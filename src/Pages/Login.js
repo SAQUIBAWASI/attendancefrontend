@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
@@ -14,7 +14,7 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/admin/login', {
+      const response = await fetch('https://attendancebackend-5cgn.onrender.com/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

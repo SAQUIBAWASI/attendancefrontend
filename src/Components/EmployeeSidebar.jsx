@@ -27,42 +27,41 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
   };
 
   const elements = [
-    {
-      icon: <i className="text-white ri-dashboard-fill"></i>,
-      name: "Dashboard",
-      path: "/dashboard",
-    },
     // {
     //   icon: <i className="text-white ri-dashboard-fill"></i>,
-    //   name: "EmployeeDashboard",
-    //   path: "/employeedashboard",
+    //   name: "Dashboard",
+    //   path: "/dashboard",
     // },
     {
-      icon: <i className="text-white ri-user-fill"></i>,
-      name: "Employees",
-      dropdown: [
-        { name: "Add Employee", path: "/addemployee" },
-        { name: "Employee List", path: "/employeelist" },
-      ],
+      icon: <i className="text-white ri-dashboard-fill"></i>,
+      name: "EmployeeDashboard",
+      path: "/employeedashboard",
     },
-    {
-      icon: <i className="text-white ri-calendar-check-fill"></i>,
-      name: "Attendance",
-      dropdown: [
-        { name: "Attendance Records", path: "/attendancelist" },
-        { name: "Today Attendance ", path: "/today-attendance" },
-        { name: "Pendings Attendance", path: "/pendings-attendance" },
-        { name: "Late Today", path: "/late-today" },
-        { name: "Absent Today", path: "/absent-today" },
-      ],
-    },
+    // {
+    //   icon: <i className="text-white ri-user-fill"></i>,
+    //   name: "Employees",
+    //   dropdown: [
+    //     { name: "Add Employee", path: "/addemployee" },
+    //     { name: "Employee List", path: "/employeelist" },
+    //   ],
+    // },
+    // {
+    //   icon: <i className="text-white ri-calendar-check-fill"></i>,
+    //   name: "Attendance",
+    //   dropdown: [
+    //     { name: "Attendance Records", path: "/attendancelist" },
+    //     { name: "Today Attendance ", path: "/today-attendance" },
+    //     { name: "Pendings Attendance", path: "/pendings-attendance" },
+    //     { name: "Late Today", path: "/late-today" },
+    //     { name: "Absent Today", path: "/absent-today" },
+    //   ],
+    // },
     {
       icon: <i className="text-white ri-calendar-close-fill"></i>,
       name: "Leave Management",
       dropdown: [
-        { name: "Leave List", path: "/leavelist" },
-        { name: "Leave Balance", path: "/leave-balance" },
-        { name: "Leave Application", path: "/leave-application" },
+         { name: "Leave Application", path: "/leave-application" },
+         { name: "My Leaves", path: "/myleaves" },
       ],
     },
     {

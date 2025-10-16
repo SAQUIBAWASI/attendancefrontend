@@ -1,114 +1,125 @@
-import React from "react";
 import { Route, Routes } from "react-router-dom";
 
 // Import your components
+import Login from "../src/Pages/Login.js";
+import CompanySidebar from "./Components/CompanySidebar.js";
 import DepartmentList from "./Components/department";
-import SubDepartmentList from "./Components/subdepartment.js";
-import AdminLayout from "./Layout/AdminLayout.jsx";
-import AttendanceForm from "./Pages/AttendanceForm.js";
-import Dashboard from "./Pages/Dashboard.jsx";
-import Holiday from "./Pages/Holiday.js";
-import DiagnostiCreate from "./Pages/LeaveApplication.js";
-import LeaveApproval from "./Pages/LeaveApproval";
-import Leaves from "./Pages/Leaves.js";
-import MissingAttendance from "./Pages/MissingAttendance.js";
-import MonthlyAttendance from "./Pages/MonthlyAttendance.js";
-import WeeklyHoliday from "./Pages/WeeklyHoliday.js";
 import Recruitment from "./Components/recruitment.js";
+import SubDepartmentList from "./Components/subdepartment.js";
+import EmployeeLogin from "./EmployeeLogin.js";
+import AdminLayout from "./Layout/AdminLayout.jsx";
+import AboutUsFormPage from "./Pages/AboutUsFormPage.js";
+import AbsentToday from "./Pages/AbsentToday.js";
+import AcceptedAppointmentsList from "./Pages/AcceptedAppointmentsList.js";
+import AddEmployeePage from "./Pages/AddEmployeePage.js";
+import AdminNotifications from "./Pages/AdminNotifications.js";
+import AllFunFactsTable from "./Pages/AllFunFactsTable.js";
+import AllPayments from "./Pages/AllPayments.js";
+import AllQuizzesTable from "./Pages/AllQuizzesTable.js";
+import AppointmentBookingForm from "./Pages/AppointmentBookingForm.js";
+import AttendanceCapture from "./Pages/AttendanceCapture.jsx";
+import AttendanceForm from "./Pages/AttendanceForm.js";
+import AttendanceList from "./Pages/AttendanceList.js";
 import DiagnosticList from "./Pages/Awardlist.js";
 import BackupReset from "./Pages/BackupReset.js";
+import BookingList from "./Pages/BookingList.js";
+import BulkFunFactUploader from "./Pages/BulkFunFactUploader.js";
+import BulkQuizUploader from "./Pages/BulkQuizUploader.js";
+import CancelledBookingList from "./Pages/CancelledBookingList .js";
+import CandidateSelection from "./Pages/CandidateSelection.js";
+import CandidateShortlist from "./Pages/CandidateShortlist.js";
+import CategoryForm from "./Pages/CategoryForm.js";
+import CategoryList from "./Pages/CategoryList.js";
+import ClientsTable from "./Pages/ClientsTable.js";
+import CompanyDetailsForm from "./Pages/CompanyDetailsForm.js";
+import CompanyList from "./Pages/CompanyList.js";
+import CompletedBookingList from "./Pages/CompletedBookingList .js";
+import ContactUsPage from "./Pages/ContactUsPage.js";
+import CouponHistoryTable from "./Pages/CouponHistoryTable.js";
+import CouponsPage from "./Pages/CouponPage.js";
+import CreateBusinessCard from "./Pages/CreateBusinessCard.js";
+import CreateCategory from "./Pages/CreateCategory.js";
+import CreateCoupon from "./Pages/CreateCoupon.js";
+import CreateLogo from "./Pages/CreateLogo.js";
+import CreatePlan from "./Pages/CreatePlan.js";
+import CreatePoster from "./Pages/CreatePoster.js";
+import CreateProductForm from "./Pages/CreateProduct.js";
+import CreateVendor from "./Pages/CreateVendor.js";
+import Dashboard from "./Pages/Dashboard.jsx";
+import DiagnosticBookingForm from "./Pages/DiagnosticBookingForm.js";
+import DiagnosticDetail from "./Pages/DiagnosticDetail.js";
+import DiagnosticsAcceptedBooking from "./Pages/DiagnosticsAcceptedBooking.js";
+import DiagnosticsBookingList from "./Pages/DiagnosticsBookingList.js";
+import DiagnosticsPendingBooking from "./Pages/DiagnosticsPendingBooking.js";
+import DiagnosticsRejectedBooking from "./Pages/DiagnosticsRejectedBooking.js";
+import DoctorAppointmentList from "./Pages/DoctorAppointmentList.js";
+import DoctorAppointmentListPending from "./Pages/DoctorAppointmentListPending.js";
+import DoctorDetailsForm from "./Pages/DoctorDetailsForm.js";
+import DoctorList from "./Pages/DoctorList.js";
+import DocumentTable from "./Pages/DocumentTable.js";
+import EmployeeDashboard from "./Pages/EmployeeDashboard.jsx";
+import EmployeeLeaves from "./Pages/EmployeeLeaves.js";
+import EmployeeList from "./Pages/EmployeeList.js";
+import GetAboutUsPage from "./Pages/GetAboutUsPage.js";
+import GetContactUsPage from "./Pages/GetContactUsPage.js";
+import Holiday from "./Pages/Holiday.js";
+import InterviewList from "./Pages/InterviewList.js";
+import LandingPage from "./Pages/LandingPage.js";
 import LanguageSetup from "./Pages/LanguageSetup.js";
+import LateToday from "./Pages/LateToday.js";
+import { default as DiagnostiCreate, default as LeaveApplication } from "./Pages/LeaveApplication.js";
+import LeaveApproval from "./Pages/LeaveApproval";
+import Leaves from "./Pages/Leaves.js";
+import LeavesList from "./Pages/LeavesList.js";
+import LogoList from "./Pages/LogoList.js";
+import ManageProjects from "./Pages/ManageProject.js";
 import MessagesTable from "./Pages/Message.js";
+import MissingAttendance from "./Pages/MissingAttendance.js";
+import MonthlyAttendance from "./Pages/MonthlyAttendance.js";
+import MyAttendance from "./Pages/MyAttendance.js";
 import NoticeList from "./Pages/Noticelist.js";
+import OrdersList from "./Pages/OrdersList.js";
+import PendingAttendance from "./Pages/PendingAttendance.js";
+import PendingBookingList from "./Pages/PendingBookingList.js";
+import PlanList from "./Pages/PlanList.js";
+import PosterList from "./Pages/PosterList.js";
+import PrivacyPolicyForm from "./Pages/PrivacyPolicyForm.js";
+import PrivacyPolicyPage from "./Pages/PrivacyPolicyPage.js";
+import ProductList from "./Pages/ProductList.js";
+import ProjectsTable from "./Pages/ProjectsTable.js";
+import ProjectTasksTable from "./Pages/ProjectTasksTable.js";
+import ReceivedPayments from "./Pages/ReceivedPayments.js";
+import RedeemedCouponsList from "./Pages/RedeemedCouponsList.js";
+import RejectedAppointmentsList from "./Pages/RejectedAppointmentsList.js";
 import SentMessagesTable from "./Pages/Sent.js";
 import Settings from "./Pages/Setting";
 import SetupRulesTable from "./Pages/Setup.js";
-import CandidateShortlist from "./Pages/CandidateShortlist.js";
-import InterviewList from "./Pages/InterviewList.js";
-import CandidateSelection from "./Pages/CandidateSelection.js";
-import ClientsTable from "./Pages/ClientsTable.js";
-import ProjectsTable from "./Pages/ProjectsTable.js";
-import ProjectTasksTable from "./Pages/ProjectTasksTable.js";
-import ManageProjects from "./Pages/ManageProject.js";
-import CompanyDetailsForm from "./Pages/CompanyDetailsForm.js";
-import CompanyList from "./Pages/CompanyList.js";
-import DoctorDetailsForm from "./Pages/DoctorDetailsForm.js";
-import DoctorList from "./Pages/DoctorList.js";
 import StaffDetailsForm from "./Pages/StaffDetailsForm.js";
-import StaffList from "./Pages/StaffList.js";
-import DiagnosticsBookingList from "./Pages/DiagnosticsBookingList.js";
-import DoctorAppointmentList from "./Pages/DoctorAppointmentList.js";
-import AppointmentBookingForm from "./Pages/AppointmentBookingForm.js";
-import DiagnosticDetail from "./Pages/DiagnosticDetail.js";
-import DiagnosticsPendingBooking from "./Pages/DiagnosticsPendingBooking.js";
-import DoctorAppointmentListPending from "./Pages/DoctorAppointmentListPending.js";
-import LoginPage from "./Pages/Login.js";
-import CategoryForm from "./Pages/CategoryForm.js";
-import CategoryList from "./Pages/CategoryList.js";
-import CompanySidebar from "./Components/CompanySidebar.js";
-import DiagnosticsAcceptedBooking from "./Pages/DiagnosticsAcceptedBooking.js";
-import DiagnosticsRejectedBooking from "./Pages/DiagnosticsRejectedBooking.js";
-import AcceptedAppointmentsList from "./Pages/AcceptedAppointmentsList.js";
-import RejectedAppointmentsList from "./Pages/RejectedAppointmentsList.js";
 import StaffHistory from "./Pages/StaffHistory.js";
-import DiagnosticBookingForm from "./Pages/DiagnosticBookingForm.js";
-import CouponsPage from "./Pages/CouponPage.js";
-import CreateCoupon from "./Pages/CreateCoupon.js";
+import StaffList from "./Pages/StaffList.js";
+import TodayAttendance from "./Pages/TodayAttendance.js";
 import UploadDocuments from "./Pages/UploadDocuments.js";
-import DocumentTable from "./Pages/DocumentTable.js";
-import CouponHistoryTable from "./Pages/CouponHistoryTable.js";
-import CreateProductForm from "./Pages/CreateProduct.js";
-import ProductList from "./Pages/ProductList.js";
-import BookingList from "./Pages/BookingList.js";
-import PendingBookingList from "./Pages/PendingBookingList.js";
-import CompletedBookingList from "./Pages/CompletedBookingList .js";
-import CancelledBookingList from "./Pages/CancelledBookingList .js";
+import AllUserCoupons from "./Pages/userCoupons.js";
 import UserList from "./Pages/UserList.js";
-import CreatePoster from "./Pages/CreatePoster.js";
-import CreateCategory from "./Pages/CreateCategory.js";
-import PosterList from "./Pages/PosterList.js";
-import CreateLogo from "./Pages/CreateLogo.js";
-import LogoList from "./Pages/LogoList.js";
-import CreateBusinessCard from "./Pages/CreateBusinessCard.js";
-import CreatePlan from "./Pages/CreatePlan.js";
-import PlanList from "./Pages/PlanList.js";
+import UserDetail from "./Pages/UserProfile.js";
 import UsersPlansList from "./Pages/UsersPlansList.js";
-import OrdersList from "./Pages/OrdersList.js";
-import PrivacyPolicyForm from "./Pages/PrivacyPolicyForm.js";
-import PrivacyPolicyPage from "./Pages/PrivacyPolicyPage.js";
-import AboutUsFormPage from "./Pages/AboutUsFormPage.js";
-import GetAboutUsPage from "./Pages/GetAboutUsPage.js";
-import ContactUsPage from "./Pages/ContactUsPage.js";
-import GetContactUsPage from "./Pages/GetContactUsPage.js";
-import CreateVendor from "./Pages/CreateVendor.js";
-import VendorList from "./Pages/VendorList.js";
-import RedeemedCouponsList from "./Pages/RedeemedCouponsList.js";
 import VendorDocumentList from "./Pages/VendorDocumentList.js";
 import VendorInvoiceList from "./Pages/VendorInvoiceList.js";
-import ReceivedPayments from "./Pages/ReceivedPayments.js";
-import AllPayments from "./Pages/AllPayments.js";
-import AllUserCoupons from "./Pages/userCoupons.js";
-import UserDetail from "./Pages/UserProfile.js";
+import VendorList from "./Pages/VendorList.js";
 import VendorDetail from "./Pages/VendorProfile.js";
-import BulkQuizUploader from "./Pages/BulkQuizUploader.js";
-import AllQuizzesTable from "./Pages/AllQuizzesTable.js";
-import BulkFunFactUploader from "./Pages/BulkFunFactUploader.js";
-import AllFunFactsTable from "./Pages/AllFunFactsTable.js";
-import AdminNotifications from "./Pages/AdminNotifications.js";
-import AddEmployeePage from "./Pages/AddEmployeePage.js";
-import EmployeeList from "./Pages/EmployeeList.js";
-import AttendanceList from "./Pages/AttendanceList.js";
-import LeavesList from "./Pages/LeavesList.js";
-
-
-
-
+import WeeklyHoliday from "./Pages/WeeklyHoliday.js";
+// import LandingPage from "./Pages/LandingPage.js";
 function App() {
   return (
     <Routes>
       {/* Login page rendered outside AdminLayout */}
-      <Route path="/" element={<LoginPage />} />
-
+      <Route path="/" element={<LandingPage />} />
+      {/* <Route path="/" element={<LoginPage />} /> */}
+      <Route path="/admin-login" element={<Login/>}/>
+      <Route path="/employee-login" element={<EmployeeLogin/>}/>
+<Route path="/employeedashboard" element={<EmployeeDashboard />} />
+              <Route path="/leave-application" element={<LeaveApplication />} />
+               <Route path="/myleaves" element={<EmployeeLeaves />} />
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"
@@ -214,6 +225,13 @@ function App() {
               <Route path="/employeelist" element={<EmployeeList />} />
               <Route path="/attendancelist" element={<AttendanceList />} />
               <Route path="/leavelist" element={<LeavesList />} />
+              
+              <Route path="/today-attendance" element={<TodayAttendance />} />
+              <Route path="/pendings-attendance" element={<PendingAttendance />} />
+              <Route path="/absent-today" element={<AbsentToday />} />
+              <Route path="/late-today" element={<LateToday />} />
+              <Route path="/attendance-capture" element={<AttendanceCapture />} />
+              <Route path="/myattendance" element={<MyAttendance />} />
 
 
 

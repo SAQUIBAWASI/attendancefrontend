@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom"; // ✅ import for navigation
 
 const AddEmployeePage = () => {
@@ -6,6 +6,7 @@ const AddEmployeePage = () => {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [department, setDepartment] = useState("");
   const [role, setRole] = useState("");
   const [joinDate, setJoinDate] = useState("");
@@ -17,14 +18,15 @@ const AddEmployeePage = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const departments = [
-    "Engineering",
+    "Developer",
     "Sales",
     "Marketing",
-    "Human Resources",
+    "Medical",
     "Finance",
-    "Operations",
-    "Graphics Designer",
+    "Nursing ",
+    "Digital Marketing",
     "Management",
+    "Laboratory Medicine ",
   ];
 
   const roles = [
@@ -33,6 +35,13 @@ const AddEmployeePage = () => {
     "Team Lead",
     "Employee",
     "HR Manager",
+    "Phlebotomist",
+    "Staff Nurse",
+    "Consultant",
+    "Graphic Designer",
+    "UI/UX & GRAPHIC DESIGNER",
+    "SMM, & SEO executive ",
+    "Web Developer",
   ];
 
   const handleSubmit = async (e) => {
@@ -41,12 +50,13 @@ const AddEmployeePage = () => {
     setErrorMessage("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/employees/add-employee", {
+      const response = await fetch("https://attendancebackend-5cgn.onrender.com/api/employees/add-employee", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
           email,
+          password,
           department,
           role,
           joinDate,
@@ -65,6 +75,7 @@ const AddEmployeePage = () => {
       setSuccessMessage("✅ Employee added successfully!");
       setName("");
       setEmail("");
+      setPassword("");
       setDepartment("");
       setRole("");
       setJoinDate("");
@@ -83,17 +94,17 @@ const AddEmployeePage = () => {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-white shadow-lg rounded-lg">
-      <h2 className="text-2xl font-semibold text-blue-900 mb-6">Add New Employee</h2>
+    <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
+      <h2 className="mb-6 text-2xl font-semibold text-blue-900">Add New Employee</h2>
 
       {/* Success or Error Message */}
       {successMessage && (
-        <div className="bg-green-100 text-green-700 p-4 rounded mb-4">
+        <div className="p-4 mb-4 text-green-700 bg-green-100 rounded">
           {successMessage}
         </div>
       )}
       {errorMessage && (
-        <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
+        <div className="p-4 mb-4 text-red-700 bg-red-100 rounded">
           {errorMessage}
         </div>
       )}
@@ -109,7 +120,7 @@ const AddEmployeePage = () => {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 p-2 w-full border border-gray-300 rounded"
+            className="w-full p-2 mt-1 border border-gray-300 rounded"
             placeholder="Enter employee name"
             required
           />
@@ -125,11 +136,27 @@ const AddEmployeePage = () => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 p-2 w-full border border-gray-300 rounded"
+            className="w-full p-2 mt-1 border border-gray-300 rounded"
             placeholder="Enter employee email"
             required
           />
         </div>
+        {/* Password */}
+        <div className="mb-4">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 mt-1 border border-gray-300 rounded"
+            placeholder="Enter employee password"
+            required
+          />
+        </div>
+
 
         {/* Department */}
         <div className="mb-4">
@@ -140,7 +167,7 @@ const AddEmployeePage = () => {
             id="department"
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
-            className="mt-1 p-2 w-full border border-gray-300 rounded"
+            className="w-full p-2 mt-1 border border-gray-300 rounded"
             required
           >
             <option value="">Select Department</option>
@@ -161,7 +188,7 @@ const AddEmployeePage = () => {
             id="role"
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="mt-1 p-2 w-full border border-gray-300 rounded"
+            className="w-full p-2 mt-1 border border-gray-300 rounded"
             required
           >
             <option value="">Select Role</option>
@@ -183,7 +210,7 @@ const AddEmployeePage = () => {
             type="date"
             value={joinDate}
             onChange={(e) => setJoinDate(e.target.value)}
-            className="mt-1 p-2 w-full border border-gray-300 rounded"
+            className="w-full p-2 mt-1 border border-gray-300 rounded"
           />
         </div>
 
@@ -197,7 +224,7 @@ const AddEmployeePage = () => {
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="mt-1 p-2 w-full border border-gray-300 rounded"
+            className="w-full p-2 mt-1 border border-gray-300 rounded"
             placeholder="e.g. +91 9876543210"
           />
         </div>
@@ -211,7 +238,7 @@ const AddEmployeePage = () => {
             id="address"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            className="mt-1 p-2 w-full border border-gray-300 rounded"
+            className="w-full p-2 mt-1 border border-gray-300 rounded"
             placeholder="Enter full address"
             rows="3"
           ></textarea>
@@ -227,7 +254,7 @@ const AddEmployeePage = () => {
             type="text"
             value={employeeId}
             onChange={(e) => setEmployeeId(e.target.value)}
-            className="mt-1 p-2 w-full border border-gray-300 rounded"
+            className="w-full p-2 mt-1 border border-gray-300 rounded"
             placeholder="Enter unique employee ID"
             required
           />
@@ -237,7 +264,7 @@ const AddEmployeePage = () => {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-6 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
           >
             Add Employee
           </button>

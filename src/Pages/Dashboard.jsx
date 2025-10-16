@@ -1,19 +1,18 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
-  FiUsers,
-  FiUserCheck,
-  FiUserX,
-  FiClock,
-  FiTrendingUp,
-  FiGrid,
-  FiCalendar,
-  FiMapPin,
-  FiCheckCircle,
-  FiXCircle,
   FiAlertCircle,
+  FiCalendar,
+  FiCheckCircle,
+  FiClock,
+  FiGrid,
+  FiTrendingUp,
+  FiUserCheck,
+  FiUsers,
+  FiUserX,
+  FiXCircle
 } from "react-icons/fi";
-import { AreaChart, Area, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from "recharts";
 import { useNavigate } from "react-router-dom";
+import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const AttendanceDashboard = () => {
   const [attendanceFilter, setAttendanceFilter] = useState("weekly");
@@ -118,15 +117,15 @@ const AttendanceDashboard = () => {
   }, []);
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading Attendance Data...</div>;
+    return <div className="flex items-center justify-center h-screen">Loading Attendance Data...</div>;
   }
 
   if (error) {
-    return <div className="flex justify-center items-center h-screen text-red-500">Error: {error}</div>;
+    return <div className="flex items-center justify-center h-screen text-red-500">Error: {error}</div>;
   }
 
   if (!attendanceData) {
-    return <div className="flex justify-center items-center h-screen">No attendance data available</div>;
+    return <div className="flex items-center justify-center h-screen">No attendance data available</div>;
   }
 
   // Pagination logic for today's attendance
@@ -163,19 +162,19 @@ const AttendanceDashboard = () => {
 
   // Navigation handlers for stat cards
   const handleTotalEmployeesClick = () => navigate("/employeelist");
-  const handlePresentTodayClick = () => navigate("/attendance-records?filter=present");
-  const handleAbsentTodayClick = () => navigate("/attendance-records?filter=absent");
-  const handleLateTodayClick = () => navigate("/attendance-records?filter=late");
+  const handlePresentTodayClick = () => navigate("/today-attendance");
+  const handleAbsentTodayClick = () => navigate("/absent-today?filter=absent");
+  const handleLateTodayClick = () => navigate("/late-today?filter=late");
   const handleAttendanceRateClick = () => navigate("/attendance-reports");
-  const handleTodaysAttendanceClick = () => navigate("/mark-attendance");
-  const handlePendingApprovalClick = () => navigate("/attendance-requests");
+  const handleTodaysAttendanceClick = () => navigate("/today-attendance");
+  const handlePendingApprovalClick = () => navigate("/pendings-attendance");
   const handleRegularizedClick = () => navigate("/attendance-regularization");
   const handleOnLeaveWFHClick = () => navigate("/leave-applications");
 
   return (
-    <div className="bg-gray-100 min-h-screen p-6">
+    <div className="min-h-screen p-6 bg-gray-100">
       {/* Top Summary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard 
           icon={FiUsers} 
           label="Total Employees" 
@@ -214,7 +213,7 @@ const AttendanceDashboard = () => {
       </div>
 
       {/* Today's Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard 
           icon={FiCalendar} 
           label="Today's Attendance" 
@@ -246,13 +245,13 @@ const AttendanceDashboard = () => {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 gap-4 mb-6 lg:grid-cols-3">
         {/* Attendance Trend Chart */}
-        <div className="bg-white rounded-lg shadow-md p-4 lg:col-span-2">
-          <div className="flex justify-between items-center mb-2">
+        <div className="p-4 bg-white rounded-lg shadow-md lg:col-span-2">
+          <div className="flex items-center justify-between mb-2">
             <h3 className="text-xl font-semibold">Attendance Trend</h3>
             <select
-              className="border border-gray-300 rounded px-2 py-1 text-sm"
+              className="px-2 py-1 text-sm border border-gray-300 rounded"
               value={attendanceFilter}
               onChange={(e) => setAttendanceFilter(e.target.value)}
             >
@@ -274,8 +273,8 @@ const AttendanceDashboard = () => {
         </div>
 
         {/* Attendance Distribution Pie Chart */}
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <h3 className="text-xl font-semibold mb-2">Today's Distribution</h3>
+        <div className="p-4 bg-white rounded-lg shadow-md">
+          <h3 className="mb-2 text-xl font-semibold">Today's Distribution</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -296,10 +295,10 @@ const AttendanceDashboard = () => {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex justify-center space-x-4 mt-2">
+          <div className="flex justify-center mt-2 space-x-4">
             {attendanceDistribution.map((item, index) => (
               <div key={index} className="flex items-center">
-                <div className="w-3 h-3 rounded-full mr-1" style={{ backgroundColor: item.color }}></div>
+                <div className="w-3 h-3 mr-1 rounded-full" style={{ backgroundColor: item.color }}></div>
                 <span className="text-sm">{item.name}: {item.value}</span>
               </div>
             ))}
@@ -308,13 +307,13 @@ const AttendanceDashboard = () => {
       </div>
 
       {/* Department & Location Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 gap-4 mb-6 lg:grid-cols-2">
         {/* Department-wise Attendance */}
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="flex justify-between items-center mb-2">
+        <div className="p-4 bg-white rounded-lg shadow-md">
+          <div className="flex items-center justify-between mb-2">
             <h3 className="text-xl font-semibold">Department-wise Attendance</h3>
             <select
-              className="border border-gray-300 rounded px-2 py-1 text-sm"
+              className="px-2 py-1 text-sm border border-gray-300 rounded"
               value={departmentFilter}
               onChange={(e) => setDepartmentFilter(e.target.value)}
             >
@@ -336,11 +335,11 @@ const AttendanceDashboard = () => {
         </div>
 
         {/* Location-wise Attendance */}
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="flex justify-between items-center mb-2">
+        <div className="p-4 bg-white rounded-lg shadow-md">
+          <div className="flex items-center justify-between mb-2">
             <h3 className="text-xl font-semibold">Location-wise Attendance</h3>
             <select
-              className="border border-gray-300 rounded px-2 py-1 text-sm"
+              className="px-2 py-1 text-sm border border-gray-300 rounded"
               value={locationFilter}
               onChange={(e) => setLocationFilter(e.target.value)}
             >
@@ -363,19 +362,19 @@ const AttendanceDashboard = () => {
       </div>
 
       {/* Today's Attendance Table */}
-      <div className="bg-white rounded-lg shadow-md p-4 mt-6">
-        <div className="flex justify-between items-center mb-4">
+      <div className="p-4 mt-6 bg-white rounded-lg shadow-md">
+        <div className="flex items-center justify-between mb-4">
           <h3 className="text-2xl font-bold">Today's Attendance</h3>
           <button
-            onClick={() => navigate("/attendance-records")}
-            className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition text-sm"
+            onClick={() => navigate("/today-attendance")}
+            className="px-4 py-2 text-sm text-white transition bg-blue-600 rounded hover:bg-blue-700"
           >
             View All Records
           </button>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm text-left">
-            <thead className="bg-gray-100 text-gray-700">
+            <thead className="text-gray-700 bg-gray-100">
               <tr>
                 <th className="px-4 py-2">Employee</th>
                 <th className="px-4 py-2">Department</th>
@@ -387,7 +386,7 @@ const AttendanceDashboard = () => {
             </thead>
             <tbody>
               {currentEmployees.map((employee, idx) => (
-                <tr key={idx} className="border-t hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/employee-details/${employee.employee.replace(/\s+/g, '-').toLowerCase()}`)}>
+                <tr key={idx} className="border-t cursor-pointer hover:bg-gray-50" onClick={() => navigate(`/employee-details/${employee.employee.replace(/\s+/g, '-').toLowerCase()}`)}>
                   <td className="px-4 py-2 font-medium">{employee.employee}</td>
                   <td className="px-4 py-2">{employee.department}</td>
                   <td className="px-4 py-2">{employee.checkIn}</td>
@@ -405,7 +404,7 @@ const AttendanceDashboard = () => {
         </div>
 
         {/* Pagination Controls */}
-        <div className="flex justify-between items-center mt-4">
+        <div className="flex items-center justify-between mt-4">
           <p className="text-sm text-gray-600">
             Showing {indexOfFirstEmployee + 1}-{Math.min(indexOfLastEmployee, attendanceData.tables.todayAttendance.length)} of {attendanceData.tables.todayAttendance.length} records
           </p>
@@ -424,19 +423,19 @@ const AttendanceDashboard = () => {
       </div>
 
       {/* Pending Attendance Requests Table */}
-      <div className="bg-white rounded-lg shadow-md p-4 mt-8">
-        <div className="flex justify-between items-center mb-4">
+      <div className="p-4 mt-8 bg-white rounded-lg shadow-md">
+        <div className="flex items-center justify-between mb-4">
           <h3 className="text-2xl font-bold">Pending Attendance Requests</h3>
           <button
-            onClick={() => navigate("/attendance-requests")}
-            className="bg-orange-600 text-white py-2 px-4 rounded hover:bg-orange-700 transition text-sm"
+            onClick={() => navigate("/pendings-attendance")}
+            className="px-4 py-2 text-sm text-white transition bg-orange-600 rounded hover:bg-orange-700"
           >
             Manage All Requests
           </button>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm text-left">
-            <thead className="bg-gray-100 text-gray-700">
+            <thead className="text-gray-700 bg-gray-100">
               <tr>
                 <th className="px-4 py-2">Employee</th>
                 <th className="px-4 py-2">Department</th>
@@ -489,7 +488,7 @@ const AttendanceDashboard = () => {
         </div>
 
         {/* Pagination Controls */}
-        <div className="flex justify-between items-center mt-4">
+        <div className="flex items-center justify-between mt-4">
           <p className="text-sm text-gray-600">
             Showing {indexOfFirstPending + 1}-{Math.min(indexOfLastPending, attendanceData.tables.pendingAttendance.length)} of {attendanceData.tables.pendingAttendance.length} requests
           </p>
@@ -508,35 +507,35 @@ const AttendanceDashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-md p-4 mt-8">
-        <h3 className="text-2xl font-bold mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="p-4 mt-8 bg-white rounded-lg shadow-md">
+        <h3 className="mb-4 text-2xl font-bold">Quick Actions</h3>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <button
             onClick={() => navigate("/attendancelist")}
-            className="bg-purple-600 text-white py-3 px-4 rounded hover:bg-purple-700 transition flex flex-col items-center justify-center"
+            className="flex flex-col items-center justify-center px-4 py-3 text-white transition bg-purple-600 rounded hover:bg-purple-700"
           >
-            <FiCalendar className="text-xl mb-1" />
+            <FiCalendar className="mb-1 text-xl" />
             <span>Mark Attendance</span>
           </button>
           <button
             onClick={() => navigate("/attendancelist")}
-            className="bg-orange-600 text-white py-3 px-4 rounded hover:bg-orange-700 transition flex flex-col items-center justify-center"
+            className="flex flex-col items-center justify-center px-4 py-3 text-white transition bg-orange-600 rounded hover:bg-orange-700"
           >
-            <FiClock className="text-xl mb-1" />
+            <FiClock className="mb-1 text-xl" />
             <span>Manage Requests</span>
           </button>
           <button
             onClick={() => navigate("/attendance-reports")}
-            className="bg-green-600 text-white py-3 px-4 rounded hover:bg-green-700 transition flex flex-col items-center justify-center"
+            className="flex flex-col items-center justify-center px-4 py-3 text-white transition bg-green-600 rounded hover:bg-green-700"
           >
-            <FiTrendingUp className="text-xl mb-1" />
+            <FiTrendingUp className="mb-1 text-xl" />
             <span>Generate Reports</span>
           </button>
           <button
             onClick={() => navigate("/employeelist")}
-            className="bg-blue-600 text-white py-3 px-4 rounded hover:bg-blue-700 transition flex flex-col items-center justify-center"
+            className="flex flex-col items-center justify-center px-4 py-3 text-white transition bg-blue-600 rounded hover:bg-blue-700"
           >
-            <FiUsers className="text-xl mb-1" />
+            <FiUsers className="mb-1 text-xl" />
             <span>Employee Management</span>
           </button>
         </div>
@@ -559,14 +558,14 @@ const StatCard = ({ icon: Icon, label, value, color, onClick }) => {
 
   return (
     <div 
-      className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between cursor-pointer hover:shadow-lg transition-shadow duration-300"
+      className="flex items-center justify-between p-4 transition-shadow duration-300 bg-white rounded-lg shadow-md cursor-pointer hover:shadow-lg"
       onClick={onClick}
     >
       <div className={`p-3 rounded-full ${colorClasses[color]}`}>
         <Icon className="text-2xl" />
       </div>
       <div className="text-right">
-        <p className="text-gray-500 text-sm">{label}</p>
+        <p className="text-sm text-gray-500">{label}</p>
         <p className="text-xl font-bold">{value}</p>
       </div>
     </div>
