@@ -9,36 +9,41 @@ const EmployeeLogin = () => {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
+  e.preventDefault();
+  setError("");
+  setIsLoading(true);
 
-    try {
-      // ✅ Login API call
-      const response = await fetch("https://attendancebackend-5cgn.onrender.com/api/employees/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+  try {
+    // ✅ Login API call
+    const response = await fetch("https://attendancebackend-5cgn.onrender.com/api/employees/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (!response.ok) throw new Error(data.message || "Login failed");
+    if (!response.ok) throw new Error(data.message || "Login failed");
 
-      // ✅ Store full employee data in localStorage
-      localStorage.setItem("employeeData", JSON.stringify(data.employee));
+    // ✅ Store full employee data in localStorage
+    localStorage.setItem("employeeData", JSON.stringify(data.employee));
 
-      // ✅ Optionally store message or token (if any)
-      localStorage.setItem("loginMessage", data.message || "Login successful");
+    // ✅ 🔹 Add these for attendance tracking
+    localStorage.setItem("employeeId", data.employee._id);
+    localStorage.setItem("employeeEmail", data.employee.email);
+    localStorage.setItem("employeeName", data.employee.name);
 
-      // ✅ Navigate to employee dashboard
-      navigate("/employeedashboard", { state: { email: data.employee.email } });
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    // ✅ Optionally store message or token (if any)
+    localStorage.setItem("loginMessage", data.message || "Login successful");
+
+    // ✅ Navigate to employee dashboard
+    navigate("/employeedashboard", { state: { email: data.employee.email } });
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-gradient-to-br from-green-100 to-teal-200">

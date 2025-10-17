@@ -58,7 +58,7 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
     // },
     {
       icon: <i className="text-white ri-calendar-close-fill"></i>,
-      name: "Leave Management",
+      name: "Leave ",
       dropdown: [
          { name: "Leave Application", path: "/leave-application" },
          { name: "My Leaves", path: "/myleaves" },
@@ -66,30 +66,30 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
     },
     {
       icon: <i className="text-white ri-file-chart-fill"></i>,
-      name: "Reports",
+      name: "Attendance",
       dropdown: [
-        { name: "Attendance Report", path: "/attendance-report" },
-        { name: "Leave Report", path: "/leave-report" },
-        { name: "Monthly Summary", path: "/monthly-summary" },
+        { name: "Attendance Report", path: "/myattendance" },
+        { name: "Check In", path: "/attendance-capture" },
+        // { name: "Monthly Summary", path: "/monthly-summary" },
       ],
     },
-    {
-      icon: <i className="text-white ri-user-settings-fill"></i>,
-      name: "Roles & Permissions",
-      dropdown: [
-        { name: "Role Management", path: "/role-management" },
-        { name: "Permission Settings", path: "/permission-settings" },
-      ],
-    },
-    {
-      icon: <i className="text-white ri-settings-3-fill"></i>,
-      name: "Settings",
-      dropdown: [
-        { name: "Attendance Settings", path: "/attendance-settings" },
-        { name: "Shift Management", path: "/shift-management" },
-        { name: "Holiday Calendar", path: "/holiday-calendar" },
-      ],
-    },
+    // {
+    //   icon: <i className="text-white ri-user-settings-fill"></i>,
+    //   name: "Roles & Permissions",
+    //   dropdown: [
+    //     { name: "Role Management", path: "/role-management" },
+    //     { name: "Permission Settings", path: "/permission-settings" },
+    //   ],
+    // },
+    // {
+    //   icon: <i className="text-white ri-settings-3-fill"></i>,
+    //   name: "Settings",
+    //   dropdown: [
+    //     { name: "Attendance Settings", path: "/attendance-settings" },
+    //     { name: "Shift Management", path: "/shift-management" },
+    //     { name: "Holiday Calendar", path: "/holiday-calendar" },
+    //   ],
+    // },
     {
       icon: <i className="text-white ri-logout-box-fill"></i>,
       name: "Logout",

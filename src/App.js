@@ -117,9 +117,11 @@ function App() {
       {/* <Route path="/" element={<LoginPage />} /> */}
       <Route path="/admin-login" element={<Login/>}/>
       <Route path="/employee-login" element={<EmployeeLogin/>}/>
-<Route path="/employeedashboard" element={<EmployeeDashboard />} />
-              <Route path="/leave-application" element={<LeaveApplication />} />
-               <Route path="/myleaves" element={<EmployeeLeaves />} />
+      <Route path="/employeedashboard" element={<EmployeeDashboard />} />
+      <Route path="/leave-application" element={<LeaveApplication />} />
+        <Route path="/myleaves" element={<EmployeeLeaves />} />
+         <Route path="/attendance-capture" element={<AttendanceCapture />} />
+          <Route path="/myattendance" element={<MyAttendance />} />
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"
