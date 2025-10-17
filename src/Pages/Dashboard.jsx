@@ -168,8 +168,8 @@ const AttendanceDashboard = () => {
   const handleAttendanceRateClick = () => navigate("/attendance-reports");
   const handleTodaysAttendanceClick = () => navigate("/today-attendance");
   const handlePendingApprovalClick = () => navigate("/pendings-attendance");
-  const handleRegularizedClick = () => navigate("/attendance-regularization");
-  const handleOnLeaveWFHClick = () => navigate("/leave-applications");
+  // const handleRegularizedClick = () => navigate("/attendance-regularization");
+  // const handleOnLeaveWFHClick = () => navigate("/leave-applications");
 
   return (
     <div className="min-h-screen p-6 bg-gray-100">
@@ -228,20 +228,20 @@ const AttendanceDashboard = () => {
           color="orange" 
           onClick={handlePendingApprovalClick}
         />
-        <StatCard 
+        {/* <StatCard 
           icon={FiCheckCircle} 
           label="Regularized" 
           value={attendanceData.todayStats.regularized} 
           color="green" 
           onClick={handleRegularizedClick}
-        />
-        <StatCard 
+        /> */}
+        {/* <StatCard 
           icon={FiGrid} 
           label="On Leave/WFH" 
           value={attendanceData.todayStats.onLeave + attendanceData.todayStats.wfh} 
           color="blue" 
           onClick={handleOnLeaveWFHClick}
-        />
+        /> */}
       </div>
 
       {/* Charts Section */}
@@ -510,22 +510,22 @@ const AttendanceDashboard = () => {
       <div className="p-4 mt-8 bg-white rounded-lg shadow-md">
         <h3 className="mb-4 text-2xl font-bold">Quick Actions</h3>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <button
+          {/* <button
             onClick={() => navigate("/attendancelist")}
             className="flex flex-col items-center justify-center px-4 py-3 text-white transition bg-purple-600 rounded hover:bg-purple-700"
           >
             <FiCalendar className="mb-1 text-xl" />
             <span>Mark Attendance</span>
-          </button>
+          </button> */}
           <button
-            onClick={() => navigate("/attendancelist")}
+            onClick={() => navigate("/leavelist")}
             className="flex flex-col items-center justify-center px-4 py-3 text-white transition bg-orange-600 rounded hover:bg-orange-700"
           >
             <FiClock className="mb-1 text-xl" />
             <span>Manage Requests</span>
           </button>
           <button
-            onClick={() => navigate("/attendance-reports")}
+            onClick={() => navigate("/attendancelist")}
             className="flex flex-col items-center justify-center px-4 py-3 text-white transition bg-green-600 rounded hover:bg-green-700"
           >
             <FiTrendingUp className="mb-1 text-xl" />

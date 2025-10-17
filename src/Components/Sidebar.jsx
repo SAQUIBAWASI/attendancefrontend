@@ -60,17 +60,18 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       icon: <i className="text-white ri-calendar-close-fill"></i>,
       name: "Leave Management",
       dropdown: [
-        { name: "Leave List", path: "/leavelist" },
-        { name: "Leave Balance", path: "/leave-balance" },
-        { name: "Leave Application", path: "/leave-application" },
+        { name: "Leave Requests", path: "/leavelist" },
+        { name: "Leave Reports ", path: "/leaves-report" },
+        // { name: "Leave Balance", path: "/leave-balance" },
+        // { name: "Leave Application", path: "/leave-application" },
       ],
     },
     {
       icon: <i className="text-white ri-file-chart-fill"></i>,
       name: "Reports",
       dropdown: [
-        { name: "Attendance Report", path: "/attendance-report" },
-        { name: "Leave Report", path: "/leave-report" },
+        { name: "Attendance Report", path: "/attendancelist" },
+        { name: "Leave Report", path: "/leaves-report" },
         { name: "Monthly Summary", path: "/monthly-summary" },
       ],
     },
