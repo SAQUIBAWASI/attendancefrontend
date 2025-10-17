@@ -422,12 +422,14 @@ const AttendanceDashboard = () => {
         </div>
       </div>
 
-      {/* Pending Attendance Requests Table */}
+      
+
+      {/* Leave  Requests Table */}
       <div className="p-4 mt-8 bg-white rounded-lg shadow-md">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-2xl font-bold">Pending Attendance Requests</h3>
+          <h3 className="text-2xl font-bold">Leave Requests</h3>
           <button
-            onClick={() => navigate("/pendings-attendance")}
+            onClick={() => navigate("/leavelist")}
             className="px-4 py-2 text-sm text-white transition bg-orange-600 rounded hover:bg-orange-700"
           >
             Manage All Requests
@@ -505,6 +507,9 @@ const AttendanceDashboard = () => {
           </div>
         </div>
       </div>
+
+
+
 
       {/* Quick Actions */}
       <div className="p-4 mt-8 bg-white rounded-lg shadow-md">
