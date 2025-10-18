@@ -20,7 +20,6 @@ export default function ShiftAssignment() {
     C: { startTime: "22:00", endTime: "06:00" },
   };
 
-  // When admin selects shift type (A/B/C)
   const handleShiftChange = (shift) => {
     setFormData({
       ...formData,
@@ -40,10 +39,23 @@ export default function ShiftAssignment() {
 
     try {
       setLoading(true);
-      const res = await axios.post("http://localhost:5000/api/shifts/assign", formData);
+      const res = await axios.post(
+        "http://localhost:5000/api/shifts/assign",
+        formData
+      );
 
       if (res.status === 200 || res.status === 201) {
         alert("✅ Shift assigned successfully!");
+
+        // ✅ Store assigned shift in localStorage
+        localStorage.setItem("employeeShift", JSON.stringify({
+          employeeId: formData.employeeId,
+          employeeName: formData.employeeName,
+          shiftType: formData.shiftType,
+          startTime: formData.startTime,
+          endTime: formData.endTime,
+        }));
+
         setFormData({
           employeeId: "",
           employeeName: "",
@@ -51,6 +63,7 @@ export default function ShiftAssignment() {
           startTime: "",
           endTime: "",
         });
+
         navigate("/shifts");
       }
     } catch (err) {

@@ -110,6 +110,7 @@ import VendorDetail from "./Pages/VendorProfile.js";
 import WeeklyHoliday from "./Pages/WeeklyHoliday.js";
 // import LandingPage from "./Pages/LandingPage.js";
 import LeavesReport from "./Pages/LeavesReport.js";
+import MyShift from "./Pages/MyShift.js";
 import ShiftList from "./Pages/ShiftList.js";
 import ShiftManagement from "./Pages/ShiftManagement.js";
 function App() {
@@ -125,6 +126,7 @@ function App() {
         <Route path="/myleaves" element={<EmployeeLeaves />} />
          <Route path="/attendance-capture" element={<AttendanceCapture />} />
           <Route path="/myattendance" element={<MyAttendance />} />
+          <Route path="/my-shift" element={<MyShift />} />
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"

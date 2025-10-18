@@ -3,7 +3,7 @@ import { CSVLink } from "react-csv";
 import EmployeeSidebar from "../Components/EmployeeSidebar";
 import Navbar from "../Components/Navbar";
 
-const BASE_URL = "http://localhost:5000"; // Replace with your backend base URL
+const BASE_URL = "http://localhost:5000"; // backend base URL
 
 export default function MyAttendance() {
   const [records, setRecords] = useState([]);
@@ -12,19 +12,27 @@ export default function MyAttendance() {
 
   useEffect(() => {
     const fetchAttendance = async () => {
-      const employeeId = localStorage.getItem("employeeId");
-      if (!employeeId) {
-        setError("Employee ID not found in localStorage.");
-        setLoading(false);
-        return;
-      }
-
       try {
+        // ✅ Load employee data from localStorage
+        const employeeData = JSON.parse(localStorage.getItem("employeeData"));
+        const employeeId = employeeData?.employeeId;
+
+        if (!employeeId) {
+          setError("❌ Employee ID not found in localStorage. Please log in again.");
+          setLoading(false);
+          return;
+        }
+
+        // ✅ Fetch attendance for this employee
         const res = await fetch(`${BASE_URL}/api/attendance/myattendance/${employeeId}`);
         const data = await res.json();
+
         if (!res.ok) throw new Error(data.message || "Failed to fetch attendance");
+
+        // ✅ Store attendance records
         setRecords(data.records || []);
       } catch (err) {
+        console.error("Attendance fetch error:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -34,7 +42,7 @@ export default function MyAttendance() {
     fetchAttendance();
   }, []);
 
-  // Prepare CSV data
+  // ✅ CSV Export Data
   const csvData = records.map((rec) => ({
     Date: new Date(rec.checkInTime || rec.createdAt).toLocaleDateString(),
     "Check In": rec.checkInTime ? new Date(rec.checkInTime).toLocaleTimeString() : "-",
@@ -45,13 +53,19 @@ export default function MyAttendance() {
     Status: rec.status,
   }));
 
+  // ✅ Conditional Rendering
   if (loading)
     return <p className="text-center mt-6 text-lg font-medium">Loading attendance...</p>;
+
   if (error)
     return <p className="text-center mt-6 text-red-600 font-medium">{error}</p>;
-  if (records.length === 0)
-    return <p className="text-center mt-6 text-gray-700 font-medium">No attendance records found.</p>;
 
+  if (records.length === 0)
+    return <p className="text-center mt-6 text-gray-700 font-medium">
+      No attendance records found.
+    </p>;
+
+  // ✅ Page Layout
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
@@ -68,7 +82,7 @@ export default function MyAttendance() {
             My Attendance
           </h2>
 
-          {/* CSV Download Button */}
+          {/* ✅ CSV Download Button */}
           <div className="text-right mb-4">
             <CSVLink
               data={csvData}
@@ -79,6 +93,7 @@ export default function MyAttendance() {
             </CSVLink>
           </div>
 
+          {/* ✅ Attendance Table */}
           <div className="overflow-x-auto shadow-lg rounded-lg bg-white p-4">
             <table className="min-w-full table-auto">
               <thead className="bg-gradient-to-r from-green-100 to-teal-100 text-gray-700">
@@ -94,19 +109,39 @@ export default function MyAttendance() {
               </thead>
               <tbody>
                 {records.map((rec, idx) => (
-                  <tr key={rec._id} className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                    <td className="px-6 py-3 text-gray-700">{new Date(rec.checkInTime || rec.createdAt).toLocaleDateString()}</td>
-                    <td className="px-6 py-3 text-gray-700">{rec.checkInTime ? new Date(rec.checkInTime).toLocaleTimeString() : "-"}</td>
-                    <td className="px-6 py-3 text-gray-700">{rec.checkOutTime ? new Date(rec.checkOutTime).toLocaleTimeString() : "-"}</td>
-                    <td className="px-6 py-3 font-semibold text-gray-800">{rec.totalHours ? rec.totalHours.toFixed(2) : "0.00"}</td>
-                    <td className="px-6 py-3 text-gray-700">{rec.distance ? rec.distance.toFixed(2) : "0.00"}</td>
+                  <tr key={rec._id || idx} className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                    <td className="px-6 py-3 text-gray-700">
+                      {new Date(rec.checkInTime || rec.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-3 text-gray-700">
+                      {rec.checkInTime ? new Date(rec.checkInTime).toLocaleTimeString() : "-"}
+                    </td>
+                    <td className="px-6 py-3 text-gray-700">
+                      {rec.checkOutTime ? new Date(rec.checkOutTime).toLocaleTimeString() : "-"}
+                    </td>
+                    <td className="px-6 py-3 font-semibold text-gray-800">
+                      {rec.totalHours ? rec.totalHours.toFixed(2) : "0.00"}
+                    </td>
+                    <td className="px-6 py-3 text-gray-700">
+                      {rec.distance ? rec.distance.toFixed(2) : "0.00"}
+                    </td>
                     <td className="px-6 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${rec.onsite ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"}`}>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          rec.onsite ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+                        }`}
+                      >
                         {rec.onsite ? "Yes" : "No"}
                       </span>
                     </td>
                     <td className="px-6 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${rec.status === "checked-in" ? "bg-blue-200 text-blue-800" : "bg-purple-200 text-purple-800"}`}>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          rec.status === "checked-in"
+                            ? "bg-blue-200 text-blue-800"
+                            : "bg-purple-200 text-purple-800"
+                        }`}
+                      >
                         {rec.status}
                       </span>
                     </td>

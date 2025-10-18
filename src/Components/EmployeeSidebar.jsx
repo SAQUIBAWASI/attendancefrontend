@@ -1,8 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Sidebar = ({ isCollapsed, isMobile }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -79,6 +78,7 @@ const handleLogout = async () => {
       dropdown: [
         { name: "Attendance Report", path: "/myattendance" },
         { name: "Check In", path: "/attendance-capture" },
+        { name: "MY Shift", path: "/my-shift" },
         // { name: "Monthly Summary", path: "/monthly-summary" },
       ],
     },
