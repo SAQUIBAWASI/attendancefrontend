@@ -31,7 +31,7 @@ const EmployeeShift = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        `http://localhost:5000/api/shifts/employee/${employeeId}`
+        `https://attendancebackend-5cgn.onrender.com/api/shifts/employee/${employeeId}`
       );
 
       if (res.data) {

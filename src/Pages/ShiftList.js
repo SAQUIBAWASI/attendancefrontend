@@ -10,7 +10,7 @@ export default function ShiftList() {
   const fetchShifts = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5000/api/shifts/all");
+      const res = await axios.get("https://attendancebackend-5cgn.onrender.com/api/shifts/all");
       setShifts(res.data);
     } catch (err) {
       alert("❌ Failed to load shifts");
@@ -28,7 +28,7 @@ export default function ShiftList() {
     if (!window.confirm("Are you sure you want to delete this shift?")) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/shifts/${id}`);
+      await axios.delete(`https://attendancebackend-5cgn.onrender.com/api/shifts/${id}`);
       alert("✅ Shift deleted successfully");
       fetchShifts();
     } catch (err) {

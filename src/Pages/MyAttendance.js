@@ -3,7 +3,7 @@ import { CSVLink } from "react-csv";
 import EmployeeSidebar from "../Components/EmployeeSidebar";
 import Navbar from "../Components/Navbar";
 
-const BASE_URL = "http://localhost:5000"; // backend base URL
+const BASE_URL = "https://attendancebackend-5cgn.onrender.com"; // backend base URL
 
 export default function MyAttendance() {
   const [records, setRecords] = useState([]);
