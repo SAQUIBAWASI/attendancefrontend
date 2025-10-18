@@ -2,6 +2,7 @@ import axios from "axios";
 import { useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Sidebar = ({ isCollapsed, isMobile }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -9,22 +10,30 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
   const toggleDropdown = (name) => {
     setOpenDropdown(openDropdown === name ? null : name);
   };
+const navigate = useNavigate();
+const handleLogout = async () => {
+  try {
+    // Call employee logout API if you have one
+    await axios.post(
+      "https://credenhealth.onrender.com/api/employees/logout",
+      {}, 
+      { withCredentials: true }
+    );
 
-  const handleLogout = async () => {
-    try {
-      await axios.post(
-        "https://credenhealth.onrender.com/api/admin/logout",
-        {},
-        { withCredentials: true }
-      );
-      localStorage.removeItem("authToken");
-      alert("Logout successful");
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Logout error:", error);
-      alert("Logout failed. Please try again.");
-    }
-  };
+    // Clear localStorage
+    localStorage.removeItem("employeeEmail");
+    localStorage.removeItem("employeeId");
+    localStorage.removeItem("token");
+
+    // Redirect to login page
+    navigate("/employee-login");
+  } catch (error) {
+    console.error("Logout error:", error);
+    // Fallback: still clear storage & redirect even if API fails
+    localStorage.clear();
+    navigate("/employee-login");
+  }
+};
 
   const elements = [
     // {
