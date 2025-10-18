@@ -43,7 +43,7 @@ export default function ShiftList() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800">Assigned Shifts</h1>
           <button
-            onClick={() => navigate("/assign-shift")}
+            onClick={() => navigate("/shift")}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
           >
             + Assign New Shift
