@@ -88,7 +88,8 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       name: "Settings",
       dropdown: [
         { name: "Attendance Settings", path: "/attendance-settings" },
-        { name: "Shift Management", path: "/shift-management" },
+        { name: "Shift Management", path: "/shift" },
+        { name: "Shift List", path: "/shiftlist" },
         { name: "Holiday Calendar", path: "/holiday-calendar" },
       ],
     },
