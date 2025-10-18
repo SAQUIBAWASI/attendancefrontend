@@ -31,7 +31,7 @@ const EmployeeShift = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        `https://attendancebackend-5cgn.onrender.com/api/shifts/employee/${employeeId}`
+        `http://localhost:5000/api/shifts/employee/${employeeId}`
       );
 
       if (res.data) {
@@ -74,7 +74,7 @@ const EmployeeShift = () => {
     }
   };
 
-useEffect(() => {
+  useEffect(() => {
   fetchShift(); // fetch once on mount
 
   const interval = setInterval(() => {
@@ -83,7 +83,6 @@ useEffect(() => {
 
   return () => clearInterval(interval);
 }, []); // <-- empty dependency array
-
 
   return (
     <div className="flex min-h-screen bg-gray-100">
