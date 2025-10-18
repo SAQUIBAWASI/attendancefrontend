@@ -2,29 +2,58 @@ import axios from "axios";
 import { useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Sidebar = ({ isCollapsed, isMobile }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
+
 
   const toggleDropdown = (name) => {
     setOpenDropdown(openDropdown === name ? null : name);
   };
 
+  // const handleLogout = async () => {
+  //   try {
+  //     await axios.post(
+  //       "https://credenhealth.onrender.com/api/admin/logout",
+  //       {},
+  //       { withCredentials: true }
+  //     );
+  //     localStorage.removeItem("authToken");
+  //     alert("Logout successful");
+  //     window.location.href = "/";
+  //   } catch (error) {
+  //     console.error("Logout error:", error);
+  //     alert("Logout failed. Please try again.");
+  //   }
+  // };
+
+  const navigate = useNavigate();
+
   const handleLogout = async () => {
-    try {
-      await axios.post(
-        "https://credenhealth.onrender.com/api/admin/logout",
-        {},
-        { withCredentials: true }
-      );
-      localStorage.removeItem("authToken");
-      alert("Logout successful");
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Logout error:", error);
-      alert("Logout failed. Please try again.");
-    }
-  };
+  try {
+    // Call employee logout API if you have one
+    await axios.post(
+      "https://credenhealth.onrender.com/api/admin/logout",
+      {}, 
+      { withCredentials: true }
+    );
+
+    // Clear localStorage
+    localStorage.removeItem("employeeEmail");
+    localStorage.removeItem("employeeId");
+    localStorage.removeItem("token");
+
+    // Redirect to login page
+    navigate("/admin-login");
+  } catch (error) {
+    console.error("Logout error:", error);
+    // Fallback: still clear storage & redirect even if API fails
+    localStorage.clear();
+    navigate("/admin-login");
+  }
+};
+
 
   const elements = [
     {
@@ -87,10 +116,10 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       icon: <i className="text-white ri-settings-3-fill"></i>,
       name: "Settings",
       dropdown: [
-        { name: "Attendance Settings", path: "/attendance-settings" },
+        // { name: "Attendance Settings", path: "/attendance-settings" },
         { name: "Shift Management", path: "/shift" },
         { name: "Shift List", path: "/shiftlist" },
-        { name: "Holiday Calendar", path: "/holiday-calendar" },
+        // { name: "Holiday Calendar", path: "/holiday-calendar" },
       ],
     },
     {
