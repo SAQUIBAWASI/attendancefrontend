@@ -30,11 +30,10 @@ export default function AttendanceCapture() {
   const [locStatus, setLocStatus] = useState("idle");
   const [submitting, setSubmitting] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
-
-  // ✅ Read employee data from location.state or fallback to localStorage
   const [employeeId, setEmployeeId] = useState(null);
   const [email, setEmail] = useState(null);
 
+  // ✅ Load employee data
   useEffect(() => {
     const stateId = location.state?.employeeId;
     const stateEmail = location.state?.email;
@@ -55,13 +54,19 @@ export default function AttendanceCapture() {
     }
   }, [location.state]);
 
-  // Restore check-in status
+  // ✅ Restore check-in status based on employeeId
   useEffect(() => {
-    const storedCheckIn = localStorage.getItem("checkedIn");
-    if (storedCheckIn === "true") setCheckedIn(true);
-  }, []);
+    if (employeeId) {
+      const storedStatus = localStorage.getItem(`checkedIn_${employeeId}`);
+      if (storedStatus === "true") {
+        setCheckedIn(true);
+      } else {
+        setCheckedIn(false);
+      }
+    }
+  }, [employeeId]);
 
-  // Fetch current geolocation
+  // ✅ Fetch current geolocation
   const fetchLocation = () => {
     if (!navigator.geolocation) return alert("Geolocation not supported!");
     setLocStatus("fetching");
@@ -106,6 +111,7 @@ export default function AttendanceCapture() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Check-In failed");
 
@@ -114,8 +120,9 @@ export default function AttendanceCapture() {
           distance <= ONSITE_RADIUS_M ? "(Onsite)" : "(Outside office)"
         }`
       );
+
       setCheckedIn(true);
-      localStorage.setItem("checkedIn", "true");
+      localStorage.setItem(`checkedIn_${employeeId}`, "true");
     } catch (err) {
       alert("❌ " + err.message);
     } finally {
@@ -142,6 +149,7 @@ export default function AttendanceCapture() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Check-Out failed");
 
@@ -150,8 +158,9 @@ export default function AttendanceCapture() {
           distance <= ONSITE_RADIUS_M ? "(Onsite)" : "(Outside office)"
         }`
       );
+
       setCheckedIn(false);
-      localStorage.removeItem("checkedIn");
+      localStorage.removeItem(`checkedIn_${employeeId}`);
     } catch (err) {
       alert("❌ " + err.message);
     } finally {
@@ -165,19 +174,19 @@ export default function AttendanceCapture() {
       <EmployeeSidebar />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-col flex-1">
         {/* Navbar */}
         <Navbar />
 
         {/* Attendance Content */}
-        <div className="p-6 max-w-lg mx-auto text-center">
-          <h2 className="text-2xl font-semibold mb-6">Attendance Capture</h2>
+        <div className="max-w-lg p-6 mx-auto text-center">
+          <h2 className="mb-6 text-2xl font-semibold">Attendance Capture</h2>
 
-          <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-            <h3 className="text-lg font-medium mb-2">Your Location</h3>
+          <div className="p-4 mb-6 bg-white rounded-lg shadow-md">
+            <h3 className="mb-2 text-lg font-medium">Your Location</h3>
             <button
               onClick={fetchLocation}
-              className="px-4 py-2 bg-green-600 text-white rounded"
+              className="px-4 py-2 text-white bg-green-600 rounded"
               disabled={locStatus === "fetching"}
             >
               {locStatus === "fetching" ? "Fetching..." : "Get Current Location"}
@@ -197,11 +206,12 @@ export default function AttendanceCapture() {
             )}
           </div>
 
+          {/* ✅ Show correct button per employee */}
           {!checkedIn ? (
             <button
               onClick={handleCheckIn}
               disabled={submitting}
-              className="w-full py-3 bg-green-700 text-white rounded-lg text-lg font-semibold"
+              className="w-full py-3 text-lg font-semibold text-white bg-green-700 rounded-lg"
             >
               {submitting ? "Checking In..." : "Check In"}
             </button>
@@ -209,7 +219,7 @@ export default function AttendanceCapture() {
             <button
               onClick={handleCheckOut}
               disabled={submitting}
-              className="w-full py-3 bg-red-600 text-white rounded-lg text-lg font-semibold"
+              className="w-full py-3 text-lg font-semibold text-white bg-red-600 rounded-lg"
             >
               {submitting ? "Checking Out..." : "Check Out"}
             </button>

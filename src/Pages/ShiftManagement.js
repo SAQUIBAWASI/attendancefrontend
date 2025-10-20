@@ -40,7 +40,7 @@ export default function ShiftAssignment() {
     try {
       setLoading(true);
       const res = await axios.post(
-        "https://attendancebackend-5cgn.onrender.com/api/shifts/assign",
+        "http://localhost:5000/api/shifts/assign",
         formData
       );
 
@@ -75,16 +75,16 @@ export default function ShiftAssignment() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex justify-center items-center p-4">
-      <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md">
-        <h1 className="text-xl font-bold mb-4 text-gray-800 text-center">
+    <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
+      <div className="w-full max-w-md p-6 bg-white shadow-lg rounded-2xl">
+        <h1 className="mb-4 text-xl font-bold text-center text-gray-800">
           Assign Shift to Employee
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Employee ID */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block mb-1 text-sm font-medium text-gray-700">
               Employee ID *
             </label>
             <input
@@ -94,14 +94,14 @@ export default function ShiftAssignment() {
                 setFormData({ ...formData, employeeId: e.target.value })
               }
               placeholder="Enter employee ID"
-              className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
           {/* Employee Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block mb-1 text-sm font-medium text-gray-700">
               Employee Name *
             </label>
             <input
@@ -111,14 +111,14 @@ export default function ShiftAssignment() {
                 setFormData({ ...formData, employeeName: e.target.value })
               }
               placeholder="Enter employee name"
-              className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
           {/* Shift Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block mb-2 text-sm font-medium text-gray-700">
               Select Shift *
             </label>
             <div className="flex gap-3">
@@ -142,7 +142,7 @@ export default function ShiftAssignment() {
           {/* Start & End Time */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">
                 Start Time
               </label>
               <input
@@ -151,12 +151,12 @@ export default function ShiftAssignment() {
                 onChange={(e) =>
                   setFormData({ ...formData, startTime: e.target.value })
                 }
-                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block mb-1 text-sm font-medium text-gray-700">
                 End Time
               </label>
               <input
@@ -165,7 +165,7 @@ export default function ShiftAssignment() {
                 onChange={(e) =>
                   setFormData({ ...formData, endTime: e.target.value })
                 }
-                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
@@ -175,7 +175,7 @@ export default function ShiftAssignment() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold"
+            className="w-full py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700"
           >
             {loading ? "Assigning..." : "Assign Shift"}
           </button>
@@ -184,7 +184,7 @@ export default function ShiftAssignment() {
           <button
             type="button"
             onClick={() => navigate("/shifts")}
-            className="w-full border mt-2 py-2 rounded-lg hover:bg-gray-100"
+            className="w-full py-2 mt-2 border rounded-lg hover:bg-gray-100"
           >
             Cancel
           </button>
