@@ -28,26 +28,26 @@
 //   if (!profile) return <p className="p-6">Loading...</p>;
 
 //   return (
-//     <div className="flex h-screen bg-gray-100 overflow-hidden">
+//     <div className="flex h-screen overflow-hidden bg-gray-100">
 //       {/* Sidebar: fixed height, scrollable */}
 //       <div className="flex-shrink-0 h-full overflow-y-auto">
 //         <EmployeeSidebar />
 //       </div>
 
 //       {/* Main content area */}
-//       <div className="flex-1 flex flex-col overflow-hidden">
+//       <div className="flex flex-col flex-1 overflow-hidden">
 //         {/* Navbar */}
 //         <div className="flex-shrink-0">
 //           <Navbar />
 //         </div>
 
 //         {/* Scrollable page content */}
-//         <main className="flex-1 overflow-y-auto p-6">
+//         <main className="flex-1 p-6 overflow-y-auto">
 //           <h1 className="text-2xl font-bold text-gray-800">Employee Dashboard</h1>
 //           <p className="text-gray-500">Welcome back, {profile.name} 👋</p>
 
 //           {/* Profile Card */}
-//           <div className="p-6 mb-6 bg-white shadow-md rounded-xl mt-6">
+//           <div className="p-6 mt-6 mb-6 bg-white shadow-md rounded-xl">
 //             <div className="flex items-center gap-4">
 //               <div className="p-4 text-blue-600 bg-blue-100 rounded-full">
 //                 <FiUser className="text-3xl" />
@@ -95,9 +95,9 @@
 // {/* My Leave Requests */}
 // <div
 //   onClick={() => navigate("/myleaves")}
-//   className="mt-10 p-6 bg-white rounded-xl shadow-md cursor-pointer hover:shadow-lg transition"
+//   className="p-6 mt-10 transition bg-white shadow-md cursor-pointer rounded-xl hover:shadow-lg"
 // >
-//   <h3 className="text-lg font-semibold flex items-center gap-2">
+//   <h3 className="flex items-center gap-2 text-lg font-semibold">
 //     <FiCalendar /> My Leave Requests
 //   </h3>
 //   <p className="text-sm text-gray-500">Track your leave applications and their status</p>
@@ -116,9 +116,9 @@
 // const DashboardCard = ({ icon, title, subtitle, onClick }) => (
 //   <div
 //     onClick={onClick}
-//     className="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md cursor-pointer transition transform hover:scale-105 hover:shadow-lg"
+//     className="flex flex-col items-center justify-center p-6 transition transform bg-white shadow-md cursor-pointer rounded-xl hover:scale-105 hover:shadow-lg"
 //   >
-//     <div className="p-4 bg-gray-100 rounded-full mb-3">{icon}</div>
+//     <div className="p-4 mb-3 bg-gray-100 rounded-full">{icon}</div>
 //     <h4 className="font-semibold text-gray-800">{title}</h4>
 //     <p className="text-sm text-gray-500">{subtitle}</p>
 //   </div>
@@ -187,22 +187,22 @@ const EmployeeDashboard = () => {
   if (!profile) return <p className="p-6">Loading...</p>;
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-gray-100">
       {/* Sidebar */}
       <div className="flex-shrink-0 h-full overflow-y-auto">
         <EmployeeSidebar />
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
 
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 p-6 overflow-y-auto">
           <h1 className="text-2xl font-bold text-gray-800">Employee Dashboard</h1>
           <p className="text-gray-500">Welcome back, {profile.name} 👋</p>
 
           {/* Profile Card */}
-          <div className="p-6 mb-6 bg-white shadow-md rounded-xl mt-6">
+          <div className="p-6 mt-6 mb-6 bg-white shadow-md rounded-xl">
             <div className="flex items-center gap-4">
               <div className="p-4 text-blue-600 bg-blue-100 rounded-full">
                 <FiUser className="text-3xl" />
@@ -250,9 +250,9 @@ const EmployeeDashboard = () => {
           {/* My Leave Requests */}
           <div
             onClick={() => navigate("/myleaves")}
-            className="mt-10 p-6 bg-white rounded-xl shadow-md cursor-pointer hover:shadow-lg transition"
+            className="p-6 mt-10 transition bg-white shadow-md cursor-pointer rounded-xl hover:shadow-lg"
           >
-            <h3 className="text-lg font-semibold flex items-center gap-2">
+            <h3 className="flex items-center gap-2 text-lg font-semibold">
               <FiCalendar /> My Leave Requests
             </h3>
             <p className="text-sm text-gray-500">Track your leave applications and their status</p>
@@ -270,9 +270,9 @@ const EmployeeDashboard = () => {
 const DashboardCard = ({ icon, title, subtitle, onClick }) => (
   <div
     onClick={onClick}
-    className="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md cursor-pointer transition transform hover:scale-105 hover:shadow-lg"
+    className="flex flex-col items-center justify-center p-6 transition transform bg-white shadow-md cursor-pointer rounded-xl hover:scale-105 hover:shadow-lg"
   >
-    <div className="p-4 bg-gray-100 rounded-full mb-3">{icon}</div>
+    <div className="p-4 mb-3 bg-gray-100 rounded-full">{icon}</div>
     <h4 className="font-semibold text-gray-800">{title}</h4>
     <p className="text-sm text-gray-500">{subtitle}</p>
   </div>

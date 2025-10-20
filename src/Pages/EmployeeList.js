@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { FaFileCsv, FaUpload, FaEye, FaTrash, FaEdit } from "react-icons/fa";
-import { CSVLink } from "react-csv";
-import * as XLSX from "xlsx";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useEffect, useState } from "react";
+import { CSVLink } from "react-csv";
+import { FaEdit, FaEye, FaFileCsv, FaTrash, FaUpload } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
 
 const EmployeeList = () => {
   const [employees, setEmployees] = useState([]);

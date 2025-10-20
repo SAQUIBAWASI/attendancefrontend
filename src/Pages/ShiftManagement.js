@@ -40,7 +40,7 @@ export default function ShiftAssignment() {
     try {
       setLoading(true);
       const res = await axios.post(
-        "http://localhost:5000/api/shifts/assign",
+        "https://attendancebackend-5cgn.onrender.com/api/shifts/assign",
         formData
       );
 

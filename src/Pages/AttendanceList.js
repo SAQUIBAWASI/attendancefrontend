@@ -28,54 +28,54 @@
 //   }, []);
 
 //   if (loading)
-//     return <p className="text-center mt-6 text-gray-700">Loading attendance records...</p>;
+//     return <p className="mt-6 text-center text-gray-700">Loading attendance records...</p>;
 
 //   if (error)
-//     return <p className="text-center mt-6 text-red-600">{error}</p>;
+//     return <p className="mt-6 text-center text-red-600">{error}</p>;
 
 //   if (records.length === 0)
-//     return <p className="text-center mt-6 text-gray-700">No attendance records found.</p>;
+//     return <p className="mt-6 text-center text-gray-700">No attendance records found.</p>;
 
 //   return (
-//     <div className="p-6 max-w-6xl mx-auto">
-//       <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">
+//     <div className="max-w-6xl p-6 mx-auto">
+//       <h2 className="mb-6 text-3xl font-bold text-center text-blue-700">
 //         All Employee Attendance
 //       </h2>
 
 //       <div className="overflow-x-auto">
-//         <table className="w-full border-collapse border border-gray-300 shadow-md rounded-lg">
+//         <table className="w-full border border-collapse border-gray-300 rounded-lg shadow-md">
 //           <thead className="bg-blue-100">
 //             <tr>
-//               <th className="border px-4 py-2 text-left text-blue-700">Employee ID</th>
-//               <th className="border px-4 py-2 text-left text-blue-700">Email</th>
-//               <th className="border px-4 py-2 text-left text-blue-700">Check-In</th>
-//               <th className="border px-4 py-2 text-left text-blue-700">Check-Out</th>
-//               <th className="border px-4 py-2 text-left text-blue-700">Total Hours</th>
-//               <th className="border px-4 py-2 text-left text-blue-700">Distance (m)</th>
-//               <th className="border px-4 py-2 text-left text-blue-700">Onsite</th>
-//               <th className="border px-4 py-2 text-left text-blue-700">Status</th>
+//               <th className="px-4 py-2 text-left text-blue-700 border">Employee ID</th>
+//               <th className="px-4 py-2 text-left text-blue-700 border">Email</th>
+//               <th className="px-4 py-2 text-left text-blue-700 border">Check-In</th>
+//               <th className="px-4 py-2 text-left text-blue-700 border">Check-Out</th>
+//               <th className="px-4 py-2 text-left text-blue-700 border">Total Hours</th>
+//               <th className="px-4 py-2 text-left text-blue-700 border">Distance (m)</th>
+//               <th className="px-4 py-2 text-left text-blue-700 border">Onsite</th>
+//               <th className="px-4 py-2 text-left text-blue-700 border">Status</th>
 //             </tr>
 //           </thead>
 
 //           <tbody>
 //             {records.map((rec) => (
 //               <tr key={rec._id} className="hover:bg-gray-50">
-//                 <td className="border px-4 py-2">{rec.employeeId}</td>
-//                 <td className="border px-4 py-2">{rec.employeeEmail}</td>
-//                 <td className="border px-4 py-2">
+//                 <td className="px-4 py-2 border">{rec.employeeId}</td>
+//                 <td className="px-4 py-2 border">{rec.employeeEmail}</td>
+//                 <td className="px-4 py-2 border">
 //                   {rec.checkInTime
 //                     ? new Date(rec.checkInTime).toLocaleString()
 //                     : "-"}
 //                 </td>
-//                 <td className="border px-4 py-2">
+//                 <td className="px-4 py-2 border">
 //                   {rec.checkOutTime
 //                     ? new Date(rec.checkOutTime).toLocaleString()
 //                     : "-"}
 //                 </td>
-//                 <td className="border px-4 py-2">{rec.totalHours?.toFixed(2) || "-"}</td>
-//                 <td className="border px-4 py-2">{rec.distance?.toFixed(2) || "-"}</td>
-//                 <td className="border px-4 py-2">{rec.onsite ? "Yes" : "No"}</td>
-//                 <td className="border px-4 py-2 capitalize">{rec.status}</td>
+//                 <td className="px-4 py-2 border">{rec.totalHours?.toFixed(2) || "-"}</td>
+//                 <td className="px-4 py-2 border">{rec.distance?.toFixed(2) || "-"}</td>
+//                 <td className="px-4 py-2 border">{rec.onsite ? "Yes" : "No"}</td>
+//                 <td className="px-4 py-2 capitalize border">{rec.status}</td>
 //               </tr>
 //             ))}
 //           </tbody>
@@ -207,82 +207,82 @@ export default function AttendanceList() {
   };
 
   if (loading)
-    return <p className="text-center mt-6 text-gray-700">Loading attendance records...</p>;
+    return <p className="mt-6 text-center text-gray-700">Loading attendance records...</p>;
 
   if (error)
-    return <p className="text-center mt-6 text-red-600">{error}</p>;
+    return <p className="mt-6 text-center text-red-600">{error}</p>;
 
   if (records.length === 0)
-    return <p className="text-center mt-6 text-gray-700">No attendance records found.</p>;
+    return <p className="mt-6 text-center text-gray-700">No attendance records found.</p>;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">
+    <div className="max-w-6xl p-6 mx-auto">
+      <h2 className="mb-6 text-3xl font-bold text-center text-blue-700">
         All Employee Attendance
       </h2>
 
       {/* ✅ Filters and Download */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
+      <div className="flex flex-col items-center justify-between gap-3 mb-6 sm:flex-row">
         <div className="flex gap-3">
           <div>
-            <label className="block text-sm text-gray-700 mb-1">Filter by Date:</label>
+            <label className="block mb-1 text-sm text-gray-700">Filter by Date:</label>
             <input
               type="date"
               value={selectedDate}
               onChange={handleDateChange}
-              className="border p-2 rounded"
+              className="p-2 border rounded"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-700 mb-1">Filter by Month:</label>
+            <label className="block mb-1 text-sm text-gray-700">Filter by Month:</label>
             <input
               type="month"
               value={selectedMonth}
               onChange={handleMonthChange}
-              className="border p-2 rounded"
+              className="p-2 border rounded"
             />
           </div>
         </div>
 
         <button
           onClick={downloadCSV}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          className="px-4 py-2 text-white transition bg-green-600 rounded hover:bg-green-700"
         >
           Download CSV
         </button>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300 shadow-md rounded-lg">
+        <table className="w-full border border-collapse border-gray-300 rounded-lg shadow-md">
           <thead className="bg-blue-100">
             <tr>
-              <th className="border px-4 py-2 text-left text-blue-700">Employee ID</th>
-              <th className="border px-4 py-2 text-left text-blue-700">Email</th>
-              <th className="border px-4 py-2 text-left text-blue-700">Check-In</th>
-              <th className="border px-4 py-2 text-left text-blue-700">Check-Out</th>
-              <th className="border px-4 py-2 text-left text-blue-700">Total Hours</th>
-              <th className="border px-4 py-2 text-left text-blue-700">Distance (m)</th>
-              <th className="border px-4 py-2 text-left text-blue-700">Onsite</th>
-              <th className="border px-4 py-2 text-left text-blue-700">Status</th>
+              <th className="px-4 py-2 text-left text-blue-700 border">Employee ID</th>
+              <th className="px-4 py-2 text-left text-blue-700 border">Email</th>
+              <th className="px-4 py-2 text-left text-blue-700 border">Check-In</th>
+              <th className="px-4 py-2 text-left text-blue-700 border">Check-Out</th>
+              <th className="px-4 py-2 text-left text-blue-700 border">Total Hours</th>
+              <th className="px-4 py-2 text-left text-blue-700 border">Distance (m)</th>
+              <th className="px-4 py-2 text-left text-blue-700 border">Onsite</th>
+              <th className="px-4 py-2 text-left text-blue-700 border">Status</th>
             </tr>
           </thead>
 
           <tbody>
             {filteredRecords.map((rec) => (
               <tr key={rec._id} className="hover:bg-gray-50">
-                <td className="border px-4 py-2">{rec.employeeId}</td>
-                <td className="border px-4 py-2">{rec.employeeEmail}</td>
-                <td className="border px-4 py-2">
+                <td className="px-4 py-2 border">{rec.employeeId}</td>
+                <td className="px-4 py-2 border">{rec.employeeEmail}</td>
+                <td className="px-4 py-2 border">
                   {rec.checkInTime ? new Date(rec.checkInTime).toLocaleString() : "-"}
                 </td>
-                <td className="border px-4 py-2">
+                <td className="px-4 py-2 border">
                   {rec.checkOutTime ? new Date(rec.checkOutTime).toLocaleString() : "-"}
                 </td>
-                <td className="border px-4 py-2">{rec.totalHours?.toFixed(2) || "-"}</td>
-                <td className="border px-4 py-2">{rec.distance?.toFixed(2) || "-"}</td>
-                <td className="border px-4 py-2">{rec.onsite ? "Yes" : "No"}</td>
-                <td className="border px-4 py-2 capitalize">{rec.status}</td>
+                <td className="px-4 py-2 border">{rec.totalHours?.toFixed(2) || "-"}</td>
+                <td className="px-4 py-2 border">{rec.distance?.toFixed(2) || "-"}</td>
+                <td className="px-4 py-2 border">{rec.onsite ? "Yes" : "No"}</td>
+                <td className="px-4 py-2 capitalize border">{rec.status}</td>
               </tr>
             ))}
           </tbody>

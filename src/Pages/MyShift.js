@@ -31,7 +31,7 @@ const EmployeeShift = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        `http://localhost:5000/api/shifts/employee/${employeeId}`
+        `https://attendancebackend-5cgn.onrender.com/api/shifts/employee/${employeeId}`
       );
 
       if (res.data) {
@@ -90,14 +90,14 @@ const EmployeeShift = () => {
       <EmployeeSidebar />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-col flex-1">
         {/* Navbar */}
         <Navbar />
 
         {/* Page content */}
         <main className="p-6">
-          <div className="bg-white rounded shadow-md max-w-5xl mx-auto p-6">
-            <h2 className="text-2xl font-bold text-blue-900 mb-6">
+          <div className="max-w-5xl p-6 mx-auto bg-white rounded shadow-md">
+            <h2 className="mb-6 text-2xl font-bold text-blue-900">
               My Shift
             </h2>
 
@@ -111,8 +111,8 @@ const EmployeeShift = () => {
               </p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full border text-sm">
-                  <thead className="bg-gray-200 text-gray-700">
+                <table className="w-full text-sm border">
+                  <thead className="text-gray-700 bg-gray-200">
                     <tr>
                       <th className="p-2 border">Shift Type</th>
                       <th className="p-2 border">Start Time</th>
@@ -121,7 +121,7 @@ const EmployeeShift = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="hover:bg-gray-50 border-b">
+                    <tr className="border-b hover:bg-gray-50">
                       <td className="p-2 border">{shift.shiftType}</td>
                       <td className="p-2 border">{shift.startTime}</td>
                       <td className="p-2 border">{shift.endTime}</td>

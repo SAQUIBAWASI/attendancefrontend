@@ -35,11 +35,11 @@
 
 //   return (
 //     <div className="p-6 bg-white rounded-lg shadow-md">
-//       <h2 className="text-2xl font-bold mb-4">Pending Attendance Requests</h2>
+//       <h2 className="mb-4 text-2xl font-bold">Pending Attendance Requests</h2>
 
 //       <div className="overflow-x-auto">
-//         <table className="w-full border text-sm">
-//           <thead className="bg-gray-200 text-gray-700">
+//         <table className="w-full text-sm border">
+//           <thead className="text-gray-700 bg-gray-200">
 //             <tr>
 //               <th className="p-2 border">Employee</th>
 //               <th className="p-2 border">Leave Type</th>
@@ -54,19 +54,19 @@
 //           <tbody>
 //             {requests.length > 0 ? (
 //               requests.map((rec) => (
-//                 <tr key={rec._id} className="hover:bg-gray-50 border-b">
-//                   <td className="p-2 border font-medium">{rec.employeeName}</td>
-//                   <td className="p-2 border capitalize">{rec.leaveType}</td>
+//                 <tr key={rec._id} className="border-b hover:bg-gray-50">
+//                   <td className="p-2 font-medium border">{rec.employeeName}</td>
+//                   <td className="p-2 capitalize border">{rec.leaveType}</td>
 //                   <td className="p-2 border">{new Date(rec.startDate).toLocaleDateString()}</td>
 //                   <td className="p-2 border">{new Date(rec.endDate).toLocaleDateString()}</td>
 //                   <td className="p-2 border">{rec.days}</td>
 //                   <td className="p-2 border">{rec.reason}</td>
 //                   <td className="p-2 border">
-//                     <span className="px-2 py-1 bg-yellow-200 text-yellow-800 rounded text-xs font-semibold">
+//                     <span className="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-200 rounded">
 //                       {rec.status}
 //                     </span>
 //                   </td>
-//                   <td className="p-2 border flex gap-2 justify-center text-lg">
+//                   <td className="flex justify-center gap-2 p-2 text-lg border">
 //                     <button
 //                       title="Approve"
 //                       onClick={() => updateRequestStatus(rec._id, "Approved")}
@@ -120,7 +120,7 @@ const LeavesList = () => {
 
   const fetchLeaves = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/leaves/leaves");
+      const res = await axios.get("https://attendancebackend-5cgn.onrender.com/api/leaves/leaves");
       setLeaves(res.data.records || res.data); // adapt if API returns { records: [...] }
     } catch (err) {
       console.error("Failed to fetch leaves:", err);
@@ -143,7 +143,7 @@ const LeavesList = () => {
     }
     try {
       await axios.put(
-        `http://localhost:5000/api/leaves/updateleaves/${editingRecord._id}`,
+        `https://attendancebackend-5cgn.onrender.com/api/leaves/updateleaves/${editingRecord._id}`,
         { status: updatedStatus }
       );
       alert(`Leave ${updatedStatus}`);
@@ -168,12 +168,12 @@ const LeavesList = () => {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto bg-white rounded-lg shadow-md mt-6">
-      <h1 className="text-3xl font-bold text-center mb-6">Leave Requests</h1>
+    <div className="max-w-6xl p-6 mx-auto mt-6 bg-white rounded-lg shadow-md">
+      <h1 className="mb-6 text-3xl font-bold text-center">Leave Requests</h1>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full border border-gray-300 text-sm">
-          <thead className="bg-gray-100 text-gray-700">
+        <table className="min-w-full text-sm border border-gray-300">
+          <thead className="text-gray-700 bg-gray-100">
             <tr>
               <th className="px-4 py-2 border">Employee</th>
               <th className="px-4 py-2 border">Leave Type</th>
@@ -202,10 +202,10 @@ const LeavesList = () => {
                   <td className={`px-4 py-2 rounded-full text-center font-semibold ${getStatusClass(l.status)}`}>
                     {l.status}
                   </td>
-                  <td className="px-4 py-2 flex gap-2 justify-center">
+                  <td className="flex justify-center gap-2 px-4 py-2">
                     <button
                       onClick={() => handleEdit(l)}
-                      className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
+                      className="px-3 py-1 text-white transition bg-blue-600 rounded hover:bg-blue-700"
                     >
                       Edit
                     </button>
@@ -214,7 +214,7 @@ const LeavesList = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="8" className="text-center py-6 text-gray-500">
+                <td colSpan="8" className="py-6 text-center text-gray-500">
                   No leave requests found.
                 </td>
               </tr>
@@ -226,14 +226,14 @@ const LeavesList = () => {
       {/* Edit Modal */}
       {editingRecord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md relative">
+          <div className="relative w-full max-w-md p-6 bg-white rounded-lg">
             <button
               onClick={() => setEditingRecord(null)}
-              className="absolute top-3 right-3 text-gray-600 hover:text-black"
+              className="absolute text-gray-600 top-3 right-3 hover:text-black"
             >
               <FaTimes />
             </button>
-            <h2 className="text-xl font-bold mb-4">Edit Leave Status</h2>
+            <h2 className="mb-4 text-xl font-bold">Edit Leave Status</h2>
             <p className="mb-2">
               <strong>Employee:</strong> {editingRecord.employeeName}
             </p>
@@ -243,7 +243,7 @@ const LeavesList = () => {
             <select
               value={updatedStatus}
               onChange={(e) => setUpdatedStatus(e.target.value)}
-              className="w-full px-3 py-2 border rounded mb-4"
+              className="w-full px-3 py-2 mb-4 border rounded"
             >
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
@@ -252,13 +252,13 @@ const LeavesList = () => {
             <div className="flex justify-end gap-2">
               <button
                 onClick={handleUpdateStatus}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+                className="px-4 py-2 text-white transition bg-green-600 rounded hover:bg-green-700"
               >
                 Save
               </button>
               <button
                 onClick={() => setEditingRecord(null)}
-                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition"
+                className="px-4 py-2 text-white transition bg-gray-400 rounded hover:bg-gray-500"
               >
                 Cancel
               </button>
