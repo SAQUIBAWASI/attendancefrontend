@@ -1,8 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Sidebar = ({ isCollapsed, isMobile }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -80,7 +79,7 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       dropdown: [
         { name: "Attendance Records", path: "/attendancelist" },
         { name: "Today Attendance ", path: "/today-attendance" },
-        { name: "Pendings Attendance", path: "/pendings-attendance" },
+        // { name: "Pendings Attendance", path: "/pendings-attendance" },
         { name: "Late Today", path: "/late-today" },
         { name: "Absent Today", path: "/absent-today" },
       ],
@@ -101,7 +100,7 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       dropdown: [
         { name: "Attendance Report", path: "/attendancelist" },
         { name: "Leave Report", path: "/leaves-report" },
-        { name: "Monthly Summary", path: "/monthly-summary" },
+        // { name: "Monthly Summary", path: "/monthly-summary" },
       ],
     },
     {

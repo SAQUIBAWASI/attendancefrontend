@@ -8,7 +8,7 @@ const OFFICE_COORDS = { lat: 17.4458661, lng: 78.3849383 };
 const ONSITE_RADIUS_M = 50;
 const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
 
-// Haversine formula for distance
+// Haversine formula
 function haversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371000;
   const toRad = (deg) => (deg * Math.PI) / 180;
@@ -33,7 +33,10 @@ export default function AttendanceCapture() {
   const [employeeId, setEmployeeId] = useState(null);
   const [email, setEmail] = useState(null);
 
-  // ✅ Load employee data
+  const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+  const storageKey = `attendance_${employeeId}_${today}`;
+
+  // Load employee data
   useEffect(() => {
     const stateId = location.state?.employeeId;
     const stateEmail = location.state?.email;
@@ -54,19 +57,45 @@ export default function AttendanceCapture() {
     }
   }, [location.state]);
 
-  // ✅ Restore check-in status based on employeeId
+  // Restore today's attendance status from backend first
   useEffect(() => {
-    if (employeeId) {
-      const storedStatus = localStorage.getItem(`checkedIn_${employeeId}`);
-      if (storedStatus === "true") {
-        setCheckedIn(true);
-      } else {
-        setCheckedIn(false);
-      }
-    }
-  }, [employeeId]);
+    const fetchTodayStatus = async () => {
+      if (!employeeId) return;
 
-  // ✅ Fetch current geolocation
+      try {
+        const res = await fetch(`${BASE_URL}/api/attendance/myattendance/${employeeId}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to fetch status");
+
+        // Filter today's record
+        const todayRecord = data.records.find((rec) => {
+          const recDate = new Date(rec.checkInTime).toLocaleDateString("en-CA");
+          return recDate === today;
+        });
+
+        if (todayRecord) {
+          // Update UI based on status
+          if (todayRecord.status === "checked-in") {
+            setCheckedIn(true); // show Check-Out
+            localStorage.setItem(storageKey, JSON.stringify({ checkedIn: true, checkedOut: false }));
+          } else if (todayRecord.status === "checked-out") {
+            setCheckedIn(false); // show Check-In
+            localStorage.setItem(storageKey, JSON.stringify({ checkedIn: true, checkedOut: true }));
+          }
+        } else {
+          // No record today
+          setCheckedIn(false);
+          localStorage.removeItem(storageKey);
+        }
+      } catch (err) {
+        console.error("Error fetching today's attendance:", err.message);
+      }
+    };
+
+    fetchTodayStatus();
+  }, [employeeId, storageKey, today]);
+
+  // Fetch geolocation
   const fetchLocation = () => {
     if (!navigator.geolocation) return alert("Geolocation not supported!");
     setLocStatus("fetching");
@@ -92,17 +121,12 @@ export default function AttendanceCapture() {
     );
   };
 
-  // ✅ Handle Check-In
+  // Check-In
   const handleCheckIn = async () => {
     if (!position) return alert("Fetch your location first!");
     if (!employeeId) return alert("Employee ID missing!");
 
-    const payload = {
-      employeeId,
-      employeeEmail: email,
-      latitude: position.lat,
-      longitude: position.lng,
-    };
+    const payload = { employeeId, employeeEmail: email, latitude: position.lat, longitude: position.lng };
 
     try {
       setSubmitting(true);
@@ -111,18 +135,17 @@ export default function AttendanceCapture() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Check-In failed");
 
       alert(
         `✅ Check-In Successful! ${
-          distance <= ONSITE_RADIUS_M ? "(Onsite)" : "(Outside office)"
+          distance <= ONSITE_RADIUS_M ? "(Onsite)" : "(Offsite)"
         }`
       );
 
-      setCheckedIn(true);
-      localStorage.setItem(`checkedIn_${employeeId}`, "true");
+      setCheckedIn(true); // show Check-Out
+      localStorage.setItem(storageKey, JSON.stringify({ checkedIn: true, checkedOut: false }));
     } catch (err) {
       alert("❌ " + err.message);
     } finally {
@@ -130,17 +153,12 @@ export default function AttendanceCapture() {
     }
   };
 
-  // ✅ Handle Check-Out
+  // Check-Out
   const handleCheckOut = async () => {
     if (!position) return alert("Fetch your location first!");
     if (!employeeId) return alert("Employee ID missing!");
 
-    const payload = {
-      employeeId,
-      employeeEmail: email,
-      latitude: position.lat,
-      longitude: position.lng,
-    };
+    const payload = { employeeId, employeeEmail: email, latitude: position.lat, longitude: position.lng };
 
     try {
       setSubmitting(true);
@@ -149,18 +167,17 @@ export default function AttendanceCapture() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Check-Out failed");
 
       alert(
         `✅ Check-Out Successful! ${
-          distance <= ONSITE_RADIUS_M ? "(Onsite)" : "(Outside office)"
+          distance <= ONSITE_RADIUS_M ? "(Onsite)" : "(Offsite)"
         }`
       );
 
-      setCheckedIn(false);
-      localStorage.removeItem(`checkedIn_${employeeId}`);
+      setCheckedIn(false); // show Check-In
+      localStorage.setItem(storageKey, JSON.stringify({ checkedIn: true, checkedOut: true }));
     } catch (err) {
       alert("❌ " + err.message);
     } finally {
@@ -170,15 +187,10 @@ export default function AttendanceCapture() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
       <EmployeeSidebar />
-
-      {/* Main Content */}
       <div className="flex flex-col flex-1">
-        {/* Navbar */}
         <Navbar />
 
-        {/* Attendance Content */}
         <div className="max-w-lg p-6 mx-auto text-center">
           <h2 className="mb-6 text-2xl font-semibold">Attendance Capture</h2>
 
@@ -206,7 +218,6 @@ export default function AttendanceCapture() {
             )}
           </div>
 
-          {/* ✅ Show correct button per employee */}
           {!checkedIn ? (
             <button
               onClick={handleCheckIn}
