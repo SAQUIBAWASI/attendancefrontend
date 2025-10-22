@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import EmployeeSidebar from "../Components/EmployeeSidebar";
+// import EmployeeSidebar from "../Components/EmployeeSidebar";
 import Navbar from "../Components/Navbar";
 
 const LeaveRequestForm = ({ defaultEmployeeId = "EMP103", defaultEmployeeName = "Shifa" }) => {
@@ -64,16 +64,23 @@ const LeaveRequestForm = ({ defaultEmployeeId = "EMP103", defaultEmployeeName = 
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      <EmployeeSidebar />
+     
 
       <div className="flex-1 flex flex-col">
         {/* Navbar */}
         <Navbar />
-
+         
         {/* Main content */}
         <div className="p-6">
           <div className="max-w-md mx-auto bg-white rounded shadow p-6">
+            {/* ✅ Back Button */}
+            <button
+              onClick={() => navigate("/employeedashboard")}
+              className="mb-5 w-full sm:w-auto px-5 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all"
+            >
+              ← Back to Dashboard
+            </button>
+
             <h2 className="mb-4 text-xl font-bold text-blue-900">Leave Request Form</h2>
 
             {/* Success / Error Messages */}

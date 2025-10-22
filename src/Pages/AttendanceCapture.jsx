@@ -1,6 +1,6 @@
 // src/pages/AttendanceCapture.jsx
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import EmployeeSidebar from "../Components/EmployeeSidebar";
 import Navbar from "../Components/Navbar";
 
@@ -25,6 +25,7 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 
 export default function AttendanceCapture() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [position, setPosition] = useState(null);
   const [distance, setDistance] = useState(null);
   const [locStatus, setLocStatus] = useState("idle");
@@ -186,55 +187,77 @@ export default function AttendanceCapture() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <EmployeeSidebar />
+    <div className="flex flex-col sm:flex-row min-h-screen bg-gray-100">
+      {/* Sidebar hidden on small screens */}
+      <div className="hidden sm:block">
+        <EmployeeSidebar />
+      </div>
+
       <div className="flex flex-col flex-1">
         <Navbar />
 
-        <div className="max-w-lg p-6 mx-auto text-center">
-          <h2 className="mb-6 text-2xl font-semibold">Attendance Capture</h2>
+        <div className="flex flex-col flex-1 p-4 sm:p-6 items-center justify-center">
+          <div className="w-full max-w-lg bg-white rounded-2xl shadow-lg p-6 sm:p-8 text-center">
+            <h2 className="mb-6 text-2xl sm:text-3xl font-semibold text-gray-800">
+              Attendance Capture
+            </h2>
 
-          <div className="p-4 mb-6 bg-white rounded-lg shadow-md">
-            <h3 className="mb-2 text-lg font-medium">Your Location</h3>
+            {/* ✅ Back Button */}
             <button
-              onClick={fetchLocation}
-              className="px-4 py-2 text-white bg-green-600 rounded"
-              disabled={locStatus === "fetching"}
+              onClick={() => navigate("/employeedashboard")}
+              className="mb-5 w-full sm:w-auto px-5 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all"
             >
-              {locStatus === "fetching" ? "Fetching..." : "Get Current Location"}
+              ← Back to Dashboard
             </button>
 
-            {position && (
-              <div className="mt-3 text-gray-700">
-                <p>Lat: {position.lat.toFixed(6)}</p>
-                <p>Lng: {position.lng.toFixed(6)}</p>
-                <p>
-                  Distance:{" "}
-                  <strong>
-                    {distance} m ({distance <= ONSITE_RADIUS_M ? "Onsite" : "Outside"})
-                  </strong>
-                </p>
-              </div>
+            <div className="p-4 mb-6 bg-gray-50 rounded-lg shadow-sm">
+              <h3 className="mb-2 text-lg font-medium text-gray-700">Your Location</h3>
+              <button
+                onClick={fetchLocation}
+                className="w-full sm:w-auto px-5 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+                disabled={locStatus === "fetching"}
+              >
+                {locStatus === "fetching" ? "Fetching..." : "Get Current Location"}
+              </button>
+
+              {position && (
+                <div className="mt-3 text-gray-700 text-sm sm:text-base">
+                  <p>Lat: {position.lat.toFixed(6)}</p>
+                  <p>Lng: {position.lng.toFixed(6)}</p>
+                  <p>
+                    Distance:{" "}
+                    <strong>
+                      {distance} m (
+                      {distance <= ONSITE_RADIUS_M ? (
+                        <span className="text-green-600">Onsite</span>
+                      ) : (
+                        <span className="text-red-600">Outside</span>
+                      )}
+                      )
+                    </strong>
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {!checkedIn ? (
+              <button
+                onClick={handleCheckIn}
+                disabled={submitting}
+                className="w-full py-3 text-lg font-semibold text-white bg-green-700 rounded-lg hover:bg-green-800"
+              >
+                {submitting ? "Checking In..." : "Check In"}
+              </button>
+            ) : (
+              <button
+                onClick={handleCheckOut}
+                disabled={submitting}
+                className="w-full py-3 text-lg font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700"
+              >
+                {submitting ? "Checking Out..." : "Check Out"}
+              </button>
             )}
           </div>
-
-          {!checkedIn ? (
-            <button
-              onClick={handleCheckIn}
-              disabled={submitting}
-              className="w-full py-3 text-lg font-semibold text-white bg-green-700 rounded-lg"
-            >
-              {submitting ? "Checking In..." : "Check In"}
-            </button>
-          ) : (
-            <button
-              onClick={handleCheckOut}
-              disabled={submitting}
-              className="w-full py-3 text-lg font-semibold text-white bg-red-600 rounded-lg"
-            >
-              {submitting ? "Checking Out..." : "Check Out"}
-            </button>
-          )}
         </div>
       </div>
     </div>

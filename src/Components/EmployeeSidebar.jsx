@@ -3,73 +3,46 @@ import { useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 
-const Sidebar = ({ isCollapsed, isMobile }) => {
+const Sidebar = ({ isCollapsed, isMobile, onClose }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
+  const navigate = useNavigate();
 
   const toggleDropdown = (name) => {
     setOpenDropdown(openDropdown === name ? null : name);
   };
-const navigate = useNavigate();
-const handleLogout = async () => {
-  try {
-    // Call employee logout API if you have one
-    await axios.post(
-      "https://credenhealth.onrender.com/api/employees/logout",
-      {}, 
-      { withCredentials: true }
-    );
 
-    // Clear localStorage
-    localStorage.removeItem("employeeEmail");
-    localStorage.removeItem("employeeId");
-    localStorage.removeItem("token");
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        "https://credenhealth.onrender.com/api/employees/logout",
+        {},
+        { withCredentials: true }
+      );
 
-    // Redirect to login page
-    navigate("/employee-login");
-  } catch (error) {
-    console.error("Logout error:", error);
-    // Fallback: still clear storage & redirect even if API fails
-    localStorage.clear();
-    navigate("/employee-login");
-  }
-};
+      localStorage.removeItem("employeeEmail");
+      localStorage.removeItem("employeeId");
+      localStorage.removeItem("token");
+
+      navigate("/employee-login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      localStorage.clear();
+      navigate("/employee-login");
+    }
+  };
 
   const elements = [
-    // {
-    //   icon: <i className="text-white ri-dashboard-fill"></i>,
-    //   name: "Dashboard",
-    //   path: "/dashboard",
-    // },
     {
       icon: <i className="text-white ri-dashboard-fill"></i>,
-      name: "EmployeeDashboard",
+      name: "Employee Dashboard",
       path: "/employeedashboard",
     },
-    // {
-    //   icon: <i className="text-white ri-user-fill"></i>,
-    //   name: "Employees",
-    //   dropdown: [
-    //     { name: "Add Employee", path: "/addemployee" },
-    //     { name: "Employee List", path: "/employeelist" },
-    //   ],
-    // },
-    // {
-    //   icon: <i className="text-white ri-calendar-check-fill"></i>,
-    //   name: "Attendance",
-    //   dropdown: [
-    //     { name: "Attendance Records", path: "/attendancelist" },
-    //     { name: "Today Attendance ", path: "/today-attendance" },
-    //     { name: "Pendings Attendance", path: "/pendings-attendance" },
-    //     { name: "Late Today", path: "/late-today" },
-    //     { name: "Absent Today", path: "/absent-today" },
-    //   ],
-    // },
     {
       icon: <i className="text-white ri-calendar-close-fill"></i>,
-      name: "Leave ",
+      name: "Leave",
       dropdown: [
-         { name: "Leave Application", path: "/leave-application" },
-         { name: "My Leaves", path: "/myleaves" },
+        { name: "Leave Application", path: "/leave-application" },
+        { name: "My Leaves", path: "/myleaves" },
       ],
     },
     {
@@ -78,27 +51,9 @@ const handleLogout = async () => {
       dropdown: [
         { name: "Attendance Report", path: "/myattendance" },
         { name: "Check In", path: "/attendance-capture" },
-        { name: "MY Shift", path: "/my-shift" },
-        // { name: "Monthly Summary", path: "/monthly-summary" },
+        { name: "My Shift", path: "/my-shift" },
       ],
     },
-    // {
-    //   icon: <i className="text-white ri-user-settings-fill"></i>,
-    //   name: "Roles & Permissions",
-    //   dropdown: [
-    //     { name: "Role Management", path: "/role-management" },
-    //     { name: "Permission Settings", path: "/permission-settings" },
-    //   ],
-    // },
-    // {
-    //   icon: <i className="text-white ri-settings-3-fill"></i>,
-    //   name: "Settings",
-    //   dropdown: [
-    //     { name: "Attendance Settings", path: "/attendance-settings" },
-    //     { name: "Shift Management", path: "/shift-management" },
-    //     { name: "Holiday Calendar", path: "/holiday-calendar" },
-    //   ],
-    // },
     {
       icon: <i className="text-white ri-logout-box-fill"></i>,
       name: "Logout",
@@ -107,68 +62,107 @@ const handleLogout = async () => {
   ];
 
   return (
-    <div
-      className={`transition-all duration-300 ${
-        isMobile ? (isCollapsed ? "w-0" : "w-64") : isCollapsed ? "w-16" : "w-64"
-      } h-screen overflow-y-scroll no-scrollbar flex flex-col bg-blue-800`}
-    >
-      <div className="sticky top-0 flex justify-center p-4 text-xl font-bold text-white">
-        <span>{isCollapsed && !isMobile ? "AD" : "Attendance System"}</span>
-      </div>
-      <div className="my-2 border-b-4 border-gray-800"></div>
+    <>
+      {/* Mobile overlay background */}
+      {isMobile && !isCollapsed && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={onClose}
+        ></div>
+      )}
 
-      <nav className={`flex flex-col ${isCollapsed && "items-center"} space-y-4 mt-4`}>
-        {elements.map((item, idx) => (
-          <div key={idx}>
-            {item.dropdown ? (
-              <>
-                <div
-                  className="flex items-center py-3 px-4 font-semibold text-sm text-white mx-4 rounded-lg hover:bg-gray-700 hover:text-[#00B074] duration-300 cursor-pointer"
-                  onClick={() => toggleDropdown(item.name)}
-                >
-                  <span className="text-xl">{item.icon}</span>
-                  <span className={`ml-4 ${isCollapsed && !isMobile ? "hidden" : "block"}`}>
-                    {item.name}
-                  </span>
-                  <FaChevronDown
-                    className={`ml-auto text-xs transform ${
-                      openDropdown === item.name ? "rotate-180" : "rotate-0"
+      {/* Sidebar container */}
+      <div
+        className={`fixed md:static top-0 left-0 h-screen bg-blue-800 text-white flex flex-col transition-all duration-300 ease-in-out z-50
+          ${isMobile ? (isCollapsed ? "-translate-x-full" : "translate-x-0 w-64") : isCollapsed ? "w-16" : "w-64"}
+        `}
+      >
+        {/* Header */}
+        <div className="sticky top-0 flex justify-center items-center p-4 text-xl font-bold border-b border-blue-700">
+          <span className="truncate text-center">
+            {isCollapsed && !isMobile ? "AD" : "Attendance System"}
+          </span>
+        </div>
+
+        {/* Navigation */}
+        <nav
+          className={`flex flex-col flex-grow overflow-y-auto no-scrollbar mt-4 space-y-1 ${
+            isCollapsed && !isMobile ? "items-center" : "px-3"
+          }`}
+        >
+          {elements.map((item, idx) => (
+            <div key={idx}>
+              {item.dropdown ? (
+                <>
+                  <div
+                    onClick={() => toggleDropdown(item.name)}
+                    className="flex items-center py-3 px-3 rounded-lg font-medium text-sm hover:bg-gray-700 hover:text-[#00B074] transition duration-300 cursor-pointer"
+                  >
+                    <span className="text-xl">{item.icon}</span>
+                    <span
+                      className={`ml-4 flex-grow ${
+                        isCollapsed && !isMobile ? "hidden" : "block"
+                      }`}
+                    >
+                      {item.name}
+                    </span>
+                    {!isCollapsed && (
+                      <FaChevronDown
+                        className={`ml-auto text-xs transform transition-transform duration-300 ${
+                          openDropdown === item.name ? "rotate-180" : "rotate-0"
+                        }`}
+                      />
+                    )}
+                  </div>
+
+                  {/* Dropdown items */}
+                  <ul
+                    className={`overflow-hidden transition-all duration-300 pl-10 ${
+                      openDropdown === item.name
+                        ? "max-h-40 opacity-100"
+                        : "max-h-0 opacity-0"
                     } ${isCollapsed && !isMobile ? "hidden" : "block"}`}
-                  />
-                </div>
-                {openDropdown === item.name && (
-                  <ul className={`text-sm text-white space-y-1 ${isCollapsed && !isMobile ? "hidden" : "block"}`}>
+                  >
                     {item.dropdown.map((subItem, subIdx) => (
                       <li key={subIdx}>
                         <Link
                           to={subItem.path}
-                          className="flex items-center space-x-2 py-2 font-medium cursor-pointer hover:text-[#00B074] hover:underline ml-10"
-                          onClick={() => setOpenDropdown(null)}
+                          onClick={() => {
+                            setOpenDropdown(null);
+                            if (isMobile) onClose();
+                          }}
+                          className="block py-2 text-sm font-normal hover:text-[#00B074] transition duration-200"
                         >
-                          <span className="text-[#00B074]">•</span>
-                          <span>{subItem.name}</span>
+                          • {subItem.name}
                         </Link>
                       </li>
                     ))}
                   </ul>
-                )}
-              </>
-            ) : (
-              <Link
-                to={item.path}
-                className="flex items-center py-3 px-4 font-semibold text-sm text-white mx-4 rounded-lg hover:bg-gray-700 hover:text-[#00B074] duration-300 cursor-pointer"
-                onClick={item.action ? item.action : null}
-              >
-                <span className="text-xl">{item.icon}</span>
-                <span className={`ml-4 ${isCollapsed && !isMobile ? "hidden" : "block"}`}>
-                  {item.name}
-                </span>
-              </Link>
-            )}
-          </div>
-        ))}
-      </nav>
-    </div>
+                </>
+              ) : (
+                <Link
+                  to={item.path}
+                  onClick={() => {
+                    if (item.action) item.action();
+                    if (isMobile) onClose();
+                  }}
+                  className="flex items-center py-3 px-3 rounded-lg font-medium text-sm hover:bg-gray-700 hover:text-[#00B074] transition duration-300 cursor-pointer"
+                >
+                  <span className="text-xl">{item.icon}</span>
+                  <span
+                    className={`ml-4 ${
+                      isCollapsed && !isMobile ? "hidden" : "block"
+                    }`}
+                  >
+                    {item.name}
+                  </span>
+                </Link>
+              )}
+            </div>
+          ))}
+        </nav>
+      </div>
+    </>
   );
 };
 
