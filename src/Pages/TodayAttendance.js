@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const BASE_URL = "https://attendancebackend-5cgn.onrender.com"; // replace with your backend base URL
+// const BASE_URL = "https://attendancebackend-5cgn.onrender.com"; // replace with your backend base URL
 
 const TodayAttendance = () => {
   const [todayRecords, setTodayRecords] = useState([]);
@@ -17,7 +17,7 @@ const TodayAttendance = () => {
   const fetchTodayAttendance = async () => {
     try {
       setLoading(true);
-      const resp = await axios.get(`${BASE_URL}/api/attendance/todaysattendance`);
+      const resp = await axios.get("https://attendancebackend-5cgn.onrender.com/api/attendance/today");
       if (resp.data && resp.data.records) {
         setTodayRecords(resp.data.records);
       }

@@ -20,7 +20,7 @@ const AbsentToday = () => {
     const employees = empResp.data;
 
     // Fetch today’s attendance
-    const attResp = await axios.get("https://attendancebackend-5cgn.onrender.com/api/attendance/todaysattendance");
+    const attResp = await axios.get("https://attendancebackend-5cgn.onrender.com/api/attendance/today");
     const attendanceData = attResp.data;
     const attendance = attendanceData.records || [];
 
