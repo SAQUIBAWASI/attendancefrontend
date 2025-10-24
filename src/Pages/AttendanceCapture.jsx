@@ -1275,7 +1275,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const BASE_URL = "http://localhost:5000/api/attendance";
+const BASE_URL = "https://attendancebackend-5cgn.onrender.com/api/attendance";
 const OFFICE_COORDS = { lat: 17.448294, lng: 78.391487 };
 const ONSITE_RADIUS_M = 600;
 
