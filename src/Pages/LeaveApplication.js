@@ -4,17 +4,17 @@ import { useNavigate } from "react-router-dom";
 // import EmployeeSidebar from "../Components/EmployeeSidebar";
 import Navbar from "../Components/Navbar";
 
-const LeaveRequestForm = ({ defaultEmployeeId = "EMP103", defaultEmployeeName = "Shifa" }) => {
+const LeaveRequestForm = ({ defaultEmployeeId = "", defaultEmployeeName = "" }) => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     employeeId: defaultEmployeeId,
     employeeName: defaultEmployeeName,
-    leaveType: "casual",
-    startDate: "2025-10-10",
-    endDate: "2025-10-11",
-    days: 2,
-    reason: "Family function",
+    leaveType: "Enter Leave Type",
+    startDate: "Enter Start Date",
+    endDate: "Enter End Date",
+    days: 0,
+    reason: "",
   });
 
   const [successMessage, setSuccessMessage] = useState("");
@@ -49,11 +49,11 @@ const LeaveRequestForm = ({ defaultEmployeeId = "EMP103", defaultEmployeeName = 
       setFormData({
         employeeId: defaultEmployeeId,
         employeeName: defaultEmployeeName,
-        leaveType: "casual",
-        startDate: "2025-10-10",
-        endDate: "2025-10-11",
-        days: 2,
-        reason: "Family function",
+        leaveType: "Enter Leave Type",
+        startDate: "Enter Start Date",
+        endDate: "Enter ENd Date",
+        days: 0,
+        reason: "",
       });
 
       setTimeout(() => navigate("/myattendance"), 1000);
