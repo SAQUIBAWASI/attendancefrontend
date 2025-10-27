@@ -1493,10 +1493,10 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const BASE_URL = "https://attendancebackend-5cgn.onrender.com"; // backend root URL
+const BASE_URL = "http://localhost:5000"; // backend root URL
 const ONSITE_RADIUS_M = 50; // 50 meters radius
 
-// Haversine formula to calculate distance in meters
+// Haversine formula to calculate distance in meters (FOR UI DISPLAY ONLY)
 function haversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371000; // meters
   const toRad = (deg) => (deg * Math.PI) / 180;
@@ -1515,7 +1515,7 @@ export default function AttendanceCapture() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [officeLocation, setOfficeLocation] = useState(null); // dynamic location
+  const [officeLocation, setOfficeLocation] = useState(null);
   const [position, setPosition] = useState(null);
   const [distance, setDistance] = useState(null);
   const [checkedIn, setCheckedIn] = useState(false);
@@ -1523,7 +1523,7 @@ export default function AttendanceCapture() {
   const [employeeId, setEmployeeId] = useState(null);
   const [employeeEmail, setEmployeeEmail] = useState(null);
 
-  // ✅ Load employee data
+  // Load employee data
   useEffect(() => {
     const stateId = location.state?.employeeId;
     const stateEmail = location.state?.email;
@@ -1544,7 +1544,7 @@ export default function AttendanceCapture() {
     }
   }, [location.state]);
 
-  // ✅ Fetch dynamic office location from backend
+  // Fetch office location
   useEffect(() => {
     const fetchOfficeLocation = async () => {
       try {
@@ -1554,6 +1554,7 @@ export default function AttendanceCapture() {
           setOfficeLocation({
             lat: data.location.latitude,
             lng: data.location.longitude,
+            name: data.location.name,
           });
         } else {
           alert("No office location set by admin yet.");
@@ -1565,7 +1566,7 @@ export default function AttendanceCapture() {
     fetchOfficeLocation();
   }, []);
 
-  // ✅ Fetch today's attendance (to know check-in status)
+  // Fetch today's attendance
   useEffect(() => {
     const fetchTodayAttendance = async () => {
       if (!employeeId) return;
@@ -1592,7 +1593,7 @@ export default function AttendanceCapture() {
     fetchTodayAttendance();
   }, [employeeId]);
 
-  // ✅ Get current user location & calculate distance
+  // Get current location
   const fetchLocation = () => {
     if (!navigator.geolocation)
       return alert("Geolocation is not supported by your browser");
@@ -1619,12 +1620,10 @@ export default function AttendanceCapture() {
     );
   };
 
-  // ✅ Handle Check-In
+  // Handle Check-In
   const handleCheckIn = async () => {
     if (!position) return alert("Get your location first");
     if (!employeeId || !employeeEmail) return alert("Employee data missing");
-
-    const locationStatus = distance <= ONSITE_RADIUS_M ? "inside" : "outside";
 
     setSubmitting(true);
     try {
@@ -1635,16 +1634,16 @@ export default function AttendanceCapture() {
           employeeId,
           employeeEmail,
           latitude: position.lat,
-          longitude: position.lng,
-          distance,
-          locationStatus, // 👈 store "inside" or "outside"
+          longitude: position.lng
+          // NOTE: distance and locationStatus removed - backend will calculate
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      alert(`Checked in (${locationStatus} office, ${distance}m away)`);
+      // Use backend response message directly
+      alert(data.message);
       setCheckedIn(true);
     } catch (err) {
       alert(err.message);
@@ -1653,12 +1652,10 @@ export default function AttendanceCapture() {
     }
   };
 
-  // ✅ Handle Check-Out
+  // Handle Check-Out
   const handleCheckOut = async () => {
     if (!position) return alert("Get your location first");
     if (!employeeId) return alert("Employee data missing");
-
-    const locationStatus = distance <= ONSITE_RADIUS_M ? "inside" : "outside";
 
     setSubmitting(true);
     try {
@@ -1668,16 +1665,16 @@ export default function AttendanceCapture() {
         body: JSON.stringify({
           employeeId,
           latitude: position.lat,
-          longitude: position.lng,
-          distance,
-          locationStatus, // 👈 store this too
+          longitude: position.lng
+          // NOTE: distance and locationStatus removed - backend will calculate
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      alert(`Checked out (${locationStatus} office, ${distance}m away)`);
+      // Use backend response message directly
+      alert(data.message);
       setCheckedIn(false);
     } catch (err) {
       alert(err.message);
@@ -1695,36 +1692,69 @@ export default function AttendanceCapture() {
         ← Back
       </button>
 
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 flex flex-col gap-4">
+      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 flex flex-col gap-6">
         <h2 className="text-2xl font-semibold text-center">Attendance Capture</h2>
 
-        <div className="bg-gray-50 p-4 rounded-md flex flex-col gap-3">
+        {/* Employee Info */}
+        {employeeId && (
+          <div className="bg-green-50 p-3 rounded-md">
+            <p className="text-green-700 font-medium">
+              Employee: {employeeId} | {employeeEmail}
+            </p>
+          </div>
+        )}
+
+        {/* Office Location */}
+        {officeLocation && (
+          <div className="bg-blue-50 p-4 rounded-md flex flex-col gap-2">
+            <h3 className="font-medium text-blue-700">Office Location: {officeLocation.name}</h3>
+            <p>Lat: {officeLocation.lat.toFixed(6)}</p>
+            <p>Lng: {officeLocation.lng.toFixed(6)}</p>
+            <p>Onsite Radius: {ONSITE_RADIUS_M} m</p>
+          </div>
+        )}
+
+        {/* Employee Location */}
+        <div className="bg-gray-50 p-4 rounded-md flex flex-col gap-2">
           <button
             onClick={fetchLocation}
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
           >
-            Get Current Location
+            Get My Current Location
           </button>
 
           {position && (
-            <div className="text-gray-700">
-              <p>Lat: {position.lat.toFixed(6)}</p>
-              <p>Lng: {position.lng.toFixed(6)}</p>
-              {distance && (
+            <>
+              <p>Your Latitude: {position.lat.toFixed(6)}</p>
+              <p>Your Longitude: {position.lng.toFixed(6)}</p>
+              {distance != null && (
                 <p>
-                  Distance: <strong>{distance} m</strong> (
-                  {distance <= ONSITE_RADIUS_M ? "Inside Office" : "Outside Office"})
+                  Distance from office: <strong>{distance} m</strong> -{" "}
+                  <span
+                    className={
+                      distance <= ONSITE_RADIUS_M ? "text-green-600 font-semibold" : "text-red-600 font-semibold"
+                    }
+                  >
+                    {distance <= ONSITE_RADIUS_M ? "Inside Office" : "Outside Office"}
+                  </span>
+                  <br />
+                  <small className="text-gray-500">(This is for display only - backend will calculate actual distance)</small>
                 </p>
               )}
-            </div>
+            </>
           )}
         </div>
 
+        {/* Check-In / Check-Out Button */}
         {!checkedIn ? (
           <button
             onClick={handleCheckIn}
             disabled={submitting || !position || !employeeId}
-            className="w-full py-3 bg-blue-600 text-white rounded-lg text-lg font-semibold hover:bg-blue-700 transition"
+            className={`w-full py-3 text-white rounded-lg text-lg font-semibold transition ${
+              submitting || !position || !employeeId
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
             {submitting ? "Checking In..." : "Check In"}
           </button>
@@ -1732,10 +1762,23 @@ export default function AttendanceCapture() {
           <button
             onClick={handleCheckOut}
             disabled={submitting || !position || !employeeId}
-            className="w-full py-3 bg-red-600 text-white rounded-lg text-lg font-semibold hover:bg-red-700 transition"
+            className={`w-full py-3 text-white rounded-lg text-lg font-semibold transition ${
+              submitting || !position || !employeeId
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-red-600 hover:bg-red-700'
+            }`}
           >
             {submitting ? "Checking Out..." : "Check Out"}
           </button>
+        )}
+
+        {/* Status Message */}
+        {checkedIn && (
+          <div className="bg-yellow-50 p-3 rounded-md text-center">
+            <p className="text-yellow-700 font-medium">
+              ✅ You are currently checked in
+            </p>
+          </div>
         )}
       </div>
     </div>

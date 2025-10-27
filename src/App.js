@@ -115,6 +115,8 @@ import LeavesReport from "./Pages/LeavesReport.js";
 import MyShift from "./Pages/MyShift.js";
 import ShiftList from "./Pages/ShiftList.js";
 import ShiftManagement from "./Pages/ShiftManagement.js";
+import AddLocationPage from "./Pages/Location.js";
+import LocationListPage from "./Pages/LocationListPage.js";
 function App() {
   return (
     <Routes>
@@ -246,6 +248,8 @@ function App() {
               <Route path="/shiftlist" element={<ShiftList />}/>
               <Route path="/assignlocation" element={<AssignLocation />}/>
               <Route path="/admin-employee-locations" element={<AdminEmployeeLocations />}/>
+              <Route path="/addlocation" element={<AddLocationPage />}/>
+               <Route path="/locationlist" element={<LocationListPage />}/>
 
             </Routes>
           </AdminLayout>

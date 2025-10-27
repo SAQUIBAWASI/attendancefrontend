@@ -74,6 +74,14 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       ],
     },
     {
+      icon: <i className="text-white ri-map-pin-2-fill"></i>,
+      name: "Locations",
+      dropdown: [
+        { name: "Add Location", path: "/addlocation" },
+        { name: "Location List", path: "/locationlist" },
+      ],
+    },
+    {
       icon: <i className="text-white ri-settings-3-fill"></i>,
       name: "Settings",
       dropdown: [
@@ -107,13 +115,13 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       <div
         className={`fixed md:static top-0 left-0 h-full flex flex-col bg-blue-800 text-white transition-all duration-300 ease-in-out z-50
         ${isMobile
-          ? isCollapsed
-            ? "-translate-x-full w-64"
-            : "translate-x-0 w-64"
-          : isCollapsed
-          ? "w-16"
-          : "w-64"
-        }`}
+            ? isCollapsed
+              ? "-translate-x-full w-64"
+              : "translate-x-0 w-64"
+            : isCollapsed
+              ? "w-16"
+              : "w-64"
+          }`}
       >
         {/* Header */}
         <div className="sticky top-0 flex justify-center items-center p-4 text-xl font-bold bg-blue-900 shadow-sm">
@@ -126,9 +134,8 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
 
         {/* Navigation */}
         <nav
-          className={`flex-1 overflow-y-auto no-scrollbar space-y-2 px-2 ${
-            isCollapsed && !isMobile ? "items-center" : ""
-          }`}
+          className={`flex-1 overflow-y-auto no-scrollbar space-y-2 px-2 ${isCollapsed && !isMobile ? "items-center" : ""
+            }`}
         >
           {elements.map((item, idx) => (
             <div key={idx}>
@@ -140,25 +147,22 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
                   >
                     <span className="text-lg">{item.icon}</span>
                     <span
-                      className={`ml-4 flex-1 ${
-                        isCollapsed && !isMobile ? "hidden" : "block"
-                      }`}
+                      className={`ml-4 flex-1 ${isCollapsed && !isMobile ? "hidden" : "block"
+                        }`}
                     >
                       {item.name}
                     </span>
                     <FaChevronDown
-                      className={`text-xs transition-transform duration-300 ${
-                        openDropdown === item.name ? "rotate-180" : "rotate-0"
-                      } ${isCollapsed && !isMobile ? "hidden" : "block"}`}
+                      className={`text-xs transition-transform duration-300 ${openDropdown === item.name ? "rotate-180" : "rotate-0"
+                        } ${isCollapsed && !isMobile ? "hidden" : "block"}`}
                     />
                   </div>
 
                   {/* Dropdown menu */}
                   {openDropdown === item.name && (
                     <ul
-                      className={`ml-8 space-y-1 ${
-                        isCollapsed && !isMobile ? "hidden" : "block"
-                      }`}
+                      className={`ml-8 space-y-1 ${isCollapsed && !isMobile ? "hidden" : "block"
+                        }`}
                     >
                       {item.dropdown.map((subItem, subIdx) => (
                         <li key={subIdx}>
@@ -182,9 +186,8 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
                 >
                   <span className="text-lg">{item.icon}</span>
                   <span
-                    className={`ml-4 ${
-                      isCollapsed && !isMobile ? "hidden" : "block"
-                    }`}
+                    className={`ml-4 ${isCollapsed && !isMobile ? "hidden" : "block"
+                      }`}
                   >
                     {item.name}
                   </span>

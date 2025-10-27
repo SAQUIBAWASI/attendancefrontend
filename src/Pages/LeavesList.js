@@ -1,25 +1,82 @@
 // src/pages/LeavesList.jsx
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaEdit, FaSearch, FaFilter, FaDownload, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 const LeavesList = () => {
   const [leaves, setLeaves] = useState([]);
+  const [filteredLeaves, setFilteredLeaves] = useState([]);
+  const [currentPageLeaves, setCurrentPageLeaves] = useState([]);
   const [editingRecord, setEditingRecord] = useState(null);
   const [updatedStatus, setUpdatedStatus] = useState("");
+  const [loading, setLoading] = useState(true);
+  
+  // Search and Filter States
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [leaveTypeFilter, setLeaveTypeFilter] = useState("all");
+
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   const fetchLeaves = async () => {
     try {
+      setLoading(true);
       const res = await axios.get("http://localhost:5000/api/leaves/leaves");
-      setLeaves(res.data.records || res.data); // adapt if API returns { records: [...] }
+      const leavesData = res.data.records || res.data || [];
+      
+      // Sort by latest first
+      const sortedLeaves = leavesData.sort((a, b) => new Date(b.createdAt || b.startDate) - new Date(a.createdAt || a.startDate));
+      setLeaves(sortedLeaves);
+      setFilteredLeaves(sortedLeaves);
     } catch (err) {
       console.error("Failed to fetch leaves:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchLeaves();
   }, []);
+
+  // Apply filters
+  useEffect(() => {
+    let filtered = leaves;
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(leave =>
+        leave.employeeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        leave.employeeId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        leave.leaveType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        leave.reason?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(leave => leave.status === statusFilter);
+    }
+
+    // Leave type filter
+    if (leaveTypeFilter !== "all") {
+      filtered = filtered.filter(leave => leave.leaveType === leaveTypeFilter);
+    }
+
+    setFilteredLeaves(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [searchTerm, statusFilter, leaveTypeFilter, leaves]);
+
+  // Pagination logic
+  useEffect(() => {
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    setCurrentPageLeaves(filteredLeaves.slice(indexOfFirstItem, indexOfLastItem));
+  }, [currentPage, filteredLeaves, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredLeaves.length / itemsPerPage);
 
   const handleEdit = (rec) => {
     setEditingRecord(rec);
@@ -36,121 +93,502 @@ const LeavesList = () => {
         `http://localhost:5000/api/leaves/updateleaves/${editingRecord._id}`,
         { status: updatedStatus }
       );
-      alert(`Leave ${updatedStatus}`);
+      alert(`✅ Leave ${updatedStatus} successfully!`);
       setEditingRecord(null);
       fetchLeaves();
     } catch (err) {
       console.error("Failed to update status:", err);
-      alert("Failed to update leave status");
+      alert("❌ Failed to update leave status");
     }
   };
 
   const getStatusClass = (status) => {
     switch (status.toLowerCase()) {
       case "approved":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 border border-green-300";
       case "rejected":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 border border-red-300";
       case "pending":
       default:
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 border border-yellow-300";
     }
   };
 
-  return (
-    <div className="p-6 max-w-6xl mx-auto bg-white rounded-lg shadow-md mt-6">
-      <h1 className="text-3xl font-bold text-center mb-6">Leave Requests</h1>
+  const getStatusIcon = (status) => {
+    switch (status.toLowerCase()) {
+      case "approved":
+        return "✅";
+      case "rejected":
+        return "❌";
+      case "pending":
+      default:
+        return "⏳";
+    }
+  };
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full border border-gray-300 text-sm">
-          <thead className="bg-gray-100 text-gray-700">
-            <tr>
-              <th className="px-4 py-2 border">Employee</th>
-              <th className="px-4 py-2 border">Leave Type</th>
-              <th className="px-4 py-2 border">Start Date</th>
-              <th className="px-4 py-2 border">End Date</th>
-              <th className="px-4 py-2 border">Days</th>
-              <th className="px-4 py-2 border">Reason</th>
-              <th className="px-4 py-2 border">Status</th>
-              <th className="px-4 py-2 border">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leaves.length > 0 ? (
-              leaves.map((l) => (
-                <tr key={l._id} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-2 font-medium">{l.employeeName}</td>
-                  <td className="px-4 py-2 capitalize">{l.leaveType}</td>
-                  <td className="px-4 py-2">
-                    {new Date(l.startDate).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-2">
-                    {new Date(l.endDate).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-2">{l.days}</td>
-                  <td className="px-4 py-2">{l.reason}</td>
-                  <td className={`px-4 py-2 rounded-full text-center font-semibold ${getStatusClass(l.status)}`}>
-                    {l.status}
-                  </td>
-                  <td className="px-4 py-2 flex gap-2 justify-center">
-                    <button
-                      onClick={() => handleEdit(l)}
-                      className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
-                    >
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="8" className="text-center py-6 text-gray-500">
-                  No leave requests found.
-                </td>
-              </tr>
+  const getLeaveTypeClass = (type) => {
+    switch (type?.toLowerCase()) {
+      case "sick leave":
+        return "bg-blue-100 text-blue-800 border border-blue-300";
+      case "casual leave":
+        return "bg-purple-100 text-purple-800 border border-purple-300";
+      case "emergency leave":
+        return "bg-red-100 text-red-800 border border-red-300";
+      case "annual leave":
+        return "bg-green-100 text-green-800 border border-green-300";
+      default:
+        return "bg-gray-100 text-gray-800 border border-gray-300";
+    }
+  };
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setLeaveTypeFilter("all");
+  };
+
+  const downloadCSV = () => {
+    if (filteredLeaves.length === 0) {
+      alert("No data available to download!");
+      return;
+    }
+
+    const headers = [
+      "Employee Name",
+      "Employee ID",
+      "Leave Type",
+      "Start Date",
+      "End Date",
+      "Days",
+      "Reason",
+      "Status",
+      "Applied Date"
+    ];
+
+    const csvRows = [
+      headers.join(","),
+      ...filteredLeaves.map(leave =>
+        [
+          `"${leave.employeeName || 'N/A'}"`,
+          `"${leave.employeeId || 'N/A'}"`,
+          `"${leave.leaveType || 'N/A'}"`,
+          `"${new Date(leave.startDate).toLocaleDateString()}"`,
+          `"${new Date(leave.endDate).toLocaleDateString()}"`,
+          leave.days || '0',
+          `"${leave.reason || 'N/A'}"`,
+          leave.status,
+          `"${new Date(leave.createdAt || leave.startDate).toLocaleDateString()}"`
+        ].join(",")
+      ),
+    ];
+
+    const csvData = csvRows.join("\n");
+    const blob = new Blob([csvData], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `leave_requests_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Get unique leave types for filter
+  const leaveTypes = [...new Set(leaves.map(leave => leave.leaveType).filter(Boolean))];
+
+  // Pagination controls
+  const goToPage = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Generate page numbers
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxPagesToShow = 5;
+    
+    if (totalPages <= maxPagesToShow) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      const startPage = Math.max(1, currentPage - 2);
+      const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(i);
+      }
+    }
+    
+    return pageNumbers;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-700 text-lg font-semibold">Loading leave requests...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-100 py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mb-3">
+            📋 Leave Requests Management
+          </h1>
+          <p className="text-gray-600 text-lg">
+            Review and manage employee leave applications
+          </p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-purple-200 text-center">
+            <div className="text-3xl font-bold text-purple-600">{leaves.length}</div>
+            <div className="text-purple-800 font-semibold">Total Requests</div>
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-yellow-200 text-center">
+            <div className="text-3xl font-bold text-yellow-600">
+              {leaves.filter(l => l.status === 'pending').length}
+            </div>
+            <div className="text-yellow-800 font-semibold">Pending</div>
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-green-200 text-center">
+            <div className="text-3xl font-bold text-green-600">
+              {leaves.filter(l => l.status === 'approved').length}
+            </div>
+            <div className="text-green-800 font-semibold">Approved</div>
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-red-200 text-center">
+            <div className="text-3xl font-bold text-red-600">
+              {leaves.filter(l => l.status === 'rejected').length}
+            </div>
+            <div className="text-red-800 font-semibold">Rejected</div>
+          </div>
+        </div>
+
+        {/* Filters Section */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-200">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-4">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">🔍 Filter Leave Requests</h3>
+              <p className="text-gray-600">Search and filter by various criteria</p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={downloadCSV}
+                className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition font-semibold flex items-center gap-2 shadow-lg"
+              >
+                <FaDownload className="text-sm" />
+                Download CSV
+              </button>
+              
+              <button
+                onClick={clearFilters}
+                className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition font-semibold flex items-center gap-2"
+              >
+                <FaFilter className="text-sm" />
+                Clear Filters
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Search */}
+            <div>
+              <label className="block mb-2 text-sm font-semibold text-blue-700">
+                <FaSearch className="inline mr-2" />
+                Search
+              </label>
+              <input
+                type="text"
+                placeholder="Search by name, ID, type, or reason..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-3 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 transition"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div>
+              <label className="block mb-2 text-sm font-semibold text-purple-700">
+                📊 Status Filter
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full p-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-500 transition"
+              >
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+
+            {/* Leave Type Filter */}
+            <div>
+              <label className="block mb-2 text-sm font-semibold text-green-700">
+                🏷️ Leave Type
+              </label>
+              <select
+                value={leaveTypeFilter}
+                onChange={(e) => setLeaveTypeFilter(e.target.value)}
+                className="w-full p-3 border-2 border-green-200 rounded-xl focus:outline-none focus:border-green-500 transition"
+              >
+                <option value="all">All Types</option>
+                {leaveTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Results Count */}
+          <div className="mt-4 flex justify-between items-center text-sm">
+            <span className="text-blue-700 font-semibold">
+              Showing <strong>{filteredLeaves.length}</strong> of <strong>{leaves.length}</strong> requests
+            </span>
+            {(searchTerm || statusFilter !== "all" || leaveTypeFilter !== "all") && (
+              <span className="text-orange-600 font-semibold">
+                🔍 Filters applied
+              </span>
             )}
-          </tbody>
-        </table>
+          </div>
+        </div>
+
+        {/* Table Section */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+          {filteredLeaves.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">📭</div>
+              <p className="text-gray-600 text-lg font-semibold mb-4">
+                {leaves.length === 0 ? "No leave requests found." : "No requests match your filters."}
+              </p>
+              {leaves.length > 0 && (
+                <button
+                  onClick={clearFilters}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+                >
+                  🔄 Clear Filters
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gradient-to-r from-purple-500 to-blue-600 text-white">
+                    <tr>
+                      <th className="px-6 py-4 text-left font-semibold">Employee</th>
+                      <th className="px-6 py-4 text-left font-semibold">Leave Type</th>
+                      <th className="px-6 py-4 text-left font-semibold">Date Range</th>
+                      <th className="px-6 py-4 text-left font-semibold">Days</th>
+                      <th className="px-6 py-4 text-left font-semibold">Reason</th>
+                      <th className="px-6 py-4 text-left font-semibold">Status</th>
+                      <th className="px-6 py-4 text-left font-semibold">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentPageLeaves.map((leave, idx) => (
+                      <tr
+                        key={leave._id}
+                        className={`border-t transition-all duration-200 ${
+                          idx % 2 === 0 ? "bg-gray-50" : "bg-white"
+                        } hover:bg-purple-50 hover:shadow-sm`}
+                      >
+                        <td className="px-6 py-4">
+                          <div>
+                            <div className="font-semibold text-gray-900">{leave.employeeName}</div>
+                            {leave.employeeId && (
+                              <div className="text-xs text-gray-500">ID: {leave.employeeId}</div>
+                            )}
+                            <div className="text-xs text-gray-400">
+                              {new Date(leave.createdAt || leave.startDate).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${getLeaveTypeClass(leave.leaveType)}`}>
+                            {leave.leaveType}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="space-y-1">
+                            <div className="font-medium">
+                              {new Date(leave.startDate).toLocaleDateString()}
+                            </div>
+                            <div className="text-xs text-gray-500">to</div>
+                            <div className="font-medium">
+                              {new Date(leave.endDate).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold">
+                            {leave.days} day{leave.days !== 1 ? 's' : ''}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="max-w-[200px]">
+                            <p className="text-gray-700 line-clamp-2">{leave.reason}</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-3 py-2 rounded-full text-xs font-semibold flex items-center gap-2 w-fit ${getStatusClass(leave.status)}`}>
+                            <span className="text-sm">{getStatusIcon(leave.status)}</span>
+                            <span className="capitalize">{leave.status}</span>
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => handleEdit(leave)}
+                            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-xl hover:from-blue-600 hover:to-purple-700 transition font-semibold flex items-center gap-2 shadow-lg"
+                          >
+                            <FaEdit className="text-sm" />
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row justify-between items-center p-6 border-t bg-gray-50 gap-4">
+                  <div className="text-sm text-gray-600">
+                    Showing <strong>{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredLeaves.length)}</strong> of{" "}
+                    <strong>{filteredLeaves.length}</strong> requests
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {/* Previous Button */}
+                    <button
+                      onClick={prevPage}
+                      disabled={currentPage === 1}
+                      className={`p-2 rounded-lg transition ${
+                        currentPage === 1
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                      }`}
+                    >
+                      <FaChevronLeft className="text-sm" />
+                    </button>
+
+                    {/* Page Numbers */}
+                    <div className="flex gap-1">
+                      {getPageNumbers().map(pageNumber => (
+                        <button
+                          key={pageNumber}
+                          onClick={() => goToPage(pageNumber)}
+                          className={`px-3 py-2 rounded-lg transition font-semibold ${
+                            currentPage === pageNumber
+                              ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg"
+                              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                          }`}
+                        >
+                          {pageNumber}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Next Button */}
+                    <button
+                      onClick={nextPage}
+                      disabled={currentPage === totalPages}
+                      className={`p-2 rounded-lg transition ${
+                        currentPage === totalPages
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                      }`}
+                    >
+                      <FaChevronRight className="text-sm" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* Edit Modal */}
       {editingRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="bg-white p-8 rounded-2xl w-full max-w-md relative shadow-2xl border border-purple-200">
             <button
               onClick={() => setEditingRecord(null)}
-              className="absolute top-3 right-3 text-gray-600 hover:text-black"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition text-xl"
             >
               <FaTimes />
             </button>
-            <h2 className="text-xl font-bold mb-4">Edit Leave Status</h2>
-            <p className="mb-2">
-              <strong>Employee:</strong> {editingRecord.employeeName}
-            </p>
-            <p className="mb-4">
-              <strong>Leave Type:</strong> {editingRecord.leaveType}
-            </p>
-            <select
-              value={updatedStatus}
-              onChange={(e) => setUpdatedStatus(e.target.value)}
-              className="w-full px-3 py-2 border rounded mb-4"
-            >
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-            </select>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={handleUpdateStatus}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-              >
-                Save
-              </button>
+            
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Update Leave Status</h2>
+              <p className="text-gray-600">Change the status of this leave request</p>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div className="bg-gray-50 p-4 rounded-xl">
+                <p className="font-semibold text-gray-700">{editingRecord.employeeName}</p>
+                <p className="text-sm text-gray-500 capitalize">{editingRecord.leaveType}</p>
+                <p className="text-xs text-gray-400">
+                  {new Date(editingRecord.startDate).toLocaleDateString()} - {new Date(editingRecord.endDate).toLocaleDateString()}
+                </p>
+              </div>
+
+              <div>
+                <label className="block mb-2 text-sm font-semibold text-gray-700">
+                  New Status
+                </label>
+                <select
+                  value={updatedStatus}
+                  onChange={(e) => setUpdatedStatus(e.target.value)}
+                  className="w-full p-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-500 transition"
+                >
+                  <option value="pending">⏳ Pending</option>
+                  <option value="approved">✅ Approved</option>
+                  <option value="rejected">❌ Rejected</option>
+                </select>
+              </div>
+
+              <div className={`p-3 rounded-xl text-center ${getStatusClass(updatedStatus)}`}>
+                <span className="font-semibold capitalize">Current: {updatedStatus}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
               <button
                 onClick={() => setEditingRecord(null)}
-                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition"
+                className="flex-1 px-4 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition font-semibold"
               >
                 Cancel
+              </button>
+              <button
+                onClick={handleUpdateStatus}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition font-semibold shadow-lg"
+              >
+                Update Status
               </button>
             </div>
           </div>
