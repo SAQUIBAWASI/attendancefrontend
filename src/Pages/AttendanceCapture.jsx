@@ -1272,14 +1272,231 @@
 //   );
 // }
 
+// import { useEffect, useState } from "react";
+// import { useLocation, useNavigate } from "react-router-dom";
+
+// const BASE_URL = "https://attendancebackend-5cgn.onrender.com/api/attendance";
+// const OFFICE_COORDS = { lat: 17.448294, lng: 78.391487 };
+// const ONSITE_RADIUS_M = 600;
+
+// // Haversine formula to calculate distance
+// function haversineDistance(lat1, lon1, lat2, lon2) {
+//   const R = 6371000; // meters
+//   const toRad = (deg) => (deg * Math.PI) / 180;
+//   const dLat = toRad(lat2 - lat1);
+//   const dLon = toRad(lon2 - lon1);
+//   const a =
+//     Math.sin(dLat / 2) ** 2 +
+//     Math.cos(toRad(lat1)) *
+//       Math.cos(toRad(lat2)) *
+//       Math.sin(dLon / 2) ** 2;
+//   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+//   return Math.round(R * c);
+// }
+
+// export default function AttendanceCapture() {
+//   const navigate = useNavigate();
+//   const location = useLocation();
+
+//   const [position, setPosition] = useState(null);
+//   const [distance, setDistance] = useState(null);
+//   const [checkedIn, setCheckedIn] = useState(false);
+//   const [submitting, setSubmitting] = useState(false);
+//   const [employeeId, setEmployeeId] = useState(null);
+//   const [employeeEmail, setEmployeeEmail] = useState(null);
+
+//   // Load employee data
+//   useEffect(() => {
+//     const stateId = location.state?.employeeId;
+//     const stateEmail = location.state?.email;
+
+//     if (stateId && stateEmail) {
+//       setEmployeeId(stateId);
+//       setEmployeeEmail(stateEmail);
+//       localStorage.setItem(
+//         "employeeData",
+//         JSON.stringify({ employeeId: stateId, email: stateEmail })
+//       );
+//     } else {
+//       const stored = JSON.parse(localStorage.getItem("employeeData"));
+//       if (stored) {
+//         setEmployeeId(stored.employeeId);
+//         setEmployeeEmail(stored.email);
+//       }
+//     }
+//   }, [location.state]);
+
+//   // Fetch today's attendance to determine initial checkedIn state
+//   useEffect(() => {
+//     const fetchTodayAttendance = async () => {
+//       if (!employeeId) return;
+
+//       try {
+//         const res = await fetch(`${BASE_URL}/myattendance/${employeeId}`);
+//         const data = await res.json();
+//         if (!res.ok) throw new Error(data.message || "Failed to fetch");
+
+//         const today = new Date();
+//         today.setHours(0, 0, 0, 0);
+
+//         // Check if there's a record with status 'checked-in' today
+//         const todayCheckIn = data.records.find(
+//           (rec) =>
+//             new Date(rec.checkInTime) >= today &&
+//             rec.status === "checked-in"
+//         );
+
+//         setCheckedIn(!!todayCheckIn);
+//       } catch (err) {
+//         console.error("Fetch today attendance error:", err);
+//       }
+//     };
+
+//     fetchTodayAttendance();
+//   }, [employeeId]);
+
+//   const fetchLocation = () => {
+//     if (!navigator.geolocation)
+//       return alert("Geolocation is not supported by your browser");
+
+//     navigator.geolocation.getCurrentPosition(
+//       (pos) => {
+//         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+//         setPosition(coords);
+//         setDistance(
+//           haversineDistance(
+//             coords.lat,
+//             coords.lng,
+//             OFFICE_COORDS.lat,
+//             OFFICE_COORDS.lng
+//           )
+//         );
+//       },
+//       (err) => alert(err.message),
+//       { enableHighAccuracy: true, timeout: 10000 }
+//     );
+//   };
+
+//   const handleCheckIn = async () => {
+//     if (!position) return alert("Get your location first");
+//     if (!employeeId || !employeeEmail)
+//       return alert("Employee data missing");
+
+//     setSubmitting(true);
+//     try {
+//       const res = await fetch(`${BASE_URL}/checkin`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//           employeeId,
+//           employeeEmail,
+//           latitude: position.lat,
+//           longitude: position.lng,
+//         }),
+//       });
+
+//       const data = await res.json();
+//       if (!res.ok) throw new Error(data.message);
+
+//       alert(data.message);
+//       setCheckedIn(true);
+//     } catch (err) {
+//       alert(err.message);
+//     } finally {
+//       setSubmitting(false);
+//     }
+//   };
+
+//   const handleCheckOut = async () => {
+//     if (!position) return alert("Get your location first");
+//     if (!employeeId) return alert("Employee data missing");
+
+//     setSubmitting(true);
+//     try {
+//       const res = await fetch(`${BASE_URL}/checkout`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//           employeeId,
+//           latitude: position.lat,
+//           longitude: position.lng,
+//         }),
+//       });
+
+//       const data = await res.json();
+//       if (!res.ok) throw new Error(data.message);
+
+//       alert(data.message);
+//       setCheckedIn(false);
+//     } catch (err) {
+//       alert(err.message);
+//     } finally {
+//       setSubmitting(false);
+//     }
+//   };
+
+//   return (
+//     <div className="min-h-screen flex flex-col items-center bg-gray-100 p-4">
+//       <button
+//         onClick={() => navigate("/employeedashboard")}
+//         className="self-start mb-4 text-gray-700 hover:text-gray-900 font-medium"
+//       >
+//         ← Back
+//       </button>
+
+//       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 flex flex-col gap-4">
+//         <h2 className="text-2xl font-semibold text-center">Attendance Capture</h2>
+
+//         <div className="bg-gray-50 p-4 rounded-md flex flex-col gap-3">
+//           <button
+//             onClick={fetchLocation}
+//             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+//           >
+//             Get Current Location
+//           </button>
+
+//           {position && (
+//             <div className="text-gray-700">
+//               <p>Lat: {position.lat.toFixed(6)}</p>
+//               <p>Lng: {position.lng.toFixed(6)}</p>
+//               <p>
+//                 Distance: <strong>{distance} m</strong> (
+//                 {distance <= ONSITE_RADIUS_M ? "Onsite" : "Outside"})
+//               </p>
+//             </div>
+//           )}
+//         </div>
+
+//         {!checkedIn ? (
+//           <button
+//             onClick={handleCheckIn}
+//             disabled={submitting || !position || !employeeId}
+//             className="w-full py-3 bg-blue-600 text-white rounded-lg text-lg font-semibold hover:bg-blue-700 transition"
+//           >
+//             {submitting ? "Checking In..." : "Check In"}
+//           </button>
+//         ) : (
+//           <button
+//             onClick={handleCheckOut}
+//             disabled={submitting || !position || !employeeId}
+//             className="w-full py-3 bg-red-600 text-white rounded-lg text-lg font-semibold hover:bg-red-700 transition"
+//           >
+//             {submitting ? "Checking Out..." : "Check Out"}
+//           </button>
+//         )}
+//       </div>
+//     </div>
+//   );
+// }
+
+
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const BASE_URL = "https://attendancebackend-5cgn.onrender.com/api/attendance";
-const OFFICE_COORDS = { lat: 17.448294, lng: 78.391487 };
-const ONSITE_RADIUS_M = 600;
+const BASE_URL = "https://attendancebackend-5cgn.onrender.com"; // backend root URL
+const ONSITE_RADIUS_M = 50; // 50 meters radius
 
-// Haversine formula to calculate distance
+// Haversine formula to calculate distance in meters
 function haversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371000; // meters
   const toRad = (deg) => (deg * Math.PI) / 180;
@@ -1298,6 +1515,7 @@ export default function AttendanceCapture() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [officeLocation, setOfficeLocation] = useState(null); // dynamic location
   const [position, setPosition] = useState(null);
   const [distance, setDistance] = useState(null);
   const [checkedIn, setCheckedIn] = useState(false);
@@ -1305,7 +1523,7 @@ export default function AttendanceCapture() {
   const [employeeId, setEmployeeId] = useState(null);
   const [employeeEmail, setEmployeeEmail] = useState(null);
 
-  // Load employee data
+  // ✅ Load employee data
   useEffect(() => {
     const stateId = location.state?.employeeId;
     const stateEmail = location.state?.email;
@@ -1326,24 +1544,43 @@ export default function AttendanceCapture() {
     }
   }, [location.state]);
 
-  // Fetch today's attendance to determine initial checkedIn state
+  // ✅ Fetch dynamic office location from backend
+  useEffect(() => {
+    const fetchOfficeLocation = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/api/location/active`);
+        const data = await res.json();
+        if (data.success && data.location) {
+          setOfficeLocation({
+            lat: data.location.latitude,
+            lng: data.location.longitude,
+          });
+        } else {
+          alert("No office location set by admin yet.");
+        }
+      } catch (err) {
+        console.error("Error fetching office location:", err);
+      }
+    };
+    fetchOfficeLocation();
+  }, []);
+
+  // ✅ Fetch today's attendance (to know check-in status)
   useEffect(() => {
     const fetchTodayAttendance = async () => {
       if (!employeeId) return;
 
       try {
-        const res = await fetch(`${BASE_URL}/myattendance/${employeeId}`);
+        const res = await fetch(`${BASE_URL}/api/attendance/myattendance/${employeeId}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to fetch");
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Check if there's a record with status 'checked-in' today
         const todayCheckIn = data.records.find(
           (rec) =>
-            new Date(rec.checkInTime) >= today &&
-            rec.status === "checked-in"
+            new Date(rec.checkInTime) >= today && rec.status === "checked-in"
         );
 
         setCheckedIn(!!todayCheckIn);
@@ -1355,6 +1592,7 @@ export default function AttendanceCapture() {
     fetchTodayAttendance();
   }, [employeeId]);
 
+  // ✅ Get current user location & calculate distance
   const fetchLocation = () => {
     if (!navigator.geolocation)
       return alert("Geolocation is not supported by your browser");
@@ -1363,28 +1601,34 @@ export default function AttendanceCapture() {
       (pos) => {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setPosition(coords);
-        setDistance(
-          haversineDistance(
+
+        if (officeLocation) {
+          const dist = haversineDistance(
             coords.lat,
             coords.lng,
-            OFFICE_COORDS.lat,
-            OFFICE_COORDS.lng
-          )
-        );
+            officeLocation.lat,
+            officeLocation.lng
+          );
+          setDistance(dist);
+        } else {
+          alert("Office location not loaded yet.");
+        }
       },
       (err) => alert(err.message),
       { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
+  // ✅ Handle Check-In
   const handleCheckIn = async () => {
     if (!position) return alert("Get your location first");
-    if (!employeeId || !employeeEmail)
-      return alert("Employee data missing");
+    if (!employeeId || !employeeEmail) return alert("Employee data missing");
+
+    const locationStatus = distance <= ONSITE_RADIUS_M ? "inside" : "outside";
 
     setSubmitting(true);
     try {
-      const res = await fetch(`${BASE_URL}/checkin`, {
+      const res = await fetch(`${BASE_URL}/api/attendance/checkin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1392,13 +1636,15 @@ export default function AttendanceCapture() {
           employeeEmail,
           latitude: position.lat,
           longitude: position.lng,
+          distance,
+          locationStatus, // 👈 store "inside" or "outside"
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      alert(data.message);
+      alert(`Checked in (${locationStatus} office, ${distance}m away)`);
       setCheckedIn(true);
     } catch (err) {
       alert(err.message);
@@ -1407,26 +1653,31 @@ export default function AttendanceCapture() {
     }
   };
 
+  // ✅ Handle Check-Out
   const handleCheckOut = async () => {
     if (!position) return alert("Get your location first");
     if (!employeeId) return alert("Employee data missing");
 
+    const locationStatus = distance <= ONSITE_RADIUS_M ? "inside" : "outside";
+
     setSubmitting(true);
     try {
-      const res = await fetch(`${BASE_URL}/checkout`, {
+      const res = await fetch(`${BASE_URL}/api/attendance/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           employeeId,
           latitude: position.lat,
           longitude: position.lng,
+          distance,
+          locationStatus, // 👈 store this too
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      alert(data.message);
+      alert(`Checked out (${locationStatus} office, ${distance}m away)`);
       setCheckedIn(false);
     } catch (err) {
       alert(err.message);
@@ -1459,10 +1710,12 @@ export default function AttendanceCapture() {
             <div className="text-gray-700">
               <p>Lat: {position.lat.toFixed(6)}</p>
               <p>Lng: {position.lng.toFixed(6)}</p>
-              <p>
-                Distance: <strong>{distance} m</strong> (
-                {distance <= ONSITE_RADIUS_M ? "Onsite" : "Outside"})
-              </p>
+              {distance && (
+                <p>
+                  Distance: <strong>{distance} m</strong> (
+                  {distance <= ONSITE_RADIUS_M ? "Inside Office" : "Outside Office"})
+                </p>
+              )}
             </div>
           )}
         </div>

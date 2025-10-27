@@ -109,6 +109,8 @@ import VendorList from "./Pages/VendorList.js";
 import VendorDetail from "./Pages/VendorProfile.js";
 import WeeklyHoliday from "./Pages/WeeklyHoliday.js";
 // import LandingPage from "./Pages/LandingPage.js";
+import AdminEmployeeLocations from "./Pages/AdminEmployeeLocations.js";
+import AssignLocation from "./Pages/AssignLocation.js";
 import LeavesReport from "./Pages/LeavesReport.js";
 import MyShift from "./Pages/MyShift.js";
 import ShiftList from "./Pages/ShiftList.js";
@@ -242,6 +244,8 @@ function App() {
               <Route path="/leaves-report" element={<LeavesReport/>}/>
               <Route path="/shift" element={<ShiftManagement />}/>
               <Route path="/shiftlist" element={<ShiftList />}/>
+              <Route path="/assignlocation" element={<AssignLocation />}/>
+              <Route path="/admin-employee-locations" element={<AdminEmployeeLocations />}/>
 
             </Routes>
           </AdminLayout>
