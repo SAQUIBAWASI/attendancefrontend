@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FiEdit, FiTrash2, FiSearch } from "react-icons/fi";
+import { FiEdit, FiSearch, FiTrash2 } from "react-icons/fi";
 
 const LocationListPage = () => {
   const [locations, setLocations] = useState([]);
@@ -19,7 +19,7 @@ const LocationListPage = () => {
   // Fetch all locations
   const fetchLocations = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/location/alllocation");
+      const response = await fetch("https://attendancebackend-5cgn.onrender.com/api/location/alllocation");
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.message || "Failed to fetch locations");
@@ -52,7 +52,7 @@ const LocationListPage = () => {
     if (!window.confirm("Are you sure you want to delete this location?")) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/location/deletelocation/${id}`, {
+      const response = await fetch(`https://attendancebackend-5cgn.onrender.com/api/location/deletelocation/${id}`, {
         method: "DELETE",
       });
       const data = await response.json();
@@ -80,7 +80,7 @@ const LocationListPage = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://localhost:5000/api/location/updatelocation/${editLocation._id}`, {
+      const response = await fetch(`https://attendancebackend-5cgn.onrender.com/api/location/updatelocation/${editLocation._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

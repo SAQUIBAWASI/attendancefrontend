@@ -1493,7 +1493,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const BASE_URL = "http://localhost:5000"; // backend root URL
+const BASE_URL = "https://attendancebackend-5cgn.onrender.com"; // backend root URL
 const ONSITE_RADIUS_M = 50; // 50 meters radius
 
 // Haversine formula to calculate distance in meters (FOR UI DISPLAY ONLY)
