@@ -99,8 +99,8 @@ export default function MyAttendance() {
     "Total Hours": rec.totalHours ? rec.totalHours.toFixed(2) : "0.00",
     "Distance (m)": rec.distance ? rec.distance.toFixed(2) : "0.00",
     Onsite: rec.onsite ? "Yes" : "No",
+    Reason: rec.reason || "Not specified",
     Status: rec.status,
-    "Office Name": rec.officeName || "N/A",
   }));
 
   // Clear all filters
@@ -279,9 +279,9 @@ export default function MyAttendance() {
                         <th className="px-4 py-3 text-left font-semibold">Check-Out Time</th>
                         <th className="px-4 py-3 text-left font-semibold">Total Hours</th>
                         <th className="px-4 py-3 text-left font-semibold">Distance (m)</th>
-                        <th className="px-4 py-3 text-left font-semibold">Location</th>
+                        <th className="px-4 py-3 text-left font-semibold">Onsite</th>
+                        <th className="px-4 py-3 text-left font-semibold">Reason</th>
                         <th className="px-4 py-3 text-left font-semibold">Status</th>
-                        <th className="px-4 py-3 text-left font-semibold">Office</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -328,7 +328,12 @@ export default function MyAttendance() {
                                   : "bg-red-200 text-red-800 border border-red-300"
                               }`}
                             >
-                              {rec.onsite ? "🏢 Onsite" : "🏠 Remote"}
+                              {rec.onsite ? "🏢 Yes" : "🏠 No"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-gray-700 bg-gray-100 px-2 py-1 rounded">
+                              {rec.reason || "Not specified"}
                             </span>
                           </td>
                           <td className="px-4 py-3">
@@ -339,11 +344,8 @@ export default function MyAttendance() {
                                   : "bg-purple-200 text-purple-800 border border-purple-300"
                               }`}
                             >
-                              {rec.status === "checked-in" ? "🟢 Active" : "✅ Completed"}
+                              {rec.status}
                             </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
-                            {rec.officeName || "Main Office"}
                           </td>
                         </tr>
                       ))}
@@ -432,7 +434,7 @@ export default function MyAttendance() {
                     <div className="text-2xl font-bold text-orange-600">
                       {records.filter(r => r.status === 'checked-in').length}
                     </div>
-                    <div className="text-sm text-orange-800">Active Sessions</div>
+                    <div className="text-sm text-orange-800">Checked In</div>
                   </div>
                   <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
                     <div className="text-2xl font-bold text-purple-600">

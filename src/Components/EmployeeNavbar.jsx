@@ -1,16 +1,22 @@
 import { RiMenu2Line, RiMenu3Line } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
 
-const Navbar = ({ isCollapsed, setIsCollapsed }) => {
+const Navbar = ({ isCollapsed = false, setIsCollapsed }) => {
   const navigate = useNavigate();
+
+  // 🟩 Safe toggle handler
+  const handleToggle = () => {
+    if (typeof setIsCollapsed === "function") {
+      setIsCollapsed((prev) => !prev);
+    } else {
+      console.warn("⚠️ setIsCollapsed not provided to Navbar, skipping toggle.");
+    }
+  };
 
   return (
     <nav className="bg-blue-800 text-white sticky top-0 w-full h-16 px-4 flex items-center shadow-md z-50">
       {/* Sidebar Toggle Button */}
-      <button
-        onClick={() => setIsCollapsed && setIsCollapsed(!isCollapsed)}
-        className="text-2xl p-2 focus:outline-none"
-      >
+      <button onClick={handleToggle} className="text-2xl p-2 focus:outline-none">
         {isCollapsed ? (
           <RiMenu2Line className="text-[#AAAAAA]" />
         ) : (
@@ -31,7 +37,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }) => {
         <img
           src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
           alt="Logo"
-          className="w-[38px] h-auto"
+          className="w-[38px] h-auto rounded-full"
         />
         <span className="hidden sm:block text-white font-bold text-lg">
           Attendance

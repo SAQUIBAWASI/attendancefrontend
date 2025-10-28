@@ -52,6 +52,7 @@ const Sidebar = ({ isCollapsed, isMobile, onClose }) => {
         { name: "Attendance Report", path: "/myattendance" },
         { name: "Check In", path: "/attendance-capture" },
         { name: "My Shift", path: "/my-shift" },
+        { name: "My AssignedLocation", path: "/mylocation" },
       ],
     },
     {

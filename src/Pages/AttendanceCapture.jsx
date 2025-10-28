@@ -1492,13 +1492,14 @@
 
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
 
-const BASE_URL = "https://attendancebackend-5cgn.onrender.com"; // backend root URL
-const ONSITE_RADIUS_M = 50; // 50 meters radius
+const BASE_URL = "http://localhost:5000";
+const ONSITE_RADIUS_M = 50;
 
-// Haversine formula to calculate distance in meters (FOR UI DISPLAY ONLY)
+// Haversine formula
 function haversineDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371000; // meters
+  const R = 6371000;
   const toRad = (deg) => (deg * Math.PI) / 180;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
@@ -1513,20 +1514,22 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 
 export default function AttendanceCapture() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const routerLocation = useLocation();
 
-  const [officeLocation, setOfficeLocation] = useState(null);
+  const [employeeId, setEmployeeId] = useState(null);
+  const [employeeEmail, setEmployeeEmail] = useState(null);
+  const [assignedLocation, setAssignedLocation] = useState(null);
   const [position, setPosition] = useState(null);
   const [distance, setDistance] = useState(null);
   const [checkedIn, setCheckedIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [employeeId, setEmployeeId] = useState(null);
-  const [employeeEmail, setEmployeeEmail] = useState(null);
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState("");
 
-  // Load employee data
+  // Get employeeId & email
   useEffect(() => {
-    const stateId = location.state?.employeeId;
-    const stateEmail = location.state?.email;
+    const stateId = routerLocation.state?.employeeId;
+    const stateEmail = routerLocation.state?.email;
 
     if (stateId && stateEmail) {
       setEmployeeId(stateId);
@@ -1536,83 +1539,74 @@ export default function AttendanceCapture() {
         JSON.stringify({ employeeId: stateId, email: stateEmail })
       );
     } else {
-      const stored = JSON.parse(localStorage.getItem("employeeData"));
+      const stored = localStorage.getItem("employeeData");
       if (stored) {
-        setEmployeeId(stored.employeeId);
-        setEmployeeEmail(stored.email);
+        const data = JSON.parse(stored);
+        setEmployeeId(data.employeeId);
+        setEmployeeEmail(data.email);
       }
     }
-  }, [location.state]);
+  }, [routerLocation.state]);
 
-  // Fetch office location
+  // Fetch Employee’s Assigned Location
   useEffect(() => {
-    const fetchOfficeLocation = async () => {
+    const fetchAssignedLocation = async () => {
+      if (!employeeId) return;
       try {
-        const res = await fetch(`${BASE_URL}/api/location/active`);
-        const data = await res.json();
-        if (data.success && data.location) {
-          setOfficeLocation({
-            lat: data.location.latitude,
-            lng: data.location.longitude,
-            name: data.location.name,
-          });
+        const res = await axios.get(`${BASE_URL}/api/employees/mylocation/${employeeId}`);
+        if (res.data.success && res.data.data) {
+          setAssignedLocation(res.data.data.location);
         } else {
-          alert("No office location set by admin yet.");
+          setError("❌ No assigned location found for this employee.");
         }
       } catch (err) {
-        console.error("Error fetching office location:", err);
+        console.error("Error fetching employee location:", err);
+        setError("❌ Failed to fetch employee location.");
       }
     };
-    fetchOfficeLocation();
-  }, []);
+    fetchAssignedLocation();
+  }, [employeeId]);
 
-  // Fetch today's attendance
+  // Fetch today’s attendance
   useEffect(() => {
     const fetchTodayAttendance = async () => {
       if (!employeeId) return;
-
       try {
-        const res = await fetch(`${BASE_URL}/api/attendance/myattendance/${employeeId}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Failed to fetch");
-
+        const res = await axios.get(`${BASE_URL}/api/attendance/myattendance/${employeeId}`);
+        const data = res.data;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-
-        const todayCheckIn = data.records.find(
-          (rec) =>
-            new Date(rec.checkInTime) >= today && rec.status === "checked-in"
+        const todayCheckIn = data.records?.find(
+          (rec) => new Date(rec.checkInTime) >= today && rec.status === "checked-in"
         );
-
         setCheckedIn(!!todayCheckIn);
       } catch (err) {
-        console.error("Fetch today attendance error:", err);
+        console.error("Error fetching today attendance:", err);
       }
     };
-
     fetchTodayAttendance();
   }, [employeeId]);
 
-  // Get current location
+  // Get current live location
   const fetchLocation = () => {
     if (!navigator.geolocation)
-      return alert("Geolocation is not supported by your browser");
+      return alert("Geolocation is not supported by your browser.");
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setPosition(coords);
 
-        if (officeLocation) {
+        if (assignedLocation) {
           const dist = haversineDistance(
             coords.lat,
             coords.lng,
-            officeLocation.lat,
-            officeLocation.lng
+            assignedLocation.latitude,
+            assignedLocation.longitude
           );
           setDistance(dist);
         } else {
-          alert("Location Capture Successfully.");
+          alert("No assigned location found. Please contact admin.");
         }
       },
       (err) => alert(err.message),
@@ -1621,63 +1615,53 @@ export default function AttendanceCapture() {
   };
 
   // Handle Check-In
-  const handleCheckIn = async () => {
-    if (!position) return alert("Get your location first");
-    if (!employeeId || !employeeEmail) return alert("Employee data missing");
+  // Frontend fix - always send reason
+const handleCheckIn = async () => {
+  if (!position) return alert("Please capture your current location first.");
+  if (!employeeId || !employeeEmail)
+    return alert("Employee data missing. Please login again.");
+  if (distance > ONSITE_RADIUS_M && !reason.trim())
+    return alert("You are outside the office range. Please select a reason.");
 
-    setSubmitting(true);
-    try {
-      const res = await fetch(`${BASE_URL}/api/attendance/checkin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          employeeId,
-          employeeEmail,
-          latitude: position.lat,
-          longitude: position.lng
-          // NOTE: distance and locationStatus removed - backend will calculate
-        }),
-      });
+  setSubmitting(true);
+  try {
+    const res = await axios.post(`${BASE_URL}/api/attendance/checkin`, {
+      employeeId,
+      employeeEmail,
+      latitude: position.lat,
+      longitude: position.lng,
+      reason: reason || "Onsite", // ✅ Always send reason
+    });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-      // Use backend response message directly
-      alert(data.message);
-      setCheckedIn(true);
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    alert(res.data.message);
+    setCheckedIn(true);
+  } catch (err) {
+    alert(err.response?.data?.message || "Check-in failed.");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   // Handle Check-Out
   const handleCheckOut = async () => {
-    if (!position) return alert("Get your location first");
-    if (!employeeId) return alert("Employee data missing");
+    if (!position) return alert("Please capture your current location first.");
+    if (!employeeId) return alert("Employee data missing.");
+    if (distance > ONSITE_RADIUS_M && !reason.trim())
+      return alert("You are outside the office range. Please select a reason.");
 
     setSubmitting(true);
     try {
-      const res = await fetch(`${BASE_URL}/api/attendance/checkout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          employeeId,
-          latitude: position.lat,
-          longitude: position.lng
-          // NOTE: distance and locationStatus removed - backend will calculate
-        }),
+      const res = await axios.post(`${BASE_URL}/api/attendance/checkout`, {
+        employeeId,
+        latitude: position.lat,
+        longitude: position.lng,
+        reason: distance > ONSITE_RADIUS_M ? reason : undefined,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-      // Use backend response message directly
-      alert(data.message);
+      alert(res.data.message);
       setCheckedIn(false);
     } catch (err) {
-      alert(err.message);
+      alert(err.response?.data?.message || "Check-out failed.");
     } finally {
       setSubmitting(false);
     }
@@ -1695,7 +1679,6 @@ export default function AttendanceCapture() {
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 flex flex-col gap-6">
         <h2 className="text-2xl font-semibold text-center">Attendance Capture</h2>
 
-        {/* Employee Info */}
         {employeeId && (
           <div className="bg-green-50 p-3 rounded-md">
             <p className="text-green-700 font-medium">
@@ -1704,18 +1687,20 @@ export default function AttendanceCapture() {
           </div>
         )}
 
-        {/* Office Location */}
-        {officeLocation && (
-          <div className="bg-blue-50 p-4 rounded-md flex flex-col gap-2">
-            <h3 className="font-medium text-blue-700">Office Location: {officeLocation.name}</h3>
-            <p>Lat: {officeLocation.lat.toFixed(6)}</p>
-            <p>Lng: {officeLocation.lng.toFixed(6)}</p>
+        {assignedLocation ? (
+          <div className="bg-blue-50 p-4 rounded-md">
+            <h3 className="font-medium text-blue-700">
+              Assigned Location: {assignedLocation.name}
+            </h3>
+            <p>Lat: {assignedLocation.latitude}</p>
+            <p>Lng: {assignedLocation.longitude}</p>
             <p>Onsite Radius: {ONSITE_RADIUS_M} m</p>
           </div>
+        ) : (
+          <p className="text-red-600">{error}</p>
         )}
 
-        {/* Employee Location */}
-        <div className="bg-gray-50 p-4 rounded-md flex flex-col gap-2">
+        <div className="bg-gray-50 p-4 rounded-md">
           <button
             onClick={fetchLocation}
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
@@ -1727,33 +1712,54 @@ export default function AttendanceCapture() {
             <>
               <p>Your Latitude: {position.lat.toFixed(6)}</p>
               <p>Your Longitude: {position.lng.toFixed(6)}</p>
+
               {distance != null && (
                 <p>
-                  Distance from office: <strong>{distance} m</strong> -{" "}
+                  Distance from assigned location:{" "}
+                  <strong>{distance} m</strong> -{" "}
                   <span
                     className={
-                      distance <= ONSITE_RADIUS_M ? "text-green-600 font-semibold" : "text-red-600 font-semibold"
+                      distance <= ONSITE_RADIUS_M
+                        ? "text-green-600 font-semibold"
+                        : "text-red-600 font-semibold"
                     }
                   >
-                    {distance <= ONSITE_RADIUS_M ? "Inside Office" : "Outside Office"}
+                    {distance <= ONSITE_RADIUS_M
+                      ? "Inside Assigned Area"
+                      : "Outside Assigned Area"}
                   </span>
-                  <br />
-                  <small className="text-gray-500">(This is for display only - backend will calculate actual distance)</small>
                 </p>
               )}
             </>
           )}
         </div>
 
-        {/* Check-In / Check-Out Button */}
+        {/* Reason Dropdown */}
+        {distance > ONSITE_RADIUS_M && (
+          <div className="flex flex-col">
+            <label className="font-medium text-gray-700 mb-1">
+              Reason (required since you’re outside the assigned area):
+            </label>
+            <select
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="border p-2 rounded-md"
+            >
+              <option value="">-- Select Reason --</option>
+              <option value="Field Work">Field Work</option>
+              <option value="Work From Home">Work From Home</option>
+            </select>
+          </div>
+        )}
+
         {!checkedIn ? (
           <button
             onClick={handleCheckIn}
             disabled={submitting || !position || !employeeId}
             className={`w-full py-3 text-white rounded-lg text-lg font-semibold transition ${
               submitting || !position || !employeeId
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
             {submitting ? "Checking In..." : "Check In"}
@@ -1764,15 +1770,14 @@ export default function AttendanceCapture() {
             disabled={submitting || !position || !employeeId}
             className={`w-full py-3 text-white rounded-lg text-lg font-semibold transition ${
               submitting || !position || !employeeId
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-red-600 hover:bg-red-700'
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-red-600 hover:bg-red-700"
             }`}
           >
             {submitting ? "Checking Out..." : "Check Out"}
           </button>
         )}
 
-        {/* Status Message */}
         {checkedIn && (
           <div className="bg-yellow-50 p-3 rounded-md text-center">
             <p className="text-yellow-700 font-medium">

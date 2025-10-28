@@ -201,8 +201,8 @@ export default function AttendanceList() {
       "Total Hours",
       "Distance (m)",
       "Onsite",
-      "Status",
-      "Office Name"
+      "Reason",
+      "Status"
     ];
 
     const csvRows = [
@@ -216,8 +216,8 @@ export default function AttendanceList() {
           rec.totalHours?.toFixed(2) || "0.00",
           rec.distance?.toFixed(2) || "0.00",
           rec.onsite ? "Yes" : "No",
-          rec.status,
-          `"${rec.officeName || "Main Office"}"`
+          `"${rec.reason || "Not specified"}"`,
+          rec.status
         ].join(",")
       ),
     ];
@@ -309,7 +309,7 @@ export default function AttendanceList() {
             <div className="text-3xl font-bold text-orange-600">
               {records.filter(r => r.status === 'checked-in').length}
             </div>
-            <div className="text-orange-800 font-semibold">Active Sessions</div>
+            <div className="text-orange-800 font-semibold">Checked In</div>
           </div>
           <div className="bg-white rounded-2xl p-6 shadow-lg border border-purple-200 text-center">
             <div className="text-3xl font-bold text-purple-600">
@@ -413,7 +413,8 @@ export default function AttendanceList() {
                       <th className="px-6 py-4 text-left font-semibold">Check-Out</th>
                       <th className="px-6 py-4 text-left font-semibold">Hours</th>
                       <th className="px-6 py-4 text-left font-semibold">Distance</th>
-                      <th className="px-6 py-4 text-left font-semibold">Location</th>
+                      <th className="px-6 py-4 text-left font-semibold">Onsite</th>
+                      <th className="px-6 py-4 text-left font-semibold">Reason</th>
                       <th className="px-6 py-4 text-left font-semibold">Status</th>
                     </tr>
                   </thead>
@@ -475,7 +476,12 @@ export default function AttendanceList() {
                                 : "bg-red-100 text-red-800 border border-red-300"
                             }`}
                           >
-                            {rec.onsite ? "🏢 Onsite" : "🏠 Remote"}
+                            {rec.onsite ? "🏢 Yes" : "🏠 No"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm text-gray-700 bg-gray-100 px-2 py-1 rounded max-w-[120px] truncate block">
+                            {rec.reason || "Not specified"}
                           </span>
                         </td>
                         <td className="px-6 py-4">
@@ -486,7 +492,7 @@ export default function AttendanceList() {
                                 : "bg-purple-100 text-purple-800 border border-purple-300"
                             }`}
                           >
-                            {rec.status === "checked-in" ? "🟢 Active" : "✅ Completed"}
+                            {rec.status}
                           </span>
                         </td>
                       </tr>

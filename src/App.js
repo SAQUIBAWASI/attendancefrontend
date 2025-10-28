@@ -117,6 +117,7 @@ import ShiftList from "./Pages/ShiftList.js";
 import ShiftManagement from "./Pages/ShiftManagement.js";
 import AddLocationPage from "./Pages/Location.js";
 import LocationListPage from "./Pages/LocationListPage.js";
+import EmployeeLocation from "./Pages/EmployeeLocation.js";
 function App() {
   return (
     <Routes>
@@ -131,6 +132,7 @@ function App() {
          <Route path="/attendance-capture" element={<AttendanceCapture />} />
           <Route path="/myattendance" element={<MyAttendance />} />
           <Route path="/my-shift" element={<MyShift />} />
+          <Route path="/mylocation" element={<EmployeeLocation />}/>
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"
@@ -250,7 +252,6 @@ function App() {
               <Route path="/admin-employee-locations" element={<AdminEmployeeLocations />}/>
               <Route path="/addlocation" element={<AddLocationPage />}/>
                <Route path="/locationlist" element={<LocationListPage />}/>
-
             </Routes>
           </AdminLayout>
         }
