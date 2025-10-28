@@ -87,8 +87,8 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       dropdown: [
         { name: "Shift Management", path: "/shift" },
         { name: "Shift List", path: "/shiftlist" },
-        { name: "Assign Location", path: "/assignlocation" },
-        { name: "Admin Employee Locations", path: "/admin-employee-locations" },
+        // { name: "Assign Location", path: "/assignlocation" },
+        // { name: "Admin Employee Locations", path: "/admin-employee-locations" },
       ],
     },
     {

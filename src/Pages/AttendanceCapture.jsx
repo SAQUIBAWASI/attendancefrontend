@@ -1612,7 +1612,7 @@ export default function AttendanceCapture() {
           );
           setDistance(dist);
         } else {
-          alert("Office location not loaded yet.");
+          alert("Location Capture Successfully.");
         }
       },
       (err) => alert(err.message),
