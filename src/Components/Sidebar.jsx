@@ -82,15 +82,14 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       ],
     },
     {
-      icon: <i className="text-white ri-settings-3-fill"></i>,
-      name: "Settings",
+      icon: <i className="text-white ri-time-fill"></i>,
+      name: "Shifts",
       dropdown: [
         { name: "Shift Management", path: "/shift" },
         { name: "Shift List", path: "/shiftlist" },
-        // { name: "Assign Location", path: "/assignlocation" },
-        // { name: "Admin Employee Locations", path: "/admin-employee-locations" },
       ],
     },
+
     {
       icon: <i className="text-white ri-logout-box-fill"></i>,
       name: "Logout",
@@ -126,7 +125,7 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
         {/* Header */}
         <div className="sticky top-0 flex justify-center items-center p-4 text-xl font-bold bg-blue-900 shadow-sm">
           <span className="truncate">
-            {isCollapsed && !isMobile ? "AD" : "Attendance System"}
+            {isCollapsed && !isMobile ? "AD" : "Team Management System"}
           </span>
         </div>
 

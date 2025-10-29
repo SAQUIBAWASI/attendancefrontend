@@ -81,7 +81,7 @@ const Sidebar = ({ isCollapsed, isMobile, onClose }) => {
         {/* Header */}
         <div className="sticky top-0 flex justify-center items-center p-4 text-xl font-bold border-b border-blue-700">
           <span className="truncate text-center">
-            {isCollapsed && !isMobile ? "AD" : "Attendance System"}
+            {isCollapsed && !isMobile ? "AD" : "Team Management System"}
           </span>
         </div>
 
