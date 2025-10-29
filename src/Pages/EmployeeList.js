@@ -29,6 +29,15 @@ const EmployeeList = () => {
         console.error("❌ Error fetching employees:", error);
       }
     };
+  
+    const filteredEmployees = employees.filter((emp) =>
+  emp.name.toLowerCase().includes(search.toLowerCase())
+);
+
+
+
+
+    
 
     const fetchLocations = async () => {
       try {
@@ -55,9 +64,22 @@ const EmployeeList = () => {
     fetchLocations();
   }, []);
 
-  const filteredEmployees = employees.filter((emp) =>
-    emp.name.toLowerCase().includes(search.toLowerCase())
+  // const filteredEmployees = employees.filter((emp) =>
+  //   emp.name.toLowerCase().includes(search.toLowerCase())
+  // );
+
+  const filteredEmployees = employees.filter((emp) => {
+  const searchTerm = search.toLowerCase().trim();
+  return (
+    emp.name?.toLowerCase().includes(searchTerm) ||
+    emp.email?.toLowerCase().includes(searchTerm) ||
+    emp.phone?.toLowerCase().includes(searchTerm) ||
+    emp.employeeId?.toLowerCase().includes(searchTerm) ||
+    emp.department?.toLowerCase().includes(searchTerm) ||
+    emp.role?.toLowerCase().includes(searchTerm)
   );
+});
+
 
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
@@ -165,6 +187,7 @@ const EmployeeList = () => {
     { label: "Employee ID", key: "employeeId" },
     { label: "Location", key: "location" },
   ];
+  
 
   return (
     <div className="p-4 bg-white rounded-lg shadow-md max-w-7xl mx-auto">
@@ -252,13 +275,13 @@ const EmployeeList = () => {
                       >
                         <FaEye />
                       </button>
-                      <button
+                      {/* <button
                         onClick={() => handleEdit(emp._id)}
                         className="text-yellow-500 hover:text-yellow-700"
                         title="Edit"
                       >
                         <FaEdit />
-                      </button>
+                      </button> */}
                       <button
                         onClick={() => handleAssignLocation(emp)}
                         className="text-green-500 hover:text-green-700"
