@@ -1490,11 +1490,11 @@
 // }
 
 
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
 const ONSITE_RADIUS_M = 50;
 
 // Haversine formula

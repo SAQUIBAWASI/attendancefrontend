@@ -33,7 +33,7 @@ const EmployeeLocation = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `http://localhost:5000/api/employees/mylocation/${employeeId}`
+          `https://attendancebackend-5cgn.onrender.com/api/employees/mylocation/${employeeId}`
         );
 
         if (res.data && res.data.success && res.data.data) {
