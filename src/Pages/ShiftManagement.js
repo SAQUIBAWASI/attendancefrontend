@@ -212,20 +212,19 @@ export default function CreateShift() {
 
   // ✅ Updated Shifts with New Timings
   const shifts = {
-    A: { startTime: "10:00", endTime: "19:00" }, // 10:00 AM - 7:00 PM
-    B: { startTime: "09:00", endTime: "19:00" }, // 9:00 AM - 7:00 PM
-    C: { startTime: "07:00", endTime: "17:00" }, // 7:00 AM - 5:00 PM
-    D: { startTime: "06:30", endTime: "16:00" }, // 6:30 AM - 4:00 PM
-    E: { startTime: "14:00", endTime: "23:00" }, // 2:00 PM - 11:00 PM
-    F: { startTime: "08:00", endTime: "18:00" }, // 8:00 AM - 6:00 PM
-    G: { startTime: "10:00", endTime: "21:00" }, // 10:00 AM - 9:00 PM
-    H: { startTime: "07:00", endTime: "13:00" }, // Split shift handled below
-    I: { startTime: "11:00", endTime: "20:00" }, // 11:00 AM - 8:00 PM
+    A: { startTime: "10:00", endTime: "19:00" },
+    B: { startTime: "09:00", endTime: "19:00" },
+    C: { startTime: "07:00", endTime: "17:00" },
+    D: { startTime: "06:30", endTime: "16:00" },
+    E: { startTime: "14:00", endTime: "23:00" },
+    F: { startTime: "08:00", endTime: "18:00" },
+    G: { startTime: "10:00", endTime: "21:00" },
+    H: { startTime: "07:00", endTime: "13:00" },
+    I: { startTime: "11:00", endTime: "20:00" },
   };
 
   const handleShiftChange = (shift) => {
     if (shift === "H") {
-      // Special case for split shift H
       setFormData({
         ...formData,
         shiftType: shift,
@@ -272,6 +271,7 @@ export default function CreateShift() {
           })
         );
 
+        // ✅ Clear form
         setFormData({
           employeeId: "",
           employeeName: "",
@@ -280,7 +280,8 @@ export default function CreateShift() {
           endTime: "",
         });
 
-        navigate("/shifts");
+        // ✅ Navigate to shift list page
+        navigate("/shiftlist");
       }
     } catch (err) {
       console.error(err);
@@ -393,7 +394,7 @@ export default function CreateShift() {
           {/* Cancel */}
           <button
             type="button"
-            onClick={() => navigate("/shifts")}
+            onClick={() => navigate("/shiftlist")}
             className="w-full py-2 mt-2 border rounded-lg hover:bg-gray-100"
           >
             Cancel
@@ -403,3 +404,4 @@ export default function CreateShift() {
     </div>
   );
 }
+
