@@ -218,7 +218,7 @@ export default function CreateShift() {
     D: { startTime: "06:30", endTime: "16:00" },
     E: { startTime: "14:00", endTime: "23:00" },
     F: { startTime: "08:00", endTime: "18:00" },
-    G: { startTime: "10:00", endTime: "21:00" },
+    G: { startTime: "10:30", endTime: "21:00" },
     H: { startTime: "07:00", endTime: "13:00" },
     I: { startTime: "11:00", endTime: "20:00" },
   };
