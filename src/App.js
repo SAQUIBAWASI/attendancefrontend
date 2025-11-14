@@ -118,6 +118,9 @@ import ShiftManagement from "./Pages/ShiftManagement.js";
 import AddLocationPage from "./Pages/Location.js";
 import LocationListPage from "./Pages/LocationListPage.js";
 import EmployeeLocation from "./Pages/EmployeeLocation.js";
+import AttendanceSummary from "./Pages/AttendanceSummary.js";
+import SuperAdminMedicalMonitor from "./Pages/SuperAdminMedicalMonitor.js";
+
 function App() {
   return (
     <Routes>
@@ -133,6 +136,7 @@ function App() {
           <Route path="/myattendance" element={<MyAttendance />} />
           <Route path="/my-shift" element={<MyShift />} />
           <Route path="/mylocation" element={<EmployeeLocation />}/>
+                         <Route path="/superadmin" element={<SuperAdminMedicalMonitor/>}/>
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"
@@ -252,6 +256,8 @@ function App() {
               <Route path="/admin-employee-locations" element={<AdminEmployeeLocations />}/>
               <Route path="/addlocation" element={<AddLocationPage />}/>
                <Route path="/locationlist" element={<LocationListPage />}/>
+               <Route path="attedancesummary" element={<AttendanceSummary/>}/>
+
             </Routes>
           </AdminLayout>
         }

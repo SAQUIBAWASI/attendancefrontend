@@ -44,6 +44,7 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       name: "Attendance",
       dropdown: [
         { name: "Attendance Records", path: "/attendancelist" },
+        {name:"AttendanceSummary",path:"/attedancesummary"},
         { name: "Today Attendance", path: "/today-attendance" },
         { name: "Late Today", path: "/late-today" },
         { name: "Absent Today", path: "/absent-today" },

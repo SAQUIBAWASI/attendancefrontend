@@ -600,12 +600,316 @@
 
 // export default LeavesList;
 
+// import axios from "axios";
+// import { useEffect, useState } from "react";
+// import {
+//   FaCalendarAlt,
+//   FaSearch,
+// } from "react-icons/fa";
+
+// const LeavesList = () => {
+//   const [leaves, setLeaves] = useState([]);
+//   const [filteredLeaves, setFilteredLeaves] = useState([]);
+//   const [loading, setLoading] = useState(true);
+
+//   // Filters
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [statusFilter, setStatusFilter] = useState("all");
+//   const [leaveTypeFilter, setLeaveTypeFilter] = useState("all");
+//   const [startDateFilter, setStartDateFilter] = useState("");
+//   const [endDateFilter, setEndDateFilter] = useState("");
+
+//   // Fetch Leaves
+//   const fetchLeaves = async () => {
+//     try {
+//       setLoading(true);
+//       const res = await axios.get("https://attendancebackend-5cgn.onrender.com/api/leaves/leaves");
+//       const leavesData = res.data.records || res.data || [];
+//       const sorted = leavesData.sort(
+//         (a, b) => new Date(b.createdAt || b.startDate) - new Date(a.createdAt || a.startDate)
+//       );
+//       setLeaves(sorted);
+//       setFilteredLeaves(sorted);
+//     } catch (err) {
+//       console.error("Failed to fetch leaves:", err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchLeaves();
+//   }, []);
+
+//   // ✅ Apply Filters
+//   useEffect(() => {
+//     let filtered = [...leaves];
+
+//     if (searchTerm) {
+//       filtered = filtered.filter(
+//         (l) =>
+//           l.employeeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//           l.employeeId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//           l.leaveType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//           l.reason?.toLowerCase().includes(searchTerm.toLowerCase())
+//       );
+//     }
+
+//     if (statusFilter !== "all") {
+//       filtered = filtered.filter((l) => l.status === statusFilter);
+//     }
+
+//     if (leaveTypeFilter !== "all") {
+//       filtered = filtered.filter((l) => l.leaveType === leaveTypeFilter);
+//     }
+
+//     // ✅ Fixed Date Range Filter
+//     if (startDateFilter) {
+//       const start = new Date(startDateFilter);
+//       filtered = filtered.filter((l) => new Date(l.startDate) >= start);
+//     }
+
+//     if (endDateFilter) {
+//       const end = new Date(endDateFilter);
+//       filtered = filtered.filter((l) => new Date(l.endDate) <= end);
+//     }
+
+//     setFilteredLeaves(filtered);
+//   }, [searchTerm, statusFilter, leaveTypeFilter, startDateFilter, endDateFilter, leaves]);
+
+//   const clearFilters = () => {
+//     setSearchTerm("");
+//     setStatusFilter("all");
+//     setLeaveTypeFilter("all");
+//     setStartDateFilter("");
+//     setEndDateFilter("");
+//   };
+
+//   // ✅ Small Stat Boxes
+//   const StatCard = ({ label, value, color }) => (
+//     <div className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}>
+//       <div className="text-lg font-bold">{value}</div>
+//       <div className="text-gray-700 text-xs font-medium">{label}</div>
+//     </div>
+//   );
+
+//   const leaveTypes = [...new Set(leaves.map((l) => l.leaveType).filter(Boolean))];
+
+//   if (loading)
+//     return (
+//       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-100">
+//         <div className="text-center">
+//           <div className="animate-spin h-12 w-12 border-b-2 border-purple-600 rounded-full mx-auto mb-3"></div>
+//           <p className="font-semibold text-gray-600">Loading leave requests...</p>
+//         </div>
+//       </div>
+//     );
+
+//   return (
+//     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-100 py-6 px-3">
+//       <div className="max-w-7xl mx-auto">
+//         {/* Header */}
+//         <div className="text-center mb-6">
+//           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
+//             📋 Leave Requests
+//           </h1>
+//           <p className="text-gray-600 text-sm">Manage and filter employee leave requests easily</p>
+//         </div>
+
+//         {/* ✅ Compact Stats */}
+//         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+//           <StatCard label="Total Requests" value={leaves.length} color="border-purple-500" />
+//           <StatCard
+//             label="Pending"
+//             value={leaves.filter((l) => l.status === "pending").length}
+//             color="border-yellow-500"
+//           />
+//           <StatCard
+//             label="Approved"
+//             value={leaves.filter((l) => l.status === "approved").length}
+//             color="border-green-500"
+//           />
+//           <StatCard
+//             label="Rejected"
+//             value={leaves.filter((l) => l.status === "rejected").length}
+//             color="border-red-500"
+//           />
+//         </div>
+
+//         {/* ✅ Filters Section */}
+//         <div className="bg-white rounded-xl shadow-md p-5 mb-6 border border-gray-200">
+//           <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4">
+//             {/* Search */}
+//             <div>
+//               <label className="block text-xs font-semibold text-gray-600 mb-1">
+//                 <FaSearch className="inline mr-1" /> Search
+//               </label>
+//               <input
+//                 type="text"
+//                 value={searchTerm}
+//                 onChange={(e) => setSearchTerm(e.target.value)}
+//                 className="w-full p-2 border border-gray-300 rounded-md text-sm"
+//                 placeholder="Name / ID / Type / Reason"
+//               />
+//             </div>
+
+//             {/* Status Filter */}
+//             <div>
+//               <label className="block text-xs font-semibold text-gray-600 mb-1">Status</label>
+//               <select
+//                 value={statusFilter}
+//                 onChange={(e) => setStatusFilter(e.target.value)}
+//                 className="w-full p-2 border border-gray-300 rounded-md text-sm"
+//               >
+//                 <option value="all">All</option>
+//                 <option value="pending">Pending</option>
+//                 <option value="approved">Approved</option>
+//                 <option value="rejected">Rejected</option>
+//               </select>
+//             </div>
+
+//             {/* Leave Type */}
+//             <div>
+//               <label className="block text-xs font-semibold text-gray-600 mb-1">Leave Type</label>
+//               <select
+//                 value={leaveTypeFilter}
+//                 onChange={(e) => setLeaveTypeFilter(e.target.value)}
+//                 className="w-full p-2 border border-gray-300 rounded-md text-sm"
+//               >
+//                 <option value="all">All</option>
+//                 {leaveTypes.map((t) => (
+//                   <option key={t}>{t}</option>
+//                 ))}
+//               </select>
+//             </div>
+
+//             {/* ✅ Start Date */}
+//             <div>
+//               <label className="block text-xs font-semibold text-gray-600 mb-1">
+//                 <FaCalendarAlt className="inline mr-1" /> From
+//               </label>
+//               <input
+//                 type="date"
+//                 value={startDateFilter}
+//                 onChange={(e) => setStartDateFilter(e.target.value)}
+//                 className="w-full p-2 border border-gray-300 rounded-md text-sm"
+//               />
+//             </div>
+
+//             {/* ✅ End Date */}
+//             <div>
+//               <label className="block text-xs font-semibold text-gray-600 mb-1">
+//                 <FaCalendarAlt className="inline mr-1" /> To
+//               </label>
+//               <input
+//                 type="date"
+//                 value={endDateFilter}
+//                 onChange={(e) => setEndDateFilter(e.target.value)}
+//                 className="w-full p-2 border border-gray-300 rounded-md text-sm"
+//               />
+//             </div>
+//           </div>
+
+//           <div className="flex justify-end mt-4 gap-3">
+//             <button
+//               onClick={clearFilters}
+//               className="bg-gray-500 text-white text-sm px-4 py-2 rounded-md hover:bg-gray-600 transition"
+//             >
+//               Clear Filters
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* ✅ Table (Your Existing Table Design Below) */}
+//         <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//           <table className="min-w-full">
+//             <thead className="bg-gradient-to-r from-purple-500 to-blue-600 text-white text-left">
+//               <tr>
+//                 <th className="py-3 px-4 rounded-tl-lg">Employee</th>
+//                 <th className="py-3 px-4">Leave Type</th>
+//                 <th className="py-3 px-4">Date Range</th>
+//                 <th className="py-3 px-4">Days</th>
+//                 <th className="py-3 px-4">Reason</th>
+//                 <th className="py-3 px-4">Status</th>
+//                 <th className="py-3 px-4 rounded-tr-lg">Actions</th>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {filteredLeaves.length > 0 ? (
+//                 filteredLeaves.map((l) => (
+//                   <tr key={l._id} className="border-b hover:bg-gray-50 transition">
+//                     <td className="py-3 px-4">
+//                       <div className="font-semibold">{l.employeeName}</div>
+//                       <div className="text-xs text-gray-500">
+//                         ID: {l.employeeId}
+//                       </div>
+//                       <div className="text-xs text-gray-400">
+//                         {new Date(l.createdAt).toLocaleDateString()}
+//                       </div>
+//                     </td>
+//                     <td className="py-3 px-4">
+//                       <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs">
+//                         {l.leaveType || "Enter Leave Type"}
+//                       </span>
+//                     </td>
+//                     <td className="py-3 px-4 text-sm text-gray-600">
+//                       {new Date(l.startDate).toLocaleDateString()} <br />
+//                       <span className="text-xs text-gray-400">to</span> <br />
+//                       {new Date(l.endDate).toLocaleDateString()}
+//                     </td>
+//                     <td className="py-3 px-4">
+//                       <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs">
+//                         {l.days} days
+//                       </span>
+//                     </td>
+//                     <td className="py-3 px-4 text-sm text-gray-700">{l.reason}</td>
+//                     <td className="py-3 px-4">
+//                       {l.status === "approved" && (
+//                         <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs">
+//                           ✅ Approved
+//                         </span>
+//                       )}
+//                       {l.status === "pending" && (
+//                         <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs">
+//                           ⏳ Pending
+//                         </span>
+//                       )}
+//                       {l.status === "rejected" && (
+//                         <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs">
+//                           ❌ Rejected
+//                         </span>
+//                       )}
+//                     </td>
+//                     <td className="py-3 px-4 text-right">
+//                       <button className="bg-gradient-to-r from-purple-500 to-blue-600 text-white px-4 py-1.5 rounded-md text-sm shadow hover:opacity-90 transition">
+//                         ✏️ Edit
+//                       </button>
+//                     </td>
+//                   </tr>
+//                 ))
+//               ) : (
+//                 <tr>
+//                   <td colSpan="7" className="text-center py-6 text-gray-500">
+//                     No leave records found.
+//                   </td>
+//                 </tr>
+//               )}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default LeavesList;
+
+
+
+
 import axios from "axios";
 import { useEffect, useState } from "react";
-import {
-  FaCalendarAlt,
-  FaSearch,
-} from "react-icons/fa";
+import { FaCalendarAlt, FaSearch } from "react-icons/fa";
 
 const LeavesList = () => {
   const [leaves, setLeaves] = useState([]);
@@ -619,14 +923,18 @@ const LeavesList = () => {
   const [startDateFilter, setStartDateFilter] = useState("");
   const [endDateFilter, setEndDateFilter] = useState("");
 
-  // Fetch Leaves
+  // ✅ Fetch all leaves
   const fetchLeaves = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("https://attendancebackend-5cgn.onrender.com/api/leaves/leaves");
+      const res = await axios.get(
+        "https://attendancebackend-5cgn.onrender.com/api/leaves/leaves"
+      );
       const leavesData = res.data.records || res.data || [];
       const sorted = leavesData.sort(
-        (a, b) => new Date(b.createdAt || b.startDate) - new Date(a.createdAt || a.startDate)
+        (a, b) =>
+          new Date(b.createdAt || b.startDate) -
+          new Date(a.createdAt || a.startDate)
       );
       setLeaves(sorted);
       setFilteredLeaves(sorted);
@@ -640,6 +948,24 @@ const LeavesList = () => {
   useEffect(() => {
     fetchLeaves();
   }, []);
+
+  // ✅ Update Leave Status (Approve / Reject)
+  const updateLeaveStatus = async (id, status) => {
+    try {
+      const res = await axios.put(
+        `https://attendancebackend-5cgn.onrender.com/api/leaves/updateleaves/${id}`,
+        { status }
+      );
+
+      if (res.status === 200) {
+        alert(`Leave ${status} successfully`);
+        fetchLeaves(); // refresh table
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      alert("Failed to update leave status");
+    }
+  };
 
   // ✅ Apply Filters
   useEffect(() => {
@@ -663,7 +989,6 @@ const LeavesList = () => {
       filtered = filtered.filter((l) => l.leaveType === leaveTypeFilter);
     }
 
-    // ✅ Fixed Date Range Filter
     if (startDateFilter) {
       const start = new Date(startDateFilter);
       filtered = filtered.filter((l) => new Date(l.startDate) >= start);
@@ -675,8 +1000,16 @@ const LeavesList = () => {
     }
 
     setFilteredLeaves(filtered);
-  }, [searchTerm, statusFilter, leaveTypeFilter, startDateFilter, endDateFilter, leaves]);
+  }, [
+    searchTerm,
+    statusFilter,
+    leaveTypeFilter,
+    startDateFilter,
+    endDateFilter,
+    leaves,
+  ]);
 
+  // ✅ Clear Filters
   const clearFilters = () => {
     setSearchTerm("");
     setStatusFilter("all");
@@ -685,9 +1018,11 @@ const LeavesList = () => {
     setEndDateFilter("");
   };
 
-  // ✅ Small Stat Boxes
+  // ✅ Stat Box
   const StatCard = ({ label, value, color }) => (
-    <div className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}>
+    <div
+      className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}
+    >
       <div className="text-lg font-bold">{value}</div>
       <div className="text-gray-700 text-xs font-medium">{label}</div>
     </div>
@@ -695,12 +1030,15 @@ const LeavesList = () => {
 
   const leaveTypes = [...new Set(leaves.map((l) => l.leaveType).filter(Boolean))];
 
+  // ✅ Loading Screen
   if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-100">
         <div className="text-center">
           <div className="animate-spin h-12 w-12 border-b-2 border-purple-600 rounded-full mx-auto mb-3"></div>
-          <p className="font-semibold text-gray-600">Loading leave requests...</p>
+          <p className="font-semibold text-gray-600">
+            Loading leave requests...
+          </p>
         </div>
       </div>
     );
@@ -713,12 +1051,18 @@ const LeavesList = () => {
           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
             📋 Leave Requests
           </h1>
-          <p className="text-gray-600 text-sm">Manage and filter employee leave requests easily</p>
+          <p className="text-gray-600 text-sm">
+            Manage and filter employee leave requests easily
+          </p>
         </div>
 
-        {/* ✅ Compact Stats */}
+        {/* ✅ Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-          <StatCard label="Total Requests" value={leaves.length} color="border-purple-500" />
+          <StatCard
+            label="Total Requests"
+            value={leaves.length}
+            color="border-purple-500"
+          />
           <StatCard
             label="Pending"
             value={leaves.filter((l) => l.status === "pending").length}
@@ -736,7 +1080,7 @@ const LeavesList = () => {
           />
         </div>
 
-        {/* ✅ Filters Section */}
+        {/* ✅ Filters */}
         <div className="bg-white rounded-xl shadow-md p-5 mb-6 border border-gray-200">
           <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4">
             {/* Search */}
@@ -755,7 +1099,9 @@ const LeavesList = () => {
 
             {/* Status Filter */}
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Status</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">
+                Status
+              </label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -770,7 +1116,9 @@ const LeavesList = () => {
 
             {/* Leave Type */}
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Leave Type</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">
+                Leave Type
+              </label>
               <select
                 value={leaveTypeFilter}
                 onChange={(e) => setLeaveTypeFilter(e.target.value)}
@@ -783,7 +1131,7 @@ const LeavesList = () => {
               </select>
             </div>
 
-            {/* ✅ Start Date */}
+            {/* Start Date */}
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">
                 <FaCalendarAlt className="inline mr-1" /> From
@@ -796,7 +1144,7 @@ const LeavesList = () => {
               />
             </div>
 
-            {/* ✅ End Date */}
+            {/* End Date */}
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">
                 <FaCalendarAlt className="inline mr-1" /> To
@@ -820,7 +1168,7 @@ const LeavesList = () => {
           </div>
         </div>
 
-        {/* ✅ Table (Your Existing Table Design Below) */}
+        {/* ✅ Table */}
         <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
           <table className="min-w-full">
             <thead className="bg-gradient-to-r from-purple-500 to-blue-600 text-white text-left">
@@ -837,7 +1185,10 @@ const LeavesList = () => {
             <tbody>
               {filteredLeaves.length > 0 ? (
                 filteredLeaves.map((l) => (
-                  <tr key={l._id} className="border-b hover:bg-gray-50 transition">
+                  <tr
+                    key={l._id}
+                    className="border-b hover:bg-gray-50 transition"
+                  >
                     <td className="py-3 px-4">
                       <div className="font-semibold">{l.employeeName}</div>
                       <div className="text-xs text-gray-500">
@@ -862,7 +1213,9 @@ const LeavesList = () => {
                         {l.days} days
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-700">{l.reason}</td>
+                    <td className="py-3 px-4 text-sm text-gray-700">
+                      {l.reason}
+                    </td>
                     <td className="py-3 px-4">
                       {l.status === "approved" && (
                         <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs">
@@ -880,10 +1233,29 @@ const LeavesList = () => {
                         </span>
                       )}
                     </td>
+
+                    {/* ✅ Approve / Reject Buttons */}
                     <td className="py-3 px-4 text-right">
-                      <button className="bg-gradient-to-r from-purple-500 to-blue-600 text-white px-4 py-1.5 rounded-md text-sm shadow hover:opacity-90 transition">
-                        ✏️ Edit
-                      </button>
+                      {l.status === "pending" ? (
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            onClick={() => updateLeaveStatus(l._id, "approved")}
+                            className="bg-green-500 text-white px-3 py-1 rounded-md text-xs hover:bg-green-600 transition"
+                          >
+                            ✅ Approve
+                          </button>
+                          <button
+                            onClick={() => updateLeaveStatus(l._id, "rejected")}
+                            className="bg-red-500 text-white px-3 py-1 rounded-md text-xs hover:bg-red-600 transition"
+                          >
+                            ❌ Reject
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-xs italic">
+                          No actions
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))
