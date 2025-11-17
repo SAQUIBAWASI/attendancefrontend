@@ -120,12 +120,21 @@ import LocationListPage from "./Pages/LocationListPage.js";
 import EmployeeLocation from "./Pages/EmployeeLocation.js";
 import AttendanceSummary from "./Pages/AttendanceSummary.js";
 import SuperAdminMedicalMonitor from "./Pages/SuperAdminMedicalMonitor.js";
+import HomePage from "./Pages/HomePage.js";
+import Navbar from "./Components/Navbar.jsx";
+import TimelyNavbar from "./Components/TimelyNavbar.js";
+import TimelyFooter from "./Pages/TimelyFooter.js";
+import AboutPage from "./Pages/AboutPage.js";
+import ServicesPage from "./Pages/ServicesPage.js";
+import WhoWeServePage from "./Pages/WhoWeServePage.js";
+import ContactPage from "./Pages/ContactPage.js";
 
 function App() {
   return (
     <Routes>
+      <Route path="/" element={<HomePage/>}></Route>
       {/* Login page rendered outside AdminLayout */}
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/land" element={<LandingPage />} />
       {/* <Route path="/" element={<LoginPage />} /> */}
       <Route path="/admin-login" element={<Login/>}/>
       <Route path="/employee-login" element={<EmployeeLogin/>}/>
@@ -136,7 +145,13 @@ function App() {
           <Route path="/myattendance" element={<MyAttendance />} />
           <Route path="/my-shift" element={<MyShift />} />
           <Route path="/mylocation" element={<EmployeeLocation />}/>
-                         <Route path="/superadmin" element={<SuperAdminMedicalMonitor/>}/>
+          <Route path="/superadmin" element={<SuperAdminMedicalMonitor/>}/>
+          <Route path="/timelynavbar" element={<TimelyNavbar/>}></Route>
+          <Route path="timelyfooter" element={<TimelyFooter/>}></Route>
+          <Route path="/about" element={<AboutPage/>}></Route>
+          <Route path="/service" element={<ServicesPage/>}></Route>
+          <Route path="/whoweserve" element={<WhoWeServePage/>}></Route>
+          <Route path="/contact" element={<ContactPage/>}></Route>
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"
