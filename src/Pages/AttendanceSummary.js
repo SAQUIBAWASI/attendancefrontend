@@ -904,7 +904,8 @@ export default function AttendanceSummary() {
       try {
         const res = await fetch(`${BASE_URL}/api/attendance/allattendance`);
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Failed to fetch attendance");
+        if (!res.ok)
+          throw new Error(data.message || "Failed to fetch attendance");
 
         const sorted = (data.records || []).sort(
           (a, b) => new Date(b.checkInTime) - new Date(a.checkInTime)
@@ -931,9 +932,10 @@ export default function AttendanceSummary() {
       "Email",
       "Present Days",
       "Late Days",
-      "Onsite Days",
-      "Half Day Leaves",
-      "Full Day Leaves",
+      "In Office",
+      "Half Days",
+      "Full Days",
+      "Working Days",
     ];
 
     const rows = employeeSummary.map((emp) => [
@@ -941,9 +943,10 @@ export default function AttendanceSummary() {
       emp.employeeEmail,
       emp.presentDays,
       emp.lateDays,
-      emp.onsiteDays,
-      emp.halfDayLeaves,
-      emp.fullDayLeaves,
+      emp.inOfficeDays,
+      emp.halfDayCount,
+      emp.fullDayCount,
+      emp.workingDays,
     ]);
 
     const csvContent =
@@ -959,11 +962,13 @@ export default function AttendanceSummary() {
     document.body.removeChild(link);
   };
 
+  // ⭐⭐⭐ UPDATED SUMMARY LOGIC ⭐⭐⭐
   const generateSummary = (data) => {
     const summaryMap = {};
 
     data.forEach((rec) => {
       const id = rec.employeeId;
+
       if (!summaryMap[id]) {
         summaryMap[id] = {
           employeeId: id,
@@ -971,9 +976,10 @@ export default function AttendanceSummary() {
           totalDays: 0,
           presentDays: 0,
           lateDays: 0,
-          onsiteDays: 0,
-          halfDayLeaves: 0,
-          fullDayLeaves: 0,
+          inOfficeDays: 0,
+          halfDayCount: 0,
+          fullDayCount: 0,
+          workingDays: 0,
         };
       }
 
@@ -982,20 +988,29 @@ export default function AttendanceSummary() {
 
       if (rec.checkInTime) emp.presentDays += 1;
 
+      // Late calculation
       const checkIn = new Date(rec.checkInTime);
       const hours = checkIn.getHours();
       const minutes = checkIn.getMinutes();
       if (hours > 10 || (hours === 10 && minutes > 0)) emp.lateDays += 1;
 
-      if (rec.onsite) emp.onsiteDays += 1;
+      if (rec.onsite) emp.inOfficeDays += 1;
 
+      // ⭐ Working hours logic (full / half)
       if (rec.checkInTime && rec.checkOutTime) {
         const checkOut = new Date(rec.checkOutTime);
-        const diffHrs = (checkOut - checkIn) / (1000 * 60 * 60);
+        const totalHours = (checkOut - checkIn) / (1000 * 60 * 60);
 
-        if (diffHrs < 4) emp.fullDayLeaves += 1;
-        else if (diffHrs < 8.8) emp.halfDayLeaves += 1;
+        if (totalHours >= 9) {
+          emp.fullDayCount += 1;
+        } else if (totalHours >= 4.5) {
+          emp.halfDayCount += 1;
+        }
       }
+
+      // ⭐ FINAL WORKING DAYS CALCULATION ⭐
+      // 2 Half Days = 1 Full Day → 0.5 + 0.5 = 1
+      emp.workingDays = emp.fullDayCount + emp.halfDayCount * 0.5;
     });
 
     setEmployeeSummary(Object.values(summaryMap));
@@ -1082,7 +1097,7 @@ export default function AttendanceSummary() {
           📊 Employee Attendance Dashboard
         </h1>
 
-        {/* ✅ Filters */}
+        {/* Filters */}
         <div className="bg-white shadow-md rounded-xl p-5 mb-8 border border-gray-200 flex flex-wrap items-center gap-4">
           <div>
             <label className="font-semibold text-gray-700 mr-2">From:</label>
@@ -1129,7 +1144,7 @@ export default function AttendanceSummary() {
           </button>
         </div>
 
-        {/* ✅ Employee Summary */}
+        {/* Employee Summary */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-8 p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-semibold text-purple-700">
@@ -1155,8 +1170,9 @@ export default function AttendanceSummary() {
                     <th className="px-6 py-3">Present</th>
                     <th className="px-6 py-3">Late</th>
                     <th className="px-6 py-3">In Office</th>
-                    <th className="px-6 py-3">Half Day</th>
-                    <th className="px-6 py-3">Full Day</th>
+                    <th className="px-6 py-3">Half Days</th>
+                    <th className="px-6 py-3">Full Days</th>
+                    <th className="px-6 py-3">Working Days</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1179,13 +1195,16 @@ export default function AttendanceSummary() {
                         {emp.lateDays}
                       </td>
                       <td className="px-6 py-3 text-blue-700 font-semibold">
-                        {emp.onsiteDays}
+                        {emp.inOfficeDays}
                       </td>
                       <td className="px-6 py-3 text-yellow-700 font-semibold">
-                        {emp.halfDayLeaves}
+                        {emp.halfDayCount}
                       </td>
                       <td className="px-6 py-3 text-red-700 font-semibold">
-                        {emp.fullDayLeaves}
+                        {emp.fullDayCount}
+                      </td>
+                      <td className="px-6 py-3 text-purple-700 font-semibold">
+                        {emp.workingDays}
                       </td>
                     </tr>
                   ))}
@@ -1195,7 +1214,7 @@ export default function AttendanceSummary() {
           )}
         </div>
 
-        {/* ✅ Employee Full Details Modal */}
+        {/* Employee Full Details Modal */}
         {selectedEmployee && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-6 rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
@@ -1217,7 +1236,7 @@ export default function AttendanceSummary() {
                     <th className="px-4 py-2 text-left">Date</th>
                     <th className="px-4 py-2 text-left">Check-In</th>
                     <th className="px-4 py-2 text-left">Check-Out</th>
-                    <th className="px-4 py-2 text-left">Onsite</th>
+                    <th className="px-4 py-2 text-left">In Office</th>
                     <th className="px-4 py-2 text-left">Working Hours</th>
                   </tr>
                 </thead>
@@ -1237,11 +1256,17 @@ export default function AttendanceSummary() {
                         className="border-t hover:bg-blue-50 transition"
                       >
                         <td className="px-4 py-2">
-                          {new Date(rec.checkInTime).toLocaleDateString("en-IN")}
+                          {new Date(
+                            rec.checkInTime
+                          ).toLocaleDateString("en-IN")}
                         </td>
-                        <td className="px-4 py-2">{formatDate(rec.checkInTime)}</td>
                         <td className="px-4 py-2">
-                          {rec.checkOutTime ? formatDate(rec.checkOutTime) : "-"}
+                          {formatDate(rec.checkInTime)}
+                        </td>
+                        <td className="px-4 py-2">
+                          {rec.checkOutTime
+                            ? formatDate(rec.checkOutTime)
+                            : "-"}
                         </td>
                         <td className="px-4 py-2">
                           {rec.onsite ? "Yes" : "No"}
@@ -1259,5 +1284,3 @@ export default function AttendanceSummary() {
     </div>
   );
 }
-
-
