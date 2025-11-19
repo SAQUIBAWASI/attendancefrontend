@@ -724,6 +724,7 @@ const AddEmployeePage = () => {
     "Team Lead",
     "Employee",
     "HR Manager",
+    "Sales Executive",
     "Phlebotomist",
     "Staff Nurse",
     "Consultant",
