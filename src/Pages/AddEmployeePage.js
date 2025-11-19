@@ -684,6 +684,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+
 const AddEmployeePage = () => {
   const navigate = useNavigate();
 
@@ -697,53 +698,40 @@ const AddEmployeePage = () => {
   const [address, setAddress] = useState("");
   const [employeeId, setEmployeeId] = useState("");
   const [locationId, setLocationId] = useState("");
+
+  // Salary Fields
+  const [salaryPerMonth, setSalaryPerMonth] = useState("");
+  const [shiftHours, setShiftHours] = useState("");
+
   const [showPassword, setShowPassword] = useState(false);
   const [locations, setLocations] = useState([]);
-  const [showLocationModal, setShowLocationModal] = useState(false);
-  const [loading, setLoading] = useState(false);
 
+  const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // ✅ Department & Roles
+  // Departments
   const departments = [
-    "Developer",
-    "Sales",
-    "Marketing",
-    "Medical",
-    "Finance",
-    "Nursing",
-    "Digital Marketing",
-    "Management",
-    "Laboratory Medicine",
+    "Developer", "Sales", "Marketing", "Medical", "Finance",
+    "Nursing", "Digital Marketing", "Management", "Laboratory Medicine"
   ];
 
+  // Roles
   const roles = [
-    "Administrator",
-    "Manager",
-    "Team Lead",
-    "Employee",
-    "HR Manager",
-    "Sales Executive",
-    "Phlebotomist",
-    "Staff Nurse",
-    "Consultant",
-    "Graphic Designer",
-    "UI/UX & GRAPHIC DESIGNER",
-    "SMM & SEO Executive",
-    "Web Developer",
+    "Administrator", "Manager", "Team Lead", "Employee", "HR Manager",
+    "Phlebotomist", "Staff Nurse", "Sales Executive",
+    "Consultant", "Graphic Designer", "UI/UX & GRAPHIC DESIGNER",
+    "SMM & SEO Executive", "Web Developer",
   ];
 
-  // ✅ Fetch all locations
+  // Fetch Locations
   useEffect(() => {
     const fetchLocations = async () => {
       try {
         const res = await axios.get(
           "https://attendancebackend-5cgn.onrender.com/api/location/alllocation"
         );
-        if (res.data && res.data.locations) {
-          setLocations(res.data.locations);
-        }
+        if (res.data?.locations) setLocations(res.data.locations);
       } catch (err) {
         console.error("❌ Error fetching locations:", err);
       }
@@ -751,39 +739,32 @@ const AddEmployeePage = () => {
     fetchLocations();
   }, []);
 
-  // ✅ Add Employee without Shift
+  // Submit Employee
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSuccessMessage("");
     setErrorMessage("");
+    setSuccessMessage("");
     setLoading(true);
 
     try {
-      // Step 1: Create Employee
-      const response = await fetch(
+      // Step 1: Add Employee
+      await axios.post(
         "https://attendancebackend-5cgn.onrender.com/api/employees/add-employee",
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name,
-            email,
-            password,
-            department,
-            role,
-            joinDate,
-            phone,
-            address,
-            employeeId,
-            locationId, // sent to backend
-          }),
+          name,
+          email,
+          password,
+          department,
+          role,
+          joinDate,
+          phone,
+          address,
+          employeeId,
+          locationId,
         }
       );
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to add employee");
-
-      // Step 2: Assign Location (only if locationId selected)
+      // Step 2: Assign Location
       if (locationId) {
         await axios.put(
           `https://attendancebackend-5cgn.onrender.com/api/employees/assign-location/${employeeId}`,
@@ -791,8 +772,20 @@ const AddEmployeePage = () => {
         );
       }
 
-      setSuccessMessage("✅ Employee added successfully!");
-      // Reset Form
+      // Step 3: Add Salary (UPDATED)
+      await axios.post(
+        "https://attendancebackend-5cgn.onrender.com/api/salary/set-salary",
+        {
+          employeeId,
+          name,
+          salaryPerMonth: Number(salaryPerMonth),
+          shiftHours: Number(shiftHours),
+        }
+      );
+
+      setSuccessMessage("✅ Employee & Salary added successfully!");
+
+      // Reset all fields
       setName("");
       setEmail("");
       setPassword("");
@@ -804,28 +797,21 @@ const AddEmployeePage = () => {
       setEmployeeId("");
       setLocationId("");
 
-      // Redirect
-      setTimeout(() => navigate("/employeelist"), 1000);
-    } catch (error) {
-      console.error("❌ Error adding employee:", error);
-      setErrorMessage(`❌ ${error.message}`);
+      setSalaryPerMonth("");
+      setShiftHours("");
+
+      setTimeout(() => navigate("/employeelist"), 800);
+    } catch (err) {
+      console.error("❌ Error:", err);
+      setErrorMessage(err.response?.data?.message || "Something went wrong!");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOpenLocationModal = () => setShowLocationModal(true);
-  const handleCloseLocationModal = () => setShowLocationModal(false);
-  const handleSelectLocation = (locId) => {
-    setLocationId(locId);
-    handleCloseLocationModal();
-  };
-
   return (
     <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
-      <h2 className="mb-6 text-2xl font-bold text-blue-900">
-        Add New Employee
-      </h2>
+      <h2 className="mb-6 text-2xl font-bold text-blue-900">Add New Employee</h2>
 
       {successMessage && (
         <div className="p-4 mb-4 text-green-700 bg-green-100 rounded">
@@ -839,224 +825,173 @@ const AddEmployeePage = () => {
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* Name */}
+        {/* NAME */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Full Name
-          </label>
+          <label className="block text-sm">Full Name</label>
           <input
-            type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
+            className="w-full p-2 border rounded"
             required
           />
         </div>
 
-        {/* Email */}
+        {/* EMAIL */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Email
-          </label>
+          <label className="block text-sm">Email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
+            className="w-full p-2 border rounded"
             required
           />
         </div>
 
-       <div className="mb-4 relative">
-      <label className="block text-sm font-medium text-gray-700">
-        Password
-      </label>
-
-      <div className="relative">
-        <input
-          type={showPassword ? "text" : "password"}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 mt-1 border border-gray-300 rounded pr-10"
-          required
-        />
-
-        {/* 👁️ Toggle icon */}
-        <button
-          type="button"
-          onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-        >
-          {showPassword ? <FaEyeSlash /> : <FaEye />}
-        </button>
-      </div>
-          
+        {/* PASSWORD */}
+        <div className="mb-4 relative">
+          <label className="block text-sm">Password</label>
+          <input
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 border rounded pr-10"
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-9 text-gray-600"
+          >
+            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          </button>
         </div>
 
-        {/* Department */}
+        {/* DEPARTMENT */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Department
-          </label>
+          <label className="block text-sm">Department</label>
           <select
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
+            className="w-full p-2 border rounded"
             required
           >
             <option value="">Select Department</option>
-            {departments.map((dept) => (
-              <option key={dept} value={dept}>
-                {dept}
-              </option>
+            {departments.map((d) => (
+              <option key={d}>{d}</option>
             ))}
           </select>
         </div>
 
-        {/* Role */}
+        {/* ROLE */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Role</label>
+          <label className="block text-sm">Role</label>
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
+            className="w-full p-2 border rounded"
             required
           >
             <option value="">Select Role</option>
             {roles.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
+              <option key={r}>{r}</option>
             ))}
           </select>
         </div>
 
-        {/* Join Date */}
+        {/* JOIN DATE */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Join Date
-          </label>
+          <label className="block text-sm">Join Date</label>
           <input
             type="date"
             value={joinDate}
             onChange={(e) => setJoinDate(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
+            className="w-full p-2 border rounded"
             required
           />
         </div>
 
-        {/* Phone */}
+        {/* PHONE */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Phone
-          </label>
+          <label className="block text-sm">Phone</label>
           <input
-            type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
+            className="w-full p-2 border rounded"
           />
         </div>
 
-        {/* Address */}
+        {/* ADDRESS */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Address
-          </label>
+          <label className="block text-sm">Address</label>
           <textarea
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
-          ></textarea>
+            className="w-full p-2 border rounded"
+          />
         </div>
 
-        {/* Employee ID */}
+        {/* EMPLOYEE ID */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Employee ID
-          </label>
+          <label className="block text-sm">Employee ID</label>
           <input
-            type="text"
             value={employeeId}
             onChange={(e) => setEmployeeId(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
+            className="w-full p-2 border rounded"
             required
           />
         </div>
 
-        {/* ✅ Location Modal */}
+        {/* SALARY PER MONTH */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Location
-          </label>
-          <div
-            onClick={handleOpenLocationModal}
-            className="w-full p-2 mt-1 border border-gray-300 rounded cursor-pointer hover:border-blue-400 bg-gray-50"
-          >
-            {locationId
-              ? locations.find((loc) => loc._id === locationId)?.name ||
-                "Change Location"
-              : "Select / Change Location"}
-          </div>
+          <label className="block text-sm">Salary Per Month</label>
+          <input
+            type="number"
+            value={salaryPerMonth}
+            onChange={(e) => setSalaryPerMonth(e.target.value)}
+            className="w-full p-2 border rounded"
+            required
+          />
         </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
-          >
-            {loading ? "Saving..." : "Add Employee"}
-          </button>
+        {/* SHIFT HOURS */}
+        <div className="mb-4">
+          <label className="block text-sm">Shift Hours Per Day</label>
+          <input
+            type="number"
+            value={shiftHours}
+            onChange={(e) => setShiftHours(e.target.value)}
+            className="w-full p-2 border rounded"
+            required
+          />
         </div>
+
+        {/* LOCATION */}
+        <div className="mb-4">
+          <label className="block text-sm">Location</label>
+          <select
+            value={locationId}
+            onChange={(e) => setLocationId(e.target.value)}
+            className="w-full p-2 border rounded"
+          >
+            <option value="">Select a Location</option>
+            {locations.map((loc) => (
+              <option key={loc._id} value={loc._id}>{loc.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* SUBMIT */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="px-6 py-2 bg-blue-600 text-white rounded"
+        >
+          {loading ? "Saving..." : "Add Employee"}
+        </button>
       </form>
-
-      {/* ✅ Location Modal */}
-      {showLocationModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-3">
-          <div className="relative w-full max-w-md bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Select Location</h3>
-            <select
-              value={locationId}
-              onChange={(e) => handleSelectLocation(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded"
-            >
-              <option value="">Select a Location</option>
-              {locations.map((loc) => (
-                <option key={loc._id} value={loc._id}>
-                  {loc.name}
-                </option>
-              ))}
-            </select>
-
-            <div className="flex justify-end mt-4 gap-3">
-              <button
-                onClick={handleCloseLocationModal}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCloseLocationModal}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Done
-              </button>
-            </div>
-
-            <button
-              onClick={handleCloseLocationModal}
-              className="absolute top-2 right-3 text-gray-500 text-xl"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
 export default AddEmployeePage;
-  
