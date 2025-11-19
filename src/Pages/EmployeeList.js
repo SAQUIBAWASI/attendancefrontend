@@ -616,6 +616,16 @@ const EmployeeList = () => {
     return location ? location.name : "Not assigned";
   };
 
+  const formatSalary = (salary) => {
+    if (!salary) return "-";
+    return `₹${Number(salary).toLocaleString('en-IN')}`;
+  };
+
+  const formatShiftHours = (hours) => {
+    if (!hours) return "-";
+    return `${hours} hours`;
+  };
+
   const csvHeaders = [
     { label: "Name", key: "name" },
     { label: "Email", key: "email" },
@@ -624,6 +634,8 @@ const EmployeeList = () => {
     { label: "Role", key: "role" },
     { label: "Join Date", key: "joinDate" },
     { label: "Employee ID", key: "employeeId" },
+    { label: "Salary Per Month", key: "salaryPerMonth" },
+    { label: "Shift Hours", key: "shiftHours" },
     { label: "Location", key: "location" },
   ];
 
@@ -695,6 +707,8 @@ const EmployeeList = () => {
                     {emp.joinDate ? new Date(emp.joinDate).toLocaleDateString() : "-"}
                   </td>
                   <td className="p-2 border">{emp.employeeId}</td>
+                  <td className="p-2 border">{formatSalary(emp.salaryPerMonth)}</td>
+                  <td className="p-2 border">{formatShiftHours(emp.shiftHours)}</td>
                   <td className="p-2 border">{getLocationName(emp.location)}</td>
                   <td className="p-2 border text-center">
                     <div className="flex justify-center gap-2">
@@ -785,6 +799,12 @@ const EmployeeList = () => {
               </li>
               <li>
                 <strong>Employee ID:</strong> {selectedEmployee.employeeId}
+              </li>
+              <li>
+                <strong>Salary Per Month:</strong> {formatSalary(selectedEmployee.salaryPerMonth)}
+              </li>
+              <li>
+                <strong>Shift Hours:</strong> {formatShiftHours(selectedEmployee.shiftHours)}
               </li>
               <li>
                 <strong>Location:</strong> {getLocationName(selectedEmployee.location)}
