@@ -127,6 +127,7 @@ import ShiftManagement from "./Pages/ShiftManagement.js";
 import SuperAdminMedicalMonitor from "./Pages/SuperAdminMedicalMonitor.js";
 import TimelyFooter from "./Pages/TimelyFooter.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
+import PayRoll from "./Pages/PayRoll.js";
 
 function App() {
   return (
@@ -151,6 +152,7 @@ function App() {
           <Route path="/service" element={<ServicesPage/>}></Route>
           <Route path="/whoweserve" element={<WhoWeServePage/>}></Route>
           <Route path="/contact" element={<ContactPage/>}></Route>
+         
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"
@@ -271,6 +273,7 @@ function App() {
               <Route path="/addlocation" element={<AddLocationPage />}/>
                <Route path="/locationlist" element={<LocationListPage />}/>
                <Route path="attedancesummary" element={<AttendanceSummary/>}/>
+                <Route path="/payroll" element={<PayRoll/>}/>
 
             </Routes>
           </AdminLayout>
