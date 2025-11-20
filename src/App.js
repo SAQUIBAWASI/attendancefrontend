@@ -109,25 +109,25 @@ import VendorList from "./Pages/VendorList.js";
 import VendorDetail from "./Pages/VendorProfile.js";
 import WeeklyHoliday from "./Pages/WeeklyHoliday.js";
 // import LandingPage from "./Pages/LandingPage.js";
+import TimelyNavbar from "./Components/TimelyNavbar.js";
+import AboutPage from "./Pages/AboutPage.js";
 import AdminEmployeeLocations from "./Pages/AdminEmployeeLocations.js";
 import AssignLocation from "./Pages/AssignLocation.js";
+import AttendanceSummary from "./Pages/AttendanceSummary.js";
+import ContactPage from "./Pages/ContactPage.js";
+import EmployeeLocation from "./Pages/EmployeeLocation.js";
+import HomePage from "./Pages/HomePage.js";
 import LeavesReport from "./Pages/LeavesReport.js";
-import MyShift from "./Pages/MyShift.js";
-import ShiftList from "./Pages/ShiftList.js";
-import ShiftManagement from "./Pages/ShiftManagement.js";
 import AddLocationPage from "./Pages/Location.js";
 import LocationListPage from "./Pages/LocationListPage.js";
-import EmployeeLocation from "./Pages/EmployeeLocation.js";
-import AttendanceSummary from "./Pages/AttendanceSummary.js";
-import SuperAdminMedicalMonitor from "./Pages/SuperAdminMedicalMonitor.js";
-import HomePage from "./Pages/HomePage.js";
-import Navbar from "./Components/Navbar.jsx";
-import TimelyNavbar from "./Components/TimelyNavbar.js";
-import TimelyFooter from "./Pages/TimelyFooter.js";
-import AboutPage from "./Pages/AboutPage.js";
+import MyShift from "./Pages/MyShift.js";
+import RoleManagement from "./Pages/RoleManagement.js";
 import ServicesPage from "./Pages/ServicesPage.js";
+import ShiftList from "./Pages/ShiftList.js";
+import ShiftManagement from "./Pages/ShiftManagement.js";
+import SuperAdminMedicalMonitor from "./Pages/SuperAdminMedicalMonitor.js";
+import TimelyFooter from "./Pages/TimelyFooter.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
-import ContactPage from "./Pages/ContactPage.js";
 
 function App() {
   return (
@@ -272,7 +272,7 @@ function App() {
               <Route path="/addlocation" element={<AddLocationPage />}/>
                <Route path="/locationlist" element={<LocationListPage />}/>
                <Route path="attedancesummary" element={<AttendanceSummary/>}/>
-
+              <Route path="/role-management" element={<RoleManagement />} />
             </Routes>
           </AdminLayout>
         }

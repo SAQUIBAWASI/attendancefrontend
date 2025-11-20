@@ -1664,6 +1664,389 @@
 //   );
 // }
 
+// import { useEffect, useState } from "react";
+
+// const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
+
+// export default function AttendanceSummary() {
+//   const [records, setRecords] = useState([]);
+//   const [filteredRecords, setFilteredRecords] = useState([]);
+//   const [employeeSummary, setEmployeeSummary] = useState([]);
+//   const [selectedEmployee, setSelectedEmployee] = useState(null);
+//   const [employeeDetails, setEmployeeDetails] = useState([]);
+//   const [employees, setEmployees] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState("");
+
+//   const [fromDate, setFromDate] = useState("");
+//   const [toDate, setToDate] = useState("");
+//   const [selectedMonth, setSelectedMonth] = useState("");
+
+//   useEffect(() => {
+//     const fetchAllData = async () => {
+//       try {
+//         const empRes = await fetch(`${BASE_URL}/api/employees/get-employees`);
+//         const empData = await empRes.json();
+//         setEmployees(empData);
+
+//         const attRes = await fetch(`${BASE_URL}/api/attendance/allattendance`);
+//         const attData = await attRes.json();
+//         if (!attRes.ok)
+//           throw new Error(attData.message || "Failed to fetch attendance");
+
+//         const sorted = (attData.records || []).sort(
+//           (a, b) => new Date(b.checkInTime) - new Date(a.checkInTime)
+//         );
+
+//         setRecords(sorted);
+//         setFilteredRecords(sorted);
+//         generateSummary(sorted, empData);
+//       } catch (err) {
+//         setError(err.message);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchAllData();
+//   }, []);
+
+//   const generateSummary = (data, empList = employees) => {
+//     const summaryMap = {};
+
+//     data.forEach((rec) => {
+//       const id = rec.employeeId;
+
+//       const employee = empList.find(
+//         (e) => e.employeeId === id || e._id === id || e.empId === id
+//       );
+
+//       if (!summaryMap[id]) {
+//         summaryMap[id] = {
+//           employeeId: id,
+//           name: employee?.name || employee?.fullName || "N/A",
+//           presentDays: 0,
+//           lateDays: 0,
+//           onsiteDays: 0,
+//           halfDayLeaves: 0,
+//           fullDayLeaves: 0,
+//           totalWorkingDays: 0,
+//         };
+//       }
+
+//       const emp = summaryMap[id];
+
+//       if (rec.checkInTime) emp.presentDays += 1;
+
+//       const checkIn = new Date(rec.checkInTime);
+//       const hours = checkIn.getHours();
+//       const minutes = checkIn.getMinutes();
+
+//       if (hours > 10 || (hours === 10 && minutes > 0)) emp.lateDays += 1;
+
+//       if (rec.onsite) emp.onsiteDays += 1;
+
+//       if (rec.checkInTime && rec.checkOutTime) {
+//         const checkOut = new Date(rec.checkOutTime);
+//         const diffHrs = (checkOut - checkIn) / (1000 * 60 * 60);
+
+//         if (diffHrs < 4) emp.fullDayLeaves += 1;
+//         else if (diffHrs < 8.8) emp.halfDayLeaves += 1;
+//       }
+//     });
+
+//     Object.values(summaryMap).forEach((emp) => {
+//       emp.totalWorkingDays =
+//         emp.presentDays - (emp.fullDayLeaves + emp.halfDayLeaves / 2);
+//       emp.totalWorkingDays = Math.max(emp.totalWorkingDays, 0);
+//     });
+
+//     setEmployeeSummary(Object.values(summaryMap));
+//   };
+
+//   const handleDateRangeFilter = () => {
+//     if (!fromDate || !toDate) {
+//       setFilteredRecords(records);
+//       generateSummary(records);
+//       return;
+//     }
+
+//     const start = new Date(fromDate);
+//     const end = new Date(toDate);
+
+//     const filtered = records.filter((rec) => {
+//       const d = new Date(rec.checkInTime);
+//       return d >= start && d <= end;
+//     });
+
+//     setFilteredRecords(filtered);
+//     generateSummary(filtered);
+//   };
+
+//   const handleMonthChange = (e) => {
+//     const month = e.target.value;
+//     setSelectedMonth(month);
+//     setFromDate("");
+//     setToDate("");
+
+//     if (!month) {
+//       setFilteredRecords(records);
+//       generateSummary(records);
+//       return;
+//     }
+
+//     const [year, monthNum] = month.split("-");
+//     const filtered = records.filter((rec) => {
+//       const d = new Date(rec.checkInTime);
+//       return d.getFullYear() === +year && d.getMonth() + 1 === +monthNum;
+//     });
+
+//     setFilteredRecords(filtered);
+//     generateSummary(filtered);
+//   };
+
+//   const clearFilters = () => {
+//     setFromDate("");
+//     setToDate("");
+//     setSelectedMonth("");
+//     setFilteredRecords(records);
+//     generateSummary(records);
+//   };
+
+//   const handleViewDetails = (employeeId) => {
+//     const details = records.filter((rec) => rec.employeeId === employeeId);
+//     setEmployeeDetails(details);
+//     setSelectedEmployee(employeeId);
+//   };
+
+//   const closeModal = () => {
+//     setSelectedEmployee(null);
+//     setEmployeeDetails([]);
+//   };
+
+//   const formatDate = (dateString) =>
+//     dateString
+//       ? new Date(dateString).toLocaleString("en-IN", {
+//           day: "2-digit",
+//           month: "short",
+//           year: "numeric",
+//           hour: "2-digit",
+//           minute: "2-digit",
+//         })
+//       : "-";
+
+//   const downloadAllSummary = () => {
+//     if (!employeeSummary.length) return;
+
+//     const header = [
+//       "Employee ID",
+//       "Name",
+//       "Present Days",
+//       "Late Days",
+//       "In Office Days",
+//       "Half Day Leaves",
+//       "Full Day Leaves",
+//       "Total Working Days",
+//     ];
+
+//     const rows = employeeSummary.map((emp) => [
+//       emp.employeeId,
+//       emp.name,
+//       emp.presentDays,
+//       emp.lateDays,
+//       emp.onsiteDays,
+//       emp.halfDayLeaves,
+//       emp.fullDayLeaves,
+//       emp.totalWorkingDays,
+//     ]);
+
+//     const csvContent =
+//       "data:text/csv;charset=utf-8," +
+//       [header, ...rows].map((e) => e.join(",")).join("\n");
+
+//     const encodedUri = encodeURI(csvContent);
+//     const link = document.createElement("a");
+//     link.setAttribute("href", encodedUri);
+//     link.setAttribute("download", "employee_summary.csv");
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//   };
+
+//   if (loading) return <p>Loading attendance records...</p>;
+//   if (error) return <p>Error: {error}</p>;
+
+//   return (
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//       <div className="mx-auto max-w-7xl">
+//         <h1 className="mb-6 text-3xl font-bold text-blue-700">
+//           📊 Employee Attendance Dashboard
+//         </h1>
+
+//         {/* Filters */}
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border shadow-md rounded-xl">
+//           <div>
+//             <label className="mr-2 font-semibold text-gray-700">From:</label>
+//             <input
+//               type="date"
+//               value={fromDate}
+//               onChange={(e) => setFromDate(e.target.value)}
+//               className="p-2 border rounded-lg"
+//             />
+//           </div>
+
+//           <div>
+//             <label className="mr-2 font-semibold text-gray-700">To:</label>
+//             <input
+//               type="date"
+//               value={toDate}
+//               onChange={(e) => setToDate(e.target.value)}
+//               className="p-2 border rounded-lg"
+//             />
+//           </div>
+
+//           <button
+//             onClick={handleDateRangeFilter}
+//             className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//           >
+//             Apply
+//           </button>
+
+//           <div>
+//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
+//             <input
+//               type="month"
+//               value={selectedMonth}
+//               onChange={handleMonthChange}
+//               className="p-2 border rounded-lg"
+//             />
+//           </div>
+
+//           <button
+//             onClick={clearFilters}
+//             className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
+//           >
+//             Clear
+//           </button>
+//         </div>
+
+//         {/* Summary Table */}
+//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
+//           <div className="flex items-center justify-between mb-4">
+//             <h2 className="text-2xl font-semibold text-purple-700">
+//               👥 Employee Summary
+//             </h2>
+//             <button
+//               onClick={downloadAllSummary}
+//               className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//             >
+//               ⬇ Download Summary
+//             </button>
+//           </div>
+
+//           <div className="overflow-x-auto">
+//             <table className="w-full text-sm border">
+//               <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
+//                 <tr>
+//                   <th className="px-6 py-3 text-left">Employee ID</th>
+//                   <th className="px-6 py-3 text-left">Name</th>
+//                   <th className="px-6 py-3">Present</th>
+//                   <th className="px-6 py-3">Late</th>
+//                   <th className="px-6 py-3">In Office</th>
+//                   <th className="px-6 py-3">Half Day</th>
+//                   <th className="px-6 py-3">Full Day</th>
+//                   <th className="px-6 py-3">Working Days</th>
+//                 </tr>
+//               </thead>
+
+//               <tbody>
+//                 {employeeSummary.map((emp) => (
+//                   <tr
+//                     key={emp.employeeId}
+//                     onClick={() => handleViewDetails(emp.employeeId)}
+//                     className="border-t cursor-pointer hover:bg-blue-50"
+//                   >
+//                     <td className="px-6 py-3">{emp.employeeId}</td>
+//                     <td className="px-6 py-3">{emp.name}</td>
+//                     <td className="px-6 py-3 text-green-700">{emp.presentDays}</td>
+//                     <td className="px-6 py-3 text-orange-700">{emp.lateDays}</td>
+//                     <td className="px-6 py-3 text-blue-700">{emp.onsiteDays}</td>
+//                     <td className="px-6 py-3 text-yellow-700">{emp.halfDayLeaves}</td>
+//                     <td className="px-6 py-3 text-red-700">{emp.fullDayLeaves}</td>
+//                     <td className="px-6 py-3 font-bold text-purple-700">
+//                       {emp.totalWorkingDays}
+//                     </td>
+//                   </tr>
+//                 ))}
+//               </tbody>
+//             </table>
+//           </div>
+//         </div>
+
+//         {/* Details Modal */}
+//         {selectedEmployee && (
+//           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+//             <div className="bg-white p-6 rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+//               <div className="flex items-center justify-between mb-4">
+//                 <h3 className="text-xl font-semibold text-blue-700">
+//                   🧾 Attendance Details — {selectedEmployee}
+//                 </h3>
+//                 <button
+//                   onClick={closeModal}
+//                   className="text-lg font-bold text-red-600"
+//                 >
+//                   ✖
+//                 </button>
+//               </div>
+
+//               <table className="w-full text-sm border">
+//                 <thead className="text-white bg-blue-600">
+//                   <tr>
+//                     <th className="px-4 py-2">Date</th>
+//                     <th className="px-4 py-2">Check-In</th>
+//                     <th className="px-4 py-2">Check-Out</th>
+//                     <th className="px-4 py-2">In Office</th>
+//                     <th className="px-4 py-2">Hours</th>
+//                   </tr>
+//                 </thead>
+
+//                 <tbody>
+//                   {employeeDetails.map((rec, i) => {
+//                     const checkIn = new Date(rec.checkInTime);
+//                     const checkOut = rec.checkOutTime
+//                       ? new Date(rec.checkOutTime)
+//                       : null;
+
+//                     const diffHrs = checkOut
+//                       ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2)
+//                       : "-";
+
+//                     return (
+//                       <tr key={i} className="border-t hover:bg-blue-50">
+//                         <td className="px-4 py-2">
+//                           {new Date(rec.checkInTime).toLocaleDateString("en-IN")}
+//                         </td>
+//                         <td className="px-4 py-2">
+//                           {formatDate(rec.checkInTime)}
+//                         </td>
+//                         <td className="px-4 py-2">
+//                           {rec.checkOutTime ? formatDate(rec.checkOutTime) : "-"}
+//                         </td>
+//                         <td className="px-4 py-2">{rec.onsite ? "Yes" : "No"}</td>
+//                         <td className="px-4 py-2">{diffHrs}</td>
+//                       </tr>
+//                     );
+//                   })}
+//                 </tbody>
+//               </table>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// }
+
 import { useEffect, useState } from "react";
 
 const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
@@ -1835,43 +2218,31 @@ export default function AttendanceSummary() {
         })
       : "-";
 
-  const downloadAllSummary = () => {
+  // 🚀 AUTO-SAVE SUMMARY TO DB (NO BUTTON)
+  useEffect(() => {
     if (!employeeSummary.length) return;
 
-    const header = [
-      "Employee ID",
-      "Name",
-      "Present Days",
-      "Late Days",
-      "In Office Days",
-      "Half Day Leaves",
-      "Full Day Leaves",
-      "Total Working Days",
-    ];
+    const autoSave = async () => {
+      try {
+        await fetch(`http://localhost:5000/api/attendancesummary/save`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            summaries: employeeSummary,
+            fromDate,
+            toDate,
+            month: selectedMonth,
+          }),
+        });
 
-    const rows = employeeSummary.map((emp) => [
-      emp.employeeId,
-      emp.name,
-      emp.presentDays,
-      emp.lateDays,
-      emp.onsiteDays,
-      emp.halfDayLeaves,
-      emp.fullDayLeaves,
-      emp.totalWorkingDays,
-    ]);
+        console.log("Auto Saved Summary Successfully!");
+      } catch (err) {
+        console.error("Auto Save Error:", err);
+      }
+    };
 
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [header, ...rows].map((e) => e.join(",")).join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "employee_summary.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+    autoSave();
+  }, [employeeSummary]); // summary change → auto save
 
   if (loading) return <p>Loading attendance records...</p>;
   if (error) return <p>Error: {error}</p>;
@@ -1907,7 +2278,7 @@ export default function AttendanceSummary() {
 
           <button
             onClick={handleDateRangeFilter}
-            className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 text-white bg-blue-600 rounded-lg"
           >
             Apply
           </button>
@@ -1924,7 +2295,7 @@ export default function AttendanceSummary() {
 
           <button
             onClick={clearFilters}
-            className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
+            className="px-4 py-2 text-white bg-gray-500 rounded-lg"
           >
             Clear
           </button>
@@ -1936,9 +2307,38 @@ export default function AttendanceSummary() {
             <h2 className="text-2xl font-semibold text-purple-700">
               👥 Employee Summary
             </h2>
+
             <button
-              onClick={downloadAllSummary}
-              className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+              onClick={() => {
+                const header = [
+                  "Employee ID",
+                  "Name",
+                  "Present",
+                  "Late",
+                  "In Office",
+                  "Half Day",
+                  "Full Day",
+                  "Working Days",
+                ];
+                const rows = employeeSummary.map((emp) => [
+                  emp.employeeId,
+                  emp.name,
+                  emp.presentDays,
+                  emp.lateDays,
+                  emp.onsiteDays,
+                  emp.halfDayLeaves,
+                  emp.fullDayLeaves,
+                  emp.totalWorkingDays,
+                ]);
+                const csv =
+                  "data:text/csv;charset=utf-8," +
+                  [header, ...rows].map((r) => r.join(",")).join("\n");
+                const link = document.createElement("a");
+                link.href = encodeURI(csv);
+                link.download = "employee_summary.csv";
+                link.click();
+              }}
+              className="px-4 py-2 text-white bg-green-600 rounded-lg"
             >
               ⬇ Download Summary
             </button>
@@ -1971,8 +2371,12 @@ export default function AttendanceSummary() {
                     <td className="px-6 py-3 text-green-700">{emp.presentDays}</td>
                     <td className="px-6 py-3 text-orange-700">{emp.lateDays}</td>
                     <td className="px-6 py-3 text-blue-700">{emp.onsiteDays}</td>
-                    <td className="px-6 py-3 text-yellow-700">{emp.halfDayLeaves}</td>
-                    <td className="px-6 py-3 text-red-700">{emp.fullDayLeaves}</td>
+                    <td className="px-6 py-3 text-yellow-700">
+                      {emp.halfDayLeaves}
+                    </td>
+                    <td className="px-6 py-3 text-red-700">
+                      {emp.fullDayLeaves}
+                    </td>
                     <td className="px-6 py-3 font-bold text-purple-700">
                       {emp.totalWorkingDays}
                     </td>
@@ -2032,7 +2436,9 @@ export default function AttendanceSummary() {
                         <td className="px-4 py-2">
                           {rec.checkOutTime ? formatDate(rec.checkOutTime) : "-"}
                         </td>
-                        <td className="px-4 py-2">{rec.onsite ? "Yes" : "No"}</td>
+                        <td className="px-4 py-2">
+                          {rec.onsite ? "Yes" : "No"}
+                        </td>
                         <td className="px-4 py-2">{diffHrs}</td>
                       </tr>
                     );
