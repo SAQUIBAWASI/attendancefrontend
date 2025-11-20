@@ -121,7 +121,6 @@ import LeavesReport from "./Pages/LeavesReport.js";
 import AddLocationPage from "./Pages/Location.js";
 import LocationListPage from "./Pages/LocationListPage.js";
 import MyShift from "./Pages/MyShift.js";
-import RoleManagement from "./Pages/RoleManagement.js";
 import ServicesPage from "./Pages/ServicesPage.js";
 import ShiftList from "./Pages/ShiftList.js";
 import ShiftManagement from "./Pages/ShiftManagement.js";
@@ -272,7 +271,7 @@ function App() {
               <Route path="/addlocation" element={<AddLocationPage />}/>
                <Route path="/locationlist" element={<LocationListPage />}/>
                <Route path="attedancesummary" element={<AttendanceSummary/>}/>
-              <Route path="/role-management" element={<RoleManagement />} />
+
             </Routes>
           </AdminLayout>
         }
