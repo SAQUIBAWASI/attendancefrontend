@@ -702,6 +702,7 @@ const AddEmployeePage = () => {
   // Salary Fields
   const [salaryPerMonth, setSalaryPerMonth] = useState("");
   const [shiftHours, setShiftHours] = useState("");
+  const [weekOffPerMonth, setWeekOffPerMonth] = useState(""); // NEW FIELD
 
   const [showPassword, setShowPassword] = useState(false);
   const [locations, setLocations] = useState([]);
@@ -772,7 +773,7 @@ const AddEmployeePage = () => {
         );
       }
 
-      // Step 3: Add Salary (UPDATED)
+      // Step 3: Add Salary (WeekOff Included)
       await axios.post(
         "http://localhost:5000/api/salary/set-salary",
         {
@@ -780,6 +781,7 @@ const AddEmployeePage = () => {
           name,
           salaryPerMonth: Number(salaryPerMonth),
           shiftHours: Number(shiftHours),
+          weekOffPerMonth: Number(weekOffPerMonth), // NEW FIELD
         }
       );
 
@@ -799,6 +801,7 @@ const AddEmployeePage = () => {
 
       setSalaryPerMonth("");
       setShiftHours("");
+      setWeekOffPerMonth(""); // RESET NEW FIELD
 
       setTimeout(() => navigate("/employeelist"), 800);
     } catch (err) {
@@ -825,6 +828,7 @@ const AddEmployeePage = () => {
       )}
 
       <form onSubmit={handleSubmit}>
+        
         {/* NAME */}
         <div className="mb-4">
           <label className="block text-sm">Full Name</label>
@@ -966,6 +970,18 @@ const AddEmployeePage = () => {
           />
         </div>
 
+        {/* WEEK OFF PER MONTH */}
+        <div className="mb-4">
+          <label className="block text-sm">Week Off Per Month</label>
+          <input
+            type="number"
+            value={weekOffPerMonth}
+            onChange={(e) => setWeekOffPerMonth(e.target.value)}
+            className="w-full p-2 border rounded"
+            required
+          />
+        </div>
+
         {/* LOCATION */}
         <div className="mb-4">
           <label className="block text-sm">Location</label>
@@ -995,3 +1011,4 @@ const AddEmployeePage = () => {
 };
 
 export default AddEmployeePage;
+
