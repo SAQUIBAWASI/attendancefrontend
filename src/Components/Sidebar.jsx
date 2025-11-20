@@ -44,7 +44,7 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       name: "Attendance",
       dropdown: [
         { name: "Attendance Records", path: "/attendancelist" },
-        {name:"AttendanceSummary",path:"/attedancesummary"},
+        { name: "AttendanceSummary", path: "/attedancesummary" },
         { name: "Today Attendance", path: "/today-attendance" },
         { name: "Late Today", path: "/late-today" },
         { name: "Absent Today", path: "/absent-today" },
@@ -58,6 +58,15 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
         { name: "Leave Reports", path: "/leaves-report" },
       ],
     },
+    {
+      icon: <i className="text-white ri-money-dollar-box-fill"></i>, // use any icon you like
+      name: "Payroll",
+      dropdown: [
+        { name: "Generate Payroll", path: "/payroll" },
+      
+      ],
+    },
+
     {
       icon: <i className="text-white ri-file-chart-fill"></i>,
       name: "Reports",

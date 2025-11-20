@@ -128,6 +128,7 @@ import AboutPage from "./Pages/AboutPage.js";
 import ServicesPage from "./Pages/ServicesPage.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
 import ContactPage from "./Pages/ContactPage.js";
+import PayRoll from "./Pages/PayRoll.js";
 
 function App() {
   return (
@@ -272,6 +273,7 @@ function App() {
               <Route path="/addlocation" element={<AddLocationPage />}/>
                <Route path="/locationlist" element={<LocationListPage />}/>
                <Route path="attedancesummary" element={<AttendanceSummary/>}/>
+               <Route path="/payroll" element={<PayRoll/>}></Route>
 
             </Routes>
           </AdminLayout>
