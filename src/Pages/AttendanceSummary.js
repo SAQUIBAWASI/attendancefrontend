@@ -1760,6 +1760,7 @@ export default function AttendanceSummary() {
         emp.presentDays - (emp.fullDayLeaves + emp.halfDayLeaves / 2);
       emp.totalWorkingDays = Math.max(emp.totalWorkingDays, 0);
     });
+    
 
     setEmployeeSummary(Object.values(summaryMap));
   };
@@ -1956,6 +1957,8 @@ export default function AttendanceSummary() {
                   <th className="px-6 py-3">Half Day</th>
                   <th className="px-6 py-3">Full Day</th>
                   <th className="px-6 py-3">Working Days</th>
+                  <th className="px-6 py-3">Salary</th>
+
                 </tr>
               </thead>
 
@@ -1976,6 +1979,8 @@ export default function AttendanceSummary() {
                     <td className="px-6 py-3 font-bold text-purple-700">
                       {emp.totalWorkingDays}
                     </td>
+                    
+
                   </tr>
                 ))}
               </tbody>
