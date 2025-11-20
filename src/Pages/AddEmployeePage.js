@@ -814,7 +814,7 @@ const AddEmployeePage = () => {
 
   return (
     <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
-      <h2 className="mb-6 text-2xl font-bold text-blue-900">Add New Employee</h2>
+      <h2 className="mb-6 text-2xl font-bold text-blue-900">Add New Employee Data</h2>
 
       {successMessage && (
         <div className="p-4 mb-4 text-green-700 bg-green-100 rounded">
