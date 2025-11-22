@@ -2047,7 +2047,7 @@
 //   );
 // }
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const BASE_URL = "http://localhost:5000";
 
@@ -2597,77 +2597,163 @@ export default function AttendanceSummary() {
         </div>
 
         {/* Details Modal */}
-        {selectedEmployee && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-blue-700">
-                  🧾 Attendance Details — {selectedEmployee}
-                </h3>
-                <button
-                  onClick={closeModal}
-                  className="text-lg font-bold text-red-600 hover:text-red-700"
-                >
-                  ✖
-                </button>
-              </div>
-
-              <table className="w-full text-sm border">
-                <thead className="text-white bg-blue-600">
-                  <tr>
-                    <th className="px-4 py-2">Date</th>
-                    <th className="px-4 py-2">Month</th>
-                    <th className="px-4 py-2">Check-In</th>
-                    <th className="px-4 py-2">Check-Out</th>
-                    <th className="px-4 py-2">In Office</th>
-                    <th className="px-4 py-2">Hours</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {employeeDetails.map((rec, i) => {
-                    const checkIn = new Date(rec.checkInTime);
-                    const checkOut = rec.checkOutTime
-                      ? new Date(rec.checkOutTime)
-                      : null;
-
-                    const diffHrs = checkOut
-                      ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2)
-                      : "-";
-
-                    const monthYear = checkIn.toLocaleString('en-IN', { 
-                      month: 'long', 
-                      year: 'numeric' 
-                    });
-
-                    return (
-                      <tr key={i} className="border-t hover:bg-blue-50">
-                        <td className="px-4 py-2">
-                          {new Date(rec.checkInTime).toLocaleDateString("en-IN")}
-                        </td>
-                        <td className="px-4 py-2 font-medium">
-                          {monthYear}
-                        </td>
-                        <td className="px-4 py-2">
-                          {formatDate(rec.checkInTime)}
-                        </td>
-                        <td className="px-4 py-2">
-                          {rec.checkOutTime ? formatDate(rec.checkOutTime) : "-"}
-                        </td>
-                        <td className="px-4 py-2">
-                          {rec.onsite ? "Yes" : "No"}
-                        </td>
-                        <td className="px-4 py-2">{diffHrs}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+{selectedEmployee && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="bg-white p-6 rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+      
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-semibold text-blue-700">
+          🧾 Attendance Details — {selectedEmployee}
+        </h3>
+        <button
+          onClick={closeModal}
+          className="text-lg font-bold text-red-600 hover:text-red-700"
+        >
+          ✖
+        </button>
       </div>
 
+      <table className="w-full text-sm border">
+        <thead className="text-white bg-blue-600">
+          <tr>
+            <th className="px-4 py-2">Date</th>
+            <th className="px-4 py-2">Month</th>
+            <th className="px-4 py-2">Check-In</th>
+            <th className="px-4 py-2">Check-Out</th>
+            <th className="px-4 py-2">Region</th>
+            <th className="px-4 py-2">Hours</th>
+            <th className="px-4 py-2">Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {employeeDetails.map((rec, i) => {
+            const checkIn = new Date(rec.checkInTime);
+            const checkOut = rec.checkOutTime ?
+              new Date(rec.checkOutTime) : null;
+
+            const diffHrs = checkOut
+              ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2)
+              : "-";
+
+            const monthYear = checkIn.toLocaleString("en-IN", {
+              month: "long",
+              year: "numeric",
+            });
+
+            return (
+              <tr key={i} className="border-t hover:bg-blue-50">
+
+                <td className="px-4 py-2">
+                  {checkIn.toLocaleDateString("en-IN")}
+                </td>
+
+                <td className="px-4 py-2 font-medium">{monthYear}</td>
+
+                <td className="px-4 py-2">{formatDate(rec.checkInTime)}</td>
+
+                <td className="px-4 py-2">
+                  {rec.checkOutTime ? formatDate(rec.checkOutTime) : "-"}
+                </td>
+
+                {/* Editable Region + Comment */}
+                <td className="px-4 py-2">
+                <select
+                className="w-full px-2 py-1 border rounded"
+                value={rec.region || ""}
+                onChange={(e) => {
+                const updated = [...employeeDetails];
+                updated[i].region = e.target.value;
+
+                // If "Comment" selected, clear previous comment
+                if (e.target.value !== "Comment") {
+                 updated[i].comment = "";
+                 }
+
+                 setEmployeeDetails(updated);
+                 }}
+                 >
+                <option value="">Select</option>
+                <option value="Onsite">Onsite</option>
+                <option value="Remote">Remote</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="Comment">Comment (Type)</option>
+                </select>
+
+        {/* Show comment box only when "Comment" selected */}
+  {rec.region === "Comment" && (
+    <input
+      type="text"
+      placeholder="Type comment here..."
+      className="w-full px-2 py-1 mt-2 border rounded"
+      value={rec.comment || ""}
+      onChange={(e) => {
+        const updated = [...employeeDetails];
+        updated[i].comment = e.target.value;
+        setEmployeeDetails(updated);
+      }}
+    />
+  )}
+</td>
+
+
+                {/* Editable Hours */}
+                <td className="px-4 py-2">
+                  <input
+                    type="number"
+                    step="0.1"
+                    className="w-20 px-2 py-1 border rounded"
+                    value={rec.hours || diffHrs}
+                    onChange={(e) => {
+                      const updated = [...employeeDetails];
+                      updated[i].hours = e.target.value;
+                      setEmployeeDetails(updated);
+                    }}
+                  />
+                </td>
+
+                {/* Save Button */}
+                <td className="px-4 py-2">
+                  <button
+                    className="px-3 py-1 text-white bg-green-600 rounded hover:bg-green-700"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`${BASE_URL}/api/attendance/update`, {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            attendanceId: rec._id,
+                            region: rec.region,
+                            hours: rec.hours,
+                          }),
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                          alert("Updated Successfully!");
+                        } else {
+                          alert("Failed: " + result.message);
+                        }
+                      } catch (error) {
+                        alert("Error updating record");
+                      }
+                    }}
+                  >
+                    Save
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
+</div>
       {/* Add CSS for fade-in animation */}
       <style jsx>{`
         @keyframes fade-in {
