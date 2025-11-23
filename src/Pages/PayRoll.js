@@ -293,51 +293,6 @@ const PayRoll = () => {
               </tbody>
             </table>
           </div>
-
-          <div class="salary-breakdown">
-            <h3>Attendance Summary</h3>
-            <table class="breakdown-table">
-              <thead>
-                <tr>
-                  <th>Particulars</th>
-                  <th>Days</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Total Present Days</td>
-                  <td>${employee.presentDays}</td>
-                </tr>
-                <tr>
-                  <td>Working Days</td>
-                  <td>${employee.workingDays}</td>
-                </tr>
-                <tr>
-                  <td>Half Days</td>
-                  <td>${employee.halfDays}</td>
-                </tr>
-                <tr>
-                  <td>Full Day Leaves</td>
-                  <td>${employee.fullDayLeaves}</td>
-                </tr>
-                <tr>
-                  <td>Late Days</td>
-                  <td>${employee.lateDays}</td>
-                </tr>
-                <tr>
-                  <td>Onsite Days</td>
-                  <td>${employee.onsiteDays}</td>
-                </tr>
-                ${hasExtraWork && employee.extraWork.extraDays > 0 ? `
-                <tr>
-                  <td>Extra Working Days</td>
-                  <td>${employee.extraWork.extraDays}</td>
-                </tr>
-                ` : ''}
-              </tbody>
-            </table>
-          </div>
-
           ${hasExtraWork && employee.extraWork.reason ? `
           <div class="notes">
             <strong>Notes:</strong> ${employee.extraWork.reason}

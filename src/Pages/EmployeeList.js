@@ -537,15 +537,20 @@ const EmployeeList = () => {
 
   const handleView = (employee) => setSelectedEmployee(employee);
   const handleCloseModal = () => setSelectedEmployee(null);
-  const handleEdit = (id) => navigate(`/addemployee`);
+  const handleEdit = (employee) => navigate(`/addemployee`, { state: { employee } });
 
   const handleDelete = async (id) => {
-    try {
-      setEmployees(employees.filter((emp) => emp._id !== id));
-      alert("✅ Employee deleted successfully!");
-    } catch (error) {
-      console.error("❌ Error deleting employee:", error);
-      alert("Failed to delete employee.");
+    if (window.confirm("Are you sure you want to delete this employee?")) {
+      try {
+        await axios.delete(
+          `https://attendancebackend-5cgn.onrender.com/api/employees/delete-employee/${id}`
+        );
+        setEmployees(employees.filter((emp) => emp._id !== id));
+        alert("✅ Employee deleted successfully!");
+      } catch (error) {
+        console.error("❌ Error deleting employee:", error);
+        alert("Failed to delete employee.");
+      }
     }
   };
 
@@ -626,6 +631,11 @@ const EmployeeList = () => {
     return `${hours} hours`;
   };
 
+  const formatWeekOff = (weekOff) => {
+    if (!weekOff) return "-";
+    return `${weekOff} days`;
+  };
+
   const csvHeaders = [
     { label: "Name", key: "name" },
     { label: "Email", key: "email" },
@@ -636,6 +646,7 @@ const EmployeeList = () => {
     { label: "Employee ID", key: "employeeId" },
     { label: "Salary Per Month", key: "salaryPerMonth" },
     { label: "Shift Hours", key: "shiftHours" },
+    { label: "Week Off Per Month", key: "weekOffPerMonth" },
     { label: "Location", key: "location" },
   ];
 
@@ -709,6 +720,7 @@ const EmployeeList = () => {
                   <td className="p-2 border">{emp.employeeId}</td>
                   <td className="p-2 border">{formatSalary(emp.salaryPerMonth)}</td>
                   <td className="p-2 border">{formatShiftHours(emp.shiftHours)}</td>
+                  <td className="p-2 border">{formatWeekOff(emp.weekOffPerMonth)}</td>
                   <td className="p-2 border">{getLocationName(emp.location)}</td>
                   <td className="p-2 border text-center">
                     <div className="flex justify-center gap-2">
@@ -720,7 +732,7 @@ const EmployeeList = () => {
                         <FaEye />
                       </button>
                       <button
-                        onClick={() => handleEdit(emp._id)}
+                        onClick={() => handleEdit(emp)}
                         className="text-yellow-500 hover:text-yellow-700"
                         title="Edit"
                       >
@@ -805,6 +817,9 @@ const EmployeeList = () => {
               </li>
               <li>
                 <strong>Shift Hours:</strong> {formatShiftHours(selectedEmployee.shiftHours)}
+              </li>
+              <li>
+                <strong>Week Off Per Month:</strong> {formatWeekOff(selectedEmployee.weekOffPerMonth)}
               </li>
               <li>
                 <strong>Location:</strong> {getLocationName(selectedEmployee.location)}
