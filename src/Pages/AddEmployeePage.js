@@ -750,7 +750,7 @@ const AddEmployeePage = () => {
     try {
       // Step 1: Add Employee
       await axios.post(
-        "http://localhost:5000/api/employees/add-employee",
+        "https://attendancebackend-5cgn.onrender.com/api/employees/add-employee",
         {
           name,
           email,
@@ -775,7 +775,7 @@ const AddEmployeePage = () => {
 
       // Step 3: Add Salary (WeekOff Included)
       await axios.post(
-        "http://localhost:5000/api/salary/set-salary",
+        "https://attendancebackend-5cgn.onrender.com/api/salary/set-salary",
         {
           employeeId,
           name,
