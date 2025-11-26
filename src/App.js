@@ -134,7 +134,7 @@ function App() {
     <Routes>
       <Route path="/" element={<HomePage/>}></Route>
       {/* Login page rendered outside AdminLayout */}
-      <Route path="/land" element={<LandingPage />} />
+      {/* <Route path="/land" element={<LandingPage />} /> */}
       {/* <Route path="/" element={<LoginPage />} /> */}
       <Route path="/admin-login" element={<Login/>}/>
       <Route path="/employee-login" element={<EmployeeLogin/>}/>

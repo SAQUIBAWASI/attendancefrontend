@@ -33,7 +33,7 @@ const TimelyNavbar = () => {
     }
 
     const handleLogin = () => {
-  navigate("/land");
+  navigate("/employee-login");
 };
 
     return (
