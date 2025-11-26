@@ -4015,7 +4015,7 @@ export default function AttendanceSummary() {
   // ✅ Update attendance record in backend
   const updateAttendanceRecord = async (attendanceId, hours, region, comment) => {
     try {
-      const response = await fetch(`${BASE_URL}/api/attendance/update`, {
+      const response = await fetch(`${BASE_URL}/api/attendancesummary/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
