@@ -116,19 +116,19 @@ import AssignLocation from "./Pages/AssignLocation.js";
 import AttendanceSummary from "./Pages/AttendanceSummary.js";
 import ContactPage from "./Pages/ContactPage.js";
 import EmployeeLocation from "./Pages/EmployeeLocation.js";
+import EmployeeSalary from "./Pages/EmployeeSalary.js";
 import HomePage from "./Pages/HomePage.js";
 import LeavesReport from "./Pages/LeavesReport.js";
 import AddLocationPage from "./Pages/Location.js";
 import LocationListPage from "./Pages/LocationListPage.js";
 import MyShift from "./Pages/MyShift.js";
+import PayRoll from "./Pages/PayRoll.js";
 import ServicesPage from "./Pages/ServicesPage.js";
 import ShiftList from "./Pages/ShiftList.js";
 import ShiftManagement from "./Pages/ShiftManagement.js";
 import SuperAdminMedicalMonitor from "./Pages/SuperAdminMedicalMonitor.js";
 import TimelyFooter from "./Pages/TimelyFooter.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
-import PayRoll from "./Pages/PayRoll.js";
-
 function App() {
   return (
     <Routes>
@@ -152,7 +152,7 @@ function App() {
           <Route path="/service" element={<ServicesPage/>}></Route>
           <Route path="/whoweserve" element={<WhoWeServePage/>}></Route>
           <Route path="/contact" element={<ContactPage/>}></Route>
-         
+          <Route path="/mysalary" element={<EmployeeSalary />} />
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"

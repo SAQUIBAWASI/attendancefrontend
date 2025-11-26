@@ -56,6 +56,13 @@ const Sidebar = ({ isCollapsed, isMobile, onClose }) => {
       ],
     },
     {
+      icon: <i className="text-white ri-money-dollar-box-fill"></i>,
+      name: "Salary",
+      dropdown: [
+        { name: "My Salary", path: "/mysalary" },
+      ],
+    },
+    {
       icon: <i className="text-white ri-logout-box-fill"></i>,
       name: "Logout",
       action: handleLogout,
