@@ -3907,10 +3907,1188 @@
 // }
 
 
+// import { useEffect, useRef, useState } from "react";
+// import * as XLSX from "xlsx";
+// import { saveAs } from "file-saver";
+
+
+// const BASE_URL = "http://localhost:5000";
+
+// export default function AttendanceSummary() {
+//   const [records, setRecords] = useState([]);
+//   const [filteredRecords, setFilteredRecords] = useState([]);
+//   const [employeeSummary, setEmployeeSummary] = useState([]);
+//   const [selectedEmployee, setSelectedEmployee] = useState(null);
+//   const [employeeDetails, setEmployeeDetails] = useState([]);
+//   const [employees, setEmployees] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState("");
+//   const [saveStatus, setSaveStatus] = useState("");
+
+//   const [fromDate, setFromDate] = useState("");
+//   const [toDate, setToDate] = useState("");
+//   const [selectedMonth, setSelectedMonth] = useState("");
+
+//   // Pagination states
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+//   // Refs for tracking changes
+//   const previousSummaryRef = useRef([]);
+//   const autoSaveIntervalRef = useRef(null);
+//   const saveStatusTimeoutRef = useRef(null);
+//   const isSavingRef = useRef(false);
+//   const lastSaveTimestampRef = useRef(0);
+
+//   // Constants for working hours calculation
+//   const FULL_DAY_HOURS = 9;
+//   const HALF_DAY_THRESHOLD = 8.80;
+//   const FULL_DAY_LEAVE_THRESHOLD = 4;
+
+//   // ✅ Close modal function
+//   const closeModal = () => {
+//     setSelectedEmployee(null);
+//     setEmployeeDetails([]);
+//   };
+
+//   // ✅ Fetch all data from backend
+//   const fetchAllData = async () => {
+//     try {
+//       setLoading(true);
+//       setError("");
+
+//       // Fetch employees
+//       const empRes = await fetch(`${BASE_URL}/api/employees/get-employees`);
+//       if (!empRes.ok) throw new Error("Failed to fetch employees");
+//       const empData = await empRes.json();
+//       setEmployees(empData);
+
+//       // Fetch attendance records
+//       const attRes = await fetch(`${BASE_URL}/api/attendance/allattendance`);
+//       if (!attRes.ok) throw new Error("Failed to fetch attendance records");
+//       const attData = await attRes.json();
+
+//       const sortedRecords = (attData.records || []).sort(
+//         (a, b) => new Date(b.checkInTime) - new Date(a.checkInTime)
+//       );
+
+//       setRecords(sortedRecords);
+//       setFilteredRecords(sortedRecords);
+
+//       // Calculate summary from backend
+//       await calculateSummaryFromBackend();
+
+//     } catch (err) {
+//       setError(err.message);
+//       console.error("Fetch error:", err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // ✅ Calculate summary using backend API
+//   const calculateSummaryFromBackend = async () => {
+//     try {
+//       const response = await fetch(`${BASE_URL}/api/attendancesummary/calculate`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify({
+//           fromDate: fromDate || null,
+//           toDate: toDate || null,
+//           month: selectedMonth || null,
+//         }),
+//       });
+
+//       const result = await response.json();
+
+//       if (result.success) {
+//         setEmployeeSummary(result.summary);
+//         previousSummaryRef.current = JSON.parse(JSON.stringify(result.summary));
+//       } else {
+//         throw new Error(result.message || "Failed to calculate summary");
+//       }
+//     } catch (error) {
+//       console.error("Error calculating summary:", error);
+//       setError("Failed to calculate attendance summary");
+//     }
+//   };
+
+//   // ✅ Update attendance record in backend
+//   const updateAttendanceRecord = async (attendanceId, hours, region, comment) => {
+//     try {
+//       const response = await fetch(`${BASE_URL}/api/attendancesummary/update`, {
+//         method: "PUT",
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify({
+//           attendanceId,
+//           hours: hours !== undefined ? parseFloat(hours) : undefined,
+//           region,
+//           comment
+//         }),
+//       });
+
+//       const result = await response.json();
+//       return result;
+//     } catch (error) {
+//       console.error("Error updating attendance:", error);
+//       return { success: false, message: "Network error" };
+//     }
+//   };
+
+//   // ✅ Handle save with backend update
+//   const handleSaveAttendance = async (rec, hours, region, comment, index) => {
+//     try {
+//       const hoursValue = hours !== undefined ? parseFloat(hours) : rec.totalHours;
+
+//       const result = await updateAttendanceRecord(rec._id, hoursValue, region, comment);
+
+//       if (result.success) {
+//         showSaveStatus("✅ Record updated successfully!");
+
+//         // Update local state
+//         const updatedDetails = employeeDetails.map((detail, idx) =>
+//           idx === index
+//             ? {
+//               ...detail,
+//               totalHours: hoursValue,
+//               region: region,
+//               comment: comment
+//             }
+//             : detail
+//         );
+//         setEmployeeDetails(updatedDetails);
+
+//         // Update main records
+//         const updatedRecords = records.map(record =>
+//           record._id === rec._id
+//             ? {
+//               ...record,
+//               totalHours: hoursValue,
+//               region: region,
+//               comment: comment
+//             }
+//             : record
+//         );
+
+//         setRecords(updatedRecords);
+//         setFilteredRecords(updatedRecords);
+
+//         // Recalculate summary with updated data
+//         await calculateSummaryFromBackend();
+
+//       } else {
+//         showSaveStatus("❌ Failed: " + (result.message || "Unknown error"), "error");
+//       }
+//     } catch (error) {
+//       showSaveStatus("🚨 Error updating record", "error");
+//     }
+//   };
+
+//   // ✅ Auto-save summary to backend
+//   const autoSaveSummary = async (type = "auto", changeTimestamp = null) => {
+//     if (changeTimestamp && changeTimestamp < lastSaveTimestampRef.current) {
+//       console.log("Skipping outdated save request");
+//       return;
+//     }
+
+//     if (isSavingRef.current || employeeSummary.length === 0) {
+//       console.log("Save already in progress or no data, skipping...");
+//       return;
+//     }
+
+//     isSavingRef.current = true;
+//     lastSaveTimestampRef.current = changeTimestamp || Date.now();
+
+//     try {
+//       console.log("Saving summary to database...", employeeSummary);
+
+//       const response = await fetch(`${BASE_URL}/api/attendancesummary/save`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify({
+//           summaries: employeeSummary,
+//           fromDate: fromDate || null,
+//           toDate: toDate || null,
+//           month: selectedMonth || "",
+//         }),
+//       });
+
+//       const result = await response.json();
+
+//       if (result.success) {
+//         console.log("✅ Summary Saved Successfully!", result);
+//         previousSummaryRef.current = JSON.parse(JSON.stringify(employeeSummary));
+
+//         if (type === "scheduled") {
+//           showSaveStatus("✅ Data auto-saved successfully!");
+//         } else if (type === "auto") {
+//           showSaveStatus("✅ Changes saved automatically!");
+//         } else {
+//           showSaveStatus("✅ Data saved successfully!");
+//         }
+//       } else {
+//         console.error("❌ Save Failed:", result.message);
+//         showSaveStatus("❌ Failed to save data!", "error");
+//       }
+//     } catch (err) {
+//       console.error("🚨 Save Error:", err);
+//       showSaveStatus("🚨 Error saving data!", "error");
+//     } finally {
+//       isSavingRef.current = false;
+//     }
+//   };
+
+//   // ✅ Fetch employee details from backend
+//   const handleViewDetails = async (employeeId) => {
+//     try {
+//       setSelectedEmployee(employeeId);
+
+//       const params = new URLSearchParams({
+//         employeeId,
+//         ...(fromDate && toDate && { fromDate, toDate }),
+//         ...(selectedMonth && { month: selectedMonth })
+//       });
+
+//       const response = await fetch(`${BASE_URL}/api/attendancesummary/employee-details?${params}`);
+//       const result = await response.json();
+
+//       if (result.success) {
+//         setEmployeeDetails(result.details);
+//       } else {
+//         throw new Error(result.message || "Failed to fetch employee details");
+//       }
+//     } catch (error) {
+//       console.error("Error fetching employee details:", error);
+//       showSaveStatus("❌ Error loading employee details", "error");
+//     }
+//   };
+
+//   // ✅ Date range filter
+//   const handleDateRangeFilter = async () => {
+//     try {
+//       setLoading(true);
+//       await calculateSummaryFromBackend();
+//       setCurrentPage(1);
+//     } catch (error) {
+//       console.error("Error applying date filter:", error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // ✅ Month filter
+//   const handleMonthChange = async (e) => {
+//     const month = e.target.value;
+//     setSelectedMonth(month);
+//     setFromDate("");
+//     setToDate("");
+
+//     try {
+//       setLoading(true);
+//       await calculateSummaryFromBackend();
+//       setCurrentPage(1);
+//     } catch (error) {
+//       console.error("Error applying month filter:", error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // ✅ Clear filters
+//   const clearFilters = async () => {
+//     setFromDate("");
+//     setToDate("");
+//     setSelectedMonth("");
+
+//     try {
+//       setLoading(true);
+//       await calculateSummaryFromBackend();
+//       setCurrentPage(1);
+//     } catch (error) {
+//       console.error("Error clearing filters:", error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // ✅ Manual save function
+//   const handleManualSave = async () => {
+//     try {
+//       console.log("Manual save triggered...");
+//       await autoSaveSummary("manual");
+//     } catch (err) {
+//       console.error("Manual save failed:", err);
+//       showSaveStatus("❌ Failed to save data!", "error");
+//     }
+//   };
+
+//   // ✅ Download employee details as CSV
+//   // const downloadEmployeeDetails = (employeeId, details) => {
+//   //   if (!details || details.length === 0) {
+//   //     showSaveStatus("❌ No data available to download", "error");
+//   //     return;
+//   //   }
+
+//   //   try {
+//   //     const employee = employees.find(emp => emp.employeeId === employeeId);
+//   //     const employeeName = employee?.name || 'Unknown';
+
+//   //     const header = [
+//   //       "Employee ID",
+//   //       "Employee Name", 
+//   //       "Date",
+//   //       "Check-In Time",
+//   //       "Check-Out Time",
+//   //       "Region",
+//   //       "Hours Worked",
+//   //       "Day Type",
+//   //       "Comment"
+//   //     ];
+
+//   //     const rows = details.map((rec) => {
+//   //       const checkIn = new Date(rec.checkInTime);
+//   //       const checkOut = rec.checkOutTime ? new Date(rec.checkOutTime) : null;
+
+//   //       const hours = rec.totalHours || 
+//   //         (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
+
+//   //       const dayType = calculateDayType(hours);
+//   //       const dayTypeText = 
+//   //         dayType === "full" ? "Full Day" :
+//   //         dayType === "half" ? "Half Day" :
+//   //         dayType === "full_leave" ? "Full Day Leave" : "Unknown";
+
+//   //       return [
+//   //         rec.employeeId,
+//   //         employeeName,
+//   //         checkIn.toLocaleDateString("en-IN"),
+//   //         formatDate(rec.checkInTime),
+//   //         rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
+//   //         rec.region || "-",
+//   //         hours,
+//   //         dayTypeText,
+//   //         rec.comment || "-"
+//   //       ];
+//   //     });
+
+//   //     const csvContent = [header, ...rows]
+//   //       .map(row => row.map(field => `"${field}"`).join(","))
+//   //       .join("\n");
+
+//   //     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+//   //     const url = URL.createObjectURL(blob);
+//   //     const link = document.createElement("a");
+
+//   //     const timestamp = new Date().toISOString().split('T')[0];
+//   //     const filename = `attendance_details_${employeeId}_${timestamp}.csv`;
+
+//   //     link.href = url;
+//   //     link.setAttribute("download", filename);
+//   //     document.body.appendChild(link);
+//   //     link.click();
+//   //     document.body.removeChild(link);
+//   //     URL.revokeObjectURL(url);
+
+//   //     showSaveStatus("✅ Details downloaded successfully!");
+
+//   //   } catch (error) {
+//   //     console.error("Download error:", error);
+//   //     showSaveStatus("❌ Error downloading details", "error");
+//   //   }
+//   // };
+
+//   // ✅ Helper functions
+//   const calculateDayType = (hours) => {
+//     const numericHours = parseFloat(hours) || 0;
+
+//     if (numericHours >= FULL_DAY_HOURS) {
+//       return "full";
+//     } else if (numericHours >= HALF_DAY_THRESHOLD) {
+//       return "half";
+//     } else if (numericHours >= FULL_DAY_LEAVE_THRESHOLD) {
+//       return "half";
+//     } else {
+//       return "full_leave";
+//     }
+//   };
+
+//   const showSaveStatus = (message, type = "success") => {
+//     setSaveStatus(message);
+
+//     if (saveStatusTimeoutRef.current) {
+//       clearTimeout(saveStatusTimeoutRef.current);
+//     }
+
+//     saveStatusTimeoutRef.current = setTimeout(() => {
+//       setSaveStatus("");
+//     }, 3000);
+//   };
+
+//   const formatDate = (dateString) =>
+//     dateString
+//       ? new Date(dateString).toLocaleString("en-IN", {
+//         day: "2-digit",
+//         month: "short",
+//         year: "numeric",
+//         hour: "2-digit",
+//         minute: "2-digit",
+//       })
+//       : "-";
+
+//   const getDayTypeBadge = (hours) => {
+//     const dayType = calculateDayType(hours);
+//     switch (dayType) {
+//       case "full":
+//         return <span className="px-2 py-1 text-xs text-white bg-green-500 rounded">Full Day</span>;
+//       case "half":
+//         return <span className="px-2 py-1 text-xs text-white bg-yellow-500 rounded">Half Day</span>;
+//       case "full_leave":
+//         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
+//       default:
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
+//     }
+//   };
+
+//   // const downloadCombinedExcel = () => {
+//   //   if (employeeSummary.length === 0) {
+//   //     alert("No summary data available");
+//   //     return;
+//   //   }
+
+//   //   const workbook = XLSX.utils.book_new();
+
+//   //   // ------------------------------------------
+//   //   // 🟩 Sheet 1 — All Employee Summary
+//   //   // ------------------------------------------
+//   //   const summaryData = employeeSummary.map(emp => ({
+//   //     "Employee ID": emp.employeeId,
+//   //     "Name": emp.name,
+//   //     "Month": emp.month,
+//   //     "Present Days": emp.presentDays,
+//   //     "Late Days": emp.lateDays,
+//   //     "Onsite Days": emp.onsiteDays,
+//   //     "Half Day Leaves": emp.halfDayLeaves,
+//   //     "Full Day Leaves": emp.fullDayLeaves,
+//   //     "Working Days": emp.totalWorkingDays.toFixed(1)
+//   //   }));
+
+//   //   const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+//   //   XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
+
+//   //   // ------------------------------------------
+//   //   // 🟦 Sheets for EACH Employee — Attendance Details
+//   //   // ------------------------------------------
+//   //   const uniqueEmployees = [...new Set(records.map(r => r.employeeId))];
+
+//   //   uniqueEmployees.forEach(empId => {
+//   //     const empRecords = records.filter(rec => rec.employeeId === empId);
+//   //     const employee = employees.find(e => e.employeeId === empId);
+
+//   //     const detailData = empRecords.map(rec => {
+//   //       const checkIn = new Date(rec.checkInTime);
+//   //       const checkOut = rec.checkOutTime ? new Date(rec.checkOutTime) : null;
+
+//   //       const hours = rec.totalHours ||
+//   //         (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
+
+//   //       return {
+//   //         "Employee ID": rec.employeeId,
+//   //         "Employee Name": employee?.name || "N/A",
+//   //         "Date": checkIn.toLocaleDateString("en-IN"),
+//   //         "Check-In": formatDate(rec.checkInTime),
+//   //         "Check-Out": rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
+//   //         // "Region": rec.region || "-",
+//   //         "Hours": hours,
+//   //         // "Comment": rec.comment || "-"
+//   //       };
+//   //     });
+
+//   //     const empSheet = XLSX.utils.json_to_sheet(detailData);
+
+//   //     const sheetName =
+//   //       (employee?.name || empId).replace(/[^A-Za-z0-9]/g, "").substring(0, 28);
+
+//   //     XLSX.utils.book_append_sheet(workbook, empSheet, sheetName);
+//   //   });
+
+//   //   // ------------------------------------------
+//   //   // 🟪 Final Export
+//   //   // ------------------------------------------
+//   //   const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+//   //   const blob = new Blob([excelBuffer], {
+//   //     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+//   //   });
+
+//   //   saveAs(blob, `Attendance_Report_All_Employees.xlsx`);
+//   // };
+
+
+//   // ✅ Initialize on component mount
+ 
+//   const downloadCombinedExcel = () => {
+//   if (employeeSummary.length === 0) {
+//     alert("No summary data available");
+//     return;
+//   }
+
+//   const workbook = XLSX.utils.book_new();
+
+//   // ------------------------------------------
+//   // 🟩 Sheet 1 — Filtered Employee Summary
+//   // ------------------------------------------
+//   const summaryData = employeeSummary.map(emp => ({
+//     "Employee ID": emp.employeeId,
+//     "Name": emp.name,
+//     "Month": emp.month,
+//     "Present Days": emp.presentDays,
+//     "Late Days": emp.lateDays,
+//     "Onsite Days": emp.onsiteDays,
+//     "Half Day Leaves": emp.halfDayLeaves,
+//     "Full Day Leaves": emp.fullDayLeaves,
+//     "Working Days": emp.totalWorkingDays.toFixed(1)
+//   }));
+
+//   const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+//   XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
+
+//   // ------------------------------------------
+//   // 🟦 Filter Data by Date
+//   // ------------------------------------------
+//   // 👉 IMPORTANT: use filteredRecords, NOT records
+//   const filtered = filteredRecords.length > 0 ? filteredRecords : records;
+
+//   const uniqueEmployees = [
+//     ...new Set(filtered.map(r => r.employeeId))
+//   ];
+
+//   // ------------------------------------------
+//   // 🟦 Sheets for EACH Employee — Filtered Attendance Details
+//   // ------------------------------------------
+//   uniqueEmployees.forEach(empId => {
+//     const empRecords = filtered.filter(rec => rec.employeeId === empId);
+//     const employee = employees.find(e => e.employeeId === empId);
+
+//     const detailData = empRecords.map(rec => {
+//       const checkIn = new Date(rec.checkInTime);
+//       const checkOut = rec.checkOutTime ? new Date(rec.checkOutTime) : null;
+
+//       const hours = rec.totalHours ||
+//         (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
+
+//       return {
+//         "Employee ID": rec.employeeId,
+//         "Employee Name": employee?.name || "N/A",
+//         "Date": checkIn.toLocaleDateString("en-IN"),
+//         "Check-In": formatDate(rec.checkInTime),
+//         "Check-Out": rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
+//         "Hours": hours,
+//       };
+//     });
+
+//     const empSheet = XLSX.utils.json_to_sheet(detailData);
+
+//     const sheetName =
+//       (employee?.name || empId)
+//         .replace(/[^A-Za-z0-9]/g, "")
+//         .substring(0, 28);
+
+//     XLSX.utils.book_append_sheet(workbook, empSheet, sheetName);
+//   });
+
+//   // ------------------------------------------
+//   // 🟪 Final Export
+//   // ------------------------------------------
+//   const excelBuffer = XLSX.write(workbook, {
+//     bookType: "xlsx",
+//     type: "array",
+//   });
+
+//   const blob = new Blob([excelBuffer], {
+//     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+//   });
+
+//   saveAs(blob, `Attendance_Report_All_Employees.xlsx`);
+// };
+
+ 
+ 
+//   useEffect(() => {
+//     fetchAllData();
+
+//     // Setup auto-save interval
+//     autoSaveIntervalRef.current = setInterval(() => {
+//       if (employeeSummary.length > 0 &&
+//         JSON.stringify(employeeSummary) !== JSON.stringify(previousSummaryRef.current) &&
+//         !isSavingRef.current) {
+//         console.log("5-minute auto-save triggered...");
+//         autoSaveSummary("scheduled");
+//       }
+//     }, 5 * 60 * 1000);
+
+//     return () => {
+//       if (autoSaveIntervalRef.current) {
+//         clearInterval(autoSaveIntervalRef.current);
+//       }
+//       if (saveStatusTimeoutRef.current) {
+//         clearTimeout(saveStatusTimeoutRef.current);
+//       }
+//     };
+//   }, []);
+
+//   // ✅ Auto-save when summary changes
+//   useEffect(() => {
+//     if (!employeeSummary.length || isSavingRef.current) return;
+
+//     const hasSummaryChanged =
+//       JSON.stringify(employeeSummary) !== JSON.stringify(previousSummaryRef.current);
+
+//     if (hasSummaryChanged) {
+//       console.log("Summary changed, auto-saving...");
+//       const changeTimestamp = Date.now();
+
+//       const timeoutId = setTimeout(() => {
+//         autoSaveSummary("auto", changeTimestamp);
+//       }, 2000);
+
+//       return () => clearTimeout(timeoutId);
+//     }
+//   }, [employeeSummary]);
+
+//   // ✅ Pagination calculations
+//   const indexOfLastItem = currentPage * itemsPerPage;
+//   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+//   const currentItems = employeeSummary.slice(indexOfFirstItem, indexOfLastItem);
+//   const totalPages = Math.ceil(employeeSummary.length / itemsPerPage);
+
+//   const handleNextPage = () => {
+//     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+//   };
+
+//   const handlePrevPage = () => {
+//     if (currentPage > 1) setCurrentPage(currentPage - 1);
+//   };
+
+//   const handlePageClick = (pageNumber) => setCurrentPage(pageNumber);
+
+//   const handleItemsPerPageChange = (e) => {
+//     setItemsPerPage(Number(e.target.value));
+//     setCurrentPage(1);
+//   };
+
+//   const getPageNumbers = () => {
+//     const pageNumbers = [];
+//     const maxVisiblePages = 5;
+
+//     if (totalPages <= maxVisiblePages) {
+//       for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+//     } else {
+//       const startPage = Math.max(1, currentPage - 2);
+//       const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+//       for (let i = startPage; i <= endPage; i++) pageNumbers.push(i);
+//     }
+
+//     return pageNumbers;
+//   };
+
+//   if (loading) return <div className="flex items-center justify-center min-h-screen">
+//     <div className="text-lg font-semibold text-blue-600">Loading attendance records...</div>
+//   </div>;
+
+//   if (error) return <div className="flex items-center justify-center min-h-screen">
+//     <div className="p-4 text-red-600 bg-red-100 rounded-lg">Error: {error}</div>
+//   </div>;
+
+//   return (
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//       <div className="mx-auto max-w-7xl">
+
+//         {/* Save Status Alert */}
+//         {saveStatus && (
+//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
+//               ? "bg-green-500 border-l-4 border-green-600"
+//               : "bg-red-500 border-l-4 border-red-600"
+//             }`}>
+//             {saveStatus}
+//           </div>
+//         )}
+
+//         <h1 className="mb-6 text-3xl font-bold text-blue-700">
+//           📊 Employee Attendance Dashboard
+//         </h1>
+
+//         {/* Working Hours Info */}
+//         <div className="p-4 mb-6 bg-white border border-blue-300 rounded-lg shadow-sm">
+//           <h3 className="font-semibold text-blue-700">📋 Working Hours Criteria:</h3>
+//           <div className="grid grid-cols-1 gap-2 mt-2 text-sm md:grid-cols-4">
+//             <div className="flex items-center gap-2">
+//               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+//               <span><strong>Full Day:</strong> ≥ {FULL_DAY_HOURS} hours</span>
+//             </div>
+//             <div className="flex items-center gap-2">
+//               <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+//               <span><strong>Half Day:</strong> ≥ {FULL_DAY_LEAVE_THRESHOLD} hours</span>
+//             </div>
+//             <div className="flex items-center gap-2">
+//               <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+//               <span><strong>Full Day Leave:</strong> &lt; {FULL_DAY_LEAVE_THRESHOLD} hours</span>
+//             </div>
+//             <div className="flex items-center gap-2">
+//               <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+//               <span><strong>Onsite:</strong> Marked as Onsite</span>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Filters */}
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border shadow-md rounded-xl">
+//           <div>
+//             <label className="mr-2 font-semibold text-gray-700">From:</label>
+//             <input
+//               type="date"
+//               value={fromDate}
+//               onChange={(e) => setFromDate(e.target.value)}
+//               className="p-2 border rounded-lg"
+//             />
+//           </div>
+
+//           <div>
+//             <label className="mr-2 font-semibold text-gray-700">To:</label>
+//             <input
+//               type="date"
+//               value={toDate}
+//               onChange={(e) => setToDate(e.target.value)}
+//               className="p-2 border rounded-lg"
+//             />
+//           </div>
+
+//           <button
+//             onClick={handleDateRangeFilter}
+//             className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//           >
+//             Apply Date Filter
+//           </button>
+
+//           <div className="ml-4">
+//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
+//             <input
+//               type="month"
+//               value={selectedMonth}
+//               onChange={handleMonthChange}
+//               className="p-2 border rounded-lg"
+//             />
+//           </div>
+
+//           <button
+//             onClick={clearFilters}
+//             className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
+//           >
+//             Clear All
+//           </button>
+
+//           {/* Manual Save Button */}
+//           <button
+//             onClick={handleManualSave}
+//             className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600"
+//             title="Manually save current summary to database"
+//           >
+//             💾 Save Now
+//           </button>
+//         </div>
+
+//         {/* Filter Status */}
+//         <div className="p-3 mb-6 text-sm text-blue-800 bg-blue-100 border border-blue-300 rounded-lg">
+//           💡 <strong>Filter Status:</strong>
+//           {fromDate && toDate && ` Date Range: ${fromDate} to ${toDate}`}
+//           {selectedMonth && ` Month: ${selectedMonth}`}
+//           {!fromDate && !toDate && !selectedMonth && ' Showing all records'}
+//           {employeeSummary.length > 0 && ` | Found ${employeeSummary.length} employees`}
+//         </div>
+
+//         {/* Summary Table */}
+//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
+//           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
+//             <h2 className="text-2xl font-semibold text-purple-700">
+//               👥 Employee Summary ({employeeSummary.length} employees)
+//             </h2>
+//               <button
+//                     onClick={downloadCombinedExcel}
+//                     className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//                   >
+//                     ⬇ Download Attendance
+//                   </button>
+
+//             <div className="flex flex-wrap items-center gap-4">
+//               {/* Items per page selector */}
+//               <div className="flex items-center gap-2">
+//                 <label className="text-sm font-medium text-gray-700">
+//                   Show:
+//                 </label>
+//                 <select
+//                   value={itemsPerPage}
+//                   onChange={handleItemsPerPageChange}
+//                   className="p-2 text-sm border rounded-lg"
+//                 >
+//                   <option value={5}>5</option>
+//                   <option value={10}>10</option>
+//                   <option value={20}>20</option>
+//                   <option value={50}>50</option>
+//                 </select>
+//                 <span className="text-sm text-gray-600">entries</span>
+//               </div>
+
+//               {/* <button
+//                 onClick={() => {
+//                   const header = [
+//                     "Employee ID",
+//                     "Name",
+//                     "Month",
+//                     "Present Days",
+//                     "Late Days",
+//                     "Onsite Days",
+//                     "Half Days",
+//                     "Full Day Leaves",
+//                     "Working Days"
+//                   ];
+//                   const rows = employeeSummary.map((emp) => [
+//                     emp.employeeId,
+//                     emp.name,
+//                     emp.month,
+//                     emp.presentDays,
+//                     emp.lateDays,
+//                     emp.onsiteDays,
+//                     emp.halfDayLeaves,
+//                     emp.fullDayLeaves,
+//                     emp.totalWorkingDays.toFixed(1)
+//                   ]);
+//                   const csv =
+//                     "data:text/csv;charset=utf-8," +
+//                     [header, ...rows].map((r) => r.join(",")).join("\n");
+//                   const link = document.createElement("a");
+//                   link.href = encodeURI(csv);
+//                   link.download = "employee_summary.csv";
+//                   link.click();
+//                 }}
+//                 className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//               >
+//                 ⬇ Download Summary
+//               </button> */}
+
+//             </div>
+//           </div>
+
+//           <div className="overflow-x-auto">
+//             <table className="w-full text-sm border">
+//               <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
+//                 <tr>
+//                   <th className="px-6 py-3 text-left">Employee ID</th>
+//                   <th className="px-6 py-3 text-left">Name</th>
+//                   <th className="px-6 py-3">Month</th>
+//                   <th className="px-6 py-3">Present</th>
+//                   <th className="px-6 py-3">Late</th>
+//                   <th className="px-6 py-3">Onsite</th>
+//                   <th className="px-6 py-3">Half Day</th>
+//                   <th className="px-6 py-3">Full Day Leave</th>
+//                   <th className="px-6 py-3">Working Days</th>
+//                 </tr>
+//               </thead>
+
+//               <tbody>
+//                 {currentItems.map((emp) => (
+//                   <tr
+//                     key={emp.employeeId}
+//                     onClick={() => handleViewDetails(emp.employeeId)}
+//                     className="border-t cursor-pointer hover:bg-blue-50"
+//                   >
+//                     <td className="px-6 py-3">{emp.employeeId}</td>
+//                     <td className="px-6 py-3">{emp.name}</td>
+//                     <td className="px-6 py-3 font-medium text-gray-700">{emp.month}</td>
+//                     <td className="px-6 py-3 text-green-700">{emp.presentDays}</td>
+//                     <td className="px-6 py-3 text-orange-700">{emp.lateDays}</td>
+//                     <td className="px-6 py-3 text-blue-700">{emp.onsiteDays}</td>
+//                     <td className="px-6 py-3 text-yellow-700">
+//                       {emp.halfDayLeaves}
+//                     </td>
+//                     <td className="px-6 py-3 text-red-700">
+//                       {emp.fullDayLeaves}
+//                     </td>
+//                     <td className="px-6 py-3 font-bold text-purple-700">
+//                       {emp.totalWorkingDays.toFixed(1)}
+//                     </td>
+//                   </tr>
+//                 ))}
+//               </tbody>
+//             </table>
+
+//             {/* Pagination Controls */}
+//             {employeeSummary.length > 0 && (
+//               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
+//                 <div className="text-sm text-gray-600">
+//                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
+//                 </div>
+
+//                 <div className="flex items-center gap-2">
+//                   <button
+//                     onClick={handlePrevPage}
+//                     disabled={currentPage === 1}
+//                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === 1
+//                         ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                       }`}
+//                   >
+//                     Previous
+//                   </button>
+
+//                   {getPageNumbers().map((page) => (
+//                     <button
+//                       key={page}
+//                       onClick={() => handlePageClick(page)}
+//                       className={`px-3 py-1 text-sm border rounded-lg ${currentPage === page
+//                           ? "text-white bg-blue-600 border-blue-600"
+//                           : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         }`}
+//                     >
+//                       {page}
+//                     </button>
+//                   ))}
+
+//                   <button
+//                     onClick={handleNextPage}
+//                     disabled={currentPage === totalPages}
+//                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === totalPages
+//                         ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                       }`}
+//                   >
+//                     Next
+//                   </button>
+//                 </div>
+//               </div>
+//             )}
+
+//             {employeeSummary.length === 0 && (
+//               <div className="py-8 text-center text-gray-500">
+//                 No records found for the selected filter
+//               </div>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Details Modal */}
+//         {selectedEmployee && (
+//           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+//             <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+
+//               <div className="flex items-center justify-between mb-4">
+//                 <h3 className="text-xl font-semibold text-blue-700">
+//                   🧾 Attendance Details — {selectedEmployee}
+//                 </h3>
+//                 <div className="flex items-center gap-3">
+//                   {/* Download Button */}
+
+//                   {/* <button
+//                     onClick={() => downloadEmployeeDetails(selectedEmployee, employeeDetails)}
+//                     className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//                     title="Download attendance details as CSV"
+//                   >
+//                     ⬇ Download Details
+//                   </button> */}
+
+//                   <button
+//                     onClick={downloadCombinedExcel}
+//                     className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//                   >
+//                     ⬇ Download Attendance
+//                   </button>
+
+
+//                   <button
+//                     onClick={closeModal}
+//                     className="text-lg font-bold text-red-600 hover:text-red-700"
+//                   >
+//                     ✖
+//                   </button>
+//                 </div>
+//               </div>
+
+//               {/* Employee Info Summary */}
+//               <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
+//                 <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
+//                   <div>
+//                     <span className="font-semibold text-blue-700">Employee ID:</span>
+//                     <span className="ml-2">{selectedEmployee}</span>
+//                   </div>
+//                   <div>
+//                     <span className="font-semibold text-blue-700">Name:</span>
+//                     <span className="ml-2">
+//                       {employees.find(emp => emp.employeeId === selectedEmployee)?.name || 'N/A'}
+//                     </span>
+//                   </div>
+//                   <div>
+//                     <span className="font-semibold text-blue-700">Total Records:</span>
+//                     <span className="ml-2">{employeeDetails.length}</span>
+//                   </div>
+//                   <div>
+//                     <span className="font-semibold text-blue-700">Period:</span>
+//                     <span className="ml-2">
+//                       {fromDate && toDate ? `${fromDate} to ${toDate}` :
+//                         selectedMonth ? selectedMonth : 'All Records'}
+//                     </span>
+//                   </div>
+//                 </div>
+//               </div>
+
+//               <table className="w-full text-sm border">
+//                 <thead className="text-white bg-blue-600">
+//                   <tr>
+//                     <th className="px-4 py-2">Employee ID</th>
+//                     <th className="px-4 py-2">Name</th>
+//                     <th className="px-4 py-2">Date</th>
+//                     <th className="px-4 py-2">Check-In</th>
+//                     <th className="px-4 py-2">Check-Out</th>
+//                     <th className="px-4 py-2">Region</th>
+//                     <th className="px-4 py-2">Hours</th>
+//                     <th className="px-4 py-2">Day Type</th>
+//                     <th className="px-4 py-2">Action</th>
+//                   </tr>
+//                 </thead>
+
+//                 <tbody>
+//                   {employeeDetails.map((rec, i) => {
+//                     const checkIn = new Date(rec.checkInTime);
+//                     const checkOut = rec.checkOutTime ?
+//                       new Date(rec.checkOutTime) : null;
+
+//                     const diffHrs = checkOut
+//                       ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2)
+//                       : "-";
+
+//                     const currentHours = rec.totalHours || diffHrs;
+//                     const employee = employees.find(emp => emp.employeeId === rec.employeeId);
+
+//                     return (
+//                       <tr key={i} className="border-t hover:bg-blue-50">
+//                         {/* Employee ID */}
+//                         <td className="px-4 py-2 font-medium text-gray-700">
+//                           {rec.employeeId}
+//                         </td>
+
+//                         {/* Employee Name */}
+//                         <td className="px-4 py-2">
+//                           {employee?.name || 'N/A'}
+//                         </td>
+
+//                         <td className="px-4 py-2">
+//                           {checkIn.toLocaleDateString("en-IN")}
+//                         </td>
+
+//                         <td className="px-4 py-2">{formatDate(rec.checkInTime)}</td>
+
+//                         <td className="px-4 py-2">
+//                           {rec.checkOutTime ? formatDate(rec.checkOutTime) : "-"}
+//                         </td>
+
+//                         <td className="px-4 py-2">
+//                           <select
+//                             className="w-full px-2 py-1 border rounded"
+//                             value={rec.region || ""}
+//                             onChange={(e) => {
+//                               const updated = [...employeeDetails];
+//                               updated[i].region = e.target.value;
+//                               if (e.target.value !== "Comment") {
+//                                 updated[i].comment = "";
+//                               }
+//                               setEmployeeDetails(updated);
+//                             }}
+//                           >
+//                             <option value="">Select</option>
+//                             <option value="Onsite">Onsite</option>
+//                             <option value="Remote">Remote</option>
+//                             <option value="Hybrid">Hybrid</option>
+//                             <option value="Comment">Comment (Type)</option>
+//                           </select>
+
+//                           {rec.region === "Comment" && (
+//                             <input
+//                               type="text"
+//                               placeholder="Type comment here..."
+//                               className="w-full px-2 py-1 mt-2 border rounded"
+//                               value={rec.comment || ""}
+//                               onChange={(e) => {
+//                                 const updated = [...employeeDetails];
+//                                 updated[i].comment = e.target.value;
+//                                 setEmployeeDetails(updated);
+//                               }}
+//                             />
+//                           )}
+//                         </td>
+
+//                         <td className="px-4 py-2">
+//                           <input
+//                             type="number"
+//                             step="0.1"
+//                             min="0"
+//                             max="24"
+//                             className="w-20 px-2 py-1 border rounded"
+//                             value={rec.hours || rec.totalHours || diffHrs}
+//                             onChange={(e) => {
+//                               const updated = [...employeeDetails];
+//                               updated[i].hours = e.target.value;
+//                               setEmployeeDetails(updated);
+//                             }}
+//                           />
+//                         </td>
+
+//                         <td className="px-4 py-2">
+//                           {getDayTypeBadge(currentHours)}
+//                         </td>
+
+//                         <td className="px-4 py-2">
+//                           <button
+//                             className="px-3 py-1 text-white bg-green-600 rounded hover:bg-green-700"
+//                             onClick={() => handleSaveAttendance(rec, rec.hours || rec.totalHours, rec.region, rec.comment, i)}
+//                           >
+//                             Save
+//                           </button>
+//                         </td>
+//                       </tr>
+//                     );
+//                   })}
+//                 </tbody>
+//               </table>
+
+//               {/* No Records Message */}
+//               {employeeDetails.length === 0 && (
+//                 <div className="py-8 text-center text-gray-500">
+//                   No attendance records found for this employee
+//                 </div>
+//               )}
+//             </div>
+//           </div>
+//         )}
+//       </div>
+
+//       <style jsx>{`
+//         @keyframes fade-in {
+//           from { opacity: 0; transform: translateY(-10px); }
+//           to { opacity: 1; transform: translateY(0); }
+//         }
+//         .animate-fade-in {
+//           animation: fade-in 0.3s ease-out;
+//         }
+//       `}</style>
+//     </div>
+//   );
+// }
+
+import { saveAs } from "file-saver";
 import { useEffect, useRef, useState } from "react";
 import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-
 
 const BASE_URL = "http://localhost:5000";
 
@@ -3940,10 +5118,9 @@ export default function AttendanceSummary() {
   const isSavingRef = useRef(false);
   const lastSaveTimestampRef = useRef(0);
 
-  // Constants for working hours calculation
-  const FULL_DAY_HOURS = 9;
-  const HALF_DAY_THRESHOLD = 8.80;
-  const FULL_DAY_LEAVE_THRESHOLD = 4;
+  // Constants for working hours calculation - UPDATED THRESHOLDS
+  const FULL_DAY_THRESHOLD = 8.80; // 8.81+ hours = Full Day
+  const HALF_DAY_THRESHOLD = 4;    // 4 to 8.80 hours = Half Day
 
   // ✅ Close modal function
   const closeModal = () => {
@@ -4228,93 +5405,16 @@ export default function AttendanceSummary() {
     }
   };
 
-  // ✅ Download employee details as CSV
-  // const downloadEmployeeDetails = (employeeId, details) => {
-  //   if (!details || details.length === 0) {
-  //     showSaveStatus("❌ No data available to download", "error");
-  //     return;
-  //   }
-
-  //   try {
-  //     const employee = employees.find(emp => emp.employeeId === employeeId);
-  //     const employeeName = employee?.name || 'Unknown';
-
-  //     const header = [
-  //       "Employee ID",
-  //       "Employee Name", 
-  //       "Date",
-  //       "Check-In Time",
-  //       "Check-Out Time",
-  //       "Region",
-  //       "Hours Worked",
-  //       "Day Type",
-  //       "Comment"
-  //     ];
-
-  //     const rows = details.map((rec) => {
-  //       const checkIn = new Date(rec.checkInTime);
-  //       const checkOut = rec.checkOutTime ? new Date(rec.checkOutTime) : null;
-
-  //       const hours = rec.totalHours || 
-  //         (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
-
-  //       const dayType = calculateDayType(hours);
-  //       const dayTypeText = 
-  //         dayType === "full" ? "Full Day" :
-  //         dayType === "half" ? "Half Day" :
-  //         dayType === "full_leave" ? "Full Day Leave" : "Unknown";
-
-  //       return [
-  //         rec.employeeId,
-  //         employeeName,
-  //         checkIn.toLocaleDateString("en-IN"),
-  //         formatDate(rec.checkInTime),
-  //         rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
-  //         rec.region || "-",
-  //         hours,
-  //         dayTypeText,
-  //         rec.comment || "-"
-  //       ];
-  //     });
-
-  //     const csvContent = [header, ...rows]
-  //       .map(row => row.map(field => `"${field}"`).join(","))
-  //       .join("\n");
-
-  //     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  //     const url = URL.createObjectURL(blob);
-  //     const link = document.createElement("a");
-
-  //     const timestamp = new Date().toISOString().split('T')[0];
-  //     const filename = `attendance_details_${employeeId}_${timestamp}.csv`;
-
-  //     link.href = url;
-  //     link.setAttribute("download", filename);
-  //     document.body.appendChild(link);
-  //     link.click();
-  //     document.body.removeChild(link);
-  //     URL.revokeObjectURL(url);
-
-  //     showSaveStatus("✅ Details downloaded successfully!");
-
-  //   } catch (error) {
-  //     console.error("Download error:", error);
-  //     showSaveStatus("❌ Error downloading details", "error");
-  //   }
-  // };
-
-  // ✅ Helper functions
+  // ✅ Helper functions - UPDATED LOGIC
   const calculateDayType = (hours) => {
     const numericHours = parseFloat(hours) || 0;
 
-    if (numericHours >= FULL_DAY_HOURS) {
-      return "full";
+    if (numericHours > FULL_DAY_THRESHOLD) {
+      return "full"; // 8.81, 8.82, 8.9, 9.0, etc. = FULL DAY
     } else if (numericHours >= HALF_DAY_THRESHOLD) {
-      return "half";
-    } else if (numericHours >= FULL_DAY_LEAVE_THRESHOLD) {
-      return "half";
+      return "half"; // 4.0 to 8.80 = HALF DAY
     } else {
-      return "full_leave";
+      return "full_leave"; // 4.0 se kam = FULL LEAVE
     }
   };
 
@@ -4355,169 +5455,91 @@ export default function AttendanceSummary() {
     }
   };
 
-  // const downloadCombinedExcel = () => {
-  //   if (employeeSummary.length === 0) {
-  //     alert("No summary data available");
-  //     return;
-  //   }
-
-  //   const workbook = XLSX.utils.book_new();
-
-  //   // ------------------------------------------
-  //   // 🟩 Sheet 1 — All Employee Summary
-  //   // ------------------------------------------
-  //   const summaryData = employeeSummary.map(emp => ({
-  //     "Employee ID": emp.employeeId,
-  //     "Name": emp.name,
-  //     "Month": emp.month,
-  //     "Present Days": emp.presentDays,
-  //     "Late Days": emp.lateDays,
-  //     "Onsite Days": emp.onsiteDays,
-  //     "Half Day Leaves": emp.halfDayLeaves,
-  //     "Full Day Leaves": emp.fullDayLeaves,
-  //     "Working Days": emp.totalWorkingDays.toFixed(1)
-  //   }));
-
-  //   const summarySheet = XLSX.utils.json_to_sheet(summaryData);
-  //   XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
-
-  //   // ------------------------------------------
-  //   // 🟦 Sheets for EACH Employee — Attendance Details
-  //   // ------------------------------------------
-  //   const uniqueEmployees = [...new Set(records.map(r => r.employeeId))];
-
-  //   uniqueEmployees.forEach(empId => {
-  //     const empRecords = records.filter(rec => rec.employeeId === empId);
-  //     const employee = employees.find(e => e.employeeId === empId);
-
-  //     const detailData = empRecords.map(rec => {
-  //       const checkIn = new Date(rec.checkInTime);
-  //       const checkOut = rec.checkOutTime ? new Date(rec.checkOutTime) : null;
-
-  //       const hours = rec.totalHours ||
-  //         (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
-
-  //       return {
-  //         "Employee ID": rec.employeeId,
-  //         "Employee Name": employee?.name || "N/A",
-  //         "Date": checkIn.toLocaleDateString("en-IN"),
-  //         "Check-In": formatDate(rec.checkInTime),
-  //         "Check-Out": rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
-  //         // "Region": rec.region || "-",
-  //         "Hours": hours,
-  //         // "Comment": rec.comment || "-"
-  //       };
-  //     });
-
-  //     const empSheet = XLSX.utils.json_to_sheet(detailData);
-
-  //     const sheetName =
-  //       (employee?.name || empId).replace(/[^A-Za-z0-9]/g, "").substring(0, 28);
-
-  //     XLSX.utils.book_append_sheet(workbook, empSheet, sheetName);
-  //   });
-
-  //   // ------------------------------------------
-  //   // 🟪 Final Export
-  //   // ------------------------------------------
-  //   const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  //   const blob = new Blob([excelBuffer], {
-  //     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  //   });
-
-  //   saveAs(blob, `Attendance_Report_All_Employees.xlsx`);
-  // };
-
-
-  // ✅ Initialize on component mount
- 
   const downloadCombinedExcel = () => {
-  if (employeeSummary.length === 0) {
-    alert("No summary data available");
-    return;
-  }
+    if (employeeSummary.length === 0) {
+      alert("No summary data available");
+      return;
+    }
 
-  const workbook = XLSX.utils.book_new();
+    const workbook = XLSX.utils.book_new();
 
-  // ------------------------------------------
-  // 🟩 Sheet 1 — Filtered Employee Summary
-  // ------------------------------------------
-  const summaryData = employeeSummary.map(emp => ({
-    "Employee ID": emp.employeeId,
-    "Name": emp.name,
-    "Month": emp.month,
-    "Present Days": emp.presentDays,
-    "Late Days": emp.lateDays,
-    "Onsite Days": emp.onsiteDays,
-    "Half Day Leaves": emp.halfDayLeaves,
-    "Full Day Leaves": emp.fullDayLeaves,
-    "Working Days": emp.totalWorkingDays.toFixed(1)
-  }));
+    // ------------------------------------------
+    // 🟩 Sheet 1 — Filtered Employee Summary - UPDATED FIELD NAMES
+    // ------------------------------------------
+    const summaryData = employeeSummary.map(emp => ({
+      "Employee ID": emp.employeeId,
+      "Name": emp.name,
+      "Month": emp.month,
+      "Present Days": emp.presentDays,
+      "Late Days": emp.lateDays,
+      "Onsite Days": emp.onsiteDays,
+      "Half Day Working": emp.halfDayWorking || emp.halfDayLeaves || 0, // Updated field name
+      "Full Day Not Working": emp.fullDayNotWorking || emp.fullDayLeaves || 0, // Updated field name
+      "Working Days": emp.totalWorkingDays.toFixed(1)
+    }));
 
-  const summarySheet = XLSX.utils.json_to_sheet(summaryData);
-  XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
+    const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
 
-  // ------------------------------------------
-  // 🟦 Filter Data by Date
-  // ------------------------------------------
-  // 👉 IMPORTANT: use filteredRecords, NOT records
-  const filtered = filteredRecords.length > 0 ? filteredRecords : records;
+    // ------------------------------------------
+    // 🟦 Filter Data by Date
+    // ------------------------------------------
+    const filtered = filteredRecords.length > 0 ? filteredRecords : records;
 
-  const uniqueEmployees = [
-    ...new Set(filtered.map(r => r.employeeId))
-  ];
+    const uniqueEmployees = [
+      ...new Set(filtered.map(r => r.employeeId))
+    ];
 
-  // ------------------------------------------
-  // 🟦 Sheets for EACH Employee — Filtered Attendance Details
-  // ------------------------------------------
-  uniqueEmployees.forEach(empId => {
-    const empRecords = filtered.filter(rec => rec.employeeId === empId);
-    const employee = employees.find(e => e.employeeId === empId);
+    // ------------------------------------------
+    // 🟦 Sheets for EACH Employee — Filtered Attendance Details
+    // ------------------------------------------
+    uniqueEmployees.forEach(empId => {
+      const empRecords = filtered.filter(rec => rec.employeeId === empId);
+      const employee = employees.find(e => e.employeeId === empId);
 
-    const detailData = empRecords.map(rec => {
-      const checkIn = new Date(rec.checkInTime);
-      const checkOut = rec.checkOutTime ? new Date(rec.checkOutTime) : null;
+      const detailData = empRecords.map(rec => {
+        const checkIn = new Date(rec.checkInTime);
+        const checkOut = rec.checkOutTime ? new Date(rec.checkOutTime) : null;
 
-      const hours = rec.totalHours ||
-        (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
+        const hours = rec.totalHours ||
+          (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
 
-      return {
-        "Employee ID": rec.employeeId,
-        "Employee Name": employee?.name || "N/A",
-        "Date": checkIn.toLocaleDateString("en-IN"),
-        "Check-In": formatDate(rec.checkInTime),
-        "Check-Out": rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
-        "Hours": hours,
-      };
+        return {
+          "Employee ID": rec.employeeId,
+          "Employee Name": employee?.name || "N/A",
+          "Date": checkIn.toLocaleDateString("en-IN"),
+          "Check-In": formatDate(rec.checkInTime),
+          "Check-Out": rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
+          "Hours": hours,
+        };
+      });
+
+      const empSheet = XLSX.utils.json_to_sheet(detailData);
+
+      const sheetName =
+        (employee?.name || empId)
+          .replace(/[^A-Za-z0-9]/g, "")
+          .substring(0, 28);
+
+      XLSX.utils.book_append_sheet(workbook, empSheet, sheetName);
     });
 
-    const empSheet = XLSX.utils.json_to_sheet(detailData);
+    // ------------------------------------------
+    // 🟪 Final Export
+    // ------------------------------------------
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
 
-    const sheetName =
-      (employee?.name || empId)
-        .replace(/[^A-Za-z0-9]/g, "")
-        .substring(0, 28);
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
 
-    XLSX.utils.book_append_sheet(workbook, empSheet, sheetName);
-  });
+    saveAs(blob, `Attendance_Report_All_Employees.xlsx`);
+  };
 
-  // ------------------------------------------
-  // 🟪 Final Export
-  // ------------------------------------------
-  const excelBuffer = XLSX.write(workbook, {
-    bookType: "xlsx",
-    type: "array",
-  });
-
-  const blob = new Blob([excelBuffer], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
-
-  saveAs(blob, `Attendance_Report_All_Employees.xlsx`);
-};
-
- 
- 
+  // ✅ Initialize on component mount
   useEffect(() => {
     fetchAllData();
 
@@ -4622,21 +5644,21 @@ export default function AttendanceSummary() {
           📊 Employee Attendance Dashboard
         </h1>
 
-        {/* Working Hours Info */}
+        {/* Working Hours Info - UPDATED CRITERIA */}
         <div className="p-4 mb-6 bg-white border border-blue-300 rounded-lg shadow-sm">
           <h3 className="font-semibold text-blue-700">📋 Working Hours Criteria:</h3>
           <div className="grid grid-cols-1 gap-2 mt-2 text-sm md:grid-cols-4">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span><strong>Full Day:</strong> ≥ {FULL_DAY_HOURS} hours</span>
+              <span><strong>Full Day:</strong> &gt; {FULL_DAY_THRESHOLD} hours (8.81+)</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-              <span><strong>Half Day:</strong> ≥ {FULL_DAY_LEAVE_THRESHOLD} hours</span>
+              <span><strong>Half Day:</strong> {HALF_DAY_THRESHOLD} to {FULL_DAY_THRESHOLD} hours</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span><strong>Full Day Leave:</strong> &lt; {FULL_DAY_LEAVE_THRESHOLD} hours</span>
+              <span><strong>Full Day Leave:</strong> &lt; {HALF_DAY_THRESHOLD} hours</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
@@ -4710,18 +5732,18 @@ export default function AttendanceSummary() {
           {employeeSummary.length > 0 && ` | Found ${employeeSummary.length} employees`}
         </div>
 
-        {/* Summary Table */}
+        {/* Summary Table - UPDATED COLUMN HEADERS */}
         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-2xl font-semibold text-purple-700">
               👥 Employee Summary ({employeeSummary.length} employees)
             </h2>
-              <button
-                    onClick={downloadCombinedExcel}
-                    className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
-                  >
-                    ⬇ Download Attendance
-                  </button>
+            <button
+              onClick={downloadCombinedExcel}
+              className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+            >
+              ⬇ Download Attendance
+            </button>
 
             <div className="flex flex-wrap items-center gap-4">
               {/* Items per page selector */}
@@ -4741,44 +5763,6 @@ export default function AttendanceSummary() {
                 </select>
                 <span className="text-sm text-gray-600">entries</span>
               </div>
-
-              {/* <button
-                onClick={() => {
-                  const header = [
-                    "Employee ID",
-                    "Name",
-                    "Month",
-                    "Present Days",
-                    "Late Days",
-                    "Onsite Days",
-                    "Half Days",
-                    "Full Day Leaves",
-                    "Working Days"
-                  ];
-                  const rows = employeeSummary.map((emp) => [
-                    emp.employeeId,
-                    emp.name,
-                    emp.month,
-                    emp.presentDays,
-                    emp.lateDays,
-                    emp.onsiteDays,
-                    emp.halfDayLeaves,
-                    emp.fullDayLeaves,
-                    emp.totalWorkingDays.toFixed(1)
-                  ]);
-                  const csv =
-                    "data:text/csv;charset=utf-8," +
-                    [header, ...rows].map((r) => r.join(",")).join("\n");
-                  const link = document.createElement("a");
-                  link.href = encodeURI(csv);
-                  link.download = "employee_summary.csv";
-                  link.click();
-                }}
-                className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
-              >
-                ⬇ Download Summary
-              </button> */}
-
             </div>
           </div>
 
@@ -4792,8 +5776,8 @@ export default function AttendanceSummary() {
                   <th className="px-6 py-3">Present</th>
                   <th className="px-6 py-3">Late</th>
                   <th className="px-6 py-3">Onsite</th>
-                  <th className="px-6 py-3">Half Day</th>
-                  <th className="px-6 py-3">Full Day Leave</th>
+                  <th className="px-6 py-3">Half Day Working</th> {/* Updated header */}
+                  <th className="px-6 py-3">Full Day Not Working</th> {/* Updated header */}
                   <th className="px-6 py-3">Working Days</th>
                 </tr>
               </thead>
@@ -4812,10 +5796,10 @@ export default function AttendanceSummary() {
                     <td className="px-6 py-3 text-orange-700">{emp.lateDays}</td>
                     <td className="px-6 py-3 text-blue-700">{emp.onsiteDays}</td>
                     <td className="px-6 py-3 text-yellow-700">
-                      {emp.halfDayLeaves}
+                      {emp.halfDayWorking || emp.halfDayLeaves || 0} {/* Updated field */}
                     </td>
                     <td className="px-6 py-3 text-red-700">
-                      {emp.fullDayLeaves}
+                      {emp.fullDayNotWorking || emp.fullDayLeaves || 0} {/* Updated field */}
                     </td>
                     <td className="px-6 py-3 font-bold text-purple-700">
                       {emp.totalWorkingDays.toFixed(1)}
@@ -4889,23 +5873,12 @@ export default function AttendanceSummary() {
                   🧾 Attendance Details — {selectedEmployee}
                 </h3>
                 <div className="flex items-center gap-3">
-                  {/* Download Button */}
-
-                  {/* <button
-                    onClick={() => downloadEmployeeDetails(selectedEmployee, employeeDetails)}
-                    className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
-                    title="Download attendance details as CSV"
-                  >
-                    ⬇ Download Details
-                  </button> */}
-
                   <button
                     onClick={downloadCombinedExcel}
                     className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
                   >
                     ⬇ Download Attendance
                   </button>
-
 
                   <button
                     onClick={closeModal}
