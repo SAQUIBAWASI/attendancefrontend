@@ -430,7 +430,7 @@ const LeaveReport = () => {
   // ✅ Fetch all approved leaves
   const fetchApprovedLeaves = async () => {
     try {
-      const res = await axios.get("https://attendancebackend-5cgn.onrender.com/api/leaves/leaves");
+      const res = await axios.get("http://localhost:5000/api/leaves/leaves?status=approved");
       const approved = (res.data.records || res.data).filter(
         (l) => l.status?.toLowerCase() === "approved"
       );

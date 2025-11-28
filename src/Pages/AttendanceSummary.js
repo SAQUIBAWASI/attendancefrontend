@@ -39,7 +39,7 @@
 //     fetchAllAttendance();
 //   }, []);
 
-//   // ✅ Generate Employee Summary Logic
+//   // ✅ Generate Attndance Summary Logic
 //   const generateSummary = (data) => {
 //     const summaryMap = {};
 
@@ -164,10 +164,10 @@
 //           📊 Employee Attendance Dashboard
 //         </h1>
 
-//         {/* ✅ Employee Summary Section */}
+//         {/* ✅ Attndance Summary Section */}
 //         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
 //           <h2 className="mb-4 text-2xl font-semibold text-purple-700">
-//             👥 Employee Summary
+//             👥 Attndance Summary
 //           </h2>
 
 //           {employeeSummary.length === 0 ? (
@@ -422,10 +422,10 @@
 //           </button>
 //         </div>
 
-//         {/* ✅ Employee Summary */}
+//         {/* ✅ Attndance Summary */}
 //         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
 //           <h2 className="mb-4 text-2xl font-semibold text-purple-700">
-//             👥 Employee Summary
+//             👥 Attndance Summary
 //           </h2>
 
 //           {employeeSummary.length === 0 ? (
@@ -529,7 +529,7 @@
 //   }, []);
 
 
-//   // ✅ Download Entire Employee Summary as CSV
+//   // ✅ Download Entire Attndance Summary as CSV
 // const downloadAllSummary = () => {
 //   if (!employeeSummary.length) return;
 
@@ -567,7 +567,7 @@
 // };
 
 
-//   // ✅ Generate Employee Summary
+//   // ✅ Generate Attndance Summary
 //   const generateSummary = (data) => {
 //     const summaryMap = {};
 
@@ -741,10 +741,10 @@
 //           </button>
 //         </div>
 
-//         {/* ✅ Employee Summary */}
+//         {/* ✅ Attndance Summary */}
 //         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
 //           <h2 className="mb-4 text-2xl font-semibold text-purple-700">
-//             👥 Employee Summary
+//             👥 Attndance Summary
 //           </h2>
 
 //            <button
@@ -1144,11 +1144,11 @@
 //           </button>
 //         </div>
 
-//         {/* Employee Summary */}
+//         {/* Attndance Summary */}
 //         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
 //           <div className="flex items-center justify-between mb-4">
 //             <h2 className="text-2xl font-semibold text-purple-700">
-//               👥 Employee Summary
+//               👥 Attndance Summary
 //             </h2>
 //             <button
 //               onClick={downloadAllSummary}
@@ -1533,11 +1533,11 @@
 //           </button>
 //         </div>
 
-//         {/* ✅ Employee Summary */}
+//         {/* ✅ Attndance Summary */}
 //         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
 //           <div className="flex items-center justify-between mb-4">
 //             <h2 className="text-2xl font-semibold text-purple-700">
-//               👥 Employee Summary
+//               👥 Attndance Summary
 //             </h2>
 //             <button
 //               onClick={downloadAllSummary}
@@ -1934,7 +1934,7 @@
 //         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
 //           <div className="flex items-center justify-between mb-4">
 //             <h2 className="text-2xl font-semibold text-purple-700">
-//               👥 Employee Summary
+//               👥 Attndance Summary
 //             </h2>
 //             <button
 //               onClick={downloadAllSummary}
@@ -2496,7 +2496,7 @@
 //         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
-//               👥 Employee Summary
+//               👥 Attndance Summary
 //             </h2>
 
 //             <div className="flex flex-wrap items-center gap-4">
@@ -3548,7 +3548,7 @@
 //         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
-//               👥 Employee Summary ({employeeSummary.length} employees)
+//               👥 Attndance Summary ({employeeSummary.length} employees)
 //             </h2>
 
 //             <div className="flex flex-wrap items-center gap-4">
@@ -4364,7 +4364,7 @@
 //   //   const workbook = XLSX.utils.book_new();
 
 //   //   // ------------------------------------------
-//   //   // 🟩 Sheet 1 — All Employee Summary
+//   //   // 🟩 Sheet 1 — All Attndance Summary
 //   //   // ------------------------------------------
 //   //   const summaryData = employeeSummary.map(emp => ({
 //   //     "Employee ID": emp.employeeId,
@@ -4440,7 +4440,7 @@
 //   const workbook = XLSX.utils.book_new();
 
 //   // ------------------------------------------
-//   // 🟩 Sheet 1 — Filtered Employee Summary
+//   // 🟩 Sheet 1 — Filtered Attndance Summary
 //   // ------------------------------------------
 //   const summaryData = employeeSummary.map(emp => ({
 //     "Employee ID": emp.employeeId,
@@ -4714,7 +4714,7 @@
 //         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
-//               👥 Employee Summary ({employeeSummary.length} employees)
+//               👥 Attndance Summary ({employeeSummary.length} employees)
 //             </h2>
 //               <button
 //                     onClick={downloadCombinedExcel}
@@ -5464,7 +5464,7 @@ export default function AttendanceSummary() {
     const workbook = XLSX.utils.book_new();
 
     // ------------------------------------------
-    // 🟩 Sheet 1 — Filtered Employee Summary - UPDATED FIELD NAMES
+    // 🟩 Sheet 1 — Filtered Attndance Summary - UPDATED FIELD NAMES
     // ------------------------------------------
     const summaryData = employeeSummary.map(emp => ({
       "Employee ID": emp.employeeId,
@@ -5736,7 +5736,7 @@ export default function AttendanceSummary() {
         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-2xl font-semibold text-purple-700">
-              👥 Employee Summary ({employeeSummary.length} employees)
+              👥 Attendance Summary ({employeeSummary.length} employees)
             </h2>
             <button
               onClick={downloadCombinedExcel}

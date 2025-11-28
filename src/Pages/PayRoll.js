@@ -2058,7 +2058,7 @@ const PayRoll = () => {
 // API endpoints
 const ATTENDANCE_SUMMARY_API_URL = "http://localhost:5000/api/attendancesummary/get";
 const ATTENDANCE_DETAILS_API_URL = "http://localhost:5000/api/attendance/allattendance";
-const LEAVES_API_URL = "http://localhost:5000/api/leaves/leaves";
+const LEAVES_API_URL = "http://localhost:5000/api/leaves/leaves?status=approved";
 const EMPLOYEES_API_URL = "http://localhost:5000/api/employees/get-employees";
 const SALARY_API_URL = "http://localhost:5000/api/attendancesummary/getsalaries";
 
@@ -2097,14 +2097,17 @@ const fetchData = async () => {
       console.warn("⚠️ Salary API error:", err.message);
     }
 
-    // STEP 2 → Fetch employees + leaves in parallel  
+    // STEP 2 → Fetch employees + APPROVED LEAVES  
     const [employeesRes, leavesRes] = await Promise.all([
       fetch(EMPLOYEES_API_URL).catch(() => ({ ok: false })),
-      fetch(LEAVES_API_URL).catch(() => ({ ok: false }))
+      // ✅ CORRECT URL use karo - sirf approved leaves ke liye
+      fetch("http://localhost:5000/api/leaves/leaves?status=approved").catch(() => ({ ok: false }))
     ]);
 
     let employeesData = employeesRes.ok ? await employeesRes.json() : [];
     let leavesData = leavesRes.ok ? await leavesRes.json() : [];
+
+    console.log("✅ Approved Leaves from API:", leavesData);
 
     // EMPLOYEES MAP
     const employeesMap = {};
