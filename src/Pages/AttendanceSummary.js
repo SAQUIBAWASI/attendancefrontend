@@ -5455,65 +5455,112 @@ export default function AttendanceSummary() {
     }
   };
 
-  const downloadCombinedExcel = () => {
-    if (employeeSummary.length === 0) {
-      alert("No summary data available");
-      return;
-    }
+ const downloadCombinedExcel = () => {
+  if (employeeSummary.length === 0) {
+    alert("No summary data available");
+    return;
+  }
 
-    const workbook = XLSX.utils.book_new();
+  const workbook = XLSX.utils.book_new();
 
-    // ------------------------------------------
-    // 🟩 Sheet 1 — Filtered Attndance Summary - UPDATED FIELD NAMES
-    // ------------------------------------------
-    const summaryData = employeeSummary.map(emp => ({
-      "Employee ID": emp.employeeId,
-      "Name": emp.name,
-      "Month": emp.month,
-      "Present Days": emp.presentDays,
-      "Late Days": emp.lateDays,
-      "Onsite Days": emp.onsiteDays,
-      "Half Day Working": emp.halfDayWorking || emp.halfDayLeaves || 0, // Updated field name
-      "Full Day Not Working": emp.fullDayNotWorking || emp.fullDayLeaves || 0, // Updated field name
-      "Working Days": emp.totalWorkingDays.toFixed(1)
-    }));
+  // ------------------------------------------
+  // 🟩 Sheet 1 — Filtered Employee Summary
+  // ------------------------------------------
+  const summaryData = employeeSummary.map(emp => ({
+    "Employee ID": emp.employeeId,
+    "Name": emp.name,
+    "Month": emp.month,
+    "Present Days": emp.presentDays,
+    "Late Days": emp.lateDays,
+    "Onsite Days": emp.onsiteDays,
+    "Half Day Working": emp.halfDayWorking || emp.halfDayLeaves || 0,
+    "Full Day Not Working": emp.fullDayNotWorking || emp.fullDayLeaves || 0,
+    "Working Days": emp.totalWorkingDays.toFixed(1)
+  }));
 
-    const summarySheet = XLSX.utils.json_to_sheet(summaryData);
-    XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
+  const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+  XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
 
-    // ------------------------------------------
-    // 🟦 Filter Data by Date
-    // ------------------------------------------
-    const filtered = filteredRecords.length > 0 ? filteredRecords : records;
+  // ------------------------------------------
+  // 🟦 Get Filtered Records - DATE FILTER APPLY KARO
+  // ------------------------------------------
+  let filteredDetails = [...records];
 
-    const uniqueEmployees = [
-      ...new Set(filtered.map(r => r.employeeId))
-    ];
+  // Apply same date filters as summary
+  if (fromDate && toDate) {
+    const from = new Date(fromDate);
+    const to = new Date(toDate);
+    to.setHours(23, 59, 59, 999);
+    
+    filteredDetails = filteredDetails.filter(r => {
+      if (!r.checkInTime) return false;
+      const recordDate = new Date(r.checkInTime);
+      return recordDate >= from && recordDate <= to;
+    });
+  }
 
-    // ------------------------------------------
-    // 🟦 Sheets for EACH Employee — Filtered Attendance Details
-    // ------------------------------------------
-    uniqueEmployees.forEach(empId => {
-      const empRecords = filtered.filter(rec => rec.employeeId === empId);
-      const employee = employees.find(e => e.employeeId === empId);
+  // Month filter apply karo
+  if (selectedMonth) {
+    filteredDetails = filteredDetails.filter(r => {
+      if (!r.checkInTime) return false;
+      const recordMonth = new Date(r.checkInTime).toISOString().slice(0, 7);
+      return recordMonth === selectedMonth;
+    });
+  }
 
-      const detailData = empRecords.map(rec => {
-        const checkIn = new Date(rec.checkInTime);
-        const checkOut = rec.checkOutTime ? new Date(rec.checkOutTime) : null;
+  // Filter only employees that are in the summary
+  const summaryEmployeeIds = employeeSummary.map(emp => emp.employeeId);
+  filteredDetails = filteredDetails.filter(r => 
+    summaryEmployeeIds.includes(r.employeeId)
+  );
 
-        const hours = rec.totalHours ||
-          (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
+  console.log("Filtered Details for Excel:", {
+    totalRecords: records.length,
+    filteredRecords: filteredDetails.length,
+    fromDate,
+    toDate,
+    selectedMonth,
+    summaryEmployees: summaryEmployeeIds.length
+  });
 
-        return {
-          "Employee ID": rec.employeeId,
-          "Employee Name": employee?.name || "N/A",
-          "Date": checkIn.toLocaleDateString("en-IN"),
-          "Check-In": formatDate(rec.checkInTime),
-          "Check-Out": rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
-          "Hours": hours,
-        };
-      });
+  // ------------------------------------------
+  // 🟦 Sheets for EACH Employee — Filtered Attendance Details
+  // ------------------------------------------
+  const uniqueEmployees = [
+    ...new Set(filteredDetails.map(r => r.employeeId))
+  ];
 
+  uniqueEmployees.forEach(empId => {
+    const empRecords = filteredDetails.filter(rec => rec.employeeId === empId);
+    
+    // ✅ SORT RECORDS BY DATE IN ASCENDING ORDER (1 Nov to 21 Nov)
+    const sortedEmpRecords = empRecords.sort((a, b) => {
+      const dateA = new Date(a.checkInTime);
+      const dateB = new Date(b.checkInTime);
+      return dateA - dateB; // Ascending order (oldest to newest)
+    });
+
+    const employee = employees.find(e => e.employeeId === empId);
+
+    const detailData = sortedEmpRecords.map(rec => {
+      const checkIn = new Date(rec.checkInTime);
+      const checkOut = rec.checkOutTime ? new Date(rec.checkOutTime) : null;
+
+      const hours = rec.totalHours ||
+        (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
+
+      return {
+        "Employee ID": rec.employeeId,
+        "Employee Name": employee?.name || "N/A",
+        "Date": checkIn.toLocaleDateString("en-IN"),
+        "Check-In": formatDate(rec.checkInTime),
+        "Check-Out": rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
+        "Hours": hours,
+      };
+    });
+
+    // Only create sheet if there are records
+    if (detailData.length > 0) {
       const empSheet = XLSX.utils.json_to_sheet(detailData);
 
       const sheetName =
@@ -5522,22 +5569,33 @@ export default function AttendanceSummary() {
           .substring(0, 28);
 
       XLSX.utils.book_append_sheet(workbook, empSheet, sheetName);
-    });
+    }
+  });
 
-    // ------------------------------------------
-    // 🟪 Final Export
-    // ------------------------------------------
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
+  // ------------------------------------------
+  // 🟪 Final Export
+  // ------------------------------------------
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: "xlsx",
+    type: "array",
+  });
 
-    const blob = new Blob([excelBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
+  const blob = new Blob([excelBuffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
 
-    saveAs(blob, `Attendance_Report_All_Employees.xlsx`);
-  };
+  // File name mein filter information add karo
+  let fileName = "Attendance_Report";
+  if (fromDate && toDate) {
+    fileName += `_${fromDate}_to_${toDate}`;
+  }
+  if (selectedMonth) {
+    fileName += `_${selectedMonth}`;
+  }
+  fileName += ".xlsx";
+
+  saveAs(blob, fileName);
+}; // ✅ YEH CLOSING BRACKET ADD KARO - FUNCTION END HOGAYA
 
   // ✅ Initialize on component mount
   useEffect(() => {

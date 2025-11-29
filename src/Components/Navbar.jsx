@@ -1,53 +1,131 @@
+// import { RiMenu2Line, RiMenu3Line } from "react-icons/ri";
+// import { useNavigate } from "react-router-dom";
+
+// const Navbar = ({ setIsCollapsed, isCollapsed }) => {
+// const navigate = useNavigate();
+// const totalNotifications = 5; // Dummy count
+
+// const handleNotificationsClick = () => {
+// navigate("/notifications");
+// };
+
+// return ( <nav className="bg-blue-800 text-white sticky top-0 w-full h-16 px-4 flex items-center justify-between shadow-md z-50">
+// {/* Sidebar toggle button (left) */}
+// <button
+// onClick={() => setIsCollapsed(!isCollapsed)}
+// className="text-2xl p-2 rounded-md hover:bg-blue-700 transition"
+// >
+// {isCollapsed ? ( <RiMenu2Line className="text-[#AAAAAA]" />
+// ) : ( <RiMenu3Line className="text-[#AAAAAA]" />
+// )} 
+// </button>
+//   {/* Center spacer for balance on desktop */}
+//   <div className="flex-grow hidden md:block"></div>
+
+//   {/* Notifications (middle on small screens, left on desktop if needed) */}
+//   {/* <div className="relative flex items-center md:order-2">
+//     <button
+//       onClick={handleNotificationsClick}
+//       className="relative p-2 hover:bg-blue-700 rounded-full transition"
+//     >
+//       <MdNotificationsNone className="text-2xl text-white" />
+//       {totalNotifications > 0 && (
+//         <span className="absolute -top-1 -right-1 bg-red-500 text-xs text-white rounded-full w-4 h-4 flex items-center justify-center">
+//           {totalNotifications}
+//         </span>
+//       )}
+//     </button>
+//   </div> */}
+
+//   {/* Logo + Title (right side) */}
+//   <div className="flex items-center gap-2 md:ml-4 md:order-3">
+//     <img
+//       src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
+//       alt="Vendor Logo"
+//       className="w-10 h-10 object-cover"
+//     />
+//     <span className="font-semibold text-lg sm:text-xl">Attendance</span>
+//   </div>
+// </nav>
+// );
+// };
+
+// export default Navbar;
+
+
 import { RiMenu2Line, RiMenu3Line } from "react-icons/ri";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Navbar = ({ setIsCollapsed, isCollapsed }) => {
-const navigate = useNavigate();
-const totalNotifications = 5; // Dummy count
+  const navigate = useNavigate();
+  const location = useLocation();
 
-const handleNotificationsClick = () => {
-navigate("/notifications");
-};
+  const handleMenuClick = () => {
+    console.log("Navbar: Toggling sidebar");
+    setIsCollapsed(!isCollapsed);
+  };
 
-return ( <nav className="bg-blue-800 text-white sticky top-0 w-full h-16 px-4 flex items-center justify-between shadow-md z-50">
-{/* Sidebar toggle button (left) */}
-<button
-onClick={() => setIsCollapsed(!isCollapsed)}
-className="text-2xl p-2 rounded-md hover:bg-blue-700 transition"
->
-{isCollapsed ? ( <RiMenu2Line className="text-[#AAAAAA]" />
-) : ( <RiMenu3Line className="text-[#AAAAAA]" />
-)} 
-</button>
-  {/* Center spacer for balance on desktop */}
-  <div className="flex-grow hidden md:block"></div>
+  const getPageTitle = () => {
+    const path = location.pathname;
+    const routes = {
+      '/dashboard': 'Dashboard',
+      '/addemployee': 'Add Employee',
+      '/employeelist': 'Employee List',
+      '/attendancelist': 'Attendance Records',
+      '/attedancesummary': 'Attendance Summary',
+      '/today-attendance': "Today's Attendance",
+      '/late-today': 'Late Today',
+      '/absent-today': 'Absent Today',
+      '/leavelist': 'Leave Requests',
+      '/leaves-report': 'Leave Reports',
+      '/payroll': 'Generate Payroll',
+      '/role-management': 'Role Management',
+      '/permission-settings': 'Permission Settings',
+      '/addlocation': 'Add Location',
+      '/locationlist': 'Location List',
+      '/shift': 'Shift Management',
+      '/shiftlist': 'Shift List',
+    };
+    
+    return routes[path] || 'Dashboard';
+  };
 
-  {/* Notifications (middle on small screens, left on desktop if needed) */}
-  {/* <div className="relative flex items-center md:order-2">
-    <button
-      onClick={handleNotificationsClick}
-      className="relative p-2 hover:bg-blue-700 rounded-full transition"
-    >
-      <MdNotificationsNone className="text-2xl text-white" />
-      {totalNotifications > 0 && (
-        <span className="absolute -top-1 -right-1 bg-red-500 text-xs text-white rounded-full w-4 h-4 flex items-center justify-center">
-          {totalNotifications}
-        </span>
-      )}
-    </button>
-  </div> */}
+  return (
+    <nav className="bg-blue-800 text-white sticky top-0 w-full h-16 px-4 flex items-center justify-between shadow-md z-40">
+      
+      {/* Left Section - Menu Button & Page Title */}
+      <div className="flex items-center gap-4">
+        {/* Sidebar toggle button */}
+        <button
+          onClick={handleMenuClick}
+          className="text-2xl p-2 rounded-md hover:bg-blue-700 transition"
+        >
+          {isCollapsed ? (
+            <RiMenu2Line className="text-white" />
+          ) : (
+            <RiMenu3Line className="text-white" />
+          )}
+        </button>
 
-  {/* Logo + Title (right side) */}
-  <div className="flex items-center gap-2 md:ml-4 md:order-3">
-    <img
-      src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
-      alt="Vendor Logo"
-      className="w-10 h-10 object-cover"
-    />
-    <span className="font-semibold text-lg sm:text-xl">Attendance</span>
-  </div>
-</nav>
-);
+        {/* Page Title - Show on all screens */}
+        <div className="bg-blue-700 px-3 py-1 rounded-md">
+          <span className="font-semibold text-sm md:text-base">
+            {getPageTitle()}
+          </span>
+        </div>
+      </div>
+
+      {/* Logo + Title (right side) */}
+      <div className="flex items-center gap-2">
+        <img
+          src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
+          alt="Vendor Logo"
+          className="w-10 h-10 object-cover rounded-lg"
+        />
+        <span className="font-semibold text-lg sm:text-xl hidden sm:block">Attendance</span>
+      </div>
+    </nav>
+  );
 };
 
 export default Navbar;

@@ -2978,172 +2978,134 @@ const fetchData = async () => {
               </thead>
 
               <tbody className="divide-y divide-gray-200">
-                {currentRecords.length === 0 ? (
-                  <tr>
-                    <td colSpan="10" className="p-8 text-center">
-                      <div className="flex flex-col items-center justify-center text-gray-500">
-                        <svg className="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p className="text-lg font-medium">No records found</p>
-                        <p className="text-sm">Try adjusting your search criteria</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  currentRecords.map((item, index) => {
-                    const calculatedSalary = calculateSalary(item);
-                    const employeeData = getEmployeeData(item);
-                    const hasSalaryData = employeeData.salaryPerMonth && employeeData.salaryPerMonth > 0;
-                    const dailyRate = calculateDailyRate(item);
-                    const weekOffDays = item.weekOffs || 0;
-                    
-                    return (
-                      <tr 
-                        key={item._id || index} 
-                        className={`hover:bg-blue-50 transition duration-150 cursor-pointer ${
-                          index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                        }`}
-                      >
-                        <td 
-                          className="p-4 font-medium text-gray-900 hover:text-blue-600 hover:underline"
-                          onClick={() => handleAttendanceRowClick(item)}
-                        >
-                          {item.employeeId}
-                        </td>
-                        
-                        <td 
-                          className="p-4 hover:text-blue-600 hover:underline"
-                          onClick={() => handleAttendanceRowClick(item)}
-                        >
-                          <div className="flex items-center">
-                            <div className="flex items-center justify-center w-8 h-8 mr-3 font-semibold text-blue-800 bg-blue-100 rounded-full">
-                              {item.name?.charAt(0) || 'U'}
-                            </div>
-                            <span className="font-medium text-gray-800">{item.name}</span>
-                            {!hasSalaryData && (
-                              <span className="px-2 py-1 ml-2 text-xs text-red-800 bg-red-100 rounded-full">
-                                No Salary Data
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        
-                        <td 
-                          className="p-4 text-center hover:text-blue-600 hover:underline"
-                          onClick={() => handleAttendanceRowClick(item)}
-                        >
-                          <span className="px-3 py-1 text-sm font-medium text-green-800 bg-green-100 rounded-full">
-                            {item.presentDays || 0}
-                          </span>
-                        </td>
-                        
-                        <td 
-                          className="p-4 text-center hover:text-blue-600 hover:underline"
-                          onClick={() => handleAttendanceRowClick(item)}
-                        >
-                          <span className="px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">
-                            {item.workingDays || 0}
-                          </span>
-                        </td>
-                        
-                        <td 
-                          className="p-4 text-center hover:text-blue-600 hover:underline"
-                          onClick={() => handleAttendanceRowClick(item)}
-                        >
-                          <span className="px-3 py-1 text-sm font-medium text-yellow-800 bg-yellow-100 rounded-full">
-                            {item.halfDayWorking || 0}
-                          </span>
-                        </td>
-                        
-                        <td 
-                          className="p-4 text-center hover:text-blue-600 hover:underline"
-                          onClick={() => handleAttendanceRowClick(item)}
-                        >
-                          <span className="px-3 py-1 text-sm font-medium text-purple-800 bg-purple-100 rounded-full">
-                            {weekOffDays}
-                          </span>
-                        </td>
-                        
-                        <td 
-                          className="p-4 text-center hover:text-blue-600 hover:underline"
-                          onClick={() => handleAttendanceRowClick(item)}
-                        >
-                          <span className="px-3 py-1 text-sm font-medium text-red-800 bg-red-100 rounded-full">
-                            {getLeaveTypes(item)}
-                          </span>
-                        </td>
-                        
-                        <td 
-                          className="p-4 font-semibold text-center hover:text-blue-600 hover:underline"
-                          onClick={() => handleAttendanceRowClick(item)}
-                        >
-                          {hasSalaryData ? (
-                            <div>
-                              <div className="text-green-700">₹{calculatedSalary}</div>
-                              <div className="text-xs text-gray-500">₹{dailyRate}/day</div>
-                            </div>
-                          ) : (
-                            <span className="text-red-600">₹0</span>
-                          )}
-                        </td>
-                        
-                        <td 
-                          className="p-4 text-center text-gray-600 hover:text-blue-600 hover:underline"
-                          onClick={() => handleAttendanceRowClick(item)}
-                        >
-                          {item.month || "-"}
-                        </td>
-                        
-                        <td className="p-4 text-center">
-                          <div className="flex justify-center space-x-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleView(item);
-                              }}
-                              className="p-2 text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600"
-                              title="View Details"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            </button>
-                            
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEdit(item);
-                              }}
-                              className="p-2 text-white transition duration-200 bg-green-500 rounded-lg hover:bg-green-600"
-                              title="Edit Salary"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
-                            </button>
-                            
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                downloadInvoice(item);
-                              }}
-                              className="p-2 text-white transition duration-200 bg-purple-500 rounded-lg hover:bg-purple-600"
-                              title="Download Invoice"
-                              disabled={!hasSalaryData}
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
+  {currentRecords.length === 0 ? (
+    <tr>
+      <td colSpan="10" className="p-8 text-center">
+        <div className="flex flex-col items-center justify-center text-gray-500">
+          <svg className="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-lg font-medium">No records found</p>
+          <p className="text-sm">Try adjusting your search criteria</p>
+        </div>
+      </td>
+    </tr>
+  ) : (
+    currentRecords.map((item, index) => {
+      const calculatedSalary = calculateSalary(item);
+      const employeeData = getEmployeeData(item);
+      const hasSalaryData = employeeData.salaryPerMonth && employeeData.salaryPerMonth > 0;
+      const dailyRate = calculateDailyRate(item);
+      const weekOffDays = item.weekOffs || 0;
+      
+      return (
+        <tr 
+          key={item._id || index} 
+          className={`hover:bg-blue-50 transition duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+        >
+          {/* Data cells with click handlers */}
+          <td className="p-4 font-medium text-gray-900 cursor-pointer" onClick={() => handleAttendanceRowClick(item)}>
+            {item.employeeId}
+          </td>
+          
+          <td className="p-4 cursor-pointer" onClick={() => handleAttendanceRowClick(item)}>
+            <div className="flex items-center">
+              <div className="flex items-center justify-center w-8 h-8 mr-3 font-semibold text-blue-800 bg-blue-100 rounded-full">
+                {item.name?.charAt(0) || 'U'}
+              </div>
+              <span className="font-medium text-gray-800">{item.name}</span>
+              {!hasSalaryData && (
+                <span className="px-2 py-1 ml-2 text-xs text-red-800 bg-red-100 rounded-full">No Salary Data</span>
+              )}
+            </div>
+          </td>
+          
+          <td className="p-4 text-center cursor-pointer" onClick={() => handleAttendanceRowClick(item)}>
+            <span className="px-3 py-1 text-sm font-medium text-green-800 bg-green-100 rounded-full">
+              {item.presentDays || 0}
+            </span>
+          </td>
+          
+          <td className="p-4 text-center cursor-pointer" onClick={() => handleAttendanceRowClick(item)}>
+            <span className="px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">
+              {item.workingDays || 0}
+            </span>
+          </td>
+          
+          <td className="p-4 text-center cursor-pointer" onClick={() => handleAttendanceRowClick(item)}>
+            <span className="px-3 py-1 text-sm font-medium text-yellow-800 bg-yellow-100 rounded-full">
+              {item.halfDayWorking || 0}
+            </span>
+          </td>
+          
+          <td className="p-4 text-center cursor-pointer" onClick={() => handleAttendanceRowClick(item)}>
+            <span className="px-3 py-1 text-sm font-medium text-purple-800 bg-purple-100 rounded-full">
+              {weekOffDays}
+            </span>
+          </td>
+          
+          <td className="p-4 text-center cursor-pointer" onClick={() => handleAttendanceRowClick(item)}>
+            <span className="px-3 py-1 text-sm font-medium text-red-800 bg-red-100 rounded-full">
+              {getLeaveTypes(item)}
+            </span>
+          </td>
+          
+          <td className="p-4 font-semibold text-center cursor-pointer" onClick={() => handleAttendanceRowClick(item)}>
+            {hasSalaryData ? (
+              <div>
+                <div className="text-green-700">₹{calculatedSalary}</div>
+                <div className="text-xs text-gray-500">₹{dailyRate}/day</div>
+              </div>
+            ) : (
+              <span className="text-red-600">₹0</span>
+            )}
+          </td>
+          
+          <td className="p-4 text-center text-gray-600 cursor-pointer" onClick={() => handleAttendanceRowClick(item)}>
+            {item.month || "-"}
+          </td>
+          
+          {/* Actions cell - NO click handler */}
+          <td className="p-4 text-center">
+            <div className="flex justify-center space-x-2">
+              <button
+                onClick={() => handleView(item)}
+                className="p-2 text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600"
+                title="View Details"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
+              
+              <button
+                onClick={() => handleEdit(item)}
+                className="p-2 text-white transition duration-200 bg-green-500 rounded-lg hover:bg-green-600"
+                title="Edit Salary"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              
+              <button
+                onClick={() => downloadInvoice(item)}
+                className="p-2 text-white transition duration-200 bg-purple-500 rounded-lg hover:bg-purple-600"
+                title="Download Invoice"
+                disabled={!hasSalaryData}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      );
+    })
+  )}
+</tbody>
             </table>
           </div>
 
@@ -3202,8 +3164,231 @@ const fetchData = async () => {
         </div>
       </div>
 
-      {/* Modals would go here */}
-      {/* ... (Attendance Modal, Edit Modal, View Modal, Quick View Modal) ... */}
+      {/* 🎯 MODALS ADDED HERE - EXACTLY YAHAN */}
+      
+      {/* View Modal */}
+      {showViewModal && selectedEmployee && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-800">Employee Details</h2>
+              <button 
+                onClick={() => setShowViewModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="bg-gray-50 p-4 rounded-lg mb-4">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
+                  <span className="text-lg font-semibold text-blue-800">
+                    {selectedEmployee.name?.charAt(0) || 'E'}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">{selectedEmployee.name}</h3>
+                  <p className="text-sm text-gray-600">ID: {selectedEmployee.employeeId}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="bg-white p-3 rounded-lg border">
+                <p className="text-sm text-gray-600">Present Days</p>
+                <p className="text-lg font-semibold text-green-600">{selectedEmployee.presentDays || 0}</p>
+              </div>
+              <div className="bg-white p-3 rounded-lg border">
+                <p className="text-sm text-gray-600">Working Days</p>
+                <p className="text-lg font-semibold text-blue-600">{selectedEmployee.workingDays || 0}</p>
+              </div>
+              <div className="bg-white p-3 rounded-lg border">
+                <p className="text-sm text-gray-600">Half Days</p>
+                <p className="text-lg font-semibold text-yellow-600">{selectedEmployee.halfDayWorking || 0}</p>
+              </div>
+              <div className="bg-white p-3 rounded-lg border">
+                <p className="text-sm text-gray-600">WeekOff Days</p>
+                <p className="text-lg font-semibold text-purple-600">{selectedEmployee.weekOffs || 0}</p>
+              </div>
+              <div className="bg-white p-3 rounded-lg border">
+                <p className="text-sm text-gray-600">Month</p>
+                <p className="text-lg font-semibold text-gray-800">{selectedEmployee.month || 'Not specified'}</p>
+              </div>
+              <div className="bg-white p-3 rounded-lg border">
+                <p className="text-sm text-gray-600">Calculated Salary</p>
+                <p className="text-lg font-semibold text-green-600">₹{calculateSalary(selectedEmployee)}</p>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button 
+                onClick={() => setShowViewModal(false)}
+                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && selectedEmployee && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-800">Edit Salary Details - {selectedEmployee.name}</h2>
+              <button 
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Present Days</label>
+                  <input
+                    type="number"
+                    name="presentDays"
+                    value={editFormData.presentDays || 0}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Working Days</label>
+                  <input
+                    type="number"
+                    name="workingDays"
+                    value={editFormData.workingDays || 0}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Half Days</label>
+                  <input
+                    type="number"
+                    name="halfDayWorking"
+                    value={editFormData.halfDayWorking || 0}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Full Day Leaves</label>
+                  <input
+                    type="number"
+                    name="fullDayNotWorking"
+                    value={editFormData.fullDayNotWorking || 0}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Calculated Salary (₹)</label>
+                  <input
+                    type="number"
+                    name="calculatedSalary"
+                    value={editFormData.calculatedSalary || 0}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+                    min="0"
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Daily Rate (₹)</label>
+                  <input
+                    type="text"
+                    value={editFormData.dailyRate || calculateDailyRate(selectedEmployee)}
+                    className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 text-gray-800">Extra Work & Adjustments</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Extra Days</label>
+                    <input
+                      type="number"
+                      name="extraDays"
+                      value={extraWorkData.extraDays || 0}
+                      onChange={handleExtraWorkChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Bonus (₹)</label>
+                    <input
+                      type="number"
+                      name="bonus"
+                      value={extraWorkData.bonus || 0}
+                      onChange={handleExtraWorkChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Deductions (₹)</label>
+                    <input
+                      type="number"
+                      name="deductions"
+                      value={extraWorkData.deductions || 0}
+                      onChange={handleExtraWorkChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Reason</label>
+                    <input
+                      type="text"
+                      name="reason"
+                      value={extraWorkData.reason || ""}
+                      onChange={handleExtraWorkChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter reason for adjustments..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-200"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       
     </div>
   );
