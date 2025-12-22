@@ -2049,7 +2049,7 @@
 
 // import { useEffect, useRef, useState } from "react";
 
-// const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
 
 // export default function AttendanceSummary() {
 //   const [records, setRecords] = useState([]);
@@ -2810,7 +2810,7 @@
 
 // import { useEffect, useRef, useState } from "react";
 
-// const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
 
 // export default function AttendanceSummary() {
 //   const [records, setRecords] = useState([]);
@@ -3912,7 +3912,7 @@
 // import { saveAs } from "file-saver";
 
 
-// const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
 
 // export default function AttendanceSummary() {
 //   const [records, setRecords] = useState([]);
@@ -5090,7 +5090,7 @@ import { saveAs } from "file-saver";
 import { useEffect, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
 
 export default function AttendanceSummary() {
   const [records, setRecords] = useState([]);
@@ -5126,6 +5126,80 @@ export default function AttendanceSummary() {
   const closeModal = () => {
     setSelectedEmployee(null);
     setEmployeeDetails([]);
+  };
+
+  // ✅ Fix wrong summary data in frontend - UPDATED VERSION
+  const fixSummaryDataInFrontend = (summary, month) => {
+    if (!summary.length || !month) return summary;
+    
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonthNum = today.getMonth() + 1;
+    const currentDay = today.getDate();
+    
+    const [selectedYear, selectedMonthNum] = month.split('-').map(Number);
+    
+    // 🚨 IMPORTANT: Check if selected month is FUTURE month
+    const isFutureMonth = selectedYear > currentYear || 
+      (selectedYear === currentYear && selectedMonthNum > currentMonthNum);
+    
+    // 🔥 FIX FOR FUTURE MONTHS: All values should be 0
+    if (isFutureMonth) {
+      console.log(`🔧 Future month detected (${month}), resetting all data to 0`);
+      
+      return summary.map(emp => ({
+        ...emp,
+        presentDays: 0,
+        lateDays: 0,
+        onsiteDays: 0,
+        halfDayWorking: 0,
+        fullDayNotWorking: 0,
+        totalWorkingDays: 0
+      }));
+    }
+    
+    // Only fix if current month
+    const isCurrentMonth = selectedYear === currentYear && selectedMonthNum === currentMonthNum;
+    
+    if (isCurrentMonth) {
+      console.log(`🔧 Frontend auto-correcting ${month} data to max ${currentDay} days`);
+      
+      return summary.map(emp => {
+        // Check if data needs correction
+        const needsCorrection = 
+          emp.presentDays > currentDay || 
+          emp.lateDays > currentDay ||
+          emp.onsiteDays > currentDay ||
+          emp.totalWorkingDays > currentDay;
+        
+        if (!needsCorrection) {
+          return emp;
+        }
+        
+        // Correct the data
+        const correctedPresent = Math.min(emp.presentDays, currentDay);
+        const correctedLate = Math.min(emp.lateDays, currentDay);
+        const correctedOnsite = Math.min(emp.onsiteDays, currentDay);
+        const correctedHalf = Math.min(emp.halfDayWorking, currentDay);
+        const correctedFullLeave = Math.min(emp.fullDayNotWorking, currentDay);
+        const correctedTotal = correctedPresent + (correctedHalf * 0.5);
+        
+        console.log(`🔧 ${emp.employeeId}: present ${emp.presentDays} → ${correctedPresent}, total ${emp.totalWorkingDays} → ${correctedTotal}`);
+        
+        return {
+          ...emp,
+          presentDays: correctedPresent,
+          lateDays: correctedLate,
+          onsiteDays: correctedOnsite,
+          halfDayWorking: correctedHalf,
+          fullDayNotWorking: correctedFullLeave,
+          totalWorkingDays: correctedTotal
+        };
+      });
+    }
+    
+    // For past months, return as-is
+    return summary;
   };
 
   // ✅ Fetch all data from backend
@@ -5166,6 +5240,8 @@ export default function AttendanceSummary() {
   // ✅ Calculate summary using backend API
   const calculateSummaryFromBackend = async () => {
     try {
+      console.log("📊 Fetching summary for month:", selectedMonth);
+      
       const response = await fetch(`${BASE_URL}/api/attendancesummary/calculate`, {
         method: "POST",
         headers: {
@@ -5181,14 +5257,65 @@ export default function AttendanceSummary() {
       const result = await response.json();
 
       if (result.success) {
-        setEmployeeSummary(result.summary);
-        previousSummaryRef.current = JSON.parse(JSON.stringify(result.summary));
+        console.log("📦 Backend summary received:", {
+          count: result.summary?.length,
+          sample: result.summary?.[0]
+        });
+        
+        // ✅ CRITICAL FIX: Apply frontend correction
+        const correctedSummary = fixSummaryDataInFrontend(result.summary, selectedMonth);
+        
+        console.log("✅ Final corrected summary:", {
+          count: correctedSummary.length,
+          sample: correctedSummary?.[0]
+        });
+        
+        setEmployeeSummary(correctedSummary);
+        previousSummaryRef.current = JSON.parse(JSON.stringify(correctedSummary));
       } else {
         throw new Error(result.message || "Failed to calculate summary");
       }
     } catch (error) {
       console.error("Error calculating summary:", error);
       setError("Failed to calculate attendance summary");
+    }
+  };
+
+  // ✅ Fix wrong data in database
+  const handleFixWrongData = async () => {
+    if (!selectedMonth) {
+      alert("Please select a month first");
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      showSaveStatus("🔧 Fixing wrong data...");
+      
+      const response = await fetch(`${BASE_URL}/api/attendancesummary/fix-summary-data`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json" 
+        },
+        body: JSON.stringify({ 
+          month: selectedMonth 
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        showSaveStatus(`✅ Fixed ${result.fixedCount} records for ${selectedMonth}`);
+        // Refresh data
+        await calculateSummaryFromBackend();
+      } else {
+        showSaveStatus("❌ Failed to fix data: " + result.message, "error");
+      }
+    } catch (error) {
+      console.error("Error fixing data:", error);
+      showSaveStatus("🚨 Error fixing data", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -5595,7 +5722,7 @@ export default function AttendanceSummary() {
   fileName += ".xlsx";
 
   saveAs(blob, fileName);
-}; // ✅ YEH CLOSING BRACKET ADD KARO - FUNCTION END HOGAYA
+};
 
   // ✅ Initialize on component mount
   useEffect(() => {
@@ -5639,6 +5766,54 @@ export default function AttendanceSummary() {
       return () => clearTimeout(timeoutId);
     }
   }, [employeeSummary]);
+
+  // ✅ Debug useEffect - UPDATED WITH FUTURE MONTH DETECTION
+  useEffect(() => {
+    if (employeeSummary.length > 0 && selectedMonth) {
+      console.log("🔍 CURRENT SUMMARY DEBUG:");
+      console.log("Selected Month:", selectedMonth);
+      console.log("Total Employees:", employeeSummary.length);
+      
+      const today = new Date();
+      const currentDay = today.getDate();
+      const currentYear = today.getFullYear();
+      const currentMonthNum = today.getMonth() + 1;
+      const [selectedYear, selectedMonthNum] = selectedMonth.split('-').map(Number);
+      
+      // Check if future month
+      const isFutureMonth = selectedYear > currentYear || 
+        (selectedYear === currentYear && selectedMonthNum > currentMonthNum);
+      
+      if (isFutureMonth) {
+        console.log(`⚠️ FUTURE MONTH DETECTED: ${selectedMonth}`);
+        console.log(`All values should be 0`);
+        
+        // Check if any employee has non-zero values
+        const employeesWithData = employeeSummary.filter(emp => 
+          emp.presentDays > 0 || emp.totalWorkingDays > 0
+        );
+        
+        if (employeesWithData.length > 0) {
+          console.log(`❌ BUG FOUND: ${employeesWithData.length} employees have data in future month`);
+          employeesWithData.slice(0, 3).forEach(emp => {
+            console.log(`   - ${emp.employeeId}: present=${emp.presentDays}, total=${emp.totalWorkingDays}`);
+          });
+        } else {
+          console.log(`✅ Good: All employees have 0 values`);
+        }
+      }
+      
+      // Show first 3 employees
+      employeeSummary.slice(0, 3).forEach((emp, index) => {
+        console.log(`Employee ${index + 1}:`, {
+          id: emp.employeeId,
+          name: emp.name,
+          presentDays: emp.presentDays,
+          totalWorkingDays: emp.totalWorkingDays
+        });
+      });
+    }
+  }, [employeeSummary, selectedMonth]);
 
   // ✅ Pagination calculations
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -5699,7 +5874,7 @@ export default function AttendanceSummary() {
         )}
 
         <h1 className="mb-6 text-3xl font-bold text-blue-700">
-          📊 Employee Attendance Dashboard
+          📊 Employee Attendance Summary
         </h1>
 
         {/* Working Hours Info - UPDATED CRITERIA */}
@@ -5769,6 +5944,15 @@ export default function AttendanceSummary() {
             className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
           >
             Clear All
+          </button>
+
+          {/* Fix Data Button */}
+          <button
+            onClick={handleFixWrongData}
+            className="px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700"
+            title="Fix wrong summary data in database"
+          >
+            🔧 Fix Data
           </button>
 
           {/* Manual Save Button */}

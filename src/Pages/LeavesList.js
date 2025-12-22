@@ -23,7 +23,7 @@
 //   const fetchLeaves = async () => {
 //     try {
 //       setLoading(true);
-//       const res = await axios.get("http://localhost:5000/api/leaves/leaves");
+//       const res = await axios.get("https://attendancebackend-5cgn.onrender.com/api/leaves/leaves");
 //       const leavesData = res.data.records || res.data || [];
       
 //       // Sort by latest first
@@ -90,7 +90,7 @@
 //     }
 //     try {
 //       await axios.put(
-//         `http://localhost:5000/api/leaves/updateleaves/${editingRecord._id}`,
+//         `https://attendancebackend-5cgn.onrender.com/api/leaves/updateleaves/${editingRecord._id}`,
 //         { status: updatedStatus }
 //       );
 //       alert(`✅ Leave ${updatedStatus} successfully!`);

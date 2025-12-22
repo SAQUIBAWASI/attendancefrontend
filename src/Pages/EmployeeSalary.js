@@ -9,7 +9,7 @@
 
 //   const navigate = useNavigate();
 
-//   const BASE_URL = "http://localhost:5000";
+//   const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
 
 //   // ✅ Correct useEffect (Attendance Summary Fetch)
 //   useEffect(() => {
@@ -173,7 +173,7 @@ export default function EmployeeDashboard() {
   const recordsPerPage = 10;
 
   const navigate = useNavigate();
-  const BASE_URL = "http://localhost:5000";
+  const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
 
   // ✅ Get current logged-in employee data
   const getCurrentEmployee = () => {
@@ -761,7 +761,7 @@ export default function EmployeeDashboard() {
       {showDetailsModal && selectedEmployee && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-800">
                 Salary Details - {selectedEmployee.month}
               </h2>
@@ -773,7 +773,7 @@ export default function EmployeeDashboard() {
               </button>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg mb-4">
+            <div className="p-4 mb-4 rounded-lg bg-gray-50">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
                   <span className="text-lg font-semibold text-blue-800">
@@ -790,43 +790,43 @@ export default function EmployeeDashboard() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Present Days</p>
                 <p className="text-lg font-semibold text-green-600">{selectedEmployee.presentDays || 0}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Working Days</p>
                 <p className="text-lg font-semibold text-blue-600">{selectedEmployee.workingDays || 0}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Half Days</p>
                 <p className="text-lg font-semibold text-yellow-600">{selectedEmployee.halfDays || 0}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">WeekOff Days</p>
                 <p className="text-lg font-semibold text-purple-600">{selectedEmployee.weekOffs || 0}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Late Days</p>
                 <p className="text-lg font-semibold text-red-600">{selectedEmployee.lateDays || 0}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Total Leaves</p>
                 <p className="text-lg font-semibold text-orange-600">{selectedEmployee.totalLeaves || 0}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Month</p>
                 <p className="text-lg font-semibold text-gray-800">{selectedEmployee.month || 'Not specified'}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Calculated Salary</p>
                 <p className="text-lg font-semibold text-green-600">₹{selectedEmployee.calculatedSalary || 0}</p>
               </div>
             </div>
 
             {selectedEmployee.salaryPerMonth && (
-              <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-                <h3 className="text-lg font-semibold mb-2 text-blue-800">Salary Information</h3>
+              <div className="p-4 mb-4 rounded-lg bg-blue-50">
+                <h3 className="mb-2 text-lg font-semibold text-blue-800">Salary Information</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">Monthly Salary</p>
@@ -843,7 +843,7 @@ export default function EmployeeDashboard() {
             <div className="flex justify-end pt-4 border-t border-gray-200">
               <button 
                 onClick={handleCloseModal}
-                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
+                className="px-6 py-2 text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600"
               >
                 Close
               </button>

@@ -6,7 +6,7 @@
 
 //   const fetchApprovedLeaves = async () => {
 //     try {
-//       const res = await axios.get("http://localhost:5000/api/leaves/approved-leaves");
+//       const res = await axios.get("https://attendancebackend-5cgn.onrender.com/api/leaves/approved-leaves");
 //       setApprovedLeaves(res.data);
 //     } catch (err) {
 //       console.error("Failed to fetch approved leaves:", err);
@@ -80,7 +80,7 @@
 
 //   const fetchApprovedLeaves = async () => {
 //     try {
-//       const res = await axios.get("http://localhost:5000/api/leaves/leaves");
+//       const res = await axios.get("https://attendancebackend-5cgn.onrender.com/api/leaves/leaves");
 //       // ✅ Filter only approved leaves
 //       const approved = (res.data.records || res.data).filter(
 //         (l) => l.status?.toLowerCase() === "approved"
@@ -148,7 +148,7 @@
 
 //   const fetchApprovedLeaves = async () => {
 //     try {
-//       const res = await axios.get("http://localhost:5000/api/leaves/leaves");
+//       const res = await axios.get("https://attendancebackend-5cgn.onrender.com/api/leaves/leaves");
 //       // ✅ Filter only approved leaves
 //       const approved = (res.data.records || res.data).filter(
 //         (l) => l.status?.toLowerCase() === "approved"
@@ -430,7 +430,7 @@ const LeaveReport = () => {
   // ✅ Fetch all approved leaves
   const fetchApprovedLeaves = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/leaves/leaves?status=approved");
+      const res = await axios.get("https://attendancebackend-5cgn.onrender.com/api/leaves/leaves?status=approved");
       const approved = (res.data.records || res.data).filter(
         (l) => l.status?.toLowerCase() === "approved"
       );
