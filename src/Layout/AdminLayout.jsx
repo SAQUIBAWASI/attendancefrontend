@@ -85,7 +85,7 @@ const AdminLayout = ({ children }) => {
         />
         
         {/* Page Content - Remove extra padding if needed */}
-        <main className="flex-1 overflow-auto p-2 md:p-4 bg-gray-100">
+        <main className="flex-1 overflow-auto p-0 md:p-2 bg-gray-100">
           {children}
         </main>
       </div>

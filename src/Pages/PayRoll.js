@@ -2849,7 +2849,7 @@ const fetchData = async () => {
 
   return (
     <div className="min-h-screen p-6 bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-8xl">
         
         {/* Header Section */}
         <div className="mb-8">

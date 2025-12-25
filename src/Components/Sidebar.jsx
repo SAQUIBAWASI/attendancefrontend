@@ -274,7 +274,7 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
         { name: "Attendance Records", path: "/attendancelist" },
         { name: "AttendanceSummary", path: "/attedancesummary" },
         { name: "Today Attendance", path: "/today-attendance" },
-        { name: "Late Today", path: "/late-today" },
+        // { name: "Late Today", path: "/late-today" },
         { name: "Absent Today", path: "/absent-today" },
       ],
     },
@@ -301,14 +301,14 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
         { name: "Leave Report", path: "/leaves-report" },
       ],
     },
-    {
-      icon: <i className="text-white ri-user-settings-fill"></i>,
-      name: "Roles & Permissions",
-      dropdown: [
-        { name: "Role Management", path: "/role-management" },
-        { name: "Permission Settings", path: "/permission-settings" },
-      ],
-    },
+    // {
+    //   icon: <i className="text-white ri-user-settings-fill"></i>,
+    //   name: "Roles & Permissions",
+    //   dropdown: [
+    //     { name: "Role Management", path: "/role-management" },
+    //     { name: "Permission Settings", path: "/permission-settings" },
+    //   ],
+    // },
     {
       icon: <i className="text-white ri-map-pin-2-fill"></i>,
       name: "Locations",

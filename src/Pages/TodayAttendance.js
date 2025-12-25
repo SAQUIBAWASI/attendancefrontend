@@ -339,12 +339,12 @@ const TodayAttendance = () => {
         <h3 className="text-2xl font-bold text-gray-800">
           Today's Attendance
         </h3>
-        <button
+        {/* <button
           onClick={() => navigate("/attendance-records")}
           className="px-4 py-2 text-sm text-white transition bg-blue-600 rounded hover:bg-blue-700"
         >
           View All Records
-        </button>
+        </button> */}
       </div>
 
       <div className="overflow-x-auto">

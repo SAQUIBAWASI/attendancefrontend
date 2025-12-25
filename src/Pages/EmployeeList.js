@@ -623,7 +623,7 @@ const EmployeeList = () => {
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md max-w-7xl mx-auto">
+    <div className="p-3 bg-white rounded-lg shadow-md max-w-9xl mx-auto">
       {/* Search + Export */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
         <h2 className="text-xl font-semibold">Employee List</h2>

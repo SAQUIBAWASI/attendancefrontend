@@ -5861,7 +5861,7 @@ export default function AttendanceSummary() {
 
   return (
     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-9xl">
 
         {/* Save Status Alert */}
         {saveStatus && (
@@ -5877,102 +5877,104 @@ export default function AttendanceSummary() {
           📊 Employee Attendance Summary
         </h1>
 
-        {/* Working Hours Info - UPDATED CRITERIA */}
-        <div className="p-4 mb-6 bg-white border border-blue-300 rounded-lg shadow-sm">
-          <h3 className="font-semibold text-blue-700">📋 Working Hours Criteria:</h3>
-          <div className="grid grid-cols-1 gap-2 mt-2 text-sm md:grid-cols-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span><strong>Full Day:</strong> &gt; {FULL_DAY_THRESHOLD} hours (8.81+)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-              <span><strong>Half Day:</strong> {HALF_DAY_THRESHOLD} to {FULL_DAY_THRESHOLD} hours</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span><strong>Full Day Leave:</strong> &lt; {HALF_DAY_THRESHOLD} hours</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span><strong>Onsite:</strong> Marked as Onsite</span>
-            </div>
-          </div>
-        </div>
+       {/* Working Hours Info - UPDATED CRITERIA */}
+<div className="p-4 mb-6 bg-white border border-blue-300 rounded-lg shadow-sm">
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border shadow-md rounded-xl">
-          <div>
-            <label className="mr-2 font-semibold text-gray-700">From:</label>
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="p-2 border rounded-lg"
-            />
-          </div>
+  <h3 className="font-semibold text-blue-700 mb-3">
+    📋 Working Hours Criteria:
+  </h3>
 
-          <div>
-            <label className="mr-2 font-semibold text-gray-700">To:</label>
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="p-2 border rounded-lg"
-            />
-          </div>
+  {/* Criteria */}
+  <div className="grid grid-cols-1 gap-2 mb-4 text-sm md:grid-cols-4">
+    <div className="flex items-center gap-2">
+      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+      <span><strong>Full Day:</strong> &gt; {FULL_DAY_THRESHOLD} hrs</span>
+    </div>
 
-          <button
-            onClick={handleDateRangeFilter}
-            className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-          >
-            Apply Date Filter
-          </button>
+    <div className="flex items-center gap-2">
+      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+      <span><strong>Half Day:</strong> {HALF_DAY_THRESHOLD} – {FULL_DAY_THRESHOLD} hrs</span>
+    </div>
 
-          <div className="ml-4">
-            <label className="mr-2 font-semibold text-gray-700">Month:</label>
-            <input
-              type="month"
-              value={selectedMonth}
-              onChange={handleMonthChange}
-              className="p-2 border rounded-lg"
-            />
-          </div>
+    <div className="flex items-center gap-2">
+      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+      <span><strong>Leave:</strong> &lt; {HALF_DAY_THRESHOLD} hrs</span>
+    </div>
 
-          <button
-            onClick={clearFilters}
-            className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
-          >
-            Clear All
-          </button>
+    <div className="flex items-center gap-2">
+      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+      <span><strong>Onsite:</strong> Marked as Onsite</span>
+    </div>
+  </div>
 
-          {/* Fix Data Button */}
-          <button
-            onClick={handleFixWrongData}
-            className="px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700"
-            title="Fix wrong summary data in database"
-          >
-            🔧 Fix Data
-          </button>
+  {/* 🔽 FILTERS (ONE ROW – SAME DIV) */}
+  <div className="flex flex-wrap items-end gap-4 pt-3 border-t">
 
-          {/* Manual Save Button */}
-          <button
-            onClick={handleManualSave}
-            className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600"
-            title="Manually save current summary to database"
-          >
-            💾 Save Now
-          </button>
-        </div>
+    <div>
+      <label className="block text-sm font-semibold text-gray-700">From</label>
+      <input
+        type="date"
+        value={fromDate}
+        onChange={(e) => setFromDate(e.target.value)}
+        className="p-2 border rounded-lg"
+      />
+    </div>
 
-        {/* Filter Status */}
+    <div>
+      <label className="block text-sm font-semibold text-gray-700">To</label>
+      <input
+        type="date"
+        value={toDate}
+        onChange={(e) => setToDate(e.target.value)}
+        className="p-2 border rounded-lg"
+      />
+    </div>
+
+    {/* <div>
+      <label className="block text-sm font-semibold text-gray-700">Month</label>
+      <input
+        type="month"
+        value={selectedMonth}
+        onChange={handleMonthChange}
+        className="p-2 border rounded-lg"
+      />
+    </div> */}
+
+    <button
+      onClick={() => handleDateRangeFilter(fromDate, toDate)}
+      className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+    >
+      Apply
+    </button>
+
+    <button
+      onClick={clearFilters}
+      className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
+    >
+      Clear
+    </button>
+
+    <button
+      onClick={handleManualSave}
+      className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600"
+    >
+      💾 Save
+    </button>
+
+  </div>
+</div>
+
+
+       
+
+        {/* Filter Status
         <div className="p-3 mb-6 text-sm text-blue-800 bg-blue-100 border border-blue-300 rounded-lg">
           💡 <strong>Filter Status:</strong>
           {fromDate && toDate && ` Date Range: ${fromDate} to ${toDate}`}
           {selectedMonth && ` Month: ${selectedMonth}`}
           {!fromDate && !toDate && !selectedMonth && ' Showing all records'}
           {employeeSummary.length > 0 && ` | Found ${employeeSummary.length} employees`}
-        </div>
+        </div> */}
 
         {/* Summary Table - UPDATED COLUMN HEADERS */}
         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
