@@ -2661,6 +2661,12 @@ const fetchData = async () => {
                   <td>₹${Math.round(workingDaysAmount)}</td>
                 </tr>
                 <tr>
+                  <td>Leave Types</td>
+                  <td colspan="3">${getLeaveTypes(employee)}</td>
+                </tr>
+
+               
+                <tr>
                   <td>WeekOff Days (Paid)</td>
                   <td>${weekOffDays}</td>
                   <td>₹${dailyRate}/day</td>
@@ -3220,6 +3226,10 @@ const fetchData = async () => {
               <div className="bg-white p-3 rounded-lg border">
                 <p className="text-sm text-gray-600">Calculated Salary</p>
                 <p className="text-lg font-semibold text-green-600">₹{calculateSalary(selectedEmployee)}</p>
+              </div>
+              <div className="bg-white p-3 rounded-lg border col-span-2">
+                <p className="text-sm text-gray-600">Approved Leaves</p>
+                <p className="text font-semibold text-red-600">{getLeaveTypes(selectedEmployee)}</p>
               </div>
             </div>
 

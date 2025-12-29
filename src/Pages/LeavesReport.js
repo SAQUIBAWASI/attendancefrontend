@@ -605,7 +605,7 @@ const LeaveReport = () => {
           <p className="text-gray-500 text-center py-8">No data available</p>
         )}
       </div>
-
+        <h1 className="text-3xl font-bold">Approved Leave Reports</h1> <br/>
       {/* ✅ Leave Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full border border-gray-300 text-sm">

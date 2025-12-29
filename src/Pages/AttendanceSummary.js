@@ -5560,9 +5560,9 @@ export default function AttendanceSummary() {
   const formatDate = (dateString) =>
     dateString
       ? new Date(dateString).toLocaleString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
+        // day: "2-digit",
+        // month: "short",
+        // year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
       })
@@ -5982,6 +5982,7 @@ export default function AttendanceSummary() {
             <h2 className="text-2xl font-semibold text-purple-700">
               👥 Attendance Summary ({employeeSummary.length} employees)
             </h2>
+            
             <button
               onClick={downloadCombinedExcel}
               className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
@@ -6132,6 +6133,7 @@ export default function AttendanceSummary() {
                   </button>
                 </div>
               </div>
+              
 
               {/* Employee Info Summary */}
               <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
@@ -6168,7 +6170,7 @@ export default function AttendanceSummary() {
                     <th className="px-4 py-2">Date</th>
                     <th className="px-4 py-2">Check-In</th>
                     <th className="px-4 py-2">Check-Out</th>
-                    <th className="px-4 py-2">Region</th>
+                    <th className="px-4 py-2">Reason</th>
                     <th className="px-4 py-2">Hours</th>
                     <th className="px-4 py-2">Day Type</th>
                     <th className="px-4 py-2">Action</th>
@@ -6205,6 +6207,7 @@ export default function AttendanceSummary() {
                         </td>
 
                         <td className="px-4 py-2">{formatDate(rec.checkInTime)}</td>
+                        
 
                         <td className="px-4 py-2">
                           {rec.checkOutTime ? formatDate(rec.checkOutTime) : "-"}
