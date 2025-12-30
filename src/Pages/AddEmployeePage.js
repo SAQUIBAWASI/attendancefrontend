@@ -680,13 +680,353 @@
 
 // export default AddEmployeePage;
 
+// import axios from "axios";
+// import { useEffect, useState } from "react";
+// import { FaEye, FaEyeSlash } from "react-icons/fa";
+// import { useNavigate } from "react-router-dom";
+
+// const AddEmployeePage = () => {
+//   const navigate = useNavigate();
+
+//   const [name, setName] = useState("");
+//   const [email, setEmail] = useState("");
+//   const [password, setPassword] = useState("");
+//   const [department, setDepartment] = useState("");
+//   const [role, setRole] = useState("");
+//   const [joinDate, setJoinDate] = useState("");
+//   const [phone, setPhone] = useState("");
+//   const [address, setAddress] = useState("");
+//   const [employeeId, setEmployeeId] = useState("");
+//   const [locationId, setLocationId] = useState("");
+
+//   // Salary Fields
+//   const [salaryPerMonth, setSalaryPerMonth] = useState("");
+//   const [shiftHours, setShiftHours] = useState("");
+//   const [weekOffPerMonth, setWeekOffPerMonth] = useState(""); // NEW FIELD
+
+//   const [showPassword, setShowPassword] = useState(false);
+//   const [locations, setLocations] = useState([]);
+
+//   const [loading, setLoading] = useState(false);
+//   const [successMessage, setSuccessMessage] = useState("");
+//   const [errorMessage, setErrorMessage] = useState("");
+
+//   // Departments
+//   const departments = [
+//     "Developer", "Sales", "Marketing", "Medical", "Finance",
+//     "Nursing", "Digital Marketing", "Management", "Laboratory Medicine"
+//   ];
+
+//   // Roles
+//   const roles = [
+//     "Administrator", "Manager", "Team Lead", "Employee", "HR Manager",
+//     "Phlebotomist", "Staff Nurse", "Sales Executive",
+//     "Consultant", "Graphic Designer", "UI/UX & GRAPHIC DESIGNER",
+//     "SMM & SEO Executive", "Web Developer",
+//   ];
+
+//   // Fetch Locations
+//   useEffect(() => {
+//     const fetchLocations = async () => {
+//       try {
+//         const res = await axios.get(
+//           "https://attendancebackend-5cgn.onrender.com/api/location/alllocation"
+//         );
+//         if (res.data?.locations) setLocations(res.data.locations);
+//       } catch (err) {
+//         console.error("❌ Error fetching locations:", err);
+//       }
+//     };
+//     fetchLocations();
+//   }, []);
+
+//   // Submit Employee
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setErrorMessage("");
+//     setSuccessMessage("");
+//     setLoading(true);
+
+//     try {
+//       // Step 1: Add Employee
+//       await axios.post(
+//         "https://localhost:5000/api/employees/add-employee",
+//         {
+//           name,
+//           email,
+//           password,
+//           department,
+//           role,
+//           joinDate,
+//           phone,
+//           address,
+//           employeeId,
+//           locationId,
+//         }
+//       );
+
+//       // Step 2: Assign Location
+//       if (locationId) {
+//         await axios.put(
+//           `https://attendancebackend-5cgn.onrender.com/api/employees/assign-location/${employeeId}`,
+//           { locationId }
+//         );
+//       }
+
+//       // Step 3: Add Salary (WeekOff Included)
+//       await axios.post(
+//         "https://attendancebackend-5cgn.onrender.com/api/salary/set-salary",
+//         {
+//           employeeId,
+//           name,
+//           salaryPerMonth: Number(salaryPerMonth),
+//           shiftHours: Number(shiftHours),
+//           weekOffPerMonth: Number(weekOffPerMonth), // NEW FIELD
+//         }
+//       );
+
+//       setSuccessMessage("✅ Employee & Salary added successfully!");
+
+//       // Reset all fields
+//       setName("");
+//       setEmail("");
+//       setPassword("");
+//       setDepartment("");
+//       setRole("");
+//       setJoinDate("");
+//       setPhone("");
+//       setAddress("");
+//       setEmployeeId("");
+//       setLocationId("");
+
+//       setSalaryPerMonth("");
+//       setShiftHours("");
+//       setWeekOffPerMonth(""); // RESET NEW FIELD
+
+//       setTimeout(() => navigate("/employeelist"), 800);
+//     } catch (err) {
+//       console.error("❌ Error:", err);
+//       setErrorMessage(err.response?.data?.message || "Something went wrong!");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
+//       <h2 className="mb-6 text-2xl font-bold text-blue-900">Add New Employee Data</h2>
+
+//       {successMessage && (
+//         <div className="p-4 mb-4 text-green-700 bg-green-100 rounded">
+//           {successMessage}
+//         </div>
+//       )}
+//       {errorMessage && (
+//         <div className="p-4 mb-4 text-red-700 bg-red-100 rounded">
+//           {errorMessage}
+//         </div>
+//       )}
+
+//       <form onSubmit={handleSubmit}>
+        
+//         {/* NAME */}
+//         <div className="mb-4">
+//           <label className="block text-sm">Full Name</label>
+//           <input
+//             value={name}
+//             onChange={(e) => setName(e.target.value)}
+//             className="w-full p-2 border rounded"
+//             required
+//           />
+//         </div>
+
+//         {/* EMAIL */}
+//         <div className="mb-4">
+//           <label className="block text-sm">Email</label>
+//           <input
+//             type="email"
+//             value={email}
+//             onChange={(e) => setEmail(e.target.value)}
+//             className="w-full p-2 border rounded"
+//             required
+//           />
+//         </div>
+
+//         {/* PASSWORD */}
+//         <div className="mb-4 relative">
+//           <label className="block text-sm">Password</label>
+//           <input
+//             type={showPassword ? "text" : "password"}
+//             value={password}
+//             onChange={(e) => setPassword(e.target.value)}
+//             className="w-full p-2 border rounded pr-10"
+//             required
+//           />
+//           <button
+//             type="button"
+//             onClick={() => setShowPassword(!showPassword)}
+//             className="absolute right-3 top-9 text-gray-600"
+//           >
+//             {showPassword ? <FaEyeSlash /> : <FaEye />}
+//           </button>
+//         </div>
+
+//         {/* DEPARTMENT */}
+//         <div className="mb-4">
+//           <label className="block text-sm">Department</label>
+//           <select
+//             value={department}
+//             onChange={(e) => setDepartment(e.target.value)}
+//             className="w-full p-2 border rounded"
+//             required
+//           >
+//             <option value="">Select Department</option>
+//             {departments.map((d) => (
+//               <option key={d}>{d}</option>
+//             ))}
+//           </select>
+//         </div>
+
+//         {/* ROLE */}
+//         <div className="mb-4">
+//           <label className="block text-sm">Role</label>
+//           <select
+//             value={role}
+//             onChange={(e) => setRole(e.target.value)}
+//             className="w-full p-2 border rounded"
+//             required
+//           >
+//             <option value="">Select Role</option>
+//             {roles.map((r) => (
+//               <option key={r}>{r}</option>
+//             ))}
+//           </select>
+//         </div>
+
+//         {/* JOIN DATE */}
+//         <div className="mb-4">
+//           <label className="block text-sm">Join Date</label>
+//           <input
+//             type="date"
+//             value={joinDate}
+//             onChange={(e) => setJoinDate(e.target.value)}
+//             className="w-full p-2 border rounded"
+//             required
+//           />
+//         </div>
+
+
+
+
+//         {/* PHONE */}
+//         <div className="mb-4">
+//           <label className="block text-sm">Phone</label>
+//           <input
+//             value={phone}
+//             onChange={(e) => setPhone(e.target.value)}
+//             className="w-full p-2 border rounded"
+//           />
+//         </div>
+
+//         {/* ADDRESS */}
+//         <div className="mb-4">
+//           <label className="block text-sm">Address</label>
+//           <textarea
+//             value={address}
+//             onChange={(e) => setAddress(e.target.value)}
+//             className="w-full p-2 border rounded"
+//           />
+//         </div>
+
+//         {/* EMPLOYEE ID */}
+//         <div className="mb-4">
+//           <label className="block text-sm">Employee ID</label>
+//           <input
+//             value={employeeId}
+//             onChange={(e) => setEmployeeId(e.target.value)}
+//             className="w-full p-2 border rounded"
+//             required
+//           />
+//         </div>
+
+//         {/* SALARY PER MONTH */}
+//         <div className="mb-4">
+//           <label className="block text-sm">Salary Per Month</label>
+//           <input
+//             type="number"
+//             value={salaryPerMonth}
+//             onChange={(e) => setSalaryPerMonth(e.target.value)}
+//             className="w-full p-2 border rounded"
+//             required
+//           />
+//         </div>
+
+//         {/* SHIFT HOURS */}
+//         <div className="mb-4">
+//           <label className="block text-sm">Shift Hours Per Day</label>
+//           <input
+//             type="number"
+//             value={shiftHours}
+//             onChange={(e) => setShiftHours(e.target.value)}
+//             className="w-full p-2 border rounded"
+//             required
+//           />
+//         </div>
+
+//         {/* WEEK OFF PER MONTH */}
+//         <div className="mb-4">
+//           <label className="block text-sm">Week Off Per Month</label>
+//           <input
+//             type="number"
+//             value={weekOffPerMonth}
+//             onChange={(e) => setWeekOffPerMonth(e.target.value)}
+//             className="w-full p-2 border rounded"
+//             required
+//           />
+//         </div>
+
+//         {/* LOCATION */}
+//         <div className="mb-4">
+//           <label className="block text-sm">Location</label>
+//           <select
+//             value={locationId}
+//             onChange={(e) => setLocationId(e.target.value)}
+//             className="w-full p-2 border rounded"
+//           >
+//             <option value="">Select a Location</option>
+//             {locations.map((loc) => (
+//               <option key={loc._id} value={loc._id}>{loc.name}</option>
+//             ))}
+//           </select>
+//         </div>
+
+//         {/* SUBMIT */}
+//         <button
+//           type="submit"
+//           disabled={loading}
+//           className="px-6 py-2 bg-blue-600 text-white rounded"
+//         >
+//           {loading ? "Saving..." : "AddEmployee"}
+//         </button>
+//       </form>
+//     </div>
+//   );
+// };
+
+// export default AddEmployeePage;
+
+
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const AddEmployeePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // ✅ edit se aaya hai ya nahi
+  const editingEmployee = location.state?.employee || null;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -699,10 +1039,10 @@ const AddEmployeePage = () => {
   const [employeeId, setEmployeeId] = useState("");
   const [locationId, setLocationId] = useState("");
 
-  // Salary Fields
+  // Salary
   const [salaryPerMonth, setSalaryPerMonth] = useState("");
   const [shiftHours, setShiftHours] = useState("");
-  const [weekOffPerMonth, setWeekOffPerMonth] = useState(""); // NEW FIELD
+  const [weekOffPerMonth, setWeekOffPerMonth] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
   const [locations, setLocations] = useState([]);
@@ -711,21 +1051,46 @@ const AddEmployeePage = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Departments
   const departments = [
-    "Developer", "Sales", "Marketing", "Medical", "Finance",
-    "Nursing", "Digital Marketing", "Management", "Laboratory Medicine"
+    "Developer","Sales","Marketing","Medical","Finance",
+    "Nursing","Digital Marketing","Management","Laboratory Medicine"
   ];
 
-  // Roles
   const roles = [
-    "Administrator", "Manager", "Team Lead", "Employee", "HR Manager",
-    "Phlebotomist", "Staff Nurse", "Sales Executive",
-    "Consultant", "Graphic Designer", "UI/UX & GRAPHIC DESIGNER",
-    "SMM & SEO Executive", "Web Developer",
+    "Administrator","Manager","Team Lead","Employee","HR Manager",
+    "Phlebotomist","Staff Nurse","Sales Executive",
+    "Consultant","Graphic Designer","UI/UX & GRAPHIC DESIGNER",
+    "SMM & SEO Executive","Web Developer",
   ];
 
-  // Fetch Locations
+  // ✅ EDIT MODE AUTO-FILL (NO STRUCTURE CHANGE)
+  useEffect(() => {
+    if (editingEmployee) {
+      setName(editingEmployee.name || "");
+      setEmail(editingEmployee.email || "");
+      setDepartment(editingEmployee.department || "");
+      setRole(editingEmployee.role || "");
+      setJoinDate(editingEmployee.joinDate?.slice(0, 10) || "");
+      setPhone(editingEmployee.phone || "");
+      setAddress(editingEmployee.address || "");
+      setEmployeeId(editingEmployee.employeeId || "");
+
+      setLocationId(
+        editingEmployee.location?._id ||
+        editingEmployee.location ||
+        ""
+      );
+
+      setSalaryPerMonth(editingEmployee.salaryPerMonth || "");
+      setShiftHours(editingEmployee.shiftHours || "");
+      setWeekOffPerMonth(editingEmployee.weekOffPerMonth || "");
+
+      // edit mode me password blank
+      setPassword("");
+    }
+  }, [editingEmployee]);
+
+  // Fetch locations
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -734,78 +1099,87 @@ const AddEmployeePage = () => {
         );
         if (res.data?.locations) setLocations(res.data.locations);
       } catch (err) {
-        console.error("❌ Error fetching locations:", err);
+        console.error(err);
       }
     };
     fetchLocations();
   }, []);
 
-  // Submit Employee
+  // ✅ ADD / UPDATE SAME FORM (LOGIC FIXED)
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setErrorMessage("");
     setSuccessMessage("");
-    setLoading(true);
 
     try {
-      // Step 1: Add Employee
-      await axios.post(
-        "https://attendancebackend-5cgn.onrender.com/api/employees/add-employee",
-        {
+      if (editingEmployee) {
+        // ================= UPDATE EMPLOYEE =================
+        const payload = {
           name,
           email,
-          password,
           department,
           role,
           joinDate,
           phone,
           address,
-          employeeId,
           locationId,
-        }
-      );
+        };
 
-      // Step 2: Assign Location
-      if (locationId) {
+        if (password) payload.password = password;
+
+        // ✅ correct employee update API
         await axios.put(
-          `https://attendancebackend-5cgn.onrender.com/api/employees/assign-location/${employeeId}`,
-          { locationId }
+          `https://attendancebackend-5cgn.onrender.com/api/employees/update/${editingEmployee._id}`,
+          payload
         );
+
+        // ================= UPDATE SALARY =================
+        await axios.put(
+          `https://attendancebackend-5cgn.onrender.com/api/salary/update-salary/${editingEmployee.employeeId}`,
+          {
+            salaryPerMonth: Number(salaryPerMonth),
+            shiftHours: Number(shiftHours),
+            weekOffPerMonth: Number(weekOffPerMonth),
+          }
+        );
+
+        setSuccessMessage("✅ Employee updated successfully!");
+      } else {
+        // ================= ADD EMPLOYEE =================
+        await axios.post(
+          "https://attendancebackend-5cgn.onrender.com/api/employees/add-employee",
+          {
+            name,
+            email,
+            password,
+            department,
+            role,
+            joinDate,
+            phone,
+            address,
+            employeeId,
+            locationId,
+          }
+        );
+
+        // ================= ADD SALARY =================
+        await axios.post(
+          "https://attendancebackend-5cgn.onrender.com/api/salary/set-salary",
+          {
+            employeeId,
+            name,
+            salaryPerMonth: Number(salaryPerMonth),
+            shiftHours: Number(shiftHours),
+            weekOffPerMonth: Number(weekOffPerMonth),
+          }
+        );
+
+        setSuccessMessage("✅ Employee added successfully!");
       }
-
-      // Step 3: Add Salary (WeekOff Included)
-      await axios.post(
-        "https://attendancebackend-5cgn.onrender.com/api/salary/set-salary",
-        {
-          employeeId,
-          name,
-          salaryPerMonth: Number(salaryPerMonth),
-          shiftHours: Number(shiftHours),
-          weekOffPerMonth: Number(weekOffPerMonth), // NEW FIELD
-        }
-      );
-
-      setSuccessMessage("✅ Employee & Salary added successfully!");
-
-      // Reset all fields
-      setName("");
-      setEmail("");
-      setPassword("");
-      setDepartment("");
-      setRole("");
-      setJoinDate("");
-      setPhone("");
-      setAddress("");
-      setEmployeeId("");
-      setLocationId("");
-
-      setSalaryPerMonth("");
-      setShiftHours("");
-      setWeekOffPerMonth(""); // RESET NEW FIELD
 
       setTimeout(() => navigate("/employeelist"), 800);
     } catch (err) {
-      console.error("❌ Error:", err);
       setErrorMessage(err.response?.data?.message || "Something went wrong!");
     } finally {
       setLoading(false);
@@ -814,7 +1188,9 @@ const AddEmployeePage = () => {
 
   return (
     <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
-      <h2 className="mb-6 text-2xl font-bold text-blue-900">Add New Employee Data</h2>
+      <h2 className="mb-6 text-2xl font-bold text-blue-900">
+        Add New Employee Data
+      </h2>
 
       {successMessage && (
         <div className="p-4 mb-4 text-green-700 bg-green-100 rounded">
@@ -827,191 +1203,95 @@ const AddEmployeePage = () => {
         </div>
       )}
 
+      {/* ❌ FORM STRUCTURE SAME */}
       <form onSubmit={handleSubmit}>
-        
-        {/* NAME */}
+
         <div className="mb-4">
           <label className="block text-sm">Full Name</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
+          <input value={name} onChange={(e)=>setName(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
-        {/* EMAIL */}
         <div className="mb-4">
           <label className="block text-sm">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
+          <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
-        {/* PASSWORD */}
         <div className="mb-4 relative">
           <label className="block text-sm">Password</label>
-          <input
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 border rounded pr-10"
-            required
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-9 text-gray-600"
-          >
+          <input type={showPassword?"text":"password"} value={password} onChange={(e)=>setPassword(e.target.value)} className="w-full p-2 border rounded pr-10" />
+          <button type="button" onClick={()=>setShowPassword(!showPassword)} className="absolute right-3 top-9">
             {showPassword ? <FaEyeSlash /> : <FaEye />}
           </button>
         </div>
 
-        {/* DEPARTMENT */}
         <div className="mb-4">
           <label className="block text-sm">Department</label>
-          <select
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          >
+          <select value={department} onChange={(e)=>setDepartment(e.target.value)} className="w-full p-2 border rounded" required>
             <option value="">Select Department</option>
-            {departments.map((d) => (
-              <option key={d}>{d}</option>
-            ))}
+            {departments.map((d)=><option key={d}>{d}</option>)}
           </select>
         </div>
 
-        {/* ROLE */}
         <div className="mb-4">
           <label className="block text-sm">Role</label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          >
+          <select value={role} onChange={(e)=>setRole(e.target.value)} className="w-full p-2 border rounded" required>
             <option value="">Select Role</option>
-            {roles.map((r) => (
-              <option key={r}>{r}</option>
-            ))}
+            {roles.map((r)=><option key={r}>{r}</option>)}
           </select>
         </div>
 
-        {/* JOIN DATE */}
         <div className="mb-4">
           <label className="block text-sm">Join Date</label>
-          <input
-            type="date"
-            value={joinDate}
-            onChange={(e) => setJoinDate(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
+          <input type="date" value={joinDate} onChange={(e)=>setJoinDate(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
-
-
-
-        {/* PHONE */}
         <div className="mb-4">
           <label className="block text-sm">Phone</label>
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="w-full p-2 border rounded"
-          />
+          <input value={phone} onChange={(e)=>setPhone(e.target.value)} className="w-full p-2 border rounded" />
         </div>
 
-        {/* ADDRESS */}
         <div className="mb-4">
           <label className="block text-sm">Address</label>
-          <textarea
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="w-full p-2 border rounded"
-          />
+          <textarea value={address} onChange={(e)=>setAddress(e.target.value)} className="w-full p-2 border rounded" />
         </div>
 
-        {/* EMPLOYEE ID */}
         <div className="mb-4">
           <label className="block text-sm">Employee ID</label>
-          <input
-            value={employeeId}
-            onChange={(e) => setEmployeeId(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
+          <input value={employeeId} onChange={(e)=>setEmployeeId(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
-        {/* SALARY PER MONTH */}
         <div className="mb-4">
           <label className="block text-sm">Salary Per Month</label>
-          <input
-            type="number"
-            value={salaryPerMonth}
-            onChange={(e) => setSalaryPerMonth(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
+          <input type="number" value={salaryPerMonth} onChange={(e)=>setSalaryPerMonth(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
-        {/* SHIFT HOURS */}
         <div className="mb-4">
           <label className="block text-sm">Shift Hours Per Day</label>
-          <input
-            type="number"
-            value={shiftHours}
-            onChange={(e) => setShiftHours(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
+          <input type="number" value={shiftHours} onChange={(e)=>setShiftHours(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
-        {/* WEEK OFF PER MONTH */}
         <div className="mb-4">
           <label className="block text-sm">Week Off Per Month</label>
-          <input
-            type="number"
-            value={weekOffPerMonth}
-            onChange={(e) => setWeekOffPerMonth(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
+          <input type="number" value={weekOffPerMonth} onChange={(e)=>setWeekOffPerMonth(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
-        {/* LOCATION */}
         <div className="mb-4">
           <label className="block text-sm">Location</label>
-          <select
-            value={locationId}
-            onChange={(e) => setLocationId(e.target.value)}
-            className="w-full p-2 border rounded"
-          >
+          <select value={locationId} onChange={(e)=>setLocationId(e.target.value)} className="w-full p-2 border rounded">
             <option value="">Select a Location</option>
-            {locations.map((loc) => (
+            {locations.map((loc)=>(
               <option key={loc._id} value={loc._id}>{loc.name}</option>
             ))}
           </select>
         </div>
 
-        {/* SUBMIT */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-6 py-2 bg-blue-600 text-white rounded"
-        >
-          {loading ? "Saving..." : "AddEmployee"}
+        <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded">
+          {loading ? "Saving..." : editingEmployee ? "Update Employee" : "Add Employee"}
         </button>
+
       </form>
     </div>
   );
 };
 
 export default AddEmployeePage;
-

@@ -5154,6 +5154,7 @@ export default function AttendanceSummary() {
         onsiteDays: 0,
         halfDayWorking: 0,
         fullDayNotWorking: 0,
+        overTimeHours: 0,
         totalWorkingDays: 0
       }));
     }
@@ -5533,6 +5534,38 @@ export default function AttendanceSummary() {
   };
 
   // ✅ Helper functions - UPDATED LOGIC
+// ✅ Calculate OT for single day (Details modal)
+// ✅ OT for single day (Attendance Details)
+const calculateOT = (hours) => {
+  const STANDARD_HOURS = 9;
+  const h = Number(hours) || 0;
+  return h > STANDARD_HOURS ? h - STANDARD_HOURS : 0;
+};
+// ✅ TOTAL OT for employee (Attendance Summary)
+const calculateEmployeeOT = (employeeId) => {
+  let totalOT = 0;
+
+  records.forEach((rec) => {
+    if (rec.employeeId !== employeeId) return;
+
+    // Month filter
+    if (selectedMonth && rec.checkInTime) {
+      const recMonth = new Date(rec.checkInTime).toISOString().slice(0, 7);
+      if (recMonth !== selectedMonth) return;
+    }
+
+    const hours = rec.hours || rec.totalHours || 0;
+
+    // 🔥 SAME LOGIC as Attendance Details
+    totalOT += calculateOT(hours);
+  });
+
+  return totalOT;
+};
+
+
+
+
   const calculateDayType = (hours) => {
     const numericHours = parseFloat(hours) || 0;
 
@@ -5593,17 +5626,22 @@ export default function AttendanceSummary() {
   // ------------------------------------------
   // 🟩 Sheet 1 — Filtered Employee Summary
   // ------------------------------------------
-  const summaryData = employeeSummary.map(emp => ({
-    "Employee ID": emp.employeeId,
-    "Name": emp.name,
-    "Month": emp.month,
-    "Present Days": emp.presentDays,
-    "Late Days": emp.lateDays,
-    "Onsite Days": emp.onsiteDays,
-    "Half Day Working": emp.halfDayWorking || emp.halfDayLeaves || 0,
-    "Full Day Not Working": emp.fullDayNotWorking || emp.fullDayLeaves || 0,
-    "Working Days": emp.totalWorkingDays.toFixed(1)
-  }));
+ const summaryData = employeeSummary.map(emp => ({
+  "Employee ID": emp.employeeId,
+  "Name": emp.name,
+  "Month": emp.month,
+  "Present Days": emp.presentDays,
+  "Late Days": emp.lateDays,
+  "Onsite Days": emp.onsiteDays,
+  "Half Day ": emp.halfDayWorking || emp.halfDayLeaves || 0,
+  "Full Day ": emp.fullDayNotWorking || emp.fullDayLeaves || 0,
+
+  // 🔥 SAME OT LOGIC AS UI
+  "Over Time": calculateEmployeeOT(emp.employeeId).toFixed(2),
+
+  "Working Days": emp.totalWorkingDays.toFixed(1)
+}));
+
 
   const summarySheet = XLSX.utils.json_to_sheet(summaryData);
   XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
@@ -5676,14 +5714,18 @@ export default function AttendanceSummary() {
       const hours = rec.totalHours ||
         (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
 
-      return {
-        "Employee ID": rec.employeeId,
-        "Employee Name": employee?.name || "N/A",
-        "Date": checkIn.toLocaleDateString("en-IN"),
-        "Check-In": formatDate(rec.checkInTime),
-        "Check-Out": rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
-        "Hours": hours,
-      };
+     return {
+  "Employee ID": rec.employeeId,
+  "Employee Name": employee?.name || "N/A",
+  "Date": checkIn.toLocaleDateString("en-IN"),
+  "Check-In": formatDate(rec.checkInTime),
+  "Check-Out": rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
+  "Hours": hours,
+
+  // 🔥 SAME DAILY OT LOGIC
+  "Over Time": calculateOT(hours).toFixed(2),
+};
+
     });
 
     // Only create sheet if there are records
@@ -5930,7 +5972,7 @@ export default function AttendanceSummary() {
       />
     </div>
 
-    {/* <div>
+    <div>
       <label className="block text-sm font-semibold text-gray-700">Month</label>
       <input
         type="month"
@@ -5938,7 +5980,7 @@ export default function AttendanceSummary() {
         onChange={handleMonthChange}
         className="p-2 border rounded-lg"
       />
-    </div> */}
+    </div>
 
     <button
       onClick={() => handleDateRangeFilter(fromDate, toDate)}
@@ -5954,12 +5996,12 @@ export default function AttendanceSummary() {
       Clear
     </button>
 
-    <button
+    {/* <button
       onClick={handleManualSave}
       className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600"
     >
       💾 Save
-    </button>
+    </button> */}
 
   </div>
 </div>
@@ -6021,8 +6063,9 @@ export default function AttendanceSummary() {
                   <th className="px-6 py-3">Present</th>
                   <th className="px-6 py-3">Late</th>
                   <th className="px-6 py-3">Onsite</th>
-                  <th className="px-6 py-3">Half Day Working</th> {/* Updated header */}
-                  <th className="px-6 py-3">Full Day Not Working</th> {/* Updated header */}
+                  <th className="px-6 py-3">Half Day </th> {/* Updated header */}
+                  <th className="px-6 py-3">Full Day </th> {/* Updated header */}
+                  <th className="px-6 py-3">Over Time</th>
                   <th className="px-6 py-3">Working Days</th>
                 </tr>
               </thead>
@@ -6041,14 +6084,22 @@ export default function AttendanceSummary() {
                     <td className="px-6 py-3 text-orange-700">{emp.lateDays}</td>
                     <td className="px-6 py-3 text-blue-700">{emp.onsiteDays}</td>
                     <td className="px-6 py-3 text-yellow-700">
-                      {emp.halfDayWorking || emp.halfDayLeaves || 0} {/* Updated field */}
-                    </td>
-                    <td className="px-6 py-3 text-red-700">
-                      {emp.fullDayNotWorking || emp.fullDayLeaves || 0} {/* Updated field */}
-                    </td>
-                    <td className="px-6 py-3 font-bold text-purple-700">
-                      {emp.totalWorkingDays.toFixed(1)}
-                    </td>
+  {emp.halfDayWorking ?? 0}
+</td>
+
+<td className="px-6 py-3 text-red-700">
+  {emp.fullDayNotWorking ?? 0}
+</td>
+<td className="px-4 py-2 font-semibold text-indigo-700">
+  {calculateEmployeeOT(emp.employeeId).toFixed(2)}
+</td>
+
+
+
+<td className="px-6 py-3 font-bold text-purple-700">
+  {Number(emp.totalWorkingDays || 0).toFixed(1)}
+</td>
+
                   </tr>
                 ))}
               </tbody>
@@ -6109,188 +6160,180 @@ export default function AttendanceSummary() {
         </div>
 
         {/* Details Modal */}
-        {selectedEmployee && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+       {/* Details Modal */}
+{selectedEmployee && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-blue-700">
-                  🧾 Attendance Details — {selectedEmployee}
-                </h3>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={downloadCombinedExcel}
-                    className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
-                  >
-                    ⬇ Download Attendance
-                  </button>
+      {/* 🔹 HEADER */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-semibold text-blue-700">
+          🧾 Attendance Details — {selectedEmployee}
+        </h3>
 
-                  <button
-                    onClick={closeModal}
-                    className="text-lg font-bold text-red-600 hover:text-red-700"
-                  >
-                    ✖
-                  </button>
-                </div>
-              </div>
-              
+        <div className="flex items-center gap-3">
+          <button
+            onClick={downloadCombinedExcel}
+            className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+          >
+            ⬇ Download Attendance
+          </button>
 
-              {/* Employee Info Summary */}
-              <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
-                <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
-                  <div>
-                    <span className="font-semibold text-blue-700">Employee ID:</span>
-                    <span className="ml-2">{selectedEmployee}</span>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-blue-700">Name:</span>
-                    <span className="ml-2">
-                      {employees.find(emp => emp.employeeId === selectedEmployee)?.name || 'N/A'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-blue-700">Total Records:</span>
-                    <span className="ml-2">{employeeDetails.length}</span>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-blue-700">Period:</span>
-                    <span className="ml-2">
-                      {fromDate && toDate ? `${fromDate} to ${toDate}` :
-                        selectedMonth ? selectedMonth : 'All Records'}
-                    </span>
-                  </div>
-                </div>
-              </div>
+          <button
+            onClick={closeModal}
+            className="text-lg font-bold text-red-600 hover:text-red-700"
+          >
+            ✖
+          </button>
+        </div>
+      </div>
 
-              <table className="w-full text-sm border">
-                <thead className="text-white bg-blue-600">
-                  <tr>
-                    <th className="px-4 py-2">Employee ID</th>
-                    <th className="px-4 py-2">Name</th>
-                    <th className="px-4 py-2">Date</th>
-                    <th className="px-4 py-2">Check-In</th>
-                    <th className="px-4 py-2">Check-Out</th>
-                    <th className="px-4 py-2">Reason</th>
-                    <th className="px-4 py-2">Hours</th>
-                    <th className="px-4 py-2">Day Type</th>
-                    <th className="px-4 py-2">Action</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {employeeDetails.map((rec, i) => {
-                    const checkIn = new Date(rec.checkInTime);
-                    const checkOut = rec.checkOutTime ?
-                      new Date(rec.checkOutTime) : null;
-
-                    const diffHrs = checkOut
-                      ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2)
-                      : "-";
-
-                    const currentHours = rec.totalHours || diffHrs;
-                    const employee = employees.find(emp => emp.employeeId === rec.employeeId);
-
-                    return (
-                      <tr key={i} className="border-t hover:bg-blue-50">
-                        {/* Employee ID */}
-                        <td className="px-4 py-2 font-medium text-gray-700">
-                          {rec.employeeId}
-                        </td>
-
-                        {/* Employee Name */}
-                        <td className="px-4 py-2">
-                          {employee?.name || 'N/A'}
-                        </td>
-
-                        <td className="px-4 py-2">
-                          {checkIn.toLocaleDateString("en-IN")}
-                        </td>
-
-                        <td className="px-4 py-2">{formatDate(rec.checkInTime)}</td>
-                        
-
-                        <td className="px-4 py-2">
-                          {rec.checkOutTime ? formatDate(rec.checkOutTime) : "-"}
-                        </td>
-
-                        <td className="px-4 py-2">
-                          <select
-                            className="w-full px-2 py-1 border rounded"
-                            value={rec.region || ""}
-                            onChange={(e) => {
-                              const updated = [...employeeDetails];
-                              updated[i].region = e.target.value;
-                              if (e.target.value !== "Comment") {
-                                updated[i].comment = "";
-                              }
-                              setEmployeeDetails(updated);
-                            }}
-                          >
-                            <option value="">Select</option>
-                            <option value="Onsite">Onsite</option>
-                            <option value="Remote">Remote</option>
-                            <option value="Hybrid">Hybrid</option>
-                            <option value="Comment">Comment (Type)</option>
-                          </select>
-
-                          {rec.region === "Comment" && (
-                            <input
-                              type="text"
-                              placeholder="Type comment here..."
-                              className="w-full px-2 py-1 mt-2 border rounded"
-                              value={rec.comment || ""}
-                              onChange={(e) => {
-                                const updated = [...employeeDetails];
-                                updated[i].comment = e.target.value;
-                                setEmployeeDetails(updated);
-                              }}
-                            />
-                          )}
-                        </td>
-
-                        <td className="px-4 py-2">
-                          <input
-                            type="number"
-                            step="0.1"
-                            min="0"
-                            max="24"
-                            className="w-20 px-2 py-1 border rounded"
-                            value={rec.hours || rec.totalHours || diffHrs}
-                            onChange={(e) => {
-                              const updated = [...employeeDetails];
-                              updated[i].hours = e.target.value;
-                              setEmployeeDetails(updated);
-                            }}
-                          />
-                        </td>
-
-                        <td className="px-4 py-2">
-                          {getDayTypeBadge(currentHours)}
-                        </td>
-
-                        <td className="px-4 py-2">
-                          <button
-                            className="px-3 py-1 text-white bg-green-600 rounded hover:bg-green-700"
-                            onClick={() => handleSaveAttendance(rec, rec.hours || rec.totalHours, rec.region, rec.comment, i)}
-                          >
-                            Save
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
-              {/* No Records Message */}
-              {employeeDetails.length === 0 && (
-                <div className="py-8 text-center text-gray-500">
-                  No attendance records found for this employee
-                </div>
-              )}
-            </div>
+      {/* 🔹 EMPLOYEE SUMMARY */}
+      <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
+        <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
+          <div>
+            <span className="font-semibold text-blue-700">Employee ID:</span>
+            <span className="ml-2">{selectedEmployee}</span>
           </div>
-        )}
+
+          <div>
+            <span className="font-semibold text-blue-700">Name:</span>
+            <span className="ml-2">
+              {employees.find(e => e.employeeId === selectedEmployee)?.name || "N/A"}
+            </span>
+          </div>
+
+          <div>
+            <span className="font-semibold text-blue-700">Month:</span>
+            <span className="ml-2">{selectedMonth || "Current Month"}</span>
+          </div>
+        </div>
+      </div>
+
+      {(() => {
+        const baseDate = selectedMonth
+          ? new Date(selectedMonth + "-01")
+          : new Date();
+
+        const year = baseDate.getFullYear();
+        const month = baseDate.getMonth();
+        const totalDays = new Date(year, month + 1, 0).getDate();
+
+        const monthDates = Array.from({ length: totalDays }, (_, i) => {
+          const d = new Date(year, month, i + 1);
+          return d.toISOString().split("T")[0];
+        });
+
+        const mergedEmployeeDetails = monthDates.map(date => {
+          const record = employeeDetails.find(rec =>
+            rec.checkInTime &&
+            new Date(rec.checkInTime).toISOString().split("T")[0] === date
+          );
+
+          return record || {
+            _absent: true,
+            employeeId: selectedEmployee,
+            date,
+            checkInTime: null,
+            checkOutTime: null,
+            reason: "",
+            hours: "",
+            comment: ""
+          };
+        });
+
+        return (
+          <table className="w-full text-sm border">
+            <thead className="text-white bg-blue-600">
+              <tr>
+                <th className="px-4 py-2">Date</th>
+                <th className="px-4 py-2">Check-In</th>
+                <th className="px-4 py-2">Check-Out</th>
+                <th className="px-4 py-2">Reason</th>
+                <th className="px-4 py-2">Hours</th>
+                <th className="px-4 py-2">Over Time</th>
+                <th className="px-4 py-2">Day Type</th>
+                <th className="px-4 py-2">Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {mergedEmployeeDetails.map((rec, i) => {
+                const hours = rec.hours || rec.totalHours || "";
+                const currentHours = Number(hours) || 0;
+                const otHours = calculateOT(currentHours);
+
+                return (
+                  <tr
+                    key={i}
+                    className={`border-t ${
+                      rec._absent ? "bg-gray-100 text-gray-500" : "hover:bg-blue-50"
+                    }`}
+                  >
+                    <td className="px-4 py-2">
+                      {(rec._absent
+                        ? new Date(rec.date)
+                        : new Date(rec.checkInTime)
+                      ).toLocaleDateString("en-IN")}
+                    </td>
+
+                    <td className="px-4 py-2">
+                      {rec.checkInTime ? formatDate(rec.checkInTime) : "-"}
+                    </td>
+
+                    <td className="px-4 py-2">
+                      {rec.checkOutTime ? formatDate(rec.checkOutTime) : "-"}
+                    </td>
+
+                    <td className="px-4 py-2">
+                      <select
+                        disabled={rec._absent}
+                        className="w-full px-2 py-1 border rounded"
+                        value={rec.reason || ""}
+                      >
+                        <option value="">Select</option>
+                        <option value="Onsite">Onsite</option>
+                        <option value="Field Work">Field Work</option>
+                        <option value="Work From Home">Work From Home</option>
+                      </select>
+                    </td>
+
+                    <td className="px-4 py-2">
+                      <input
+                        disabled={rec._absent}
+                        type="number"
+                        className="w-20 px-2 py-1 border rounded"
+                        value={hours}
+                      />
+                    </td>
+
+                    <td className="px-4 py-2 font-semibold text-indigo-700">
+                      {otHours.toFixed(2)}
+                    </td>
+
+                    <td className="px-4 py-2">
+                      {getDayTypeBadge(currentHours)}
+                    </td>
+
+                    <td className="px-4 py-2">
+                      {!rec._absent && (
+                        <button className="px-3 py-1 text-white bg-green-600 rounded">
+                          Save
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        );
+      })()}
+    </div>
+  </div>
+)}
+
+
       </div>
 
       <style jsx>{`
