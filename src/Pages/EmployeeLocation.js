@@ -33,7 +33,7 @@ const EmployeeLocation = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `https://attendancebackend-5cgn.onrender.com/api/employees/mylocation/${employeeId}`
+          `https://api.timelyhealth.in//api/employees/mylocation/${employeeId}`
         );
 
         if (res.data && res.data.success && res.data.data) {

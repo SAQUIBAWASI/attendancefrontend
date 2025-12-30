@@ -40,7 +40,7 @@
 //     try {
 //       setLoading(true);
 //       const res = await axios.post(
-//         "https://attendancebackend-5cgn.onrender.com/api/shifts/assign",
+//         "https://api.timelyhealth.in//api/shifts/assign",
 //         formData
 //       );
 
@@ -252,7 +252,7 @@ export default function CreateShift() {
     try {
       setLoading(true);
       const res = await axios.post(
-        "https://attendancebackend-5cgn.onrender.com/api/shifts/assign",
+        "https://api.timelyhealth.in//api/shifts/assign",
         formData
       );
 

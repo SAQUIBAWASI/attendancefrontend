@@ -19,7 +19,7 @@
 //   });
 //   const recordsPerPage = 10;
 
-//   const API_URL = "https://attendancebackend-5cgn.onrender.com/api/attendancesummary/getattendancesummary";
+//   const API_URL = "https://api.timelyhealth.in//api/attendancesummary/getattendancesummary";
 
 //   useEffect(() => {
 //     fetchData();
@@ -1019,11 +1019,11 @@
 //   });
 //   const recordsPerPage = 10;
 
-//   const API_URL = "https://attendancebackend-5cgn.onrender.com/api/attendancesummary/get";
-//   const ATTENDANCE_API_URL = "https://attendancebackend-5cgn.onrender.com/api/attendance/allattendance";
-//   const LEAVES_API_URL = "https://attendancebackend-5cgn.onrender.com/api/leaves/leaves";
-//   const EMPLOYEES_API_URL = "https://attendancebackend-5cgn.onrender.com/api/employees/get-employees";
-//   const SALARY_API_URL = "https://attendancebackend-5cgn.onrender.com/api/employees/getsalaries";
+//   const API_URL = "https://api.timelyhealth.in//api/attendancesummary/get";
+//   const ATTENDANCE_API_URL = "https://api.timelyhealth.in//api/attendance/allattendance";
+//   const LEAVES_API_URL = "https://api.timelyhealth.in//api/leaves/leaves";
+//   const EMPLOYEES_API_URL = "https://api.timelyhealth.in//api/employees/get-employees";
+//   const SALARY_API_URL = "https://api.timelyhealth.in//api/employees/getsalaries";
 
 //   useEffect(() => {
 //     fetchData();
@@ -2056,11 +2056,11 @@ const PayRoll = () => {
   const recordsPerPage = 10;
 
 // API endpoints
-const ATTENDANCE_SUMMARY_API_URL = "https://attendancebackend-5cgn.onrender.com/api/attendancesummary/get";
-const ATTENDANCE_DETAILS_API_URL = "https://attendancebackend-5cgn.onrender.com/api/attendance/allattendance";
-const LEAVES_API_URL = "https://attendancebackend-5cgn.onrender.com/api/leaves/leaves?status=approved";
-const EMPLOYEES_API_URL = "https://attendancebackend-5cgn.onrender.com/api/employees/get-employees";
-const SALARY_API_URL = "https://attendancebackend-5cgn.onrender.com/api/attendancesummary/getsalaries";
+const ATTENDANCE_SUMMARY_API_URL = "https://api.timelyhealth.in//api/attendancesummary/get";
+const ATTENDANCE_DETAILS_API_URL = "https://api.timelyhealth.in//api/attendance/allattendance";
+const LEAVES_API_URL = "https://api.timelyhealth.in//api/leaves/leaves?status=approved";
+const EMPLOYEES_API_URL = "https://api.timelyhealth.in//api/employees/get-employees";
+const SALARY_API_URL = "https://api.timelyhealth.in//api/attendancesummary/getsalaries";
 
 useEffect(() => {
   fetchData();
@@ -2101,7 +2101,7 @@ const fetchData = async () => {
     const [employeesRes, leavesRes] = await Promise.all([
       fetch(EMPLOYEES_API_URL).catch(() => ({ ok: false })),
       // ✅ CORRECT URL use karo - sirf approved leaves ke liye
-      fetch("https://attendancebackend-5cgn.onrender.com/api/leaves/leaves?status=approved").catch(() => ({ ok: false }))
+      fetch("https://api.timelyhealth.in//api/leaves/leaves?status=approved").catch(() => ({ ok: false }))
     ]);
 
     let employeesData = employeesRes.ok ? await employeesRes.json() : [];
@@ -3436,11 +3436,11 @@ export default PayRoll;
 //   const recordsPerPage = 10;
 
 // // API endpoints
-// const ATTENDANCE_SUMMARY_API_URL = "https://attendancebackend-5cgn.onrender.com/api/attendancesummary/get";
-// const ATTENDANCE_DETAILS_API_URL = "https://attendancebackend-5cgn.onrender.com/api/attendance/allattendance";
-// const LEAVES_API_URL = "https://attendancebackend-5cgn.onrender.com/api/leaves/leaves?status=approved";
-// const EMPLOYEES_API_URL = "https://attendancebackend-5cgn.onrender.com/api/employees/get-employees";
-// const SALARY_API_URL = "https://attendancebackend-5cgn.onrender.com/api/attendancesummary/getsalaries";
+// const ATTENDANCE_SUMMARY_API_URL = "https://api.timelyhealth.in//api/attendancesummary/get";
+// const ATTENDANCE_DETAILS_API_URL = "https://api.timelyhealth.in//api/attendance/allattendance";
+// const LEAVES_API_URL = "https://api.timelyhealth.in//api/leaves/leaves?status=approved";
+// const EMPLOYEES_API_URL = "https://api.timelyhealth.in//api/employees/get-employees";
+// const SALARY_API_URL = "https://api.timelyhealth.in//api/attendancesummary/getsalaries";
 
 // useEffect(() => {
 //   fetchData();
@@ -3480,7 +3480,7 @@ export default PayRoll;
 //     // STEP 2 → Fetch employees + APPROVED LEAVES  
 //     const [employeesRes, leavesRes] = await Promise.all([
 //       fetch(EMPLOYEES_API_URL).catch(() => ({ ok: false })),
-//       fetch("https://attendancebackend-5cgn.onrender.com/api/leaves/leaves?status=approved").catch(() => ({ ok: false }))
+//       fetch("https://api.timelyhealth.in//api/leaves/leaves?status=approved").catch(() => ({ ok: false }))
 //     ]);
 
 //     let employeesData = employeesRes.ok ? await employeesRes.json() : [];

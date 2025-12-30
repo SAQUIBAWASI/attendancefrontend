@@ -16,7 +16,7 @@ const EmployeeLogin = () => {
 
   try {
     // ✅ Login API call
-    const response = await fetch("https://attendancebackend-5cgn.onrender.com/api/employees/login", {
+    const response = await fetch("https://api.timelyhealth.in//api/employees/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),

@@ -33,7 +33,7 @@ const EmployeeShift = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `https://attendancebackend-5cgn.onrender.com/api/shifts/employee/${employeeId}`
+          `https://api.timelyhealth.in//api/shifts/employee/${employeeId}`
         );
 
         if (res.data) {

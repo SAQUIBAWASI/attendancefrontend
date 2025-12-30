@@ -15,7 +15,7 @@
 //     if (!email) return;
 //     const fetchEmployee = async () => {
 //       try {
-//         const res = await fetch(`https://attendancebackend-5cgn.onrender.com/api/employees/get-employee?email=${email}`);
+//         const res = await fetch(`https://api.timelyhealth.in//api/employees/get-employee?email=${email}`);
 //         const data = await res.json();
 //         setProfile(data);
 //       } catch (err) {
@@ -187,7 +187,7 @@ const EmployeeDashboard = () => {
     const fetchEmployee = async () => {
       try {
         const res = await fetch(
-          `https://attendancebackend-5cgn.onrender.com/api/employees/get-employee?email=${email}`
+          `https://api.timelyhealth.in//api/employees/get-employee?email=${email}`
         );
         const data = await res.json();
         setProfile(data);

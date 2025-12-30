@@ -50,7 +50,7 @@
 //     setErrorMessage("");
 
 //     try {
-//       const response = await fetch("https://attendancebackend-5cgn.onrender.com/api/employees/add-employee", {
+//       const response = await fetch("https://api.timelyhealth.in//api/employees/add-employee", {
 //         method: "POST",
 //         headers: { "Content-Type": "application/json" },
 //         body: JSON.stringify({
@@ -349,7 +349,7 @@
 //     const fetchLocations = async () => {
 //       try {
 //         const res = await axios.get(
-//           "https://attendancebackend-5cgn.onrender.com/api/location/alllocation"
+//           "https://api.timelyhealth.in//api/location/alllocation"
 //         );
 //         if (res.data && res.data.locations) {
 //           setLocations(res.data.locations);
@@ -371,7 +371,7 @@
 //     try {
 //       // Step 1: Create Employee
 //       const response = await fetch(
-//         "https://attendancebackend-5cgn.onrender.com/api/employees/add-employee",
+//         "https://api.timelyhealth.in//api/employees/add-employee",
 //         {
 //           method: "POST",
 //           headers: { "Content-Type": "application/json" },
@@ -397,7 +397,7 @@
 //       // Step 2: Assign Location (only if locationId selected)
 //       if (locationId) {
 //         await axios.put(
-//           `https://attendancebackend-5cgn.onrender.com/api/employees/assign-location/${employeeId}`,
+//           `https://api.timelyhealth.in//api/employees/assign-location/${employeeId}`,
 //           { locationId }
 //         );
 //       }
@@ -730,7 +730,7 @@
 //     const fetchLocations = async () => {
 //       try {
 //         const res = await axios.get(
-//           "https://attendancebackend-5cgn.onrender.com/api/location/alllocation"
+//           "https://api.timelyhealth.in//api/location/alllocation"
 //         );
 //         if (res.data?.locations) setLocations(res.data.locations);
 //       } catch (err) {
@@ -768,14 +768,14 @@
 //       // Step 2: Assign Location
 //       if (locationId) {
 //         await axios.put(
-//           `https://attendancebackend-5cgn.onrender.com/api/employees/assign-location/${employeeId}`,
+//           `https://api.timelyhealth.in//api/employees/assign-location/${employeeId}`,
 //           { locationId }
 //         );
 //       }
 
 //       // Step 3: Add Salary (WeekOff Included)
 //       await axios.post(
-//         "https://attendancebackend-5cgn.onrender.com/api/salary/set-salary",
+//         "https://api.timelyhealth.in//api/salary/set-salary",
 //         {
 //           employeeId,
 //           name,
@@ -1095,7 +1095,7 @@ const AddEmployeePage = () => {
     const fetchLocations = async () => {
       try {
         const res = await axios.get(
-          "https://attendancebackend-5cgn.onrender.com/api/location/alllocation"
+          "https://api.timelyhealth.in//api/location/alllocation"
         );
         if (res.data?.locations) setLocations(res.data.locations);
       } catch (err) {
@@ -1130,13 +1130,13 @@ const AddEmployeePage = () => {
 
         // ✅ correct employee update API
         await axios.put(
-          `https://attendancebackend-5cgn.onrender.com/api/employees/update/${editingEmployee._id}`,
+          `https://api.timelyhealth.in//api/employees/update/${editingEmployee._id}`,
           payload
         );
 
         // ================= UPDATE SALARY =================
         await axios.put(
-          `https://attendancebackend-5cgn.onrender.com/api/salary/update-salary/${editingEmployee.employeeId}`,
+          `https://api.timelyhealth.in//api/salary/update-salary/${editingEmployee.employeeId}`,
           {
             salaryPerMonth: Number(salaryPerMonth),
             shiftHours: Number(shiftHours),
@@ -1148,7 +1148,7 @@ const AddEmployeePage = () => {
       } else {
         // ================= ADD EMPLOYEE =================
         await axios.post(
-          "https://attendancebackend-5cgn.onrender.com/api/employees/add-employee",
+          "https://api.timelyhealth.in//api/employees/add-employee",
           {
             name,
             email,
@@ -1165,7 +1165,7 @@ const AddEmployeePage = () => {
 
         // ================= ADD SALARY =================
         await axios.post(
-          "https://attendancebackend-5cgn.onrender.com/api/salary/set-salary",
+          "https://api.timelyhealth.in//api/salary/set-salary",
           {
             employeeId,
             name,

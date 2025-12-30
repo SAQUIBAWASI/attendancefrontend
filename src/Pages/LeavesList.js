@@ -23,7 +23,7 @@
 //   const fetchLeaves = async () => {
 //     try {
 //       setLoading(true);
-//       const res = await axios.get("https://attendancebackend-5cgn.onrender.com/api/leaves/leaves");
+//       const res = await axios.get("https://api.timelyhealth.in//api/leaves/leaves");
 //       const leavesData = res.data.records || res.data || [];
       
 //       // Sort by latest first
@@ -90,7 +90,7 @@
 //     }
 //     try {
 //       await axios.put(
-//         `https://attendancebackend-5cgn.onrender.com/api/leaves/updateleaves/${editingRecord._id}`,
+//         `https://api.timelyhealth.in//api/leaves/updateleaves/${editingRecord._id}`,
 //         { status: updatedStatus }
 //       );
 //       alert(`✅ Leave ${updatedStatus} successfully!`);
@@ -623,7 +623,7 @@
 //   const fetchLeaves = async () => {
 //     try {
 //       setLoading(true);
-//       const res = await axios.get("https://attendancebackend-5cgn.onrender.com/api/leaves/leaves");
+//       const res = await axios.get("https://api.timelyhealth.in//api/leaves/leaves");
 //       const leavesData = res.data.records || res.data || [];
 //       const sorted = leavesData.sort(
 //         (a, b) => new Date(b.createdAt || b.startDate) - new Date(a.createdAt || a.startDate)
@@ -928,7 +928,7 @@ const LeavesList = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        "https://attendancebackend-5cgn.onrender.com/api/leaves/leaves"
+        "https://api.timelyhealth.in//api/leaves/leaves"
       );
       const leavesData = res.data.records || res.data || [];
       const sorted = leavesData.sort(
@@ -953,7 +953,7 @@ const LeavesList = () => {
   const updateLeaveStatus = async (id, status) => {
     try {
       const res = await axios.put(
-        `https://attendancebackend-5cgn.onrender.com/api/leaves/updateleaves/${id}`,
+        `https://api.timelyhealth.in//api/leaves/updateleaves/${id}`,
         { status }
       );
 

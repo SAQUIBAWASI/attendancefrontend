@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 
-const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
+const BASE_URL = "https://api.timelyhealth.in/";
 
 export default function AttendanceList() {
   const [records, setRecords] = useState([]);

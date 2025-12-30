@@ -17,7 +17,7 @@
 //     try {
 //       setLoading(true);
 //       const resp = await axios.get(
-//         "https://attendancebackend-5cgn.onrender.com/api/attendance/today"
+//         "https://api.timelyhealth.in//api/attendance/today"
 //       );
 
 //       let records = resp.data.records || [];
@@ -131,7 +131,7 @@
 // import { useEffect, useState } from "react";
 // import { useNavigate } from "react-router-dom";
 
-// // const BASE_URL = "https://attendancebackend-5cgn.onrender.com"; // replace with your backend base URL
+// // const BASE_URL = "https://api.timelyhealth.in/"; // replace with your backend base URL
 
 // const TodayAttendance = () => {
 //   const [todayRecords, setTodayRecords] = useState([]);
@@ -146,7 +146,7 @@
 //   const fetchTodayAttendance = async () => {
 //     try {
 //       setLoading(true);
-//       const resp = await axios.get("https://attendancebackend-5cgn.onrender.com/api/attendance/today");
+//       const resp = await axios.get("https://api.timelyhealth.in//api/attendance/today");
 //       if (resp.data && resp.data.records) {
 //         setTodayRecords(resp.data.records);
 //       }
@@ -271,14 +271,14 @@ const TodayAttendance = () => {
 
       // 1️⃣ Fetch attendance
       const attendanceResp = await axios.get(
-        "https://attendancebackend-5cgn.onrender.com/api/attendance/today"
+        "https://api.timelyhealth.in//api/attendance/today"
       );
 
       const attendance = attendanceResp.data.records || [];
 
       // 2️⃣ Fetch employee list
       const empResp = await axios.get(
-        "https://attendancebackend-5cgn.onrender.com/api/employees/get-employees"
+        "https://api.timelyhealth.in//api/employees/get-employees"
       );
       const employees = empResp.data || [];
 

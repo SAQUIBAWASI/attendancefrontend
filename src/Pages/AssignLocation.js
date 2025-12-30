@@ -7,7 +7,7 @@ export default function AssignLocation() {
   const [longitude, setLongitude] = useState("");
   const [message, setMessage] = useState("");
 
-  const BASE_URL = "https://attendancebackend-5cgn.onrender.com/api/employees";
+  const BASE_URL = "https://api.timelyhealth.in//api/employees";
 
   const handleAssign = async () => {
     try {

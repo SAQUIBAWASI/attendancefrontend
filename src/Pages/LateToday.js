@@ -2,7 +2,7 @@
 // import axios from "axios";
 // import { useEffect, useState } from "react";
 
-// const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
+// const BASE_URL = "https://api.timelyhealth.in/";
 
 // const LateToday = () => {
 //   const [records, setRecords] = useState([]);
@@ -117,7 +117,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 
-const BASE_URL = "https://attendancebackend-5cgn.onrender.com"; // replace with your backend URL
+const BASE_URL = "https://api.timelyhealth.in/"; // replace with your backend URL
 
 const LateToday = () => {
   const [records, setRecords] = useState([]);

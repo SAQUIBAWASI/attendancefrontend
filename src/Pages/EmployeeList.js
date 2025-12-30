@@ -22,7 +22,7 @@
 //     const fetchEmployees = async () => {
 //       try {
 //         const response = await axios.get(
-//           "https://attendancebackend-5cgn.onrender.com/api/employees/get-employees"
+//           "https://api.timelyhealth.in//api/employees/get-employees"
 //         );
 //         setEmployees(response.data);
 //       } catch (error) {
@@ -42,7 +42,7 @@
 //     const fetchLocations = async () => {
 //       try {
 //         const response = await axios.get(
-//           "https://attendancebackend-5cgn.onrender.com/api/location/alllocation"
+//           "https://api.timelyhealth.in//api/location/alllocation"
 //         );
 //         console.log("Locations API Response:", response.data);
         
@@ -130,7 +130,7 @@
 //     setLoading(true);
 //     try {
 //       const response = await axios.put(
-//         `https://attendancebackend-5cgn.onrender.com/api/employees/assign-location/${selectedEmployeeForLocation.employeeId}`,
+//         `https://api.timelyhealth.in//api/employees/assign-location/${selectedEmployeeForLocation.employeeId}`,
 //         { locationId: selectedLocationId }
 //       );
 
@@ -491,7 +491,7 @@ const EmployeeList = () => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get(
-          "https://attendancebackend-5cgn.onrender.com/api/employees/get-employees"
+          "https://api.timelyhealth.in//api/employees/get-employees"
         );
         setEmployees(response.data);
       } catch (error) {
@@ -502,7 +502,7 @@ const EmployeeList = () => {
     const fetchLocations = async () => {
       try {
         const response = await axios.get(
-          "https://attendancebackend-5cgn.onrender.com/api/location/alllocation"
+          "https://api.timelyhealth.in//api/location/alllocation"
         );
         let locationsData = [];
         if (response.data?.locations) {
@@ -544,7 +544,7 @@ const EmployeeList = () => {
     if (window.confirm("Are you sure you want to delete this employee?")) {
       try {
         await axios.delete(
-          `https://attendancebackend-5cgn.onrender.com/api/employees/delete-employee/${id}`
+          `https://api.timelyhealth.in//api/employees/delete-employee/${id}`
         );
         setEmployees(employees.filter((emp) => emp._id !== id));
         alert("✅ Employee deleted successfully!");
@@ -577,7 +577,7 @@ const EmployeeList = () => {
     setLoading(true);
     try {
       const response = await axios.put(
-        `https://attendancebackend-5cgn.onrender.com/api/employees/assign-location/${selectedEmployeeForLocation.employeeId}`,
+        `https://api.timelyhealth.in//api/employees/assign-location/${selectedEmployeeForLocation.employeeId}`,
         { locationId: selectedLocationId }
       );
 

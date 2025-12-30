@@ -6,7 +6,7 @@
 
 // const OFFICE_COORDS = { lat: 17.4458661, lng: 78.3849383 };
 // const ONSITE_RADIUS_M = 50;
-// const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
+// const BASE_URL = "https://api.timelyhealth.in/";
 
 // // Haversine formula
 // function haversineDistance(lat1, lon1, lat2, lon2) {
@@ -272,7 +272,7 @@
 
 // const OFFICE_COORDS = { lat: 17.445860, lng: 78.387154 };
 // const ONSITE_RADIUS_M = 600;
-// const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
+// const BASE_URL = "https://api.timelyhealth.in/";
 
 // // ✅ Accurate Haversine Formula
 // function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
@@ -548,7 +548,7 @@
 
 // const OFFICE_COORDS = { lat: 17.4458661, lng: 78.3849383 };
 // const ONSITE_RADIUS_M = 50;
-// const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
+// const BASE_URL = "https://api.timelyhealth.in/";
 
 // // Haversine formula
 // function haversineDistance(lat1, lon1, lat2, lon2) {
@@ -842,7 +842,7 @@
 
 // const OFFICE_COORDS = { lat: 17.4458661, lng: 78.3849383 };
 // const ONSITE_RADIUS_M = 50;
-// const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
+// const BASE_URL = "https://api.timelyhealth.in/";
 
 // // Haversine formula for distance
 // function haversineDistance(lat1, lon1, lat2, lon2) {
@@ -1058,7 +1058,7 @@
 
 // import { useEffect, useState } from "react";
 // import { useLocation, useNavigate } from "react-router-dom";
-// const BASE_URL = "https://attendancebackend-5cgn.onrender.com/api/attendance";
+// const BASE_URL = "https://api.timelyhealth.in//api/attendance";
 // const OFFICE_COORDS = { lat: 17.448294, lng: 78.391487 };
 // const ONSITE_RADIUS_M = 600;
 
@@ -1275,7 +1275,7 @@
 // import { useEffect, useState } from "react";
 // import { useLocation, useNavigate } from "react-router-dom";
 
-// const BASE_URL = "https://attendancebackend-5cgn.onrender.com/api/attendance";
+// const BASE_URL = "https://api.timelyhealth.in//api/attendance";
 // const OFFICE_COORDS = { lat: 17.448294, lng: 78.391487 };
 // const ONSITE_RADIUS_M = 600;
 
@@ -1494,7 +1494,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const BASE_URL = "https://attendancebackend-5cgn.onrender.com";
+const BASE_URL = "https://api.timelyhealth.in/";
 const ONSITE_RADIUS_M = 50;
 
 // Haversine formula
