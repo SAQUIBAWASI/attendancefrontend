@@ -20,7 +20,7 @@
 //       <Sidebar isCollapsed={isCollapsed} isMobile={isMobile} setIsCollapsed={setIsCollapsed}/>
 
 //       {/* Main Content */}
-//       <div className="flex-1 flex flex-col">
+//       <div className="flex flex-col flex-1">
 //         {/* Navbar */}
 //        <Navbar setIsCollapsed={setIsCollapsed} isCollapsed={isCollapsed}/>
 //         <div className="p-4 overflow-y-scroll no-scrollbar bg-[#EFF0F1]">{children}</div>
@@ -62,7 +62,7 @@ const AdminLayout = ({ children }) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-gray-100">
       {/* Sidebar */}
       <Sidebar 
         isCollapsed={isCollapsed}
@@ -85,7 +85,7 @@ const AdminLayout = ({ children }) => {
         />
         
         {/* Page Content - Remove extra padding if needed */}
-        <main className="flex-1 overflow-auto p-0 md:p-2 bg-gray-100">
+        <main className="flex-1 p-0 overflow-auto bg-gray-100 md:p-2">
           {children}
         </main>
       </div>

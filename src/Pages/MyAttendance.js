@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { CSVLink } from "react-csv";
 import { useNavigate } from "react-router-dom";
-import EmployeeNavbar from "../Components/EmployeeNavbar";
+
 
 const BASE_URL = "https://api.timelyhealth.in/";
 
@@ -134,7 +134,7 @@ export default function MyAttendance() {
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Main Section */}
       <div className="flex flex-col flex-1">
-        <EmployeeNavbar />
+      
 
         <div className="flex-1 p-4 sm:p-6 lg:p-8 flex justify-center items-start">
           <div className="w-full max-w-7xl bg-white shadow-xl rounded-2xl p-4 sm:p-6 lg:p-8">
@@ -148,12 +148,12 @@ export default function MyAttendance() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                <button
+                {/* <button
                   onClick={() => navigate("/employeedashboard")}
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-semibold flex items-center justify-center"
                 >
                   ← Back to Dashboard
-                </button>
+                </button> */}
 
                 <CSVLink
                   data={csvData}

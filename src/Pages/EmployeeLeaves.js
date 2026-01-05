@@ -46,7 +46,7 @@
 //     const fetchLeaves = async () => {
 //       try {
 //         const resp = await axios.get(
-//           `https://attendancebackend-5cgn.onrender.com/api/leaves/employeeleaves/${employeeId}`
+//           `http://localhost:5000api/leaves/employeeleaves/${employeeId}`
 //         );
 
 //         if (resp.data && resp.data.success) {
@@ -74,20 +74,20 @@
 //       <EmployeeSidebar />
 
 //       {/* Main content */}
-//       <div className="flex-1 flex flex-col">
+//       <div className="flex flex-col flex-1">
 //         {/* Navbar */}
 //         <Navbar />
 
 //         {/* Page content */}
 //         <main className="p-6">
-//           <div className="bg-white rounded shadow-md max-w-5xl mx-auto p-6">
-//             <h2 className="text-2xl font-bold mb-4 text-blue-900">My Leave Requests</h2>
+//           <div className="max-w-5xl p-6 mx-auto bg-white rounded shadow-md">
+//             <h2 className="mb-4 text-2xl font-bold text-blue-900">My Leave Requests</h2>
 //             {leaves.length === 0 ? (
 //               <p className="text-gray-500">No leave records found.</p>
 //             ) : (
 //               <div className="overflow-x-auto">
-//                 <table className="w-full border text-sm">
-//                   <thead className="bg-gray-200 text-gray-700">
+//                 <table className="w-full text-sm border">
+//                   <thead className="text-gray-700 bg-gray-200">
 //                     <tr>
 //                       <th className="p-2 border">Leave Type</th>
 //                       <th className="p-2 border">Start Date</th>
@@ -99,8 +99,8 @@
 //                   </thead>
 //                   <tbody>
 //                     {leaves.map((leave) => (
-//                       <tr key={leave._id} className="hover:bg-gray-50 border-b">
-//                         <td className="p-2 border capitalize">{leave.leaveType}</td>
+//                       <tr key={leave._id} className="border-b hover:bg-gray-50">
+//                         <td className="p-2 capitalize border">{leave.leaveType}</td>
 //                         <td className="p-2 border">
 //                           {new Date(leave.startDate).toLocaleDateString()}
 //                         </td>
@@ -145,7 +145,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../Components/Navbar";
+
 
 const EmployeeLeaves = () => {
   const navigate = useNavigate();
@@ -183,7 +183,7 @@ const EmployeeLeaves = () => {
     const fetchLeaves = async () => {
       try {
         const resp = await axios.get(
-          `https://attendancebackend-5cgn.onrender.com/api/leaves/employeeleaves/${employeeId}`
+          `http://localhost:5000/api/leaves/employeeleaves/${employeeId}`
         );
 
         if (resp.data && resp.data.success) {
@@ -247,47 +247,46 @@ const EmployeeLeaves = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
-      {/* Navbar */}
-      <Navbar />
+    
 
       {/* Page content */}
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
-        <div className="bg-white rounded-lg shadow-md max-w-6xl mx-auto p-6">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+        <div className="max-w-6xl p-6 mx-auto bg-white rounded-lg shadow-md">
+          <div className="flex flex-col gap-4 mb-6 md:flex-row md:justify-between md:items-center">
             <h2 className="text-2xl font-bold text-blue-900">
               My Leave Requests
             </h2>
 
-            <div className="flex flex-col sm:flex-row gap-3 items-stretch md:items-center w-full md:w-auto">
-              <button
+            <div className="flex flex-col items-stretch w-full gap-3 sm:flex-row md:items-center md:w-auto">
+              {/* <button
                 onClick={() => navigate("/employeedashboard")}
-                className="w-full sm:w-auto px-5 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all"
+                className="w-full px-5 py-2 font-medium text-white transition-all bg-blue-600 rounded-lg sm:w-auto hover:bg-blue-700"
               >
                 ← Back to Dashboard
-              </button>
+              </button> */}
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <div className="flex flex-col">
-                  <label className="text-sm text-gray-600 mb-1">
+                  <label className="mb-1 text-sm text-gray-600">
                     Filter by Date:
                   </label>
                   <input
                     type="date"
                     value={selectedDate}
                     onChange={handleDateChange}
-                    className="border p-2 rounded w-full sm:w-auto"
+                    className="w-full p-2 border rounded sm:w-auto"
                   />
                 </div>
 
                 <div className="flex flex-col">
-                  <label className="text-sm text-gray-600 mb-1">
+                  <label className="mb-1 text-sm text-gray-600">
                     Filter by Month:
                   </label>
                   <input
                     type="month"
                     value={selectedMonth}
                     onChange={handleMonthChange}
-                    className="border p-2 rounded w-full sm:w-auto"
+                    className="w-full p-2 border rounded sm:w-auto"
                   />
                 </div>
               </div>
@@ -299,7 +298,7 @@ const EmployeeLeaves = () => {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full border text-sm min-w-[600px]">
-                <thead className="bg-gray-200 text-gray-700">
+                <thead className="text-gray-700 bg-gray-200">
                   <tr>
                     <th className="p-2 border">Leave Type</th>
                     <th className="p-2 border">Start Date</th>
@@ -313,9 +312,9 @@ const EmployeeLeaves = () => {
                   {filteredLeaves.map((leave) => (
                     <tr
                       key={leave._id}
-                      className="hover:bg-gray-50 border-b"
+                      className="border-b hover:bg-gray-50"
                     >
-                      <td className="p-2 border capitalize">{leave.leaveType}</td>
+                      <td className="p-2 capitalize border">{leave.leaveType}</td>
                       <td className="p-2 border">
                         {new Date(leave.startDate).toLocaleDateString()}
                       </td>

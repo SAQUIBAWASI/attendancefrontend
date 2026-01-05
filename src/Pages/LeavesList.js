@@ -23,7 +23,7 @@
 //   const fetchLeaves = async () => {
 //     try {
 //       setLoading(true);
-//       const res = await axios.get("https://api.timelyhealth.in//api/leaves/leaves");
+//       const res = await axios.get("http://localhost:5000/api/leaves/leaves");
 //       const leavesData = res.data.records || res.data || [];
       
 //       // Sort by latest first
@@ -90,7 +90,7 @@
 //     }
 //     try {
 //       await axios.put(
-//         `https://api.timelyhealth.in//api/leaves/updateleaves/${editingRecord._id}`,
+//         `http://localhost:5000/api/leaves/updateleaves/${editingRecord._id}`,
 //         { status: updatedStatus }
 //       );
 //       alert(`✅ Leave ${updatedStatus} successfully!`);
@@ -236,66 +236,66 @@
 
 //   if (loading) {
 //     return (
-//       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-100 flex items-center justify-center">
+//       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
 //         <div className="text-center">
-//           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
-//           <p className="text-gray-700 text-lg font-semibold">Loading leave requests...</p>
+//           <div className="w-16 h-16 mx-auto mb-4 border-b-2 border-purple-600 rounded-full animate-spin"></div>
+//           <p className="text-lg font-semibold text-gray-700">Loading leave requests...</p>
 //         </div>
 //       </div>
 //     );
 //   }
 
 //   return (
-//     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-100 py-8 px-4">
-//       <div className="max-w-7xl mx-auto">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-purple-50 to-blue-100">
+//       <div className="mx-auto max-w-7xl">
 //         {/* Header Section */}
-//         <div className="text-center mb-8">
-//           <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mb-3">
+//         <div className="mb-8 text-center">
+//           <h1 className="mb-3 text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
 //             📋 Leave Requests Management
 //           </h1>
-//           <p className="text-gray-600 text-lg">
+//           <p className="text-lg text-gray-600">
 //             Review and manage employee leave applications
 //           </p>
 //         </div>
 
 //         {/* Stats Cards */}
-//         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-//           <div className="bg-white rounded-2xl p-6 shadow-lg border border-purple-200 text-center">
+//         <div className="grid grid-cols-1 gap-4 mb-8 md:grid-cols-4">
+//           <div className="p-6 text-center bg-white border border-purple-200 shadow-lg rounded-2xl">
 //             <div className="text-3xl font-bold text-purple-600">{leaves.length}</div>
-//             <div className="text-purple-800 font-semibold">Total Requests</div>
+//             <div className="font-semibold text-purple-800">Total Requests</div>
 //           </div>
-//           <div className="bg-white rounded-2xl p-6 shadow-lg border border-yellow-200 text-center">
+//           <div className="p-6 text-center bg-white border border-yellow-200 shadow-lg rounded-2xl">
 //             <div className="text-3xl font-bold text-yellow-600">
 //               {leaves.filter(l => l.status === 'pending').length}
 //             </div>
-//             <div className="text-yellow-800 font-semibold">Pending</div>
+//             <div className="font-semibold text-yellow-800">Pending</div>
 //           </div>
-//           <div className="bg-white rounded-2xl p-6 shadow-lg border border-green-200 text-center">
+//           <div className="p-6 text-center bg-white border border-green-200 shadow-lg rounded-2xl">
 //             <div className="text-3xl font-bold text-green-600">
 //               {leaves.filter(l => l.status === 'approved').length}
 //             </div>
-//             <div className="text-green-800 font-semibold">Approved</div>
+//             <div className="font-semibold text-green-800">Approved</div>
 //           </div>
-//           <div className="bg-white rounded-2xl p-6 shadow-lg border border-red-200 text-center">
+//           <div className="p-6 text-center bg-white border border-red-200 shadow-lg rounded-2xl">
 //             <div className="text-3xl font-bold text-red-600">
 //               {leaves.filter(l => l.status === 'rejected').length}
 //             </div>
-//             <div className="text-red-800 font-semibold">Rejected</div>
+//             <div className="font-semibold text-red-800">Rejected</div>
 //           </div>
 //         </div>
 
 //         {/* Filters Section */}
-//         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-200">
-//           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-4">
+//         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
+//           <div className="flex flex-col items-start justify-between gap-6 mb-4 lg:flex-row lg:items-center">
 //             <div>
-//               <h3 className="text-xl font-semibold text-gray-800 mb-2">🔍 Filter Leave Requests</h3>
+//               <h3 className="mb-2 text-xl font-semibold text-gray-800">🔍 Filter Leave Requests</h3>
 //               <p className="text-gray-600">Search and filter by various criteria</p>
 //             </div>
             
-//             <div className="flex flex-col sm:flex-row gap-3">
+//             <div className="flex flex-col gap-3 sm:flex-row">
 //               <button
 //                 onClick={downloadCSV}
-//                 className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition font-semibold flex items-center gap-2 shadow-lg"
+//                 className="flex items-center gap-2 px-6 py-3 font-semibold text-white transition shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl hover:from-green-600 hover:to-emerald-700"
 //               >
 //                 <FaDownload className="text-sm" />
 //                 Download CSV
@@ -303,7 +303,7 @@
               
 //               <button
 //                 onClick={clearFilters}
-//                 className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition font-semibold flex items-center gap-2"
+//                 className="flex items-center gap-2 px-6 py-3 font-semibold text-white transition bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl hover:from-gray-600 hover:to-gray-700"
 //               >
 //                 <FaFilter className="text-sm" />
 //                 Clear Filters
@@ -311,7 +311,7 @@
 //             </div>
 //           </div>
 
-//           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+//           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             {/* Search */}
 //             <div>
 //               <label className="block mb-2 text-sm font-semibold text-blue-700">
@@ -323,7 +323,7 @@
 //                 placeholder="Search by name, ID, type, or reason..."
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="w-full p-3 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 transition"
+//                 className="w-full p-3 transition border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500"
 //               />
 //             </div>
 
@@ -335,7 +335,7 @@
 //               <select
 //                 value={statusFilter}
 //                 onChange={(e) => setStatusFilter(e.target.value)}
-//                 className="w-full p-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-500 transition"
+//                 className="w-full p-3 transition border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-500"
 //               >
 //                 <option value="all">All Status</option>
 //                 <option value="pending">Pending</option>
@@ -352,7 +352,7 @@
 //               <select
 //                 value={leaveTypeFilter}
 //                 onChange={(e) => setLeaveTypeFilter(e.target.value)}
-//                 className="w-full p-3 border-2 border-green-200 rounded-xl focus:outline-none focus:border-green-500 transition"
+//                 className="w-full p-3 transition border-2 border-green-200 rounded-xl focus:outline-none focus:border-green-500"
 //               >
 //                 <option value="all">All Types</option>
 //                 {leaveTypes.map(type => (
@@ -363,12 +363,12 @@
 //           </div>
 
 //           {/* Results Count */}
-//           <div className="mt-4 flex justify-between items-center text-sm">
-//             <span className="text-blue-700 font-semibold">
+//           <div className="flex items-center justify-between mt-4 text-sm">
+//             <span className="font-semibold text-blue-700">
 //               Showing <strong>{filteredLeaves.length}</strong> of <strong>{leaves.length}</strong> requests
 //             </span>
 //             {(searchTerm || statusFilter !== "all" || leaveTypeFilter !== "all") && (
-//               <span className="text-orange-600 font-semibold">
+//               <span className="font-semibold text-orange-600">
 //                 🔍 Filters applied
 //               </span>
 //             )}
@@ -376,17 +376,17 @@
 //         </div>
 
 //         {/* Table Section */}
-//         <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+//         <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
 //           {filteredLeaves.length === 0 ? (
-//             <div className="text-center py-16">
-//               <div className="text-6xl mb-4">📭</div>
-//               <p className="text-gray-600 text-lg font-semibold mb-4">
+//             <div className="py-16 text-center">
+//               <div className="mb-4 text-6xl">📭</div>
+//               <p className="mb-4 text-lg font-semibold text-gray-600">
 //                 {leaves.length === 0 ? "No leave requests found." : "No requests match your filters."}
 //               </p>
 //               {leaves.length > 0 && (
 //                 <button
 //                   onClick={clearFilters}
-//                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+//                   className="px-6 py-2 font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
 //                 >
 //                   🔄 Clear Filters
 //                 </button>
@@ -396,15 +396,15 @@
 //             <>
 //               <div className="overflow-x-auto">
 //                 <table className="w-full text-sm">
-//                   <thead className="bg-gradient-to-r from-purple-500 to-blue-600 text-white">
+//                   <thead className="text-white bg-gradient-to-r from-purple-500 to-blue-600">
 //                     <tr>
-//                       <th className="px-6 py-4 text-left font-semibold">Employee</th>
-//                       <th className="px-6 py-4 text-left font-semibold">Leave Type</th>
-//                       <th className="px-6 py-4 text-left font-semibold">Date Range</th>
-//                       <th className="px-6 py-4 text-left font-semibold">Days</th>
-//                       <th className="px-6 py-4 text-left font-semibold">Reason</th>
-//                       <th className="px-6 py-4 text-left font-semibold">Status</th>
-//                       <th className="px-6 py-4 text-left font-semibold">Actions</th>
+//                       <th className="px-6 py-4 font-semibold text-left">Employee</th>
+//                       <th className="px-6 py-4 font-semibold text-left">Leave Type</th>
+//                       <th className="px-6 py-4 font-semibold text-left">Date Range</th>
+//                       <th className="px-6 py-4 font-semibold text-left">Days</th>
+//                       <th className="px-6 py-4 font-semibold text-left">Reason</th>
+//                       <th className="px-6 py-4 font-semibold text-left">Status</th>
+//                       <th className="px-6 py-4 font-semibold text-left">Actions</th>
 //                     </tr>
 //                   </thead>
 //                   <tbody>
@@ -443,7 +443,7 @@
 //                           </div>
 //                         </td>
 //                         <td className="px-6 py-4">
-//                           <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold">
+//                           <span className="px-3 py-1 text-sm font-bold text-blue-800 bg-blue-100 rounded-full">
 //                             {leave.days} day{leave.days !== 1 ? 's' : ''}
 //                           </span>
 //                         </td>
@@ -461,7 +461,7 @@
 //                         <td className="px-6 py-4">
 //                           <button
 //                             onClick={() => handleEdit(leave)}
-//                             className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-xl hover:from-blue-600 hover:to-purple-700 transition font-semibold flex items-center gap-2 shadow-lg"
+//                             className="flex items-center gap-2 px-4 py-2 font-semibold text-white transition shadow-lg bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl hover:from-blue-600 hover:to-purple-700"
 //                           >
 //                             <FaEdit className="text-sm" />
 //                             Edit
@@ -475,7 +475,7 @@
 
 //               {/* Pagination */}
 //               {totalPages > 1 && (
-//                 <div className="flex flex-col sm:flex-row justify-between items-center p-6 border-t bg-gray-50 gap-4">
+//                 <div className="flex flex-col items-center justify-between gap-4 p-6 border-t sm:flex-row bg-gray-50">
 //                   <div className="text-sm text-gray-600">
 //                     Showing <strong>{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredLeaves.length)}</strong> of{" "}
 //                     <strong>{filteredLeaves.length}</strong> requests
@@ -534,22 +534,22 @@
 
 //       {/* Edit Modal */}
 //       {editingRecord && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-//           <div className="bg-white p-8 rounded-2xl w-full max-w-md relative shadow-2xl border border-purple-200">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//           <div className="relative w-full max-w-md p-8 bg-white border border-purple-200 shadow-2xl rounded-2xl">
 //             <button
 //               onClick={() => setEditingRecord(null)}
-//               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition text-xl"
+//               className="absolute text-xl text-gray-400 transition top-4 right-4 hover:text-gray-600"
 //             >
 //               <FaTimes />
 //             </button>
             
-//             <div className="text-center mb-6">
-//               <h2 className="text-2xl font-bold text-gray-800 mb-2">Update Leave Status</h2>
+//             <div className="mb-6 text-center">
+//               <h2 className="mb-2 text-2xl font-bold text-gray-800">Update Leave Status</h2>
 //               <p className="text-gray-600">Change the status of this leave request</p>
 //             </div>
 
-//             <div className="space-y-4 mb-6">
-//               <div className="bg-gray-50 p-4 rounded-xl">
+//             <div className="mb-6 space-y-4">
+//               <div className="p-4 bg-gray-50 rounded-xl">
 //                 <p className="font-semibold text-gray-700">{editingRecord.employeeName}</p>
 //                 <p className="text-sm text-gray-500 capitalize">{editingRecord.leaveType}</p>
 //                 <p className="text-xs text-gray-400">
@@ -564,7 +564,7 @@
 //                 <select
 //                   value={updatedStatus}
 //                   onChange={(e) => setUpdatedStatus(e.target.value)}
-//                   className="w-full p-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-500 transition"
+//                   className="w-full p-3 transition border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-500"
 //                 >
 //                   <option value="pending">⏳ Pending</option>
 //                   <option value="approved">✅ Approved</option>
@@ -580,13 +580,13 @@
 //             <div className="flex gap-3">
 //               <button
 //                 onClick={() => setEditingRecord(null)}
-//                 className="flex-1 px-4 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition font-semibold"
+//                 className="flex-1 px-4 py-3 font-semibold text-white transition bg-gray-500 rounded-xl hover:bg-gray-600"
 //               >
 //                 Cancel
 //               </button>
 //               <button
 //                 onClick={handleUpdateStatus}
-//                 className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition font-semibold shadow-lg"
+//                 className="flex-1 px-4 py-3 font-semibold text-white transition shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl hover:from-green-600 hover:to-emerald-700"
 //               >
 //                 Update Status
 //               </button>
@@ -623,7 +623,7 @@
 //   const fetchLeaves = async () => {
 //     try {
 //       setLoading(true);
-//       const res = await axios.get("https://api.timelyhealth.in//api/leaves/leaves");
+//       const res = await axios.get("http://localhost:5000/api/leaves/leaves");
 //       const leavesData = res.data.records || res.data || [];
 //       const sorted = leavesData.sort(
 //         (a, b) => new Date(b.createdAt || b.startDate) - new Date(a.createdAt || a.startDate)
@@ -689,7 +689,7 @@
 //   const StatCard = ({ label, value, color }) => (
 //     <div className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}>
 //       <div className="text-lg font-bold">{value}</div>
-//       <div className="text-gray-700 text-xs font-medium">{label}</div>
+//       <div className="text-xs font-medium text-gray-700">{label}</div>
 //     </div>
 //   );
 
@@ -697,27 +697,27 @@
 
 //   if (loading)
 //     return (
-//       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-100">
+//       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
 //         <div className="text-center">
-//           <div className="animate-spin h-12 w-12 border-b-2 border-purple-600 rounded-full mx-auto mb-3"></div>
+//           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div>
 //           <p className="font-semibold text-gray-600">Loading leave requests...</p>
 //         </div>
 //       </div>
 //     );
 
 //   return (
-//     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-100 py-6 px-3">
-//       <div className="max-w-7xl mx-auto">
+//     <div className="min-h-screen px-3 py-6 bg-gradient-to-br from-purple-50 to-blue-100">
+//       <div className="mx-auto max-w-7xl">
 //         {/* Header */}
-//         <div className="text-center mb-6">
+//         <div className="mb-6 text-center">
 //           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
 //             📋 Leave Requests
 //           </h1>
-//           <p className="text-gray-600 text-sm">Manage and filter employee leave requests easily</p>
+//           <p className="text-sm text-gray-600">Manage and filter employee leave requests easily</p>
 //         </div>
 
 //         {/* ✅ Compact Stats */}
-//         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+//         <div className="grid grid-cols-2 gap-2 mb-4 sm:grid-cols-4">
 //           <StatCard label="Total Requests" value={leaves.length} color="border-purple-500" />
 //           <StatCard
 //             label="Pending"
@@ -737,29 +737,29 @@
 //         </div>
 
 //         {/* ✅ Filters Section */}
-//         <div className="bg-white rounded-xl shadow-md p-5 mb-6 border border-gray-200">
-//           <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4">
+//         <div className="p-5 mb-6 bg-white border border-gray-200 shadow-md rounded-xl">
+//           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:grid-cols-5">
 //             {/* Search */}
 //             <div>
-//               <label className="block text-xs font-semibold text-gray-600 mb-1">
+//               <label className="block mb-1 text-xs font-semibold text-gray-600">
 //                 <FaSearch className="inline mr-1" /> Search
 //               </label>
 //               <input
 //                 type="text"
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="w-full p-2 border border-gray-300 rounded-md text-sm"
+//                 className="w-full p-2 text-sm border border-gray-300 rounded-md"
 //                 placeholder="Name / ID / Type / Reason"
 //               />
 //             </div>
 
 //             {/* Status Filter */}
 //             <div>
-//               <label className="block text-xs font-semibold text-gray-600 mb-1">Status</label>
+//               <label className="block mb-1 text-xs font-semibold text-gray-600">Status</label>
 //               <select
 //                 value={statusFilter}
 //                 onChange={(e) => setStatusFilter(e.target.value)}
-//                 className="w-full p-2 border border-gray-300 rounded-md text-sm"
+//                 className="w-full p-2 text-sm border border-gray-300 rounded-md"
 //               >
 //                 <option value="all">All</option>
 //                 <option value="pending">Pending</option>
@@ -770,11 +770,11 @@
 
 //             {/* Leave Type */}
 //             <div>
-//               <label className="block text-xs font-semibold text-gray-600 mb-1">Leave Type</label>
+//               <label className="block mb-1 text-xs font-semibold text-gray-600">Leave Type</label>
 //               <select
 //                 value={leaveTypeFilter}
 //                 onChange={(e) => setLeaveTypeFilter(e.target.value)}
-//                 className="w-full p-2 border border-gray-300 rounded-md text-sm"
+//                 className="w-full p-2 text-sm border border-gray-300 rounded-md"
 //               >
 //                 <option value="all">All</option>
 //                 {leaveTypes.map((t) => (
@@ -785,35 +785,35 @@
 
 //             {/* ✅ Start Date */}
 //             <div>
-//               <label className="block text-xs font-semibold text-gray-600 mb-1">
+//               <label className="block mb-1 text-xs font-semibold text-gray-600">
 //                 <FaCalendarAlt className="inline mr-1" /> From
 //               </label>
 //               <input
 //                 type="date"
 //                 value={startDateFilter}
 //                 onChange={(e) => setStartDateFilter(e.target.value)}
-//                 className="w-full p-2 border border-gray-300 rounded-md text-sm"
+//                 className="w-full p-2 text-sm border border-gray-300 rounded-md"
 //               />
 //             </div>
 
 //             {/* ✅ End Date */}
 //             <div>
-//               <label className="block text-xs font-semibold text-gray-600 mb-1">
+//               <label className="block mb-1 text-xs font-semibold text-gray-600">
 //                 <FaCalendarAlt className="inline mr-1" /> To
 //               </label>
 //               <input
 //                 type="date"
 //                 value={endDateFilter}
 //                 onChange={(e) => setEndDateFilter(e.target.value)}
-//                 className="w-full p-2 border border-gray-300 rounded-md text-sm"
+//                 className="w-full p-2 text-sm border border-gray-300 rounded-md"
 //               />
 //             </div>
 //           </div>
 
-//           <div className="flex justify-end mt-4 gap-3">
+//           <div className="flex justify-end gap-3 mt-4">
 //             <button
 //               onClick={clearFilters}
-//               className="bg-gray-500 text-white text-sm px-4 py-2 rounded-md hover:bg-gray-600 transition"
+//               className="px-4 py-2 text-sm text-white transition bg-gray-500 rounded-md hover:bg-gray-600"
 //             >
 //               Clear Filters
 //             </button>
@@ -823,22 +823,22 @@
 //         {/* ✅ Table (Your Existing Table Design Below) */}
 //         <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //           <table className="min-w-full">
-//             <thead className="bg-gradient-to-r from-purple-500 to-blue-600 text-white text-left">
+//             <thead className="text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
 //               <tr>
-//                 <th className="py-3 px-4 rounded-tl-lg">Employee</th>
-//                 <th className="py-3 px-4">Leave Type</th>
-//                 <th className="py-3 px-4">Date Range</th>
-//                 <th className="py-3 px-4">Days</th>
-//                 <th className="py-3 px-4">Reason</th>
-//                 <th className="py-3 px-4">Status</th>
-//                 <th className="py-3 px-4 rounded-tr-lg">Actions</th>
+//                 <th className="px-4 py-3 rounded-tl-lg">Employee</th>
+//                 <th className="px-4 py-3">Leave Type</th>
+//                 <th className="px-4 py-3">Date Range</th>
+//                 <th className="px-4 py-3">Days</th>
+//                 <th className="px-4 py-3">Reason</th>
+//                 <th className="px-4 py-3">Status</th>
+//                 <th className="px-4 py-3 rounded-tr-lg">Actions</th>
 //               </tr>
 //             </thead>
 //             <tbody>
 //               {filteredLeaves.length > 0 ? (
 //                 filteredLeaves.map((l) => (
-//                   <tr key={l._id} className="border-b hover:bg-gray-50 transition">
-//                     <td className="py-3 px-4">
+//                   <tr key={l._id} className="transition border-b hover:bg-gray-50">
+//                     <td className="px-4 py-3">
 //                       <div className="font-semibold">{l.employeeName}</div>
 //                       <div className="text-xs text-gray-500">
 //                         ID: {l.employeeId}
@@ -847,40 +847,40 @@
 //                         {new Date(l.createdAt).toLocaleDateString()}
 //                       </div>
 //                     </td>
-//                     <td className="py-3 px-4">
-//                       <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs">
+//                     <td className="px-4 py-3">
+//                       <span className="px-3 py-1 text-xs text-gray-700 bg-gray-100 rounded-full">
 //                         {l.leaveType || "Enter Leave Type"}
 //                       </span>
 //                     </td>
-//                     <td className="py-3 px-4 text-sm text-gray-600">
+//                     <td className="px-4 py-3 text-sm text-gray-600">
 //                       {new Date(l.startDate).toLocaleDateString()} <br />
 //                       <span className="text-xs text-gray-400">to</span> <br />
 //                       {new Date(l.endDate).toLocaleDateString()}
 //                     </td>
-//                     <td className="py-3 px-4">
-//                       <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs">
+//                     <td className="px-4 py-3">
+//                       <span className="px-3 py-1 text-xs text-blue-700 bg-blue-100 rounded-full">
 //                         {l.days} days
 //                       </span>
 //                     </td>
-//                     <td className="py-3 px-4 text-sm text-gray-700">{l.reason}</td>
-//                     <td className="py-3 px-4">
+//                     <td className="px-4 py-3 text-sm text-gray-700">{l.reason}</td>
+//                     <td className="px-4 py-3">
 //                       {l.status === "approved" && (
-//                         <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs">
+//                         <span className="px-3 py-1 text-xs text-green-700 bg-green-100 rounded-full">
 //                           ✅ Approved
 //                         </span>
 //                       )}
 //                       {l.status === "pending" && (
-//                         <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs">
+//                         <span className="px-3 py-1 text-xs text-yellow-700 bg-yellow-100 rounded-full">
 //                           ⏳ Pending
 //                         </span>
 //                       )}
 //                       {l.status === "rejected" && (
-//                         <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs">
+//                         <span className="px-3 py-1 text-xs text-red-700 bg-red-100 rounded-full">
 //                           ❌ Rejected
 //                         </span>
 //                       )}
 //                     </td>
-//                     <td className="py-3 px-4 text-right">
+//                     <td className="px-4 py-3 text-right">
 //                       <button className="bg-gradient-to-r from-purple-500 to-blue-600 text-white px-4 py-1.5 rounded-md text-sm shadow hover:opacity-90 transition">
 //                         ✏️ Edit
 //                       </button>
@@ -889,7 +889,7 @@
 //                 ))
 //               ) : (
 //                 <tr>
-//                   <td colSpan="7" className="text-center py-6 text-gray-500">
+//                   <td colSpan="7" className="py-6 text-center text-gray-500">
 //                     No leave records found.
 //                   </td>
 //                 </tr>
@@ -910,6 +910,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { FaCalendarAlt, FaSearch } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const LeavesList = () => {
   const [leaves, setLeaves] = useState([]);
@@ -928,7 +929,7 @@ const LeavesList = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        "https://api.timelyhealth.in//api/leaves/leaves"
+        "http://localhost:5000/api/leaves/leaves"
       );
       const leavesData = res.data.records || res.data || [];
       const sorted = leavesData.sort(
@@ -953,7 +954,7 @@ const LeavesList = () => {
   const updateLeaveStatus = async (id, status) => {
     try {
       const res = await axios.put(
-        `https://api.timelyhealth.in//api/leaves/updateleaves/${id}`,
+        `http://localhost:5000/api/leaves/updateleaves/${id}`,
         { status }
       );
 
@@ -1017,25 +1018,26 @@ const LeavesList = () => {
     setStartDateFilter("");
     setEndDateFilter("");
   };
-
+ const navigate = useNavigate();
   // ✅ Stat Box
   const StatCard = ({ label, value, color }) => (
     <div
       className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}
     >
       <div className="text-lg font-bold">{value}</div>
-      <div className="text-gray-700 text-xs font-medium">{label}</div>
+      <div className="text-xs font-medium text-gray-700">{label}</div>
     </div>
   );
 
   const leaveTypes = [...new Set(leaves.map((l) => l.leaveType).filter(Boolean))];
+ 
 
   // ✅ Loading Screen
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-100">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
         <div className="text-center">
-          <div className="animate-spin h-12 w-12 border-b-2 border-purple-600 rounded-full mx-auto mb-3"></div>
+          <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div>
           <p className="font-semibold text-gray-600">
             Loading leave requests...
           </p>
@@ -1044,20 +1046,31 @@ const LeavesList = () => {
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-100 py-6 px-3">
-      <div className="max-w-9xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
-            📋 Leave Requests
-          </h1>
-          <p className="text-gray-600 text-sm">
-            Manage and filter employee leave requests easily
-          </p>
-        </div>
+    <div className="min-h-screen px-3 py-6 bg-gradient-to-br from-purple-50 to-blue-100">
+      <div className="mx-auto max-w-9xl">
+       {/* Header */}
+<div className="relative flex items-center mb-6">
+  {/* Center Title */}
+  <div className="w-full text-center">
+    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
+      📋 Leave Requests
+    </h1>
+    <p className="text-sm text-gray-600">
+      Manage and filter employee leave requests easily
+    </p>
+  </div>
+
+   {/* Right Button */}
+  <button
+    onClick={() => navigate("/leaves-report")}
+    className="absolute right-0 px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+  >
+    📊 Leaves Report
+  </button>
+</div>
 
         {/* ✅ Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+        <div className="grid grid-cols-2 gap-2 mb-4 sm:grid-cols-4">
           <StatCard
             label="Total Requests"
             value={leaves.length}
@@ -1081,31 +1094,31 @@ const LeavesList = () => {
         </div>
 
         {/* ✅ Filters */}
-        <div className="bg-white rounded-xl shadow-md p-5 mb-6 border border-gray-200">
-          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4">
+        <div className="p-5 mb-6 bg-white border border-gray-200 shadow-md rounded-xl">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:grid-cols-5">
             {/* Search */}
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
+              <label className="block mb-1 text-xs font-semibold text-gray-600">
                 <FaSearch className="inline mr-1" /> Search
               </label>
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                className="w-full p-2 text-sm border border-gray-300 rounded-md"
                 placeholder="Name / ID / Type / Reason"
               />
             </div>
 
             {/* Status Filter */}
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
+              <label className="block mb-1 text-xs font-semibold text-gray-600">
                 Status
               </label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                className="w-full p-2 text-sm border border-gray-300 rounded-md"
               >
                 <option value="all">All</option>
                 <option value="pending">Pending</option>
@@ -1116,13 +1129,13 @@ const LeavesList = () => {
 
             {/* Leave Type */}
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
+              <label className="block mb-1 text-xs font-semibold text-gray-600">
                 Leave Type
               </label>
               <select
                 value={leaveTypeFilter}
                 onChange={(e) => setLeaveTypeFilter(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                className="w-full p-2 text-sm border border-gray-300 rounded-md"
               >
                 <option value="all">All</option>
                 {leaveTypes.map((t) => (
@@ -1133,35 +1146,35 @@ const LeavesList = () => {
 
             {/* Start Date */}
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
+              <label className="block mb-1 text-xs font-semibold text-gray-600">
                 <FaCalendarAlt className="inline mr-1" /> From
               </label>
               <input
                 type="date"
                 value={startDateFilter}
                 onChange={(e) => setStartDateFilter(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                className="w-full p-2 text-sm border border-gray-300 rounded-md"
               />
             </div>
 
             {/* End Date */}
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
+              <label className="block mb-1 text-xs font-semibold text-gray-600">
                 <FaCalendarAlt className="inline mr-1" /> To
               </label>
               <input
                 type="date"
                 value={endDateFilter}
                 onChange={(e) => setEndDateFilter(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                className="w-full p-2 text-sm border border-gray-300 rounded-md"
               />
             </div>
           </div>
 
-          <div className="flex justify-end mt-4 gap-3">
+          <div className="flex justify-end gap-3 mt-4">
             <button
               onClick={clearFilters}
-              className="bg-gray-500 text-white text-sm px-4 py-2 rounded-md hover:bg-gray-600 transition"
+              className="px-4 py-2 text-sm text-white transition bg-gray-500 rounded-md hover:bg-gray-600"
             >
               Clear Filters
             </button>
@@ -1171,15 +1184,15 @@ const LeavesList = () => {
         {/* ✅ Table */}
         <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
           <table className="min-w-full">
-            <thead className="bg-gradient-to-r from-purple-500 to-blue-600 text-white text-left">
+            <thead className="text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
               <tr>
-                <th className="py-3 px-4 rounded-tl-lg">Employee</th>
-                <th className="py-3 px-4">Leave Type</th>
-                <th className="py-3 px-4">Date Range</th>
-                <th className="py-3 px-4">Days</th>
-                <th className="py-3 px-4">Reason</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 rounded-tr-lg">Actions</th>
+                <th className="px-4 py-3 rounded-tl-lg">Employee</th>
+                <th className="px-4 py-3">Leave Type</th>
+                <th className="px-4 py-3">Date Range</th>
+                <th className="px-4 py-3">Days</th>
+                <th className="px-4 py-3">Reason</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3 rounded-tr-lg">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -1187,9 +1200,9 @@ const LeavesList = () => {
                 filteredLeaves.map((l) => (
                   <tr
                     key={l._id}
-                    className="border-b hover:bg-gray-50 transition"
+                    className="transition border-b hover:bg-gray-50"
                   >
-                    <td className="py-3 px-4">
+                    <td className="px-4 py-3">
                       <div className="font-semibold">{l.employeeName}</div>
                       <div className="text-xs text-gray-500">
                         ID: {l.employeeId}
@@ -1198,61 +1211,61 @@ const LeavesList = () => {
                         {new Date(l.createdAt).toLocaleDateString()}
                       </div>
                     </td>
-                    <td className="py-3 px-4">
-                      <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs">
+                    <td className="px-4 py-3">
+                      <span className="px-3 py-1 text-xs text-gray-700 bg-gray-100 rounded-full">
                         {l.leaveType || "Enter Leave Type"}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-600">
+                    <td className="px-4 py-3 text-sm text-gray-600">
                       {new Date(l.startDate).toLocaleDateString()} <br />
                       <span className="text-xs text-gray-400">to</span> <br />
                       {new Date(l.endDate).toLocaleDateString()}
                     </td>
-                    <td className="py-3 px-4">
-                      <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs">
+                    <td className="px-4 py-3">
+                      <span className="px-3 py-1 text-xs text-blue-700 bg-blue-100 rounded-full">
                         {l.days} days
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-gray-700">
                       {l.reason}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="px-4 py-3">
                       {l.status === "approved" && (
-                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs">
+                        <span className="px-3 py-1 text-xs text-green-700 bg-green-100 rounded-full">
                           ✅ Approved
                         </span>
                       )}
                       {l.status === "pending" && (
-                        <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs">
+                        <span className="px-3 py-1 text-xs text-yellow-700 bg-yellow-100 rounded-full">
                           ⏳ Pending
                         </span>
                       )}
                       {l.status === "rejected" && (
-                        <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs">
+                        <span className="px-3 py-1 text-xs text-red-700 bg-red-100 rounded-full">
                           ❌ Rejected
                         </span>
                       )}
                     </td>
 
                     {/* ✅ Approve / Reject Buttons */}
-                    <td className="py-3 px-4 text-right">
+                    <td className="px-4 py-3 text-right">
                       {l.status === "pending" ? (
-                        <div className="flex gap-2 justify-end">
+                        <div className="flex justify-end gap-2">
                           <button
                             onClick={() => updateLeaveStatus(l._id, "approved")}
-                            className="bg-green-500 text-white px-3 py-1 rounded-md text-xs hover:bg-green-600 transition"
+                            className="px-3 py-1 text-xs text-white transition bg-green-500 rounded-md hover:bg-green-600"
                           >
                             ✅ Approve
                           </button>
                           <button
                             onClick={() => updateLeaveStatus(l._id, "rejected")}
-                            className="bg-red-500 text-white px-3 py-1 rounded-md text-xs hover:bg-red-600 transition"
+                            className="px-3 py-1 text-xs text-white transition bg-red-500 rounded-md hover:bg-red-600"
                           >
                             ❌ Reject
                           </button>
                         </div>
                       ) : (
-                        <span className="text-gray-400 text-xs italic">
+                        <span className="text-xs italic text-gray-400">
                           No actions
                         </span>
                       )}
@@ -1261,7 +1274,7 @@ const LeavesList = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="text-center py-6 text-gray-500">
+                  <td colSpan="7" className="py-6 text-center text-gray-500">
                     No leave records found.
                   </td>
                 </tr>

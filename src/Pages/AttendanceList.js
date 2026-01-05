@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 
-const BASE_URL = "https://api.timelyhealth.in/";
+const BASE_URL = "http://localhost:5000";
 
 export default function AttendanceList() {
   const [records, setRecords] = useState([]);
@@ -165,10 +165,10 @@ export default function AttendanceList() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-700 text-lg font-semibold">Loading attendance records...</p>
+          <div className="w-16 h-16 mx-auto mb-4 border-b-2 border-blue-600 rounded-full animate-spin"></div>
+          <p className="text-lg font-semibold text-gray-700">Loading attendance records...</p>
         </div>
       </div>
     );
@@ -176,13 +176,13 @@ export default function AttendanceList() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center bg-white p-8 rounded-2xl shadow-lg border border-red-200 max-w-md">
-          <div className="text-red-500 text-4xl mb-4">❌</div>
-          <p className="text-red-600 text-lg font-semibold mb-4">{error}</p>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="max-w-md p-8 text-center bg-white border border-red-200 shadow-lg rounded-2xl">
+          <div className="mb-4 text-4xl text-red-500">❌</div>
+          <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+            className="px-6 py-2 font-semibold text-white transition bg-red-600 rounded-lg hover:bg-red-700"
           >
             🔄 Retry
           </button>
@@ -192,70 +192,70 @@ export default function AttendanceList() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
-      <div className="max-w-9xl mx-auto">
+    <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="mx-auto max-w-9xl">
         {/* Header Section */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-3">
+        <div className="mb-8 text-center">
+          <h1 className="mb-3 text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
             📊 All Employee Attendance
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-lg text-gray-600">
             Monitor and manage employee attendance records
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-blue-200 text-center">
+        <div className="grid grid-cols-1 gap-4 mb-8 md:grid-cols-4">
+          <div className="p-6 text-center bg-white border border-blue-200 shadow-lg rounded-2xl">
             <div className="text-3xl font-bold text-blue-600">{records.length}</div>
-            <div className="text-blue-800 font-semibold">Total Records</div>
+            <div className="font-semibold text-blue-800">Total Records</div>
           </div>
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-green-200 text-center">
+          <div className="p-6 text-center bg-white border border-green-200 shadow-lg rounded-2xl">
             <div className="text-3xl font-bold text-green-600">
               {records.filter(r => r.onsite).length}
             </div>
-            <div className="text-green-800 font-semibold">Onsite Entries</div>
+            <div className="font-semibold text-green-800">Onsite Entries</div>
           </div>
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-orange-200 text-center">
+          <div className="p-6 text-center bg-white border border-orange-200 shadow-lg rounded-2xl">
             <div className="text-3xl font-bold text-orange-600">
               {records.filter(r => r.status === 'checked-in').length}
             </div>
-            <div className="text-orange-800 font-semibold">Checked In</div>
+            <div className="font-semibold text-orange-800">Checked In</div>
           </div>
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-purple-200 text-center">
+          <div className="p-6 text-center bg-white border border-purple-200 shadow-lg rounded-2xl">
             <div className="text-3xl font-bold text-purple-600">
               {filteredRecords.length}
             </div>
-            <div className="text-purple-800 font-semibold">Filtered Records</div>
+            <div className="font-semibold text-purple-800">Filtered Records</div>
           </div>
         </div>
 
         {/* Filters Section */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-200">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-4">
+        <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
+          <div className="flex flex-col items-start justify-between gap-6 mb-4 lg:flex-row lg:items-center">
             <div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">🔍 Filter Records</h3>
+              <h3 className="mb-2 text-xl font-semibold text-gray-800">🔍 Filter Records</h3>
               <p className="text-gray-600">Filter by specific date or month</p>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 onClick={downloadCSV}
-                className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition font-semibold flex items-center gap-2 shadow-lg"
+                className="flex items-center gap-2 px-6 py-3 font-semibold text-white transition shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl hover:from-green-600 hover:to-emerald-700"
               >
                 📥 Download CSV
               </button>
               
               <button
                 onClick={clearFilters}
-                className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition font-semibold flex items-center gap-2"
+                className="flex items-center gap-2 px-6 py-3 font-semibold text-white transition bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl hover:from-gray-600 hover:to-gray-700"
               >
                 🗑️ Clear Filters
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div>
               <label className="block mb-2 text-sm font-semibold text-blue-700">
                 📅 Filter by Date
@@ -264,7 +264,7 @@ export default function AttendanceList() {
                 type="date"
                 value={selectedDate}
                 onChange={handleDateChange}
-                className="w-full p-3 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 transition"
+                className="w-full p-3 transition border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -276,17 +276,17 @@ export default function AttendanceList() {
                 type="month"
                 value={selectedMonth}
                 onChange={handleMonthChange}
-                className="w-full p-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-500 transition"
+                className="w-full p-3 transition border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-500"
               />
             </div>
 
             <div className="flex items-end">
-              <div className="w-full bg-blue-50 p-3 rounded-xl border-2 border-blue-100">
-                <p className="text-sm text-blue-700 font-semibold">
+              <div className="w-full p-3 border-2 border-blue-100 bg-blue-50 rounded-xl">
+                <p className="text-sm font-semibold text-blue-700">
                   Showing {filteredRecords.length} of {records.length} records
                 </p>
                 {(selectedDate || selectedMonth) && (
-                  <p className="text-xs text-orange-600 mt-1">
+                  <p className="mt-1 text-xs text-orange-600">
                     🔍 Filters applied
                   </p>
                 )}
@@ -296,17 +296,17 @@ export default function AttendanceList() {
         </div>
 
         {/* Table Section */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+        <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
           {filteredRecords.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">📭</div>
-              <p className="text-gray-600 text-lg font-semibold mb-4">
+            <div className="py-16 text-center">
+              <div className="mb-4 text-6xl">📭</div>
+              <p className="mb-4 text-lg font-semibold text-gray-600">
                 {records.length === 0 ? "No attendance records found." : "No records match your filters."}
               </p>
               {records.length > 0 && (
                 <button
                   onClick={clearFilters}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+                  className="px-6 py-2 font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
                   🔄 Clear Filters
                 </button>
@@ -316,17 +316,17 @@ export default function AttendanceList() {
             <>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                  <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
                     <tr>
-                      <th className="px-6 py-4 text-left font-semibold">Employee</th>
-                      <th className="px-6 py-4 text-left font-semibold">Date</th>
-                      <th className="px-6 py-4 text-left font-semibold">Check-In</th>
-                      <th className="px-6 py-4 text-left font-semibold">Check-Out</th>
-                      <th className="px-6 py-4 text-left font-semibold">Hours</th>
-                      <th className="px-6 py-4 text-left font-semibold">Distance</th>
-                      <th className="px-6 py-4 text-left font-semibold">Onsite</th>
-                      <th className="px-6 py-4 text-left font-semibold">Reason</th>
-                      <th className="px-6 py-4 text-left font-semibold">Status</th>
+                      <th className="px-6 py-4 font-semibold text-left">Employee</th>
+                      <th className="px-6 py-4 font-semibold text-left">Date</th>
+                      <th className="px-6 py-4 font-semibold text-left">Check-In</th>
+                      <th className="px-6 py-4 font-semibold text-left">Check-Out</th>
+                      <th className="px-6 py-4 font-semibold text-left">Hours</th>
+                      <th className="px-6 py-4 font-semibold text-left">Distance</th>
+                      <th className="px-6 py-4 font-semibold text-left">Onsite</th>
+                      <th className="px-6 py-4 font-semibold text-left">Reason</th>
+                      <th className="px-6 py-4 font-semibold text-left">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -350,7 +350,7 @@ export default function AttendanceList() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <span className="text-green-600 text-lg">🟢</span>
+                            <span className="text-lg text-green-600">🟢</span>
                             <div>
                               <div className="font-semibold">{formatTime(rec.checkInTime)}</div>
                             </div>
@@ -358,7 +358,7 @@ export default function AttendanceList() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <span className="text-red-600 text-lg">🔴</span>
+                            <span className="text-lg text-red-600">🔴</span>
                             <div>
                               <div className="font-semibold">
                                 {rec.checkOutTime ? formatTime(rec.checkOutTime) : "-"}
@@ -375,7 +375,7 @@ export default function AttendanceList() {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-700">
+                          <span className="px-2 py-1 font-mono text-gray-700 bg-gray-100 rounded">
                             {rec.distance?.toFixed(0) || "0"}m
                           </span>
                         </td>
@@ -414,7 +414,7 @@ export default function AttendanceList() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row justify-between items-center p-6 border-t bg-gray-50 gap-4">
+                <div className="flex flex-col items-center justify-between gap-4 p-6 border-t sm:flex-row bg-gray-50">
                   <div className="text-sm text-gray-600">
                     Showing <strong>{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredRecords.length)}</strong> of{" "}
                     <strong>{filteredRecords.length}</strong> records

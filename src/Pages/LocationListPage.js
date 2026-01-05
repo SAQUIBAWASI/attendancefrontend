@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FiEdit, FiSearch, FiTrash2 } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 const LocationListPage = () => {
   const [locations, setLocations] = useState([]);
@@ -19,7 +20,7 @@ const LocationListPage = () => {
   // Fetch all locations
   const fetchLocations = async () => {
     try {
-      const response = await fetch("https://attendancebackend-5cgn.onrender.com/api/location/alllocation");
+      const response = await fetch("http://localhost:5000/api/location/alllocation");
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.message || "Failed to fetch locations");
@@ -52,7 +53,7 @@ const LocationListPage = () => {
     if (!window.confirm("Are you sure you want to delete this location?")) return;
 
     try {
-      const response = await fetch(`https://attendancebackend-5cgn.onrender.com/api/location/deletelocation/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/location/deletelocation/${id}`, {
         method: "DELETE",
       });
       const data = await response.json();
@@ -75,12 +76,12 @@ const LocationListPage = () => {
     setUpdatedLongitude(location.longitude.toString()); // prefill lng
     setIsEditModalOpen(true);
   };
-
+ const navigate = useNavigate();
   // Handle Update
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`https://attendancebackend-5cgn.onrender.com/api/location/updatelocation/${editLocation._id}`, {
+      const response = await fetch(`http://localhost:5000/api/location/updatelocation/${editLocation._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -134,17 +135,31 @@ const LocationListPage = () => {
       <div className="flex flex-col items-center justify-between gap-4 mb-6 md:flex-row">
         <h2 className="text-2xl font-bold text-blue-900">📍 Location Management</h2>
 
-        {/* Search Bar */}
-        <div className="relative w-full md:w-1/3">
-          <input
-            type="text"
-            placeholder="Search location..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full py-2 pl-10 pr-4 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <FiSearch className="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
-        </div>
+        {/* Search + Add Location */}
+<div className="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:justify-between">
+  
+  {/* Search Bar */}
+  <div className="relative w-full md:w-1/3">
+    <FiSearch className="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+    <input
+      type="text"
+      placeholder="Search location..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="w-full py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+  </div>
+
+  {/* Add Location Button */}
+  <button
+    onClick={() => navigate("/addlocation")}
+    className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+  >
+    📍 Add Location
+  </button>
+
+</div>
+
       </div>
 
       {/* Loading / Error */}
@@ -157,7 +172,7 @@ const LocationListPage = () => {
 
       {/* Empty State */}
       {!loading && filteredLocations.length === 0 && (
-        <div className="p-6 text-center text-gray-500 bg-gray-50 rounded-md">
+        <div className="p-6 text-center text-gray-500 rounded-md bg-gray-50">
           No matching locations found.
         </div>
       )}
@@ -210,7 +225,7 @@ const LocationListPage = () => {
       {/* Edit Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60">
-          <div className="w-full max-w-md p-6 bg-white rounded-xl shadow-2xl border border-gray-200">
+          <div className="w-full max-w-md p-6 bg-white border border-gray-200 shadow-2xl rounded-xl">
             <h3 className="mb-4 text-lg font-semibold text-blue-800">Edit Location</h3>
             <form onSubmit={handleUpdate}>
               {/* Location Name */}
@@ -272,7 +287,7 @@ const LocationListPage = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 shadow-md hover:shadow-lg transition"
+                  className="px-4 py-2 text-white transition bg-blue-600 rounded shadow-md hover:bg-blue-700 hover:shadow-lg"
                 >
                   Save Changes
                 </button>

@@ -1,7 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../Components/Navbar";
 
 const EmployeeLocation = () => {
   const navigate = useNavigate();
@@ -33,7 +32,7 @@ const EmployeeLocation = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `https://api.timelyhealth.in//api/employees/mylocation/${employeeId}`
+          `http://localhost:5000/api/employees/mylocation/${employeeId}`
         );
 
         if (res.data && res.data.success && res.data.data) {
@@ -55,19 +54,19 @@ const EmployeeLocation = () => {
   return (
     <div className="flex min-h-screen bg-gray-100">
       <div className="flex flex-col flex-1">
-        <Navbar />
+        
 
         <main className="p-4 sm:p-6 lg:p-8">
           <div className="max-w-5xl p-6 mx-auto bg-white rounded-lg shadow-md">
             {/* Header + Back Button */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
+            <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:justify-between sm:items-center">
               <h2 className="text-2xl font-bold text-blue-900">My Office Assigned Location</h2>
-              <button
+              {/* <button
                 onClick={() => navigate("/employeedashboard")}
-                className="px-5 py-2 w-full sm:w-auto bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium"
+                className="w-full px-5 py-2 font-medium text-white transition-all bg-blue-600 rounded-lg sm:w-auto hover:bg-blue-700"
               >
                 ← Back to Dashboard
-              </button>
+              </button> */}
             </div>
 
             {/* Loading & Error States */}
@@ -82,9 +81,9 @@ const EmployeeLocation = () => {
             ) : (
               <>
                 {/* Desktop Table */}
-                <div className="hidden sm:block overflow-x-auto">
+                <div className="hidden overflow-x-auto sm:block">
                   <table className="w-full min-w-[500px] text-sm border">
-                    <thead className="bg-gray-200 text-gray-700">
+                    <thead className="text-gray-700 bg-gray-200">
                       <tr>
                         <th className="p-2 border">Employee Name</th>
                         <th className="p-2 border">Employee ID</th>
@@ -105,7 +104,7 @@ const EmployeeLocation = () => {
                         <td className="p-2 border">
                           {locationData?.location?.name || "N/A"}
                         </td>
-                        <td className="p-2 border text-sm">
+                        <td className="p-2 text-sm border">
                           {locationData?.location?.fullAddress || "N/A"}
                         </td>
                         <td className="p-2 border">
@@ -120,9 +119,9 @@ const EmployeeLocation = () => {
                 </div>
 
                 {/* Mobile View */}
-                <div className="sm:hidden flex flex-col gap-4">
+                <div className="flex flex-col gap-4 sm:hidden">
                   <div className="p-4 border rounded-lg shadow-sm bg-gray-50">
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-gray-700">
                         Employee
                       </span>
@@ -130,7 +129,7 @@ const EmployeeLocation = () => {
                         {locationData?.employee?.name || "N/A"}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-gray-700">
                         Employee ID
                       </span>
@@ -138,7 +137,7 @@ const EmployeeLocation = () => {
                         {locationData?.employee?.employeeId || "N/A"}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-gray-700">
                         Location
                       </span>
@@ -150,15 +149,15 @@ const EmployeeLocation = () => {
                       <span className="font-medium text-gray-700">
                         Address:
                       </span>
-                      <p className="text-gray-900 text-sm mt-1">
+                      <p className="mt-1 text-sm text-gray-900">
                         {locationData?.location?.fullAddress || "N/A"}
                       </p>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex items-center justify-between">
                       <span className="font-medium text-gray-700">
                         Coordinates
                       </span>
-                      <span className="text-gray-900 text-xs">
+                      <span className="text-xs text-gray-900">
                         {locationData?.location?.latitude ?? "N/A"},{" "}
                         {locationData?.location?.longitude ?? "N/A"}
                       </span>

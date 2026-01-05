@@ -64,7 +64,6 @@ import GetAboutUsPage from "./Pages/GetAboutUsPage.js";
 import GetContactUsPage from "./Pages/GetContactUsPage.js";
 import Holiday from "./Pages/Holiday.js";
 import InterviewList from "./Pages/InterviewList.js";
-import LandingPage from "./Pages/LandingPage.js";
 import LanguageSetup from "./Pages/LanguageSetup.js";
 import LateToday from "./Pages/LateToday.js";
 import { default as DiagnostiCreate, default as LeaveApplication } from "./Pages/LeaveApplication.js";
@@ -110,6 +109,7 @@ import VendorDetail from "./Pages/VendorProfile.js";
 import WeeklyHoliday from "./Pages/WeeklyHoliday.js";
 // import LandingPage from "./Pages/LandingPage.js";
 import TimelyNavbar from "./Components/TimelyNavbar.js";
+import EmployeeLayout from "./Layout/EmployeeLayout.jsx";
 import AboutPage from "./Pages/AboutPage.js";
 import AdminEmployeeLocations from "./Pages/AdminEmployeeLocations.js";
 import AssignLocation from "./Pages/AssignLocation.js";
@@ -139,12 +139,12 @@ function App() {
       <Route path="/admin-login" element={<Login/>}/>
       <Route path="/employee-login" element={<EmployeeLogin/>}/>
       <Route path="/employeedashboard" element={<EmployeeDashboard />} />
-      <Route path="/leave-application" element={<LeaveApplication />} />
-        <Route path="/myleaves" element={<EmployeeLeaves />} />
-         <Route path="/attendance-capture" element={<AttendanceCapture />} />
-          <Route path="/myattendance" element={<MyAttendance />} />
-          <Route path="/my-shift" element={<MyShift />} />
-          <Route path="/mylocation" element={<EmployeeLocation />}/>
+      <Route path="/leave-application" element={<EmployeeLayout><LeaveApplication /></EmployeeLayout>} />
+        <Route path="/myleaves" element={<EmployeeLayout><EmployeeLeaves /></EmployeeLayout>} />
+         <Route path="/attendance-capture" element={<EmployeeLayout><AttendanceCapture /></EmployeeLayout>} />
+          <Route path="/myattendance" element={<EmployeeLayout><MyAttendance /></EmployeeLayout>} />
+          <Route path="/my-shift" element={<EmployeeLayout><MyShift /></EmployeeLayout>} />
+          <Route path="/mylocation" element={<EmployeeLayout><EmployeeLocation /></EmployeeLayout>}/>
           <Route path="/superadmin" element={<SuperAdminMedicalMonitor/>}/>
           <Route path="/timelynavbar" element={<TimelyNavbar/>}></Route>
           <Route path="timelyfooter" element={<TimelyFooter/>}></Route>
@@ -152,7 +152,7 @@ function App() {
           <Route path="/service" element={<ServicesPage/>}></Route>
           <Route path="/whoweserve" element={<WhoWeServePage/>}></Route>
           <Route path="/contact" element={<ContactPage/>}></Route>
-          <Route path="/mysalary" element={<EmployeeSalary />} />
+          <Route path="/mysalary" element={<EmployeeLayout><EmployeeSalary /></EmployeeLayout>} />
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"

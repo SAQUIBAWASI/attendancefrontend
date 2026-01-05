@@ -9,11 +9,11 @@
 // navigate("/notifications");
 // };
 
-// return ( <nav className="bg-blue-800 text-white sticky top-0 w-full h-16 px-4 flex items-center justify-between shadow-md z-50">
+// return ( <nav className="sticky top-0 z-50 flex items-center justify-between w-full h-16 px-4 text-white bg-blue-800 shadow-md">
 // {/* Sidebar toggle button (left) */}
 // <button
 // onClick={() => setIsCollapsed(!isCollapsed)}
-// className="text-2xl p-2 rounded-md hover:bg-blue-700 transition"
+// className="p-2 text-2xl transition rounded-md hover:bg-blue-700"
 // >
 // {isCollapsed ? ( <RiMenu2Line className="text-[#AAAAAA]" />
 // ) : ( <RiMenu3Line className="text-[#AAAAAA]" />
@@ -26,11 +26,11 @@
 //   {/* <div className="relative flex items-center md:order-2">
 //     <button
 //       onClick={handleNotificationsClick}
-//       className="relative p-2 hover:bg-blue-700 rounded-full transition"
+//       className="relative p-2 transition rounded-full hover:bg-blue-700"
 //     >
 //       <MdNotificationsNone className="text-2xl text-white" />
 //       {totalNotifications > 0 && (
-//         <span className="absolute -top-1 -right-1 bg-red-500 text-xs text-white rounded-full w-4 h-4 flex items-center justify-center">
+//         <span className="absolute flex items-center justify-center w-4 h-4 text-xs text-white bg-red-500 rounded-full -top-1 -right-1">
 //           {totalNotifications}
 //         </span>
 //       )}
@@ -42,9 +42,9 @@
 //     <img
 //       src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
 //       alt="Vendor Logo"
-//       className="w-10 h-10 object-cover"
+//       className="object-cover w-10 h-10"
 //     />
-//     <span className="font-semibold text-lg sm:text-xl">Attendance</span>
+//     <span className="text-lg font-semibold sm:text-xl">Attendance</span>
 //   </div>
 // </nav>
 // );
@@ -91,14 +91,14 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
   };
 
   return (
-    <nav className="bg-blue-800 text-white sticky top-0 w-full h-16 px-4 flex items-center justify-between shadow-md z-40">
+    <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-16 px-4 text-white bg-blue-800 shadow-md">
       
       {/* Left Section - Menu Button & Page Title */}
       <div className="flex items-center gap-4">
         {/* Sidebar toggle button */}
         <button
           onClick={handleMenuClick}
-          className="text-2xl p-2 rounded-md hover:bg-blue-700 transition"
+          className="p-2 text-2xl transition rounded-md hover:bg-blue-700"
         >
           {isCollapsed ? (
             <RiMenu2Line className="text-white" />
@@ -108,8 +108,8 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
         </button>
 
         {/* Page Title - Show on all screens */}
-        <div className="bg-blue-700 px-3 py-1 rounded-md">
-          <span className="font-semibold text-sm md:text-base">
+        <div className="px-3 py-1 bg-blue-700 rounded-md">
+          <span className="text-sm font-semibold md:text-base">
             {getPageTitle()}
           </span>
         </div>
@@ -120,9 +120,9 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
         <img
           src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
           alt="Vendor Logo"
-          className="w-10 h-10 object-cover rounded-lg"
+          className="object-cover w-10 h-10 rounded-lg"
         />
-        <span className="font-semibold text-lg sm:text-xl hidden sm:block">Attendance</span>
+        <span className="hidden text-lg font-semibold sm:text-xl sm:block">Attendance</span>
       </div>
     </nav>
   );

@@ -6,7 +6,7 @@ export default function AdminEmployeeLocations() {
   const [form, setForm] = useState({ name: "", latitude: "", longitude: "" });
   const [message, setMessage] = useState("");
 
-  const BASE_URL = "https://attendancebackend-5cgn.onrender.com/api/employees";
+  const BASE_URL = "http://localhost:5000api/employees";
 
   // ✅ Fetch all employees
   const fetchEmployees = async () => {

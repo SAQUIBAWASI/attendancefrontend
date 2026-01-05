@@ -6,7 +6,7 @@
 
 //   const fetchApprovedLeaves = async () => {
 //     try {
-//       const res = await axios.get("https://api.timelyhealth.in//api/leaves/approved-leaves");
+//       const res = await axios.get("http://localhost:5000/api/leaves/approved-leaves");
 //       setApprovedLeaves(res.data);
 //     } catch (err) {
 //       console.error("Failed to fetch approved leaves:", err);
@@ -18,12 +18,12 @@
 //   }, []);
 
 //   return (
-//     <div className="p-6 max-w-6xl mx-auto bg-white rounded-lg shadow-md mt-6">
-//       <h1 className="text-3xl font-bold text-center mb-6">Approved Leaves Report</h1>
+//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-white rounded-lg shadow-md">
+//       <h1 className="mb-6 text-3xl font-bold text-center">Approved Leaves Report</h1>
 
 //       <div className="overflow-x-auto">
-//         <table className="min-w-full border border-gray-300 text-sm">
-//           <thead className="bg-gray-100 text-gray-700">
+//         <table className="min-w-full text-sm border border-gray-300">
+//           <thead className="text-gray-700 bg-gray-100">
 //             <tr>
 //               <th className="px-4 py-2 border">Employee</th>
 //               <th className="px-4 py-2 border">Leave Type</th>
@@ -48,14 +48,14 @@
 //                   </td>
 //                   <td className="px-4 py-2">{l.days}</td>
 //                   <td className="px-4 py-2">{l.reason}</td>
-//                   <td className="px-4 py-2 text-green-700 font-semibold text-center">
+//                   <td className="px-4 py-2 font-semibold text-center text-green-700">
 //                     Approved
 //                   </td>
 //                 </tr>
 //               ))
 //             ) : (
 //               <tr>
-//                 <td colSpan="7" className="text-center py-6 text-gray-500">
+//                 <td colSpan="7" className="py-6 text-center text-gray-500">
 //                   No approved leaves found.
 //                 </td>
 //               </tr>
@@ -80,7 +80,7 @@
 
 //   const fetchApprovedLeaves = async () => {
 //     try {
-//       const res = await axios.get("https://api.timelyhealth.in//api/leaves/leaves");
+//       const res = await axios.get("http://localhost:5000/api/leaves/leaves");
 //       // ✅ Filter only approved leaves
 //       const approved = (res.data.records || res.data).filter(
 //         (l) => l.status?.toLowerCase() === "approved"
@@ -96,12 +96,12 @@
 //   }, []);
 
 //   return (
-//     <div className="p-6 max-w-6xl mx-auto bg-white rounded-lg shadow-md mt-6">
-//       <h1 className="text-3xl font-bold text-center mb-6">Approved Leaves Report</h1>
+//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-white rounded-lg shadow-md">
+//       <h1 className="mb-6 text-3xl font-bold text-center">Approved Leaves Report</h1>
 
 //       <div className="overflow-x-auto">
-//         <table className="min-w-full border border-gray-300 text-sm">
-//           <thead className="bg-gray-100 text-gray-700">
+//         <table className="min-w-full text-sm border border-gray-300">
+//           <thead className="text-gray-700 bg-gray-100">
 //             <tr>
 //               <th className="px-4 py-2 border">Employee</th>
 //               <th className="px-4 py-2 border">Leave Type</th>
@@ -125,7 +125,7 @@
 //               ))
 //             ) : (
 //               <tr>
-//                 <td colSpan="6" className="text-center py-6 text-gray-500">
+//                 <td colSpan="6" className="py-6 text-center text-gray-500">
 //                   No approved leaves found.
 //                 </td>
 //               </tr>
@@ -148,7 +148,7 @@
 
 //   const fetchApprovedLeaves = async () => {
 //     try {
-//       const res = await axios.get("https://api.timelyhealth.in//api/leaves/leaves");
+//       const res = await axios.get("http://localhost:5000/api/leaves/leaves");
 //       // ✅ Filter only approved leaves
 //       const approved = (res.data.records || res.data).filter(
 //         (l) => l.status?.toLowerCase() === "approved"
@@ -193,20 +193,20 @@
 //   };
 
 //   return (
-//     <div className="p-6 max-w-6xl mx-auto bg-white rounded-lg shadow-md mt-6">
-//       <div className="flex justify-between items-center mb-6">
+//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-white rounded-lg shadow-md">
+//       <div className="flex items-center justify-between mb-6">
 //         <h1 className="text-3xl font-bold">Approved Leave Requests</h1>
 //         <button
 //           onClick={downloadCSV}
-//           className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+//           className="px-4 py-2 text-white transition bg-green-600 rounded hover:bg-green-700"
 //         >
 //           ⬇️ Download CSV
 //         </button>
 //       </div>
 
 //       <div className="overflow-x-auto">
-//         <table className="min-w-full border border-gray-300 text-sm">
-//           <thead className="bg-gray-100 text-gray-700">
+//         <table className="min-w-full text-sm border border-gray-300">
+//           <thead className="text-gray-700 bg-gray-100">
 //             <tr>
 //               <th className="px-4 py-2 border">Employee</th>
 //               <th className="px-4 py-2 border">Leave Type</th>
@@ -234,7 +234,7 @@
 //               ))
 //             ) : (
 //               <tr>
-//                 <td colSpan="6" className="text-center py-6 text-gray-500">
+//                 <td colSpan="6" className="py-6 text-center text-gray-500">
 //                   No approved leaves found.
 //                 </td>
 //               </tr>
@@ -260,7 +260,7 @@
 //   // ✅ Fetch all approved leaves
 //   const fetchApprovedLeaves = async () => {
 //     try {
-//       const res = await axios.get("https://api.timelyhealth.in//api/leaves/leaves");
+//       const res = await axios.get("http://localhost:5000/api/leaves/leaves");
 //       const approved = (res.data.records || res.data).filter(
 //         (l) => l.status?.toLowerCase() === "approved"
 //       );
@@ -330,9 +330,9 @@
 //   };
 
 //   return (
-//     <div className="p-6 max-w-6xl mx-auto bg-white rounded-lg shadow-md mt-6">
+//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-white rounded-lg shadow-md">
 //       {/* Header Section */}
-//       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+//       <div className="flex flex-col items-center justify-between gap-4 mb-6 md:flex-row">
 //         <h1 className="text-3xl font-bold">Approved Leave Requests</h1>
 
 //         <div className="flex items-center gap-3">
@@ -341,11 +341,11 @@
 //             type="month"
 //             value={selectedMonth}
 //             onChange={handleMonthChange}
-//             className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:ring-green-200"
+//             className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-green-200"
 //           />
 //           <button
 //             onClick={downloadCSV}
-//             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+//             className="px-4 py-2 text-white transition bg-green-600 rounded hover:bg-green-700"
 //           >
 //             ⬇️ Download CSV
 //           </button>
@@ -365,8 +365,8 @@
 
 //       {/* ✅ Table */}
 //       <div className="overflow-x-auto">
-//         <table className="min-w-full border border-gray-300 text-sm">
-//           <thead className="bg-gray-100 text-gray-700">
+//         <table className="min-w-full text-sm border border-gray-300">
+//           <thead className="text-gray-700 bg-gray-100">
 //             <tr>
 //               <th className="px-4 py-2 border">Employee</th>
 //               <th className="px-4 py-2 border">Leave Type</th>
@@ -394,7 +394,7 @@
 //               ))
 //             ) : (
 //               <tr>
-//                 <td colSpan="6" className="text-center py-6 text-gray-500">
+//                 <td colSpan="6" className="py-6 text-center text-gray-500">
 //                   No approved leaves found for this month.
 //                 </td>
 //               </tr>
@@ -430,7 +430,7 @@ const LeaveReport = () => {
   // ✅ Fetch all approved leaves
   const fetchApprovedLeaves = async () => {
     try {
-      const res = await axios.get("https://api.timelyhealth.in//api/leaves/leaves?status=approved");
+      const res = await axios.get("http://localhost:5000/api/leaves/leaves?status=approved");
       const approved = (res.data.records || res.data).filter(
         (l) => l.status?.toLowerCase() === "approved"
       );
@@ -520,23 +520,23 @@ const LeaveReport = () => {
   }, [approvedLeaves]);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto bg-white rounded-lg shadow-md mt-6">
+    <div className="p-6 mx-auto mt-6 bg-white rounded-lg shadow-md max-w-7xl">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+      <div className="flex flex-col items-center justify-between gap-4 mb-6 md:flex-row">
         <h1 className="text-3xl font-bold">Approved Leave Reports</h1>
 
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex flex-wrap items-center gap-3">
           <input
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:ring-green-200"
+            className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-green-200"
           />
 
           <select
             value={selectedEmployee}
             onChange={(e) => setSelectedEmployee(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-2"
+            className="px-3 py-2 border border-gray-300 rounded"
           >
             <option value="">All Employees</option>
             {employees.map((name) => (
@@ -549,7 +549,7 @@ const LeaveReport = () => {
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-2"
+            className="px-3 py-2 border border-gray-300 rounded"
           >
             <option value="">All Leave Types</option>
             {leaveTypes.map((t) => (
@@ -561,7 +561,7 @@ const LeaveReport = () => {
 
           <button
             onClick={downloadCSV}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+            className="px-4 py-2 text-white transition bg-green-600 rounded hover:bg-green-700"
           >
             ⬇️ Download CSV
           </button>
@@ -569,26 +569,26 @@ const LeaveReport = () => {
       </div>
 
       {/* ✅ Stats Summary */}
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-green-50 p-4 rounded-lg text-center shadow">
-          <p className="text-gray-600 text-sm">Total Approved Leaves</p>
+      <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-3">
+        <div className="p-4 text-center rounded-lg shadow bg-green-50">
+          <p className="text-sm text-gray-600">Total Approved Leaves</p>
           <h2 className="text-2xl font-bold text-green-700">{filteredLeaves.length}</h2>
         </div>
 
-        <div className="bg-blue-50 p-4 rounded-lg text-center shadow">
-          <p className="text-gray-600 text-sm">Total Employees</p>
+        <div className="p-4 text-center rounded-lg shadow bg-blue-50">
+          <p className="text-sm text-gray-600">Total Employees</p>
           <h2 className="text-2xl font-bold text-blue-700">{employees.length}</h2>
         </div>
 
-        <div className="bg-yellow-50 p-4 rounded-lg text-center shadow">
-          <p className="text-gray-600 text-sm">Leave Types</p>
+        <div className="p-4 text-center rounded-lg shadow bg-yellow-50">
+          <p className="text-sm text-gray-600">Leave Types</p>
           <h2 className="text-2xl font-bold text-yellow-700">{leaveTypes.length}</h2>
         </div>
       </div>
 
       {/* ✅ Bar Chart */}
-      <div className="mb-8 bg-gray-50 p-4 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+      <div className="p-4 mb-8 rounded-lg shadow bg-gray-50">
+        <h2 className="mb-4 text-xl font-semibold text-gray-800">
           📊 Who Took the Most Leaves
         </h2>
         {leaveCountData.length > 0 ? (
@@ -602,14 +602,14 @@ const LeaveReport = () => {
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <p className="text-gray-500 text-center py-8">No data available</p>
+          <p className="py-8 text-center text-gray-500">No data available</p>
         )}
       </div>
         <h1 className="text-3xl font-bold">Approved Leave Reports</h1> <br/>
       {/* ✅ Leave Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-full border border-gray-300 text-sm">
-          <thead className="bg-gray-100 text-gray-700">
+        <table className="min-w-full text-sm border border-gray-300">
+          <thead className="text-gray-700 bg-gray-100">
             <tr>
               <th className="px-4 py-2 border">Employee</th>
               <th className="px-4 py-2 border">Leave Type</th>
@@ -633,7 +633,7 @@ const LeaveReport = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="text-center py-6 text-gray-500">
+                <td colSpan="6" className="py-6 text-center text-gray-500">
                   No approved leaves found for this selection.
                 </td>
               </tr>

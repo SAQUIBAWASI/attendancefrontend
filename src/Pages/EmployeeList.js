@@ -22,7 +22,7 @@
 //     const fetchEmployees = async () => {
 //       try {
 //         const response = await axios.get(
-//           "https://api.timelyhealth.in//api/employees/get-employees"
+//           "http://localhost:5000/api/employees/get-employees"
 //         );
 //         setEmployees(response.data);
 //       } catch (error) {
@@ -42,7 +42,7 @@
 //     const fetchLocations = async () => {
 //       try {
 //         const response = await axios.get(
-//           "https://api.timelyhealth.in//api/location/alllocation"
+//           "http://localhost:5000/api/location/alllocation"
 //         );
 //         console.log("Locations API Response:", response.data);
         
@@ -130,7 +130,7 @@
 //     setLoading(true);
 //     try {
 //       const response = await axios.put(
-//         `https://api.timelyhealth.in//api/employees/assign-location/${selectedEmployeeForLocation.employeeId}`,
+//         `http://localhost:5000/api/employees/assign-location/${selectedEmployeeForLocation.employeeId}`,
 //         { locationId: selectedLocationId }
 //       );
 
@@ -190,19 +190,19 @@
   
 
 //   return (
-//     <div className="p-4 bg-white rounded-lg shadow-md max-w-7xl mx-auto">
+//     <div className="p-4 mx-auto bg-white rounded-lg shadow-md max-w-7xl">
 //       {/* Header */}
-//       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+//       <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //         <h2 className="text-xl font-semibold text-center sm:text-left">
 //           Employee List
 //         </h2>
 //       </div>
 
 //       {/* Controls */}
-//       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+//       <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center">
 //         <input
 //           type="text"
-//           className="px-3 py-2 text-sm border rounded w-full sm:w-64"
+//           className="w-full px-3 py-2 text-sm border rounded sm:w-64"
 //           placeholder="Search by name..."
 //           value={search}
 //           onChange={(e) => setSearch(e.target.value)}
@@ -213,14 +213,14 @@
 //             data={filteredEmployees}
 //             headers={csvHeaders}
 //             filename="employees.csv"
-//             className="flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-green-500 rounded hover:bg-green-600 transition"
+//             className="flex items-center justify-center gap-2 px-4 py-2 text-sm text-white transition bg-green-500 rounded hover:bg-green-600"
 //           >
 //             <FaFileCsv /> CSV
 //           </CSVLink>
 
 //           <label
 //             htmlFor="file-upload"
-//             className="flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-purple-600 rounded cursor-pointer hover:bg-purple-700 transition"
+//             className="flex items-center justify-center gap-2 px-4 py-2 text-sm text-white transition bg-purple-600 rounded cursor-pointer hover:bg-purple-700"
 //           >
 //             <FaUpload /> Import
 //             <input
@@ -237,7 +237,7 @@
 //       {/* Table Container */}
 //       <div className="overflow-x-auto border rounded-lg">
 //         <table className="w-full text-sm min-w-[600px]">
-//           <thead className="bg-gray-200 text-gray-700">
+//           <thead className="text-gray-700 bg-gray-200">
 //             <tr>
 //               {csvHeaders.map((header, idx) => (
 //                 <th key={idx} className="p-2 text-left border">
@@ -252,7 +252,7 @@
 //               currentEmployees.map((emp) => (
 //                 <tr
 //                   key={emp._id}
-//                   className="border-b hover:bg-gray-50 transition"
+//                   className="transition border-b hover:bg-gray-50"
 //                 >
 //                   <td className="p-2 border">{emp.name}</td>
 //                   <td className="p-2 border">{emp.email}</td>
@@ -266,7 +266,7 @@
 //                   </td>
 //                   <td className="p-2 border">{emp.employeeId}</td>
 //                   <td className="p-2 border">{getLocationName(emp.location)}</td>
-//                   <td className="p-2 border text-center">
+//                   <td className="p-2 text-center border">
 //                     <div className="flex justify-center gap-2">
 //                       <button
 //                         onClick={() => handleView(emp)}
@@ -315,11 +315,11 @@
 //       </div>
 
 //       {/* Pagination */}
-//       <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3">
+//       <div className="flex flex-col items-center justify-between gap-3 mt-4 sm:flex-row">
 //         <button
 //           onClick={goToPrevPage}
 //           disabled={currentPage === 1}
-//           className="px-4 py-2 text-gray-700 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+//           className="w-full px-4 py-2 text-gray-700 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
 //         >
 //           Previous
 //         </button>
@@ -329,7 +329,7 @@
 //         <button
 //           onClick={goToNextPage}
 //           disabled={currentPage === totalPages}
-//           className="px-4 py-2 text-gray-700 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+//           className="w-full px-4 py-2 text-gray-700 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
 //         >
 //           Next
 //         </button>
@@ -337,7 +337,7 @@
 
 //       {/* View Employee Modal */}
 //       {selectedEmployee && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-3">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black bg-opacity-50">
 //           <div className="relative w-full max-w-md p-6 bg-white rounded-lg shadow-lg overflow-y-auto max-h-[90vh]">
 //             <h3 className="mb-4 text-lg font-bold text-center sm:text-left">
 //               Employee Details
@@ -374,7 +374,7 @@
 //             </ul>
 //             <button
 //               onClick={handleCloseModal}
-//               className="absolute text-gray-600 top-2 right-3 hover:text-black text-lg"
+//               className="absolute text-lg text-gray-600 top-2 right-3 hover:text-black"
 //             >
 //               ✕
 //             </button>
@@ -384,14 +384,14 @@
 
 //       {/* Assign Location Modal */}
 //       {showLocationModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-3">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black bg-opacity-50">
 //           <div className="relative w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
 //             <h3 className="mb-4 text-lg font-bold text-center sm:text-left">
 //               Assign Location
 //             </h3>
             
 //             <div className="mb-4">
-//               <p className="text-sm text-gray-600 mb-2">
+//               <p className="mb-2 text-sm text-gray-600">
 //                 Assign location to: <strong>{selectedEmployeeForLocation?.name}</strong>
 //               </p>
 //               <p className="text-xs text-gray-500">
@@ -403,7 +403,7 @@
 //             </div>
 
 //             <div className="mb-4">
-//               <label className="block text-sm font-medium text-gray-700 mb-2">
+//               <label className="block mb-2 text-sm font-medium text-gray-700">
 //                 Select Location
 //               </label>
 //               <select
@@ -423,7 +423,7 @@
 //                 )}
 //               </select>
 //               {locations.length === 0 && (
-//                 <p className="text-xs text-red-500 mt-1">No locations found. Please add locations first.</p>
+//                 <p className="mt-1 text-xs text-red-500">No locations found. Please add locations first.</p>
 //               )}
 //             </div>
 
@@ -438,11 +438,11 @@
 //               <button
 //                 onClick={assignLocation}
 //                 disabled={loading || !selectedLocationId || locations.length === 0}
-//                 className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+//                 className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
 //               >
 //                 {loading ? (
 //                   <>
-//                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+//                     <div className="w-4 h-4 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
 //                     Assigning...
 //                   </>
 //                 ) : (
@@ -453,7 +453,7 @@
 
 //             <button
 //               onClick={handleCloseLocationModal}
-//               className="absolute text-gray-600 top-2 right-3 hover:text-black text-lg"
+//               className="absolute text-lg text-gray-600 top-2 right-3 hover:text-black"
 //             >
 //               ✕
 //             </button>
@@ -491,7 +491,7 @@ const EmployeeList = () => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get(
-          "https://api.timelyhealth.in//api/employees/get-employees"
+          "http://localhost:5000/api/employees/get-employees"
         );
         setEmployees(response.data);
       } catch (error) {
@@ -502,7 +502,7 @@ const EmployeeList = () => {
     const fetchLocations = async () => {
       try {
         const response = await axios.get(
-          "https://api.timelyhealth.in//api/location/alllocation"
+          "http://localhost:5000/api/location/alllocation"
         );
         let locationsData = [];
         if (response.data?.locations) {
@@ -544,7 +544,7 @@ const EmployeeList = () => {
     if (window.confirm("Are you sure you want to delete this employee?")) {
       try {
         await axios.delete(
-          `https://api.timelyhealth.in//api/employees/delete-employee/${id}`
+          `http://localhost:5000/api/employees/delete-employee/${id}`
         );
         setEmployees(employees.filter((emp) => emp._id !== id));
         alert("✅ Employee deleted successfully!");
@@ -577,7 +577,7 @@ const EmployeeList = () => {
     setLoading(true);
     try {
       const response = await axios.put(
-        `https://api.timelyhealth.in//api/employees/assign-location/${selectedEmployeeForLocation.employeeId}`,
+        `http://localhost:5000/api/employees/assign-location/${selectedEmployeeForLocation.employeeId}`,
         { locationId: selectedLocationId }
       );
 
@@ -623,45 +623,57 @@ const EmployeeList = () => {
   };
 
   return (
-    <div className="p-3 bg-white rounded-lg shadow-md max-w-9xl mx-auto">
-      {/* Search + Export */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-        <h2 className="text-xl font-semibold">Employee List</h2>
-      </div>
+    <div className="p-3 mx-auto bg-white rounded-lg shadow-md max-w-9xl">
+     {/* Search + Export */}
+<div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
+  <h2 className="text-xl font-semibold">Employee List</h2>
+</div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-        <input
-          type="text"
-          className="px-3 py-2 text-sm border rounded w-full sm:w-64"
-          placeholder="Search by name..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+<div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center">
+  {/* Search */}
+  <input
+    type="text"
+    className="w-full px-3 py-2 text-sm border rounded sm:w-64"
+    placeholder="Search by name..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+  />
 
-        <div className="flex flex-wrap gap-2">
-          <CSVLink
-            data={filteredEmployees}
-            filename="employees.csv"
-            className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-green-500 rounded"
-          >
-            <FaFileCsv /> CSV
-          </CSVLink>
+  {/* Buttons */}
+  <div className="flex flex-wrap gap-2">
+    <CSVLink
+      data={filteredEmployees}
+      filename="employees.csv"
+      className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-green-500 rounded"
+    >
+      <FaFileCsv /> CSV
+    </CSVLink>
 
-          <label
-            htmlFor="file-upload"
-            className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-purple-600 rounded cursor-pointer"
-          >
-            <FaUpload /> Import
-            <input
-              id="file-upload"
-              type="file"
-              accept=".xlsx, .xls"
-              onChange={handleBulkImport}
-              className="hidden"
-            />
-          </label>
-        </div>
-      </div>
+    <label
+      htmlFor="file-upload"
+      className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-purple-600 rounded cursor-pointer"
+    >
+      <FaUpload /> Import
+      <input
+        id="file-upload"
+        type="file"
+        accept=".xlsx, .xls"
+        onChange={handleBulkImport}
+        className="hidden"
+      />
+    </label>
+
+    <button
+      onClick={() => navigate("/addemployee")}
+      className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
+    >
+      + Add Employee
+    </button>
+  </div>
+</div>
+
+      
+      
 
       {/* Table */}
       <div className="overflow-x-auto border rounded-lg">
@@ -701,7 +713,7 @@ const EmployeeList = () => {
                   <td className="p-2 border">{emp.weekOffPerMonth}</td>
                   <td className="p-2 border">{getLocationName(emp.location)}</td>
 
-                  <td className="p-2 border text-center">
+                  <td className="p-2 text-center border">
                     <div className="flex justify-center gap-2">
                       <button className="text-blue-500" onClick={() => handleView(emp)}>
                         <FaEye />
@@ -740,10 +752,10 @@ const EmployeeList = () => {
       {/* Modals remain unchanged */}
       {/* VIEW MODAL */}
       {selectedEmployee && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-3">
-          <div className="bg-white rounded-lg p-5 max-w-md w-full relative">
+        <div className="fixed inset-0 flex items-center justify-center p-3 bg-black bg-opacity-50">
+          <div className="relative w-full max-w-md p-5 bg-white rounded-lg">
             <button className="absolute top-2 right-3" onClick={handleCloseModal}>X</button>
-            <h3 className="text-lg font-bold mb-3">Employee Details</h3>
+            <h3 className="mb-3 text-lg font-bold">Employee Details</h3>
             <p><b>Name:</b> {selectedEmployee.name}</p>
             <p><b>Email:</b> {selectedEmployee.email}</p>
             <p><b>Phone:</b> {selectedEmployee.phone}</p>
@@ -755,17 +767,17 @@ const EmployeeList = () => {
 
       {/* ASSIGN LOCATION MODAL */}
       {showLocationModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-3">
-          <div className="bg-white rounded-lg p-5 max-w-md w-full relative">
+        <div className="fixed inset-0 flex items-center justify-center p-3 bg-black bg-opacity-50">
+          <div className="relative w-full max-w-md p-5 bg-white rounded-lg">
             <button className="absolute top-2 right-3" onClick={handleCloseLocationModal}>
               X
             </button>
-            <h3 className="text-lg font-bold mb-4">Assign Location</h3>
+            <h3 className="mb-4 text-lg font-bold">Assign Location</h3>
 
             <select
               value={selectedLocationId}
               onChange={(e) => setSelectedLocationId(e.target.value)}
-              className="w-full border p-2 rounded"
+              className="w-full p-2 border rounded"
             >
               <option value="">Select Location</option>
               {locations.map((loc) => (
@@ -777,7 +789,7 @@ const EmployeeList = () => {
 
             <button
               onClick={assignLocation}
-              className="w-full bg-blue-600 text-white py-2 rounded mt-4"
+              className="w-full py-2 mt-4 text-white bg-blue-600 rounded"
             >
               Assign
             </button>

@@ -34,7 +34,7 @@
 //   const fetchAttendanceData = async () => {
 //     try {
 //       const res = await fetch(
-//         "https://api.timelyhealth.in//api/attendance/summary"
+//         "http://localhost:5000/api/attendance/summary"
 //       );
 //       const data = await res.json();
 //       setAttendanceData(data);
@@ -356,7 +356,7 @@ const AttendanceDashboard = () => {
   const fetchAttendanceData = async () => {
     try {
       const res = await fetch(
-        "https://api.timelyhealth.in//api/attendance/summary"
+        "http://localhost:5000/api/attendance/summary"
       );
       const data = await res.json();
       setAttendanceData(data);

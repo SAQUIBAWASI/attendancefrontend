@@ -1669,12 +1669,12 @@ const handleCheckIn = async () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gray-100 p-4">
-      <button
+      {/* <button
         onClick={() => navigate("/employeedashboard")}
         className="self-start mb-4 text-gray-700 hover:text-gray-900 font-medium"
       >
         ← Back
-      </button>
+      </button> */}
 
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 flex flex-col gap-6">
         <h2 className="text-2xl font-semibold text-center">Attendance Capture</h2>

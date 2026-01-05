@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 // import EmployeeSidebar from "../Components/EmployeeSidebar";
-import Navbar from "../Components/Navbar";
+
 
 const EmployeeShift = () => {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ const EmployeeShift = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `https://api.timelyhealth.in//api/shifts/employee/${employeeId}`
+          `http://localhost:5000/api/shifts/employee/${employeeId}`
         );
 
         if (res.data) {
@@ -96,19 +96,19 @@ const EmployeeShift = () => {
     <div className="flex min-h-screen bg-gray-100">
     
       <div className="flex flex-col flex-1">
-        <Navbar />
+        
 
         <main className="p-4 sm:p-6 lg:p-8">
           <div className="max-w-5xl p-6 mx-auto bg-white rounded-lg shadow-md">
             {/* Header + Back Button */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
+            <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:justify-between sm:items-center">
               <h2 className="text-2xl font-bold text-blue-900">My Shift</h2>
-              <button
+              {/* <button
                 onClick={() => navigate("/employeedashboard")}
-                className="px-5 py-2 w-full sm:w-auto bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium"
+                className="w-full px-5 py-2 font-medium text-white transition-all bg-blue-600 rounded-lg sm:w-auto hover:bg-blue-700"
               >
                 ← Back to Dashboard
-              </button>
+              </button> */}
             </div>
 
             {loading ? (
@@ -122,9 +122,9 @@ const EmployeeShift = () => {
             ) : (
               <>
                 {/* Desktop/Tablet Table */}
-                <div className="hidden sm:block overflow-x-auto">
+                <div className="hidden overflow-x-auto sm:block">
                   <table className="w-full min-w-[500px] text-sm border">
-                    <thead className="bg-gray-200 text-gray-700">
+                    <thead className="text-gray-700 bg-gray-200">
                       <tr>
                         <th className="p-2 border">Shift Type</th>
                         <th className="p-2 border">Start Time</th>
@@ -156,23 +156,23 @@ const EmployeeShift = () => {
                 </div>
 
                 {/* Mobile Cards */}
-                <div className="sm:hidden flex flex-col gap-4">
+                <div className="flex flex-col gap-4 sm:hidden">
                   <div className="p-4 border rounded-lg shadow-sm bg-gray-50">
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-gray-700">
                         Shift Type
                       </span>
                       <span className="text-gray-900">{shift.shiftType}</span>
                     </div>
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-gray-700">Start</span>
                       <span className="text-gray-900">{shift.startTime}</span>
                     </div>
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-gray-700">End</span>
                       <span className="text-gray-900">{shift.endTime}</span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex items-center justify-between">
                       <span className="font-medium text-gray-700">Status</span>
                       <span
                         className={`px-2 py-1 rounded text-xs font-semibold ${
