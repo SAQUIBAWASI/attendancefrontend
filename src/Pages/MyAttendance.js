@@ -4,7 +4,7 @@ import { CSVLink } from "react-csv";
 import { useNavigate } from "react-router-dom";
 
 
-const BASE_URL = "https://api.timelyhealth.in/";
+const BASE_URL = "http://localhost:5000";
 
 export default function MyAttendance() {
   const navigate = useNavigate();
@@ -12,12 +12,12 @@ export default function MyAttendance() {
   const [filteredRecords, setFilteredRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
+
   // Search and Filter States
   const [searchDate, setSearchDate] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [onsiteFilter, setOnsiteFilter] = useState("all");
-  
+
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -39,10 +39,10 @@ export default function MyAttendance() {
         if (!res.ok) throw new Error(data.message || "Failed to fetch attendance");
 
         // Sort records by checkInTime descending (newest first)
-        const sortedRecords = (data.records || []).sort((a, b) => 
+        const sortedRecords = (data.records || []).sort((a, b) =>
           new Date(b.checkInTime) - new Date(a.checkInTime)
         );
-        
+
         setRecords(sortedRecords);
         setFilteredRecords(sortedRecords);
       } catch (err) {
@@ -76,7 +76,7 @@ export default function MyAttendance() {
 
     // Onsite filter
     if (onsiteFilter !== "all") {
-      filtered = filtered.filter(rec => 
+      filtered = filtered.filter(rec =>
         onsiteFilter === "yes" ? rec.onsite : !rec.onsite
       );
     }
@@ -134,12 +134,12 @@ export default function MyAttendance() {
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Main Section */}
       <div className="flex flex-col flex-1">
-      
+
 
         <div className="flex-1 p-4 sm:p-6 lg:p-8 flex justify-center items-start">
           <div className="w-full max-w-7xl bg-white shadow-xl rounded-2xl p-4 sm:p-6 lg:p-8">
             {/* Header Section */}
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
+            {/* <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
               <div>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-teal-600">
                   📅 My Attendance Records
@@ -148,12 +148,7 @@ export default function MyAttendance() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                {/* <button
-                  onClick={() => navigate("/employeedashboard")}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-semibold flex items-center justify-center"
-                >
-                  ← Back to Dashboard
-                </button> */}
+             
 
                 <CSVLink
                   data={csvData}
@@ -163,7 +158,7 @@ export default function MyAttendance() {
                   ⬇ Download CSV
                 </CSVLink>
               </div>
-            </div>
+            </div> */}
 
             {/* Search and Filter Section */}
             <div className="bg-blue-50 rounded-xl p-4 mb-6 border border-blue-200">
@@ -288,9 +283,8 @@ export default function MyAttendance() {
                       {currentRecords.map((rec, idx) => (
                         <tr
                           key={rec._id || idx}
-                          className={`border-t transition-all duration-200 ${
-                            idx % 2 === 0 ? "bg-gray-50" : "bg-white"
-                          } hover:bg-green-50 hover:shadow-sm`}
+                          className={`border-t transition-all duration-200 ${idx % 2 === 0 ? "bg-gray-50" : "bg-white"
+                            } hover:bg-green-50 hover:shadow-sm`}
                         >
                           <td className="px-4 py-3 font-medium text-gray-900">
                             {formatDate(rec.checkInTime || rec.createdAt)}
@@ -308,10 +302,9 @@ export default function MyAttendance() {
                             </div>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`font-semibold ${
-                              rec.totalHours >= 8 ? 'text-green-600' : 
-                              rec.totalHours >= 4 ? 'text-orange-600' : 'text-red-600'
-                            }`}>
+                            <span className={`font-semibold ${rec.totalHours >= 8 ? 'text-green-600' :
+                                rec.totalHours >= 4 ? 'text-orange-600' : 'text-red-600'
+                              }`}>
                               {rec.totalHours ? rec.totalHours.toFixed(2) : "0.00"}h
                             </span>
                           </td>
@@ -322,11 +315,10 @@ export default function MyAttendance() {
                           </td>
                           <td className="px-4 py-3">
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                rec.onsite
+                              className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.onsite
                                   ? "bg-green-200 text-green-800 border border-green-300"
                                   : "bg-red-200 text-red-800 border border-red-300"
-                              }`}
+                                }`}
                             >
                               {rec.onsite ? "🏢 Yes" : "🏠 No"}
                             </span>
@@ -338,11 +330,10 @@ export default function MyAttendance() {
                           </td>
                           <td className="px-4 py-3">
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                rec.status === "checked-in"
+                              className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.status === "checked-in"
                                   ? "bg-blue-200 text-blue-800 border border-blue-300"
                                   : "bg-purple-200 text-purple-800 border border-purple-300"
-                              }`}
+                                }`}
                             >
                               {rec.status}
                             </span>
@@ -360,16 +351,15 @@ export default function MyAttendance() {
                       Showing <strong>{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredRecords.length)}</strong> of{" "}
                       <strong>{filteredRecords.length}</strong> records
                     </div>
-                    
+
                     <div className="flex gap-2">
                       <button
                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
-                        className={`px-4 py-2 rounded-lg transition ${
-                          currentPage === 1
+                        className={`px-4 py-2 rounded-lg transition ${currentPage === 1
                             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                             : "bg-blue-600 text-white hover:bg-blue-700"
-                        }`}
+                          }`}
                       >
                         ← Previous
                       </button>
@@ -391,11 +381,10 @@ export default function MyAttendance() {
                             <button
                               key={pageNum}
                               onClick={() => setCurrentPage(pageNum)}
-                              className={`px-3 py-2 rounded-lg transition ${
-                                currentPage === pageNum
+                              className={`px-3 py-2 rounded-lg transition ${currentPage === pageNum
                                   ? "bg-green-600 text-white font-semibold"
                                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                              }`}
+                                }`}
                             >
                               {pageNum}
                             </button>
@@ -406,11 +395,10 @@ export default function MyAttendance() {
                       <button
                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                         disabled={currentPage === totalPages}
-                        className={`px-4 py-2 rounded-lg transition ${
-                          currentPage === totalPages
+                        className={`px-4 py-2 rounded-lg transition ${currentPage === totalPages
                             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                             : "bg-blue-600 text-white hover:bg-blue-700"
-                        }`}
+                          }`}
                       >
                         Next →
                       </button>

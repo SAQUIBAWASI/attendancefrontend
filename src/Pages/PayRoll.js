@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import logo from "../Images/Timely-Health-Logo.png";
 
 const PayRoll = () => {
   const [records, setRecords] = useState([]);
@@ -110,7 +111,13 @@ const PayRoll = () => {
           shiftHours: emp.shiftHours || 8,
           weekOffPerMonth: emp.weekOffPerMonth || 0,
           name: emp.name,
-          employeeId: emp.employeeId
+          employeeId: emp.employeeId,
+          // ✅ Updated field names to match backend/AddEmployeePage
+          department: emp.department || '',
+          designation: emp.role || emp.designation || '', // Try 'role' first as it's used in AddEmployee
+          joiningDate: emp.joinDate || emp.joiningDate || '', // Try 'joinDate' first
+          bankAccount: emp.bankAccount || '',
+          panCard: emp.panCard || ''
         };
       });
 
@@ -258,6 +265,9 @@ const PayRoll = () => {
       weekOffPerMonth: employee.weekOffs || 0,
       name: employee.name || '',
       designation: '',
+      department: '',
+      joiningDate: '',
+      bankAccount: '',
       employeeId: employee.employeeId
     };
   };
@@ -310,9 +320,7 @@ const PayRoll = () => {
     return date.toLocaleString("en-IN", {
       day: "2-digit",
       month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+      year: "numeric"
     });
   };
 
@@ -415,18 +423,21 @@ const PayRoll = () => {
     const dailyRate = employeeData.salaryPerMonth / daysInMonth;
 
     // Calculate effective working days
-    const effectiveWorkingDays = (editFormData.workingDays || 0) + (0.5 * (editFormData.halfDayWorking || 0));
+    const workingDays = editFormData.workingDays || 0;
+    const halfDays = editFormData.halfDayWorking || 0;
+    const effectiveWorkingDays = workingDays + (0.5 * halfDays);
 
     const paidLeaveDays = (leaves.CL || 0) + (leaves.EL || 0) + (leaves.COFF || 0);
 
     // ✅ CORRECT CALCULATION: (Working days + WeekOffs + Paid Leaves)
-    // Note: LOP is properly handled because it reduces 'effectiveWorkingDays' (attendance), so we don't subtract it again.
     const paidDays = Math.max(0, effectiveWorkingDays + weekOffDays + paidLeaveDays);
     const baseSalary = paidDays * dailyRate;
 
     // Extra work calculation
     const extraDaysAmount = (extraWorkData.extraDays || 0) * dailyRate;
-    const totalExtraAmount = extraDaysAmount + (extraWorkData.bonus || 0) - (extraWorkData.deductions || 0);
+    const bonus = extraWorkData.bonus || 0;
+    const deductions = extraWorkData.deductions || 0;
+    const totalExtraAmount = extraDaysAmount + bonus - deductions;
     const finalSalary = baseSalary + totalExtraAmount;
 
     const updatedData = {
@@ -437,8 +448,8 @@ const PayRoll = () => {
         extraHours: extraWorkData.extraHours || 0,
         overtimeRate: 0,
         overtimeAmount: 0,
-        bonus: extraWorkData.bonus || 0,
-        deductions: extraWorkData.deductions || 0,
+        bonus: bonus,
+        deductions: deductions,
         totalExtraAmount: totalExtraAmount,
         reason: extraWorkData.reason || ""
       }
@@ -486,7 +497,7 @@ const PayRoll = () => {
     printWindow.print();
   };
 
-  // ✅ Generate invoice HTML with CORRECT CALCULATION
+  // ✅ Generate invoice HTML with COMPACT TABLE DESIGN
   const generateInvoiceHTML = (employee) => {
     const employeeData = getEmployeeData(employee);
 
@@ -495,10 +506,10 @@ const PayRoll = () => {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Salary Invoice - ${employee?.name || 'Unknown'}</title>
+          <title>Payslip</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333; text-align: center; }
-            .error { color: red; font-size: 18px; margin-top: 100px; }
+            .error { color: red; font-size: 18px; margin-top: 100px; border: 1px solid red; padding: 20px; display: inline-block; }
           </style>
         </head>
         <body>
@@ -516,25 +527,22 @@ const PayRoll = () => {
     const dailyRate = calculateDailyRate(employee);
     const leaves = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
     const weekOffDays = calculateWeekOffDays(employee);
-    const holidays = calculateHolidays(employee);
     const unpaidLeaves = leaves.LOP; // Only LOP is unpaid
     const paidLeaveDays = (leaves.CL || 0) + (leaves.EL || 0) + (leaves.COFF || 0);
 
     const paidLeaveAmount = paidLeaveDays * dailyRate;
 
     // ✅ CORRECT CALCULATION
-    const workingDaysAmount = (employee.totalWorkingDays || 0) * dailyRate;
+    const fullWorkingDaysAmount = (employee.totalWorkingDays || 0) * dailyRate;
+    const halfWorkingDaysAmount = (employee.halfDayWorking || 0) * (dailyRate / 2);
     const weekOffAmount = weekOffDays * dailyRate;
 
-    let extraWorkAmount = 0;
-    if (employee.extraWork) {
-      extraWorkAmount = ((employee.extraWork.extraDays || 0) * dailyRate) +
-        (employee.extraWork.bonus || 0) -
-        (employee.extraWork.deductions || 0);
-    }
+    const bonus = employee.extraWork?.bonus || 0;
+    const deductions = employee.extraWork?.deductions || 0;
+    const extraDaysPay = (employee.extraWork?.extraDays || 0) * dailyRate;
 
-    // Total salary = (Working days + WeekOffs + Paid Leaves) * Daily rate + Extra work
-    const totalSalary = workingDaysAmount + weekOffAmount + paidLeaveAmount + extraWorkAmount;
+    // Total salary = (Full Working days + Half Working days + WeekOffs + Paid Leaves) * Daily rate + Extra work
+    const totalSalary = fullWorkingDaysAmount + halfWorkingDaysAmount + weekOffAmount + paidLeaveAmount + extraDaysPay + bonus - deductions;
 
     const hasExtraWork = employee.extraWork && (
       (employee.extraWork.extraDays || 0) > 0 ||
@@ -546,237 +554,186 @@ const PayRoll = () => {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Salary Invoice - ${employee.name}</title>
+        <meta charset="utf-8">
+        <title>Payslip - ${employee.name}</title>
         <style>
-          body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333; }
-          .invoice-container { max-width: 800px; margin: 0 auto; border: 2px solid #3b82f6; border-radius: 10px; padding: 30px; }
-          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3b82f6; padding-bottom: 20px; }
-          .company-name { font-size: 28px; font-weight: bold; color: #3b82f6; margin-bottom: 5px; }
-          .invoice-title { font-size: 24px; font-weight: bold; margin: 20px 0; }
-          .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
-          .detail-item { margin-bottom: 10px; }
-          .detail-label { font-weight: bold; color: #666; }
-          .salary-breakdown { margin: 30px 0; }
-          .breakdown-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-          .breakdown-table th, .breakdown-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-          .breakdown-table th { background-color: #3b82f6; color: white; }
-          .total-row { font-weight: bold; background-color: #f8fafc; }
-          .extra-work-row { background-color: #f0f9ff; }
-          .paid-leave-row { background-color: #f0fff4; }
-          .leave-deduction-row { background-color: #fef2f2; }
-          .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #3b82f6; color: #666; }
-          .signature { margin-top: 50px; display: flex; justify-content: space-between; }
-          .signature-box { width: 200px; border-top: 1px solid #333; padding-top: 10px; text-align: center; }
-          .notes { margin-top: 20px; padding: 15px; background-color: #f8fafc; border-radius: 5px; }
-          .month-info { background-color: #f0f9ff; padding: 10px; border-radius: 5px; margin-bottom: 20px; }
+          @page { size: A4; margin: 0; }
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; /* Reduced body padding */
+            color: #000;
+          }
+          .invoice-container { 
+            width: 100%; 
+            max-width: 210mm; /* A4 width */
+            margin: 0 auto; 
+            border: 1px solid #000; 
+          }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { 
+            padding: 4px 8px; 
+            border: 1px solid #000; 
+            font-size: 12px; 
+            vertical-align: middle;
+          }
+          /* Header Styles */
+          .header-cell { border: none; padding: 2px 2px; text-align: center; border-bottom: 1px solid #000; }
+          
+          /* Earnings/Deductions Table Styles */
+          .section-header { 
+            background-color: #f0f0f0; 
+            font-weight: bold; 
+            text-align: center; 
+            text-transform: uppercase;
+          }
+          .amount-col { text-align: right; width: 15%; }
+          .label-col { text-align: left; width: 35%; }
+          
+          .notes-box { 
+            margin: 10px; 
+            padding: 5px; 
+            border: 1px dashed #666; 
+            font-size: 11px;
+            background-color: #fafafa;
+          }
         </style>
       </head>
       <body>
         <div class="invoice-container">
-          <div class="header">
-            <div class="company-name">Timely Health Tech Pvt Ltd</div>
-            <div>123 Tech Park, Innovation City, IC 12345</div>
-            <div>Phone: (123) 456-7890 | Email: hr@techsolutions.com</div>
-          </div>
-
-          <div class="invoice-title">SALARY INVOICE</div>
           
-          <div class="month-info">
-            <p><strong>Month:</strong> ${employee.month || selectedMonth || "Current Month"} | <strong>Days in Month:</strong> ${daysInMonth}</p>
+          <!-- MAIN LAYOUT TABLE -->
+          <table>
+            
+            <!-- HEADER -->
+            <tr>
+              <td colspan="4" class="header-cell">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0px;">
+                  <div style="width: 130px; text-align: left;">
+                    <img src="${logo}" alt="Logo" style="height: 110px; width: auto; max-width: 130px; object-fit: contain; display: block;">
+                  </div>
+                  <div style="flex: 1; text-align: center; margin-right: 130px;">
+                    <h1 style="margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">Timely Health Tech Pvt Ltd</h1>
+                    <p style="margin: 0px 0 0 0; font-size: 11px; line-height: 1.1;">
+                      H. No: 1-98/9/25/p, # 301, 3rd Floor, Sri Sai Balaji Avenue,<br> 
+                      Arunodaya Colony, Madhapur, Hyderabad, TG - 500081
+                    </p>
+                  </div>
+                </div>
+                <div style="text-align: center; margin-bottom: 2px;">
+                  <span style="font-size: 18px; font-weight: bold; text-decoration: underline; text-underline-offset: 3px; display: inline-block;">PAYSLIP ${formatMonthDisplay(employee.month || selectedMonth).toUpperCase()}</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- EMPLOYEE DETAILS -->
+            <tr style="background-color: #fafafa;">
+              <td width="20%"><strong>ID</strong></td>
+              <td width="30%">${employee.employeeId}</td>
+              <td width="20%"><strong>Joined</strong></td>
+              <td width="30%">${employeeData.joiningDate ? new Date(employeeData.joiningDate).toLocaleDateString() : '-'}</td>
+            </tr>
+            <tr>
+              <td><strong>Name</strong></td>
+              <td>${employee.name}</td>
+              <td><strong>Role</strong></td>
+              <td>${employeeData.designation || '-'}</td>
+            </tr>
+            <tr style="background-color: #fafafa;">
+              <td><strong>Dept</strong></td>
+              <td>${employeeData.department || '-'}</td>
+              <td><strong>Month</strong></td>
+              <td>${formatMonthDisplay(employee.month || selectedMonth)}</td>
+            </tr>
+            <tr>
+              <td><strong>Invoice Date</strong></td>
+              <td>${new Date().toLocaleDateString()}</td>
+              <td></td>
+              <td></td>
+            </tr>
+
+            <!-- SALARY BREAKDOWN HEADER -->
+            <tr class="section-header">
+              <td colspan="2">EARNINGS</td>
+              <td colspan="2">DEDUCTIONS</td>
+            </tr>
+
+            <!-- SALARY CONTENT Row 1 -->
+            <tr>
+              <td class="label-col">Gross Salary</td>
+              <td class="amount-col">₹${Math.round(employeeData.salaryPerMonth).toFixed(2)}</td>
+              <td class="label-col">Leaves</td>
+              <td class="amount-col" style="color:red;">${unpaidLeaves} Days</td>
+            </tr>
+            
+            <!-- ROW 2: Days Info -->
+            <tr>
+              <td class="label-col">Working Days (Full)</td>
+              <td class="amount-col">${employee.totalWorkingDays || 0}</td>
+              <td class="label-col">Half Days</td>
+              <td class="amount-col">${employee.halfDayWorking || 0}</td>
+            </tr>
+
+            <!-- ROW 3: Week Offs -->
+            <tr>
+              <td class="label-col">Week Off Days</td>
+              <td class="amount-col">${weekOffDays}</td>
+              <td class="label-col">Paid Leaves</td>
+              <td class="amount-col">${paidLeaveDays}</td>
+            </tr>
+
+             <!-- ROW 4: Extra & Adjustments -->
+         
+
+            <!-- ROW 5: Deductions -->
+            <tr>
+              <td class="label-col">PF / Other</td>
+              <td class="amount-col">₹0.00</td>
+              <td class="label-col">Other Deductions</td>
+              <td class="amount-col" style="color:red;">₹${(employee.extraWork?.deductions || 0).toFixed(2)}</td>
+            </tr>
+
+            <!-- TOTALS ROW -->
+            <tr style="font-weight: bold; background-color: #f0f0f0;">
+              <td class="label-col">Total Earnings</td>
+              <td class="amount-col">₹${Math.round(totalSalary).toFixed(2)}</td>
+              <td class="label-col">Net Pay</td>
+              <td class="amount-col">₹${Math.round(totalSalary).toFixed(2)}</td>
+            </tr>
+
+         
+            
+            <!-- NOTES SECTION IF EXISTS -->
+            ${hasExtraWork && employee.extraWork.reason ? `
+            <tr>
+              <td colspan="4" style="border: none; padding: 10px;">
+                <div class="notes-box">
+                  <strong>Adjustments Note:</strong> ${employee.extraWork.reason}
+                </div>
+              </td>
+            </tr>
+            ` : ''}
+
+            <!-- SIGNATURES -->
+          
+
+          </table>
+          
+          <div style="text-align: center; font-size: 10px; margin-top: 10px;">
+            This is a computer-generated document.
           </div>
 
-          <div class="details-grid">
-            <div>
-              <div class="detail-item">
-                <span class="detail-label">Employee ID:</span> ${employee.employeeId}
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Employee Name:</span> ${employee.name}
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Month:</span> ${employee.month || selectedMonth || "Current"}
-              </div>
-            </div>
-            <div>
-              <div class="detail-item">
-                <span class="detail-label">Invoice Date:</span> ${new Date().toLocaleDateString()}
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Invoice No:</span> INV-${employee.employeeId}-${new Date().getTime()}
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Days in Month:</span> ${daysInMonth}
-              </div>
-            </div>
-          </div>
-
-          <div class="salary-breakdown">
-            <h3>Salary Breakdown</h3>
-            <table class="breakdown-table">
-              <thead>
-                <tr>
-                  <th>Description</th>
-                  <th>Days/Hours</th>
-                  <th>Rate</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="paid-leave-row">
-                  <td colspan="4"><strong>Salary Components</strong></td>
-                </tr>
-                <tr>
-                  <td>Monthly Salary</td>
-                  <td>-</td>
-                  <td>₹${employeeData.salaryPerMonth}/month</td>
-                  <td>₹${employeeData.salaryPerMonth}</td>
-                </tr>
-                <tr>
-                  <td>Daily Rate (${daysInMonth} days)</td>
-                  <td>-</td>
-                  <td>₹${dailyRate}/day</td>
-                  <td>-</td>
-                </tr>
-                <tr>
-                  <td>Working Days (Includes Half Days)</td>
-                  <td>${employee.totalWorkingDays || 0}</td>
-                  <td>₹${dailyRate}/day</td>
-                  <td>₹${Math.round(workingDaysAmount)}</td>
-                </tr>
-                <tr>
-                  <td>Half Days Included</td>
-                  <td>${employee.halfDayWorking || 0}</td>
-                  <td>-</td>
-                  <td>(Included in Working Days)</td>
-                </tr>
-                <tr>
-                  <td>WeekOff Days (Paid)</td>
-                  <td>${weekOffDays}</td>
-                  <td>₹${dailyRate}/day</td>
-                  <td>₹${Math.round(weekOffAmount)}</td>
-                </tr>
-
-                <tr>
-                  <td>Paid Leaves (CL/EL/COFF)</td>
-                  <td>${paidLeaveDays}</td>
-                  <td>₹${dailyRate}/day</td>
-                  <td>₹${Math.round(paidLeaveAmount)}</td>
-                </tr>
-                <tr>
-                  <td>Leave Types</td>
-                  <td colspan="3">${getLeaveTypes(employee)}</td>
-                </tr>
-                
-                
-                
-                ${hasExtraWork ? `
-                <tr class="extra-work-row">
-                  <td colspan="4"><strong>Extra Work & Adjustments</strong></td>
-                </tr>
-                ${(employee.extraWork.extraDays || 0) > 0 ? `
-                <tr class="extra-work-row">
-                  <td>Extra Working Days</td>
-                  <td>${employee.extraWork.extraDays}</td>
-                  <td>₹${dailyRate}/day</td>
-                  <td>₹${Math.round((employee.extraWork.extraDays || 0) * dailyRate)}</td>
-                </tr>
-                ` : ''}
-                ${(employee.extraWork.bonus || 0) > 0 ? `
-                <tr class="extra-work-row">
-                  <td>Performance Bonus</td>
-                  <td>-</td>
-                  <td>-</td>
-                  <td>₹${employee.extraWork.bonus}</td>
-                </tr>
-                ` : ''}
-                ${(employee.extraWork.deductions || 0) > 0 ? `
-                <tr class="extra-work-row">
-                  <td>Other Deductions</td>
-                  <td>-</td>
-                  <td>-</td>
-                  <td>-₹${employee.extraWork.deductions}</td>
-                </tr>
-                ` : ''}
-                ` : ''}
-                
-                <tr class="total-row">
-                  <td colspan="3"><strong>Total Salary Payable</strong></td>
-                  <td><strong>₹${Math.round(totalSalary)}</strong></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="salary-breakdown">
-            <h3>Salary Summary</h3>
-            <table class="breakdown-table">
-              <thead>
-                <tr>
-                  <th>Particulars</th>
-                  <th>Details</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Month</td>
-                  <td>${employee.month || selectedMonth || "Current"}</td>
-                </tr>
-                <tr>
-                  <td>Days in Month</td>
-                  <td>${daysInMonth}</td>
-                </tr>
-                <tr>
-                  <td>Monthly Salary</td>
-                  <td>₹${employeeData.salaryPerMonth}</td>
-                </tr>
-                <tr>
-                  <td>Daily Rate</td>
-                  <td>₹${dailyRate}/day</td>
-                </tr>
-                <tr>
-                  <td>Effective Working Days</td>
-                  <td>${employee.totalWorkingDays || 0}</td>
-                </tr>
-                <tr>
-                  <td>WeekOff Days</td>
-                  <td>${weekOffDays}</td>
-                </tr>
-
-                <tr>
-                  <td>Unpaid Leaves</td>
-                  <td>${unpaidLeaves}</td>
-                </tr>
-                <tr class="total-row">
-                  <td><strong>Final Salary</strong></td>
-                  <td><strong>₹${Math.round(totalSalary)}</strong></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          ${hasExtraWork && employee.extraWork.reason ? `
-          <div class="notes">
-            <strong>Notes:</strong> ${employee.extraWork.reason}
-          </div>
-          ` : ''}
-
-          <div class="signature">
-            <div class="signature-box">
-              Employee Signature
-            </div>
-            <div class="signature-box">
-              Authorized Signature
-            </div>
-          </div>
-
-          <div class="footer">
-            Thank you for your hard work and dedication!<br>
-            <small>Calculated based on ${daysInMonth} days in ${employee.month || selectedMonth || "current month"}</small>
-          </div>
         </div>
       </body>
       </html>
     `;
+  };
+
+  // Helper to convert number to words (Simple version for strict requirement)
+  const convertNumberToWords = (amount) => {
+    // Basic placeholder - typically you'd want a proper library or function
+    // For now, returning standard text to avoid complex logic injection
+    return "Amount in words";
   };
 
   // ✅ Get leave types for display
@@ -859,68 +816,68 @@ const PayRoll = () => {
         </div> */}
 
         {/* Search and Filter Section */}
-       <div className="px-4 py-2 mb-3 bg-white border rounded-lg shadow-sm">
-  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="px-4 py-2 mb-3 bg-white border rounded-lg shadow-sm">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 
-    {/* Search */}
-    <div className="relative flex-1">
-      <input
-        type="text"
-        placeholder="Search by ID or Name"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full py-1.5 pl-8 pr-3 text-sm border rounded-md focus:ring-1 focus:ring-blue-400"
-      />
-      <svg
-        className="absolute w-4 h-4 text-gray-400 left-2 top-1/2 -translate-y-1/2"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-      </svg>
-    </div>
+            {/* Search */}
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search by ID or Name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full py-1.5 pl-8 pr-3 text-sm border rounded-md focus:ring-1 focus:ring-blue-400"
+              />
+              <svg
+                className="absolute w-4 h-4 text-gray-400 left-2 top-1/2 -translate-y-1/2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
 
-    {/* Actions */}
-    <div className="flex gap-2">
-      <input
-        type="month"
-        value={selectedMonth}
-        onChange={(e) => {
-          const monthValue = e.target.value;
-          setSelectedMonth(monthValue);
-          monthValue ? fetchData(monthValue) : fetchData();
-        }}
-        className="px-2 py-1.5 text-sm border rounded-md"
-      />
+            {/* Actions */}
+            <div className="flex gap-2">
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => {
+                  const monthValue = e.target.value;
+                  setSelectedMonth(monthValue);
+                  monthValue ? fetchData(monthValue) : fetchData();
+                }}
+                className="px-2 py-1.5 text-sm border rounded-md"
+              />
 
-      <button
-        onClick={() => {
-          setSelectedMonth("");
-          fetchData();
-        }}
-        className="px-3 py-1.5 text-sm text-gray-700 bg-gray-100 border rounded-md hover:bg-gray-200"
-      >
-        Current
-      </button>
+              <button
+                onClick={() => {
+                  setSelectedMonth("");
+                  fetchData();
+                }}
+                className="px-3 py-1.5 text-sm text-gray-700 bg-gray-100 border rounded-md hover:bg-gray-200"
+              >
+                Current
+              </button>
 
-      <button
-        onClick={() => fetchData(selectedMonth)}
-        disabled={isLoadingMonth}
-        className="flex items-center px-3 py-1.5 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
-      >
-        {isLoadingMonth ? (
-          <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9" />
-          </svg>
-        ) : (
-          "Refresh"
-        )}
-      </button>
-    </div>
+              <button
+                onClick={() => fetchData(selectedMonth)}
+                disabled={isLoadingMonth}
+                className="flex items-center px-3 py-1.5 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isLoadingMonth ? (
+                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9" />
+                  </svg>
+                ) : (
+                  "Refresh"
+                )}
+              </button>
+            </div>
 
-  </div>
-</div>
+          </div>
+        </div>
 
 
         {/* Stats Overview */}
@@ -994,91 +951,91 @@ const PayRoll = () => {
 
         <div className="grid grid-cols-2 gap-2 mb-3 md:grid-cols-4">
 
-  {/* Total Employees */}
-  <div className="px-3 py-2 bg-white border-l-2 border-blue-500 rounded-md shadow-sm">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-[10px] text-gray-500 leading-tight">
-          Total Employees
-        </p>
-        <p className="text-sm font-semibold text-gray-800 leading-tight">
-          {filteredRecords.length}
-        </p>
-      </div>
-      <div className="p-1.5 bg-blue-100 rounded-full">
-        <svg className="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0" />
-        </svg>
-      </div>
-    </div>
-  </div>
+          {/* Total Employees */}
+          <div className="px-3 py-2 bg-white border-l-2 border-blue-500 rounded-md shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-gray-500 leading-tight">
+                  Total Employees
+                </p>
+                <p className="text-sm font-semibold text-gray-800 leading-tight">
+                  {filteredRecords.length}
+                </p>
+              </div>
+              <div className="p-1.5 bg-blue-100 rounded-full">
+                <svg className="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0" />
+                </svg>
+              </div>
+            </div>
+          </div>
 
-  {/* Total Salary */}
-  <div className="px-3 py-2 bg-white border-l-2 border-green-500 rounded-md shadow-sm">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-[10px] text-gray-500 leading-tight">
-          Total Salary
-        </p>
-        <p className="text-sm font-semibold text-gray-800 leading-tight">
-          ₹{filteredRecords.reduce((s, e) => s + (e.calculatedSalary || 0), 0).toLocaleString()}
-        </p>
-      </div>
-      <div className="p-1.5 bg-green-100 rounded-full">
-        <svg className="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8" />
-        </svg>
-      </div>
-    </div>
-  </div>
+          {/* Total Salary */}
+          <div className="px-3 py-2 bg-white border-l-2 border-green-500 rounded-md shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-gray-500 leading-tight">
+                  Total Salary
+                </p>
+                <p className="text-sm font-semibold text-gray-800 leading-tight">
+                  ₹{filteredRecords.reduce((s, e) => s + (e.calculatedSalary || 0), 0).toLocaleString()}
+                </p>
+              </div>
+              <div className="p-1.5 bg-green-100 rounded-full">
+                <svg className="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8" />
+                </svg>
+              </div>
+            </div>
+          </div>
 
-  {/* Active This Month */}
-  <div className="px-3 py-2 bg-white border-l-2 border-purple-500 rounded-md shadow-sm">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-[10px] text-gray-500 leading-tight">
-          Active This Month
-        </p>
-        <p className="text-sm font-semibold text-gray-800 leading-tight">
-          {filteredRecords.filter(e => (e.totalWorkingDays || 0) > 0).length}
-        </p>
-      </div>
-      <div className="p-1.5 bg-purple-100 rounded-full">
-        <svg className="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
-        </svg>
-      </div>
-    </div>
-  </div>
+          {/* Active This Month */}
+          <div className="px-3 py-2 bg-white border-l-2 border-purple-500 rounded-md shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-gray-500 leading-tight">
+                  Active This Month
+                </p>
+                <p className="text-sm font-semibold text-gray-800 leading-tight">
+                  {filteredRecords.filter(e => (e.totalWorkingDays || 0) > 0).length}
+                </p>
+              </div>
+              <div className="p-1.5 bg-purple-100 rounded-full">
+                <svg className="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
+                </svg>
+              </div>
+            </div>
+          </div>
 
-  {/* On Leave */}
-  <div className="px-3 py-2 bg-white border-l-2 border-red-500 rounded-md shadow-sm">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-[10px] text-gray-500 leading-tight">
-          On Leave
-        </p>
-        <p className="text-sm font-semibold text-gray-800 leading-tight">
-          {filteredRecords.filter(emp => {
-            const leaves = employeeLeaves[emp.employeeId];
-            return leaves && (leaves.CL + leaves.EL + leaves.COFF + leaves.LOP) > 0;
-          }).length}
-        </p>
-      </div>
-      <div className="p-1.5 bg-red-100 rounded-full">
-        <svg className="w-3.5 h-3.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01" />
-        </svg>
-      </div>
-    </div>
-  </div>
+          {/* On Leave */}
+          <div className="px-3 py-2 bg-white border-l-2 border-red-500 rounded-md shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-gray-500 leading-tight">
+                  On Leave
+                </p>
+                <p className="text-sm font-semibold text-gray-800 leading-tight">
+                  {filteredRecords.filter(emp => {
+                    const leaves = employeeLeaves[emp.employeeId];
+                    return leaves && (leaves.CL + leaves.EL + leaves.COFF + leaves.LOP) > 0;
+                  }).length}
+                </p>
+              </div>
+              <div className="p-1.5 bg-red-100 rounded-full">
+                <svg className="w-3.5 h-3.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01" />
+                </svg>
+              </div>
+            </div>
+          </div>
 
-</div>
+        </div>
 
 
-        
 
-        
+
+
 
         {/* Table Container */}
         <div className="overflow-hidden bg-white border border-blue-200 shadow-xl rounded-2xl">
@@ -1191,24 +1148,24 @@ const PayRoll = () => {
                         </td> */}
 
                         <td
-  className="p-4 text-center text-gray-600 cursor-pointer"
-  onClick={() => handleAttendanceRowClick(item)}
->
-  <div>
-    <div className="font-medium">
-      {item.month
-        ? `${item.month.slice(2, 4)}-${item.month.slice(5, 7)}`
-        : "-"}
-    </div>
-    <div className="text-xs text-gray-500">
-      {item.monthDays || monthDays} days
-    </div>
-  </div>
-</td>
+                          className="p-4 text-center text-gray-600 cursor-pointer"
+                          onClick={() => handleAttendanceRowClick(item)}
+                        >
+                          <div>
+                            <div className="font-medium">
+                              {item.month
+                                ? `${item.month.slice(2, 4)}-${item.month.slice(5, 7)}`
+                                : "-"}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {item.monthDays || monthDays} days
+                            </div>
+                          </div>
+                        </td>
 
 
-                        
-                        
+
+
 
                         {/* Actions cell */}
                         <td className="p-4 text-center">
@@ -1267,8 +1224,8 @@ const PayRoll = () => {
                     onClick={handlePrevious}
                     disabled={currentPage === 1}
                     className={`px-4 py-2 rounded-lg border ${currentPage === 1
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
                       }`}
                   >
                     Previous
@@ -1280,8 +1237,8 @@ const PayRoll = () => {
                         key={pageNumber}
                         onClick={() => handlePageClick(pageNumber)}
                         className={`px-4 py-2 rounded-lg border ${currentPage === pageNumber
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
                           }`}
                       >
                         {pageNumber}
@@ -1293,8 +1250,8 @@ const PayRoll = () => {
                     onClick={handleNext}
                     disabled={currentPage === totalPages}
                     className={`px-4 py-2 rounded-lg border ${currentPage === totalPages
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
                       }`}
                   >
                     Next

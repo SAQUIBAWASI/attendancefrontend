@@ -60,11 +60,11 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
     "/employeedashboard": "Employee Dashboard",
     "/leave-application": "Leave Application",
     "/myleaves": "My Leaves",
-    "/myattendance": "Attendance Report",
+    "/myattendance": "My Attendance Records",
     "/attendance-capture": "Check In",
     "/my-shift": "My Shift",
     "/mylocation": "My Assigned Location",
-    "/mysalary": "My Salary",
+    "/mysalary": "My Salary - KARDAM KUMAR",
   };
 
   const handleMenuClick = () => {

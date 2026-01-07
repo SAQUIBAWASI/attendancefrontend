@@ -198,7 +198,7 @@
 
 //         // Fetch ALL salaries first
 //         const salaryRes = await fetch(`${BASE_URL}/api/attendancesummary/getsalaries`);
-        
+
 //         if (!salaryRes.ok) {
 //           throw new Error(`Failed to fetch salary data: ${salaryRes.status}`);
 //         }
@@ -234,11 +234,11 @@
 //           const summaryRes = await fetch(
 //             `${BASE_URL}/api/attendancesummary/get?employeeId=${employeeId}`
 //           );
-          
+
 //           if (summaryRes.ok) {
 //             const summaryData = await summaryRes.json();
 //             const summary = summaryData.summary || [];
-            
+
 //             employeeSalaryRecords = summary
 //               .filter(item => item.employeeId === employeeId)
 //               .map(item => ({
@@ -265,7 +265,7 @@
 //         console.log("✅ Current Employee Salary Records:", sortedRecords);
 //         setRecords(sortedRecords);
 //         setFilteredRecords(sortedRecords);
-        
+
 //       } catch (err) {
 //         console.error("❌ Salary fetch error:", err);
 //         setError(err.message || "Failed to load salary data");
@@ -307,7 +307,7 @@
 //   const getPageNumbers = () => {
 //     const pageNumbers = [];
 //     const maxVisiblePages = 5;
-    
+
 //     if (totalPages <= maxVisiblePages) {
 //       for (let i = 1; i <= totalPages; i++) {
 //         pageNumbers.push(i);
@@ -315,12 +315,12 @@
 //     } else {
 //       const startPage = Math.max(1, currentPage - 2);
 //       const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-      
+
 //       for (let i = startPage; i <= endPage; i++) {
 //         pageNumbers.push(i);
 //       }
 //     }
-    
+
 //     return pageNumbers;
 //   };
 
@@ -339,7 +339,7 @@
 //   // ✅ Generate salary slip HTML
 //   const generateSalarySlipHTML = (employee) => {
 //     const currentEmployee = getCurrentEmployee();
-    
+
 //     return `
 //       <!DOCTYPE html>
 //       <html>
@@ -515,7 +515,7 @@
 //   return (
 //     <div className="min-h-screen p-6 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-7xl">
-        
+
 //         {/* Header Section */}
 //         <div className="mb-8">
 //           <button
@@ -640,7 +640,7 @@
 //                       <td className="p-4 font-medium text-gray-900">
 //                         {emp.employeeId}
 //                       </td>
-                      
+
 //                       <td className="p-4">
 //                         <div className="flex items-center">
 //                           <div className="flex items-center justify-center w-8 h-8 mr-3 font-semibold text-blue-800 bg-blue-100 rounded-full">
@@ -649,33 +649,33 @@
 //                           <span className="font-medium text-gray-800">{currentEmployee?.name || emp.name}</span>
 //                         </div>
 //                       </td>
-                      
+
 //                       <td className="p-4 text-center">
 //                         <span className="px-3 py-1 text-sm font-medium text-green-800 bg-green-100 rounded-full">
 //                           {emp.presentDays || 0}
 //                         </span>
 //                       </td>
-                      
+
 //                       <td className="p-4 text-center">
 //                         <span className="px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">
 //                           {emp.lateDays || 0}
 //                         </span>
 //                       </td>
-                      
+
 //                       <td className="p-4 text-center">
 //                         <span className="px-3 py-1 text-sm font-medium text-yellow-800 bg-yellow-100 rounded-full">
 //                           {emp.halfDays || 0}
 //                         </span>
 //                       </td>
-                      
+
 //                       <td className="p-4 font-semibold text-center text-green-700">
 //                         ₹{emp.calculatedSalary || 0}
 //                       </td>
-                      
+
 //                       <td className="p-4 text-center text-gray-600">
 //                         {emp.month || "-"}
 //                       </td>
-                      
+
 //                       <td className="p-4 text-center">
 //                         <div className="flex justify-center space-x-2">
 //                           <button
@@ -685,7 +685,7 @@
 //                           >
 //                             <Eye size={16} />
 //                           </button>
-                          
+
 //                           <button
 //                             onClick={() => downloadSalarySlip(emp)}
 //                             className="p-2 text-white transition duration-200 bg-purple-500 rounded-lg hover:bg-purple-600"
@@ -709,7 +709,7 @@
 //                 <div className="text-sm text-gray-600">
 //                   Showing {indexOfFirstRecord + 1} to {Math.min(indexOfLastRecord, filteredRecords.length)} of {filteredRecords.length} entries
 //                 </div>
-                
+
 //                 <div className="flex items-center space-x-2">
 //                   <button
 //                     onClick={handlePrevious}
@@ -722,7 +722,7 @@
 //                   >
 //                     Previous
 //                   </button>
-                  
+
 //                   <div className="flex space-x-1">
 //                     {getPageNumbers().map(pageNumber => (
 //                       <button
@@ -738,7 +738,7 @@
 //                       </button>
 //                     ))}
 //                   </div>
-                  
+
 //                   <button
 //                     onClick={handleNext}
 //                     disabled={currentPage === totalPages}
@@ -858,6 +858,7 @@
 import { Calendar, Eye, FileText, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import logo from "../Images/Timely-Health-Logo.png";
 
 export default function EmployeeDashboard() {
   const [records, setRecords] = useState([]);
@@ -911,14 +912,14 @@ export default function EmployeeDashboard() {
   const generateLast12Months = () => {
     const months = [];
     const today = new Date();
-    
+
     for (let i = 0; i < 12; i++) {
       const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
       const monthStr = formatMonthForAPI(date);
       const displayStr = formatMonthDisplay(monthStr);
       months.push({ value: monthStr, display: displayStr });
     }
-    
+
     return months;
   };
 
@@ -939,7 +940,7 @@ export default function EmployeeDashboard() {
 
       // Fetch ALL salaries without month filter
       const salaryRes = await fetch(`${BASE_URL}/api/attendancesummary/getsalaries`);
-      
+
       if (!salaryRes.ok) {
         throw new Error(`Failed to fetch salary data: ${salaryRes.status}`);
       }
@@ -975,11 +976,11 @@ export default function EmployeeDashboard() {
       if (employeeSalaryRecords.length === 0) {
         console.log("🔄 Trying fallback API for employee:", employeeId);
         const summaryRes = await fetch(`${BASE_URL}/api/attendancesummary/get`);
-        
+
         if (summaryRes.ok) {
           const summaryData = await summaryRes.json();
           const summary = summaryData.summary || [];
-          
+
           employeeSalaryRecords = summary
             .filter(item => item.employeeId === employeeId)
             .map(item => ({
@@ -1003,7 +1004,7 @@ export default function EmployeeDashboard() {
         .filter(month => month && month !== "Not specified")
         .sort((a, b) => b.localeCompare(a)) // Latest first
       )];
-      
+
       setAllMonths(months);
 
       // Sort by latest month first
@@ -1015,10 +1016,10 @@ export default function EmployeeDashboard() {
 
       console.log("✅ Current Employee ALL Salary Records:", sortedRecords);
       console.log("📅 Available Months:", months);
-      
+
       setRecords(sortedRecords);
       setFilteredRecords(sortedRecords);
-      
+
     } catch (err) {
       console.error("❌ Salary fetch error:", err);
       setError(err.message || "Failed to load salary data");
@@ -1046,7 +1047,7 @@ export default function EmployeeDashboard() {
       const salaryRes = await fetch(
         `${BASE_URL}/api/attendancesummary/getsalaries?month=${month}`
       );
-      
+
       if (!salaryRes.ok) {
         throw new Error(`Failed to fetch salary data: ${salaryRes.status}`);
       }
@@ -1086,11 +1087,11 @@ export default function EmployeeDashboard() {
         const summaryRes = await fetch(
           `${BASE_URL}/api/attendancesummary/get?month=${month}`
         );
-        
+
         if (summaryRes.ok) {
           const summaryData = await summaryRes.json();
           const summary = summaryData.summary || [];
-          
+
           employeeSalaryRecords = summary
             .filter(item => item.employeeId === employeeId)
             .map(item => ({
@@ -1109,10 +1110,10 @@ export default function EmployeeDashboard() {
       }
 
       console.log(`✅ ${month} Salary Records:`, employeeSalaryRecords);
-      
+
       setRecords(employeeSalaryRecords);
       setFilteredRecords(employeeSalaryRecords);
-      
+
     } catch (err) {
       console.error(`❌ ${month} Salary fetch error:`, err);
       setError(err.message || "Failed to load salary data for selected month");
@@ -1154,7 +1155,7 @@ export default function EmployeeDashboard() {
   // ✅ Filter records based on search (only for current employee)
   useEffect(() => {
     let filtered = [...records];
-    
+
     // Apply search filter
     if (searchTerm.trim() !== "") {
       filtered = filtered.filter(record => {
@@ -1167,12 +1168,12 @@ export default function EmployeeDashboard() {
         );
       });
     }
-    
+
     // Apply month filter if selected
     if (selectedMonth) {
       filtered = filtered.filter(record => record.month === selectedMonth);
     }
-    
+
     setFilteredRecords(filtered);
     setCurrentPage(1);
   }, [searchTerm, selectedMonth, records]);
@@ -1198,7 +1199,7 @@ export default function EmployeeDashboard() {
   const getPageNumbers = () => {
     const pageNumbers = [];
     const maxVisiblePages = 5;
-    
+
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i);
@@ -1206,12 +1207,12 @@ export default function EmployeeDashboard() {
     } else {
       const startPage = Math.max(1, currentPage - 2);
       const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-      
+
       for (let i = startPage; i <= endPage; i++) {
         pageNumbers.push(i);
       }
     }
-    
+
     return pageNumbers;
   };
 
@@ -1230,206 +1231,162 @@ export default function EmployeeDashboard() {
   // ✅ Calculate daily rate based on actual month days
   const calculateDailyRate = (employee) => {
     if (!employee.salaryPerMonth || employee.salaryPerMonth === 0) return 0;
-    
+
     const daysInMonth = employee.monthDays || 30;
     return (employee.salaryPerMonth / daysInMonth).toFixed(2);
   };
 
-  // ✅ Generate salary slip HTML
+  // ✅ Generate salary slip HTML (Ported from PayRoll.js)
   const generateSalarySlipHTML = (employee) => {
     const currentEmployee = getCurrentEmployee();
     const dailyRate = calculateDailyRate(employee);
     const daysInMonth = employee.monthDays || 30;
-    
+
+    // Fallback data from currentEmployee if missing in salary record
+    const joined = currentEmployee?.joinDate || currentEmployee?.joiningDate || "-";
+    const dept = currentEmployee?.department || "-";
+    const role = currentEmployee?.designation || currentEmployee?.role || "-";
+
+    // Standardize variables for the template
+    const fullWorkingDaysCount = (employee.presentDays || 0); // Assuming presentDays are full
+    const halfDaysCount = (employee.halfDays || 0);
+    const weekOffDays = (employee.weekOffs || 0);
+    const totalSalary = employee.calculatedSalary || 0;
+    const grossSalary = employee.salaryPerMonth || 0;
+
     return `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Salary Slip - ${currentEmployee?.name || employee.name}</title>
+        <meta charset="utf-8">
+        <title>Payslip - ${currentEmployee?.name || employee.name}</title>
         <style>
-          body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333; }
-          .slip-container { max-width: 800px; margin: 0 auto; border: 2px solid #3b82f6; border-radius: 10px; padding: 30px; }
-          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3b82f6; padding-bottom: 20px; }
-          .company-name { font-size: 28px; font-weight: bold; color: #3b82f6; margin-bottom: 5px; }
-          .slip-title { font-size: 24px; font-weight: bold; margin: 20px 0; }
-          .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
-          .detail-item { margin-bottom: 10px; }
-          .detail-label { font-weight: bold; color: #666; }
-          .salary-breakdown { margin: 30px 0; }
-          .breakdown-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-          .breakdown-table th, .breakdown-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-          .breakdown-table th { background-color: #3b82f6; color: white; }
-          .total-row { font-weight: bold; background-color: #f8fafc; }
-          .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #3b82f6; color: #666; }
-          .signature { margin-top: 50px; display: flex; justify-content: space-between; }
-          .signature-box { width: 200px; border-top: 1px solid #333; padding-top: 10px; text-align: center; }
-          .month-info { background-color: #f0f9ff; padding: 10px; border-radius: 5px; margin-bottom: 20px; }
+          @page { size: A4; margin: 0; }
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            color: #000;
+          }
+          .invoice-container { 
+            width: 100%; 
+            max-width: 210mm; 
+            margin: 0 auto; 
+            border: 1px solid #000; 
+          }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { 
+            padding: 4px 8px; 
+            border: 1px solid #000; 
+            font-size: 12px;
+            vertical-align: middle;
+          }
+          .header-cell { border: none; padding: 2px 2px; border-bottom: 1px solid #000; }
+          .section-header { 
+            background-color: #f0f0f0; 
+            font-weight: bold; 
+            text-align: center; 
+            text-transform: uppercase;
+          }
+          .amount-col { text-align: right; width: 15%; }
+          .label-col { text-align: left; width: 35%; }
+          .notes-box { 
+            margin: 10px; 
+            padding: 5px; 
+            border: 1px dashed #666; 
+            font-size: 11px;
+            background-color: #fafafa;
+          }
         </style>
       </head>
       <body>
-        <div class="slip-container">
-          <div class="header">
-            <div class="company-name">TECH SOLUTIONS LTD</div>
-            <div>123 Tech Park, Innovation City, IC 12345</div>
-            <div>Phone: (123) 456-7890 | Email: hr@techsolutions.com</div>
-          </div>
+        <div class="invoice-container">
+          <table>
+            <!-- HEADER (Compact & Professional) -->
+            <tr>
+              <td colspan="4" class="header-cell">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0px;">
+                  <div style="width: 130px; text-align: left;">
+                    <img src="${logo}" alt="Logo" style="height: 110px; width: auto; max-width: 130px; object-fit: contain; display: block;">
+                  </div>
+                  <div style="flex: 1; text-align: center; margin-right: 130px;">
+                    <h1 style="margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">Timely Health Tech Pvt Ltd</h1>
+                    <p style="margin: 0px 0 0 0; font-size: 11px; line-height: 1.1;">
+                      H. No: 1-98/9/25/p, # 301, 3rd Floor, Sri Sai Balaji Avenue,<br> 
+                      Arunodaya Colony, Madhapur, Hyderabad, TG - 500081
+                    </p>
+                  </div>
+                </div>
+                <div style="text-align: center; margin-bottom: 2px;">
+                  <span style="font-size: 18px; font-weight: bold; text-decoration: underline; text-underline-offset: 3px; display: inline-block;">PAYSLIP ${formatMonthDisplay(employee.month).toUpperCase()}</span>
+                </div>
+              </td>
+            </tr>
 
-          <div class="slip-title">SALARY SLIP</div>
+            <!-- EMPLOYEE DETAILS -->
+            <tr style="background-color: #fafafa;">
+              <td width="20%"><strong>ID</strong></td>
+              <td width="30%">${employee.employeeId}</td>
+              <td width="20%"><strong>Joined</strong></td>
+              <td width="30%">${joined ? new Date(joined).toLocaleDateString() : '-'}</td>
+            </tr>
+            <tr>
+              <td><strong>Name</strong></td>
+              <td>${currentEmployee?.name || employee.name}</td>
+              <td><strong>Role</strong></td>
+              <td>${role}</td>
+            </tr>
+            <tr style="background-color: #fafafa;">
+              <td><strong>Dept</strong></td>
+              <td>${dept}</td>
+              <td><strong>Month</strong></td>
+              <td>${formatMonthDisplay(employee.month)}</td>
+            </tr>
+            <tr>
+              <td><strong>Invoice Date</strong></td>
+              <td>${new Date().toLocaleDateString()}</td>
+              <td></td>
+              <td></td>
+            </tr>
+
+            <!-- EARNINGS / DEDUCTIONS -->
+            <tr class="section-header">
+              <td colspan="2">EARNINGS</td>
+              <td colspan="2">DEDUCTIONS</td>
+            </tr>
+
+            <tr>
+              <td class="label-col">Gross Salary</td>
+              <td class="amount-col">₹${Math.round(grossSalary).toFixed(2)}</td>
+              <td class="label-col">Unpaid Leaves</td>
+              <td class="amount-col" style="color:red;">${employee.totalLeaves || 0} Days</td>
+            </tr>
+            
+            <tr>
+              <td class="label-col">Working Days (Full)</td>
+              <td class="amount-col">${fullWorkingDaysCount}</td>
+              <td class="label-col">Half Days</td>
+              <td class="amount-col">${halfDaysCount}</td>
+            </tr>
+
+            <tr>
+              <td class="label-col">Week Off Days</td>
+              <td class="amount-col">${weekOffDays}</td>
+              <td class="label-col">PF / Other</td>
+              <td class="amount-col">₹0.00</td>
+            </tr>
+
+            <!-- TOTALS -->
+            <tr style="font-weight: bold; background-color: #f0f0f0;">
+              <td class="label-col">Total Earnings</td>
+              <td class="amount-col">₹${Math.round(totalSalary).toFixed(2)}</td>
+              <td class="label-col">Net Pay</td>
+              <td class="amount-col">₹${Math.round(totalSalary).toFixed(2)}</td>
+            </tr>
+          </table>
           
-          <div class="month-info">
-            <p><strong>Month:</strong> ${employee.monthFormatted || formatMonthDisplay(employee.month)} | <strong>Days in Month:</strong> ${daysInMonth}</p>
-          </div>
-
-          <div class="details-grid">
-            <div>
-              <div class="detail-item">
-                <span class="detail-label">Employee ID:</span> ${currentEmployee?.employeeId || employee.employeeId}
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Employee Name:</span> ${currentEmployee?.name || employee.name}
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Month:</span> ${employee.monthFormatted || formatMonthDisplay(employee.month)}
-              </div>
-            </div>
-            <div>
-              <div class="detail-item">
-                <span class="detail-label">Issue Date:</span> ${new Date().toLocaleDateString()}
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Slip No:</span> SLIP-${currentEmployee?.employeeId || employee.employeeId}-${new Date().getTime()}
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Days in Month:</span> ${daysInMonth}
-              </div>
-            </div>
-          </div>
-
-          <div class="salary-breakdown">
-            <h3>Salary Breakdown - ${employee.monthFormatted || formatMonthDisplay(employee.month)}</h3>
-            <table class="breakdown-table">
-              <thead>
-                <tr>
-                  <th>Particulars</th>
-                  <th>Details</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Monthly Salary</td>
-                  <td>-</td>
-                  <td>₹${employee.salaryPerMonth || 0}</td>
-                </tr>
-                <tr>
-                  <td>Daily Rate</td>
-                  <td>${daysInMonth} days in month</td>
-                  <td>₹${dailyRate}/day</td>
-                </tr>
-                <tr>
-                  <td>Present Days</td>
-                  <td>${employee.presentDays || 0} days</td>
-                  <td>₹${Math.round((employee.presentDays || 0) * dailyRate)}</td>
-                </tr>
-                ${(employee.halfDays || 0) > 0 ? `
-                <tr>
-                  <td>Half Days (0.5 day each)</td>
-                  <td>${employee.halfDays || 0} days</td>
-                  <td>₹${Math.round((employee.halfDays || 0) * (dailyRate / 2))}</td>
-                </tr>
-                ` : ''}
-                ${(employee.weekOffs || 0) > 0 ? `
-                <tr>
-                  <td>WeekOff Days (Paid)</td>
-                  <td>${employee.weekOffs || 0} days</td>
-                  <td>₹${Math.round((employee.weekOffs || 0) * dailyRate)}</td>
-                </tr>
-                ` : ''}
-                <tr>
-                  <td>Working Days Total</td>
-                  <td>${employee.workingDays || 0} days</td>
-                  <td>-</td>
-                </tr>
-                ${(employee.lateDays || 0) > 0 ? `
-                <tr>
-                  <td>Late Days</td>
-                  <td>${employee.lateDays || 0} days</td>
-                  <td>-</td>
-                </tr>
-                ` : ''}
-                ${(employee.totalLeaves || 0) > 0 ? `
-                <tr>
-                  <td>Total Leaves</td>
-                  <td>${employee.totalLeaves || 0} days</td>
-                  <td>-</td>
-                </tr>
-                ` : ''}
-                <tr class="total-row">
-                  <td colspan="2"><strong>Final Salary Payable</strong></td>
-                  <td><strong>₹${employee.calculatedSalary || 0}</strong></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="salary-breakdown">
-            <h3>Salary Summary</h3>
-            <table class="breakdown-table">
-              <thead>
-                <tr>
-                  <th>Particulars</th>
-                  <th>Details</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Month</td>
-                  <td>${employee.monthFormatted || formatMonthDisplay(employee.month)}</td>
-                </tr>
-                <tr>
-                  <td>Days in Month</td>
-                  <td>${daysInMonth}</td>
-                </tr>
-                <tr>
-                  <td>Monthly Salary</td>
-                  <td>₹${employee.salaryPerMonth || 0}</td>
-                </tr>
-                <tr>
-                  <td>Daily Rate</td>
-                  <td>₹${dailyRate}/day</td>
-                </tr>
-                <tr>
-                  <td>Effective Working Days</td>
-                  <td>${employee.workingDays || 0}</td>
-                </tr>
-                <tr>
-                  <td>WeekOff Days</td>
-                  <td>${employee.weekOffs || 0}</td>
-                </tr>
-                <tr>
-                  <td>Total Leaves</td>
-                  <td>${employee.totalLeaves || 0}</td>
-                </tr>
-                <tr class="total-row">
-                  <td><strong>Final Salary</strong></td>
-                  <td><strong>₹${employee.calculatedSalary || 0}</strong></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="signature">
-            <div class="signature-box">
-              Employee Signature
-            </div>
-            <div class="signature-box">
-              Authorized Signature
-            </div>
-          </div>
-
-          <div class="footer">
-            This is a computer generated slip and does not require signature.<br>
-            <small>Calculated based on ${daysInMonth} days in ${employee.monthFormatted || formatMonthDisplay(employee.month)}</small>
+          <div style="text-align: center; font-size: 10px; margin-top: 10px;">
+            This is a computer-generated document.
           </div>
         </div>
       </body>
@@ -1462,7 +1419,7 @@ export default function EmployeeDashboard() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="p-4 text-red-600 bg-red-100 rounded-lg">
           <p className="font-semibold">Error: {error}</p>
-          <button 
+          <button
             onClick={() => fetchAllMonthsData()}
             className="px-4 py-2 mt-2 text-white bg-blue-600 rounded hover:bg-blue-700"
           >
@@ -1476,20 +1433,20 @@ export default function EmployeeDashboard() {
   return (
     <div className="min-h-screen p-6 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="mx-auto max-w-7xl">
-        
+
         {/* Header Section */}
-        <div className="mb-8">
+        {/* <div className="mb-8"> */}
           {/* <button
             onClick={() => navigate("/employeedashboard")}
             className="flex items-center gap-2 px-4 py-2 mb-4 text-white transition bg-gray-700 rounded-lg hover:bg-gray-800"
           >
             <ArrowLeft size={18} /> Back to Dashboard
           </button> */}
-          <h1 className="mb-2 text-3xl font-bold text-gray-800">
+          {/* <h1 className="mb-2 text-3xl font-bold text-gray-800">
             My Salary History - {currentEmployee?.name || 'Employee'}
-          </h1>
-          <p className="text-gray-600">View your salary details and download salary slips</p>
-          <div className="flex items-center mt-2">
+          </h1> */}
+          {/* <p className="text-gray-600">View your salary details and download salary slips</p> */}
+          {/* <div className="flex items-center mt-2">
             {selectedMonth ? (
               <span className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-full">
                 Month: {formatMonthDisplay(selectedMonth)}
@@ -1503,7 +1460,7 @@ export default function EmployeeDashboard() {
               Showing {filteredRecords.length} salary records
             </span>
           </div>
-        </div>
+        </div> */}
 
         {/* Search and Filter Section */}
         <div className="p-6 mb-6 bg-white border border-blue-200 shadow-lg rounded-2xl">
@@ -1535,30 +1492,28 @@ export default function EmployeeDashboard() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={handleClearFilter}
-                  className={`px-4 py-2 rounded-lg border ${
-                    !selectedMonth 
-                      ? 'bg-blue-600 text-white border-blue-600' 
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
-                  }`}
+                  className={`px-4 py-2 rounded-lg border ${!selectedMonth
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                    }`}
                 >
                   All Months
                 </button>
-                
+
                 {/* Last 3 months quick buttons */}
                 {last12Months.slice(0, 3).map((month, index) => (
                   <button
                     key={index}
                     onClick={() => handleQuickMonthSelect(month.value)}
-                    className={`px-4 py-2 rounded-lg border ${
-                      selectedMonth === month.value
-                        ? 'bg-green-600 text-white border-green-600'
-                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
-                    }`}
+                    className={`px-4 py-2 rounded-lg border ${selectedMonth === month.value
+                      ? 'bg-green-600 text-white border-green-600'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                      }`}
                   >
                     {month.display}
                   </button>
                 ))}
-                
+
                 {/* Calendar Month Picker */}
                 <div className="relative">
                   <button
@@ -1568,7 +1523,7 @@ export default function EmployeeDashboard() {
                     <Calendar size={18} />
                     Select Month
                   </button>
-                  
+
                   {showMonthPicker && (
                     <div className="absolute left-0 z-10 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg">
                       <input
@@ -1595,7 +1550,7 @@ export default function EmployeeDashboard() {
                     </button>
                   </div>
                 )}
-                
+
                 {/* Refresh Button */}
                 <button
                   onClick={() => {
@@ -1688,7 +1643,7 @@ export default function EmployeeDashboard() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Average Monthly Salary</p>
                 <p className="text-2xl font-bold text-gray-800">
-                  ₹{filteredRecords.length > 0 
+                  ₹{filteredRecords.length > 0
                     ? Math.round(filteredRecords.reduce((sum, emp) => sum + (emp.calculatedSalary || 0), 0) / filteredRecords.length)
                     : 0}
                 </p>
@@ -1731,11 +1686,11 @@ export default function EmployeeDashboard() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <p className="text-lg font-medium">
-                          {selectedMonth 
+                          {selectedMonth
                             ? `No salary record found for ${formatMonthDisplay(selectedMonth)}`
                             : searchTerm
-                            ? 'No records match your search'
-                            : 'No salary records found for you'
+                              ? 'No records match your search'
+                              : 'No salary records found for you'
                           }
                         </p>
                         <p className="text-sm">Contact HR if you believe this is an error</p>
@@ -1753,13 +1708,12 @@ export default function EmployeeDashboard() {
                 ) : (
                   currentRecords.map((emp, index) => {
                     const dailyRate = calculateDailyRate(emp);
-                    
+
                     return (
-                      <tr 
-                        key={index} 
-                        className={`hover:bg-blue-50 transition duration-150 ${
-                          index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                        }`}
+                      <tr
+                        key={index}
+                        className={`hover:bg-blue-50 transition duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                          }`}
                       >
                         <td className="p-4 font-medium text-gray-900">
                           <div>
@@ -1767,44 +1721,44 @@ export default function EmployeeDashboard() {
                             <div className="text-xs text-gray-500">{emp.monthDays || 30} days in month</div>
                           </div>
                         </td>
-                        
+
                         <td className="p-4 text-center">
                           <span className="px-3 py-1 text-sm font-medium text-green-800 bg-green-100 rounded-full">
                             {emp.presentDays || 0}
                           </span>
                         </td>
-                        
+
                         <td className="p-4 text-center">
                           <span className="px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">
                             {emp.workingDays || 0}
                           </span>
                         </td>
-                        
+
                         <td className="p-4 text-center">
                           <span className="px-3 py-1 text-sm font-medium text-yellow-800 bg-yellow-100 rounded-full">
                             {emp.halfDays || 0}
                           </span>
                         </td>
-                        
+
                         <td className="p-4 text-center">
                           <span className="px-3 py-1 text-sm font-medium text-purple-800 bg-purple-100 rounded-full">
                             {emp.weekOffs || 0}
                           </span>
                         </td>
-                        
+
                         <td className="p-4 text-center">
                           <span className="px-3 py-1 text-sm font-medium text-red-800 bg-red-100 rounded-full">
                             {emp.totalLeaves || 0}
                           </span>
                         </td>
-                        
+
                         <td className="p-4 text-center">
                           <div>
                             <div className="font-semibold text-green-700">₹{emp.calculatedSalary || 0}</div>
                             <div className="text-xs text-gray-500">₹{dailyRate}/day</div>
                           </div>
                         </td>
-                        
+
                         <td className="p-4 text-center">
                           <div className="flex justify-center space-x-2">
                             <button
@@ -1814,7 +1768,7 @@ export default function EmployeeDashboard() {
                             >
                               <Eye size={16} />
                             </button>
-                            
+
                             <button
                               onClick={() => downloadSalarySlip(emp)}
                               className="p-2 text-white transition duration-200 bg-purple-500 rounded-lg hover:bg-purple-600"
@@ -1840,44 +1794,41 @@ export default function EmployeeDashboard() {
                   Showing {indexOfFirstRecord + 1} to {Math.min(indexOfLastRecord, filteredRecords.length)} of {filteredRecords.length} entries
                   {selectedMonth && ` for ${formatMonthDisplay(selectedMonth)}`}
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={handlePrevious}
                     disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-lg border ${
-                      currentPage === 1 
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
-                    }`}
+                    className={`px-4 py-2 rounded-lg border ${currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                      }`}
                   >
                     Previous
                   </button>
-                  
+
                   <div className="flex space-x-1">
                     {getPageNumbers().map(pageNumber => (
                       <button
                         key={pageNumber}
                         onClick={() => handlePageClick(pageNumber)}
-                        className={`px-4 py-2 rounded-lg border ${
-                          currentPage === pageNumber
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
-                        }`}
+                        className={`px-4 py-2 rounded-lg border ${currentPage === pageNumber
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                          }`}
                       >
                         {pageNumber}
                       </button>
                     ))}
                   </div>
-                  
+
                   <button
                     onClick={handleNext}
                     disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-lg border ${
-                      currentPage === totalPages
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
-                    }`}
+                    className={`px-4 py-2 rounded-lg border ${currentPage === totalPages
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                      }`}
                   >
                     Next
                   </button>
@@ -1896,7 +1847,7 @@ export default function EmployeeDashboard() {
               <h2 className="text-xl font-bold text-gray-800">
                 Salary Details - {selectedEmployee.monthFormatted || formatMonthDisplay(selectedEmployee.month)}
               </h2>
-              <button 
+              <button
                 onClick={handleCloseModal}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -1981,13 +1932,13 @@ export default function EmployeeDashboard() {
             </div>
 
             <div className="flex justify-end pt-4 border-t border-gray-200">
-              <button 
+              <button
                 onClick={() => downloadSalarySlip(selectedEmployee)}
                 className="px-4 py-2 mr-2 text-white transition duration-200 bg-purple-500 rounded-lg hover:bg-purple-600"
               >
                 Download Slip
               </button>
-              <button 
+              <button
                 onClick={handleCloseModal}
                 className="px-6 py-2 text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600"
               >
