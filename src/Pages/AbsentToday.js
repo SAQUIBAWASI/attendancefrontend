@@ -16,11 +16,11 @@ const AbsentToday = () => {
     setLoading(true);
 
     // Fetch all employees
-    const empResp = await axios.get("https://api.timelyhealth.in//api/employees/get-employees");
+    const empResp = await axios.get("http://localhost:5000/api/employees/get-employees");
     const employees = empResp.data;
 
     // Fetch today’s attendance
-    const attResp = await axios.get("https://api.timelyhealth.in//api/attendance/today");
+    const attResp = await axios.get("http://localhost:5000/api/attendance/today");
     const attendanceData = attResp.data;
     const attendance = attendanceData.records || [];
 
@@ -63,15 +63,15 @@ const AbsentToday = () => {
 };
 
   if (loading)
-    return <p className="text-center mt-6 text-gray-600">Loading absent employees...</p>;
+    return <p className="text-center mt-6 text-gray-600">Loading Absent Employees Today ({today})...</p>;
   if (error)
     return <p className="text-center mt-6 text-red-600">{error}</p>;
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-md mt-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
+      {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">
         Absent Employees Today ({today})
-      </h2>
+      </h2> */}
 
       {absentEmployees.length === 0 ? (
         <p className="text-center text-green-600 font-semibold">

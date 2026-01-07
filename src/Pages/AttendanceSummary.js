@@ -4430,7 +4430,7 @@
 
 
 //   // ✅ Initialize on component mount
- 
+
 //   const downloadCombinedExcel = () => {
 //   if (employeeSummary.length === 0) {
 //     alert("No summary data available");
@@ -4516,8 +4516,8 @@
 //   saveAs(blob, `Attendance_Report_All_Employees.xlsx`);
 // };
 
- 
- 
+
+
 //   useEffect(() => {
 //     fetchAllData();
 
@@ -5171,22 +5171,22 @@
 //   // ✅ Fix wrong summary data in frontend - UPDATED VERSION
 //   const fixSummaryDataInFrontend = (summary, month) => {
 //     if (!summary.length || !month) return summary;
-    
+
 //     const today = new Date();
 //     const currentYear = today.getFullYear();
 //     const currentMonthNum = today.getMonth() + 1;
 //     const currentDay = today.getDate();
-    
+
 //     const [selectedYear, selectedMonthNum] = month.split('-').map(Number);
-    
+
 //     // 🚨 IMPORTANT: Check if selected month is FUTURE month
 //     const isFutureMonth = selectedYear > currentYear || 
 //       (selectedYear === currentYear && selectedMonthNum > currentMonthNum);
-    
+
 //     // 🔥 FIX FOR FUTURE MONTHS: All values should be 0
 //     if (isFutureMonth) {
 //       console.log(`🔧 Future month detected (${month}), resetting all data to 0`);
-      
+
 //       return summary.map(emp => ({
 //         ...emp,
 //         presentDays: 0,
@@ -5198,13 +5198,13 @@
 //         totalWorkingDays: 0
 //       }));
 //     }
-    
+
 //     // Only fix if current month
 //     const isCurrentMonth = selectedYear === currentYear && selectedMonthNum === currentMonthNum;
-    
+
 //     if (isCurrentMonth) {
 //       console.log(`🔧 Frontend auto-correcting ${month} data to max ${currentDay} days`);
-      
+
 //       return summary.map(emp => {
 //         // Check if data needs correction
 //         const needsCorrection = 
@@ -5212,11 +5212,11 @@
 //           emp.lateDays > currentDay ||
 //           emp.onsiteDays > currentDay ||
 //           emp.totalWorkingDays > currentDay;
-        
+
 //         if (!needsCorrection) {
 //           return emp;
 //         }
-        
+
 //         // Correct the data
 //         const correctedPresent = Math.min(emp.presentDays, currentDay);
 //         const correctedLate = Math.min(emp.lateDays, currentDay);
@@ -5224,9 +5224,9 @@
 //         const correctedHalf = Math.min(emp.halfDayWorking, currentDay);
 //         const correctedFullLeave = Math.min(emp.fullDayNotWorking, currentDay);
 //         const correctedTotal = correctedPresent + (correctedHalf * 0.5);
-        
+
 //         console.log(`🔧 ${emp.employeeId}: present ${emp.presentDays} → ${correctedPresent}, total ${emp.totalWorkingDays} → ${correctedTotal}`);
-        
+
 //         return {
 //           ...emp,
 //           presentDays: correctedPresent,
@@ -5238,7 +5238,7 @@
 //         };
 //       });
 //     }
-    
+
 //     // For past months, return as-is
 //     return summary;
 //   };
@@ -5282,7 +5282,7 @@
 //   const calculateSummaryFromBackend = async () => {
 //     try {
 //       console.log("📊 Fetching summary for month:", selectedMonth);
-      
+
 //       const response = await fetch(`${BASE_URL}/api/attendancesummary/calculate`, {
 //         method: "POST",
 //         headers: {
@@ -5302,15 +5302,15 @@
 //           count: result.summary?.length,
 //           sample: result.summary?.[0]
 //         });
-        
+
 //         // ✅ CRITICAL FIX: Apply frontend correction
 //         const correctedSummary = fixSummaryDataInFrontend(result.summary, selectedMonth);
-        
+
 //         console.log("✅ Final corrected summary:", {
 //           count: correctedSummary.length,
 //           sample: correctedSummary?.[0]
 //         });
-        
+
 //         setEmployeeSummary(correctedSummary);
 //         previousSummaryRef.current = JSON.parse(JSON.stringify(correctedSummary));
 //       } else {
@@ -5328,11 +5328,11 @@
 //       alert("Please select a month first");
 //       return;
 //     }
-    
+
 //     try {
 //       setLoading(true);
 //       showSaveStatus("🔧 Fixing wrong data...");
-      
+
 //       const response = await fetch(`${BASE_URL}/api/attendancesummary/fix-summary-data`, {
 //         method: "POST",
 //         headers: { 
@@ -5342,9 +5342,9 @@
 //           month: selectedMonth 
 //         }),
 //       });
-      
+
 //       const result = await response.json();
-      
+
 //       if (result.success) {
 //         showSaveStatus(`✅ Fixed ${result.fixedCount} records for ${selectedMonth}`);
 //         // Refresh data
@@ -5696,7 +5696,7 @@
 //     const from = new Date(fromDate);
 //     const to = new Date(toDate);
 //     to.setHours(23, 59, 59, 999);
-    
+
 //     filteredDetails = filteredDetails.filter(r => {
 //       if (!r.checkInTime) return false;
 //       const recordDate = new Date(r.checkInTime);
@@ -5737,7 +5737,7 @@
 
 //   uniqueEmployees.forEach(empId => {
 //     const empRecords = filteredDetails.filter(rec => rec.employeeId === empId);
-    
+
 //     // ✅ SORT RECORDS BY DATE IN ASCENDING ORDER (1 Nov to 21 Nov)
 //     const sortedEmpRecords = empRecords.sort((a, b) => {
 //       const dateA = new Date(a.checkInTime);
@@ -5855,26 +5855,26 @@
 //       console.log("🔍 CURRENT SUMMARY DEBUG:");
 //       console.log("Selected Month:", selectedMonth);
 //       console.log("Total Employees:", employeeSummary.length);
-      
+
 //       const today = new Date();
 //       const currentDay = today.getDate();
 //       const currentYear = today.getFullYear();
 //       const currentMonthNum = today.getMonth() + 1;
 //       const [selectedYear, selectedMonthNum] = selectedMonth.split('-').map(Number);
-      
+
 //       // Check if future month
 //       const isFutureMonth = selectedYear > currentYear || 
 //         (selectedYear === currentYear && selectedMonthNum > currentMonthNum);
-      
+
 //       if (isFutureMonth) {
 //         console.log(`⚠️ FUTURE MONTH DETECTED: ${selectedMonth}`);
 //         console.log(`All values should be 0`);
-        
+
 //         // Check if any employee has non-zero values
 //         const employeesWithData = employeeSummary.filter(emp => 
 //           emp.presentDays > 0 || emp.totalWorkingDays > 0
 //         );
-        
+
 //         if (employeesWithData.length > 0) {
 //           console.log(`❌ BUG FOUND: ${employeesWithData.length} employees have data in future month`);
 //           employeesWithData.slice(0, 3).forEach(emp => {
@@ -5884,7 +5884,7 @@
 //           console.log(`✅ Good: All employees have 0 values`);
 //         }
 //       }
-      
+
 //       // Show first 3 employees
 //       employeeSummary.slice(0, 3).forEach((emp, index) => {
 //         console.log(`Employee ${index + 1}:`, {
@@ -6047,7 +6047,7 @@
 // </div>
 
 
-       
+
 
 //         {/* Filter Status
 //         <div className="p-3 mb-6 text-sm text-blue-800 bg-blue-100 border border-blue-300 rounded-lg">
@@ -6064,7 +6064,7 @@
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attendance Summary ({employeeSummary.length} employees)
 //             </h2>
-            
+
 //             <button
 //               onClick={downloadCombinedExcel}
 //               className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
@@ -6429,10 +6429,10 @@ const BASE_URL = "http://localhost:5000";
 
 export default function AttendanceSummary() {
   const [editedRows, setEditedRows] = useState({});
-  
+
   const handleHoursChange = (index, value) => {
     const numericValue = parseFloat(value) || 0;
-    
+
     setEditedRows(prev => ({
       ...prev,
       [index]: {
@@ -6476,37 +6476,37 @@ export default function AttendanceSummary() {
 
     try {
       const result = await updateAttendanceRecord(
-        rec._id, 
-        edited?.hours || rec.totalHours, 
-        rec.region || "", 
+        rec._id,
+        edited?.hours || rec.totalHours,
+        rec.region || "",
         edited?.comment || rec.comment || "",
         edited?.reason || rec.reason || ""
       );
-      
+
       if (result.success) {
         // ✅ Local state update
         const updatedDetails = employeeDetails.map((detail, idx) =>
           idx === index
             ? {
-                ...detail,
-                totalHours: edited?.hours || rec.totalHours,
-                comment: edited?.comment || rec.comment,
-                reason: edited?.reason || rec.reason
-              }
+              ...detail,
+              totalHours: edited?.hours || rec.totalHours,
+              comment: edited?.comment || rec.comment,
+              reason: edited?.reason || rec.reason
+            }
             : detail
         );
-        
+
         setEmployeeDetails(updatedDetails);
-        
+
         // ✅ EditedRows से remove करें
         setEditedRows(prev => {
           const newEditedRows = { ...prev };
           delete newEditedRows[index];
           return newEditedRows;
         });
-        
+
         alert("Attendance updated successfully");
-        
+
         // ✅ Summary refresh करें
         await calculateSummaryFromBackend();
       } else {
@@ -6557,22 +6557,22 @@ export default function AttendanceSummary() {
   // ✅ Fix wrong summary data in frontend - UPDATED VERSION
   const fixSummaryDataInFrontend = (summary, month) => {
     if (!summary.length || !month) return summary;
-    
+
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonthNum = today.getMonth() + 1;
     const currentDay = today.getDate();
-    
+
     const [selectedYear, selectedMonthNum] = month.split('-').map(Number);
-    
+
     // 🚨 IMPORTANT: Check if selected month is FUTURE month
-    const isFutureMonth = selectedYear > currentYear || 
+    const isFutureMonth = selectedYear > currentYear ||
       (selectedYear === currentYear && selectedMonthNum > currentMonthNum);
-    
+
     // 🔥 FIX FOR FUTURE MONTHS: All values should be 0
     if (isFutureMonth) {
       console.log(`🔧 Future month detected (${month}), resetting all data to 0`);
-      
+
       return summary.map(emp => ({
         ...emp,
         presentDays: 0,
@@ -6584,25 +6584,25 @@ export default function AttendanceSummary() {
         totalWorkingDays: 0
       }));
     }
-    
+
     // Only fix if current month
     const isCurrentMonth = selectedYear === currentYear && selectedMonthNum === currentMonthNum;
-    
+
     if (isCurrentMonth) {
       console.log(`🔧 Frontend auto-correcting ${month} data to max ${currentDay} days`);
-      
+
       return summary.map(emp => {
         // Check if data needs correction
-        const needsCorrection = 
-          emp.presentDays > currentDay || 
+        const needsCorrection =
+          emp.presentDays > currentDay ||
           emp.lateDays > currentDay ||
           emp.onsiteDays > currentDay ||
           emp.totalWorkingDays > currentDay;
-        
+
         if (!needsCorrection) {
           return emp;
         }
-        
+
         // Correct the data
         const correctedPresent = Math.min(emp.presentDays, currentDay);
         const correctedLate = Math.min(emp.lateDays, currentDay);
@@ -6610,9 +6610,9 @@ export default function AttendanceSummary() {
         const correctedHalf = Math.min(emp.halfDayWorking, currentDay);
         const correctedFullLeave = Math.min(emp.fullDayNotWorking, currentDay);
         const correctedTotal = correctedPresent + (correctedHalf * 0.5);
-        
+
         console.log(`🔧 ${emp.employeeId}: present ${emp.presentDays} → ${correctedPresent}, total ${emp.totalWorkingDays} → ${correctedTotal}`);
-        
+
         return {
           ...emp,
           presentDays: correctedPresent,
@@ -6624,7 +6624,7 @@ export default function AttendanceSummary() {
         };
       });
     }
-    
+
     // For past months, return as-is
     return summary;
   };
@@ -6668,7 +6668,7 @@ export default function AttendanceSummary() {
   const calculateSummaryFromBackend = async () => {
     try {
       console.log("📊 Fetching summary for month:", selectedMonth);
-      
+
       const response = await fetch(`${BASE_URL}/api/attendancesummary/calculate`, {
         method: "POST",
         headers: {
@@ -6688,15 +6688,15 @@ export default function AttendanceSummary() {
           count: result.summary?.length,
           sample: result.summary?.[0]
         });
-        
+
         // ✅ CRITICAL FIX: Apply frontend correction
         const correctedSummary = fixSummaryDataInFrontend(result.summary, selectedMonth);
-        
+
         console.log("✅ Final corrected summary:", {
           count: correctedSummary.length,
           sample: correctedSummary?.[0]
         });
-        
+
         setEmployeeSummary(correctedSummary);
         previousSummaryRef.current = JSON.parse(JSON.stringify(correctedSummary));
       } else {
@@ -6714,23 +6714,23 @@ export default function AttendanceSummary() {
       alert("Please select a month first");
       return;
     }
-    
+
     try {
       setLoading(true);
       showSaveStatus("🔧 Fixing wrong data...");
-      
+
       const response = await fetch(`${BASE_URL}/api/attendancesummary/fix-summary-data`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json" 
+        headers: {
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ 
-          month: selectedMonth 
+        body: JSON.stringify({
+          month: selectedMonth
         }),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         showSaveStatus(`✅ Fixed ${result.fixedCount} records for ${selectedMonth}`);
         // Refresh data
@@ -6897,12 +6897,12 @@ export default function AttendanceSummary() {
 
       if (result.success) {
         // ✅ Data को date के हिसाब से sort करें (आरोही क्रम)
-        const sortedDetails = result.details.sort((a, b) => 
+        const sortedDetails = result.details.sort((a, b) =>
           new Date(a.checkInTime) - new Date(b.checkInTime)
         );
-        
+
         setEmployeeDetails(sortedDetails);
-        
+
         // ✅ Edited rows में existing data pre-fill करें
         const initialEditedRows = {};
         sortedDetails.forEach((detail, index) => {
@@ -6915,7 +6915,7 @@ export default function AttendanceSummary() {
             };
           }
         });
-        
+
         setEditedRows(initialEditedRows);
       } else {
         throw new Error(result.message || "Failed to fetch employee details");
@@ -6994,7 +6994,7 @@ export default function AttendanceSummary() {
     const h = Number(hours) || 0;
     return h > STANDARD_HOURS ? h - STANDARD_HOURS : 0;
   };
-  
+
   // ✅ TOTAL OT for employee (Attendance Summary)
   const calculateEmployeeOT = (employeeId) => {
     let totalOT = 0;
@@ -7098,7 +7098,7 @@ export default function AttendanceSummary() {
       const from = new Date(fromDate);
       const to = new Date(toDate);
       to.setHours(23, 59, 59, 999);
-      
+
       filteredDetails = filteredDetails.filter(r => {
         if (!r.checkInTime) return false;
         const recordDate = new Date(r.checkInTime);
@@ -7117,7 +7117,7 @@ export default function AttendanceSummary() {
 
     // Filter only employees that are in the summary
     const summaryEmployeeIds = employeeSummary.map(emp => emp.employeeId);
-    filteredDetails = filteredDetails.filter(r => 
+    filteredDetails = filteredDetails.filter(r =>
       summaryEmployeeIds.includes(r.employeeId)
     );
 
@@ -7139,7 +7139,7 @@ export default function AttendanceSummary() {
 
     uniqueEmployees.forEach(empId => {
       const empRecords = filteredDetails.filter(rec => rec.employeeId === empId);
-      
+
       // ✅ SORT RECORDS BY DATE IN ASCENDING ORDER (1 Nov to 21 Nov)
       const sortedEmpRecords = empRecords.sort((a, b) => {
         const dateA = new Date(a.checkInTime);
@@ -7256,26 +7256,26 @@ export default function AttendanceSummary() {
       console.log("🔍 CURRENT SUMMARY DEBUG:");
       console.log("Selected Month:", selectedMonth);
       console.log("Total Employees:", employeeSummary.length);
-      
+
       const today = new Date();
       const currentDay = today.getDate();
       const currentYear = today.getFullYear();
       const currentMonthNum = today.getMonth() + 1;
       const [selectedYear, selectedMonthNum] = selectedMonth.split('-').map(Number);
-      
+
       // Check if future month
-      const isFutureMonth = selectedYear > currentYear || 
+      const isFutureMonth = selectedYear > currentYear ||
         (selectedYear === currentYear && selectedMonthNum > currentMonthNum);
-      
+
       if (isFutureMonth) {
         console.log(`⚠️ FUTURE MONTH DETECTED: ${selectedMonth}`);
         console.log(`All values should be 0`);
-        
+
         // Check if any employee has non-zero values
-        const employeesWithData = employeeSummary.filter(emp => 
+        const employeesWithData = employeeSummary.filter(emp =>
           emp.presentDays > 0 || emp.totalWorkingDays > 0
         );
-        
+
         if (employeesWithData.length > 0) {
           console.log(`❌ BUG FOUND: ${employeesWithData.length} employees have data in future month`);
           employeesWithData.slice(0, 3).forEach(emp => {
@@ -7285,7 +7285,7 @@ export default function AttendanceSummary() {
           console.log(`✅ Good: All employees have 0 values`);
         }
       }
-      
+
       // Show first 3 employees
       employeeSummary.slice(0, 3).forEach((emp, index) => {
         console.log(`Employee ${index + 1}:`, {
@@ -7349,95 +7349,94 @@ export default function AttendanceSummary() {
         {/* Save Status Alert */}
         {saveStatus && (
           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
-              ? "bg-green-500 border-l-4 border-green-600"
-              : "bg-red-500 border-l-4 border-red-600"
+            ? "bg-green-500 border-l-4 border-green-600"
+            : "bg-red-500 border-l-4 border-red-600"
             }`}>
             {saveStatus}
           </div>
         )}
 
-        <h1 className="mb-6 text-3xl font-bold text-blue-700">
+        {/* <h1 className="mb-6 text-3xl font-bold text-blue-700">
           📊 Employee Attendance Summary
-        </h1>
+        </h1> */}
 
         {/* Working Hours Info - UPDATED CRITERIA */}
+
+
+
+
         <div className="p-4 mb-6 bg-white border border-blue-300 rounded-lg shadow-sm">
 
-          <h3 className="mb-3 font-semibold text-blue-700">
-            📋 Working Hours Criteria:
-          </h3>
+          {/* 🔽 Filters & Actions – Single Row */}
+          <div className="flex items-end gap-4 pt-3 border-t border-gray-200 flex-nowrap">
 
-          {/* Criteria */}
-          <div className="grid grid-cols-1 gap-2 mb-4 text-sm md:grid-cols-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span><strong>Full Day:</strong> &gt; {FULL_DAY_THRESHOLD} hrs</span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-              <span><strong>Half Day:</strong> {HALF_DAY_THRESHOLD} – {FULL_DAY_THRESHOLD} hrs</span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span><strong>Leave:</strong> &lt; {HALF_DAY_THRESHOLD} hrs</span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span><strong>Onsite:</strong> Marked as Onsite</span>
-            </div>
-          </div>
-
-          {/* 🔽 FILTERS (ONE ROW – SAME DIV) */}
-          <div className="flex flex-wrap items-end gap-4 pt-3 border-t">
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700">From</label>
+            <div className="flex flex-col">
+              <label className="mb-1 text-xs font-medium text-gray-600">
+                From
+              </label>
               <input
                 type="date"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="p-2 border rounded-lg"
+                className="h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700">To</label>
+            <div className="flex flex-col">
+              <label className="mb-1 text-xs font-medium text-gray-600">
+                To
+              </label>
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="p-2 border rounded-lg"
+                className="h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700">Month</label>
+            <div className="flex flex-col">
+              <label className="mb-1 text-xs font-medium text-gray-600">
+                Month
+              </label>
               <input
                 type="month"
                 value={selectedMonth}
                 onChange={handleMonthChange}
-                className="p-2 border rounded-lg"
+                className="h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
             <button
               onClick={() => handleDateRangeFilter(fromDate, toDate)}
-              className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+              className="h-9 px-4 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
             >
               Apply
             </button>
 
             <button
               onClick={clearFilters}
-              className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
+              className="h-9 px-4 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition"
             >
               Clear
             </button>
+
+            <button
+              onClick={downloadCombinedExcel}
+              className="flex items-center h-9 gap-2 px-4 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition"
+            >
+              Download
+            </button>
+
           </div>
         </div>
+
+
+
+
+
+
+
+
 
         {/* Summary Table - UPDATED COLUMN HEADERS */}
         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
@@ -7445,12 +7444,12 @@ export default function AttendanceSummary() {
             <h2 className="text-2xl font-semibold text-purple-700">
               👥 Attendance Summary ({employeeSummary.length} employees)
             </h2>
-            
+
             <button
               onClick={downloadCombinedExcel}
               className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
             >
-              ⬇ Download Attendance
+              ⬇ Download
             </button>
 
             <div className="flex flex-wrap items-center gap-4">
@@ -7478,16 +7477,16 @@ export default function AttendanceSummary() {
             <table className="w-full text-sm border">
               <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
                 <tr>
-                  <th className="px-6 py-3 text-left">Employee ID</th>
-                  <th className="px-6 py-3 text-left">Name</th>
-                  <th className="px-6 py-3">Month</th>
-                  <th className="px-6 py-3">Present</th>
-                  <th className="px-6 py-3">Late</th>
-                  <th className="px-6 py-3">Onsite</th>
-                  <th className="px-6 py-3">Half Day </th>
-                  <th className="px-6 py-3">Full Day </th>
-                  <th className="px-6 py-3">Over Time</th>
-                  <th className="px-6 py-3">Working Days</th>
+                  <th className=" py-3 text-left">Employee ID</th>
+                  <th className=" py-3 text-left">Name</th>
+                  <th className="py-3">Month</th>
+                  <th className=" py-3">Present</th>
+                  <th className=" py-3">Late</th>
+                  <th className="py-3">Onsite</th>
+                  <th className="py-3">Half Day </th>
+                  <th className=" py-3">Full Day </th>
+                  <th className=" py-3">Over Time</th>
+                  <th className=" py-3">Working Days</th>
                 </tr>
               </thead>
 
@@ -7498,13 +7497,13 @@ export default function AttendanceSummary() {
                     onClick={() => handleViewDetails(emp.employeeId)}
                     className="border-t cursor-pointer hover:bg-blue-50"
                   >
-                    <td className="px-6 py-3">{emp.employeeId}</td>
-                    <td className="px-6 py-3">{emp.name}</td>
-                    <td className="px-6 py-3 font-medium text-gray-700">{emp.month}</td>
-                    <td className="px-6 py-3 text-green-700">{emp.presentDays}</td>
-                    <td className="px-6 py-3 text-orange-700">{emp.lateDays}</td>
-                    <td className="px-6 py-3 text-blue-700">{emp.onsiteDays}</td>
-                    <td className="px-6 py-3 text-yellow-700">
+                    <td className=" py-3">{emp.employeeId}</td>
+                    <td className=" py-3">{emp.name}</td>
+                    <td className=" py-3 font-medium text-gray-700">{emp.month}</td>
+                    <td className=" py-3 text-green-700">{emp.presentDays}</td>
+                    <td className=" py-3 text-orange-700">{emp.lateDays}</td>
+                    <td className=" py-3 text-blue-700">{emp.onsiteDays}</td>
+                    <td className=" py-3 text-yellow-700">
                       {emp.halfDayWorking ?? 0}
                     </td>
 
@@ -7536,8 +7535,8 @@ export default function AttendanceSummary() {
                     onClick={handlePrevPage}
                     disabled={currentPage === 1}
                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === 1
-                        ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                        : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                      ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                      : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                       }`}
                   >
                     Previous
@@ -7548,8 +7547,8 @@ export default function AttendanceSummary() {
                       key={page}
                       onClick={() => handlePageClick(page)}
                       className={`px-3 py-1 text-sm border rounded-lg ${currentPage === page
-                          ? "text-white bg-blue-600 border-blue-600"
-                          : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                        ? "text-white bg-blue-600 border-blue-600"
+                        : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                         }`}
                     >
                       {page}
@@ -7560,8 +7559,8 @@ export default function AttendanceSummary() {
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === totalPages
-                        ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                        : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                      ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                      : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                       }`}
                   >
                     Next
@@ -7579,176 +7578,175 @@ export default function AttendanceSummary() {
         </div>
 
         {/* Details Modal - UPDATED VERSION */}
- {selectedEmployee && (() => {
+        {selectedEmployee && (() => {
 
-  // 🔹 current month default
-  const getCurrentMonth = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  };
+          // 🔹 current month default
+          const getCurrentMonth = () => {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+          };
 
-  const activeMonth = selectedMonth || getCurrentMonth();
+          const activeMonth = selectedMonth || getCurrentMonth();
 
-  // 🔹 month ke saare dates
-  const getAllDatesOfMonth = (month) => {
-    if (!month) return [];
-    const [year, m] = month.split("-");
-    const start = new Date(year, m - 1, 1);
-    const end = new Date(year, m, 0);
-    const dates = [];
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      dates.push(new Date(d));
-    }
-    return dates;
-  };
+          // 🔹 month ke saare dates
+          const getAllDatesOfMonth = (month) => {
+            if (!month) return [];
+            const [year, m] = month.split("-");
+            const start = new Date(year, m - 1, 1);
+            const end = new Date(year, m, 0);
+            const dates = [];
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+              dates.push(new Date(d));
+            }
+            return dates;
+          };
 
-  const monthDates = getAllDatesOfMonth(activeMonth);
+          const monthDates = getAllDatesOfMonth(activeMonth);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
-        {/* 🔹 HEADER */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold text-blue-700">
-            🧾 Attendance Details — {selectedEmployee}
-          </h3>
+                {/* 🔹 HEADER */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold text-blue-700">
+                    🧾 Attendance Details — {selectedEmployee}
+                  </h3>
 
-          <button
-            onClick={closeModal}
-            className="text-lg font-bold text-red-600 hover:text-red-700"
-          >
-            ✖
-          </button>
-        </div>
+                  <button
+                    onClick={closeModal}
+                    className="text-lg font-bold text-red-600 hover:text-red-700"
+                  >
+                    ✖
+                  </button>
+                </div>
 
-        {/* 🔹 SUMMARY */}
-        <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
-          <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
-            <div>
-              <span className="font-semibold text-blue-700">Employee ID:</span>
-              <span className="ml-2">{selectedEmployee}</span>
+                {/* 🔹 SUMMARY */}
+                <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
+                  <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
+                    <div>
+                      <span className="font-semibold text-blue-700">Employee ID:</span>
+                      <span className="ml-2">{selectedEmployee}</span>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-blue-700">Month:</span>
+                      <span className="ml-2">{activeMonth}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 🔹 TABLE */}
+                <table className="w-full text-sm border">
+                  <thead className="text-white bg-blue-600">
+                    <tr>
+                      <th className="px-4 py-2">Date</th>
+                      <th className="px-4 py-2">Check-In</th>
+                      <th className="px-4 py-2">Check-Out</th>
+                      <th className="px-4 py-2">Reason</th>
+                      <th className="px-4 py-2">Hours</th>
+                      <th className="px-4 py-2">Admin Comment</th>
+                      <th className="px-4 py-2">Over Time</th>
+                      <th className="px-4 py-2">Day Type</th>
+                      <th className="px-4 py-2">Action</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {monthDates.map((date) => {
+                      const dateKey = date.toISOString().slice(0, 10); // 🔑 FIX
+
+                      const rec = employeeDetails.find(r =>
+                        r.checkInTime &&
+                        new Date(r.checkInTime).toDateString() === date.toDateString()
+                      );
+
+                      const baseHours = Number(rec?.hours || rec?.totalHours || 0);
+                      const edited = editedRows[dateKey];
+                      const currentHours = edited?.hours ?? baseHours;
+                      const otHours = calculateOT(currentHours);
+
+                      return (
+                        <tr key={dateKey} className="border-t hover:bg-blue-50">
+                          <td className="px-4 py-2">
+                            {date.toLocaleDateString("en-IN")}
+                          </td>
+
+                          <td className="px-4 py-2">
+                            {rec?.checkInTime ? formatDate(rec.checkInTime) : "-"}
+                          </td>
+
+                          <td className="px-4 py-2">
+                            {rec?.checkOutTime ? formatDate(rec.checkOutTime) : "-"}
+                          </td>
+
+                          <td className="px-4 py-2">
+                            <select
+                              className="w-full px-2 py-1 border rounded"
+                              value={edited?.reason || rec?.reason || ""}
+                              onChange={e => handleReasonChange(dateKey, e.target.value)}
+                              disabled={!rec}
+                            >
+                              <option value="">Select</option>
+                              <option value="Onsite">Onsite</option>
+                              <option value="Field Work">Field Work</option>
+                              <option value="Work From Home">Work From Home</option>
+                            </select>
+                          </td>
+
+                          <td className="px-4 py-2">
+                            <input
+                              type="number"
+                              step="0.25"
+                              min="0"
+                              max="24"
+                              className="w-20 px-2 py-1 border rounded"
+                              value={rec ? currentHours : ""}
+                              onChange={e => handleHoursChange(dateKey, e.target.value)}
+                              disabled={!rec}
+                            />
+                          </td>
+
+                          <td className="px-4 py-2">
+                            <input
+                              type="text"
+                              className="w-full px-2 py-1 border rounded"
+                              placeholder="Admin comment"
+                              value={edited?.comment || rec?.comment || ""}
+                              onChange={e => handleCommentChange(dateKey, e.target.value)}
+                              disabled={!rec}
+                            />
+                          </td>
+
+                          <td className="px-4 py-2 font-semibold text-indigo-700">
+                            {rec ? otHours.toFixed(2) : "-"}
+                          </td>
+
+                          <td className="px-4 py-2">
+                            {rec ? getDayTypeBadge(currentHours) : "-"}
+                          </td>
+
+                          <td className="px-4 py-2">
+                            <button
+                              disabled={!rec || !(edited?.comment || rec?.comment)}
+                              onClick={() => handleSave(rec, dateKey)}
+                              className={`px-3 py-1 text-white rounded ${rec && (edited?.comment || rec?.comment)
+                                ? "bg-green-600 hover:bg-green-700"
+                                : "bg-gray-400 cursor-not-allowed"
+                                }`}
+                            >
+                              {rec ? (edited ? "Update" : "Save") : "-"}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+              </div>
             </div>
-            <div>
-              <span className="font-semibold text-blue-700">Month:</span>
-              <span className="ml-2">{activeMonth}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 🔹 TABLE */}
-        <table className="w-full text-sm border">
-          <thead className="text-white bg-blue-600">
-            <tr>
-              <th className="px-4 py-2">Date</th>
-              <th className="px-4 py-2">Check-In</th>
-              <th className="px-4 py-2">Check-Out</th>
-              <th className="px-4 py-2">Reason</th>
-              <th className="px-4 py-2">Hours</th>
-              <th className="px-4 py-2">Admin Comment</th>
-              <th className="px-4 py-2">Over Time</th>
-              <th className="px-4 py-2">Day Type</th>
-              <th className="px-4 py-2">Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {monthDates.map((date) => {
-              const dateKey = date.toISOString().slice(0, 10); // 🔑 FIX
-
-              const rec = employeeDetails.find(r =>
-                r.checkInTime &&
-                new Date(r.checkInTime).toDateString() === date.toDateString()
-              );
-
-              const baseHours = Number(rec?.hours || rec?.totalHours || 0);
-              const edited = editedRows[dateKey];
-              const currentHours = edited?.hours ?? baseHours;
-              const otHours = calculateOT(currentHours);
-
-              return (
-                <tr key={dateKey} className="border-t hover:bg-blue-50">
-                  <td className="px-4 py-2">
-                    {date.toLocaleDateString("en-IN")}
-                  </td>
-
-                  <td className="px-4 py-2">
-                    {rec?.checkInTime ? formatDate(rec.checkInTime) : "-"}
-                  </td>
-
-                  <td className="px-4 py-2">
-                    {rec?.checkOutTime ? formatDate(rec.checkOutTime) : "-"}
-                  </td>
-
-                  <td className="px-4 py-2">
-                    <select
-                      className="w-full px-2 py-1 border rounded"
-                      value={edited?.reason || rec?.reason || ""}
-                      onChange={e => handleReasonChange(dateKey, e.target.value)}
-                      disabled={!rec}
-                    >
-                      <option value="">Select</option>
-                      <option value="Onsite">Onsite</option>
-                      <option value="Field Work">Field Work</option>
-                      <option value="Work From Home">Work From Home</option>
-                    </select>
-                  </td>
-
-                  <td className="px-4 py-2">
-                    <input
-                      type="number"
-                      step="0.25"
-                      min="0"
-                      max="24"
-                      className="w-20 px-2 py-1 border rounded"
-                      value={rec ? currentHours : ""}
-                      onChange={e => handleHoursChange(dateKey, e.target.value)}
-                      disabled={!rec}
-                    />
-                  </td>
-
-                  <td className="px-4 py-2">
-                    <input
-                      type="text"
-                      className="w-full px-2 py-1 border rounded"
-                      placeholder="Admin comment"
-                      value={edited?.comment || rec?.comment || ""}
-                      onChange={e => handleCommentChange(dateKey, e.target.value)}
-                      disabled={!rec}
-                    />
-                  </td>
-
-                  <td className="px-4 py-2 font-semibold text-indigo-700">
-                    {rec ? otHours.toFixed(2) : "-"}
-                  </td>
-
-                  <td className="px-4 py-2">
-                    {rec ? getDayTypeBadge(currentHours) : "-"}
-                  </td>
-
-                  <td className="px-4 py-2">
-                    <button
-                      disabled={!rec || !(edited?.comment || rec?.comment)}
-                      onClick={() => handleSave(rec, dateKey)}
-                      className={`px-3 py-1 text-white rounded ${
-                        rec && (edited?.comment || rec?.comment)
-                          ? "bg-green-600 hover:bg-green-700"
-                          : "bg-gray-400 cursor-not-allowed"
-                      }`}
-                    >
-                      {rec ? (edited ? "Update" : "Save") : "-"}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-
-      </div>
-    </div>
-  );
-})()}
+          );
+        })()}
 
 
 

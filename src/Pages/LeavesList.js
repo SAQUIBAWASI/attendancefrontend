@@ -1049,25 +1049,25 @@ const LeavesList = () => {
     <div className="min-h-screen px-3 py-6 bg-gradient-to-br from-purple-50 to-blue-100">
       <div className="mx-auto max-w-9xl">
        {/* Header */}
-<div className="relative flex items-center mb-6">
+{/* <div className="relative flex items-center mb-6"> */}
   {/* Center Title */}
-  <div className="w-full text-center">
+  {/* <div className="w-full text-center">
     <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
       📋 Leave Requests
     </h1>
     <p className="text-sm text-gray-600">
       Manage and filter employee leave requests easily
     </p>
-  </div>
+  </div> */}
 
    {/* Right Button */}
-  <button
+  {/* <button
     onClick={() => navigate("/leaves-report")}
     className="absolute right-0 px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700"
   >
     📊 Leaves Report
   </button>
-</div>
+</div> */}
 
         {/* ✅ Stats */}
         <div className="grid grid-cols-2 gap-2 mb-4 sm:grid-cols-4">
@@ -1093,102 +1093,91 @@ const LeavesList = () => {
           />
         </div>
 
-        {/* ✅ Filters */}
-        <div className="p-5 mb-6 bg-white border border-gray-200 shadow-md rounded-xl">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:grid-cols-5">
-            {/* Search */}
-            <div>
-              <label className="block mb-1 text-xs font-semibold text-gray-600">
-                <FaSearch className="inline mr-1" /> Search
-              </label>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-2 text-sm border border-gray-300 rounded-md"
-                placeholder="Name / ID / Type / Reason"
-              />
-            </div>
+      
 
-            {/* Status Filter */}
-            <div>
-              <label className="block mb-1 text-xs font-semibold text-gray-600">
-                Status
-              </label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full p-2 text-sm border border-gray-300 rounded-md"
-              >
-                <option value="all">All</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
 
-            {/* Leave Type */}
-            <div>
-              <label className="block mb-1 text-xs font-semibold text-gray-600">
-                Leave Type
-              </label>
-              <select
-                value={leaveTypeFilter}
-                onChange={(e) => setLeaveTypeFilter(e.target.value)}
-                className="w-full p-2 text-sm border border-gray-300 rounded-md"
-              >
-                <option value="all">All</option>
-                {leaveTypes.map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
-              </select>
-            </div>
+        <div className="p-3 mb-3 bg-white border border-gray-200 shadow-md rounded-xl">
 
-            {/* Start Date */}
-            <div>
-              <label className="block mb-1 text-xs font-semibold text-gray-600">
-                <FaCalendarAlt className="inline mr-1" /> From
-              </label>
-              <input
-                type="date"
-                value={startDateFilter}
-                onChange={(e) => setStartDateFilter(e.target.value)}
-                className="w-full p-2 text-sm border border-gray-300 rounded-md"
-              />
-            </div>
+  {/* Filters – Single Row */}
+  <div className="flex items-end gap-10 flex-nowrap">
 
-            {/* End Date */}
-            <div>
-              <label className="block mb-1 text-xs font-semibold text-gray-600">
-                <FaCalendarAlt className="inline mr-1" /> To
-              </label>
-              <input
-                type="date"
-                value={endDateFilter}
-                onChange={(e) => setEndDateFilter(e.target.value)}
-                className="w-full p-2 text-sm border border-gray-300 rounded-md"
-              />
-            </div>
-          </div>
+    {/* Search */}
+    <div className="flex flex-col w-64">
+      <label className="mb-1 text-xs font-semibold text-gray-600">
+        <FaSearch className="inline mr-1" /> Search
+      </label>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+        placeholder="Name / ID / Type / Reason"
+      />
+    </div>
 
-          <div className="flex justify-end gap-3 mt-4">
-            <button
-              onClick={clearFilters}
-              className="px-4 py-2 text-sm text-white transition bg-gray-500 rounded-md hover:bg-gray-600"
-            >
-              Clear Filters
-            </button>
-          </div>
-        </div>
+    {/* Status */}
+    <div className="flex flex-col w-40">
+      <label className="mb-1 text-xs font-semibold text-gray-600">
+        Status
+      </label>
+      <select
+        value={statusFilter}
+        onChange={(e) => setStatusFilter(e.target.value)}
+        className="h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+      >
+        <option value="all">All</option>
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+      </select>
+    </div>
+
+    {/* From Date */}
+    <div className="flex flex-col w-40">
+      <label className="mb-1 text-xs font-semibold text-gray-600">
+        <FaCalendarAlt className="inline mr-1" /> From
+      </label>
+      <input
+        type="date"
+        value={startDateFilter}
+        onChange={(e) => setStartDateFilter(e.target.value)}
+        className="h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+      />
+    </div>
+
+    {/* To Date */}
+    <div className="flex flex-col w-40">
+      <label className="mb-1 text-xs font-semibold text-gray-600">
+        <FaCalendarAlt className="inline mr-1" /> To
+      </label>
+      <input
+        type="date"
+        value={endDateFilter}
+        onChange={(e) => setEndDateFilter(e.target.value)}
+        className="h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+      />
+    </div>
+
+    {/* Clear Button */}
+    <button
+      onClick={clearFilters}
+      className="h-9 px-5 mb-[2px] text-sm font-medium text-white bg-gray-500 rounded-md hover:bg-gray-600 transition"
+    >
+      Clear Filters
+    </button>
+
+  </div>
+</div>
+
 
         {/* ✅ Table */}
         <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
           <table className="min-w-full">
-            <thead className="text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
+            <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
               <tr>
                 <th className="px-4 py-3 rounded-tl-lg">Employee</th>
-                <th className="px-4 py-3">Leave Type</th>
-                <th className="px-4 py-3">Date Range</th>
+                {/* <th className="px-4 py-3">Leave Type</th> */}
+                <th className="px-4 py-3">Dates</th>
                 <th className="px-4 py-3">Days</th>
                 <th className="px-4 py-3">Reason</th>
                 <th className="px-4 py-3">Status</th>
@@ -1204,18 +1193,18 @@ const LeavesList = () => {
                   >
                     <td className="px-4 py-3">
                       <div className="font-semibold">{l.employeeName}</div>
-                      <div className="text-xs text-gray-500">
+                      {/* <div className="text-xs text-gray-500">
                         ID: {l.employeeId}
-                      </div>
-                      <div className="text-xs text-gray-400">
+                      </div> */}
+                      {/* <div className="text-xs text-gray-400">
                         {new Date(l.createdAt).toLocaleDateString()}
-                      </div>
+                      </div> */}
                     </td>
-                    <td className="px-4 py-3">
+                    {/* <td className="px-4 py-3">
                       <span className="px-3 py-1 text-xs text-gray-700 bg-gray-100 rounded-full">
                         {l.leaveType || "Enter Leave Type"}
                       </span>
-                    </td>
+                    </td> */}
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {new Date(l.startDate).toLocaleDateString()} <br />
                       <span className="text-xs text-gray-400">to</span> <br />

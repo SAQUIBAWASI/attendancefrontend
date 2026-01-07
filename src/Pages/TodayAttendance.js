@@ -271,14 +271,14 @@ const TodayAttendance = () => {
 
       // 1️⃣ Fetch attendance
       const attendanceResp = await axios.get(
-        "https://api.timelyhealth.in//api/attendance/today"
+        "http://localhost:5000/api/attendance/today"
       );
-
+      
       const attendance = attendanceResp.data.records || [];
 
       // 2️⃣ Fetch employee list
       const empResp = await axios.get(
-        "https://api.timelyhealth.in//api/employees/get-employees"
+        "http://localhost:5000/api/employees/get-employees"
       );
       const employees = empResp.data || [];
 
@@ -336,9 +336,9 @@ const TodayAttendance = () => {
   return (
     <div className="max-w-6xl p-6 mx-auto mt-6 bg-white rounded-lg shadow-md">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-2xl font-bold text-gray-800">
+        {/* <h3 className="text-2xl font-bold text-gray-800">
           Today's Attendance
-        </h3>
+        </h3> */}
         {/* <button
           onClick={() => navigate("/attendance-records")}
           className="px-4 py-2 text-sm text-white transition bg-blue-600 rounded hover:bg-blue-700"

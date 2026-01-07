@@ -194,18 +194,9 @@ export default function AttendanceList() {
   return (
     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="mx-auto max-w-9xl">
-        {/* Header Section */}
-        <div className="mb-8 text-center">
-          <h1 className="mb-3 text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-            📊 All Employee Attendance
-          </h1>
-          <p className="text-lg text-gray-600">
-            Monitor and manage employee attendance records
-          </p>
-        </div>
-
+  
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 gap-4 mb-8 md:grid-cols-4">
+        {/* <div className="grid grid-cols-1 gap-4 mb-8 md:grid-cols-4">
           <div className="p-6 text-center bg-white border border-blue-200 shadow-lg rounded-2xl">
             <div className="text-3xl font-bold text-blue-600">{records.length}</div>
             <div className="font-semibold text-blue-800">Total Records</div>
@@ -228,10 +219,48 @@ export default function AttendanceList() {
             </div>
             <div className="font-semibold text-purple-800">Filtered Records</div>
           </div>
-        </div>
+        </div> */}
+        <div className="grid grid-cols-2 gap-2 mb-4 md:grid-cols-4">
+  <div className="p-3 text-center bg-white border rounded-lg shadow-sm">
+    <div className="text-lg font-semibold text-blue-600">
+      {records.length}
+    </div>
+    <div className="text-[11px] text-gray-500">
+      Total
+    </div>
+  </div>
+
+  <div className="p-3 text-center bg-white border rounded-lg shadow-sm">
+    <div className="text-lg font-semibold text-green-600">
+      {records.filter(r => r.onsite).length}
+    </div>
+    <div className="text-[11px] text-gray-500">
+      Onsite
+    </div>
+  </div>
+
+  <div className="p-3 text-center bg-white border rounded-lg shadow-sm">
+    <div className="text-lg font-semibold text-orange-600">
+      {records.filter(r => r.status === "checked-in").length}
+    </div>
+    <div className="text-[11px] text-gray-500">
+      Checked In
+    </div>
+  </div>
+
+  <div className="p-3 text-center bg-white border rounded-lg shadow-sm">
+    <div className="text-lg font-semibold text-purple-600">
+      {filteredRecords.length}
+    </div>
+    <div className="text-[11px] text-gray-500">
+      Filtered
+    </div>
+  </div>
+</div>
+
 
         {/* Filters Section */}
-        <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
+        {/* <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
           <div className="flex flex-col items-start justify-between gap-6 mb-4 lg:flex-row lg:items-center">
             <div>
               <h3 className="mb-2 text-xl font-semibold text-gray-800">🔍 Filter Records</h3>
@@ -293,7 +322,75 @@ export default function AttendanceList() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
+        
+        <div className="px-4 py-3 mb-4 bg-white border rounded-lg shadow-sm">
+  <div className="grid items-end grid-cols-1 gap-3 sm:grid-cols-5">
+    
+    {/* Title */}
+    <div className="sm:col-span-2">
+      <h3 className="text-sm font-semibold text-gray-800">
+        Filter Records
+      </h3>
+      <p className="text-xs text-gray-500">
+        Filter by date or month
+      </p>
+    </div>
+
+    {/* Date */}
+    <div>
+      <label className="block mb-1 text-[11px] text-gray-600">
+        Date
+      </label>
+      <input
+        type="date"
+        value={selectedDate}
+        onChange={handleDateChange}
+        className="w-full px-2 py-1.5 text-xs border rounded-md"
+      />
+    </div>
+
+    {/* Month */}
+    <div>
+      <label className="block mb-1 text-[11px] text-gray-600">
+        Month
+      </label>
+      <input
+        type="month"
+        value={selectedMonth}
+        onChange={handleMonthChange}
+        className="w-full px-2 py-1.5 text-xs border rounded-md"
+      />
+    </div>
+
+    {/* Actions */}
+    <div className="flex gap-2">
+      <button
+        onClick={downloadCSV}
+        className="px-3 py-1.5 text-xs text-white bg-green-600 rounded-md hover:bg-green-700"
+      >
+        CSV
+      </button>
+
+      <button
+        onClick={clearFilters}
+        className="px-3 py-1.5 text-xs text-white bg-gray-600 rounded-md hover:bg-gray-700"
+      >
+        Clear
+      </button>
+    </div>
+  </div>
+
+  {/* Footer Info */}
+  <div className="mt-2 text-xs text-gray-600">
+    Showing <span className="font-medium">{filteredRecords.length}</span> /{" "}
+    <span className="font-medium">{records.length}</span>
+    {(selectedDate || selectedMonth) && (
+      <span className="ml-2 text-orange-600">• Filters applied</span>
+    )}
+  </div>
+</div>
+
 
         {/* Table Section */}
         <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
