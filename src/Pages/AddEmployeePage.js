@@ -1044,6 +1044,11 @@ const AddEmployeePage = () => {
   const [shiftHours, setShiftHours] = useState("");
   const [weekOffPerMonth, setWeekOffPerMonth] = useState("");
 
+  const [isAddingNewDept, setIsAddingNewDept] = useState(false);
+  const [customDepartment, setCustomDepartment] = useState("");
+  const [isAddingNewRole, setIsAddingNewRole] = useState(false);
+  const [customRole, setCustomRole] = useState("");
+
   const [showPassword, setShowPassword] = useState(false);
   const [locations, setLocations] = useState([]);
 
@@ -1113,13 +1118,16 @@ const AddEmployeePage = () => {
     setSuccessMessage("");
 
     try {
+      const finalDept = isAddingNewDept ? customDepartment : department;
+      const finalRole = isAddingNewRole ? customRole : role;
+
       if (editingEmployee) {
         // ================= UPDATE EMPLOYEE =================
         const profilePayload = {
           name,
           email,
-          department,
-          role,
+          department: finalDept,
+          role: finalRole,
           joinDate,
           phone,
           address,
@@ -1161,8 +1169,8 @@ const AddEmployeePage = () => {
             name,
             email,
             password,
-            department,
-            role,
+            department: finalDept,
+            role: finalRole,
             joinDate,
             phone,
             address,
@@ -1234,18 +1242,88 @@ const AddEmployeePage = () => {
 
         <div className="mb-4">
           <label className="block text-sm">Department</label>
-          <select value={department} onChange={(e) => setDepartment(e.target.value)} className="w-full p-2 border rounded" required>
-            <option value="">Select Department</option>
-            {departments.map((d) => <option key={d}>{d}</option>)}
-          </select>
+          <div className="flex gap-2">
+            <select
+              value={isAddingNewDept ? "ADD_NEW" : department}
+              onChange={(e) => {
+                if (e.target.value === "ADD_NEW") {
+                  setIsAddingNewDept(true);
+                  setDepartment("");
+                } else {
+                  setIsAddingNewDept(false);
+                  setDepartment(e.target.value);
+                }
+              }}
+              className="w-full p-2 border rounded"
+              required={!isAddingNewDept}
+            >
+              <option value="">Select Department</option>
+              {departments.map((d) => <option key={d} value={d}>{d}</option>)}
+              <option value="ADD_NEW" className="font-bold text-blue-600">+ Add New Department</option>
+            </select>
+          </div>
+          {isAddingNewDept && (
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="text"
+                placeholder="Enter new department name"
+                value={customDepartment}
+                onChange={(e) => setCustomDepartment(e.target.value)}
+                className="flex-1 p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setIsAddingNewDept(false)}
+                className="text-xs text-red-500 hover:text-red-700 font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="mb-4">
           <label className="block text-sm">Role</label>
-          <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full p-2 border rounded" required>
-            <option value="">Select Role</option>
-            {roles.map((r) => <option key={r}>{r}</option>)}
-          </select>
+          <div className="flex gap-2">
+            <select
+              value={isAddingNewRole ? "ADD_NEW" : role}
+              onChange={(e) => {
+                if (e.target.value === "ADD_NEW") {
+                  setIsAddingNewRole(true);
+                  setRole("");
+                } else {
+                  setIsAddingNewRole(false);
+                  setRole(e.target.value);
+                }
+              }}
+              className="w-full p-2 border rounded"
+              required={!isAddingNewRole}
+            >
+              <option value="">Select Role</option>
+              {roles.map((r) => <option key={r} value={r}>{r}</option>)}
+              <option value="ADD_NEW" className="font-bold text-blue-600">+ Add New Role</option>
+            </select>
+          </div>
+          {isAddingNewRole && (
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="text"
+                placeholder="Enter new role name"
+                value={customRole}
+                onChange={(e) => setCustomRole(e.target.value)}
+                className="flex-1 p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setIsAddingNewRole(false)}
+                className="text-xs text-red-500 hover:text-red-700 font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="mb-4">
@@ -1289,15 +1367,46 @@ const AddEmployeePage = () => {
           <input type="number" value={weekOffPerMonth} onChange={(e) => setWeekOffPerMonth(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
-        <div className="mb-4">
-          <label className="block text-sm">Location</label>
+        {/* <div className="mb-4">
+          <label className="block text-sm">Location</label> <button>Add New Location</button>
           <select value={locationId} onChange={(e) => setLocationId(e.target.value)} className="w-full p-2 border rounded">
             <option value="">Select a Location</option>
             {locations.map((loc) => (
               <option key={loc._id} value={loc._id}>{loc.name}</option>
             ))}
           </select>
-        </div>
+        </div> */}
+
+        <div className="mb-4">
+  {/* Label + Button */}
+  <div className="flex items-center justify-between mb-1">
+    <label className="text-sm font-medium text-gray-700">
+      Location
+    </label>
+
+    <button onClick={()=>navigate("/addlocation")}
+      type="button"
+      className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
+    >
+      + Add Location
+    </button>
+  </div>
+
+  {/* Select */}
+  <select
+    value={locationId}
+    onChange={(e) => setLocationId(e.target.value)}
+    className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+  >
+    <option value="">Select a Location</option>
+    {locations.map((loc) => (
+      <option key={loc._id} value={loc._id}>
+        {loc.name}
+      </option>
+    ))}
+  </select>
+</div>
+
 
         <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded">
           {loading ? "Saving..." : editingEmployee ? "Update Employee" : "Add Employee"}
