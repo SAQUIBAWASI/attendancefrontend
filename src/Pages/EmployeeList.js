@@ -21,12 +21,25 @@ const EmployeeList = () => {
   const itemsPerPage = 10;
   const navigate = useNavigate();
 
+  // List of hardcoded inactive employee IDs (backwards compatibility)
+  const HARDCODED_INACTIVE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
+
+  const isEmployeeHidden = (emp) => {
+    if (!emp) return false;
+    // Database preference: If status is set, favor it.
+    if (emp.status === 'active') return false;
+    if (emp.status === 'inactive') return true;
+    // Fallback: Check hardcoded list for old records
+    return HARDCODED_INACTIVE_IDS.includes(emp.employeeId);
+  };
+
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get(
           "http://localhost:5000/api/employees/get-employees"
         );
+        // We now keep all employees so the user can see/toggle hidden ones
         setEmployees(response.data);
       } catch (error) {
         console.error("❌ Error fetching employees:", error);
@@ -74,6 +87,35 @@ const EmployeeList = () => {
   const handleCloseModal = () => setSelectedEmployee(null);
   const handleEdit = (employee) => navigate(`/addemployee`, { state: { employee } });
 
+  const handleToggleStatus = async (emp) => {
+    const isCurrentlyHidden = isEmployeeHidden(emp);
+    const newStatus = isCurrentlyHidden ? 'active' : 'inactive';
+    const confirmMsg = isCurrentlyHidden
+      ? `Are you sure you want to make ${emp.name} ACTIVE?`
+      : `Are you sure you want to HIDE ${emp.name}? They will not appear in reports.`;
+
+    if (window.confirm(confirmMsg)) {
+      try {
+        setLoading(true);
+
+        const payload = {
+          status: newStatus
+        };
+
+        await axios.put(`http://localhost:5000/api/employees/update/${emp._id}`, payload);
+
+        // Update local state
+        setEmployees(employees.map(e => e._id === emp._id ? { ...e, status: newStatus } : e));
+        alert(`✅ Employee status updated to ${newStatus}`);
+      } catch (error) {
+        console.error("❌ Error updating employee status:", error);
+        alert(`Failed to update status: ${error.response?.data?.message || error.message}`);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this employee?")) {
       try {
@@ -108,13 +150,25 @@ const EmployeeList = () => {
       return;
     }
 
+    const selectedLoc = locations.find(loc => loc._id === selectedLocationId);
+    if (!selectedLoc) {
+      alert("Selected location not found");
+      return;
+    }
+
     setLoading(true);
     try {
+      // Backend assign-location endpoint expects coordinates (as seen in AssignLocation.js)
       const response = await axios.put(
         `http://localhost:5000/api/employees/assign-location/${selectedEmployeeForLocation.employeeId}`,
-        { locationId: selectedLocationId }
+        {
+          name: selectedLoc.name,
+          latitude: selectedLoc.latitude,
+          longitude: selectedLoc.longitude
+        }
       );
 
+      // Update local state. Store the location ID to keep getLocationName working.
       setEmployees(
         employees.map((emp) =>
           emp._id === selectedEmployeeForLocation._id
@@ -123,11 +177,11 @@ const EmployeeList = () => {
         )
       );
 
-      alert("✅ " + response.data.message);
+      alert("✅ Location assigned successfully!");
       handleCloseLocationModal();
     } catch (error) {
       console.error("❌ Error assigning location:", error);
-      alert(error.response?.data?.message || "Failed to assign location");
+      alert(`Failed to assign location: ${error.response?.data?.message || error.message}`);
     } finally {
       setLoading(false);
     }
@@ -158,64 +212,64 @@ const EmployeeList = () => {
 
   return (
     <div className="p-3 mx-auto bg-white rounded-lg shadow-md max-w-9xl">
-     {/* Search + Export */}
-{/* <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Search + Export */}
+      {/* <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
   <h2 className="text-xl font-semibold">Employee List</h2>
 </div> */}
 
-<div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center">
-  {/* Search */}
-  <input
-    type="text"
-    className="w-full px-3 py-2 text-sm border rounded sm:w-64"
-    placeholder="Search by name..."
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-  />
+      <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center">
+        {/* Search */}
+        <input
+          type="text"
+          className="w-full px-3 py-2 text-sm border rounded sm:w-64"
+          placeholder="Search by name..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
 
-  {/* Buttons */}
-  <div className="flex flex-wrap gap-2">
-    <CSVLink
-      data={filteredEmployees}
-      filename="employees.csv"
-      className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-green-500 rounded"
-    >
-      <FaFileCsv /> CSV
-    </CSVLink>
+        {/* Buttons */}
+        <div className="flex flex-wrap gap-2">
+          <CSVLink
+            data={filteredEmployees}
+            filename="employees.csv"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-green-500 rounded"
+          >
+            <FaFileCsv /> CSV
+          </CSVLink>
 
-    <label
-      htmlFor="file-upload"
-      className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-purple-600 rounded cursor-pointer"
-    >
-      <FaUpload /> Import
-      <input
-        id="file-upload"
-        type="file"
-        accept=".xlsx, .xls"
-        onChange={handleBulkImport}
-        className="hidden"
-      />
-    </label>
+          <label
+            htmlFor="file-upload"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-purple-600 rounded cursor-pointer"
+          >
+            <FaUpload /> Import
+            <input
+              id="file-upload"
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleBulkImport}
+              className="hidden"
+            />
+          </label>
 
-    <button
-      onClick={() => navigate("/addemployee")}
-      className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
-    >
-      + Add Employee
-    </button>
-  </div>
-</div>
+          <button
+            onClick={() => navigate("/addemployee")}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
+          >
+            + Add Employee
+          </button>
+        </div>
+      </div>
 
-      
-      
+
+
 
       {/* Table */}
       <div className="overflow-x-auto border rounded-lg">
         <table className="w-full text-sm min-w-[600px]">
           <thead className="bg-gray-200">
             <tr>
+              <th className="p-2 border">Emp ID</th>
               <th className="p-2 border">Name</th>
-               <th className="p-2 border">Emp ID</th>
               {/* <th className="p-2 border">Email</th> */}
               <th className="p-2 border">Phone</th>
               <th className="p-2 border">Department</th>
@@ -233,8 +287,8 @@ const EmployeeList = () => {
             {currentEmployees.length > 0 ? (
               currentEmployees.map((emp) => (
                 <tr key={emp._id} className="border-b hover:bg-gray-50">
+                  <td className="p-2 border">{emp.employeeId}</td>
                   <td className="p-2 border">{emp.name}</td>
-                   <td className="p-2 border">{emp.employeeId}</td>
                   {/* <td className="p-2 border">{emp.email}</td> */}
                   <td className="p-2 border">{emp.phone}</td>
                   <td className="p-2 border">{emp.department}</td>
@@ -242,7 +296,7 @@ const EmployeeList = () => {
                   <td className="p-2 border">
                     {emp.joinDate ? new Date(emp.joinDate).toLocaleDateString() : "-"}
                   </td>
-                 
+
                   <td className="p-2 border">₹{emp.salaryPerMonth}</td>
                   <td className="p-2 border">{emp.shiftHours}</td>
                   <td className="p-2 border">{emp.weekOffPerMonth}</td>
@@ -250,16 +304,26 @@ const EmployeeList = () => {
 
                   <td className="p-2 text-center border">
                     <div className="flex justify-center gap-2">
-                      <button className="text-blue-500" onClick={() => handleView(emp)}>
+                      <button className="text-blue-500" onClick={() => handleView(emp)} title="View Detail">
                         <FaEye />
                       </button>
-                      <button className="text-yellow-500" onClick={() => handleEdit(emp)}>
+                      <button className="text-yellow-500" onClick={() => handleEdit(emp)} title="Edit Employee">
                         <FaEdit />
                       </button>
-                      <button className="text-green-500" onClick={() => handleAssignLocation(emp)}>
+                      <button className="text-green-500" onClick={() => handleAssignLocation(emp)} title="Assign Location">
                         <FaMapMarkerAlt />
                       </button>
-                      <button className="text-red-500" onClick={() => handleDelete(emp._id)}>
+
+                      {/* Status Toggle Button */}
+                      <button
+                        onClick={() => handleToggleStatus(emp)}
+                        className={`px-2 py-0.5 text-xs font-bold rounded ${isEmployeeHidden(emp) ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                        title={isEmployeeHidden(emp) ? "Make Active" : "Hide Employee"}
+                      >
+                        {isEmployeeHidden(emp) ? 'ACTIVE' : 'HIDE'}
+                      </button>
+
+                      <button className="text-red-500" onClick={() => handleDelete(emp._id)} title="Delete Employee">
                         <FaTrash />
                       </button>
                     </div>

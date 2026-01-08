@@ -133,7 +133,9 @@ const LateToday = () => {
       setLoading(true);
       const resp = await axios.get(`${BASE_URL}/api/attendance/lateattendance`);
       if (resp.data && resp.data.records) {
-        setRecords(resp.data.records);
+        const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
+        const activeRecords = resp.data.records.filter(rec => !INACTIVE_EMPLOYEE_IDS.includes(rec.employeeId));
+        setRecords(activeRecords);
       } else {
         setError("Unexpected API response");
       }

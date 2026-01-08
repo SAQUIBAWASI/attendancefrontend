@@ -12,8 +12,15 @@
 //   const fetchPendingRequests = async () => {
 //     try {
 //       const resp = await axios.get("https://attendancebackend-5cgn.onrender.com/api/leaves/pendingleaves");
+//       const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
 //       if (resp.data && resp.data.records) {
-//         setRequests(resp.data.records);
+//         // Assuming 'employeeId' or 'employee' field exists in the records for filtering
+//         // If not, you might need to adjust the filtering logic based on available fields like employeeName
+//         const activeRequests = resp.data.records.filter(record => 
+//           !INACTIVE_EMPLOYEE_IDS.includes(record.employeeId) && 
+//           !INACTIVE_EMPLOYEE_IDS.includes(record.employee)
+//         );
+//         setRequests(activeRequests);
 //       } else {
 //         console.error("Unexpected API response:", resp.data);
 //       }
@@ -121,7 +128,10 @@ const LeavesList = () => {
   const fetchLeaves = async () => {
     try {
       const res = await axios.get("https://attendancebackend-5cgn.onrender.com/api/leaves/leaves");
-      setLeaves(res.data.records || res.data); // adapt if API returns { records: [...] }
+      const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
+      const rawRecords = res.data.records || res.data;
+      const activeLeaves = rawRecords.filter(l => !INACTIVE_EMPLOYEE_IDS.includes(l.employeeId));
+      setLeaves(activeLeaves);
     } catch (err) {
       console.error("Failed to fetch leaves:", err);
     }

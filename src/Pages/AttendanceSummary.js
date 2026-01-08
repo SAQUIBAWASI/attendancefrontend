@@ -6639,7 +6639,13 @@ export default function AttendanceSummary() {
       const empRes = await fetch(`${BASE_URL}/api/employees/get-employees`);
       if (!empRes.ok) throw new Error("Failed to fetch employees");
       const empData = await empRes.json();
-      setEmployees(empData);
+      const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
+      const activeEmployees = empData.filter(emp => {
+        if (emp.status === 'inactive') return false;
+        if (emp.status === 'active') return true;
+        return !INACTIVE_EMPLOYEE_IDS.includes(emp.employeeId);
+      });
+      setEmployees(activeEmployees);
 
       // Fetch attendance records
       const attRes = await fetch(`${BASE_URL}/api/attendance/allattendance`);
@@ -6697,8 +6703,20 @@ export default function AttendanceSummary() {
           sample: correctedSummary?.[0]
         });
 
-        setEmployeeSummary(correctedSummary);
-        previousSummaryRef.current = JSON.parse(JSON.stringify(correctedSummary));
+        // List of inactive employee IDs to hide
+        const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
+
+        // Filter out inactive employees
+        const activeSummary = correctedSummary.filter(emp => {
+          // Check summary emp directly if it has status, or use employees list
+          const master = employees.find(e => e.employeeId === emp.employeeId);
+          if (master?.status === 'inactive') return false;
+          if (master?.status === 'active') return true;
+          return !INACTIVE_EMPLOYEE_IDS.includes(emp.employeeId);
+        });
+
+        setEmployeeSummary(activeSummary);
+        previousSummaryRef.current = JSON.parse(JSON.stringify(activeSummary));
       } else {
         throw new Error(result.message || "Failed to calculate summary");
       }

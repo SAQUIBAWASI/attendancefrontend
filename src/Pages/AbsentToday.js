@@ -12,55 +12,60 @@ const AbsentToday = () => {
   }, []);
 
   const fetchAbsentEmployees = async () => {
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    // Fetch all employees
-    const empResp = await axios.get("http://localhost:5000/api/employees/get-employees");
-    const employees = empResp.data;
+      // Fetch all employees
+      const empResp = await axios.get("http://localhost:5000/api/employees/get-employees");
+      const employees = empResp.data;
 
-    // Fetch today’s attendance
-    const attResp = await axios.get("http://localhost:5000/api/attendance/today");
-    const attendanceData = attResp.data;
-    const attendance = attendanceData.records || [];
+      // Fetch today’s attendance
+      const attResp = await axios.get("http://localhost:5000/api/attendance/today");
+      const attendanceData = attResp.data;
+      const attendance = attendanceData.records || [];
 
-    // Extract unique present employee IDs
-    const presentIds = [
-      ...new Set(
-        attendance.map((a) => {
-          if (typeof a.employeeId === "object") {
-            return a.employeeId.employeeId || a.employeeId._id || "";
-          }
-          return a.employeeId || a.empId || "";
-        }).filter(Boolean)
-      ),
-    ];
+      // Extract unique present employee IDs
+      const presentIds = [
+        ...new Set(
+          attendance.map((a) => {
+            if (typeof a.employeeId === "object") {
+              return a.employeeId.employeeId || a.employeeId._id || "";
+            }
+            return a.employeeId || a.empId || "";
+          }).filter(Boolean)
+        ),
+      ];
 
-    console.log("✅ Present IDs:", presentIds);
+      console.log("✅ Present IDs:", presentIds);
 
-    // Filter employees who are not present
-    const absents = employees.filter((emp) => {
-      const empId = emp.employeeId || emp._id || emp.empId;
-      return !presentIds.includes(empId);
-    });
+      // Filter employees who are not present and are active
+      const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
+      const absents = employees.filter((emp) => {
+        const empId = emp.employeeId || emp._id || emp.empId;
 
-    console.log("🚨 Absent Employees:", absents);
+        if (emp.status === 'inactive') return false;
+        if (emp.status === 'active') return true;
 
-    // Format for table
-    const formatted = absents.map((emp) => ({
-      employeeId: emp.employeeId || emp._id,
-      name: emp.name || emp.fullName || "N/A",
-      date: new Date().toLocaleDateString("en-CA"),
-    }));
+        return !presentIds.includes(empId) && !INACTIVE_EMPLOYEE_IDS.includes(empId);
+      });
 
-    setAbsentEmployees(formatted);
-  } catch (err) {
-    console.error("❌ Error fetching absent employees:", err);
-    setError("Failed to fetch absent employees");
-  } finally {
-    setLoading(false);
-  }
-};
+      console.log("🚨 Absent Employees:", absents);
+
+      // Format for table
+      const formatted = absents.map((emp) => ({
+        employeeId: emp.employeeId || emp._id,
+        name: emp.name || emp.fullName || "N/A",
+        date: new Date().toLocaleDateString("en-CA"),
+      }));
+
+      setAbsentEmployees(formatted);
+    } catch (err) {
+      console.error("❌ Error fetching absent employees:", err);
+      setError("Failed to fetch absent employees");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading)
     return <p className="text-center mt-6 text-gray-600">Loading Absent Employees Today ({today})...</p>;

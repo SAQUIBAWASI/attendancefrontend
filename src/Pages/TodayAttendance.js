@@ -273,7 +273,7 @@ const TodayAttendance = () => {
       const attendanceResp = await axios.get(
         "http://localhost:5000/api/attendance/today"
       );
-      
+
       const attendance = attendanceResp.data.records || [];
 
       // 2️⃣ Fetch employee list
@@ -304,7 +304,25 @@ const TodayAttendance = () => {
         };
       });
 
-      setTodayRecords(merged);
+      const activeRecords = merged.filter((rec) => {
+        const empId =
+          rec.employeeId?.employeeId ||
+          (typeof rec.employeeId === 'string' ? rec.employeeId : '') ||
+          rec.empId ||
+          "";
+
+        // Find the employee in the full list to check their database status
+        const employee = employees.find(e => e.employeeId === empId || e._id === empId);
+
+        if (employee?.status === 'inactive') return false;
+        if (employee?.status === 'active') return true;
+
+        // Fallback for hardcoded IDs
+        const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
+        return !INACTIVE_EMPLOYEE_IDS.includes(empId);
+      });
+
+      setTodayRecords(activeRecords);
     } catch (err) {
       console.error("Error fetching today's attendance:", err);
       setError("Failed to fetch today's attendance");

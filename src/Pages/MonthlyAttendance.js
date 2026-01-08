@@ -14,7 +14,12 @@ const MonthlyAttendance = () => {
   const fetchAttendanceRecords = async () => {
     try {
       const response = await axios.get("https://hr-backend-hifb.onrender.com/api/hr/all-montlyattendance");
-      setAttendanceRecords(response.data); // Populate the table with data from the server
+      const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
+      const activeRecords = response.data.filter(record =>
+        !INACTIVE_EMPLOYEE_IDS.includes(record.employeeId) &&
+        !INACTIVE_EMPLOYEE_IDS.includes(record.employee)
+      );
+      setAttendanceRecords(activeRecords); // Populate the table with data from the server
     } catch (error) {
       console.error("Error fetching attendance records:", error);
     }
@@ -46,7 +51,7 @@ const MonthlyAttendance = () => {
 
       // Alert for successful submission
       alert(`✅ Monthly Attendance Submitted Successfully!\n👤 Employee: ${employee}\n📅 Year: ${year}, Month: ${month}\n⏰ Time In: ${timeIn}, Time Out: ${timeOut}`);
-      
+
       // Clear form fields after submission
       setEmployee("");
       setYear("");

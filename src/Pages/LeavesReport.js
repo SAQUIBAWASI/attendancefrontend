@@ -431,8 +431,9 @@ const LeaveReport = () => {
   const fetchApprovedLeaves = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/leaves/leaves?status=approved");
+      const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
       const approved = (res.data.records || res.data).filter(
-        (l) => l.status?.toLowerCase() === "approved"
+        (l) => l.status?.toLowerCase() === "approved" && !INACTIVE_EMPLOYEE_IDS.includes(l.employeeId)
       );
       setApprovedLeaves(approved);
       setFilteredLeaves(approved);
@@ -522,36 +523,36 @@ const LeaveReport = () => {
   return (
     <div className="p-6 mx-auto mt-6 bg-white rounded-lg shadow-md max-w-7xl">
 
-            <div className="grid grid-cols-3 gap-2 mb-4">
-  
-  <div className="px-3 py-2 text-center rounded-md shadow-sm bg-green-50">
-    <p className="text-[11px] text-gray-500 leading-tight">
-      Approved Leaves
-    </p>
-    <h2 className="text-sm font-semibold text-green-700 leading-tight">
-      {filteredLeaves.length}
-    </h2>
-  </div>
+      <div className="grid grid-cols-3 gap-2 mb-4">
 
-  <div className="px-3 py-2 text-center rounded-md shadow-sm bg-blue-50">
-    <p className="text-[11px] text-gray-500 leading-tight">
-      Employees
-    </p>
-    <h2 className="text-sm font-semibold text-blue-700 leading-tight">
-      {employees.length}
-    </h2>
-  </div>
+        <div className="px-3 py-2 text-center rounded-md shadow-sm bg-green-50">
+          <p className="text-[11px] text-gray-500 leading-tight">
+            Approved Leaves
+          </p>
+          <h2 className="text-sm font-semibold text-green-700 leading-tight">
+            {filteredLeaves.length}
+          </h2>
+        </div>
 
-  <div className="px-3 py-2 text-center rounded-md shadow-sm bg-yellow-50">
-    <p className="text-[11px] text-gray-500 leading-tight">
-      Leave Types
-    </p>
-    <h2 className="text-sm font-semibold text-yellow-700 leading-tight">
-      {leaveTypes.length}
-    </h2>
-  </div>
+        <div className="px-3 py-2 text-center rounded-md shadow-sm bg-blue-50">
+          <p className="text-[11px] text-gray-500 leading-tight">
+            Employees
+          </p>
+          <h2 className="text-sm font-semibold text-blue-700 leading-tight">
+            {employees.length}
+          </h2>
+        </div>
 
-</div>
+        <div className="px-3 py-2 text-center rounded-md shadow-sm bg-yellow-50">
+          <p className="text-[11px] text-gray-500 leading-tight">
+            Leave Types
+          </p>
+          <h2 className="text-sm font-semibold text-yellow-700 leading-tight">
+            {leaveTypes.length}
+          </h2>
+        </div>
+
+      </div>
       {/* Header */}
       <div className="flex flex-col items-center justify-between gap-4 mb-6 md:flex-row">
         <h1 className="text-3xl font-bold">Approved Leave Reports</h1>
@@ -668,7 +669,7 @@ const LeaveReport = () => {
           <p className="py-8 text-center text-gray-500">No data available</p>
         )}
       </div> */}
-        {/* <h1 className="text-3xl font-bold">Approved Leave Reports</h1> <br/> */}
+      {/* <h1 className="text-3xl font-bold">Approved Leave Reports</h1> <br/> */}
       {/* ✅ Leave Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm border border-gray-300">
@@ -705,7 +706,7 @@ const LeaveReport = () => {
         </table>
       </div>
 
-          <div className="p-4 mb-8 rounded-lg shadow bg-gray-50">
+      <div className="p-4 mb-8 rounded-lg shadow bg-gray-50">
         <h2 className="mb-4 text-xl font-semibold text-gray-800">
           📊 Who Took the Most Leaves
         </h2>

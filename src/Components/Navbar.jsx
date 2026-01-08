@@ -91,7 +91,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
   };
 
   return (
-    <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-16 px-4 text-white bg-blue-800 shadow-md">
+    <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-blue-800 shadow-md">
       
       {/* Left Section - Menu Button & Page Title */}
       <div className="flex items-center gap-4">

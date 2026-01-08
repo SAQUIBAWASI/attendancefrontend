@@ -10,7 +10,7 @@ export default function AttendanceList() {
   const [error, setError] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
-  
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -18,18 +18,36 @@ export default function AttendanceList() {
   useEffect(() => {
     const fetchAllAttendance = async () => {
       try {
+        // Fetch employees first to check their status
+        const empRes = await fetch("http://localhost:5000/api/employees/get-employees");
+        const employees = empRes.ok ? await empRes.json() : [];
+
         const res = await fetch(`${BASE_URL}/api/attendance/allattendance`);
         const data = await res.json();
 
         if (!res.ok) throw new Error(data.message || "Failed to fetch attendance");
 
         // Sort by checkInTime descending (newest first)
-        const sortedRecords = (data.records || []).sort((a, b) => 
+        const sortedRecords = (data.records || []).sort((a, b) =>
           new Date(b.checkInTime) - new Date(a.checkInTime)
         );
-        
-        setRecords(sortedRecords);
-        setFilteredRecords(sortedRecords);
+
+        // List of inactive employee IDs to hide
+        const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
+
+        // Filter out inactive employees
+        const activeRecords = sortedRecords.filter(rec => {
+          const empId = rec.employeeId;
+          const employee = employees.find(e => e.employeeId === empId || e._id === empId);
+
+          if (employee?.status === 'inactive') return false;
+          if (employee?.status === 'active') return true;
+
+          return !INACTIVE_EMPLOYEE_IDS.includes(empId);
+        });
+
+        setRecords(activeRecords);
+        setFilteredRecords(activeRecords);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -194,7 +212,7 @@ export default function AttendanceList() {
   return (
     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="mx-auto max-w-9xl">
-  
+
         {/* Stats Cards */}
         {/* <div className="grid grid-cols-1 gap-4 mb-8 md:grid-cols-4">
           <div className="p-6 text-center bg-white border border-blue-200 shadow-lg rounded-2xl">
@@ -221,42 +239,42 @@ export default function AttendanceList() {
           </div>
         </div> */}
         <div className="grid grid-cols-2 gap-2 mb-4 md:grid-cols-4">
-  <div className="p-3 text-center bg-white border rounded-lg shadow-sm">
-    <div className="text-lg font-semibold text-blue-600">
-      {records.length}
-    </div>
-    <div className="text-[11px] text-gray-500">
-      Total
-    </div>
-  </div>
+          <div className="p-3 text-center bg-white border rounded-lg shadow-sm">
+            <div className="text-lg font-semibold text-blue-600">
+              {records.length}
+            </div>
+            <div className="text-[11px] text-gray-500">
+              Total
+            </div>
+          </div>
 
-  <div className="p-3 text-center bg-white border rounded-lg shadow-sm">
-    <div className="text-lg font-semibold text-green-600">
-      {records.filter(r => r.onsite).length}
-    </div>
-    <div className="text-[11px] text-gray-500">
-      Onsite
-    </div>
-  </div>
+          <div className="p-3 text-center bg-white border rounded-lg shadow-sm">
+            <div className="text-lg font-semibold text-green-600">
+              {records.filter(r => r.onsite).length}
+            </div>
+            <div className="text-[11px] text-gray-500">
+              Onsite
+            </div>
+          </div>
 
-  <div className="p-3 text-center bg-white border rounded-lg shadow-sm">
-    <div className="text-lg font-semibold text-orange-600">
-      {records.filter(r => r.status === "checked-in").length}
-    </div>
-    <div className="text-[11px] text-gray-500">
-      Checked In
-    </div>
-  </div>
+          <div className="p-3 text-center bg-white border rounded-lg shadow-sm">
+            <div className="text-lg font-semibold text-orange-600">
+              {records.filter(r => r.status === "checked-in").length}
+            </div>
+            <div className="text-[11px] text-gray-500">
+              Checked In
+            </div>
+          </div>
 
-  <div className="p-3 text-center bg-white border rounded-lg shadow-sm">
-    <div className="text-lg font-semibold text-purple-600">
-      {filteredRecords.length}
-    </div>
-    <div className="text-[11px] text-gray-500">
-      Filtered
-    </div>
-  </div>
-</div>
+          <div className="p-3 text-center bg-white border rounded-lg shadow-sm">
+            <div className="text-lg font-semibold text-purple-600">
+              {filteredRecords.length}
+            </div>
+            <div className="text-[11px] text-gray-500">
+              Filtered
+            </div>
+          </div>
+        </div>
 
 
         {/* Filters Section */}
@@ -323,73 +341,73 @@ export default function AttendanceList() {
             </div>
           </div>
         </div> */}
-        
+
         <div className="px-4 py-3 mb-4 bg-white border rounded-lg shadow-sm">
-  <div className="grid items-end grid-cols-1 gap-3 sm:grid-cols-5">
-    
-    {/* Title */}
-    <div className="sm:col-span-2">
-      <h3 className="text-sm font-semibold text-gray-800">
-        Filter Records
-      </h3>
-      <p className="text-xs text-gray-500">
-        Filter by date or month
-      </p>
-    </div>
+          <div className="grid items-end grid-cols-1 gap-3 sm:grid-cols-5">
 
-    {/* Date */}
-    <div>
-      <label className="block mb-1 text-[11px] text-gray-600">
-        Date
-      </label>
-      <input
-        type="date"
-        value={selectedDate}
-        onChange={handleDateChange}
-        className="w-full px-2 py-1.5 text-xs border rounded-md"
-      />
-    </div>
+            {/* Title */}
+            <div className="sm:col-span-2">
+              <h3 className="text-sm font-semibold text-gray-800">
+                Filter Records
+              </h3>
+              <p className="text-xs text-gray-500">
+                Filter by date or month
+              </p>
+            </div>
 
-    {/* Month */}
-    <div>
-      <label className="block mb-1 text-[11px] text-gray-600">
-        Month
-      </label>
-      <input
-        type="month"
-        value={selectedMonth}
-        onChange={handleMonthChange}
-        className="w-full px-2 py-1.5 text-xs border rounded-md"
-      />
-    </div>
+            {/* Date */}
+            <div>
+              <label className="block mb-1 text-[11px] text-gray-600">
+                Date
+              </label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={handleDateChange}
+                className="w-full px-2 py-1.5 text-xs border rounded-md"
+              />
+            </div>
 
-    {/* Actions */}
-    <div className="flex gap-2">
-      <button
-        onClick={downloadCSV}
-        className="px-3 py-1.5 text-xs text-white bg-green-600 rounded-md hover:bg-green-700"
-      >
-        CSV
-      </button>
+            {/* Month */}
+            <div>
+              <label className="block mb-1 text-[11px] text-gray-600">
+                Month
+              </label>
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={handleMonthChange}
+                className="w-full px-2 py-1.5 text-xs border rounded-md"
+              />
+            </div>
 
-      <button
-        onClick={clearFilters}
-        className="px-3 py-1.5 text-xs text-white bg-gray-600 rounded-md hover:bg-gray-700"
-      >
-        Clear
-      </button>
-    </div>
-  </div>
+            {/* Actions */}
+            <div className="flex gap-2">
+              <button
+                onClick={downloadCSV}
+                className="px-3 py-1.5 text-xs text-white bg-green-600 rounded-md hover:bg-green-700"
+              >
+                CSV
+              </button>
 
-  {/* Footer Info */}
-  <div className="mt-2 text-xs text-gray-600">
-    Showing <span className="font-medium">{filteredRecords.length}</span> /{" "}
-    <span className="font-medium">{records.length}</span>
-    {(selectedDate || selectedMonth) && (
-      <span className="ml-2 text-orange-600">• Filters applied</span>
-    )}
-  </div>
-</div>
+              <button
+                onClick={clearFilters}
+                className="px-3 py-1.5 text-xs text-white bg-gray-600 rounded-md hover:bg-gray-700"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+
+          {/* Footer Info */}
+          <div className="mt-2 text-xs text-gray-600">
+            Showing <span className="font-medium">{filteredRecords.length}</span> /{" "}
+            <span className="font-medium">{records.length}</span>
+            {(selectedDate || selectedMonth) && (
+              <span className="ml-2 text-orange-600">• Filters applied</span>
+            )}
+          </div>
+        </div>
 
 
         {/* Table Section */}
@@ -430,9 +448,8 @@ export default function AttendanceList() {
                     {currentRecords.map((rec, idx) => (
                       <tr
                         key={rec._id}
-                        className={`border-t transition-all duration-200 ${
-                          idx % 2 === 0 ? "bg-gray-50" : "bg-white"
-                        } hover:bg-blue-50 hover:shadow-sm`}
+                        className={`border-t transition-all duration-200 ${idx % 2 === 0 ? "bg-gray-50" : "bg-white"
+                          } hover:bg-blue-50 hover:shadow-sm`}
                       >
                         <td className="px-6 py-4">
                           <div>
@@ -464,10 +481,9 @@ export default function AttendanceList() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`font-bold text-lg ${
-                            rec.totalHours >= 8 ? 'text-green-600' : 
+                          <span className={`font-bold text-lg ${rec.totalHours >= 8 ? 'text-green-600' :
                             rec.totalHours >= 4 ? 'text-orange-600' : 'text-red-600'
-                          }`}>
+                            }`}>
                             {rec.totalHours ? rec.totalHours.toFixed(1) : "0.0"}h
                           </span>
                         </td>
@@ -478,11 +494,10 @@ export default function AttendanceList() {
                         </td>
                         <td className="px-6 py-4">
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              rec.onsite
-                                ? "bg-green-100 text-green-800 border border-green-300"
-                                : "bg-red-100 text-red-800 border border-red-300"
-                            }`}
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.onsite
+                              ? "bg-green-100 text-green-800 border border-green-300"
+                              : "bg-red-100 text-red-800 border border-red-300"
+                              }`}
                           >
                             {rec.onsite ? "🏢 Yes" : "🏠 No"}
                           </span>
@@ -494,11 +509,10 @@ export default function AttendanceList() {
                         </td>
                         <td className="px-6 py-4">
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              rec.status === "checked-in"
-                                ? "bg-blue-100 text-blue-800 border border-blue-300"
-                                : "bg-purple-100 text-purple-800 border border-purple-300"
-                            }`}
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.status === "checked-in"
+                              ? "bg-blue-100 text-blue-800 border border-blue-300"
+                              : "bg-purple-100 text-purple-800 border border-purple-300"
+                              }`}
                           >
                             {rec.status}
                           </span>
@@ -516,16 +530,15 @@ export default function AttendanceList() {
                     Showing <strong>{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredRecords.length)}</strong> of{" "}
                     <strong>{filteredRecords.length}</strong> records
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
-                      className={`px-4 py-2 rounded-lg transition font-semibold ${
-                        currentPage === 1
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
-                      }`}
+                      className={`px-4 py-2 rounded-lg transition font-semibold ${currentPage === 1
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                        }`}
                     >
                       ← Previous
                     </button>
@@ -547,11 +560,10 @@ export default function AttendanceList() {
                           <button
                             key={pageNum}
                             onClick={() => setCurrentPage(pageNum)}
-                            className={`px-3 py-2 rounded-lg transition font-semibold ${
-                              currentPage === pageNum
-                                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                            }`}
+                            className={`px-3 py-2 rounded-lg transition font-semibold ${currentPage === pageNum
+                              ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                              }`}
                           >
                             {pageNum}
                           </button>
@@ -562,11 +574,10 @@ export default function AttendanceList() {
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages}
-                      className={`px-4 py-2 rounded-lg transition font-semibold ${
-                        currentPage === totalPages
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
-                      }`}
+                      className={`px-4 py-2 rounded-lg transition font-semibold ${currentPage === totalPages
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                        }`}
                     >
                       Next →
                     </button>

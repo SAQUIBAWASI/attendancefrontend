@@ -828,7 +828,7 @@
 //       )}
 
 //       <form onSubmit={handleSubmit}>
-        
+
 //         {/* NAME */}
 //         <div className="mb-4">
 //           <label className="block text-sm">Full Name</label>
@@ -1052,15 +1052,15 @@ const AddEmployeePage = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const departments = [
-    "Developer","Sales","Marketing","Medical","Finance",
-    "Nursing","Digital Marketing","Management","Laboratory Medicine"
+    "Developer", "Sales", "Marketing", "Medical", "Finance",
+    "Nursing", "Digital Marketing", "Management", "Laboratory Medicine"
   ];
 
   const roles = [
-    "Administrator","Manager","Team Lead","Employee","HR Manager",
-    "Phlebotomist","Staff Nurse","Sales Executive",
-    "Consultant","Graphic Designer","UI/UX & GRAPHIC DESIGNER",
-    "SMM & SEO Executive","Web Developer",
+    "Administrator", "Manager", "Team Lead", "Employee", "HR Manager",
+    "Phlebotomist", "Staff Nurse", "Sales Executive",
+    "Consultant", "Graphic Designer", "UI/UX & GRAPHIC DESIGNER",
+    "SMM & SEO Executive", "Web Developer",
   ];
 
   // ✅ EDIT MODE AUTO-FILL (NO STRUCTURE CHANGE)
@@ -1115,7 +1115,7 @@ const AddEmployeePage = () => {
     try {
       if (editingEmployee) {
         // ================= UPDATE EMPLOYEE =================
-        const payload = {
+        const profilePayload = {
           name,
           email,
           department,
@@ -1123,28 +1123,36 @@ const AddEmployeePage = () => {
           joinDate,
           phone,
           address,
-          locationId,
+          locationId, // Send as locationId
+          location: locationId, // Also send as location for compatibility
         };
 
-        if (password) payload.password = password;
+        // password optional during edit
+        if (password) profilePayload.password = password;
 
-        // ✅ correct employee update API
         await axios.put(
           `http://localhost:5000/api/employees/update/${editingEmployee._id}`,
-          payload
+          profilePayload
         );
 
-        // ================= UPDATE SALARY =================
-        await axios.put(
-          `http://localhost:5000/api/salary/update-salary/${editingEmployee.employeeId}`,
-          {
-            salaryPerMonth: Number(salaryPerMonth),
-            shiftHours: Number(shiftHours),
-            weekOffPerMonth: Number(weekOffPerMonth),
+        // ================= UPDATE SALARY (ONLY IF VALUES PROVIDED) =================
+        if (salaryPerMonth || shiftHours || weekOffPerMonth) {
+          try {
+            await axios.put(
+              `http://localhost:5000/api/salary/update-salary/${editingEmployee.employeeId}`,
+              {
+                employeeId: editingEmployee.employeeId,
+                salaryPerMonth: Number(salaryPerMonth) || 0,
+                shiftHours: Number(shiftHours) || 8,
+                weekOffPerMonth: Number(weekOffPerMonth) || 0,
+              }
+            );
+          } catch (salErr) {
+            console.warn("⚠️ Salary update failed, but profile updated:", salErr.message);
           }
-        );
+        }
 
-        setSuccessMessage("✅ Employee updated successfully!");
+        setSuccessMessage("✅ Employee details updated successfully!");
       } else {
         // ================= ADD EMPLOYEE =================
         await axios.post(
@@ -1208,78 +1216,84 @@ const AddEmployeePage = () => {
 
         <div className="mb-4">
           <label className="block text-sm">Full Name</label>
-          <input value={name} onChange={(e)=>setName(e.target.value)} className="w-full p-2 border rounded" required />
+          <input value={name} onChange={(e) => setName(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
         <div className="mb-4">
           <label className="block text-sm">Email</label>
-          <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} className="w-full p-2 border rounded" required />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
         <div className="mb-4 relative">
           <label className="block text-sm">Password</label>
-          <input type={showPassword?"text":"password"} value={password} onChange={(e)=>setPassword(e.target.value)} className="w-full p-2 border rounded pr-10" />
-          <button type="button" onClick={()=>setShowPassword(!showPassword)} className="absolute right-3 top-9">
+          <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2 border rounded pr-10" />
+          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-9">
             {showPassword ? <FaEyeSlash /> : <FaEye />}
           </button>
         </div>
 
         <div className="mb-4">
           <label className="block text-sm">Department</label>
-          <select value={department} onChange={(e)=>setDepartment(e.target.value)} className="w-full p-2 border rounded" required>
+          <select value={department} onChange={(e) => setDepartment(e.target.value)} className="w-full p-2 border rounded" required>
             <option value="">Select Department</option>
-            {departments.map((d)=><option key={d}>{d}</option>)}
+            {departments.map((d) => <option key={d}>{d}</option>)}
           </select>
         </div>
 
         <div className="mb-4">
           <label className="block text-sm">Role</label>
-          <select value={role} onChange={(e)=>setRole(e.target.value)} className="w-full p-2 border rounded" required>
+          <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full p-2 border rounded" required>
             <option value="">Select Role</option>
-            {roles.map((r)=><option key={r}>{r}</option>)}
+            {roles.map((r) => <option key={r}>{r}</option>)}
           </select>
         </div>
 
         <div className="mb-4">
           <label className="block text-sm">Join Date</label>
-          <input type="date" value={joinDate} onChange={(e)=>setJoinDate(e.target.value)} className="w-full p-2 border rounded" required />
+          <input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
         <div className="mb-4">
           <label className="block text-sm">Phone</label>
-          <input value={phone} onChange={(e)=>setPhone(e.target.value)} className="w-full p-2 border rounded" />
+          <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full p-2 border rounded" />
         </div>
 
         <div className="mb-4">
           <label className="block text-sm">Address</label>
-          <textarea value={address} onChange={(e)=>setAddress(e.target.value)} className="w-full p-2 border rounded" />
+          <textarea value={address} onChange={(e) => setAddress(e.target.value)} className="w-full p-2 border rounded" />
         </div>
 
         <div className="mb-4">
           <label className="block text-sm">Employee ID</label>
-          <input value={employeeId} onChange={(e)=>setEmployeeId(e.target.value)} className="w-full p-2 border rounded" required />
+          <input
+            value={employeeId}
+            onChange={(e) => setEmployeeId(e.target.value)}
+            className={`w-full p-2 border rounded ${editingEmployee ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+            required
+            readOnly={!!editingEmployee}
+          />
         </div>
 
         <div className="mb-4">
           <label className="block text-sm">Salary Per Month</label>
-          <input type="number" value={salaryPerMonth} onChange={(e)=>setSalaryPerMonth(e.target.value)} className="w-full p-2 border rounded" required />
+          <input type="number" value={salaryPerMonth} onChange={(e) => setSalaryPerMonth(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
         <div className="mb-4">
           <label className="block text-sm">Shift Hours Per Day</label>
-          <input type="number" value={shiftHours} onChange={(e)=>setShiftHours(e.target.value)} className="w-full p-2 border rounded" required />
+          <input type="number" value={shiftHours} onChange={(e) => setShiftHours(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
         <div className="mb-4">
           <label className="block text-sm">Week Off Per Month</label>
-          <input type="number" value={weekOffPerMonth} onChange={(e)=>setWeekOffPerMonth(e.target.value)} className="w-full p-2 border rounded" required />
+          <input type="number" value={weekOffPerMonth} onChange={(e) => setWeekOffPerMonth(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
         <div className="mb-4">
           <label className="block text-sm">Location</label>
-          <select value={locationId} onChange={(e)=>setLocationId(e.target.value)} className="w-full p-2 border rounded">
+          <select value={locationId} onChange={(e) => setLocationId(e.target.value)} className="w-full p-2 border rounded">
             <option value="">Select a Location</option>
-            {locations.map((loc)=>(
+            {locations.map((loc) => (
               <option key={loc._id} value={loc._id}>{loc.name}</option>
             ))}
           </select>
