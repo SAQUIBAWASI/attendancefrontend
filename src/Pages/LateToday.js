@@ -116,6 +116,7 @@
 // src/pages/LateToday.jsx
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { isEmployeeHidden } from "../utils/employeeStatus";
 
 const BASE_URL = "http://localhost:5000/"; // replace with your backend URL
 
@@ -131,10 +132,20 @@ const LateToday = () => {
   const fetchLateAttendance = async () => {
     try {
       setLoading(true);
-      const resp = await axios.get(`${BASE_URL}/api/attendance/lateattendance`);
-      if (resp.data && resp.data.records) {
-        const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
-        const activeRecords = resp.data.records.filter(rec => !INACTIVE_EMPLOYEE_IDS.includes(rec.employeeId));
+      const [lateResp, empResp] = await Promise.all([
+        axios.get(`${BASE_URL}/api/attendance/lateattendance`),
+        axios.get(`${BASE_URL}/api/employees/get-employees`)
+      ]);
+
+      const employees = empResp.data || [];
+      const rawRecords = lateResp.data.records || [];
+
+      if (rawRecords) {
+        const activeRecords = rawRecords.filter(rec => {
+          // Find employee to check status
+          const emp = employees.find(e => e.employeeId === rec.employeeId || e._id === rec.employeeId);
+          return !isEmployeeHidden(emp || { employeeId: rec.employeeId });
+        });
         setRecords(activeRecords);
       } else {
         setError("Unexpected API response");

@@ -6,7 +6,6 @@ import CompanySidebar from "./Components/CompanySidebar.js";
 import DepartmentList from "./Components/department";
 import Recruitment from "./Components/recruitment.js";
 import SubDepartmentList from "./Components/subdepartment.js";
-import EmployeeLogin from "./EmployeeLogin.js";
 import AdminLayout from "./Layout/AdminLayout.jsx";
 import AboutUsFormPage from "./Pages/AboutUsFormPage.js";
 import AbsentToday from "./Pages/AbsentToday.js";
@@ -129,30 +128,32 @@ import ShiftManagement from "./Pages/ShiftManagement.js";
 import SuperAdminMedicalMonitor from "./Pages/SuperAdminMedicalMonitor.js";
 import TimelyFooter from "./Pages/TimelyFooter.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
+import EmpManagment from "./Pages/EmpManagment.js";
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage/>}></Route>
+      <Route path="/" element={<HomePage />}></Route>
       {/* Login page rendered outside AdminLayout */}
       {/* <Route path="/land" element={<LandingPage />} /> */}
       {/* <Route path="/" element={<LoginPage />} /> */}
-      <Route path="/admin-login" element={<Login/>}/>
-      <Route path="/employee-login" element={<EmployeeLogin/>}/>
+      <Route path="/login" element={<Login />} />
+      <Route path="/admin-login" element={<Login />} />
+      <Route path="/employee-login" element={<Login />} />
       <Route path="/employeedashboard" element={<EmployeeDashboard />} />
       <Route path="/leave-application" element={<EmployeeLayout><LeaveApplication /></EmployeeLayout>} />
-        <Route path="/myleaves" element={<EmployeeLayout><EmployeeLeaves /></EmployeeLayout>} />
-         <Route path="/attendance-capture" element={<EmployeeLayout><AttendanceCapture /></EmployeeLayout>} />
-          <Route path="/myattendance" element={<EmployeeLayout><MyAttendance /></EmployeeLayout>} />
-          <Route path="/my-shift" element={<EmployeeLayout><MyShift /></EmployeeLayout>} />
-          <Route path="/mylocation" element={<EmployeeLayout><EmployeeLocation /></EmployeeLayout>}/>
-          <Route path="/superadmin" element={<SuperAdminMedicalMonitor/>}/>
-          <Route path="/timelynavbar" element={<TimelyNavbar/>}></Route>
-          <Route path="timelyfooter" element={<TimelyFooter/>}></Route>
-          <Route path="/about" element={<AboutPage/>}></Route>
-          <Route path="/service" element={<ServicesPage/>}></Route>
-          <Route path="/whoweserve" element={<WhoWeServePage/>}></Route>
-          <Route path="/contact" element={<ContactPage/>}></Route>
-          <Route path="/mysalary" element={<EmployeeLayout><EmployeeSalary /></EmployeeLayout>} />
+      <Route path="/myleaves" element={<EmployeeLayout><EmployeeLeaves /></EmployeeLayout>} />
+      <Route path="/attendance-capture" element={<EmployeeLayout><AttendanceCapture /></EmployeeLayout>} />
+      <Route path="/myattendance" element={<EmployeeLayout><MyAttendance /></EmployeeLayout>} />
+      <Route path="/my-shift" element={<EmployeeLayout><MyShift /></EmployeeLayout>} />
+      <Route path="/mylocation" element={<EmployeeLayout><EmployeeLocation /></EmployeeLayout>} />
+      <Route path="/superadmin" element={<SuperAdminMedicalMonitor />} />
+      <Route path="/timelynavbar" element={<TimelyNavbar />}></Route>
+      <Route path="timelyfooter" element={<TimelyFooter />}></Route>
+      <Route path="/about" element={<AboutPage />}></Route>
+      <Route path="/service" element={<ServicesPage />}></Route>
+      <Route path="/whoweserve" element={<WhoWeServePage />}></Route>
+      <Route path="/contact" element={<ContactPage />}></Route>
+      <Route path="/mysalary" element={<EmployeeLayout><EmployeeSalary /></EmployeeLayout>} />
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"
@@ -251,29 +252,30 @@ function App() {
               <Route path="/quizzes" element={<AllQuizzesTable />} />
               <Route path="/add-bulk-funfacts" element={<BulkFunFactUploader />} />
               <Route path="/allfanfacts" element={<AllFunFactsTable />} />
-               <Route path="/notifications" element={<AdminNotifications />} />
+              <Route path="/notifications" element={<AdminNotifications />} />
 
 
-             <Route path="/addemployee" element={<AddEmployeePage />} />
+              <Route path="/addemployee" element={<AddEmployeePage />} />
               <Route path="/employeelist" element={<EmployeeList />} />
               <Route path="/attendancelist" element={<AttendanceList />} />
               <Route path="/leavelist" element={<LeavesList />} />
-              
+
               <Route path="/today-attendance" element={<TodayAttendance />} />
               <Route path="/pendings-attendance" element={<PendingAttendance />} />
               <Route path="/absent-today" element={<AbsentToday />} />
               <Route path="/late-today" element={<LateToday />} />
               <Route path="/attendance-capture" element={<AttendanceCapture />} />
               <Route path="/myattendance" element={<MyAttendance />} />
-              <Route path="/leaves-report" element={<LeavesReport/>}/>
-              <Route path="/shift" element={<ShiftManagement />}/>
-              <Route path="/shiftlist" element={<ShiftList />}/>
-              <Route path="/assignlocation" element={<AssignLocation />}/>
-              <Route path="/admin-employee-locations" element={<AdminEmployeeLocations />}/>
-              <Route path="/addlocation" element={<AddLocationPage />}/>
-               <Route path="/locationlist" element={<LocationListPage />}/>
-               <Route path="attedancesummary" element={<AttendanceSummary/>}/>
-                <Route path="/payroll" element={<PayRoll/>}/>
+              <Route path="/leaves-report" element={<LeavesReport />} />
+              <Route path="/shift" element={<ShiftManagement />} />
+              <Route path="/shiftlist" element={<ShiftList />} />
+              <Route path="/assignlocation" element={<AssignLocation />} />
+              <Route path="/admin-employee-locations" element={<AdminEmployeeLocations />} />
+              <Route path="/addlocation" element={<AddLocationPage />} />
+              <Route path="/locationlist" element={<LocationListPage />} />
+              <Route path="attedancesummary" element={<AttendanceSummary />} />
+              <Route path="/empmanagement" element={<EmpManagment />} />
+              <Route path="/payroll" element={<PayRoll />} />
 
             </Routes>
           </AdminLayout>

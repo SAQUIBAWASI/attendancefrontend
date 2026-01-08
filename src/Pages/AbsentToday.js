@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { isEmployeeHidden } from "../utils/employeeStatus";
 
 const AbsentToday = () => {
   const [absentEmployees, setAbsentEmployees] = useState([]);
@@ -39,14 +40,13 @@ const AbsentToday = () => {
       console.log("✅ Present IDs:", presentIds);
 
       // Filter employees who are not present and are active
-      const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
       const absents = employees.filter((emp) => {
         const empId = emp.employeeId || emp._id || emp.empId;
 
-        if (emp.status === 'inactive') return false;
-        if (emp.status === 'active') return true;
+        // Check if employee is inactive (hidden) using utility
+        if (isEmployeeHidden(emp)) return false;
 
-        return !presentIds.includes(empId) && !INACTIVE_EMPLOYEE_IDS.includes(empId);
+        return !presentIds.includes(empId);
       });
 
       console.log("🚨 Absent Employees:", absents);

@@ -254,6 +254,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { isEmployeeHidden } from "../utils/employeeStatus";
 
 const TodayAttendance = () => {
   const [todayRecords, setTodayRecords] = useState([]);
@@ -314,12 +315,8 @@ const TodayAttendance = () => {
         // Find the employee in the full list to check their database status
         const employee = employees.find(e => e.employeeId === empId || e._id === empId);
 
-        if (employee?.status === 'inactive') return false;
-        if (employee?.status === 'active') return true;
-
-        // Fallback for hardcoded IDs
-        const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
-        return !INACTIVE_EMPLOYEE_IDS.includes(empId);
+        // Use central utility
+        return !isEmployeeHidden(employee || { employeeId: empId });
       });
 
       setTodayRecords(activeRecords);

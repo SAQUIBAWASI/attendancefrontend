@@ -8,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import Pagination from "./Pagination"; // ✅ ADD THIS
 
+import { isEmployeeHidden } from "../utils/employeeStatus";
+
 const EmployeeList = () => {
   const [employees, setEmployees] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -21,17 +23,6 @@ const EmployeeList = () => {
   const itemsPerPage = 10;
   const navigate = useNavigate();
 
-  // List of hardcoded inactive employee IDs (backwards compatibility)
-  const HARDCODED_INACTIVE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
-
-  const isEmployeeHidden = (emp) => {
-    if (!emp) return false;
-    // Database preference: If status is set, favor it.
-    if (emp.status === 'active') return false;
-    if (emp.status === 'inactive') return true;
-    // Fallback: Check hardcoded list for old records
-    return HARDCODED_INACTIVE_IDS.includes(emp.employeeId);
-  };
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -76,7 +67,8 @@ const EmployeeList = () => {
       emp.department?.toLowerCase().includes(searchTerm) ||
       emp.role?.toLowerCase().includes(searchTerm)
     );
-  });
+  })
+    .sort((a, b) => isEmployeeHidden(a) - isEmployeeHidden(b));
 
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
@@ -117,6 +109,7 @@ const EmployeeList = () => {
   };
 
   const handleDelete = async (id) => {
+    console.log("Attempting to delete employee with ID:", id); // 🔍 Debug log
     if (window.confirm("Are you sure you want to delete this employee?")) {
       try {
         await axios.delete(
@@ -126,7 +119,9 @@ const EmployeeList = () => {
         alert("✅ Employee deleted successfully!");
       } catch (error) {
         console.error("❌ Error deleting employee:", error);
-        alert("Failed to delete employee.");
+        // Show specific error from backend if available
+        const errMsg = error.response?.data?.message || error.message || "Unknown error";
+        alert(`Failed to delete employee. Error: ${errMsg}`);
       }
     }
   };
@@ -320,7 +315,7 @@ const EmployeeList = () => {
                         className={`px-2 py-0.5 text-xs font-bold rounded ${isEmployeeHidden(emp) ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                         title={isEmployeeHidden(emp) ? "Make Active" : "Hide Employee"}
                       >
-                        {isEmployeeHidden(emp) ? 'ACTIVE' : 'HIDE'}
+                        {isEmployeeHidden(emp) ? 'INACTIVE' : 'ACTIVE'}
                       </button>
 
                       <button className="text-red-500" onClick={() => handleDelete(emp._id)} title="Delete Employee">

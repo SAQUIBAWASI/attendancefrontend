@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { isEmployeeHidden } from "../utils/employeeStatus";
 
 const MonthlyAttendance = () => {
   const [employee, setEmployee] = useState("");
@@ -14,11 +15,7 @@ const MonthlyAttendance = () => {
   const fetchAttendanceRecords = async () => {
     try {
       const response = await axios.get("https://hr-backend-hifb.onrender.com/api/hr/all-montlyattendance");
-      const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
-      const activeRecords = response.data.filter(record =>
-        !INACTIVE_EMPLOYEE_IDS.includes(record.employeeId) &&
-        !INACTIVE_EMPLOYEE_IDS.includes(record.employee)
-      );
+      const activeRecords = response.data.filter(record => !isEmployeeHidden(record));
       setAttendanceRecords(activeRecords); // Populate the table with data from the server
     } catch (error) {
       console.error("Error fetching attendance records:", error);

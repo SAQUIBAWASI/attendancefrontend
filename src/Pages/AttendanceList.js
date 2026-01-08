@@ -1,5 +1,5 @@
-
 import { useEffect, useState } from "react";
+import { filterActiveRecords } from "../utils/employeeStatus";
 
 const BASE_URL = "http://localhost:5000";
 
@@ -32,19 +32,8 @@ export default function AttendanceList() {
           new Date(b.checkInTime) - new Date(a.checkInTime)
         );
 
-        // List of inactive employee IDs to hide
-        const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
-
-        // Filter out inactive employees
-        const activeRecords = sortedRecords.filter(rec => {
-          const empId = rec.employeeId;
-          const employee = employees.find(e => e.employeeId === empId || e._id === empId);
-
-          if (employee?.status === 'inactive') return false;
-          if (employee?.status === 'active') return true;
-
-          return !INACTIVE_EMPLOYEE_IDS.includes(empId);
-        });
+        // Filter out inactive employees using central utility
+        const activeRecords = filterActiveRecords(sortedRecords, employees);
 
         setRecords(activeRecords);
         setFilteredRecords(activeRecords);

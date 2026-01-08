@@ -64,26 +64,25 @@ const AdminLayout = ({ children }) => {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
       {/* Sidebar */}
-      <Sidebar 
+      <Sidebar
         isCollapsed={isCollapsed}
         isMobile={isMobile}
         onLinkClick={handleSidebarClose} // This will close sidebar on ALL devices
       />
-      
+
       {/* Main Content - Fixed space calculation */}
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
-        isMobile 
-          ? 'ml-0' 
-          : isCollapsed 
-            ? 'lg:ml-16' 
-            : 'lg:ml-64'
-      }`}>
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isMobile
+          ? 'ml-0'
+          : isCollapsed
+            ? 'lg:ml-16'
+            : 'lg:ml-60'
+        }`}>
         {/* Navbar */}
-        <Navbar 
+        <Navbar
           setIsCollapsed={setIsCollapsed}
           isCollapsed={isCollapsed}
         />
-        
+
         {/* Page Content - Remove extra padding if needed */}
         <main className="flex-1 p-0 overflow-auto bg-gray-100 md:p-2">
           {children}

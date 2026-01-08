@@ -410,6 +410,7 @@
 
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
+import { isEmployeeHidden } from "../utils/employeeStatus";
 import {
   Bar,
   BarChart,
@@ -427,18 +428,31 @@ const LeaveReport = () => {
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [selectedType, setSelectedType] = useState("");
 
-  // ✅ Fetch all approved leaves
+  // ✅ Fetch all approved leaves and employees
   const fetchApprovedLeaves = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/leaves/leaves?status=approved");
-      const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
-      const approved = (res.data.records || res.data).filter(
-        (l) => l.status?.toLowerCase() === "approved" && !INACTIVE_EMPLOYEE_IDS.includes(l.employeeId)
-      );
+      const [leavesRes, empRes] = await Promise.all([
+        axios.get("http://localhost:5000/api/leaves/leaves?status=approved"),
+        axios.get("http://localhost:5000/api/employees/get-employees")
+      ]);
+
+      const employees = empRes.data || [];
+      const allLeaves = leavesRes.data.records || leavesRes.data;
+
+      const approved = allLeaves.filter((l) => {
+        if (l.status?.toLowerCase() !== "approved") return false;
+
+        // Find employee to check status
+        const emp = employees.find(e => e.employeeId === l.employeeId || e._id === l.employeeId);
+
+        // Use central utility with employee object (or fallback to ID check)
+        return !isEmployeeHidden(emp || { employeeId: l.employeeId });
+      });
+
       setApprovedLeaves(approved);
       setFilteredLeaves(approved);
     } catch (err) {
-      console.error("Failed to fetch approved leaves:", err);
+      console.error("Failed to fetch data:", err);
     }
   };
 

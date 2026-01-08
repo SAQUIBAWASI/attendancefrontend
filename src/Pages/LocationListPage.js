@@ -38,13 +38,20 @@ const LocationListPage = () => {
     fetchLocations();
   }, []);
 
-  // Search functionality
+  // Search and Sort functionality
   useEffect(() => {
-    const filtered = locations.filter(
-      (loc) =>
-        loc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        loc.fullAddress.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filtered = locations
+      .filter(
+        (loc) =>
+          loc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          loc.fullAddress.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .sort((a, b) => {
+        // Active (status !== 'inactive') should be first (0), Inactive (status === 'inactive') should be second (1)
+        const statusA = a.status === "inactive" ? 1 : 0;
+        const statusB = b.status === "inactive" ? 1 : 0;
+        return statusA - statusB;
+      });
     setFilteredLocations(filtered);
   }, [searchTerm, locations]);
 
@@ -67,6 +74,37 @@ const LocationListPage = () => {
     }
   };
 
+  // Handle Toggle Status
+  const handleToggleStatus = async (location) => {
+    const newStatus = location.status === "inactive" ? "active" : "inactive";
+    const confirmMsg = location.status === "inactive"
+      ? `Are you sure you want to make ${location.name} ACTIVE?`
+      : `Are you sure you want to make ${location.name} INACTIVE?`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/location/updatelocation/${location._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...location,
+          status: newStatus,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Failed to update status");
+
+      setLocations((prev) =>
+        prev.map((loc) => (loc._id === location._id ? { ...loc, status: newStatus } : loc))
+      );
+      alert(`✅ Location set to ${newStatus}`);
+    } catch (error) {
+      alert("❌ " + error.message);
+    }
+  };
+
   // Open Edit Modal
   const openEditModal = (location) => {
     setEditLocation(location);
@@ -76,7 +114,7 @@ const LocationListPage = () => {
     setUpdatedLongitude(location.longitude.toString()); // prefill lng
     setIsEditModalOpen(true);
   };
- const navigate = useNavigate();
+  const navigate = useNavigate();
   // Handle Update
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -100,12 +138,12 @@ const LocationListPage = () => {
         prev.map((loc) =>
           loc._id === editLocation._id
             ? {
-                ...loc,
-                name: updatedName,
-                fullAddress: updatedFullAddress,
-                latitude: parseFloat(updatedLatitude),
-                longitude: parseFloat(updatedLongitude),
-              }
+              ...loc,
+              name: updatedName,
+              fullAddress: updatedFullAddress,
+              latitude: parseFloat(updatedLatitude),
+              longitude: parseFloat(updatedLongitude),
+            }
             : loc
         )
       );
@@ -113,12 +151,12 @@ const LocationListPage = () => {
         prev.map((loc) =>
           loc._id === editLocation._id
             ? {
-                ...loc,
-                name: updatedName,
-                fullAddress: updatedFullAddress,
-                latitude: parseFloat(updatedLatitude),
-                longitude: parseFloat(updatedLongitude),
-              }
+              ...loc,
+              name: updatedName,
+              fullAddress: updatedFullAddress,
+              latitude: parseFloat(updatedLatitude),
+              longitude: parseFloat(updatedLongitude),
+            }
             : loc
         )
       );
@@ -136,29 +174,29 @@ const LocationListPage = () => {
         <h2 className="text-2xl font-bold text-blue-900">📍 Location Management</h2>
 
         {/* Search + Add Location */}
-<div className="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:justify-between">
-  
-  {/* Search Bar */}
-  <div className="relative w-full md:w-1/3">
-    <FiSearch className="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
-    <input
-      type="text"
-      placeholder="Search location..."
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      className="w-full py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-  </div>
+        <div className="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:justify-between">
 
-  {/* Add Location Button */}
-  <button
-    onClick={() => navigate("/addlocation")}
-    className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
-  >
-    📍 Add Location
-  </button>
+          {/* Search Bar */}
+          <div className="relative w-full md:w-1/3">
+            <FiSearch className="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+            <input
+              type="text"
+              placeholder="Search location..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-</div>
+          {/* Add Location Button */}
+          <button
+            onClick={() => navigate("/addlocation")}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+          >
+            📍 Add Location
+          </button>
+
+        </div>
 
       </div>
 
@@ -206,6 +244,16 @@ const LocationListPage = () => {
                         className="p-2 text-blue-600 transition rounded hover:bg-blue-100"
                       >
                         <FiEdit size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleToggleStatus(loc)}
+                        className={`px-2 py-1 text-[10px] font-bold rounded uppercase transition ${loc.status === "inactive"
+                            ? "bg-gray-100 text-gray-500 hover:bg-green-100 hover:text-green-700"
+                            : "bg-green-100 text-green-700 hover:bg-gray-200 hover:text-gray-700"
+                          }`}
+                        title={loc.status === "inactive" ? "Make Active" : "Make Inactive"}
+                      >
+                        {loc.status === "inactive" ? "Inactive" : "Active"}
                       </button>
                       <button
                         onClick={() => handleDelete(loc._id)}
