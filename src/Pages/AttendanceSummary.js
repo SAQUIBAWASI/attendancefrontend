@@ -7976,27 +7976,27 @@ export default function AttendanceSummary() {
         "Full Day Leave": empSummary.fullDayNotWorking || 0,
         "Over Time": calculateEmployeeOT(employeeId).toFixed(2),
         "Working Days": empSummary.totalWorkingDays.toFixed(1),
-        "Total Hours": sortedAttendance.reduce((sum, rec) => 
+        "Total Hours": sortedAttendance.reduce((sum, rec) =>
           sum + (Number(rec.totalHours) || 0), 0
         ).toFixed(2)
       }];
 
       const summarySheet = XLSX.utils.json_to_sheet(summaryData);
-      
+
       // Sheet name formatting
-      const summarySheetName = employee.name 
+      const summarySheetName = employee.name
         ? employee.name.replace(/[^A-Za-z0-9]/g, "").substring(0, 28)
         : employeeId;
-      
+
       XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
 
       // 🟦 Sheet 2: Detailed Attendance
       const detailData = sortedAttendance.map(rec => {
         const checkIn = new Date(rec.checkInTime);
         const checkOut = rec.checkOutTime ? new Date(rec.checkOutTime) : null;
-        const hours = rec.totalHours || 
+        const hours = rec.totalHours ||
           (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
-        
+
         return {
           "Date": checkIn.toLocaleDateString("en-IN"),
           "Day": checkIn.toLocaleDateString("en-IN", { weekday: 'short' }),
@@ -8873,68 +8873,82 @@ export default function AttendanceSummary() {
 
         {/* Working Hours Info - UPDATED CRITERIA */}
 
-        <div className="p-4 mb-6 bg-white border border-blue-300 rounded-lg shadow-sm">
+        <div className="p-3 mb-4 bg-white border border-gray-200 shadow-md rounded-lg">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-end">
 
-          {/* 🔽 Filters & Actions – Single Row */}
-          <div className="flex items-end gap-4 pt-3 border-t border-gray-200 flex-nowrap">
-
-            <div className="flex flex-col">
-              <label className="mb-1 text-xs font-medium text-gray-600">
-                From
+            {/* From Date */}
+            <div className="md:col-span-2">
+              <label className="block mb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                From Date
               </label>
               <input
                 type="date"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
-            <div className="flex flex-col">
-              <label className="mb-1 text-xs font-medium text-gray-600">
-                To
+            {/* To Date */}
+            <div className="md:col-span-2">
+              <label className="block mb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                To Date
               </label>
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
-            <div className="flex flex-col">
-              <label className="mb-1 text-xs font-medium text-gray-600">
-                Month
+            {/* Month Selector */}
+            <div className="md:col-span-2">
+              <label className="block mb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                Select Month
               </label>
               <input
                 type="month"
                 value={selectedMonth}
                 onChange={handleMonthChange}
-                className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
-            <button
-              onClick={() => handleDateRangeFilter(fromDate, toDate)}
-              className="px-4 text-sm font-medium text-white transition bg-blue-600 rounded-md h-9 hover:bg-blue-700"
-            >
-              Apply
-            </button>
+            {/* Action Buttons Group */}
+            <div className="flex flex-wrap gap-2 md:col-span-6 md:justify-end">
 
-            <button
-              onClick={clearFilters}
-              className="px-4 text-sm font-medium text-gray-700 transition bg-gray-100 border border-gray-300 rounded-md h-9 hover:bg-gray-200"
-            >
-              Clear
-            </button>
+              <button
+                onClick={() => handleDateRangeFilter(fromDate, toDate)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors bg-blue-600 rounded-md shadow-sm hover:bg-blue-700 focus:ring-1 focus:ring-blue-500 focus:ring-offset-1"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Apply
+              </button>
 
-            <button
-              onClick={downloadCombinedExcel}
-              className="flex items-center gap-2 px-4 text-sm font-medium text-white transition bg-green-600 rounded-md h-9 hover:bg-green-700"
-            >
-              ⬇ Download All
-            </button>
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:text-gray-900 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Clear
+              </button>
 
+              <button
+                onClick={downloadCombinedExcel}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:ring-1 focus:ring-green-500 focus:ring-offset-1"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download
+              </button>
+
+            </div>
           </div>
         </div>
 
@@ -9040,8 +9054,8 @@ export default function AttendanceSummary() {
                     onClick={handlePrevPage}
                     disabled={currentPage === 1}
                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === 1
-                        ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                        : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                      ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                      : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                       }`}
                   >
                     Previous
@@ -9052,8 +9066,8 @@ export default function AttendanceSummary() {
                       key={page}
                       onClick={() => handlePageClick(page)}
                       className={`px-3 py-1 text-sm border rounded-lg ${currentPage === page
-                          ? "text-white bg-blue-600 border-blue-600"
-                          : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                        ? "text-white bg-blue-600 border-blue-600"
+                        : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                         }`}
                     >
                       {page}
@@ -9064,8 +9078,8 @@ export default function AttendanceSummary() {
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === totalPages
-                        ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                        : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                      ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                      : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                       }`}
                   >
                     Next
@@ -9235,8 +9249,8 @@ export default function AttendanceSummary() {
                               disabled={!rec || !(edited?.comment || rec?.comment)}
                               onClick={() => handleSave(rec, dateKey)}
                               className={`px-3 py-1 text-white rounded ${rec && (edited?.comment || rec?.comment)
-                                  ? "bg-green-600 hover:bg-green-700"
-                                  : "bg-gray-400 cursor-not-allowed"
+                                ? "bg-green-600 hover:bg-green-700"
+                                : "bg-gray-400 cursor-not-allowed"
                                 }`}
                             >
                               {rec ? (edited ? "Update" : "Save") : "-"}
