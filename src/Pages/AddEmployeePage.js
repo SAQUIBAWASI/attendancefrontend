@@ -2096,7 +2096,68 @@ const AddEmployeePage = () => {
               </option>
             ))}
           </select>
+<<<<<<< HEAD
         </div>
+=======
+        </div> */}
+
+        <div className="mb-4">
+          {/* Label + Button */}
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-sm font-medium text-gray-700">
+              Location
+            </label>
+
+            {/* <button onClick={() => navigate("/addlocation")}
+              type="button"
+              className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
+            >
+              + Add Location
+            </button> */}
+          </div>
+
+          {/* Select */}
+          {/* <select
+            value={locationId}
+            onChange={(e) => setLocationId(e.target.value)}
+            className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select a Location</option>
+            {locations.map((loc) => (
+              <option key={loc._id} value={loc._id}>
+                {loc.name}
+              </option>
+            ))}
+          </select> */}
+          <select
+  value={locationId}
+  onChange={(e) => {
+    const selectedValue = e.target.value;
+
+    if (selectedValue === "add-new") {
+      navigate("/addlocation");
+      return;
+    }
+
+    setLocationId(selectedValue);
+  }}
+  className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+>
+  <option value="">Select a Location</option>
+
+  {locations.map((loc) => (
+    <option key={loc._id} value={loc._id}>
+      {loc.name}
+    </option>
+  ))}
+
+  <option value="add-new">➕ Add New Location</option>
+</select>
+
+          
+        </div>
+
+>>>>>>> 264eba67185cdba26a81be0b0d8c14294f40f22c
 
         <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded">
           {loading ? "Saving..." : editingEmployee ? "Update Employee" : "Add Employee"}
