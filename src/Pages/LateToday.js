@@ -118,7 +118,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { isEmployeeHidden } from "../utils/employeeStatus";
 
-const BASE_URL = "http://localhost:5000/"; // replace with your backend URL
+const BASE_URL = "http://localhost:5000"; // replace with your backend URL
 
 const LateToday = () => {
   const [records, setRecords] = useState([]);
@@ -141,11 +141,20 @@ const LateToday = () => {
       const rawRecords = lateResp.data.records || [];
 
       if (rawRecords) {
-        const activeRecords = rawRecords.filter(rec => {
-          // Find employee to check status
+        const activeRecords = rawRecords.reduce((acc, rec) => {
+          // Find employee to check status and get name
           const emp = employees.find(e => e.employeeId === rec.employeeId || e._id === rec.employeeId);
-          return !isEmployeeHidden(emp || { employeeId: rec.employeeId });
-        });
+
+          if (!isEmployeeHidden(emp || { employeeId: rec.employeeId })) {
+            // Attach name if missing
+            const recordWithInfo = {
+              ...rec,
+              employeeName: rec.employeeName || (emp ? emp.name : "-")
+            };
+            acc.push(recordWithInfo);
+          }
+          return acc;
+        }, []);
         setRecords(activeRecords);
       } else {
         setError("Unexpected API response");
@@ -175,8 +184,9 @@ const LateToday = () => {
               <tr>
                 <th className="px-4 py-2 border">Employee ID</th>
                 <th className="px-4 py-2 border">Name</th>
-                <th className="px-4 py-2 border">Email</th>
+                <th className="px-4 py-2 border">Shift Start</th>
                 <th className="px-4 py-2 border">Check In</th>
+                <th className="px-4 py-2 border">Late By</th>
                 <th className="px-4 py-2 border">Status</th>
               </tr>
             </thead>
@@ -185,14 +195,21 @@ const LateToday = () => {
                 <tr key={rec._id} className="hover:bg-gray-50">
                   <td className="px-4 py-2 border">{rec.employeeId}</td>
                   <td className="px-4 py-2 border">{rec.employeeName || "-"}</td>
-                  <td className="px-4 py-2 border">{rec.employeeEmail}</td>
-                  <td className="px-4 py-2 border">
+                  <td className="px-4 py-2 border text-blue-600 font-medium">
+                    {rec.shiftStart || "-"}
+                  </td>
+                  <td className="px-4 py-2 border text-red-600 font-medium">
                     {rec.checkInTime
-                      ? new Date(rec.checkInTime).toLocaleTimeString()
+                      ? new Date(rec.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                       : "-"}
                   </td>
+                  <td className="px-4 py-2 border text-gray-700">
+                    {rec.lateByMinutes ? `${rec.lateByMinutes} mins` : "-"}
+                  </td>
                   <td className="px-4 py-2 border text-yellow-700 font-semibold">
-                    Late Come
+                    <span className="bg-yellow-100 px-2 py-1 rounded text-xs">
+                      Late
+                    </span>
                   </td>
                 </tr>
               ))}

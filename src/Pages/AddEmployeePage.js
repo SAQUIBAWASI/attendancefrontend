@@ -1384,16 +1384,16 @@ const AddEmployeePage = () => {
               Location
             </label>
 
-            <button onClick={() => navigate("/addlocation")}
+            {/* <button onClick={() => navigate("/addlocation")}
               type="button"
               className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
             >
               + Add Location
-            </button>
+            </button> */}
           </div>
 
           {/* Select */}
-          <select
+          {/* <select
             value={locationId}
             onChange={(e) => setLocationId(e.target.value)}
             className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1404,7 +1404,33 @@ const AddEmployeePage = () => {
                 {loc.name}
               </option>
             ))}
-          </select>
+          </select> */}
+          <select
+  value={locationId}
+  onChange={(e) => {
+    const selectedValue = e.target.value;
+
+    if (selectedValue === "add-new") {
+      navigate("/addlocation");
+      return;
+    }
+
+    setLocationId(selectedValue);
+  }}
+  className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+>
+  <option value="">Select a Location</option>
+
+  {locations.map((loc) => (
+    <option key={loc._id} value={loc._id}>
+      {loc.name}
+    </option>
+  ))}
+
+  <option value="add-new">➕ Add New Location</option>
+</select>
+
+          
         </div>
 
 
