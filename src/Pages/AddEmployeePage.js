@@ -2096,10 +2096,8 @@ const AddEmployeePage = () => {
               </option>
             ))}
           </select>
-<<<<<<< HEAD
-        </div>
-=======
-        </div> */}
+
+        </div> 
 
         <div className="mb-4">
           {/* Label + Button */}
@@ -2157,7 +2155,7 @@ const AddEmployeePage = () => {
           
         </div>
 
->>>>>>> 264eba67185cdba26a81be0b0d8c14294f40f22c
+
 
         <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded">
           {loading ? "Saving..." : editingEmployee ? "Update Employee" : "Add Employee"}
