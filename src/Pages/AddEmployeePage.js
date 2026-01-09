@@ -1491,7 +1491,7 @@ const AddEmployeePage = () => {
       setShiftHours(editingEmployee.shiftHours || "");
       setWeekOffPerMonth(editingEmployee.weekOffPerMonth || "");
       setPassword("");
-      
+
       // Fetch employee's shift if editing
       fetchEmployeeShift();
     }
@@ -1500,7 +1500,7 @@ const AddEmployeePage = () => {
   // Fetch employee's existing shift
   const fetchEmployeeShift = async () => {
     if (!editingEmployee?.employeeId) return;
-    
+
     try {
       const res = await axios.get(`http://localhost:5000/api/shifts/employee/${editingEmployee.employeeId}`);
       if (res.data && !res.data.message) {
@@ -1532,14 +1532,14 @@ const AddEmployeePage = () => {
       try {
         const res = await axios.get("http://localhost:5000/api/shifts/all");
         console.log("All shifts data:", res.data);
-        
+
         if (res.data && Array.isArray(res.data)) {
           setAllShiftsData(res.data);
-          
+
           // Get unique shift types
           const uniqueShifts = [...new Set(res.data.map(shift => shift.shiftType))];
           setShiftList(uniqueShifts);
-          
+
           // Set default times from first shift if available
           if (res.data.length > 0) {
             const firstShift = res.data[0];
@@ -1575,20 +1575,20 @@ const AddEmployeePage = () => {
         startTime: startTime,
         endTime: endTime
       };
-      
+
       const response = await axios.post(
         "http://localhost:5000/api/shifts/assign",
         shiftData
       );
-      
+
       console.log("Shift assigned with times:", response.data);
       return { success: true, data: response.data };
-      
+
     } catch (error) {
       console.error("Shift assignment error:", error.response?.data || error.message);
-      return { 
-        success: false, 
-        message: error.response?.data?.message || error.message 
+      return {
+        success: false,
+        message: error.response?.data?.message || error.message
       };
     }
   };
@@ -1613,7 +1613,7 @@ const AddEmployeePage = () => {
       }
 
       finalShift = finalShift.toUpperCase().trim();
-      
+
       if (finalShift.length !== 1 || !/^[A-Z]$/.test(finalShift)) {
         throw new Error("Shift type should be a single letter from A to Z");
       }
@@ -1790,10 +1790,10 @@ const AddEmployeePage = () => {
 
         <div className="mb-4 relative">
           <label className="block text-sm">Password {!editingEmployee && "*"}</label>
-          <input 
-            type={showPassword ? "text" : "password"} 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
+          <input
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="w-full p-2 border rounded pr-10"
             required={!editingEmployee}
           />
@@ -1892,7 +1892,7 @@ const AddEmployeePage = () => {
         {/* ✅ ENHANCED SHIFT SECTION WITH TIME PICKERS */}
         <div className="mb-4 p-4 border rounded-lg bg-gray-50">
           <label className="block text-sm font-medium mb-2">Shift Details *</label>
-          
+
           <div className="flex gap-2 mb-3">
             <select
               value={isAddingNewShift ? "ADD_NEW" : shiftType}
@@ -1915,7 +1915,7 @@ const AddEmployeePage = () => {
               <option value="ADD_NEW" className="font-bold text-blue-600">+ Add New Shift Type</option>
             </select>
           </div>
-          
+
           {isAddingNewShift ? (
             <div className="space-y-4 p-3 border border-blue-200 rounded bg-blue-50">
               <div className="flex justify-between items-center">
@@ -1928,7 +1928,7 @@ const AddEmployeePage = () => {
                   Cancel
                 </button>
               </div>
-              
+
               <div>
                 <label className="block text-xs text-gray-600 mb-1">Shift Type Code *</label>
                 <input
@@ -1947,7 +1947,7 @@ const AddEmployeePage = () => {
                 />
                 <p className="text-xs text-gray-500 mt-1">Single letter from A to Z</p>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Start Time *</label>
@@ -1984,7 +1984,7 @@ const AddEmployeePage = () => {
                       <span className="text-xs text-green-600">✓ Existing Shift</span>
                     )}
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs text-gray-600 mb-1">Start Time *</label>
@@ -2007,7 +2007,7 @@ const AddEmployeePage = () => {
                       />
                     </div>
                   </div>
-                  
+
                   {/* Show shift timing info if exists */}
                   {(() => {
                     const selectedShift = allShiftsData.find(s => s.shiftType === shiftType);
@@ -2024,7 +2024,7 @@ const AddEmployeePage = () => {
               )}
             </div>
           )}
-          
+
           <p className="text-xs text-gray-500 mt-2">
             Available shifts: {shiftList.join(", ")}
           </p>
@@ -2072,12 +2072,12 @@ const AddEmployeePage = () => {
           <input type="number" value={weekOffPerMonth} onChange={(e) => setWeekOffPerMonth(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
-        <div className="mb-4">
+        {/* <div className="mb-4">
           <div className="flex items-center justify-between mb-1">
             <label className="text-sm font-medium text-gray-700">
               Location
             </label>
-            <button onClick={()=>navigate("/addlocation")}
+            <button onClick={() => navigate("/addlocation")}
               type="button"
               className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
             >
@@ -2097,7 +2097,7 @@ const AddEmployeePage = () => {
             ))}
           </select>
 
-        </div> 
+        </div> */}
 
         <div className="mb-4">
           {/* Label + Button */}
@@ -2128,31 +2128,31 @@ const AddEmployeePage = () => {
             ))}
           </select> */}
           <select
-  value={locationId}
-  onChange={(e) => {
-    const selectedValue = e.target.value;
+            value={locationId}
+            onChange={(e) => {
+              const selectedValue = e.target.value;
 
-    if (selectedValue === "add-new") {
-      navigate("/addlocation");
-      return;
-    }
+              if (selectedValue === "add-new") {
+                navigate("/addlocation");
+                return;
+              }
 
-    setLocationId(selectedValue);
-  }}
-  className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
->
-  <option value="">Select a Location</option>
+              setLocationId(selectedValue);
+            }}
+            className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select a Location</option>
 
-  {locations.map((loc) => (
-    <option key={loc._id} value={loc._id}>
-      {loc.name}
-    </option>
-  ))}
+            {locations.map((loc) => (
+              <option key={loc._id} value={loc._id}>
+                {loc.name}
+              </option>
+            ))}
 
-  <option value="add-new">➕ Add New Location</option>
-</select>
+            <option value="add-new">➕ Add New Location</option>
+          </select>
 
-          
+
         </div>
 
 
