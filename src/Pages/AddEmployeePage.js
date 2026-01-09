@@ -1378,34 +1378,34 @@ const AddEmployeePage = () => {
         </div> */}
 
         <div className="mb-4">
-  {/* Label + Button */}
-  <div className="flex items-center justify-between mb-1">
-    <label className="text-sm font-medium text-gray-700">
-      Location
-    </label>
+          {/* Label + Button */}
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-sm font-medium text-gray-700">
+              Location
+            </label>
 
-    <button onClick={()=>navigate("/addlocation")}
-      type="button"
-      className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
-    >
-      + Add Location
-    </button>
-  </div>
+            <button onClick={() => navigate("/addlocation")}
+              type="button"
+              className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
+            >
+              + Add Location
+            </button>
+          </div>
 
-  {/* Select */}
-  <select
-    value={locationId}
-    onChange={(e) => setLocationId(e.target.value)}
-    className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-  >
-    <option value="">Select a Location</option>
-    {locations.map((loc) => (
-      <option key={loc._id} value={loc._id}>
-        {loc.name}
-      </option>
-    ))}
-  </select>
-</div>
+          {/* Select */}
+          <select
+            value={locationId}
+            onChange={(e) => setLocationId(e.target.value)}
+            className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select a Location</option>
+            {locations.map((loc) => (
+              <option key={loc._id} value={loc._id}>
+                {loc.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
 
         <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded">
