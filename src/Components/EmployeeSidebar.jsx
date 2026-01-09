@@ -213,7 +213,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
   const elements = [
     {
       icon: <i className="ri-dashboard-fill"></i>,
-      name: "Employee Dashboard",
+      name: "Dashboard",
       path: "/employeedashboard",
     },
     {
@@ -268,7 +268,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
       >
         {/* Header */}
         <div className="h-16 flex-shrink-0 flex items-center justify-center bg-blue-900 font-bold">
-          {isCollapsed && !isMobile ? "AD" : "Team Management System"}
+          {isCollapsed && !isMobile ? "TM" : "Team Management System"}
         </div>
 
         {/* Menu - Scrollable if needed */}
