@@ -128,6 +128,10 @@ import ShiftManagement from "./Pages/ShiftManagement.js";
 import SuperAdminMedicalMonitor from "./Pages/SuperAdminMedicalMonitor.js";
 import TimelyFooter from "./Pages/TimelyFooter.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
+<<<<<<< HEAD
+=======
+// import EmpManagment from "./Pages/EmpManagment.js";
+>>>>>>> e156b6a2860d93515a289d161d05724944dbb208
 function App() {
   return (
     <Routes>

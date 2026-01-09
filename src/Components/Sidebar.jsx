@@ -52,11 +52,11 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
       name: "Leave Management",
       path: "/leavelist"
     },
-      {
-      icon: <i className="ri-calendar-close-fill"></i>,
-      name: "Emp Management",
-      path: "/empmanagement"
-    },
+    //   {
+    //   icon: <i className="ri-calendar-close-fill"></i>,
+    //   name: "Emp Management",
+    //   path: "/empmanagement"
+    // },
     { icon: <i className="ri-money-dollar-box-fill"></i>, name: "Payroll", path: "/payroll" },
     { icon: <i className="ri-file-chart-fill"></i>, name: "Reports", path: "/leaves-report" },
     { icon: <i className="ri-map-pin-2-fill"></i>, name: "Locations", path: "/locationlist" },
