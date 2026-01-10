@@ -64,7 +64,7 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
     "/attendance-capture": "Check In",
     "/my-shift": "My Shift",
     "/mylocation": "My Assigned Location",
-    "/mysalary": "My Salary - KARDAM KUMAR",
+    "/mysalary": "My Salary",
   };
 
   const handleMenuClick = () => {
