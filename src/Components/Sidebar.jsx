@@ -49,7 +49,7 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
     },
     {
       icon: <i className="ri-calendar-close-fill"></i>,
-      name: "Leave Management",
+      name: "Leaves",
       path: "/leavelist"
     },
     //   {
@@ -78,8 +78,8 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
       <div
         className={`fixed top-0 left-0 h-full bg-[#1E40AF] text-white z-50 transition-all duration-300 border-r border-blue-800/50
         ${isMobile
-            ? isCollapsed ? "-translate-x-full w-60" : "translate-x-0 w-60"
-            : isCollapsed ? "w-16" : "w-60"
+            ? isCollapsed ? "-translate-x-full w-52" : "translate-x-0 w-52"
+            : isCollapsed ? "w-16" : "w-52"
           }`}
       >
         {/* Header */}

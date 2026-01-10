@@ -29,8 +29,8 @@ export default function EmployeeLayout({ children }) {
   const sidebarMargin = isMobile
     ? "ml-0"
     : isCollapsed
-    ? "ml-16"
-    : "ml-64";
+      ? "ml-16"
+      : "ml-52";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -44,7 +44,7 @@ export default function EmployeeLayout({ children }) {
       </div>
 
       {/* Main Content */}
-      <div 
+      <div
         className={`flex flex-col min-h-screen transition-all duration-300 ${sidebarMargin}`}
       >
         {/* Navbar - FIXED AT TOP */}

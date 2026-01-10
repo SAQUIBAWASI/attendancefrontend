@@ -262,9 +262,9 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
       {/* Sidebar */}
       <div
         className={`h-screen bg-blue-800 text-white flex flex-col transition-all duration-300 ease-in-out z-50 ${isMobile
-            ? `fixed top-0 left-0 ${isCollapsed ? "-translate-x-full" : "translate-x-0"
-            } w-64`
-            : `relative ${isCollapsed ? "w-16" : "w-64"}`
+          ? `fixed top-0 left-0 ${isCollapsed ? "-translate-x-full" : "translate-x-0"
+          } w-52`
+          : `relative ${isCollapsed ? "w-16" : "w-52"}`
           }`}
       >
         {/* Header */}
