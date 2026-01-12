@@ -10,7 +10,7 @@
 //   const fetchShifts = async () => {
 //     try {
 //       setLoading(true);
-//       const res = await axios.get("http://localhost:5000api/shifts/all");
+//       const res = await axios.get("https://api.timelyhealth.inapi/shifts/all");
 //       setShifts(res.data);
 //     } catch (err) {
 //       alert("❌ Failed to load shifts");
@@ -28,7 +28,7 @@
 //     if (!window.confirm("Are you sure you want to delete this shift?")) return;
 
 //     try {
-//       await axios.delete(`http://localhost:5000api/shifts/${id}`);
+//       await axios.delete(`https://api.timelyhealth.inapi/shifts/${id}`);
 //       alert("✅ Shift deleted successfully");
 //       fetchShifts();
 //     } catch (err) {
@@ -120,7 +120,7 @@ export default function ShiftList() {
   const fetchShifts = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5000/api/shifts/all");
+      const res = await axios.get("https://api.timelyhealth.in/api/shifts/all");
 
       console.log("Shifts API Response:", res.data);
 
@@ -146,7 +146,7 @@ export default function ShiftList() {
     if (!window.confirm("Are you sure you want to delete this shift?")) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/shifts/${id}`);
+      await axios.delete(`https://api.timelyhealth.in/api/shifts/${id}`);
       alert("✅ Shift deleted successfully");
       fetchShifts(); // Refresh list after deletion
     } catch (err) {

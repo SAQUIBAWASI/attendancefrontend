@@ -10,7 +10,7 @@
 //   const [editingRecord, setEditingRecord] = useState(null);
 //   const [updatedStatus, setUpdatedStatus] = useState("");
 //   const [loading, setLoading] = useState(true);
-  
+
 //   // Search and Filter States
 //   const [searchTerm, setSearchTerm] = useState("");
 //   const [statusFilter, setStatusFilter] = useState("all");
@@ -23,9 +23,9 @@
 //   const fetchLeaves = async () => {
 //     try {
 //       setLoading(true);
-//       const res = await axios.get("http://localhost:5000/api/leaves/leaves");
+//       const res = await axios.get("https://api.timelyhealth.in/api/leaves/leaves");
 //       const leavesData = res.data.records || res.data || [];
-      
+
 //       // Sort by latest first
 //       const sortedLeaves = leavesData.sort((a, b) => new Date(b.createdAt || b.startDate) - new Date(a.createdAt || a.startDate));
 //       setLeaves(sortedLeaves);
@@ -90,7 +90,7 @@
 //     }
 //     try {
 //       await axios.put(
-//         `http://localhost:5000/api/leaves/updateleaves/${editingRecord._id}`,
+//         `https://api.timelyhealth.in/api/leaves/updateleaves/${editingRecord._id}`,
 //         { status: updatedStatus }
 //       );
 //       alert(`✅ Leave ${updatedStatus} successfully!`);
@@ -217,7 +217,7 @@
 //   const getPageNumbers = () => {
 //     const pageNumbers = [];
 //     const maxPagesToShow = 5;
-    
+
 //     if (totalPages <= maxPagesToShow) {
 //       for (let i = 1; i <= totalPages; i++) {
 //         pageNumbers.push(i);
@@ -225,12 +225,12 @@
 //     } else {
 //       const startPage = Math.max(1, currentPage - 2);
 //       const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-      
+
 //       for (let i = startPage; i <= endPage; i++) {
 //         pageNumbers.push(i);
 //       }
 //     }
-    
+
 //     return pageNumbers;
 //   };
 
@@ -291,7 +291,7 @@
 //               <h3 className="mb-2 text-xl font-semibold text-gray-800">🔍 Filter Leave Requests</h3>
 //               <p className="text-gray-600">Search and filter by various criteria</p>
 //             </div>
-            
+
 //             <div className="flex flex-col gap-3 sm:flex-row">
 //               <button
 //                 onClick={downloadCSV}
@@ -300,7 +300,7 @@
 //                 <FaDownload className="text-sm" />
 //                 Download CSV
 //               </button>
-              
+
 //               <button
 //                 onClick={clearFilters}
 //                 className="flex items-center gap-2 px-6 py-3 font-semibold text-white transition bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl hover:from-gray-600 hover:to-gray-700"
@@ -480,7 +480,7 @@
 //                     Showing <strong>{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredLeaves.length)}</strong> of{" "}
 //                     <strong>{filteredLeaves.length}</strong> requests
 //                   </div>
-                  
+
 //                   <div className="flex items-center gap-2">
 //                     {/* Previous Button */}
 //                     <button
@@ -542,7 +542,7 @@
 //             >
 //               <FaTimes />
 //             </button>
-            
+
 //             <div className="mb-6 text-center">
 //               <h2 className="mb-2 text-2xl font-bold text-gray-800">Update Leave Status</h2>
 //               <p className="text-gray-600">Change the status of this leave request</p>
@@ -623,7 +623,7 @@
 //   const fetchLeaves = async () => {
 //     try {
 //       setLoading(true);
-//       const res = await axios.get("http://localhost:5000/api/leaves/leaves");
+//       const res = await axios.get("https://api.timelyhealth.in/api/leaves/leaves");
 //       const leavesData = res.data.records || res.data || [];
 //       const sorted = leavesData.sort(
 //         (a, b) => new Date(b.createdAt || b.startDate) - new Date(a.createdAt || a.startDate)
@@ -929,7 +929,7 @@ const LeavesList = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        "http://localhost:5000/api/leaves/leaves"
+        "https://api.timelyhealth.in/api/leaves/leaves"
       );
       const leavesData = res.data.records || res.data || [];
       const sorted = leavesData.sort(
@@ -953,9 +953,17 @@ const LeavesList = () => {
   // ✅ Update Leave Status (Approve / Reject)
   const updateLeaveStatus = async (id, status) => {
     try {
+      // Get admin info from localStorage
+      const adminName = localStorage.getItem("adminName") || "Admin";
+      const adminEmail = localStorage.getItem("adminEmail") || "";
+
       const res = await axios.put(
-        `http://localhost:5000/api/leaves/updateleaves/${id}`,
-        { status }
+        `https://api.timelyhealth.in/api/leaves/updateleaves/${id}`,
+        {
+          status,
+          adminName,
+          adminEmail
+        }
       );
 
       if (res.status === 200) {
@@ -1018,7 +1026,7 @@ const LeavesList = () => {
     setStartDateFilter("");
     setEndDateFilter("");
   };
- const navigate = useNavigate();
+  const navigate = useNavigate();
   // ✅ Stat Box
   const StatCard = ({ label, value, color }) => (
     <div
@@ -1030,7 +1038,7 @@ const LeavesList = () => {
   );
 
   const leaveTypes = [...new Set(leaves.map((l) => l.leaveType).filter(Boolean))];
- 
+
 
   // ✅ Loading Screen
   if (loading)
@@ -1048,10 +1056,10 @@ const LeavesList = () => {
   return (
     <div className="min-h-screen px-3 py-6 bg-gradient-to-br from-purple-50 to-blue-100">
       <div className="mx-auto max-w-9xl">
-       {/* Header */}
-{/* <div className="relative flex items-center mb-6"> */}
-  {/* Center Title */}
-  {/* <div className="w-full text-center">
+        {/* Header */}
+        {/* <div className="relative flex items-center mb-6"> */}
+        {/* Center Title */}
+        {/* <div className="w-full text-center">
     <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
       📋 Leave Requests
     </h1>
@@ -1060,8 +1068,8 @@ const LeavesList = () => {
     </p>
   </div> */}
 
-   {/* Right Button */}
-  {/* <button
+        {/* Right Button */}
+        {/* <button
     onClick={() => navigate("/leaves-report")}
     className="absolute right-0 px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700"
   >
@@ -1093,81 +1101,81 @@ const LeavesList = () => {
           />
         </div>
 
-      
+
 
 
         <div className="p-3 mb-3 bg-white border border-gray-200 shadow-md rounded-xl">
 
-  {/* Filters – Single Row */}
-  <div className="flex items-end gap-10 flex-nowrap">
+          {/* Filters – Single Row */}
+          <div className="flex items-end gap-10 flex-nowrap">
 
-    {/* Search */}
-    <div className="flex flex-col w-64">
-      <label className="mb-1 text-xs font-semibold text-gray-600">
-        <FaSearch className="inline mr-1" /> Search
-      </label>
-      <input
-        type="text"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-        placeholder="Name / ID / Type / Reason"
-      />
-    </div>
+            {/* Search */}
+            <div className="flex flex-col w-64">
+              <label className="mb-1 text-xs font-semibold text-gray-600">
+                <FaSearch className="inline mr-1" /> Search
+              </label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="Name / ID / Type / Reason"
+              />
+            </div>
 
-    {/* Status */}
-    <div className="flex flex-col w-40">
-      <label className="mb-1 text-xs font-semibold text-gray-600">
-        Status
-      </label>
-      <select
-        value={statusFilter}
-        onChange={(e) => setStatusFilter(e.target.value)}
-        className="h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-      >
-        <option value="all">All</option>
-        <option value="pending">Pending</option>
-        <option value="approved">Approved</option>
-        <option value="rejected">Rejected</option>
-      </select>
-    </div>
+            {/* Status */}
+            <div className="flex flex-col w-40">
+              <label className="mb-1 text-xs font-semibold text-gray-600">
+                Status
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="all">All</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
 
-    {/* From Date */}
-    <div className="flex flex-col w-40">
-      <label className="mb-1 text-xs font-semibold text-gray-600">
-        <FaCalendarAlt className="inline mr-1" /> From
-      </label>
-      <input
-        type="date"
-        value={startDateFilter}
-        onChange={(e) => setStartDateFilter(e.target.value)}
-        className="h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-      />
-    </div>
+            {/* From Date */}
+            <div className="flex flex-col w-40">
+              <label className="mb-1 text-xs font-semibold text-gray-600">
+                <FaCalendarAlt className="inline mr-1" /> From
+              </label>
+              <input
+                type="date"
+                value={startDateFilter}
+                onChange={(e) => setStartDateFilter(e.target.value)}
+                className="h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
 
-    {/* To Date */}
-    <div className="flex flex-col w-40">
-      <label className="mb-1 text-xs font-semibold text-gray-600">
-        <FaCalendarAlt className="inline mr-1" /> To
-      </label>
-      <input
-        type="date"
-        value={endDateFilter}
-        onChange={(e) => setEndDateFilter(e.target.value)}
-        className="h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-      />
-    </div>
+            {/* To Date */}
+            <div className="flex flex-col w-40">
+              <label className="mb-1 text-xs font-semibold text-gray-600">
+                <FaCalendarAlt className="inline mr-1" /> To
+              </label>
+              <input
+                type="date"
+                value={endDateFilter}
+                onChange={(e) => setEndDateFilter(e.target.value)}
+                className="h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
 
-    {/* Clear Button */}
-    <button
-      onClick={clearFilters}
-      className="h-9 px-5 mb-[2px] text-sm font-medium text-white bg-gray-500 rounded-md hover:bg-gray-600 transition"
-    >
-      Clear Filters
-    </button>
+            {/* Clear Button */}
+            <button
+              onClick={clearFilters}
+              className="h-9 px-5 mb-[2px] text-sm font-medium text-white bg-gray-500 rounded-md hover:bg-gray-600 transition"
+            >
+              Clear Filters
+            </button>
 
-  </div>
-</div>
+          </div>
+        </div>
 
 
         {/* ✅ Table */}

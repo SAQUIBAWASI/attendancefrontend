@@ -6,7 +6,7 @@
 
 //   const fetchApprovedLeaves = async () => {
 //     try {
-//       const res = await axios.get("http://localhost:5000/api/leaves/approved-leaves");
+//       const res = await axios.get("https://api.timelyhealth.in/api/leaves/approved-leaves");
 //       setApprovedLeaves(res.data);
 //     } catch (err) {
 //       console.error("Failed to fetch approved leaves:", err);
@@ -80,7 +80,7 @@
 
 //   const fetchApprovedLeaves = async () => {
 //     try {
-//       const res = await axios.get("http://localhost:5000/api/leaves/leaves");
+//       const res = await axios.get("https://api.timelyhealth.in/api/leaves/leaves");
 //       // ✅ Filter only approved leaves
 //       const approved = (res.data.records || res.data).filter(
 //         (l) => l.status?.toLowerCase() === "approved"
@@ -148,7 +148,7 @@
 
 //   const fetchApprovedLeaves = async () => {
 //     try {
-//       const res = await axios.get("http://localhost:5000/api/leaves/leaves");
+//       const res = await axios.get("https://api.timelyhealth.in/api/leaves/leaves");
 //       // ✅ Filter only approved leaves
 //       const approved = (res.data.records || res.data).filter(
 //         (l) => l.status?.toLowerCase() === "approved"
@@ -260,7 +260,7 @@
 //   // ✅ Fetch all approved leaves
 //   const fetchApprovedLeaves = async () => {
 //     try {
-//       const res = await axios.get("http://localhost:5000/api/leaves/leaves");
+//       const res = await axios.get("https://api.timelyhealth.in/api/leaves/leaves");
 //       const approved = (res.data.records || res.data).filter(
 //         (l) => l.status?.toLowerCase() === "approved"
 //       );
@@ -432,8 +432,8 @@ const LeaveReport = () => {
   const fetchApprovedLeaves = async () => {
     try {
       const [leavesRes, empRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/leaves/leaves?status=approved"),
-        axios.get("http://localhost:5000/api/employees/get-employees")
+        axios.get("https://api.timelyhealth.in/api/leaves/leaves?status=approved"),
+        axios.get("https://api.timelyhealth.in/api/employees/get-employees")
       ]);
 
       const employees = empRes.data || [];

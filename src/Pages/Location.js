@@ -62,7 +62,7 @@ const AddLocationPage = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/location/add-location",
+        "https://api.timelyhealth.in/api/location/add-location",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

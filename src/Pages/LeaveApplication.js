@@ -39,13 +39,50 @@ const LeaveRequestForm = ({ defaultEmployeeId = "", defaultEmployeeName = "" }) 
     setErrorMessage("");
 
     try {
-      const response = await axios.post("https://api.timelyhealth.in//api/leaves/add-leave", formData);
+      const response = await axios.post("https://api.timelyhealth.in/api/leaves/add-leave", formData);
 
       if (response.status !== 200 && response.status !== 201) {
         throw new Error(response.data.error || "Something went wrong");
       }
 
       setSuccessMessage("✅ Leave request submitted successfully!");
+
+      // ✅ Log leave application activity
+      try {
+        const employeeData = JSON.parse(localStorage.getItem("employeeData"));
+        const employeeId = employeeData?.employeeId || formData.employeeId;
+        const employeeName = employeeData?.name || formData.employeeName;
+        const employeeEmail = employeeData?.email || `${employeeId}@system.com`;
+
+        console.log("Logging leave application:", {
+          employeeId,
+          employeeName,
+          employeeEmail,
+          leaveDetails: formData
+        });
+
+        await axios.post("https://api.timelyhealth.in/api/user-activity/log", {
+          userId: employeeId,
+          userName: employeeName,
+          userEmail: employeeEmail,
+          userRole: "employee",
+          action: "leave_apply",
+          actionDetails: `Applied for ${formData.leaveType} leave from ${formData.startDate} to ${formData.endDate} (${formData.days} days)`,
+          metadata: {
+            leaveType: formData.leaveType,
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+            days: formData.days,
+            reason: formData.reason
+          }
+        });
+
+        console.log("✅ Leave application activity logged successfully");
+      } catch (logError) {
+        console.error("❌ Failed to log leave application activity:", logError);
+        // Don't block the workflow if logging fails
+      }
+
       setFormData({
         employeeId: defaultEmployeeId,
         employeeName: defaultEmployeeName,
@@ -64,10 +101,10 @@ const LeaveRequestForm = ({ defaultEmployeeId = "", defaultEmployeeName = "" }) 
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-     
+
 
       <div className="flex-1 flex flex-col">
-       
+
         <div className="p-6">
           <div className="max-w-md mx-auto bg-white rounded shadow p-6">
             {/* ✅ Back Button */}

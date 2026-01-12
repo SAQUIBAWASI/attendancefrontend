@@ -35,7 +35,7 @@ const LoginPage = () => {
       }
 
       // 2. Second Attempt (if Admin fails): Employee Login
-      const empResponse = await fetch("http://localhost:5000/api/employees/login", {
+      const empResponse = await fetch("https://api.timelyhealth.in/api/employees/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

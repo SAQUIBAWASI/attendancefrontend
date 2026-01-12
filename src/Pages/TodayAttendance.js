@@ -272,14 +272,14 @@ const TodayAttendance = () => {
 
       // 1️⃣ Fetch attendance
       const attendanceResp = await axios.get(
-        "http://localhost:5000/api/attendance/today"
+        "https://api.timelyhealth.in/api/attendance/today"
       );
 
       const attendance = attendanceResp.data.records || [];
 
       // 2️⃣ Fetch employee list
       const empResp = await axios.get(
-        "http://localhost:5000/api/employees/get-employees"
+        "https://api.timelyhealth.in/api/employees/get-employees"
       );
       const employees = empResp.data || [];
 

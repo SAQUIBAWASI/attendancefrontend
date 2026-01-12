@@ -9,7 +9,7 @@
 
 //   const navigate = useNavigate();
 
-//   const BASE_URL = "http://localhost:5000";
+//   const BASE_URL = "https://api.timelyhealth.in";
 
 //   // ✅ Correct useEffect (Attendance Summary Fetch)
 //   useEffect(() => {
@@ -173,7 +173,7 @@
 //   const recordsPerPage = 10;
 
 //   const navigate = useNavigate();
-//   const BASE_URL = "http://localhost:5000";
+//   const BASE_URL = "https://api.timelyhealth.in";
 
 //   // ✅ Get current logged-in employee data
 //   const getCurrentEmployee = () => {
@@ -855,6 +855,7 @@
 //   );
 // }
 
+import axios from "axios";
 import { Calendar, Eye, FileText, Search, X } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -879,7 +880,7 @@ export default function EmployeeDashboard() {
   const recordsPerPage = 10;
 
   const navigate = useNavigate();
-  const BASE_URL = "http://localhost:5000";
+  const BASE_URL = "https://api.timelyhealth.in";
 
   // ✅ Get current logged-in employee data
   const getCurrentEmployee = () => {
@@ -1573,12 +1574,49 @@ export default function EmployeeDashboard() {
   };
 
   // ✅ Download salary slip
-  const downloadSalarySlip = (employee) => {
+  const downloadSalarySlip = async (employee) => {
     const slipContent = generateInvoiceHTML(employee);
     const printWindow = window.open('', '_blank');
-    printWindow.document.write(slipContent);
-    printWindow.document.close();
-    printWindow.print();
+    if (printWindow) {
+      printWindow.document.write(slipContent);
+      printWindow.document.close();
+      printWindow.print();
+
+      // ✅ Log payslip download activity
+      try {
+        const employeeData = getCurrentEmployee();
+        const employeeId = employeeData?.employeeId || employee.employeeId;
+        const employeeName = employeeData?.name || employee.name;
+        const employeeEmail = employeeData?.email || `${employeeId}@system.com`;
+
+        console.log("Logging employee payslip download:", {
+          employeeId,
+          employeeName,
+          employeeEmail,
+          month: employee.month
+        });
+
+        await axios.post("https://api.timelyhealth.in/api/user-activity/log", {
+          userId: employeeId,
+          userName: employeeName,
+          userEmail: employeeEmail,
+          userRole: "employee",
+          action: "payslip_download",
+          actionDetails: `Downloaded own payslip for ${formatMonthDisplay(employee.month || selectedMonth)}`,
+          metadata: {
+            employeeId: employee.employeeId,
+            employeeName: employee.name,
+            month: employee.month || selectedMonth,
+            salary: employee.calculatedSalary
+          }
+        });
+
+        console.log("✅ Employee payslip download logged successfully");
+      } catch (logError) {
+        console.error("❌ Failed to log payslip download activity:", logError);
+        // Don't block the download if logging fails
+      }
+    }
   };
 
   const currentEmployee = getCurrentEmployee();

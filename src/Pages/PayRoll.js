@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import axios from "axios";
 import logo from "../Images/Timely-Health-Logo.png";
 const PayRoll = () => {
   const [records, setRecords] = useState([]);
@@ -36,16 +37,16 @@ const PayRoll = () => {
   const recordsPerPage = 10;
 
   // API endpoints
-  const ATTENDANCE_SUMMARY_API_URL = "http://localhost:5000/api/attendancesummary/get";
-  const ATTENDANCE_DETAILS_API_URL = "http://localhost:5000/api/attendance/allattendance";
-  const LEAVES_API_URL = "http://localhost:5000/api/leaves/leaves?status=approved";
-  const EMPLOYEES_API_URL = "http://localhost:5000/api/employees/get-employees";
+  const ATTENDANCE_SUMMARY_API_URL = "https://api.timelyhealth.in/api/attendancesummary/get";
+  const ATTENDANCE_DETAILS_API_URL = "https://api.timelyhealth.in/api/attendance/allattendance";
+  const LEAVES_API_URL = "https://api.timelyhealth.in/api/leaves/leaves?status=approved";
+  const EMPLOYEES_API_URL = "https://api.timelyhealth.in/api/employees/get-employees";
 
   // Dynamic Salary API URL with month parameter
   const getSalaryApiUrl = (month) => {
     return month
-      ? `http://localhost:5000/api/attendancesummary/getsalaries?month=${month}`
-      : "http://localhost:5000/api/attendancesummary/getsalaries";
+      ? `https://api.timelyhealth.in/api/attendancesummary/getsalaries?month=${month}`
+      : "https://api.timelyhealth.in/api/attendancesummary/getsalaries";
   };
 
   // Process leaves data
@@ -315,7 +316,7 @@ const PayRoll = () => {
         requestBody.weekOffPerMonth = parseInt(manualDays);
       }
 
-      const response = await fetch("http://localhost:5000/api/attendancesummary/updateWeekOffConfig", {
+      const response = await fetch("https://api.timelyhealth.in/api/attendancesummary/updateWeekOffConfig", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -570,13 +571,47 @@ const PayRoll = () => {
   };
 
   // Download invoice
-  const downloadInvoice = (employee) => {
+  const downloadInvoice = async (employee) => {
     const invoiceContent = generateInvoiceHTML(employee);
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(invoiceContent);
       printWindow.document.close();
       printWindow.print();
+
+      // ✅ Log payslip download activity
+      try {
+        const adminName = localStorage.getItem("adminName") || "Admin";
+        const adminId = localStorage.getItem("adminId") || "admin";
+        const adminEmail = localStorage.getItem("adminEmail") || localStorage.getItem("employeeEmail") || "admin@system.com";
+
+        console.log("Logging payslip download:", {
+          adminName,
+          adminId,
+          adminEmail,
+          employee: employee.name
+        });
+
+        const response = await axios.post("https://api.timelyhealth.in/api/user-activity/log", {
+          userId: adminId,
+          userName: adminName,
+          userEmail: adminEmail,
+          userRole: "admin",
+          action: "payslip_download",
+          actionDetails: `Downloaded payslip for ${employee.name} (${employee.employeeId}) - ${formatMonthDisplay(employee.month || selectedMonth)}`,
+          metadata: {
+            employeeId: employee.employeeId,
+            employeeName: employee.name,
+            month: employee.month || selectedMonth,
+            salary: employee.calculatedSalary
+          }
+        });
+
+        console.log("✅ Payslip download logged successfully:", response.data);
+      } catch (error) {
+        console.error("❌ Failed to log payslip download:", error.response?.data || error.message);
+        // Don't block the download if logging fails
+      }
     }
   };
 

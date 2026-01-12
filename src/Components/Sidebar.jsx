@@ -58,6 +58,7 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
     //   path: "/empmanagement"
     // },
     { icon: <i className="ri-money-dollar-box-fill"></i>, name: "Payroll", path: "/payroll" },
+      { icon: <i className="ri-user-fill"></i>, name: "User Activity", path: "/useractivity" },
     { icon: <i className="ri-file-chart-fill"></i>, name: "Reports", path: "/leaves-report" },
     { icon: <i className="ri-map-pin-2-fill"></i>, name: "Locations", path: "/locationlist" },
     { icon: <i className="ri-time-fill"></i>, name: "Shifts", path: "/shiftlist" },

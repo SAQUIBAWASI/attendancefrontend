@@ -17,11 +17,11 @@ const AbsentToday = () => {
       setLoading(true);
 
       // Fetch all employees
-      const empResp = await axios.get("http://localhost:5000/api/employees/get-employees");
+      const empResp = await axios.get("https://api.timelyhealth.in/api/employees/get-employees");
       const employees = empResp.data;
 
       // Fetch today’s attendance
-      const attResp = await axios.get("http://localhost:5000/api/attendance/today");
+      const attResp = await axios.get("https://api.timelyhealth.in/api/attendance/today");
       const attendanceData = attResp.data;
       const attendance = attendanceData.records || [];
 

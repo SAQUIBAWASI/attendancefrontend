@@ -128,7 +128,7 @@ import ShiftManagement from "./Pages/ShiftManagement.js";
 import SuperAdminMedicalMonitor from "./Pages/SuperAdminMedicalMonitor.js";
 import TimelyFooter from "./Pages/TimelyFooter.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
-
+import UserActivity from "./Pages/UserActivity.js";
 
 
 // import EmpManagment from "./Pages/EmpManagment.js";
@@ -279,6 +279,7 @@ function App() {
               <Route path="attedancesummary" element={<AttendanceSummary />} />
               {/* <Route path="/empmanagement" element={<EmpManagment />} /> */}
               <Route path="/payroll" element={<PayRoll />} />
+              <Route path="/useractivity" element={<UserActivity />} />
 
             </Routes>
           </AdminLayout>
