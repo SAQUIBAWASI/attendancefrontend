@@ -50,7 +50,7 @@
 //     setErrorMessage("");
 
 //     try {
-//       const response = await fetch("https://api.timelyhealth.in/api/employees/add-employee", {
+//       const response = await fetch("http://localhost:5000/api/employees/add-employee", {
 //         method: "POST",
 //         headers: { "Content-Type": "application/json" },
 //         body: JSON.stringify({
@@ -349,7 +349,7 @@
 //     const fetchLocations = async () => {
 //       try {
 //         const res = await axios.get(
-//           "https://api.timelyhealth.in/api/location/alllocation"
+//           "http://localhost:5000/api/location/alllocation"
 //         );
 //         if (res.data && res.data.locations) {
 //           setLocations(res.data.locations);
@@ -371,7 +371,7 @@
 //     try {
 //       // Step 1: Create Employee
 //       const response = await fetch(
-//         "https://api.timelyhealth.in/api/employees/add-employee",
+//         "http://localhost:5000/api/employees/add-employee",
 //         {
 //           method: "POST",
 //           headers: { "Content-Type": "application/json" },
@@ -397,7 +397,7 @@
 //       // Step 2: Assign Location (only if locationId selected)
 //       if (locationId) {
 //         await axios.put(
-//           `https://api.timelyhealth.in/api/employees/assign-location/${employeeId}`,
+//           `http://localhost:5000/api/employees/assign-location/${employeeId}`,
 //           { locationId }
 //         );
 //       }
@@ -730,7 +730,7 @@
 //     const fetchLocations = async () => {
 //       try {
 //         const res = await axios.get(
-//           "https://api.timelyhealth.in/api/location/alllocation"
+//           "http://localhost:5000/api/location/alllocation"
 //         );
 //         if (res.data?.locations) setLocations(res.data.locations);
 //       } catch (err) {
@@ -768,14 +768,14 @@
 //       // Step 2: Assign Location
 //       if (locationId) {
 //         await axios.put(
-//           `https://api.timelyhealth.in/api/employees/assign-location/${employeeId}`,
+//           `http://localhost:5000/api/employees/assign-location/${employeeId}`,
 //           { locationId }
 //         );
 //       }
 
 //       // Step 3: Add Salary (WeekOff Included)
 //       await axios.post(
-//         "https://api.timelyhealth.in/api/salary/set-salary",
+//         "http://localhost:5000/api/salary/set-salary",
 //         {
 //           employeeId,
 //           name,
@@ -1100,7 +1100,7 @@
 //     const fetchLocations = async () => {
 //       try {
 //         const res = await axios.get(
-//           "https://api.timelyhealth.in/api/location/alllocation"
+//           "http://localhost:5000/api/location/alllocation"
 //         );
 //         if (res.data?.locations) setLocations(res.data.locations);
 //       } catch (err) {
@@ -1139,7 +1139,7 @@
 //         if (password) profilePayload.password = password;
 
 //         await axios.put(
-//           `https://api.timelyhealth.in/api/employees/update/${editingEmployee._id}`,
+//           `http://localhost:5000/api/employees/update/${editingEmployee._id}`,
 //           profilePayload
 //         );
 
@@ -1147,7 +1147,7 @@
 //         if (salaryPerMonth || shiftHours || weekOffPerMonth) {
 //           try {
 //             await axios.put(
-//               `https://api.timelyhealth.in/api/salary/update-salary/${editingEmployee.employeeId}`,
+//               `http://localhost:5000/api/salary/update-salary/${editingEmployee.employeeId}`,
 //               {
 //                 employeeId: editingEmployee.employeeId,
 //                 salaryPerMonth: Number(salaryPerMonth) || 0,
@@ -1164,7 +1164,7 @@
 //       } else {
 //         // ================= ADD EMPLOYEE =================
 //         await axios.post(
-//           "https://api.timelyhealth.in/api/employees/add-employee",
+//           "http://localhost:5000/api/employees/add-employee",
 //           {
 //             name,
 //             email,
@@ -1181,7 +1181,7 @@
 
 //         // ================= ADD SALARY =================
 //         await axios.post(
-//           "https://api.timelyhealth.in/api/salary/set-salary",
+//           "http://localhost:5000/api/salary/set-salary",
 //           {
 //             employeeId,
 //             name,
@@ -1419,6 +1419,1607 @@
 
 // export default AddEmployeePage;
 
+// import axios from "axios";
+// import { useEffect, useState } from "react";
+// import { FaEye, FaEyeSlash } from "react-icons/fa";
+// import { useLocation, useNavigate } from "react-router-dom";
+
+// const AddEmployeePage = () => {
+//   const navigate = useNavigate();
+//   const location = useLocation();
+
+//   const editingEmployee = location.state?.employee || null;
+
+//   const [name, setName] = useState("");
+//   const [email, setEmail] = useState("");
+//   const [password, setPassword] = useState("");
+//   const [department, setDepartment] = useState("");
+//   const [role, setRole] = useState("");
+//   const [shiftType, setShiftType] = useState("A");
+//   const [shiftStartTime, setShiftStartTime] = useState("09:00"); // ✅ Start time
+//   const [shiftEndTime, setShiftEndTime] = useState("18:00"); // ✅ End time
+//   const [joinDate, setJoinDate] = useState("");
+//   const [phone, setPhone] = useState("");
+//   const [address, setAddress] = useState("");
+//   const [employeeId, setEmployeeId] = useState("");
+//   const [locationId, setLocationId] = useState("");
+//   const [salaryPerMonth, setSalaryPerMonth] = useState("");
+//   const [shiftHours, setShiftHours] = useState("8");
+//   const [weekOffPerMonth, setWeekOffPerMonth] = useState("0");
+
+//   const [isAddingNewDept, setIsAddingNewDept] = useState(false);
+//   const [customDepartment, setCustomDepartment] = useState("");
+//   const [isAddingNewRole, setIsAddingNewRole] = useState(false);
+//   const [customRole, setCustomRole] = useState("");
+//   const [isAddingNewShift, setIsAddingNewShift] = useState(false);
+//   const [customShiftType, setCustomShiftType] = useState("");
+//   const [customShiftStartTime, setCustomShiftStartTime] = useState("09:00"); // ✅ New shift start time
+//   const [customShiftEndTime, setCustomShiftEndTime] = useState("18:00"); // ✅ New shift end time
+
+//   const [showPassword, setShowPassword] = useState(false);
+//   const [locations, setLocations] = useState([]);
+//   const [shiftList, setShiftList] = useState(["A", "B", "C", "D", "E", "F", "G", "H", "I"]);
+//   const [allShiftsData, setAllShiftsData] = useState([]); // ✅ Store all shift data with times
+//   const [loading, setLoading] = useState(false);
+//   const [successMessage, setSuccessMessage] = useState("");
+//   const [errorMessage, setErrorMessage] = useState("");
+
+//   const departments = [
+//     "Developer", "Sales", "Marketing", "Medical", "Finance",
+//     "Nursing", "Digital Marketing", "Management", "Laboratory Medicine"
+//   ];
+
+//   const roles = [
+//     "Administrator", "Manager", "Team Lead", "Employee", "HR Manager",
+//     "Phlebotomist", "Staff Nurse", "Sales Executive",
+//     "Consultant", "Graphic Designer", "UI/UX & GRAPHIC DESIGNER",
+//     "SMM & SEO Executive", "Web Developer",
+//   ];
+
+//   useEffect(() => {
+//     if (editingEmployee) {
+//       setName(editingEmployee.name || "");
+//       setEmail(editingEmployee.email || "");
+//       setDepartment(editingEmployee.department || "");
+//       setRole(editingEmployee.role || "");
+//       setJoinDate(editingEmployee.joinDate?.slice(0, 10) || "");
+//       setPhone(editingEmployee.phone || "");
+//       setAddress(editingEmployee.address || "");
+//       setEmployeeId(editingEmployee.employeeId || "");
+//       setLocationId(editingEmployee.location?._id || editingEmployee.location || "");
+//       setSalaryPerMonth(editingEmployee.salaryPerMonth || "");
+//       setShiftHours(editingEmployee.shiftHours || "");
+//       setWeekOffPerMonth(editingEmployee.weekOffPerMonth || "");
+//       setPassword("");
+
+//       // Fetch employee's shift if editing
+//       fetchEmployeeShift();
+//     }
+//   }, [editingEmployee]);
+
+//   // Fetch employee's existing shift
+//   const fetchEmployeeShift = async () => {
+//     if (!editingEmployee?.employeeId) return;
+
+//     try {
+//       const res = await axios.get(`http://localhost:5000/api/shifts/employee/${editingEmployee.employeeId}`);
+//       if (res.data && !res.data.message) {
+//         setShiftType(res.data.shiftType);
+//         setShiftStartTime(res.data.startTime || "09:00");
+//         setShiftEndTime(res.data.endTime || "18:00");
+//       }
+//     } catch (err) {
+//       console.log("No shift assigned yet");
+//     }
+//   };
+
+//   // Fetch locations
+//   useEffect(() => {
+//     const fetchLocations = async () => {
+//       try {
+//         const res = await axios.get("http://localhost:5000/api/location/alllocation");
+//         if (res.data?.locations) setLocations(res.data.locations);
+//       } catch (err) {
+//         console.error(err);
+//       }
+//     };
+//     fetchLocations();
+//   }, []);
+
+//   // ✅ Fetch all shifts data with times
+//   useEffect(() => {
+//     const fetchAllShifts = async () => {
+//       try {
+//         const res = await axios.get("http://localhost:5000/api/shifts/all");
+//         console.log("All shifts data:", res.data);
+
+//         if (res.data && Array.isArray(res.data)) {
+//           setAllShiftsData(res.data);
+
+//           // Get unique shift types
+//           const uniqueShifts = [...new Set(res.data.map(shift => shift.shiftType))];
+//           setShiftList(uniqueShifts);
+
+//           // Set default times from first shift if available
+//           if (res.data.length > 0) {
+//             const firstShift = res.data[0];
+//             if (!shiftStartTime) setShiftStartTime(firstShift.startTime || "09:00");
+//             if (!shiftEndTime) setShiftEndTime(firstShift.endTime || "18:00");
+//           }
+//         }
+//       } catch (err) {
+//         console.log("Using default shifts:", err.message);
+//       }
+//     };
+//     fetchAllShifts();
+//   }, []);
+
+//   // ✅ When shift type changes, update times if shift exists
+//   useEffect(() => {
+//     if (shiftType && !isAddingNewShift && allShiftsData.length > 0) {
+//       const existingShift = allShiftsData.find(s => s.shiftType === shiftType);
+//       if (existingShift) {
+//         setShiftStartTime(existingShift.startTime || "09:00");
+//         setShiftEndTime(existingShift.endTime || "18:00");
+//       }
+//     }
+//   }, [shiftType, isAddingNewShift, allShiftsData]);
+
+//   // ✅ Shift assign function with custom times
+//   const assignShiftToEmployee = async (empId, empName, shift, startTime, endTime) => {
+//     try {
+//       const shiftData = {
+//         employeeId: empId,
+//         employeeName: empName,
+//         shiftType: shift.toUpperCase(),
+//         startTime: startTime,
+//         endTime: endTime
+//       };
+
+//       const response = await axios.post(
+//         "http://localhost:5000/api/shifts/assign",
+//         shiftData
+//       );
+
+//       console.log("Shift assigned with times:", response.data);
+//       return { success: true, data: response.data };
+
+//     } catch (error) {
+//       console.error("Shift assignment error:", error.response?.data || error.message);
+//       return {
+//         success: false,
+//         message: error.response?.data?.message || error.message
+//       };
+//     }
+//   };
+
+//   // ✅ Main submit function
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setLoading(true);
+//     setErrorMessage("");
+//     setSuccessMessage("");
+
+//     try {
+//       const finalDept = isAddingNewDept ? customDepartment : department;
+//       const finalRole = isAddingNewRole ? customRole : role;
+//       let finalShift = isAddingNewShift ? customShiftType : shiftType;
+//       let finalStartTime = isAddingNewShift ? customShiftStartTime : shiftStartTime;
+//       let finalEndTime = isAddingNewShift ? customShiftEndTime : shiftEndTime;
+
+//       // Shift validation
+//       if (!finalShift) {
+//         throw new Error("Please select a shift type");
+//       }
+
+//       finalShift = finalShift.toUpperCase().trim();
+
+//       if (finalShift.length !== 1 || !/^[A-Z]$/.test(finalShift)) {
+//         throw new Error("Shift type should be a single letter from A to Z");
+//       }
+
+//       // Time validation
+//       if (!finalStartTime || !finalEndTime) {
+//         throw new Error("Please select both start and end time");
+//       }
+
+//       if (finalStartTime >= finalEndTime) {
+//         throw new Error("End time must be after start time");
+//       }
+
+//       if (editingEmployee) {
+//         // ================= UPDATE EMPLOYEE =================
+//         const profilePayload = {
+//           name,
+//           email,
+//           department: finalDept,
+//           role: finalRole,
+//           joinDate,
+//           phone,
+//           address,
+//           locationId,
+//           location: locationId,
+//         };
+
+//         if (password) profilePayload.password = password;
+
+//         // 1. Update employee
+//         await axios.put(
+//           `http://localhost:5000/api/employees/update/${editingEmployee._id}`,
+//           profilePayload
+//         );
+
+//         // 2. Assign shift with custom times
+//         const shiftResult = await assignShiftToEmployee(
+//           editingEmployee.employeeId,
+//           name,
+//           finalShift,
+//           finalStartTime,
+//           finalEndTime
+//         );
+
+//         if (!shiftResult.success) {
+//           console.warn("Shift assignment note:", shiftResult.message);
+//         }
+
+//         // 3. Update salary
+//         if (salaryPerMonth || shiftHours || weekOffPerMonth) {
+//           try {
+//             await axios.put(
+//               `http://localhost:5000/api/salary/update-salary/${editingEmployee.employeeId}`,
+//               {
+//                 employeeId: editingEmployee.employeeId,
+//                 salaryPerMonth: Number(salaryPerMonth) || 0,
+//                 shiftHours: Number(shiftHours) || 8,
+//                 weekOffPerMonth: Number(weekOffPerMonth) || 0,
+//               }
+//             );
+//           } catch (salErr) {
+//             console.warn("Salary update:", salErr.message);
+//           }
+//         }
+
+//         // 4. Add new shift to list if created
+//         if (isAddingNewShift && !shiftList.includes(finalShift)) {
+//           setShiftList(prev => [...prev, finalShift]);
+//           setAllShiftsData(prev => [...prev, {
+//             shiftType: finalShift,
+//             startTime: finalStartTime,
+//             endTime: finalEndTime
+//           }]);
+//         }
+
+//         setSuccessMessage("✅ Employee updated successfully!");
+
+//       } else {
+//         // ================= ADD NEW EMPLOYEE =================
+//         // 1. Add employee
+//         await axios.post(
+//           "http://localhost:5000/api/employees/add-employee",
+//           {
+//             name,
+//             email,
+//             password,
+//             department: finalDept,
+//             role: finalRole,
+//             joinDate,
+//             phone,
+//             address,
+//             employeeId,
+//             locationId,
+//           }
+//         );
+
+//         // 2. Assign shift with custom times
+//         const shiftResult = await assignShiftToEmployee(
+//           employeeId,
+//           name,
+//           finalShift,
+//           finalStartTime,
+//           finalEndTime
+//         );
+
+//         if (!shiftResult.success) {
+//           console.warn("Shift assignment note:", shiftResult.message);
+//         }
+
+//         // 3. Add salary
+//         await axios.post(
+//           "http://localhost:5000/api/salary/set-salary",
+//           {
+//             employeeId,
+//             name,
+//             salaryPerMonth: Number(salaryPerMonth),
+//             shiftHours: Number(shiftHours),
+//             weekOffPerMonth: Number(weekOffPerMonth),
+//           }
+//         );
+
+//         // 4. Add new shift to list if created
+//         if (isAddingNewShift && !shiftList.includes(finalShift)) {
+//           setShiftList(prev => [...prev, finalShift]);
+//           setAllShiftsData(prev => [...prev, {
+//             shiftType: finalShift,
+//             startTime: finalStartTime,
+//             endTime: finalEndTime
+//           }]);
+//         }
+
+//         setSuccessMessage("✅ Employee added successfully!");
+//       }
+
+//       setTimeout(() => navigate("/employeelist"), 1000);
+//     } catch (err) {
+//       console.error("Submit error:", err);
+//       setErrorMessage(err.message || "Something went wrong!");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
+//       <h2 className="mb-6 text-2xl font-bold text-blue-900">
+//         {editingEmployee ? "Edit Employee" : "Add New Employee"}
+//       </h2>
+
+//       {successMessage && (
+//         <div className="p-4 mb-4 text-green-700 bg-green-100 rounded">
+//           {successMessage}
+//         </div>
+//       )}
+//       {errorMessage && (
+//         <div className="p-4 mb-4 text-red-700 bg-red-100 rounded">
+//           {errorMessage}
+//         </div>
+//       )}
+
+//       <form onSubmit={handleSubmit}>
+
+//         {/* Name, Email, Password, Department, Role fields - SAME AS BEFORE */}
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Full Name *</label>
+//           <input value={name} onChange={(e) => setName(e.target.value)} className="w-full p-2 border rounded" required />
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Email *</label>
+//           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2 border rounded" required />
+//         </div>
+
+//         <div className="mb-4 relative">
+//           <label className="block text-sm">Password {!editingEmployee && "*"}</label>
+//           <input
+//             type={showPassword ? "text" : "password"}
+//             value={password}
+//             onChange={(e) => setPassword(e.target.value)}
+//             className="w-full p-2 border rounded pr-10"
+//             required={!editingEmployee}
+//           />
+//           <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-9">
+//             {showPassword ? <FaEyeSlash /> : <FaEye />}
+//           </button>
+//           {editingEmployee && <p className="text-xs text-gray-500 mt-1">Leave blank to keep current password</p>}
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Department</label>
+//           <div className="flex gap-2">
+//             <select
+//               value={isAddingNewDept ? "ADD_NEW" : department}
+//               onChange={(e) => {
+//                 if (e.target.value === "ADD_NEW") {
+//                   setIsAddingNewDept(true);
+//                   setDepartment("");
+//                 } else {
+//                   setIsAddingNewDept(false);
+//                   setDepartment(e.target.value);
+//                 }
+//               }}
+//               className="w-full p-2 border rounded"
+//               required={!isAddingNewDept}
+//             >
+//               <option value="">Select Department</option>
+//               {departments.map((d) => <option key={d} value={d}>{d}</option>)}
+//               <option value="ADD_NEW" className="font-bold text-blue-600">+ Add New Department</option>
+//             </select>
+//           </div>
+//           {isAddingNewDept && (
+//             <div className="flex items-center gap-2 mt-2">
+//               <input
+//                 type="text"
+//                 placeholder="Enter new department name"
+//                 value={customDepartment}
+//                 onChange={(e) => setCustomDepartment(e.target.value)}
+//                 className="flex-1 p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
+//                 required
+//               />
+//               <button
+//                 type="button"
+//                 onClick={() => setIsAddingNewDept(false)}
+//                 className="text-xs text-red-500 hover:text-red-700 font-medium"
+//               >
+//                 Cancel
+//               </button>
+//             </div>
+//           )}
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Role</label>
+//           <div className="flex gap-2">
+//             <select
+//               value={isAddingNewRole ? "ADD_NEW" : role}
+//               onChange={(e) => {
+//                 if (e.target.value === "ADD_NEW") {
+//                   setIsAddingNewRole(true);
+//                   setRole("");
+//                 } else {
+//                   setIsAddingNewRole(false);
+//                   setRole(e.target.value);
+//                 }
+//               }}
+//               className="w-full p-2 border rounded"
+//               required={!isAddingNewRole}
+//             >
+//               <option value="">Select Role</option>
+//               {roles.map((r) => <option key={r} value={r}>{r}</option>)}
+//               <option value="ADD_NEW" className="font-bold text-blue-600">+ Add New Role</option>
+//             </select>
+//           </div>
+//           {isAddingNewRole && (
+//             <div className="flex items-center gap-2 mt-2">
+//               <input
+//                 type="text"
+//                 placeholder="Enter new role name"
+//                 value={customRole}
+//                 onChange={(e) => setCustomRole(e.target.value)}
+//                 className="flex-1 p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
+//                 required
+//               />
+//               <button
+//                 type="button"
+//                 onClick={() => setIsAddingNewRole(false)}
+//                 className="text-xs text-red-500 hover:text-red-700 font-medium"
+//               >
+//                 Cancel
+//               </button>
+//             </div>
+//           )}
+//         </div>
+
+//         {/* ✅ ENHANCED SHIFT SECTION WITH TIME PICKERS */}
+//         <div className="mb-4 p-4 border rounded-lg bg-gray-50">
+//           <label className="block text-sm font-medium mb-2">Shift Details *</label>
+
+//           <div className="flex gap-2 mb-3">
+//             <select
+//               value={isAddingNewShift ? "ADD_NEW" : shiftType}
+//               onChange={(e) => {
+//                 if (e.target.value === "ADD_NEW") {
+//                   setIsAddingNewShift(true);
+//                   setShiftType("");
+//                 } else {
+//                   setIsAddingNewShift(false);
+//                   setShiftType(e.target.value);
+//                 }
+//               }}
+//               className="w-full p-2 border rounded"
+//               required={!isAddingNewShift}
+//             >
+//               <option value="">Select Shift Type</option>
+//               {shiftList.map((shift) => (
+//                 <option key={shift} value={shift}>Shift {shift}</option>
+//               ))}
+//               <option value="ADD_NEW" className="font-bold text-blue-600">+ Add New Shift Type</option>
+//             </select>
+//           </div>
+
+//           {isAddingNewShift ? (
+//             <div className="space-y-4 p-3 border border-blue-200 rounded bg-blue-50">
+//               <div className="flex justify-between items-center">
+//                 <span className="text-sm font-medium text-blue-800">Create New Shift Type</span>
+//                 <button
+//                   type="button"
+//                   onClick={() => setIsAddingNewShift(false)}
+//                   className="text-xs text-red-500 hover:text-red-700 font-medium"
+//                 >
+//                   Cancel
+//                 </button>
+//               </div>
+
+//               <div>
+//                 <label className="block text-xs text-gray-600 mb-1">Shift Type Code *</label>
+//                 <input
+//                   type="text"
+//                   placeholder="Enter shift type (A, B, C, etc.)"
+//                   value={customShiftType}
+//                   onChange={(e) => {
+//                     const value = e.target.value.toUpperCase();
+//                     if (value.length <= 1) {
+//                       setCustomShiftType(value);
+//                     }
+//                   }}
+//                   className="w-full p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
+//                   maxLength="1"
+//                   required
+//                 />
+//                 <p className="text-xs text-gray-500 mt-1">Single letter from A to Z</p>
+//               </div>
+
+//               <div className="grid grid-cols-2 gap-3">
+//                 <div>
+//                   <label className="block text-xs text-gray-600 mb-1">Start Time *</label>
+//                   <input
+//                     type="time"
+//                     value={customShiftStartTime}
+//                     onChange={(e) => setCustomShiftStartTime(e.target.value)}
+//                     className="w-full p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
+//                     required
+//                   />
+//                 </div>
+//                 <div>
+//                   <label className="block text-xs text-gray-600 mb-1">End Time *</label>
+//                   <input
+//                     type="time"
+//                     value={customShiftEndTime}
+//                     onChange={(e) => setCustomShiftEndTime(e.target.value)}
+//                     className="w-full p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
+//                     required
+//                   />
+//                 </div>
+//               </div>
+//             </div>
+//           ) : (
+//             <div className="space-y-3">
+//               {/* Show shift details if existing shift is selected */}
+//               {shiftType && (
+//                 <div className="p-3 border border-gray-200 rounded bg-white">
+//                   <div className="flex justify-between items-center mb-2">
+//                     <span className="text-sm font-medium">
+//                       Selected: <span className="text-blue-600">Shift {shiftType}</span>
+//                     </span>
+//                     {allShiftsData.find(s => s.shiftType === shiftType) && (
+//                       <span className="text-xs text-green-600">✓ Existing Shift</span>
+//                     )}
+//                   </div>
+
+//                   <div className="grid grid-cols-2 gap-3">
+//                     <div>
+//                       <label className="block text-xs text-gray-600 mb-1">Start Time *</label>
+//                       <input
+//                         type="time"
+//                         value={shiftStartTime}
+//                         onChange={(e) => setShiftStartTime(e.target.value)}
+//                         className="w-full p-2 border rounded"
+//                         required
+//                       />
+//                     </div>
+//                     <div>
+//                       <label className="block text-xs text-gray-600 mb-1">End Time *</label>
+//                       <input
+//                         type="time"
+//                         value={shiftEndTime}
+//                         onChange={(e) => setShiftEndTime(e.target.value)}
+//                         className="w-full p-2 border rounded"
+//                         required
+//                       />
+//                     </div>
+//                   </div>
+
+//                   {/* Show shift timing info if exists */}
+//                   {(() => {
+//                     const selectedShift = allShiftsData.find(s => s.shiftType === shiftType);
+//                     if (selectedShift) {
+//                       return (
+//                         <div className="mt-2 text-xs text-gray-500">
+//                           <p>Default timing for this shift: {selectedShift.startTime} - {selectedShift.endTime}</p>
+//                           <p className="mt-1">You can modify the timing for this employee</p>
+//                         </div>
+//                       );
+//                     }
+//                   })()}
+//                 </div>
+//               )}
+//             </div>
+//           )}
+
+//           <p className="text-xs text-gray-500 mt-2">
+//             Available shifts: {shiftList.join(", ")}
+//           </p>
+//         </div>
+
+//         {/* Rest of the form - SAME AS BEFORE */}
+//         <div className="mb-4">
+//           <label className="block text-sm">Join Date *</label>
+//           <input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} className="w-full p-2 border rounded" required />
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Phone</label>
+//           <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full p-2 border rounded" />
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Address</label>
+//           <textarea value={address} onChange={(e) => setAddress(e.target.value)} className="w-full p-2 border rounded" />
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Employee ID *</label>
+//           <input
+//             value={employeeId}
+//             onChange={(e) => setEmployeeId(e.target.value)}
+//             className={`w-full p-2 border rounded ${editingEmployee ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+//             required
+//             readOnly={!!editingEmployee}
+//           />
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Salary Per Month *</label>
+//           <input type="number" value={salaryPerMonth} onChange={(e) => setSalaryPerMonth(e.target.value)} className="w-full p-2 border rounded" required />
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Shift Hours Per Day *</label>
+//           <input type="number" value={shiftHours} onChange={(e) => setShiftHours(e.target.value)} className="w-full p-2 border rounded" required />
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Week Off Per Month *</label>
+//           <input type="number" value={weekOffPerMonth} onChange={(e) => setWeekOffPerMonth(e.target.value)} className="w-full p-2 border rounded" required />
+//         </div>
+
+//         {/* <div className="mb-4">
+//           <div className="flex items-center justify-between mb-1">
+//             <label className="text-sm font-medium text-gray-700">
+//               Location
+//             </label>
+//             <button onClick={() => navigate("/addlocation")}
+//               type="button"
+//               className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
+//             >
+//               + Add Location
+//             </button>
+//           </div>
+//           <select
+//             value={locationId}
+//             onChange={(e) => setLocationId(e.target.value)}
+//             className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//           >
+//             <option value="">Select a Location</option>
+//             {locations.map((loc) => (
+//               <option key={loc._id} value={loc._id}>
+//                 {loc.name}
+//               </option>
+//             ))}
+//           </select>
+
+//         </div> */}
+
+//         <div className="mb-4">
+//           {/* Label + Button */}
+//           <div className="flex items-center justify-between mb-1">
+//             <label className="text-sm font-medium text-gray-700">
+//               Location
+//             </label>
+
+//             {/* <button onClick={() => navigate("/addlocation")}
+//               type="button"
+//               className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
+//             >
+//               + Add Location
+//             </button> */}
+//           </div>
+
+//           {/* Select */}
+//           {/* <select
+//             value={locationId}
+//             onChange={(e) => setLocationId(e.target.value)}
+//             className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//           >
+//             <option value="">Select a Location</option>
+//             {locations.map((loc) => (
+//               <option key={loc._id} value={loc._id}>
+//                 {loc.name}
+//               </option>
+//             ))}
+//           </select> */}
+//           <select
+//             value={locationId}
+//             onChange={(e) => {
+//               const selectedValue = e.target.value;
+
+//               if (selectedValue === "add-new") {
+//                 navigate("/addlocation");
+//                 return;
+//               }
+
+//               setLocationId(selectedValue);
+//             }}
+//             className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//           >
+//             <option value="">Select a Location</option>
+
+//             {locations.map((loc) => (
+//               <option key={loc._id} value={loc._id}>
+//                 {loc.name}
+//               </option>
+//             ))}
+
+//             <option value="add-new">➕ Add New Location</option>
+//           </select>
+
+
+//         </div>
+
+
+
+//         <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded">
+//           {loading ? "Saving..." : editingEmployee ? "Update Employee" : "Add Employee"}
+//         </button>
+
+//       </form>
+//     </div>
+//   );
+// };
+
+// export default AddEmployeePage;
+
+// import axios from "axios";
+// import { useEffect, useState } from "react";
+// import { FaEye, FaEyeSlash } from "react-icons/fa";
+// import { useLocation, useNavigate } from "react-router-dom";
+
+// const AddEmployeePage = () => {
+//   const navigate = useNavigate();
+//   const location = useLocation();
+
+//   const editingEmployee = location.state?.employee || null;
+
+//   const [name, setName] = useState("");
+//   const [email, setEmail] = useState("");
+//   const [password, setPassword] = useState("");
+//   const [department, setDepartment] = useState("");
+//   const [role, setRole] = useState("");
+//   const [shiftType, setShiftType] = useState("A");
+//   const [shiftStartTime, setShiftStartTime] = useState("09:00");
+//   const [shiftEndTime, setShiftEndTime] = useState("18:00");
+//   const [joinDate, setJoinDate] = useState("");
+//   const [phone, setPhone] = useState("");
+//   const [address, setAddress] = useState("");
+//   const [employeeId, setEmployeeId] = useState("");
+//   const [locationId, setLocationId] = useState("");
+//   const [salaryPerMonth, setSalaryPerMonth] = useState("");
+//   const [shiftHours, setShiftHours] = useState("8");
+//   const [weekOffPerMonth, setWeekOffPerMonth] = useState("0");
+
+//   const [departments, setDepartments] = useState([]); // ✅ Changed to fetch from backend
+//   const [roles, setRoles] = useState([]); // ✅ Changed to fetch from backend
+//   const [isAddingNewDept, setIsAddingNewDept] = useState(false);
+//   const [customDepartment, setCustomDepartment] = useState("");
+//   const [isAddingNewRole, setIsAddingNewRole] = useState(false);
+//   const [customRole, setCustomRole] = useState("");
+//   const [isAddingNewShift, setIsAddingNewShift] = useState(false);
+//   const [customShiftType, setCustomShiftType] = useState("");
+//   const [customShiftStartTime, setCustomShiftStartTime] = useState("09:00");
+//   const [customShiftEndTime, setCustomShiftEndTime] = useState("18:00");
+
+//   const [showPassword, setShowPassword] = useState(false);
+//   const [locations, setLocations] = useState([]);
+//   const [shiftList, setShiftList] = useState(["A", "B", "C", "D", "E", "F", "G", "H", "I"]);
+//   const [allShiftsData, setAllShiftsData] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [successMessage, setSuccessMessage] = useState("");
+//   const [errorMessage, setErrorMessage] = useState("");
+
+//   // ✅ Fetch departments from backend
+//   useEffect(() => {
+//     fetchDepartments();
+//     fetchRoles();
+//   }, []);
+
+//   const fetchDepartments = async () => {
+//     try {
+//       const response = await axios.get('http://localhost:5000/api/department/all');
+//       if (response.data.success) {
+//         setDepartments(response.data.data);
+//       }
+//     } catch (error) {
+//       console.error('Error fetching departments:', error);
+//       // Fallback to hardcoded departments if API fails
+//       setDepartments([
+//         { name: "Developer", employeeCount: 0 },
+//         { name: "Sales", employeeCount: 0 },
+//         { name: "Marketing", employeeCount: 0 },
+//         { name: "Medical", employeeCount: 0 },
+//         { name: "Finance", employeeCount: 0 },
+//         { name: "Nursing", employeeCount: 0 },
+//         { name: "Digital Marketing", employeeCount: 0 },
+//         { name: "Management", employeeCount: 0 },
+//         { name: "Laboratory Medicine", employeeCount: 0 }
+//       ]);
+//     }
+//   };
+
+//   // ✅ Fetch roles from backend
+//   const fetchRoles = async () => {
+//     try {
+//       const response = await axios.get('http://localhost:5000/api/roles/all');
+//       if (response.data.success) {
+//         setRoles(response.data.data);
+//       }
+//     } catch (error) {
+//       console.error('Error fetching roles:', error);
+//       // Fallback to hardcoded roles if API fails
+//       setRoles([
+//         { name: "Administrator", employeeCount: 0 },
+//         { name: "Manager", employeeCount: 0 },
+//         { name: "Team Lead", employeeCount: 0 },
+//         { name: "Employee", employeeCount: 0 },
+//         { name: "HR Manager", employeeCount: 0 },
+//         { name: "Phlebotomist", employeeCount: 0 },
+//         { name: "Staff Nurse", employeeCount: 0 },
+//         { name: "Sales Executive", employeeCount: 0 },
+//         { name: "Consultant", employeeCount: 0 },
+//         { name: "Graphic Designer", employeeCount: 0 },
+//         { name: "UI/UX & GRAPHIC DESIGNER", employeeCount: 0 },
+//         { name: "SMM & SEO Executive", employeeCount: 0 },
+//         { name: "Web Developer", employeeCount: 0 }
+//       ]);
+//     }
+//   };
+
+//   useEffect(() => {
+//     if (editingEmployee) {
+//       setName(editingEmployee.name || "");
+//       setEmail(editingEmployee.email || "");
+//       setDepartment(editingEmployee.department || "");
+//       setRole(editingEmployee.role || "");
+//       setJoinDate(editingEmployee.joinDate?.slice(0, 10) || "");
+//       setPhone(editingEmployee.phone || "");
+//       setAddress(editingEmployee.address || "");
+//       setEmployeeId(editingEmployee.employeeId || "");
+//       setLocationId(editingEmployee.location?._id || editingEmployee.location || "");
+//       setSalaryPerMonth(editingEmployee.salaryPerMonth || "");
+//       setShiftHours(editingEmployee.shiftHours || "");
+//       setWeekOffPerMonth(editingEmployee.weekOffPerMonth || "");
+//       setPassword("");
+
+//       fetchEmployeeShift();
+//     }
+//   }, [editingEmployee]);
+
+//   const fetchEmployeeShift = async () => {
+//     if (!editingEmployee?.employeeId) return;
+
+//     try {
+//       const res = await axios.get(`http://localhost:5000/api/shifts/employee/${editingEmployee.employeeId}`);
+//       if (res.data && !res.data.message) {
+//         setShiftType(res.data.shiftType);
+//         setShiftStartTime(res.data.startTime || "09:00");
+//         setShiftEndTime(res.data.endTime || "18:00");
+//       }
+//     } catch (err) {
+//       console.log("No shift assigned yet");
+//     }
+//   };
+
+//   useEffect(() => {
+//     const fetchLocations = async () => {
+//       try {
+//         const res = await axios.get("http://localhost:5000/api/location/alllocation");
+//         if (res.data?.locations) setLocations(res.data.locations);
+//       } catch (err) {
+//         console.error(err);
+//       }
+//     };
+//     fetchLocations();
+//   }, []);
+
+//   useEffect(() => {
+//     const fetchAllShifts = async () => {
+//       try {
+//         const res = await axios.get("http://localhost:5000/api/shifts/all");
+//         console.log("All shifts data:", res.data);
+
+//         if (res.data && Array.isArray(res.data)) {
+//           setAllShiftsData(res.data);
+
+//           const uniqueShifts = [...new Set(res.data.map(shift => shift.shiftType))];
+//           setShiftList(uniqueShifts);
+
+//           if (res.data.length > 0) {
+//             const firstShift = res.data[0];
+//             if (!shiftStartTime) setShiftStartTime(firstShift.startTime || "09:00");
+//             if (!shiftEndTime) setShiftEndTime(firstShift.endTime || "18:00");
+//           }
+//         }
+//       } catch (err) {
+//         console.log("Using default shifts:", err.message);
+//       }
+//     };
+//     fetchAllShifts();
+//   }, []);
+
+//   useEffect(() => {
+//     if (shiftType && !isAddingNewShift && allShiftsData.length > 0) {
+//       const existingShift = allShiftsData.find(s => s.shiftType === shiftType);
+//       if (existingShift) {
+//         setShiftStartTime(existingShift.startTime || "09:00");
+//         setShiftEndTime(existingShift.endTime || "18:00");
+//       }
+//     }
+//   }, [shiftType, isAddingNewShift, allShiftsData]);
+
+//   const assignShiftToEmployee = async (empId, empName, shift, startTime, endTime) => {
+//     try {
+//       const shiftData = {
+//         employeeId: empId,
+//         employeeName: empName,
+//         shiftType: shift.toUpperCase(),
+//         startTime: startTime,
+//         endTime: endTime
+//       };
+
+//       const response = await axios.post(
+//         "http://localhost:5000/api/shifts/assign",
+//         shiftData
+//       );
+
+//       console.log("Shift assigned with times:", response.data);
+//       return { success: true, data: response.data };
+
+//     } catch (error) {
+//       console.error("Shift assignment error:", error.response?.data || error.message);
+//       return {
+//         success: false,
+//         message: error.response?.data?.message || error.message
+//       };
+//     }
+//   };
+
+//   // ✅ Handle Add New Department click
+//   const handleAddNewDepartment = () => {
+//     // Navigate to DepartmentDashboard and open add modal
+//     navigate('/departmentdashboard', { 
+//       state: { openAddModal: true } 
+//     });
+//   };
+
+//   // ✅ Handle Add New Role click
+//   const handleAddNewRole = () => {
+//     // Navigate to RoleDashboard and open add modal
+//     navigate('/roledashboard', { 
+//       state: { openAddModal: true } 
+//     });
+//   };
+
+//   // ✅ Handle Add New Location click
+//   const handleAddNewLocation = () => {
+//     navigate('/addlocation');
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setLoading(true);
+//     setErrorMessage("");
+//     setSuccessMessage("");
+
+//     try {
+//       const finalDept = isAddingNewDept ? customDepartment : department;
+//       const finalRole = isAddingNewRole ? customRole : role;
+//       let finalShift = isAddingNewShift ? customShiftType : shiftType;
+//       let finalStartTime = isAddingNewShift ? customShiftStartTime : shiftStartTime;
+//       let finalEndTime = isAddingNewShift ? customShiftEndTime : shiftEndTime;
+
+//       // Shift validation
+//       if (!finalShift) {
+//         throw new Error("Please select a shift type");
+//       }
+
+//       finalShift = finalShift.toUpperCase().trim();
+
+//       if (finalShift.length !== 1 || !/^[A-Z]$/.test(finalShift)) {
+//         throw new Error("Shift type should be a single letter from A to Z");
+//       }
+
+//       // Time validation
+//       if (!finalStartTime || !finalEndTime) {
+//         throw new Error("Please select both start and end time");
+//       }
+
+//       if (finalStartTime >= finalEndTime) {
+//         throw new Error("End time must be after start time");
+//       }
+
+//       if (editingEmployee) {
+//         // ================= UPDATE EMPLOYEE =================
+//         const profilePayload = {
+//           name,
+//           email,
+//           department: finalDept,
+//           role: finalRole,
+//           joinDate,
+//           phone,
+//           address,
+//           locationId,
+//           location: locationId,
+//         };
+
+//         if (password) profilePayload.password = password;
+
+//         // 1. Update employee
+//         await axios.put(
+//           `http://localhost:5000/api/employees/update/${editingEmployee._id}`,
+//           profilePayload
+//         );
+
+//         // 2. Assign shift with custom times
+//         const shiftResult = await assignShiftToEmployee(
+//           editingEmployee.employeeId,
+//           name,
+//           finalShift,
+//           finalStartTime,
+//           finalEndTime
+//         );
+
+//         if (!shiftResult.success) {
+//           console.warn("Shift assignment note:", shiftResult.message);
+//         }
+
+//         // 3. Update salary
+//         if (salaryPerMonth || shiftHours || weekOffPerMonth) {
+//           try {
+//             await axios.put(
+//               `http://localhost:5000/api/salary/update-salary/${editingEmployee.employeeId}`,
+//               {
+//                 employeeId: editingEmployee.employeeId,
+//                 salaryPerMonth: Number(salaryPerMonth) || 0,
+//                 shiftHours: Number(shiftHours) || 8,
+//                 weekOffPerMonth: Number(weekOffPerMonth) || 0,
+//               }
+//             );
+//           } catch (salErr) {
+//             console.warn("Salary update:", salErr.message);
+//           }
+//         }
+
+//         // 4. Add new shift to list if created
+//         if (isAddingNewShift && !shiftList.includes(finalShift)) {
+//           setShiftList(prev => [...prev, finalShift]);
+//           setAllShiftsData(prev => [...prev, {
+//             shiftType: finalShift,
+//             startTime: finalStartTime,
+//             endTime: finalEndTime
+//           }]);
+//         }
+
+//         setSuccessMessage("✅ Employee updated successfully!");
+
+//       } else {
+//         // ================= ADD NEW EMPLOYEE =================
+//         // 1. Add employee
+//         await axios.post(
+//           "http://localhost:5000/api/employees/add-employee",
+//           {
+//             name,
+//             email,
+//             password,
+//             department: finalDept,
+//             role: finalRole,
+//             joinDate,
+//             phone,
+//             address,
+//             employeeId,
+//             locationId,
+//           }
+//         );
+
+//         // 2. Assign shift with custom times
+//         const shiftResult = await assignShiftToEmployee(
+//           employeeId,
+//           name,
+//           finalShift,
+//           finalStartTime,
+//           finalEndTime
+//         );
+
+//         if (!shiftResult.success) {
+//           console.warn("Shift assignment note:", shiftResult.message);
+//         }
+
+//         // 3. Add salary
+//         await axios.post(
+//           "http://localhost:5000/api/salary/set-salary",
+//           {
+//             employeeId,
+//             name,
+//             salaryPerMonth: Number(salaryPerMonth),
+//             shiftHours: Number(shiftHours),
+//             weekOffPerMonth: Number(weekOffPerMonth),
+//           }
+//         );
+
+//         // 4. Add new shift to list if created
+//         if (isAddingNewShift && !shiftList.includes(finalShift)) {
+//           setShiftList(prev => [...prev, finalShift]);
+//           setAllShiftsData(prev => [...prev, {
+//             shiftType: finalShift,
+//             startTime: finalStartTime,
+//             endTime: finalEndTime
+//           }]);
+//         }
+
+//         setSuccessMessage("✅ Employee added successfully!");
+//       }
+
+//       setTimeout(() => navigate("/employeelist"), 1000);
+//     } catch (err) {
+//       console.error("Submit error:", err);
+//       setErrorMessage(err.message || "Something went wrong!");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
+//       <h2 className="mb-6 text-2xl font-bold text-blue-900">
+//         {editingEmployee ? "Edit Employee" : "Add New Employee"}
+//       </h2>
+
+//       {successMessage && (
+//         <div className="p-4 mb-4 text-green-700 bg-green-100 rounded">
+//           {successMessage}
+//         </div>
+//       )}
+//       {errorMessage && (
+//         <div className="p-4 mb-4 text-red-700 bg-red-100 rounded">
+//           {errorMessage}
+//         </div>
+//       )}
+
+//       <form onSubmit={handleSubmit}>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Full Name *</label>
+//           <input value={name} onChange={(e) => setName(e.target.value)} className="w-full p-2 border rounded" required />
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Email *</label>
+//           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2 border rounded" required />
+//         </div>
+
+//         <div className="mb-4 relative">
+//           <label className="block text-sm">Password {!editingEmployee && "*"}</label>
+//           <input
+//             type={showPassword ? "text" : "password"}
+//             value={password}
+//             onChange={(e) => setPassword(e.target.value)}
+//             className="w-full p-2 border rounded pr-10"
+//             required={!editingEmployee}
+//           />
+//           <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-9">
+//             {showPassword ? <FaEyeSlash /> : <FaEye />}
+//           </button>
+//           {editingEmployee && <p className="text-xs text-gray-500 mt-1">Leave blank to keep current password</p>}
+//         </div>
+
+//         {/* ✅ ENHANCED DEPARTMENT SELECTION */}
+//         <div className="mb-4">
+//           <label className="block text-sm font-medium text-gray-700 mb-2">
+//             Department *
+//           </label>
+//           <div className="flex gap-2">
+//             <select
+//               value={isAddingNewDept ? "ADD_NEW" : department}
+//               onChange={(e) => {
+//                 if (e.target.value === "ADD_NEW") {
+//                   // Navigate to DepartmentDashboard with modal open
+//                   handleAddNewDepartment();
+//                   return;
+//                 } else {
+//                   setIsAddingNewDept(false);
+//                   setDepartment(e.target.value);
+//                 }
+//               }}
+//               className="w-full p-2 border rounded"
+//               required={!isAddingNewDept}
+//             >
+//               <option value="">Select Department</option>
+//               {departments.map((dept) => (
+//                 <option key={dept.name} value={dept.name}>
+//                   {dept.name} {dept.employeeCount > 0 ? `(${dept.employeeCount})` : ''}
+//                 </option>
+//               ))}
+//               <option value="ADD_NEW" className="font-bold text-blue-600">
+//                 + Add New Department
+//               </option>
+//             </select>
+//             {/* <button
+//               type="button"
+//               onClick={handleAddNewDepartment}
+//               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 whitespace-nowrap"
+//               title="Manage Departments"
+//             >
+//               Manage
+//             </button> */}
+//           </div>
+          
+//           {/* Custom department input for immediate use (optional) */}
+//           {isAddingNewDept && (
+//             <div className="flex items-center gap-2 mt-2">
+//               <input
+//                 type="text"
+//                 placeholder="Enter new department name"
+//                 value={customDepartment}
+//                 onChange={(e) => setCustomDepartment(e.target.value)}
+//                 className="flex-1 p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
+//                 required
+//               />
+//               <button
+//                 type="button"
+//                 onClick={() => setIsAddingNewDept(false)}
+//                 className="text-xs text-red-500 hover:text-red-700 font-medium"
+//               >
+//                 Cancel
+//               </button>
+//             </div>
+//           )}
+          
+//           {department && !isAddingNewDept && (
+//             <p className="text-xs text-green-600 mt-1">Selected: {department}</p>
+//           )}
+//         </div>
+
+//         {/* ✅ ENHANCED ROLE SELECTION */}
+//         <div className="mb-4">
+//           <label className="block text-sm font-medium text-gray-700 mb-2">
+//             Role *
+//           </label>
+//           <div className="flex gap-2">
+//             <select
+//               value={isAddingNewRole ? "ADD_NEW" : role}
+//               onChange={(e) => {
+//                 if (e.target.value === "ADD_NEW") {
+//                   // Navigate to RoleDashboard with modal open
+//                   handleAddNewRole();
+//                   return;
+//                 } else {
+//                   setIsAddingNewRole(false);
+//                   setRole(e.target.value);
+//                 }
+//               }}
+//               className="w-full p-2 border rounded"
+//               required={!isAddingNewRole}
+//             >
+//               <option value="">Select Role</option>
+//               {roles.map((roleItem) => (
+//                 <option key={roleItem.name} value={roleItem.name}>
+//                   {roleItem.name} {roleItem.employeeCount > 0 ? `(${roleItem.employeeCount})` : ''}
+//                 </option>
+//               ))}
+//               <option value="ADD_NEW" className="font-bold text-blue-600">
+//                 + Add New Role
+//               </option>
+//             </select>
+//             {/* <button
+//               type="button"
+//               onClick={handleAddNewRole}
+//               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 whitespace-nowrap"
+//               title="Manage Roles"
+//             >
+//               Manage
+//             </button> */}
+//           </div>
+          
+//           {/* Custom role input for immediate use (optional) */}
+//           {isAddingNewRole && (
+//             <div className="flex items-center gap-2 mt-2">
+//               <input
+//                 type="text"
+//                 placeholder="Enter new role name"
+//                 value={customRole}
+//                 onChange={(e) => setCustomRole(e.target.value)}
+//                 className="flex-1 p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
+//                 required
+//               />
+//               <button
+//                 type="button"
+//                 onClick={() => setIsAddingNewRole(false)}
+//                 className="text-xs text-red-500 hover:text-red-700 font-medium"
+//               >
+//                 Cancel
+//               </button>
+//             </div>
+//           )}
+          
+//           {role && !isAddingNewRole && (
+//             <p className="text-xs text-green-600 mt-1">Selected: {role}</p>
+//           )}
+//         </div>
+
+//         {/* ✅ SHIFT SECTION */}
+//         <div className="mb-4 p-4 border rounded-lg bg-gray-50">
+//           <label className="block text-sm font-medium mb-2">Shift Details *</label>
+
+//           <div className="flex gap-2 mb-3">
+//             <select
+//               value={isAddingNewShift ? "ADD_NEW" : shiftType}
+//               onChange={(e) => {
+//                 if (e.target.value === "ADD_NEW") {
+//                   setIsAddingNewShift(true);
+//                   setShiftType("");
+//                 } else {
+//                   setIsAddingNewShift(false);
+//                   setShiftType(e.target.value);
+//                 }
+//               }}
+//               className="w-full p-2 border rounded"
+//               required={!isAddingNewShift}
+//             >
+//               <option value="">Select Shift Type</option>
+//               {shiftList.map((shift) => (
+//                 <option key={shift} value={shift}>Shift {shift}</option>
+//               ))}
+//               <option value="ADD_NEW" className="font-bold text-blue-600">+ Add New Shift Type</option>
+//             </select>
+//           </div>
+
+//           {isAddingNewShift ? (
+//             <div className="space-y-4 p-3 border border-blue-200 rounded bg-blue-50">
+//               <div className="flex justify-between items-center">
+//                 <span className="text-sm font-medium text-blue-800">Create New Shift Type</span>
+//                 <button
+//                   type="button"
+//                   onClick={() => setIsAddingNewShift(false)}
+//                   className="text-xs text-red-500 hover:text-red-700 font-medium"
+//                 >
+//                   Cancel
+//                 </button>
+//               </div>
+
+//               <div>
+//                 <label className="block text-xs text-gray-600 mb-1">Shift Type Code *</label>
+//                 <input
+//                   type="text"
+//                   placeholder="Enter shift type (A, B, C, etc.)"
+//                   value={customShiftType}
+//                   onChange={(e) => {
+//                     const value = e.target.value.toUpperCase();
+//                     if (value.length <= 1) {
+//                       setCustomShiftType(value);
+//                     }
+//                   }}
+//                   className="w-full p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
+//                   maxLength="1"
+//                   required
+//                 />
+//                 <p className="text-xs text-gray-500 mt-1">Single letter from A to Z</p>
+//               </div>
+
+//               <div className="grid grid-cols-2 gap-3">
+//                 <div>
+//                   <label className="block text-xs text-gray-600 mb-1">Start Time *</label>
+//                   <input
+//                     type="time"
+//                     value={customShiftStartTime}
+//                     onChange={(e) => setCustomShiftStartTime(e.target.value)}
+//                     className="w-full p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
+//                     required
+//                   />
+//                 </div>
+//                 <div>
+//                   <label className="block text-xs text-gray-600 mb-1">End Time *</label>
+//                   <input
+//                     type="time"
+//                     value={customShiftEndTime}
+//                     onChange={(e) => setCustomShiftEndTime(e.target.value)}
+//                     className="w-full p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
+//                     required
+//                   />
+//                 </div>
+//               </div>
+//             </div>
+//           ) : (
+//             <div className="space-y-3">
+//               {shiftType && (
+//                 <div className="p-3 border border-gray-200 rounded bg-white">
+//                   <div className="flex justify-between items-center mb-2">
+//                     <span className="text-sm font-medium">
+//                       Selected: <span className="text-blue-600">Shift {shiftType}</span>
+//                     </span>
+//                     {allShiftsData.find(s => s.shiftType === shiftType) && (
+//                       <span className="text-xs text-green-600">✓ Existing Shift</span>
+//                     )}
+//                   </div>
+
+//                   <div className="grid grid-cols-2 gap-3">
+//                     <div>
+//                       <label className="block text-xs text-gray-600 mb-1">Start Time *</label>
+//                       <input
+//                         type="time"
+//                         value={shiftStartTime}
+//                         onChange={(e) => setShiftStartTime(e.target.value)}
+//                         className="w-full p-2 border rounded"
+//                         required
+//                       />
+//                     </div>
+//                     <div>
+//                       <label className="block text-xs text-gray-600 mb-1">End Time *</label>
+//                       <input
+//                         type="time"
+//                         value={shiftEndTime}
+//                         onChange={(e) => setShiftEndTime(e.target.value)}
+//                         className="w-full p-2 border rounded"
+//                         required
+//                       />
+//                     </div>
+//                   </div>
+
+//                   {(() => {
+//                     const selectedShift = allShiftsData.find(s => s.shiftType === shiftType);
+//                     if (selectedShift) {
+//                       return (
+//                         <div className="mt-2 text-xs text-gray-500">
+//                           <p>Default timing for this shift: {selectedShift.startTime} - {selectedShift.endTime}</p>
+//                           <p className="mt-1">You can modify the timing for this employee</p>
+//                         </div>
+//                       );
+//                     }
+//                   })()}
+//                 </div>
+//               )}
+//             </div>
+//           )}
+
+//           <p className="text-xs text-gray-500 mt-2">
+//             Available shifts: {shiftList.join(", ")}
+//           </p>
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Join Date *</label>
+//           <input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} className="w-full p-2 border rounded" required />
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Phone</label>
+//           <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full p-2 border rounded" />
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Address</label>
+//           <textarea value={address} onChange={(e) => setAddress(e.target.value)} className="w-full p-2 border rounded" />
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Employee ID *</label>
+//           <input
+//             value={employeeId}
+//             onChange={(e) => setEmployeeId(e.target.value)}
+//             className={`w-full p-2 border rounded ${editingEmployee ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+//             required
+//             readOnly={!!editingEmployee}
+//           />
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Salary Per Month *</label>
+//           <input type="number" value={salaryPerMonth} onChange={(e) => setSalaryPerMonth(e.target.value)} className="w-full p-2 border rounded" required />
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Shift Hours Per Day *</label>
+//           <input type="number" value={shiftHours} onChange={(e) => setShiftHours(e.target.value)} className="w-full p-2 border rounded" required />
+//         </div>
+
+//         <div className="mb-4">
+//           <label className="block text-sm">Week Off Per Month *</label>
+//           <input type="number" value={weekOffPerMonth} onChange={(e) => setWeekOffPerMonth(e.target.value)} className="w-full p-2 border rounded" required />
+//         </div>
+
+//         {/* ✅ ENHANCED LOCATION SELECTION */}
+//         {/* <div className="mb-4">
+//           <div className="flex items-center justify-between mb-1">
+//             <label className="text-sm font-medium text-gray-700">
+//               Location
+//             </label>
+//             <button onClick={() => navigate("/addlocation")}
+//               type="button"
+//               className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
+//             >
+//               + Add Location
+//             </button>
+//           </div>
+//           <select
+//             value={locationId}
+//             onChange={(e) => setLocationId(e.target.value)}
+//             className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//           >
+//             <option value="">Select a Location</option>
+//             {locations.map((loc) => (
+//               <option key={loc._id} value={loc._id}>
+//                 {loc.name}
+//               </option>
+//             ))}
+//           </select>
+
+//         </div> */}
+
+//         <div className="mb-4">
+//           {/* Label + Button */}
+//           <div className="flex items-center justify-between mb-1">
+//             <label className="text-sm font-medium text-gray-700">
+//               Location
+//             </label>
+
+//             {/* <button onClick={() => navigate("/addlocation")}
+//               type="button"
+//               className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
+//             >
+//               + Add Location
+//             </button> */}
+//           </div>
+
+//           {/* Select */}
+//           {/* <select
+//             value={locationId}
+//             onChange={(e) => setLocationId(e.target.value)}
+//             className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//           >
+//             <option value="">Select a Location</option>
+//             {locations.map((loc) => (
+//               <option key={loc._id} value={loc._id}>
+//                 {loc.name}
+//               </option>
+//             ))}
+//           </select> */}
+//           <select
+//             value={locationId}
+//             onChange={(e) => {
+//               const selectedValue = e.target.value;
+
+//               if (selectedValue === "add-new") {
+//                 navigate("/addlocation");
+//                 return;
+//               }
+
+//               setLocationId(selectedValue);
+//             }}
+//             className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//           >
+//             <option value="">Select a Location</option>
+
+//             {locations.map((loc) => (
+//               <option key={loc._id} value={loc._id}>
+//                 {loc.name}
+//               </option>
+//             ))}
+
+//             <option value="add-new">➕ Add New Location</option>
+//           </select>
+
+
+//         </div>
+
+
+
+//         <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded">
+//           {loading ? "Saving..." : editingEmployee ? "Update Employee" : "Add Employee"}
+//         </button>
+
+//       </form>
+//     </div>
+//   );
+// };
+
+// export default AddEmployeePage;
+
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -1435,9 +3036,9 @@ const AddEmployeePage = () => {
   const [password, setPassword] = useState("");
   const [department, setDepartment] = useState("");
   const [role, setRole] = useState("");
-  const [shiftType, setShiftType] = useState("A");
-  const [shiftStartTime, setShiftStartTime] = useState("09:00"); // ✅ Start time
-  const [shiftEndTime, setShiftEndTime] = useState("18:00"); // ✅ End time
+  const [shiftType, setShiftType] = useState("");
+  const [shiftStartTime, setShiftStartTime] = useState("09:00");
+  const [shiftEndTime, setShiftEndTime] = useState("18:00");
   const [joinDate, setJoinDate] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -1447,34 +3048,158 @@ const AddEmployeePage = () => {
   const [shiftHours, setShiftHours] = useState("8");
   const [weekOffPerMonth, setWeekOffPerMonth] = useState("0");
 
+  const [departments, setDepartments] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [isAddingNewDept, setIsAddingNewDept] = useState(false);
   const [customDepartment, setCustomDepartment] = useState("");
   const [isAddingNewRole, setIsAddingNewRole] = useState(false);
   const [customRole, setCustomRole] = useState("");
-  const [isAddingNewShift, setIsAddingNewShift] = useState(false);
-  const [customShiftType, setCustomShiftType] = useState("");
-  const [customShiftStartTime, setCustomShiftStartTime] = useState("09:00"); // ✅ New shift start time
-  const [customShiftEndTime, setCustomShiftEndTime] = useState("18:00"); // ✅ New shift end time
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [locations, setLocations] = useState([]);
-  const [shiftList, setShiftList] = useState(["A", "B", "C", "D", "E", "F", "G", "H", "I"]);
-  const [allShiftsData, setAllShiftsData] = useState([]); // ✅ Store all shift data with times
+  // ✅ SHIFT RELATED STATES
+  const [masterShifts, setMasterShifts] = useState([]);
+  const [shiftList, setShiftList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [locations, setLocations] = useState([]);
 
-  const departments = [
-    "Developer", "Sales", "Marketing", "Medical", "Finance",
-    "Nursing", "Digital Marketing", "Management", "Laboratory Medicine"
-  ];
+  // ✅ SHIFT MODAL STATE
+  const [showShiftModal, setShowShiftModal] = useState(false);
+  const [createShiftForm, setCreateShiftForm] = useState({
+    shiftType: '',
+    shiftName: '',
+    timeSlots: [
+      { slotId: `${Date.now()}_1`, timeRange: '', description: '' },
+      { slotId: `${Date.now()}_2`, timeRange: '', description: '' },
+      { slotId: `${Date.now()}_3`, timeRange: '', description: '' },
+      { slotId: `${Date.now()}_4`, timeRange: '', description: '' }
+    ]
+  });
 
-  const roles = [
-    "Administrator", "Manager", "Team Lead", "Employee", "HR Manager",
-    "Phlebotomist", "Staff Nurse", "Sales Executive",
-    "Consultant", "Graphic Designer", "UI/UX & GRAPHIC DESIGNER",
-    "SMM & SEO Executive", "Web Developer",
-  ];
+  // ✅ Fetch departments, roles and shifts from backend
+  useEffect(() => {
+    fetchDepartments();
+    fetchRoles();
+    fetchAllShifts();
+    fetchLocations();
+  }, []);
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/department/all');
+      if (response.data.success) {
+        setDepartments(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+      setDepartments([
+        { name: "Developer", employeeCount: 0 },
+        { name: "Sales", employeeCount: 0 },
+        { name: "Marketing", employeeCount: 0 },
+        { name: "Medical", employeeCount: 0 },
+        { name: "Finance", employeeCount: 0 },
+        { name: "Nursing", employeeCount: 0 },
+        { name: "Digital Marketing", employeeCount: 0 },
+        { name: "Management", employeeCount: 0 },
+        { name: "Laboratory Medicine", employeeCount: 0 }
+      ]);
+    }
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/roles/all');
+      if (response.data.success) {
+        setRoles(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+      setRoles([
+        { name: "Administrator", employeeCount: 0 },
+        { name: "Manager", employeeCount: 0 },
+        { name: "Team Lead", employeeCount: 0 },
+        { name: "Employee", employeeCount: 0 },
+        { name: "HR Manager", employeeCount: 0 },
+        { name: "Phlebotomist", employeeCount: 0 },
+        { name: "Staff Nurse", employeeCount: 0 },
+        { name: "Sales Executive", employeeCount: 0 },
+        { name: "Consultant", employeeCount: 0 },
+        { name: "Graphic Designer", employeeCount: 0 },
+        { name: "UI/UX & GRAPHIC DESIGNER", employeeCount: 0 },
+        { name: "SMM & SEO Executive", employeeCount: 0 },
+        { name: "Web Developer", employeeCount: 0 }
+      ]);
+    }
+  };
+
+  const fetchLocations = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/location/alllocation");
+      if (res.data?.locations) setLocations(res.data.locations);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // ✅ FETCH ALL SHIFTS - Updated to match ShiftManagement
+  const fetchAllShifts = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/shifts/master");
+      console.log("Master shifts response:", res.data);
+
+      if (res.data && res.data.success && Array.isArray(res.data.data)) {
+        const shifts = res.data.data;
+        setMasterShifts(shifts);
+        
+        // Extract unique shift types with their names
+        const shiftOptions = shifts.map(shift => ({
+          type: shift.shiftType,
+          name: shift.shiftName || `Shift ${shift.shiftType}`,
+          timeSlots: shift.timeSlots || []
+        }));
+        
+        setShiftList(shiftOptions);
+        
+        // If editing employee, don't auto-select
+        if (!editingEmployee && shiftOptions.length > 0 && !shiftType) {
+          const firstShift = shiftOptions[0];
+          setShiftType(firstShift.type);
+          
+          // Set default time from first slot
+          if (firstShift.timeSlots && firstShift.timeSlots.length > 0) {
+            const timeRange = firstShift.timeSlots[0].timeRange;
+            const [start, end] = timeRange.split(" - ");
+            if (start && end) {
+              setShiftStartTime(start.trim());
+              setShiftEndTime(end.trim());
+            }
+          }
+        }
+      } else {
+        // Fallback for legacy shifts
+        const legacyRes = await axios.get("http://localhost:5000/api/shifts/all");
+        if (legacyRes.data && Array.isArray(legacyRes.data)) {
+          const uniqueShifts = [...new Set(legacyRes.data.map(shift => shift.shiftType))];
+          const shiftOptions = uniqueShifts.map(type => ({
+            type,
+            name: `Shift ${type}`,
+            timeSlots: []
+          }));
+          setShiftList(shiftOptions);
+        }
+      }
+    } catch (err) {
+      console.log("Error fetching shifts:", err.message);
+      // Set default shifts
+      setShiftList([
+        { type: "A", name: "Morning Shift", timeSlots: [] },
+        { type: "B", name: "Evening Shift", timeSlots: [] },
+        { type: "C", name: "Night Shift", timeSlots: [] },
+        { type: "D", name: "General Shift", timeSlots: [] }
+      ]);
+    }
+  };
 
   useEffect(() => {
     if (editingEmployee) {
@@ -1492,17 +3217,15 @@ const AddEmployeePage = () => {
       setWeekOffPerMonth(editingEmployee.weekOffPerMonth || "");
       setPassword("");
 
-      // Fetch employee's shift if editing
       fetchEmployeeShift();
     }
   }, [editingEmployee]);
 
-  // Fetch employee's existing shift
   const fetchEmployeeShift = async () => {
     if (!editingEmployee?.employeeId) return;
 
     try {
-      const res = await axios.get(`https://api.timelyhealth.in/api/shifts/employee/${editingEmployee.employeeId}`);
+      const res = await axios.get(`http://localhost:5000/api/shifts/employee/${editingEmployee.employeeId}`);
       if (res.data && !res.data.message) {
         setShiftType(res.data.shiftType);
         setShiftStartTime(res.data.startTime || "09:00");
@@ -1513,59 +3236,21 @@ const AddEmployeePage = () => {
     }
   };
 
-  // Fetch locations
+  // ✅ Update time when shift type changes
   useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        const res = await axios.get("https://api.timelyhealth.in/api/location/alllocation");
-        if (res.data?.locations) setLocations(res.data.locations);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchLocations();
-  }, []);
-
-  // ✅ Fetch all shifts data with times
-  useEffect(() => {
-    const fetchAllShifts = async () => {
-      try {
-        const res = await axios.get("https://api.timelyhealth.in/api/shifts/all");
-        console.log("All shifts data:", res.data);
-
-        if (res.data && Array.isArray(res.data)) {
-          setAllShiftsData(res.data);
-
-          // Get unique shift types
-          const uniqueShifts = [...new Set(res.data.map(shift => shift.shiftType))];
-          setShiftList(uniqueShifts);
-
-          // Set default times from first shift if available
-          if (res.data.length > 0) {
-            const firstShift = res.data[0];
-            if (!shiftStartTime) setShiftStartTime(firstShift.startTime || "09:00");
-            if (!shiftEndTime) setShiftEndTime(firstShift.endTime || "18:00");
-          }
+    if (shiftType) {
+      const selectedShift = masterShifts.find(s => s.shiftType === shiftType);
+      if (selectedShift && selectedShift.timeSlots && selectedShift.timeSlots.length > 0) {
+        const timeRange = selectedShift.timeSlots[0].timeRange;
+        const [start, end] = timeRange.split(" - ");
+        if (start && end) {
+          setShiftStartTime(start.trim());
+          setShiftEndTime(end.trim());
         }
-      } catch (err) {
-        console.log("Using default shifts:", err.message);
-      }
-    };
-    fetchAllShifts();
-  }, []);
-
-  // ✅ When shift type changes, update times if shift exists
-  useEffect(() => {
-    if (shiftType && !isAddingNewShift && allShiftsData.length > 0) {
-      const existingShift = allShiftsData.find(s => s.shiftType === shiftType);
-      if (existingShift) {
-        setShiftStartTime(existingShift.startTime || "09:00");
-        setShiftEndTime(existingShift.endTime || "18:00");
       }
     }
-  }, [shiftType, isAddingNewShift, allShiftsData]);
+  }, [shiftType, masterShifts]);
 
-  // ✅ Shift assign function with custom times
   const assignShiftToEmployee = async (empId, empName, shift, startTime, endTime) => {
     try {
       const shiftData = {
@@ -1577,7 +3262,7 @@ const AddEmployeePage = () => {
       };
 
       const response = await axios.post(
-        "https://api.timelyhealth.in/api/shifts/assign",
+        "http://localhost:5000/api/shifts/assign",
         shiftData
       );
 
@@ -1593,7 +3278,97 @@ const AddEmployeePage = () => {
     }
   };
 
-  // ✅ Main submit function
+  // ✅ FUNCTION TO CREATE CUSTOM SHIFT
+  const handleCreateCustomShift = async (e) => {
+    e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      console.log("Creating custom shift:", createShiftForm);
+      
+      if (!createShiftForm.shiftType || !createShiftForm.shiftName) {
+        setErrorMessage('Please enter shift type and name');
+        return;
+      }
+
+      // Validate time slots
+      const validSlots = createShiftForm.timeSlots.filter(slot => 
+        slot.timeRange.trim() !== '' && slot.description.trim() !== ''
+      );
+      
+      if (validSlots.length === 0) {
+        setErrorMessage('Please add at least one time slot');
+        return;
+      }
+
+      const response = await axios.post('http://localhost:5000/api/shifts/create', {
+        shiftType: createShiftForm.shiftType,
+        shiftName: createShiftForm.shiftName,
+        timeSlots: validSlots
+      });
+      
+      console.log("Create custom response:", response.data);
+      
+      if (response.data.success) {
+        setSuccessMessage(`✅ Custom Shift ${createShiftForm.shiftType} created successfully!`);
+        
+        // Refresh shift list
+        await fetchAllShifts();
+        
+        // Auto-select the newly created shift
+        setShiftType(createShiftForm.shiftType);
+        
+        // Close modal
+        setShowShiftModal(false);
+        
+        // Reset form
+        setCreateShiftForm({
+          shiftType: '',
+          shiftName: '',
+          timeSlots: [
+            { slotId: `${Date.now()}_1`, timeRange: '', description: '' },
+            { slotId: `${Date.now()}_2`, timeRange: '', description: '' },
+            { slotId: `${Date.now()}_3`, timeRange: '', description: '' },
+            { slotId: `${Date.now()}_4`, timeRange: '', description: '' }
+          ]
+        });
+      } else {
+        setErrorMessage(response.data.message);
+      }
+    } catch (error) {
+      console.error('Create custom error:', error);
+      setErrorMessage(error.response?.data?.message || 'Failed to create custom shift');
+    }
+  };
+
+  // ✅ Add time slot
+  const addTimeSlot = () => {
+    setCreateShiftForm(prev => ({
+      ...prev,
+      timeSlots: [
+        ...prev.timeSlots,
+        { slotId: `${Date.now()}_${prev.timeSlots.length + 1}`, timeRange: '', description: '' }
+      ]
+    }));
+  };
+
+  // ✅ Remove time slot
+  const removeTimeSlot = (index) => {
+    if (createShiftForm.timeSlots.length > 1) {
+      const newSlots = [...createShiftForm.timeSlots];
+      newSlots.splice(index, 1);
+      setCreateShiftForm(prev => ({ ...prev, timeSlots: newSlots }));
+    }
+  };
+
+  // ✅ Update time slot
+  const updateTimeSlot = (index, field, value) => {
+    const newSlots = [...createShiftForm.timeSlots];
+    newSlots[index] = { ...newSlots[index], [field]: value };
+    setCreateShiftForm(prev => ({ ...prev, timeSlots: newSlots }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -1603,22 +3378,15 @@ const AddEmployeePage = () => {
     try {
       const finalDept = isAddingNewDept ? customDepartment : department;
       const finalRole = isAddingNewRole ? customRole : role;
-      let finalShift = isAddingNewShift ? customShiftType : shiftType;
-      let finalStartTime = isAddingNewShift ? customShiftStartTime : shiftStartTime;
-      let finalEndTime = isAddingNewShift ? customShiftEndTime : shiftEndTime;
+      const finalShift = shiftType;
+      const finalStartTime = shiftStartTime;
+      const finalEndTime = shiftEndTime;
 
       // Shift validation
       if (!finalShift) {
         throw new Error("Please select a shift type");
       }
 
-      finalShift = finalShift.toUpperCase().trim();
-
-      if (finalShift.length !== 1 || !/^[A-Z]$/.test(finalShift)) {
-        throw new Error("Shift type should be a single letter from A to Z");
-      }
-
-      // Time validation
       if (!finalStartTime || !finalEndTime) {
         throw new Error("Please select both start and end time");
       }
@@ -1645,7 +3413,7 @@ const AddEmployeePage = () => {
 
         // 1. Update employee
         await axios.put(
-          `https://api.timelyhealth.in/api/employees/update/${editingEmployee._id}`,
+          `http://localhost:5000/api/employees/update/${editingEmployee._id}`,
           profilePayload
         );
 
@@ -1666,7 +3434,7 @@ const AddEmployeePage = () => {
         if (salaryPerMonth || shiftHours || weekOffPerMonth) {
           try {
             await axios.put(
-              `https://api.timelyhealth.in/api/salary/update-salary/${editingEmployee.employeeId}`,
+              `http://localhost:5000/api/salary/update-salary/${editingEmployee.employeeId}`,
               {
                 employeeId: editingEmployee.employeeId,
                 salaryPerMonth: Number(salaryPerMonth) || 0,
@@ -1679,23 +3447,13 @@ const AddEmployeePage = () => {
           }
         }
 
-        // 4. Add new shift to list if created
-        if (isAddingNewShift && !shiftList.includes(finalShift)) {
-          setShiftList(prev => [...prev, finalShift]);
-          setAllShiftsData(prev => [...prev, {
-            shiftType: finalShift,
-            startTime: finalStartTime,
-            endTime: finalEndTime
-          }]);
-        }
-
         setSuccessMessage("✅ Employee updated successfully!");
 
       } else {
         // ================= ADD NEW EMPLOYEE =================
         // 1. Add employee
         await axios.post(
-          "https://api.timelyhealth.in/api/employees/add-employee",
+          "http://localhost:5000/api/employees/add-employee",
           {
             name,
             email,
@@ -1725,7 +3483,7 @@ const AddEmployeePage = () => {
 
         // 3. Add salary
         await axios.post(
-          "https://api.timelyhealth.in/api/salary/set-salary",
+          "http://localhost:5000/api/salary/set-salary",
           {
             employeeId,
             name,
@@ -1734,16 +3492,6 @@ const AddEmployeePage = () => {
             weekOffPerMonth: Number(weekOffPerMonth),
           }
         );
-
-        // 4. Add new shift to list if created
-        if (isAddingNewShift && !shiftList.includes(finalShift)) {
-          setShiftList(prev => [...prev, finalShift]);
-          setAllShiftsData(prev => [...prev, {
-            shiftType: finalShift,
-            startTime: finalStartTime,
-            endTime: finalEndTime
-          }]);
-        }
 
         setSuccessMessage("✅ Employee added successfully!");
       }
@@ -1776,8 +3524,6 @@ const AddEmployeePage = () => {
 
       <form onSubmit={handleSubmit}>
 
-        {/* Name, Email, Password, Department, Role fields - SAME AS BEFORE */}
-
         <div className="mb-4">
           <label className="block text-sm">Full Name *</label>
           <input value={name} onChange={(e) => setName(e.target.value)} className="w-full p-2 border rounded" required />
@@ -1803,15 +3549,20 @@ const AddEmployeePage = () => {
           {editingEmployee && <p className="text-xs text-gray-500 mt-1">Leave blank to keep current password</p>}
         </div>
 
+        {/* ✅ ENHANCED DEPARTMENT SELECTION */}
         <div className="mb-4">
-          <label className="block text-sm">Department</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Department *
+          </label>
           <div className="flex gap-2">
             <select
               value={isAddingNewDept ? "ADD_NEW" : department}
               onChange={(e) => {
                 if (e.target.value === "ADD_NEW") {
-                  setIsAddingNewDept(true);
-                  setDepartment("");
+                  navigate('/departmentdashboard', { 
+                    state: { openAddModal: true } 
+                  });
+                  return;
                 } else {
                   setIsAddingNewDept(false);
                   setDepartment(e.target.value);
@@ -1821,10 +3572,17 @@ const AddEmployeePage = () => {
               required={!isAddingNewDept}
             >
               <option value="">Select Department</option>
-              {departments.map((d) => <option key={d} value={d}>{d}</option>)}
-              <option value="ADD_NEW" className="font-bold text-blue-600">+ Add New Department</option>
+              {departments.map((dept) => (
+                <option key={dept.name} value={dept.name}>
+                  {dept.name} {dept.employeeCount > 0 ? `(${dept.employeeCount})` : ''}
+                </option>
+              ))}
+              <option value="ADD_NEW" className="font-bold text-blue-600">
+                + Add New Department
+              </option>
             </select>
           </div>
+          
           {isAddingNewDept && (
             <div className="flex items-center gap-2 mt-2">
               <input
@@ -1844,17 +3602,26 @@ const AddEmployeePage = () => {
               </button>
             </div>
           )}
+          
+          {department && !isAddingNewDept && (
+            <p className="text-xs text-green-600 mt-1">Selected: {department}</p>
+          )}
         </div>
 
+        {/* ✅ ENHANCED ROLE SELECTION */}
         <div className="mb-4">
-          <label className="block text-sm">Role</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Role *
+          </label>
           <div className="flex gap-2">
             <select
               value={isAddingNewRole ? "ADD_NEW" : role}
               onChange={(e) => {
                 if (e.target.value === "ADD_NEW") {
-                  setIsAddingNewRole(true);
-                  setRole("");
+                  navigate('/roledashboard', { 
+                    state: { openAddModal: true } 
+                  });
+                  return;
                 } else {
                   setIsAddingNewRole(false);
                   setRole(e.target.value);
@@ -1864,10 +3631,17 @@ const AddEmployeePage = () => {
               required={!isAddingNewRole}
             >
               <option value="">Select Role</option>
-              {roles.map((r) => <option key={r} value={r}>{r}</option>)}
-              <option value="ADD_NEW" className="font-bold text-blue-600">+ Add New Role</option>
+              {roles.map((roleItem) => (
+                <option key={roleItem.name} value={roleItem.name}>
+                  {roleItem.name} {roleItem.employeeCount > 0 ? `(${roleItem.employeeCount})` : ''}
+                </option>
+              ))}
+              <option value="ADD_NEW" className="font-bold text-blue-600">
+                + Add New Role
+              </option>
             </select>
           </div>
+          
           {isAddingNewRole && (
             <div className="flex items-center gap-2 mt-2">
               <input
@@ -1887,150 +3661,74 @@ const AddEmployeePage = () => {
               </button>
             </div>
           )}
+          
+          {role && !isAddingNewRole && (
+            <p className="text-xs text-green-600 mt-1">Selected: {role}</p>
+          )}
         </div>
 
-        {/* ✅ ENHANCED SHIFT SECTION WITH TIME PICKERS */}
-        <div className="mb-4 p-4 border rounded-lg bg-gray-50">
-          <label className="block text-sm font-medium mb-2">Shift Details *</label>
-
-          <div className="flex gap-2 mb-3">
-            <select
-              value={isAddingNewShift ? "ADD_NEW" : shiftType}
-              onChange={(e) => {
-                if (e.target.value === "ADD_NEW") {
-                  setIsAddingNewShift(true);
-                  setShiftType("");
-                } else {
-                  setIsAddingNewShift(false);
-                  setShiftType(e.target.value);
-                }
-              }}
-              className="w-full p-2 border rounded"
-              required={!isAddingNewShift}
-            >
-              <option value="">Select Shift Type</option>
-              {shiftList.map((shift) => (
-                <option key={shift} value={shift}>Shift {shift}</option>
-              ))}
-              <option value="ADD_NEW" className="font-bold text-blue-600">+ Add New Shift Type</option>
-            </select>
-          </div>
-
-          {isAddingNewShift ? (
-            <div className="space-y-4 p-3 border border-blue-200 rounded bg-blue-50">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-blue-800">Create New Shift Type</span>
-                <button
-                  type="button"
-                  onClick={() => setIsAddingNewShift(false)}
-                  className="text-xs text-red-500 hover:text-red-700 font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-
+        {/* ✅ ENHANCED SHIFT SELECTION - SIMPLE VERSION */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Shift Details *
+          </label>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2">
+              <select
+                value={shiftType}
+                onChange={(e) => {
+                  if (e.target.value === "ADD_NEW") {
+                    setShowShiftModal(true);
+                  } else {
+                    setShiftType(e.target.value);
+                  }
+                }}
+                className="w-full p-2 border rounded"
+                required
+              >
+                <option value="">Select Shift Type</option>
+                {shiftList.map((shift) => (
+                  <option key={shift.type} value={shift.type}>
+                    Shift {shift.type}: {shift.name}
+                  </option>
+                ))}
+                <option value="ADD_NEW" className="font-bold text-blue-600">
+                  + Add New Shift
+                </option>
+              </select>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Shift Type Code *</label>
+                <label className="block text-xs text-gray-600 mb-1">Start Time *</label>
                 <input
-                  type="text"
-                  placeholder="Enter shift type (A, B, C, etc.)"
-                  value={customShiftType}
-                  onChange={(e) => {
-                    const value = e.target.value.toUpperCase();
-                    if (value.length <= 1) {
-                      setCustomShiftType(value);
-                    }
-                  }}
-                  className="w-full p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
-                  maxLength="1"
+                  type="time"
+                  value={shiftStartTime}
+                  onChange={(e) => setShiftStartTime(e.target.value)}
+                  className="w-full p-2 border rounded text-sm"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">Single letter from A to Z</p>
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">Start Time *</label>
-                  <input
-                    type="time"
-                    value={customShiftStartTime}
-                    onChange={(e) => setCustomShiftStartTime(e.target.value)}
-                    className="w-full p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">End Time *</label>
-                  <input
-                    type="time"
-                    value={customShiftEndTime}
-                    onChange={(e) => setCustomShiftEndTime(e.target.value)}
-                    className="w-full p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">End Time *</label>
+                <input
+                  type="time"
+                  value={shiftEndTime}
+                  onChange={(e) => setShiftEndTime(e.target.value)}
+                  className="w-full p-2 border rounded text-sm"
+                  required
+                />
               </div>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {/* Show shift details if existing shift is selected */}
-              {shiftType && (
-                <div className="p-3 border border-gray-200 rounded bg-white">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium">
-                      Selected: <span className="text-blue-600">Shift {shiftType}</span>
-                    </span>
-                    {allShiftsData.find(s => s.shiftType === shiftType) && (
-                      <span className="text-xs text-green-600">✓ Existing Shift</span>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">Start Time *</label>
-                      <input
-                        type="time"
-                        value={shiftStartTime}
-                        onChange={(e) => setShiftStartTime(e.target.value)}
-                        className="w-full p-2 border rounded"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">End Time *</label>
-                      <input
-                        type="time"
-                        value={shiftEndTime}
-                        onChange={(e) => setShiftEndTime(e.target.value)}
-                        className="w-full p-2 border rounded"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Show shift timing info if exists */}
-                  {(() => {
-                    const selectedShift = allShiftsData.find(s => s.shiftType === shiftType);
-                    if (selectedShift) {
-                      return (
-                        <div className="mt-2 text-xs text-gray-500">
-                          <p>Default timing for this shift: {selectedShift.startTime} - {selectedShift.endTime}</p>
-                          <p className="mt-1">You can modify the timing for this employee</p>
-                        </div>
-                      );
-                    }
-                  })()}
-                </div>
-              )}
-            </div>
+          </div>
+          
+          {shiftList.length > 0 && (
+            <p className="text-xs text-gray-500 mt-2">
+              Available shifts: {shiftList.map(s => `Shift ${s.type}`).join(", ")}
+            </p>
           )}
-
-          <p className="text-xs text-gray-500 mt-2">
-            Available shifts: {shiftList.join(", ")}
-          </p>
         </div>
 
-        {/* Rest of the form - SAME AS BEFORE */}
         <div className="mb-4">
           <label className="block text-sm">Join Date *</label>
           <input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} className="w-full p-2 border rounded" required />
@@ -2072,61 +3770,8 @@ const AddEmployeePage = () => {
           <input type="number" value={weekOffPerMonth} onChange={(e) => setWeekOffPerMonth(e.target.value)} className="w-full p-2 border rounded" required />
         </div>
 
-        {/* <div className="mb-4">
-          <div className="flex items-center justify-between mb-1">
-            <label className="text-sm font-medium text-gray-700">
-              Location
-            </label>
-            <button onClick={() => navigate("/addlocation")}
-              type="button"
-              className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
-            >
-              + Add Location
-            </button>
-          </div>
-          <select
-            value={locationId}
-            onChange={(e) => setLocationId(e.target.value)}
-            className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select a Location</option>
-            {locations.map((loc) => (
-              <option key={loc._id} value={loc._id}>
-                {loc.name}
-              </option>
-            ))}
-          </select>
-
-        </div> */}
-
         <div className="mb-4">
-          {/* Label + Button */}
-          <div className="flex items-center justify-between mb-1">
-            <label className="text-sm font-medium text-gray-700">
-              Location
-            </label>
-
-            {/* <button onClick={() => navigate("/addlocation")}
-              type="button"
-              className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
-            >
-              + Add Location
-            </button> */}
-          </div>
-
-          {/* Select */}
-          {/* <select
-            value={locationId}
-            onChange={(e) => setLocationId(e.target.value)}
-            className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select a Location</option>
-            {locations.map((loc) => (
-              <option key={loc._id} value={loc._id}>
-                {loc.name}
-              </option>
-            ))}
-          </select> */}
+          <label className="block text-sm">Location *</label>
           <select
             value={locationId}
             onChange={(e) => {
@@ -2151,17 +3796,156 @@ const AddEmployeePage = () => {
 
             <option value="add-new">➕ Add New Location</option>
           </select>
-
-
         </div>
-
-
 
         <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded">
           {loading ? "Saving..." : editingEmployee ? "Update Employee" : "Add Employee"}
         </button>
 
       </form>
+
+      {/* ✅ SHIFT MODAL - ShiftManagement wala modal */}
+      {showShiftModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-xl font-semibold text-gray-800">Create Custom Shift (E-Z or any letter)</h3>
+              <button onClick={() => setShowShiftModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl">
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateCustomShift} className="p-6">
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Shift Type (Single letter E-Z) *
+                    </label>
+                    <input
+                      type="text"
+                      maxLength="1"
+                      value={createShiftForm.shiftType}
+                      onChange={(e) => setCreateShiftForm(prev => ({ 
+                        ...prev, 
+                        shiftType: e.target.value.toUpperCase().replace(/[^A-Z]/g, '')
+                      }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg uppercase"
+                      placeholder="E"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Enter a single letter (E, F, G, H, etc.)</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Shift Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={createShiftForm.shiftName}
+                      onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftName: e.target.value }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                      placeholder="e.g., Extended Shift E"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Time Slots Configuration */}
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Configure Time Slots (Minimum 1 required) *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addTimeSlot}
+                      className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+                    >
+                      + Add Slot
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {createShiftForm.timeSlots.map((slot, index) => (
+                      <div key={slot.slotId} className="p-4 border rounded-lg bg-gray-50">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium">Slot {index + 1}</span>
+                          {createShiftForm.timeSlots.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeTimeSlot(index)}
+                              className="text-red-600 hover:text-red-800 text-sm"
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">Time Range *</label>
+                            <input
+                              type="text"
+                              value={slot.timeRange}
+                              onChange={(e) => updateTimeSlot(index, 'timeRange', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                              placeholder="e.g., 10:00 - 19:00"
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">Description *</label>
+                            <input
+                              type="text"
+                              value={slot.description}
+                              onChange={(e) => updateTimeSlot(index, 'description', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                              placeholder="e.g., Morning 10 to 7"
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Preview */}
+                {createShiftForm.shiftType && createShiftForm.timeSlots.some(s => s.timeRange) && (
+                  <div className="bg-blue-50 p-4 rounded border border-blue-200">
+                    <h4 className="font-medium text-blue-800 mb-2">Preview:</h4>
+                    <p className="text-sm text-blue-700">
+                      Shift {createShiftForm.shiftType}: {createShiftForm.shiftName}
+                    </p>
+                    <p className="text-sm text-blue-600 mt-1">
+                      {createShiftForm.timeSlots.filter(s => s.timeRange).length} time slot(s) will be created.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowShiftModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                >
+                  Create Custom Shift
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

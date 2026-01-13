@@ -61,7 +61,7 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
       { icon: <i className="ri-user-fill"></i>, name: "User Activity", path: "/useractivity" },
     { icon: <i className="ri-file-chart-fill"></i>, name: "Reports", path: "/leaves-report" },
     { icon: <i className="ri-map-pin-2-fill"></i>, name: "Locations", path: "/locationlist" },
-    { icon: <i className="ri-time-fill"></i>, name: "Shifts", path: "/shiftlist" },
+    { icon: <i className="ri-time-fill"></i>, name: "Shifts", path: "/shift" },
     { icon: <i className="ri-logout-box-fill"></i>, name: "Logout", action: handleLogout },
   ];
 

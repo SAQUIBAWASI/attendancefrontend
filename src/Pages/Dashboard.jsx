@@ -6,8 +6,15 @@ import { FiClock, FiTrendingUp, FiUserCheck, FiUserX, FiUsers } from "react-icon
 import { useNavigate } from "react-router-dom";
 
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  Cell, AreaChart, Area
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis, YAxis
 } from 'recharts';
 
 const AttendanceDashboard = () => {
@@ -22,17 +29,17 @@ const AttendanceDashboard = () => {
   const fetchData = async () => {
     try {
       // Fetch Summary Stats
-      const summaryRes = await fetch("https://api.timelyhealth.in/api/attendance/summary");
+      const summaryRes = await fetch("http://localhost:5000/api/attendance/summary");
       const summaryData = await summaryRes.json();
       setAttendanceData(summaryData);
 
       // Fetch All Attendance for Chart
-      const allAttRes = await fetch("https://api.timelyhealth.in/api/attendance/allattendance");
+      const allAttRes = await fetch("http://localhost:5000/api/attendance/allattendance");
       const allAttData = await allAttRes.json();
       setAllAttendance(Array.isArray(allAttData) ? allAttData : allAttData.records || allAttData.allAttendance || []);
 
       // Fetch Approved Leaves for Chart
-      const leavesRes = await fetch("https://api.timelyhealth.in/api/leaves/leaves?status=approved");
+      const leavesRes = await fetch("http://localhost:5000/api/leaves/leaves?status=approved");
       const leavesResult = await leavesRes.json();
       setLeavesData(Array.isArray(leavesResult) ? leavesResult : leavesResult.records || leavesResult.leaves || []);
 

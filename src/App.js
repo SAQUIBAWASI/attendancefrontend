@@ -107,6 +107,7 @@ import VendorList from "./Pages/VendorList.js";
 import VendorDetail from "./Pages/VendorProfile.js";
 import WeeklyHoliday from "./Pages/WeeklyHoliday.js";
 // import LandingPage from "./Pages/LandingPage.js";
+import EmployeeDetailsModal from "./Components/EmployeeDetailsModel.js";
 import TimelyNavbar from "./Components/TimelyNavbar.js";
 import EmployeeLayout from "./Layout/EmployeeLayout.jsx";
 import AboutPage from "./Pages/AboutPage.js";
@@ -114,6 +115,7 @@ import AdminEmployeeLocations from "./Pages/AdminEmployeeLocations.js";
 import AssignLocation from "./Pages/AssignLocation.js";
 import AttendanceSummary from "./Pages/AttendanceSummary.js";
 import ContactPage from "./Pages/ContactPage.js";
+import DepartmentDashboard from "./Pages/DepartmentDashboard.js";
 import EmployeeLocation from "./Pages/EmployeeLocation.js";
 import EmployeeSalary from "./Pages/EmployeeSalary.js";
 import HomePage from "./Pages/HomePage.js";
@@ -122,15 +124,14 @@ import AddLocationPage from "./Pages/Location.js";
 import LocationListPage from "./Pages/LocationListPage.js";
 import MyShift from "./Pages/MyShift.js";
 import PayRoll from "./Pages/PayRoll.js";
+import RoleDashboard from "./Pages/RoleDashboard.js";
 import ServicesPage from "./Pages/ServicesPage.js";
 import ShiftList from "./Pages/ShiftList.js";
 import ShiftManagement from "./Pages/ShiftManagement.js";
 import SuperAdminMedicalMonitor from "./Pages/SuperAdminMedicalMonitor.js";
 import TimelyFooter from "./Pages/TimelyFooter.js";
-import WhoWeServePage from "./Pages/WhoWeServePage.js";
 import UserActivity from "./Pages/UserActivity.js";
-
-
+import WhoWeServePage from "./Pages/WhoWeServePage.js";
 // import EmpManagment from "./Pages/EmpManagment.js";
 function App() {
   return (
@@ -280,7 +281,9 @@ function App() {
               {/* <Route path="/empmanagement" element={<EmpManagment />} /> */}
               <Route path="/payroll" element={<PayRoll />} />
               <Route path="/useractivity" element={<UserActivity />} />
-
+              <Route path="/departmentdashboard" element={<DepartmentDashboard />} />
+              <Route path="/roledashboard" element={<RoleDashboard />} />
+              <Route path="/employeedetailsmodel" element={<EmployeeDetailsModal />} />
             </Routes>
           </AdminLayout>
         }

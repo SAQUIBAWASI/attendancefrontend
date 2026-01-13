@@ -28,7 +28,7 @@ const EmployeeList = () => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get(
-          "https://api.timelyhealth.in/api/employees/get-employees"
+          "http://localhost:5000/api/employees/get-employees"
         );
         // We now keep all employees so the user can see/toggle hidden ones
         setEmployees(response.data);
@@ -40,7 +40,7 @@ const EmployeeList = () => {
     const fetchLocations = async () => {
       try {
         const response = await axios.get(
-          "https://api.timelyhealth.in/api/location/alllocation"
+          "http://localhost:5000/api/location/alllocation"
         );
         let locationsData = [];
         if (response.data?.locations) {
@@ -94,7 +94,7 @@ const EmployeeList = () => {
           status: newStatus
         };
 
-        await axios.put(`https://api.timelyhealth.in/api/employees/update/${emp._id}`, payload);
+        await axios.put(`http://localhost:5000/api/employees/update/${emp._id}`, payload);
 
         // Update local state
         setEmployees(employees.map(e => e._id === emp._id ? { ...e, status: newStatus } : e));
@@ -113,7 +113,7 @@ const EmployeeList = () => {
     if (window.confirm("Are you sure you want to delete this employee?")) {
       try {
         await axios.delete(
-          `https://api.timelyhealth.in/api/employees/delete-employee/${id}`
+          `http://localhost:5000/api/employees/delete-employee/${id}`
         );
         setEmployees(employees.filter((emp) => emp._id !== id));
         alert("✅ Employee deleted successfully!");
@@ -155,7 +155,7 @@ const EmployeeList = () => {
     try {
       // Backend assign-location endpoint expects coordinates (as seen in AssignLocation.js)
       const response = await axios.put(
-        `https://api.timelyhealth.in/api/employees/assign-location/${selectedEmployeeForLocation.employeeId}`,
+        `http://localhost:5000/api/employees/assign-location/${selectedEmployeeForLocation.employeeId}`,
         {
           name: selectedLoc.name,
           latitude: selectedLoc.latitude,
