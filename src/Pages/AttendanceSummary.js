@@ -7785,6 +7785,7 @@
 // }
 
 import { saveAs } from "file-saver";
+import JSZip from "jszip";
 import { useEffect, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 
@@ -7910,7 +7911,7 @@ export default function AttendanceSummary() {
   const FULL_DAY_THRESHOLD = 8.80; // 8.81+ hours = Full Day
   const HALF_DAY_THRESHOLD = 4;    // 4 to 8.80 hours = Half Day
 
-  // ✅ Single Employee Excel Download Function
+  // ✅ Single Employee Excel Download Function - ZIP Version
   const downloadSingleEmployeeExcel = async (employeeId) => {
     try {
       const employee = employees.find(emp => emp.employeeId === employeeId);
@@ -7961,10 +7962,11 @@ export default function AttendanceSummary() {
         return new Date(a.checkInTime) - new Date(b.checkInTime);
       });
 
-      // ✅ Create workbook
-      const workbook = XLSX.utils.book_new();
+      // ✅ Create ZIP instance
+      const zip = new JSZip();
 
-      // 🟩 Sheet 1: Employee Summary
+      // ✅ 1. Summary Sheet File
+      const summaryWorkbook = XLSX.utils.book_new();
       const summaryData = [{
         "Employee ID": empSummary.employeeId,
         "Name": empSummary.name,
@@ -7982,15 +7984,27 @@ export default function AttendanceSummary() {
       }];
 
       const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(summaryWorkbook, summarySheet, "Summary");
 
-      // Sheet name formatting
-      const summarySheetName = employee.name
-        ? employee.name.replace(/[^A-Za-z0-9]/g, "").substring(0, 28)
-        : employeeId;
+      const summaryExcelBuffer = XLSX.write(summaryWorkbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
 
-      XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
+      // Summary file name
+      let summaryFileName = `${employeeId}_${employee.name || "Employee"}_Summary`;
+      if (fromDate && toDate) {
+        summaryFileName += `_${fromDate}_to_${toDate}`;
+      } else if (selectedMonth) {
+        summaryFileName += `_${selectedMonth}`;
+      }
+      summaryFileName += ".xlsx";
 
-      // 🟦 Sheet 2: Detailed Attendance
+      // Add summary file to ZIP
+      zip.file(summaryFileName, summaryExcelBuffer, { binary: true });
+
+      // ✅ 2. Detailed Attendance File
+      const detailWorkbook = XLSX.utils.book_new();
       const detailData = sortedAttendance.map(rec => {
         const checkIn = new Date(rec.checkInTime);
         const checkOut = rec.checkOutTime ? new Date(rec.checkOutTime) : null;
@@ -8012,29 +8026,40 @@ export default function AttendanceSummary() {
       });
 
       const detailSheet = XLSX.utils.json_to_sheet(detailData);
-      XLSX.utils.book_append_sheet(workbook, detailSheet, "Attendance");
+      XLSX.utils.book_append_sheet(detailWorkbook, detailSheet, "Attendance");
 
-      // 🟪 File name with employee info and filter details
-      let fileName = `${employeeId}_${employee.name || "Employee"}`;
-      if (fromDate && toDate) {
-        fileName += `_${fromDate}_to_${toDate}`;
-      } else if (selectedMonth) {
-        fileName += `_${selectedMonth}`;
-      }
-      fileName += ".xlsx";
-
-      // Export
-      const excelBuffer = XLSX.write(workbook, {
+      const detailExcelBuffer = XLSX.write(detailWorkbook, {
         bookType: "xlsx",
         type: "array",
       });
 
-      const blob = new Blob([excelBuffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
+      // Detail file name
+      let detailFileName = `${employeeId}_${employee.name || "Employee"}_Detailed_Attendance`;
+      if (fromDate && toDate) {
+        detailFileName += `_${fromDate}_to_${toDate}`;
+      } else if (selectedMonth) {
+        detailFileName += `_${selectedMonth}`;
+      }
+      detailFileName += ".xlsx";
 
-      saveAs(blob, fileName);
-      showSaveStatus(`✅ Downloaded ${employee.name}'s attendance report`);
+      // Add detail file to ZIP
+      zip.file(detailFileName, detailExcelBuffer, { binary: true });
+
+      // ✅ Generate ZIP file
+      const zipContent = await zip.generateAsync({ type: "blob" });
+
+      // ✅ ZIP file name
+      let zipFileName = `${employeeId}_${employee.name || "Employee"}_Attendance_Report`;
+      if (fromDate && toDate) {
+        zipFileName += `_${fromDate}_to_${toDate}`;
+      } else if (selectedMonth) {
+        zipFileName += `_${selectedMonth}`;
+      }
+      zipFileName += ".zip";
+
+      // ✅ Save ZIP file
+      saveAs(zipContent, zipFileName);
+      showSaveStatus(`✅ Downloaded ${employee.name}'s attendance report (ZIP)`);
 
     } catch (error) {
       console.error("Error downloading single employee report:", error);
@@ -8572,148 +8597,176 @@ export default function AttendanceSummary() {
     }
   };
 
-  const downloadCombinedExcel = () => {
+  // ✅ Bulk Download - ZIP Version (सभी का एक साथ डाउनलोड)
+  const downloadCombinedExcel = async () => {
     if (employeeSummary.length === 0) {
       alert("No summary data available");
       return;
     }
 
-    const workbook = XLSX.utils.book_new();
+    try {
+      showSaveStatus("📦 Preparing ZIP file...");
 
-    // ------------------------------------------
-    // 🟩 Sheet 1 — Filtered Employee Summary
-    // ------------------------------------------
-    const summaryData = employeeSummary.map(emp => ({
-      "Employee ID": emp.employeeId,
-      "Name": emp.name,
-      "Month": emp.month,
-      "Present Days": emp.presentDays,
-      "Late Days": emp.lateDays,
-      "Onsite Days": emp.onsiteDays,
-      "Half Day ": emp.halfDayWorking || emp.halfDayLeaves || 0,
-      "Full Day ": emp.fullDayNotWorking || emp.fullDayLeaves || 0,
-      "Over Time": calculateEmployeeOT(emp.employeeId).toFixed(2),
-      "Working Days": emp.totalWorkingDays.toFixed(1)
-    }));
+      // ✅ Create ZIP instance
+      const zip = new JSZip();
 
-    const summarySheet = XLSX.utils.json_to_sheet(summaryData);
-    XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
+      // ✅ 1. Combined Summary File (All Employees)
+      const summaryWorkbook = XLSX.utils.book_new();
+      const summaryData = employeeSummary.map(emp => ({
+        "Employee ID": emp.employeeId,
+        "Name": emp.name,
+        "Month": emp.month,
+        "Present Days": emp.presentDays,
+        "Late Days": emp.lateDays,
+        "Onsite Days": emp.onsiteDays,
+        "Half Day ": emp.halfDayWorking || emp.halfDayLeaves || 0,
+        "Full Day ": emp.fullDayNotWorking || emp.fullDayLeaves || 0,
+        "Over Time": calculateEmployeeOT(emp.employeeId).toFixed(2),
+        "Working Days": emp.totalWorkingDays.toFixed(1)
+      }));
 
-    // ------------------------------------------
-    // 🟦 Get Filtered Records - DATE FILTER APPLY KARO
-    // ------------------------------------------
-    let filteredDetails = [...records];
+      const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(summaryWorkbook, summarySheet, "Summary");
 
-    // Apply same date filters as summary
-    if (fromDate && toDate) {
-      const from = new Date(fromDate);
-      const to = new Date(toDate);
-      to.setHours(23, 59, 59, 999);
-
-      filteredDetails = filteredDetails.filter(r => {
-        if (!r.checkInTime) return false;
-        const recordDate = new Date(r.checkInTime);
-        return recordDate >= from && recordDate <= to;
-      });
-    }
-
-    // Month filter apply karo
-    if (selectedMonth) {
-      filteredDetails = filteredDetails.filter(r => {
-        if (!r.checkInTime) return false;
-        const recordMonth = new Date(r.checkInTime).toISOString().slice(0, 7);
-        return recordMonth === selectedMonth;
-      });
-    }
-
-    // Filter only employees that are in the summary
-    const summaryEmployeeIds = employeeSummary.map(emp => emp.employeeId);
-    filteredDetails = filteredDetails.filter(r =>
-      summaryEmployeeIds.includes(r.employeeId)
-    );
-
-    console.log("Filtered Details for Excel:", {
-      totalRecords: records.length,
-      filteredRecords: filteredDetails.length,
-      fromDate,
-      toDate,
-      selectedMonth,
-      summaryEmployees: summaryEmployeeIds.length
-    });
-
-    // ------------------------------------------
-    // 🟦 Sheets for EACH Employee — Filtered Attendance Details
-    // ------------------------------------------
-    const uniqueEmployees = [
-      ...new Set(filteredDetails.map(r => r.employeeId))
-    ];
-
-    uniqueEmployees.forEach(empId => {
-      const empRecords = filteredDetails.filter(rec => rec.employeeId === empId);
-
-      // ✅ SORT RECORDS BY DATE IN ASCENDING ORDER (1 Nov to 21 Nov)
-      const sortedEmpRecords = empRecords.sort((a, b) => {
-        const dateA = new Date(a.checkInTime);
-        const dateB = new Date(b.checkInTime);
-        return dateA - dateB; // Ascending order (oldest to newest)
+      const summaryExcelBuffer = XLSX.write(summaryWorkbook, {
+        bookType: "xlsx",
+        type: "array",
       });
 
-      const employee = employees.find(e => e.employeeId === empId);
-
-      const detailData = sortedEmpRecords.map(rec => {
-        const checkIn = new Date(rec.checkInTime);
-        const checkOut = rec.checkOutTime ? new Date(rec.checkOutTime) : null;
-
-        const hours = rec.totalHours ||
-          (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
-
-        return {
-          "Employee ID": rec.employeeId,
-          "Employee Name": employee?.name || "N/A",
-          "Date": checkIn.toLocaleDateString("en-IN"),
-          "Check-In": formatDate(rec.checkInTime),
-          "Check-Out": rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
-          "Hours": hours,
-          "Over Time": calculateOT(hours).toFixed(2),
-        };
-      });
-
-      // Only create sheet if there are records
-      if (detailData.length > 0) {
-        const empSheet = XLSX.utils.json_to_sheet(detailData);
-
-        const sheetName =
-          (employee?.name || empId)
-            .replace(/[^A-Za-z0-9]/g, "")
-            .substring(0, 28);
-
-        XLSX.utils.book_append_sheet(workbook, empSheet, sheetName);
+      // Summary file name
+      let summaryFileName = "All_Employees_Summary";
+      if (fromDate && toDate) {
+        summaryFileName += `_${fromDate}_to_${toDate}`;
+      } else if (selectedMonth) {
+        summaryFileName += `_${selectedMonth}`;
       }
-    });
+      summaryFileName += ".xlsx";
 
-    // ------------------------------------------
-    // 🟪 Final Export
-    // ------------------------------------------
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
+      // Add summary file to ZIP
+      zip.file(summaryFileName, summaryExcelBuffer, { binary: true });
 
-    const blob = new Blob([excelBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
+      // ✅ 2. Filtered Records
+      let filteredDetails = [...records];
 
-    // File name mein filter information add karo
-    let fileName = "Attendance_Report";
-    if (fromDate && toDate) {
-      fileName += `_${fromDate}_to_${toDate}`;
+      // Apply same date filters as summary
+      if (fromDate && toDate) {
+        const from = new Date(fromDate);
+        const to = new Date(toDate);
+        to.setHours(23, 59, 59, 999);
+
+        filteredDetails = filteredDetails.filter(r => {
+          if (!r.checkInTime) return false;
+          const recordDate = new Date(r.checkInTime);
+          return recordDate >= from && recordDate <= to;
+        });
+      }
+
+      // Month filter apply karo
+      if (selectedMonth) {
+        filteredDetails = filteredDetails.filter(r => {
+          if (!r.checkInTime) return false;
+          const recordMonth = new Date(r.checkInTime).toISOString().slice(0, 7);
+          return recordMonth === selectedMonth;
+        });
+      }
+
+      // Filter only employees that are in the summary
+      const summaryEmployeeIds = employeeSummary.map(emp => emp.employeeId);
+      filteredDetails = filteredDetails.filter(r =>
+        summaryEmployeeIds.includes(r.employeeId)
+      );
+
+      // ✅ 3. Create a folder for individual employee files
+      const employeesFolder = zip.folder("Individual_Reports");
+
+      // ✅ 4. Create separate files for each employee
+      const uniqueEmployees = [
+        ...new Set(filteredDetails.map(r => r.employeeId))
+      ];
+
+      for (const empId of uniqueEmployees) {
+        try {
+          const empRecords = filteredDetails.filter(rec => rec.employeeId === empId);
+          const employee = employees.find(e => e.employeeId === empId);
+
+          if (empRecords.length === 0) continue;
+
+          // ✅ SORT RECORDS BY DATE IN ASCENDING ORDER (oldest to newest)
+          const sortedEmpRecords = empRecords.sort((a, b) => {
+            const dateA = new Date(a.checkInTime);
+            const dateB = new Date(b.checkInTime);
+            return dateA - dateB;
+          });
+
+          // Create employee details workbook
+          const empWorkbook = XLSX.utils.book_new();
+          const detailData = sortedEmpRecords.map(rec => {
+            const checkIn = new Date(rec.checkInTime);
+            const checkOut = rec.checkOutTime ? new Date(rec.checkOutTime) : null;
+
+            const hours = rec.totalHours ||
+              (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
+
+            return {
+              "Date": checkIn.toLocaleDateString("en-IN"),
+              "Day": checkIn.toLocaleDateString("en-IN", { weekday: 'short' }),
+              "Check-In": formatDate(rec.checkInTime),
+              "Check-Out": rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
+              "Hours": hours,
+              "Over Time": calculateOT(hours).toFixed(2),
+              "Day Type": calculateDayType(hours),
+              "Region": rec.region || "-",
+              "Admin Comment": rec.comment || "",
+              "Reason": rec.reason || ""
+            };
+          });
+
+          const empSheet = XLSX.utils.json_to_sheet(detailData);
+          XLSX.utils.book_append_sheet(empWorkbook, empSheet, "Attendance");
+
+          const empExcelBuffer = XLSX.write(empWorkbook, {
+            bookType: "xlsx",
+            type: "array",
+          });
+
+          // Employee file name
+          let empFileName = `${empId}_${employee?.name || "Employee"}_Attendance`;
+          if (fromDate && toDate) {
+            empFileName += `_${fromDate}_to_${toDate}`;
+          } else if (selectedMonth) {
+            empFileName += `_${selectedMonth}`;
+          }
+          empFileName += ".xlsx";
+
+          // Add employee file to the folder
+          employeesFolder.file(empFileName, empExcelBuffer, { binary: true });
+
+        } catch (error) {
+          console.error(`Error creating file for employee ${empId}:`, error);
+          continue;
+        }
+      }
+
+      // ✅ Generate ZIP file
+      const zipContent = await zip.generateAsync({ type: "blob" });
+
+      // ✅ ZIP file name
+      let zipFileName = "Complete_Attendance_Report";
+      if (fromDate && toDate) {
+        zipFileName += `_${fromDate}_to_${toDate}`;
+      } else if (selectedMonth) {
+        zipFileName += `_${selectedMonth}`;
+      }
+      zipFileName += ".zip";
+
+      // ✅ Save ZIP file
+      saveAs(zipContent, zipFileName);
+      showSaveStatus(`✅ Downloaded complete report (${employeeSummary.length} employees)`);
+
+    } catch (error) {
+      console.error("Error downloading combined report:", error);
+      showSaveStatus("❌ Failed to download combined report", "error");
     }
-    if (selectedMonth) {
-      fileName += `_${selectedMonth}`;
-    }
-    fileName += ".xlsx";
-
-    saveAs(blob, fileName);
   };
 
   // ✅ Initialize on component mount
@@ -8867,10 +8920,6 @@ export default function AttendanceSummary() {
           </div>
         )}
 
-        {/* <h1 className="mb-6 text-3xl font-bold text-blue-700">
-          📊 Employee Attendance Summary
-        </h1> */}
-
         {/* Working Hours Info - UPDATED CRITERIA */}
 
         <div className="p-3 mb-4 bg-white border border-gray-200 shadow-md rounded-lg">
@@ -8945,7 +8994,7 @@ export default function AttendanceSummary() {
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Download
+                Download 
               </button>
 
             </div>
@@ -9032,7 +9081,7 @@ export default function AttendanceSummary() {
                           downloadSingleEmployeeExcel(emp.employeeId);
                         }}
                         className="flex items-center justify-center px-3 py-1 text-sm text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
-                        title={`Download ${emp.name}'s report`}
+                        title={`Download ${emp.name}'s report (ZIP)`}
                       >
                         ⬇
                       </button>
@@ -9254,7 +9303,7 @@ export default function AttendanceSummary() {
                                 }`}
                             >
                               {rec ? (edited ? "Update" : "Save") : "-"}
-                            </button>r
+                            </button>
                           </td>
                         </tr>
                       );

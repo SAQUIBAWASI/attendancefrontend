@@ -130,6 +130,7 @@ import ShiftList from "./Pages/ShiftList.js";
 import ShiftManagement from "./Pages/ShiftManagement.js";
 import SuperAdminMedicalMonitor from "./Pages/SuperAdminMedicalMonitor.js";
 import TimelyFooter from "./Pages/TimelyFooter.js";
+import UserAccessManagement from "./Pages/UserAccessManagement.js";
 import UserActivity from "./Pages/UserActivity.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
 // import EmpManagment from "./Pages/EmpManagment.js";
@@ -284,6 +285,7 @@ function App() {
               <Route path="/departmentdashboard" element={<DepartmentDashboard />} />
               <Route path="/roledashboard" element={<RoleDashboard />} />
               <Route path="/employeedetailsmodel" element={<EmployeeDetailsModal />} />
+              <Route path="/useraccess" element={<UserAccessManagement />} />
             </Routes>
           </AdminLayout>
         }

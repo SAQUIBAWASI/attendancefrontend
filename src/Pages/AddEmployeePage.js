@@ -3022,7 +3022,7 @@
 
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaBriefcase, FaBuilding, FaCalendar, FaClock, FaDollarSign, FaEnvelope, FaEye, FaEyeSlash, FaHome, FaIdCard, FaLock, FaMapMarkerAlt, FaPhone, FaUserTie } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const AddEmployeePage = () => {
@@ -3050,22 +3050,22 @@ const AddEmployeePage = () => {
 
   const [departments, setDepartments] = useState([]);
   const [roles, setRoles] = useState([]);
-  const [isAddingNewDept, setIsAddingNewDept] = useState(false);
-  const [customDepartment, setCustomDepartment] = useState("");
-  const [isAddingNewRole, setIsAddingNewRole] = useState(false);
-  const [customRole, setCustomRole] = useState("");
-
-  // ✅ SHIFT RELATED STATES
+  const [locations, setLocations] = useState([]);
   const [masterShifts, setMasterShifts] = useState([]);
   const [shiftList, setShiftList] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [locations, setLocations] = useState([]);
 
-  // ✅ SHIFT MODAL STATE
+  // Modal states
   const [showShiftModal, setShowShiftModal] = useState(false);
+  const [showDeptModal, setShowDeptModal] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+
+  // Form data for modals
   const [createShiftForm, setCreateShiftForm] = useState({
     shiftType: '',
     shiftName: '',
@@ -3077,7 +3077,16 @@ const AddEmployeePage = () => {
     ]
   });
 
-  // ✅ Fetch departments, roles and shifts from backend
+  const [deptForm, setDeptForm] = useState({ name: '', description: '' });
+  const [roleForm, setRoleForm] = useState({ name: '', description: '' });
+  const [locationForm, setLocationForm] = useState({
+    name: '',
+    latitude: '',
+    longitude: '',
+    fullAddress: ''
+  });
+
+  // ✅ Fetch all data
   useEffect(() => {
     fetchDepartments();
     fetchRoles();
@@ -3085,122 +3094,7 @@ const AddEmployeePage = () => {
     fetchLocations();
   }, []);
 
-  const fetchDepartments = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/department/all');
-      if (response.data.success) {
-        setDepartments(response.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching departments:', error);
-      setDepartments([
-        { name: "Developer", employeeCount: 0 },
-        { name: "Sales", employeeCount: 0 },
-        { name: "Marketing", employeeCount: 0 },
-        { name: "Medical", employeeCount: 0 },
-        { name: "Finance", employeeCount: 0 },
-        { name: "Nursing", employeeCount: 0 },
-        { name: "Digital Marketing", employeeCount: 0 },
-        { name: "Management", employeeCount: 0 },
-        { name: "Laboratory Medicine", employeeCount: 0 }
-      ]);
-    }
-  };
-
-  const fetchRoles = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/roles/all');
-      if (response.data.success) {
-        setRoles(response.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching roles:', error);
-      setRoles([
-        { name: "Administrator", employeeCount: 0 },
-        { name: "Manager", employeeCount: 0 },
-        { name: "Team Lead", employeeCount: 0 },
-        { name: "Employee", employeeCount: 0 },
-        { name: "HR Manager", employeeCount: 0 },
-        { name: "Phlebotomist", employeeCount: 0 },
-        { name: "Staff Nurse", employeeCount: 0 },
-        { name: "Sales Executive", employeeCount: 0 },
-        { name: "Consultant", employeeCount: 0 },
-        { name: "Graphic Designer", employeeCount: 0 },
-        { name: "UI/UX & GRAPHIC DESIGNER", employeeCount: 0 },
-        { name: "SMM & SEO Executive", employeeCount: 0 },
-        { name: "Web Developer", employeeCount: 0 }
-      ]);
-    }
-  };
-
-  const fetchLocations = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/location/alllocation");
-      if (res.data?.locations) setLocations(res.data.locations);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // ✅ FETCH ALL SHIFTS - Updated to match ShiftManagement
-  const fetchAllShifts = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/shifts/master");
-      console.log("Master shifts response:", res.data);
-
-      if (res.data && res.data.success && Array.isArray(res.data.data)) {
-        const shifts = res.data.data;
-        setMasterShifts(shifts);
-        
-        // Extract unique shift types with their names
-        const shiftOptions = shifts.map(shift => ({
-          type: shift.shiftType,
-          name: shift.shiftName || `Shift ${shift.shiftType}`,
-          timeSlots: shift.timeSlots || []
-        }));
-        
-        setShiftList(shiftOptions);
-        
-        // If editing employee, don't auto-select
-        if (!editingEmployee && shiftOptions.length > 0 && !shiftType) {
-          const firstShift = shiftOptions[0];
-          setShiftType(firstShift.type);
-          
-          // Set default time from first slot
-          if (firstShift.timeSlots && firstShift.timeSlots.length > 0) {
-            const timeRange = firstShift.timeSlots[0].timeRange;
-            const [start, end] = timeRange.split(" - ");
-            if (start && end) {
-              setShiftStartTime(start.trim());
-              setShiftEndTime(end.trim());
-            }
-          }
-        }
-      } else {
-        // Fallback for legacy shifts
-        const legacyRes = await axios.get("http://localhost:5000/api/shifts/all");
-        if (legacyRes.data && Array.isArray(legacyRes.data)) {
-          const uniqueShifts = [...new Set(legacyRes.data.map(shift => shift.shiftType))];
-          const shiftOptions = uniqueShifts.map(type => ({
-            type,
-            name: `Shift ${type}`,
-            timeSlots: []
-          }));
-          setShiftList(shiftOptions);
-        }
-      }
-    } catch (err) {
-      console.log("Error fetching shifts:", err.message);
-      // Set default shifts
-      setShiftList([
-        { type: "A", name: "Morning Shift", timeSlots: [] },
-        { type: "B", name: "Evening Shift", timeSlots: [] },
-        { type: "C", name: "Night Shift", timeSlots: [] },
-        { type: "D", name: "General Shift", timeSlots: [] }
-      ]);
-    }
-  };
-
+  // ✅ Set editing employee data
   useEffect(() => {
     if (editingEmployee) {
       setName(editingEmployee.name || "");
@@ -3216,41 +3110,68 @@ const AddEmployeePage = () => {
       setShiftHours(editingEmployee.shiftHours || "");
       setWeekOffPerMonth(editingEmployee.weekOffPerMonth || "");
       setPassword("");
-
-      fetchEmployeeShift();
     }
   }, [editingEmployee]);
 
-  const fetchEmployeeShift = async () => {
-    if (!editingEmployee?.employeeId) return;
-
+  // ✅ Fetch departments
+  const fetchDepartments = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/shifts/employee/${editingEmployee.employeeId}`);
-      if (res.data && !res.data.message) {
-        setShiftType(res.data.shiftType);
-        setShiftStartTime(res.data.startTime || "09:00");
-        setShiftEndTime(res.data.endTime || "18:00");
+      const response = await axios.get('http://localhost:5000/api/department/all');
+      if (response.data.success) {
+        setDepartments(response.data.data);
       }
-    } catch (err) {
-      console.log("No shift assigned yet");
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+      setDepartments([]);
     }
   };
 
-  // ✅ Update time when shift type changes
-  useEffect(() => {
-    if (shiftType) {
-      const selectedShift = masterShifts.find(s => s.shiftType === shiftType);
-      if (selectedShift && selectedShift.timeSlots && selectedShift.timeSlots.length > 0) {
-        const timeRange = selectedShift.timeSlots[0].timeRange;
-        const [start, end] = timeRange.split(" - ");
-        if (start && end) {
-          setShiftStartTime(start.trim());
-          setShiftEndTime(end.trim());
-        }
+  // ✅ Fetch roles
+  const fetchRoles = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/roles/all');
+      if (response.data.success) {
+        setRoles(response.data.data);
       }
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+      setRoles([]);
     }
-  }, [shiftType, masterShifts]);
+  };
 
+  // ✅ Fetch locations
+  const fetchLocations = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/location/alllocation");
+      if (res.data?.locations) setLocations(res.data.locations);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // ✅ Fetch shifts
+  const fetchAllShifts = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/shifts/master");
+      if (res.data && res.data.success && Array.isArray(res.data.data)) {
+        const shifts = res.data.data;
+        setMasterShifts(shifts);
+        
+        const shiftOptions = shifts.map(shift => ({
+          type: shift.shiftType,
+          name: shift.shiftName || `Shift ${shift.shiftType}`,
+          timeSlots: shift.timeSlots || []
+        }));
+        
+        setShiftList(shiftOptions);
+      }
+    } catch (err) {
+      console.log("Error fetching shifts:", err.message);
+      setShiftList([]);
+    }
+  };
+
+  // ✅ Handle shift assignment
   const assignShiftToEmployee = async (empId, empName, shift, startTime, endTime) => {
     try {
       const shiftData = {
@@ -3265,10 +3186,7 @@ const AddEmployeePage = () => {
         "http://localhost:5000/api/shifts/assign",
         shiftData
       );
-
-      console.log("Shift assigned with times:", response.data);
       return { success: true, data: response.data };
-
     } catch (error) {
       console.error("Shift assignment error:", error.response?.data || error.message);
       return {
@@ -3278,97 +3196,7 @@ const AddEmployeePage = () => {
     }
   };
 
-  // ✅ FUNCTION TO CREATE CUSTOM SHIFT
-  const handleCreateCustomShift = async (e) => {
-    e.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
-
-    try {
-      console.log("Creating custom shift:", createShiftForm);
-      
-      if (!createShiftForm.shiftType || !createShiftForm.shiftName) {
-        setErrorMessage('Please enter shift type and name');
-        return;
-      }
-
-      // Validate time slots
-      const validSlots = createShiftForm.timeSlots.filter(slot => 
-        slot.timeRange.trim() !== '' && slot.description.trim() !== ''
-      );
-      
-      if (validSlots.length === 0) {
-        setErrorMessage('Please add at least one time slot');
-        return;
-      }
-
-      const response = await axios.post('http://localhost:5000/api/shifts/create', {
-        shiftType: createShiftForm.shiftType,
-        shiftName: createShiftForm.shiftName,
-        timeSlots: validSlots
-      });
-      
-      console.log("Create custom response:", response.data);
-      
-      if (response.data.success) {
-        setSuccessMessage(`✅ Custom Shift ${createShiftForm.shiftType} created successfully!`);
-        
-        // Refresh shift list
-        await fetchAllShifts();
-        
-        // Auto-select the newly created shift
-        setShiftType(createShiftForm.shiftType);
-        
-        // Close modal
-        setShowShiftModal(false);
-        
-        // Reset form
-        setCreateShiftForm({
-          shiftType: '',
-          shiftName: '',
-          timeSlots: [
-            { slotId: `${Date.now()}_1`, timeRange: '', description: '' },
-            { slotId: `${Date.now()}_2`, timeRange: '', description: '' },
-            { slotId: `${Date.now()}_3`, timeRange: '', description: '' },
-            { slotId: `${Date.now()}_4`, timeRange: '', description: '' }
-          ]
-        });
-      } else {
-        setErrorMessage(response.data.message);
-      }
-    } catch (error) {
-      console.error('Create custom error:', error);
-      setErrorMessage(error.response?.data?.message || 'Failed to create custom shift');
-    }
-  };
-
-  // ✅ Add time slot
-  const addTimeSlot = () => {
-    setCreateShiftForm(prev => ({
-      ...prev,
-      timeSlots: [
-        ...prev.timeSlots,
-        { slotId: `${Date.now()}_${prev.timeSlots.length + 1}`, timeRange: '', description: '' }
-      ]
-    }));
-  };
-
-  // ✅ Remove time slot
-  const removeTimeSlot = (index) => {
-    if (createShiftForm.timeSlots.length > 1) {
-      const newSlots = [...createShiftForm.timeSlots];
-      newSlots.splice(index, 1);
-      setCreateShiftForm(prev => ({ ...prev, timeSlots: newSlots }));
-    }
-  };
-
-  // ✅ Update time slot
-  const updateTimeSlot = (index, field, value) => {
-    const newSlots = [...createShiftForm.timeSlots];
-    newSlots[index] = { ...newSlots[index], [field]: value };
-    setCreateShiftForm(prev => ({ ...prev, timeSlots: newSlots }));
-  };
-
+  // ✅ Handle main form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -3376,49 +3204,37 @@ const AddEmployeePage = () => {
     setSuccessMessage("");
 
     try {
-      const finalDept = isAddingNewDept ? customDepartment : department;
-      const finalRole = isAddingNewRole ? customRole : role;
       const finalShift = shiftType;
       const finalStartTime = shiftStartTime;
       const finalEndTime = shiftEndTime;
 
       // Shift validation
-      if (!finalShift) {
-        throw new Error("Please select a shift type");
-      }
-
-      if (!finalStartTime || !finalEndTime) {
-        throw new Error("Please select both start and end time");
-      }
-
-      if (finalStartTime >= finalEndTime) {
-        throw new Error("End time must be after start time");
-      }
+      if (!finalShift) throw new Error("Please select a shift type");
+      if (!finalStartTime || !finalEndTime) throw new Error("Please select both start and end time");
+      if (finalStartTime >= finalEndTime) throw new Error("End time must be after start time");
 
       if (editingEmployee) {
-        // ================= UPDATE EMPLOYEE =================
+        // Update employee
         const profilePayload = {
           name,
           email,
-          department: finalDept,
-          role: finalRole,
+          department,
+          role,
           joinDate,
           phone,
           address,
           locationId,
           location: locationId,
         };
-
         if (password) profilePayload.password = password;
 
-        // 1. Update employee
         await axios.put(
           `http://localhost:5000/api/employees/update/${editingEmployee._id}`,
           profilePayload
         );
 
-        // 2. Assign shift with custom times
-        const shiftResult = await assignShiftToEmployee(
+        // Assign shift
+        await assignShiftToEmployee(
           editingEmployee.employeeId,
           name,
           finalShift,
@@ -3426,11 +3242,7 @@ const AddEmployeePage = () => {
           finalEndTime
         );
 
-        if (!shiftResult.success) {
-          console.warn("Shift assignment note:", shiftResult.message);
-        }
-
-        // 3. Update salary
+        // Update salary
         if (salaryPerMonth || shiftHours || weekOffPerMonth) {
           try {
             await axios.put(
@@ -3448,18 +3260,16 @@ const AddEmployeePage = () => {
         }
 
         setSuccessMessage("✅ Employee updated successfully!");
-
       } else {
-        // ================= ADD NEW EMPLOYEE =================
-        // 1. Add employee
+        // Add new employee
         await axios.post(
           "http://localhost:5000/api/employees/add-employee",
           {
             name,
             email,
             password,
-            department: finalDept,
-            role: finalRole,
+            department,
+            role,
             joinDate,
             phone,
             address,
@@ -3468,8 +3278,8 @@ const AddEmployeePage = () => {
           }
         );
 
-        // 2. Assign shift with custom times
-        const shiftResult = await assignShiftToEmployee(
+        // Assign shift
+        await assignShiftToEmployee(
           employeeId,
           name,
           finalShift,
@@ -3477,11 +3287,7 @@ const AddEmployeePage = () => {
           finalEndTime
         );
 
-        if (!shiftResult.success) {
-          console.warn("Shift assignment note:", shiftResult.message);
-        }
-
-        // 3. Add salary
+        // Add salary
         await axios.post(
           "http://localhost:5000/api/salary/set-salary",
           {
@@ -3505,175 +3311,442 @@ const AddEmployeePage = () => {
     }
   };
 
+  // ✅ SHIFT MODAL FUNCTIONS
+  const handleCreateCustomShift = async (e) => {
+    e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      if (!createShiftForm.shiftType || !createShiftForm.shiftName) {
+        setErrorMessage('Please enter shift type and name');
+        return;
+      }
+
+      const validSlots = createShiftForm.timeSlots.filter(slot => 
+        slot.timeRange.trim() !== '' && slot.description.trim() !== ''
+      );
+      
+      if (validSlots.length === 0) {
+        setErrorMessage('Please add at least one time slot');
+        return;
+      }
+
+      const response = await axios.post('http://localhost:5000/api/shifts/create', {
+        shiftType: createShiftForm.shiftType,
+        shiftName: createShiftForm.shiftName,
+        timeSlots: validSlots
+      });
+      
+      if (response.data.success) {
+        setSuccessMessage(`✅ Custom Shift ${createShiftForm.shiftType} created successfully!`);
+        await fetchAllShifts();
+        setShiftType(createShiftForm.shiftType);
+        setShowShiftModal(false);
+        setCreateShiftForm({
+          shiftType: '',
+          shiftName: '',
+          timeSlots: [
+            { slotId: `${Date.now()}_1`, timeRange: '', description: '' },
+            { slotId: `${Date.now()}_2`, timeRange: '', description: '' },
+            { slotId: `${Date.now()}_3`, timeRange: '', description: '' },
+            { slotId: `${Date.now()}_4`, timeRange: '', description: '' }
+          ]
+        });
+      } else {
+        setErrorMessage(response.data.message);
+      }
+    } catch (error) {
+      console.error('Create custom error:', error);
+      setErrorMessage(error.response?.data?.message || 'Failed to create custom shift');
+    }
+  };
+
+  const addTimeSlot = () => {
+    setCreateShiftForm(prev => ({
+      ...prev,
+      timeSlots: [
+        ...prev.timeSlots,
+        { slotId: `${Date.now()}_${prev.timeSlots.length + 1}`, timeRange: '', description: '' }
+      ]
+    }));
+  };
+
+  const removeTimeSlot = (index) => {
+    if (createShiftForm.timeSlots.length > 1) {
+      const newSlots = [...createShiftForm.timeSlots];
+      newSlots.splice(index, 1);
+      setCreateShiftForm(prev => ({ ...prev, timeSlots: newSlots }));
+    }
+  };
+
+  const updateTimeSlot = (index, field, value) => {
+    const newSlots = [...createShiftForm.timeSlots];
+    newSlots[index] = { ...newSlots[index], [field]: value };
+    setCreateShiftForm(prev => ({ ...prev, timeSlots: newSlots }));
+  };
+
+  // ✅ DEPARTMENT MODAL FUNCTIONS
+  const handleCreateDepartment = async (e) => {
+    e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      if (!deptForm.name.trim()) {
+        setErrorMessage('Please enter department name');
+        return;
+      }
+
+      const response = await axios.post('http://localhost:5000/api/department/create', {
+        name: deptForm.name,
+        description: deptForm.description
+      });
+      
+      if (response.data.success) {
+        setSuccessMessage(`✅ Department "${deptForm.name}" created successfully!`);
+        await fetchDepartments();
+        setDepartment(deptForm.name);
+        setShowDeptModal(false);
+        setDeptForm({ name: '', description: '' });
+      } else {
+        setErrorMessage(response.data.message);
+      }
+    } catch (error) {
+      console.error('Create department error:', error);
+      setErrorMessage(error.response?.data?.message || 'Failed to create department');
+    }
+  };
+
+  // ✅ ROLE MODAL FUNCTIONS
+  const handleCreateRole = async (e) => {
+    e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      if (!roleForm.name.trim()) {
+        setErrorMessage('Please enter role name');
+        return;
+      }
+
+      const response = await axios.post('http://localhost:5000/api/roles/create', {
+        name: roleForm.name,
+        description: roleForm.description
+      });
+      
+      if (response.data.success) {
+        setSuccessMessage(`✅ Role "${roleForm.name}" created successfully!`);
+        await fetchRoles();
+        setRole(roleForm.name);
+        setShowRoleModal(false);
+        setRoleForm({ name: '', description: '' });
+      } else {
+        setErrorMessage(response.data.message);
+      }
+    } catch (error) {
+      console.error('Create role error:', error);
+      setErrorMessage(error.response?.data?.message || 'Failed to create role');
+    }
+  };
+
+  // ✅ LOCATION MODAL FUNCTIONS
+  const handleGetCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      setErrorMessage("❌ Geolocation is not supported by your browser.");
+      return;
+    }
+
+    setErrorMessage("");
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setLocationForm(prev => ({
+          ...prev,
+          latitude: latitude.toFixed(6),
+          longitude: longitude.toFixed(6)
+        }));
+
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+          );
+          const data = await res.json();
+          if (data.display_name) {
+            setLocationForm(prev => ({
+              ...prev,
+              fullAddress: data.display_name
+            }));
+          } else {
+            setErrorMessage("⚠️ Could not fetch full address.");
+          }
+        } catch {
+          setErrorMessage("⚠️ Failed to fetch address from coordinates.");
+        }
+      },
+      (err) => {
+        setErrorMessage("❌ Location access denied. Please enter manually.");
+      }
+    );
+  };
+
+  const handleCreateLocation = async (e) => {
+    e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      if (!locationForm.name.trim() || !locationForm.latitude || !locationForm.longitude) {
+        setErrorMessage('Please fill all required fields');
+        return;
+      }
+
+      const response = await axios.post("http://localhost:5000/api/location/add-location", {
+        name: locationForm.name,
+        latitude: locationForm.latitude,
+        longitude: locationForm.longitude,
+        fullAddress: locationForm.fullAddress
+      });
+
+      if (response.data.success || response.data.location) {
+        setSuccessMessage(`✅ Location "${locationForm.name}" added successfully!`);
+        await fetchLocations();
+        
+        // Set the newly created location as selected
+        const newLocation = response.data.location || response.data.data;
+        if (newLocation && newLocation._id) {
+          setLocationId(newLocation._id);
+        }
+        
+        setShowLocationModal(false);
+        setLocationForm({
+          name: '',
+          latitude: '',
+          longitude: '',
+          fullAddress: ''
+        });
+      } else {
+        setErrorMessage(response.data.message || 'Failed to add location');
+      }
+    } catch (error) {
+      console.error('Create location error:', error);
+      setErrorMessage(error.response?.data?.message || 'Failed to add location');
+    }
+  };
+
   return (
-    <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
-      <h2 className="mb-6 text-2xl font-bold text-blue-900">
-        {editingEmployee ? "Edit Employee" : "Add New Employee"}
-      </h2>
-
-      {successMessage && (
-        <div className="p-4 mb-4 text-green-700 bg-green-100 rounded">
-          {successMessage}
-        </div>
-      )}
-      {errorMessage && (
-        <div className="p-4 mb-4 text-red-700 bg-red-100 rounded">
-          {errorMessage}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit}>
-
-        <div className="mb-4">
-          <label className="block text-sm">Full Name *</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} className="w-full p-2 border rounded" required />
+    <div className="max-w-6xl mx-auto p-4">
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">
+            {editingEmployee ? "Edit Employee" : "Add New Employee"}
+          </h2>
+          <p className="text-gray-600 text-sm mt-1">Fill in the employee details below</p>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-sm">Email *</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2 border rounded" required />
-        </div>
-
-        <div className="mb-4 relative">
-          <label className="block text-sm">Password {!editingEmployee && "*"}</label>
-          <input
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 border rounded pr-10"
-            required={!editingEmployee}
-          />
-          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-9">
-            {showPassword ? <FaEyeSlash /> : <FaEye />}
-          </button>
-          {editingEmployee && <p className="text-xs text-gray-500 mt-1">Leave blank to keep current password</p>}
-        </div>
-
-        {/* ✅ ENHANCED DEPARTMENT SELECTION */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Department *
-          </label>
-          <div className="flex gap-2">
-            <select
-              value={isAddingNewDept ? "ADD_NEW" : department}
-              onChange={(e) => {
-                if (e.target.value === "ADD_NEW") {
-                  navigate('/departmentdashboard', { 
-                    state: { openAddModal: true } 
-                  });
-                  return;
-                } else {
-                  setIsAddingNewDept(false);
-                  setDepartment(e.target.value);
-                }
-              }}
-              className="w-full p-2 border rounded"
-              required={!isAddingNewDept}
-            >
-              <option value="">Select Department</option>
-              {departments.map((dept) => (
-                <option key={dept.name} value={dept.name}>
-                  {dept.name} {dept.employeeCount > 0 ? `(${dept.employeeCount})` : ''}
-                </option>
-              ))}
-              <option value="ADD_NEW" className="font-bold text-blue-600">
-                + Add New Department
-              </option>
-            </select>
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+            {successMessage}
           </div>
-          
-          {isAddingNewDept && (
-            <div className="flex items-center gap-2 mt-2">
-              <input
-                type="text"
-                placeholder="Enter new department name"
-                value={customDepartment}
-                onChange={(e) => setCustomDepartment(e.target.value)}
-                className="flex-1 p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setIsAddingNewDept(false)}
-                className="text-xs text-red-500 hover:text-red-700 font-medium"
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-          
-          {department && !isAddingNewDept && (
-            <p className="text-xs text-green-600 mt-1">Selected: {department}</p>
-          )}
-        </div>
-
-        {/* ✅ ENHANCED ROLE SELECTION */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Role *
-          </label>
-          <div className="flex gap-2">
-            <select
-              value={isAddingNewRole ? "ADD_NEW" : role}
-              onChange={(e) => {
-                if (e.target.value === "ADD_NEW") {
-                  navigate('/roledashboard', { 
-                    state: { openAddModal: true } 
-                  });
-                  return;
-                } else {
-                  setIsAddingNewRole(false);
-                  setRole(e.target.value);
-                }
-              }}
-              className="w-full p-2 border rounded"
-              required={!isAddingNewRole}
-            >
-              <option value="">Select Role</option>
-              {roles.map((roleItem) => (
-                <option key={roleItem.name} value={roleItem.name}>
-                  {roleItem.name} {roleItem.employeeCount > 0 ? `(${roleItem.employeeCount})` : ''}
-                </option>
-              ))}
-              <option value="ADD_NEW" className="font-bold text-blue-600">
-                + Add New Role
-              </option>
-            </select>
+        )}
+        
+        {errorMessage && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            {errorMessage}
           </div>
-          
-          {isAddingNewRole && (
-            <div className="flex items-center gap-2 mt-2">
-              <input
-                type="text"
-                placeholder="Enter new role name"
-                value={customRole}
-                onChange={(e) => setCustomRole(e.target.value)}
-                className="flex-1 p-2 border border-blue-300 rounded focus:ring-1 focus:ring-blue-400 outline-none"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setIsAddingNewRole(false)}
-                className="text-xs text-red-500 hover:text-red-700 font-medium"
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-          
-          {role && !isAddingNewRole && (
-            <p className="text-xs text-green-600 mt-1">Selected: {role}</p>
-          )}
-        </div>
+        )}
 
-        {/* ✅ ENHANCED SHIFT SELECTION - SIMPLE VERSION */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Shift Details *
-          </label>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-2">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Row 1: Name, Email, Password */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <FaIdCard className="inline mr-1 text-blue-500" /> Full Name *
+              </label>
+              <input 
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                placeholder="John Doe"
+                required 
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <FaEnvelope className="inline mr-1 text-blue-500" /> Email *
+              </label>
+              <input 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                placeholder="john@example.com"
+                required 
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <FaLock className="inline mr-1 text-blue-500" /> Password {!editingEmployee && "*"}
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  placeholder={editingEmployee ? "Keep blank for no change" : "Enter password"}
+                  required={!editingEmployee}
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)} 
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 2: Department, Role, Employee ID */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <FaBuilding className="inline mr-1 text-blue-500" /> Department *
+              </label>
+              <select
+                value={department}
+                onChange={(e) => {
+                  if (e.target.value === "ADD_NEW_DEPT") {
+                    setShowDeptModal(true);
+                  } else {
+                    setDepartment(e.target.value);
+                  }
+                }}
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                required
+              >
+                <option value="">Select Department</option>
+                {departments.map((dept) => (
+                  <option key={dept.name} value={dept.name}>
+                    {dept.name} {dept.employeeCount > 0 ? `(${dept.employeeCount})` : ''}
+                  </option>
+                ))}
+                <option value="ADD_NEW_DEPT" className="text-blue-600 font-medium">
+                  + Add New
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <FaUserTie className="inline mr-1 text-blue-500" /> Role *
+              </label>
+              <select
+                value={role}
+                onChange={(e) => {
+                  if (e.target.value === "ADD_NEW_ROLE") {
+                    setShowRoleModal(true);
+                  } else {
+                    setRole(e.target.value);
+                  }
+                }}
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                required
+              >
+                <option value="">Select Role</option>
+                {roles.map((roleItem) => (
+                  <option key={roleItem.name} value={roleItem.name}>
+                    {roleItem.name} {roleItem.employeeCount > 0 ? `(${roleItem.employeeCount})` : ''}
+                  </option>
+                ))}
+                <option value="ADD_NEW_ROLE" className="text-blue-600 font-medium">
+                  + Add New
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <FaBriefcase className="inline mr-1 text-blue-500" /> Employee ID *
+              </label>
+              <input
+                value={employeeId}
+                onChange={(e) => setEmployeeId(e.target.value)}
+                className={`w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${editingEmployee ? 'bg-gray-50' : ''}`}
+                placeholder="EMP001"
+                required
+                readOnly={!!editingEmployee}
+              />
+            </div>
+          </div>
+
+          {/* Row 3: Join Date, Phone, Location */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <FaCalendar className="inline mr-1 text-blue-500" /> Join Date *
+              </label>
+              <input 
+                type="date" 
+                value={joinDate} 
+                onChange={(e) => setJoinDate(e.target.value)} 
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                required 
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <FaPhone className="inline mr-1 text-blue-500" /> Phone Number
+              </label>
+              <input 
+                value={phone} 
+                onChange={(e) => setPhone(e.target.value)} 
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                placeholder="+91 9876543210"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <FaMapMarkerAlt className="inline mr-1 text-blue-500" /> Location *
+              </label>
+              <select
+                value={locationId}
+                onChange={(e) => {
+                  const selectedValue = e.target.value;
+                  if (selectedValue === "ADD_NEW_LOCATION") {
+                    setShowLocationModal(true);
+                    return;
+                  }
+                  setLocationId(selectedValue);
+                }}
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                required
+              >
+                <option value="">Select Location</option>
+                {locations.map((loc) => (
+                  <option key={loc._id} value={loc._id}>
+                    {loc.name}
+                  </option>
+                ))}
+                <option value="ADD_NEW_LOCATION" className="text-blue-600 font-medium">
+                  + Add New
+                </option>
+              </select>
+            </div>
+          </div>
+
+          {/* Row 4: Shift Details */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <FaClock className="inline mr-1 text-blue-500" /> Shift Type *
+              </label>
               <select
                 value={shiftType}
                 onChange={(e) => {
@@ -3683,133 +3756,147 @@ const AddEmployeePage = () => {
                     setShiftType(e.target.value);
                   }
                 }}
-                className="w-full p-2 border rounded"
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 required
               >
-                <option value="">Select Shift Type</option>
+                <option value="">Select Shift</option>
                 {shiftList.map((shift) => (
                   <option key={shift.type} value={shift.type}>
                     Shift {shift.type}: {shift.name}
                   </option>
                 ))}
-                <option value="ADD_NEW" className="font-bold text-blue-600">
-                  + Add New Shift
+                <option value="ADD_NEW" className="text-blue-600 font-medium">
+                  + Add New
                 </option>
               </select>
             </div>
-            
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Start Time *</label>
-                <input
-                  type="time"
-                  value={shiftStartTime}
-                  onChange={(e) => setShiftStartTime(e.target.value)}
-                  className="w-full p-2 border rounded text-sm"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">End Time *</label>
-                <input
-                  type="time"
-                  value={shiftEndTime}
-                  onChange={(e) => setShiftEndTime(e.target.value)}
-                  className="w-full p-2 border rounded text-sm"
-                  required
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Start Time *
+              </label>
+              <input
+                type="time"
+                value={shiftStartTime}
+                onChange={(e) => setShiftStartTime(e.target.value)}
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                End Time *
+              </label>
+              <input
+                type="time"
+                value={shiftEndTime}
+                onChange={(e) => setShiftEndTime(e.target.value)}
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Shift Hours/Day *
+              </label>
+              <input 
+                type="number" 
+                value={shiftHours} 
+                onChange={(e) => setShiftHours(e.target.value)} 
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                min="1"
+                max="24"
+                required 
+              />
+            </div>
+          </div>
+
+          {/* Row 5: Salary Details */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <FaDollarSign className="inline mr-1 text-blue-500" /> Salary/Month *
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-gray-500 text-sm">₹</span>
+                </div>
+                <input 
+                  type="number" 
+                  value={salaryPerMonth} 
+                  onChange={(e) => setSalaryPerMonth(e.target.value)} 
+                  className="pl-8 w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  placeholder="0.00"
+                  required 
                 />
               </div>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Week Off/Month *
+              </label>
+              <input 
+                type="number" 
+                value={weekOffPerMonth} 
+                onChange={(e) => setWeekOffPerMonth(e.target.value)} 
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                min="0"
+                max="30"
+                required 
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <FaHome className="inline mr-1 text-blue-500" /> Address
+              </label>
+              <input
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                placeholder="Enter address"
+              />
+            </div>
           </div>
-          
-          {shiftList.length > 0 && (
-            <p className="text-xs text-gray-500 mt-2">
-              Available shifts: {shiftList.map(s => `Shift ${s.type}`).join(", ")}
-            </p>
-          )}
-        </div>
 
-        <div className="mb-4">
-          <label className="block text-sm">Join Date *</label>
-          <input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} className="w-full p-2 border rounded" required />
-        </div>
+          {/* Submit Button */}
+          <div className="pt-4">
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className={`w-full md:w-auto px-8 py-3 rounded-lg font-medium transition duration-200 ${
+                loading 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'
+              }`}
+            >
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </div>
+              ) : editingEmployee ? (
+                "Update Employee"
+              ) : (
+                "Add Employee"
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
 
-        <div className="mb-4">
-          <label className="block text-sm">Phone</label>
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full p-2 border rounded" />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm">Address</label>
-          <textarea value={address} onChange={(e) => setAddress(e.target.value)} className="w-full p-2 border rounded" />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm">Employee ID *</label>
-          <input
-            value={employeeId}
-            onChange={(e) => setEmployeeId(e.target.value)}
-            className={`w-full p-2 border rounded ${editingEmployee ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-            required
-            readOnly={!!editingEmployee}
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm">Salary Per Month *</label>
-          <input type="number" value={salaryPerMonth} onChange={(e) => setSalaryPerMonth(e.target.value)} className="w-full p-2 border rounded" required />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm">Shift Hours Per Day *</label>
-          <input type="number" value={shiftHours} onChange={(e) => setShiftHours(e.target.value)} className="w-full p-2 border rounded" required />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm">Week Off Per Month *</label>
-          <input type="number" value={weekOffPerMonth} onChange={(e) => setWeekOffPerMonth(e.target.value)} className="w-full p-2 border rounded" required />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm">Location *</label>
-          <select
-            value={locationId}
-            onChange={(e) => {
-              const selectedValue = e.target.value;
-
-              if (selectedValue === "add-new") {
-                navigate("/addlocation");
-                return;
-              }
-
-              setLocationId(selectedValue);
-            }}
-            className="w-full p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select a Location</option>
-
-            {locations.map((loc) => (
-              <option key={loc._id} value={loc._id}>
-                {loc.name}
-              </option>
-            ))}
-
-            <option value="add-new">➕ Add New Location</option>
-          </select>
-        </div>
-
-        <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded">
-          {loading ? "Saving..." : editingEmployee ? "Update Employee" : "Add Employee"}
-        </button>
-
-      </form>
-
-      {/* ✅ SHIFT MODAL - ShiftManagement wala modal */}
+      {/* ✅ SHIFT MODAL */}
       {showShiftModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b">
-              <h3 className="text-xl font-semibold text-gray-800">Create Custom Shift (E-Z or any letter)</h3>
+              <h3 className="text-xl font-semibold text-gray-800">Create Custom Shift</h3>
               <button onClick={() => setShowShiftModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl">
                 &times;
               </button>
@@ -3852,7 +3939,6 @@ const AddEmployeePage = () => {
                   </div>
                 </div>
 
-                {/* Time Slots Configuration */}
                 <div>
                   <div className="flex justify-between items-center mb-3">
                     <label className="block text-sm font-medium text-gray-700">
@@ -3940,6 +4026,233 @@ const AddEmployeePage = () => {
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                 >
                   Create Custom Shift
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ DEPARTMENT MODAL */}
+      {showDeptModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-xl font-semibold text-gray-800">Add New Department</h3>
+              <button onClick={() => setShowDeptModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl">
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateDepartment} className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Department Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={deptForm.name}
+                    onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    placeholder="e.g., Sales, Development"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={deptForm.description}
+                    onChange={(e) => setDeptForm(prev => ({ ...prev, description: e.target.value }))}
+                    rows="3"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Describe the department..."
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6 pt-6 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowDeptModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Add Department
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ ROLE MODAL */}
+      {showRoleModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-xl font-semibold text-gray-800">Add New Role</h3>
+              <button onClick={() => setShowRoleModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl">
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateRole} className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Role Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={roleForm.name}
+                    onChange={(e) => setRoleForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    placeholder="e.g., Manager, Developer"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={roleForm.description}
+                    onChange={(e) => setRoleForm(prev => ({ ...prev, description: e.target.value }))}
+                    rows="3"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Describe the role..."
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6 pt-6 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowRoleModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  Add Role
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ LOCATION MODAL */}
+      {showLocationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-xl font-semibold text-gray-800">Add New Location</h3>
+              <button onClick={() => setShowLocationModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl">
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateLocation} className="p-6">
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Location Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={locationForm.name}
+                    onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    placeholder="e.g., Main Office, Branch Office"
+                    required
+                  />
+                </div>
+
+                <div className="flex justify-between items-center mb-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Location Coordinates
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleGetCurrentLocation}
+                    className="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700"
+                  >
+                    📍 Get Current Location
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Latitude *
+                    </label>
+                    <input
+                      type="text"
+                      value={locationForm.latitude}
+                      onChange={(e) => setLocationForm(prev => ({ ...prev, latitude: e.target.value }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                      placeholder="e.g., 28.6139"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Longitude *
+                    </label>
+                    <input
+                      type="text"
+                      value={locationForm.longitude}
+                      onChange={(e) => setLocationForm(prev => ({ ...prev, longitude: e.target.value }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                      placeholder="e.g., 77.2090"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Address *
+                  </label>
+                  <textarea
+                    value={locationForm.fullAddress}
+                    onChange={(e) => setLocationForm(prev => ({ ...prev, fullAddress: e.target.value }))}
+                    rows="3"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Enter full address"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6 pt-6 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowLocationModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                >
+                  Add Location
                 </button>
               </div>
             </form>

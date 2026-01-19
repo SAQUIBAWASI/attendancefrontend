@@ -626,6 +626,190 @@ const ShiftManagement = () => {
     return "Not specified";
   };
 
+  // ✅ ASSIGN SHIFT FUNCTION - FIXED VERSION
+  const handleAssignShift = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    try {
+      const { employeeId, employeeName, shiftType, selectedSlotId } = assignForm;
+      
+      if (!employeeId || !employeeName || !shiftType) {
+        setError('Please fill all required fields');
+        return;
+      }
+
+      // Get time slot details
+      let selectedTimeRange = "10:00 - 19:00";
+      let selectedDescription = "Morning shift";
+      
+      if (selectedSlotId) {
+        const timeSlots = getShiftTimeSlots(shiftType);
+        const selectedSlot = timeSlots.find(slot => slot.slotId === selectedSlotId);
+        if (selectedSlot) {
+          selectedTimeRange = selectedSlot.timeRange;
+          selectedDescription = selectedSlot.description;
+        }
+      }
+
+      console.log("📝 Assigning shift with data:", {
+        employeeId,
+        employeeName,
+        shiftType,
+        selectedSlotId,
+        selectedTimeRange,
+        selectedDescription
+      });
+
+      // ✅ API call
+      const response = await axios.post('http://localhost:5000/api/shifts/assign', {
+        employeeId,
+        employeeName,
+        shiftType,
+        selectedSlotId,
+        selectedTimeRange,
+        selectedDescription
+      });
+
+      console.log("📱 Assign API response:", response.data);
+
+      if (response.data.success) {
+        setSuccess(`✅ Shift assigned to ${employeeName} successfully!`);
+        fetchData();
+        setShowAssignModal(false);
+        setAssignForm({
+          employeeId: '',
+          employeeName: '',
+          shiftType: '',
+          selectedSlotId: ''
+        });
+      } else {
+        setError(response.data.message || 'Failed to assign shift');
+      }
+    } catch (error) {
+      console.error('❌ Assign error:', error);
+      setError(error.response?.data?.message || 'Failed to assign shift');
+    }
+  };
+
+  // ✅ UPDATE ASSIGNMENT FUNCTION
+  const handleUpdateAssignment = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    try {
+      const { employeeName, shiftType, selectedSlotId } = assignForm;
+      
+      if (!employeeName || !shiftType) {
+        setError('Please fill all required fields');
+        return;
+      }
+
+      // Get time slot details
+      let selectedTimeRange = "10:00 - 19:00";
+      let selectedDescription = "Morning shift";
+      
+      if (selectedSlotId) {
+        const timeSlots = getShiftTimeSlots(shiftType);
+        const selectedSlot = timeSlots.find(slot => slot.slotId === selectedSlotId);
+        if (selectedSlot) {
+          selectedTimeRange = selectedSlot.timeRange;
+          selectedDescription = selectedSlot.description;
+        }
+      }
+
+      console.log("📝 Updating assignment:", {
+        id: editingAssignment._id,
+        employeeName,
+        shiftType,
+        selectedSlotId,
+        selectedTimeRange,
+        selectedDescription
+      });
+
+      const response = await axios.put(
+        `http://localhost:5000/api/shifts/assignments/${editingAssignment._id}`,
+        {
+          employeeName,
+          shiftType,
+          selectedSlotId,
+          selectedTimeRange: selectedTimeRange,
+          selectedDescription: selectedDescription
+        }
+      );
+
+      console.log("📱 Update API response:", response.data);
+
+      if (response.data.success) {
+        setSuccess('✅ Assignment updated successfully!');
+        fetchData();
+        setShowAssignModal(false);
+        setEditingAssignment(null);
+        setAssignForm({
+          employeeId: '',
+          employeeName: '',
+          shiftType: '',
+          selectedSlotId: ''
+        });
+      } else {
+        setError(response.data.message || 'Failed to update assignment');
+      }
+    } catch (error) {
+      console.error('❌ Update error:', error);
+      setError(error.response?.data?.message || 'Failed to update assignment');
+    }
+  };
+
+  // ✅ DELETE ASSIGNMENT
+  const handleDeleteAssignment = async (id) => {
+    if (window.confirm('Are you sure you want to delete this assignment?')) {
+      try {
+        const response = await axios.delete(`http://localhost:5000/api/shifts/assignments/${id}`);
+        if (response.data.success) {
+          setSuccess('Shift assignment removed successfully');
+          fetchData();
+        }
+      } catch (error) {
+        setError('Failed to delete assignment');
+      }
+    }
+  };
+
+  // ✅ DELETE MASTER SHIFT
+  const handleDeleteMasterShift = async (id, shiftName) => {
+    if (window.confirm(`Delete ${shiftName}? This will remove all assignments.`)) {
+      try {
+        const response = await axios.delete(`http://localhost:5000/api/shifts/master/${id}`);
+        if (response.data.success) {
+          setSuccess(response.data.message);
+          fetchData();
+        }
+      } catch (error) {
+        setError('Failed to delete shift');
+      }
+    }
+  };
+
+  // ✅ VIEW EMPLOYEES BY SHIFT TYPE
+  const handleViewEmployees = async (shiftType, shiftName) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/shifts/type/${shiftType}/employees`);
+      if (response.data.success) {
+        setViewShiftInfo({
+          shiftType,
+          shiftName
+        });
+        setViewEmployees(response.data.data.employees);
+        setViewingShiftType(shiftType);
+        setShowViewModal(true);
+      }
+    } catch (error) {
+      setError('Failed to fetch employees');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -640,16 +824,16 @@ const ShiftManagement = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Shift Management</h1>
-          <p className="text-gray-600">Supporting A-Z shift types with legacy data</p>
+          <h1 className="text-3xl font-bold text-gray-800">Shifts</h1>
+          {/* <p className="text-gray-600">Supporting A-Z shift types with legacy data</p> */}
         </div>
         <div className="flex gap-3">
-          <button
+          {/* <button
             onClick={() => setShowCreateModal(true)}
             className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 text-sm"
           >
             <FaPlus /> Quick Create (A-D)
-          </button>
+          </button> */}
           <button
             onClick={() => setShowCustomCreateModal(true)}
             className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 text-sm"
@@ -677,9 +861,113 @@ const ShiftManagement = () => {
         </div>
       )}
 
-      {/* Assigned Employees */}
+      {/* ✅ 1. AVAILABLE SHIFTS SECTION - FIRST */}
+      <div className="mb-8">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Available Shifts ({masterShifts.length})</h2>
+        {masterShifts.length === 0 ? (
+          <div className="text-center py-12 bg-gray-50 rounded-lg">
+            <div className="text-gray-400 mb-4 text-6xl">⏰</div>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No shifts created yet</h3>
+            <p className="text-gray-500 mb-4">Create your first shift to get started</p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+            >
+              Create First Shift
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {masterShifts.map((shift) => (
+              <div
+                key={shift._id}
+                className={`bg-white rounded-lg border p-4 shadow-sm ${getShiftColor(shift.shiftType)}`}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex-1">
+                    <h3 className={`text-lg font-bold ${getShiftTextColor(shift.shiftType)}`}>
+                      {shift.shiftName}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`px-2 py-1 text-xs rounded ${getShiftTextColor(shift.shiftType)}`}>
+                        Shift {shift.shiftType}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {shift.timeSlots?.length || 0} slots
+                      </span>
+                    </div>
+                    
+                    {/* Time Slots Preview */}
+                    <div className="mt-2">
+                      <div className="space-y-1 max-h-16 overflow-y-auto">
+                        {shift.timeSlots?.slice(0, 2).map((slot) => (
+                          <div key={slot.slotId} className="text-xs text-gray-600 flex items-center gap-1">
+                            <span>• {slot.timeRange}</span>
+                          </div>
+                        ))}
+                        {shift.timeSlots?.length > 2 && (
+                          <div className="text-xs text-gray-400">
+                            +{shift.timeSlots.length - 2} more
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteMasterShift(shift._id, shift.shiftName)}
+                    className="text-red-600 hover:text-red-800 p-1 text-sm"
+                    title="Delete Shift"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+
+                {/* Employee Count */}
+                <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                  <div className="flex items-center gap-2">
+                    <FaUser className="text-gray-500 text-xs" />
+                    <span className="text-xs font-medium">
+                      {getEmployeesCount(shift.shiftType)} employees
+                    </span>
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handleViewEmployees(shift.shiftType, shift.shiftName)}
+                      disabled={getEmployeesCount(shift.shiftType) === 0}
+                      className={`px-2 py-1 text-xs rounded flex items-center gap-1 ${
+                        getEmployeesCount(shift.shiftType) > 0
+                          ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                          : 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                      }`}
+                    >
+                      <FaEye className="text-xs" /> View
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAssignForm({
+                          employeeId: '',
+                          employeeName: '',
+                          shiftType: shift.shiftType,
+                          selectedSlotId: ''
+                        });
+                        setEditingAssignment(null);
+                        setShowAssignModal(true);
+                      }}
+                      className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      <FaPlus className="text-xs" /> Assign
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ✅ 2. ALL ASSIGNED EMPLOYEES SECTION - SECOND */}
       {employeeAssignments.length > 0 && (
-        <div className="mb-8">
+        <div className="mt-8">
           <h2 className="text-xl font-bold text-gray-800 mb-4">All Assigned Employees ({employeeAssignments.length})</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {employeeAssignments.map((assignment) => (
@@ -726,19 +1014,7 @@ const ShiftManagement = () => {
                       <FaEdit />
                     </button>
                     <button
-                      onClick={async () => {
-                        if (window.confirm(`Remove ${assignment.employeeAssignment?.employeeName || assignment.employeeName} from shift?`)) {
-                          try {
-                            const response = await axios.delete(`http://localhost:5000/api/shifts/assignments/${assignment._id}`);
-                            if (response.data.success) {
-                              setSuccess('Shift assignment removed successfully');
-                              fetchData();
-                            }
-                          } catch (error) {
-                            setError('Failed to delete assignment');
-                          }
-                        }
-                      }}
+                      onClick={() => handleDeleteAssignment(assignment._id)}
                       className="text-red-600 hover:text-red-800 p-1 text-sm"
                       title="Delete"
                     >
@@ -752,137 +1028,8 @@ const ShiftManagement = () => {
         </div>
       )}
 
-      {/* Available Shifts */}
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Available Shifts ({masterShifts.length})</h2>
-      {masterShifts.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <div className="text-gray-400 mb-4 text-6xl">⏰</div>
-          <h3 className="text-xl font-semibold text-gray-600 mb-2">No shifts created yet</h3>
-          <p className="text-gray-500 mb-4">Create your first shift to get started</p>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
-          >
-            Create First Shift
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {masterShifts.map((shift) => (
-            <div
-              key={shift._id}
-              className={`bg-white rounded-lg border p-4 shadow-sm ${getShiftColor(shift.shiftType)}`}
-            >
-              <div className="flex justify-between items-start mb-2">
-                <div className="flex-1">
-                  <h3 className={`text-lg font-bold ${getShiftTextColor(shift.shiftType)}`}>
-                    {shift.shiftName}
-                  </h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className={`px-2 py-1 text-xs rounded ${getShiftTextColor(shift.shiftType)}`}>
-                      Shift {shift.shiftType}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {shift.timeSlots?.length || 0} slots
-                    </span>
-                  </div>
-                  
-                  {/* Time Slots Preview */}
-                  <div className="mt-2">
-                    <div className="space-y-1 max-h-16 overflow-y-auto">
-                      {shift.timeSlots?.slice(0, 2).map((slot) => (
-                        <div key={slot.slotId} className="text-xs text-gray-600 flex items-center gap-1">
-                          <span>• {slot.timeRange}</span>
-                        </div>
-                      ))}
-                      {shift.timeSlots?.length > 2 && (
-                        <div className="text-xs text-gray-400">
-                          +{shift.timeSlots.length - 2} more
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={async () => {
-                    if (window.confirm(`Delete ${shift.shiftName}? This will remove all assignments.`)) {
-                      try {
-                        const response = await axios.delete(`http://localhost:5000/api/shifts/master/${shift._id}`);
-                        if (response.data.success) {
-                          setSuccess(response.data.message);
-                          fetchData();
-                        }
-                      } catch (error) {
-                        setError('Failed to delete shift');
-                      }
-                    }
-                  }}
-                  className="text-red-600 hover:text-red-800 p-1 text-sm"
-                  title="Delete Shift"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-
-              {/* Employee Count */}
-              <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                <div className="flex items-center gap-2">
-                  <FaUser className="text-gray-500 text-xs" />
-                  <span className="text-xs font-medium">
-                    {getEmployeesCount(shift.shiftType)} employees
-                  </span>
-                </div>
-                <div className="flex gap-1">
-                  <button
-                    onClick={async () => {
-                      try {
-                        const response = await axios.get(`http://localhost:5000/api/shifts/type/${shift.shiftType}/employees`);
-                        if (response.data.success) {
-                          setViewShiftInfo({
-                            shiftType: shift.shiftType,
-                            shiftName: shift.shiftName
-                          });
-                          setViewEmployees(response.data.data.employees);
-                          setViewingShiftType(shift.shiftType);
-                          setShowViewModal(true);
-                        }
-                      } catch (error) {
-                        setError('Failed to fetch employees');
-                      }
-                    }}
-                    disabled={getEmployeesCount(shift.shiftType) === 0}
-                    className={`px-2 py-1 text-xs rounded flex items-center gap-1 ${
-                      getEmployeesCount(shift.shiftType) > 0
-                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                        : 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                    }`}
-                  >
-                    <FaEye className="text-xs" /> View
-                  </button>
-                  <button
-                    onClick={() => {
-                      setAssignForm({
-                        employeeId: '',
-                        employeeName: '',
-                        shiftType: shift.shiftType,
-                        selectedSlotId: ''
-                      });
-                      setEditingAssignment(null);
-                      setShowAssignModal(true);
-                    }}
-                    className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
-                  >
-                    <FaPlus className="text-xs" /> Assign
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* QUICK CREATE MODAL (A-D) */}
-      {showCreateModal && (
+      {/* {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
             <div className="flex justify-between items-center p-6 border-b">
@@ -1000,7 +1147,7 @@ const ShiftManagement = () => {
             </form>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* CUSTOM CREATE MODAL (E-Z) */}
       {showCustomCreateModal && (
@@ -1158,84 +1305,7 @@ const ShiftManagement = () => {
               </button>
             </div>
 
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              setError('');
-              setSuccess('');
-
-              try {
-                const { employeeId, employeeName, shiftType, selectedSlotId } = assignForm;
-                
-                if (!employeeId || !employeeName || !shiftType) {
-                  setError('Please fill all required fields');
-                  return;
-                }
-
-                // For shift types without master shift (like G from legacy)
-                if (!masterShifts.find(s => s.shiftType === shiftType)) {
-                  // Create assignment without time slot
-                  const response = await axios.post('http://localhost:5000/api/shifts/assign', {
-                    employeeId,
-                    employeeName,
-                    shiftType,
-                    selectedTimeRange: "Not specified",
-                    selectedDescription: "Legacy shift type"
-                  });
-                  
-                  if (response.data.success) {
-                    setSuccess('Shift assigned successfully!');
-                    fetchData();
-                    setShowAssignModal(false);
-                  }
-                  return;
-                }
-
-                // Normal assignment with time slot
-                if (!selectedSlotId) {
-                  setError('Please select a time slot');
-                  return;
-                }
-
-                const masterShift = masterShifts.find(s => s.shiftType === shiftType);
-                const selectedSlot = masterShift?.timeSlots?.find(s => s.slotId === selectedSlotId);
-
-                if (editingAssignment) {
-                  const response = await axios.put(
-                    `http://localhost:5000/api/shifts/assignments/${editingAssignment._id}`,
-                    {
-                      employeeName,
-                      shiftType,
-                      selectedSlotId,
-                      selectedTimeRange: selectedSlot?.timeRange || "Not specified",
-                      selectedDescription: selectedSlot?.description || "No description"
-                    }
-                  );
-                  
-                  if (response.data.success) {
-                    setSuccess('Assignment updated successfully!');
-                    fetchData();
-                    setShowAssignModal(false);
-                  }
-                } else {
-                  const response = await axios.post('http://localhost:5000/api/shifts/assign', {
-                    employeeId,
-                    employeeName,
-                    shiftType,
-                    selectedSlotId,
-                    selectedTimeRange: selectedSlot?.timeRange || "Not specified",
-                    selectedDescription: selectedSlot?.description || "No description"
-                  });
-                  
-                  if (response.data.success) {
-                    setSuccess('Shift assigned successfully!');
-                    fetchData();
-                    setShowAssignModal(false);
-                  }
-                }
-              } catch (error) {
-                setError(error.response?.data?.message || 'Failed to process assignment');
-              }
-            }} className="p-6">
+            <form onSubmit={editingAssignment ? handleUpdateAssignment : handleAssignShift} className="p-6">
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1337,7 +1407,16 @@ const ShiftManagement = () => {
               <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
                 <button
                   type="button"
-                  onClick={() => setShowAssignModal(false)}
+                  onClick={() => {
+                    setShowAssignModal(false);
+                    setEditingAssignment(null);
+                    setAssignForm({
+                      employeeId: '',
+                      employeeName: '',
+                      shiftType: '',
+                      selectedSlotId: ''
+                    });
+                  }}
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm"
                 >
                   Cancel
@@ -1424,20 +1503,7 @@ const ShiftManagement = () => {
                             <FaEdit className="text-xs" /> Edit
                           </button>
                           <button
-                            onClick={async () => {
-                              if (window.confirm(`Remove ${emp.employeeAssignment?.employeeName || emp.employeeName} from shift?`)) {
-                                try {
-                                  const response = await axios.delete(`http://localhost:5000/api/shifts/assignments/${emp._id}`);
-                                  if (response.data.success) {
-                                    setSuccess('✅ Shift assignment removed successfully');
-                                    fetchData();
-                                    setShowViewModal(false);
-                                  }
-                                } catch (error) {
-                                  setError('Failed to delete assignment');
-                                }
-                              }
-                            }}
+                            onClick={() => handleDeleteAssignment(emp._id)}
                             className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
                           >
                             <FaTrash className="text-xs" /> Remove
