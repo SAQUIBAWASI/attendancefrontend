@@ -1790,8 +1790,386 @@
 //   );
 // }
 
+// import axios from "axios";
+// import { useEffect, useState } from "react";
+// import { useLocation, useNavigate } from "react-router-dom";
+
+// const BASE_URL = "https://api.timelyhealth.in/";
+// const ONSITE_RADIUS_M = 50;
+
+// // Haversine formula
+// function haversineDistance(lat1, lon1, lat2, lon2) {
+//   const R = 6371000;
+//   const toRad = (deg) => (deg * Math.PI) / 180;
+//   const dLat = toRad(lat2 - lat1);
+//   const dLon = toRad(lon2 - lon1);
+//   const a =
+//     Math.sin(dLat / 2) ** 2 +
+//     Math.cos(toRad(lat1)) *
+//       Math.cos(toRad(lat2)) *
+//       Math.sin(dLon / 2) ** 2;
+//   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+//   return Math.round(R * c);
+// }
+
+// export default function AttendanceCapture() {
+//   const navigate = useNavigate();
+//   const routerLocation = useLocation();
+
+//   const [employeeId, setEmployeeId] = useState(null);
+//   const [employeeEmail, setEmployeeEmail] = useState(null);
+//   const [employeeName, setEmployeeName] = useState(null);
+//   const [assignedLocation, setAssignedLocation] = useState(null);
+//   const [position, setPosition] = useState(null);
+//   const [distance, setDistance] = useState(null);
+//   const [checkedIn, setCheckedIn] = useState(false);
+//   const [submitting, setSubmitting] = useState(false);
+//   const [reason, setReason] = useState("");
+//   const [error, setError] = useState("");
+//   const [loadingLocation, setLoadingLocation] = useState(true);
+//   const [locationError, setLocationError] = useState("");
+
+//   // Get employeeId & email
+//   useEffect(() => {
+//     const stateId = routerLocation.state?.employeeId;
+//     const stateEmail = routerLocation.state?.email;
+
+//     if (stateId && stateEmail) {
+//       setEmployeeId(stateId);
+//       setEmployeeEmail(stateEmail);
+//       localStorage.setItem(
+//         "employeeData",
+//         JSON.stringify({ employeeId: stateId, email: stateEmail })
+//       );
+//     } else {
+//       const stored = localStorage.getItem("employeeData");
+//       if (stored) {
+//         const data = JSON.parse(stored);
+//         setEmployeeId(data.employeeId);
+//         setEmployeeEmail(data.email);
+//       } else {
+//         navigate("/");
+//       }
+//     }
+//   }, [routerLocation.state, navigate]);
+
+//   // Fetch Employee's Assigned Location and Name
+//   useEffect(() => {
+//     const fetchAssignedLocation = async () => {
+//       if (!employeeId) return;
+      
+//       setLoadingLocation(true);
+//       try {
+//         const res = await axios.get(`${BASE_URL}api/employees/mylocation/${employeeId}`);
+//         console.log("Location API Response:", res.data);
+        
+//         if (res.data.success && res.data.data) {
+//           setAssignedLocation(res.data.data.location);
+          
+//           // ✅ Extract employee name from API response
+//           if (res.data.data.employee && res.data.data.employee.name) {
+//             setEmployeeName(res.data.data.employee.name);
+//           } else {
+//             const username = employeeEmail ? employeeEmail.split('@')[0] : '';
+//             setEmployeeName(username);
+//           }
+          
+//           setError("");
+//         } else {
+//           setError("❌ No assigned location found for this employee.");
+//           setAssignedLocation(null);
+//         }
+//       } catch (err) {
+//         console.error("Error fetching employee location:", err);
+//         setError("❌ Failed to fetch employee location. Please try again.");
+//         setAssignedLocation(null);
+//       } finally {
+//         setLoadingLocation(false);
+//       }
+//     };
+    
+//     if (employeeId) {
+//       fetchAssignedLocation();
+//     }
+//   }, [employeeId, employeeEmail]);
+
+//   // Fetch today's attendance
+//   useEffect(() => {
+//     const fetchTodayAttendance = async () => {
+//       if (!employeeId) return;
+//       try {
+//         const res = await axios.get(`${BASE_URL}api/attendance/myattendance/${employeeId}`);
+//         const data = res.data;
+        
+//         // ✅ Get employee name from attendance API response too
+//         if (data.employeeName) {
+//           setEmployeeName(data.employeeName);
+//         }
+        
+//         const today = new Date();
+//         today.setHours(0, 0, 0, 0);
+//         const todayCheckIn = data.records?.find(
+//           (rec) => new Date(rec.checkInTime) >= today && rec.status === "checked-in"
+//         );
+//         setCheckedIn(!!todayCheckIn);
+//       } catch (err) {
+//         console.error("Error fetching today attendance:", err);
+//       }
+//     };
+    
+//     if (employeeId) {
+//       fetchTodayAttendance();
+//     }
+//   }, [employeeId]);
+
+//   // Get current live location
+//   const fetchLocation = () => {
+//     setLocationError("");
+    
+//     if (!navigator.geolocation) {
+//       setLocationError("Geolocation is not supported by your browser.");
+//       return alert("Geolocation is not supported by your browser.");
+//     }
+
+//     setPosition(null);
+    
+//     navigator.geolocation.getCurrentPosition(
+//       (pos) => {
+//         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+//         setPosition(coords);
+//         console.log("Geolocation captured:", coords);
+
+//         if (assignedLocation) {
+//           const dist = haversineDistance(
+//             coords.lat,
+//             coords.lng,
+//             assignedLocation.latitude,
+//             assignedLocation.longitude
+//           );
+//           setDistance(dist);
+//           console.log("Distance calculated:", dist, "meters");
+//         } else {
+//           setLocationError("No assigned location found. Please contact admin.");
+//         }
+//       },
+//       (err) => {
+//         const errorMessage = "Error getting location: " + err.message;
+//         setLocationError(errorMessage);
+//         alert(errorMessage);
+//       },
+//       { 
+//         enableHighAccuracy: true, 
+//         timeout: 15000,
+//         maximumAge: 0 
+//       }
+//     );
+//   };
+
+//   // Handle Check-In
+//   const handleCheckIn = async () => {
+//     if (!position) return alert("Please capture your current location first.");
+//     if (!employeeId || !employeeEmail)
+//       return alert("Employee data missing. Please login again.");
+//     if (distance > ONSITE_RADIUS_M && !reason.trim())
+//       return alert("You are outside the office range. Please select a reason.");
+
+//     setSubmitting(true);
+//     try {
+//       const res = await axios.post(`${BASE_URL}api/attendance/checkin`, {
+//         employeeId,
+//         employeeEmail,
+//         latitude: position.lat,
+//         longitude: position.lng,
+//         reason: reason || "Onsite",
+//       });
+
+//       alert(res.data.message);
+//       setCheckedIn(true);
+      
+//       // ✅ Update employee name from response
+//       if (res.data.employeeName) {
+//         setEmployeeName(res.data.employeeName);
+//       }
+//     } catch (err) {
+//       alert(err.response?.data?.message || "Check-in failed.");
+//     } finally {
+//       setSubmitting(false);
+//     }
+//   };
+
+//   // Handle Check-Out - ✅ Added confirmation dialog
+//   const handleCheckOut = async () => {
+//     if (!position) return alert("Please capture your current location first.");
+//     if (!employeeId) return alert("Employee data missing.");
+    
+//     // ✅ CONFIRMATION DIALOG ADDED HERE
+//     const isConfirmed = window.confirm("Are you sure you want to check out?");
+//     if (!isConfirmed) return;
+
+//     if (distance > ONSITE_RADIUS_M && !reason.trim())
+//       return alert("You are outside the office range. Please select a reason.");
+
+//     setSubmitting(true);
+//     try {
+//       const res = await axios.post(`${BASE_URL}api/attendance/checkout`, {
+//         employeeId,
+//         latitude: position.lat,
+//         longitude: position.lng,
+//         reason: distance > ONSITE_RADIUS_M ? reason : undefined,
+//       });
+
+//       alert(res.data.message);
+//       setCheckedIn(false);
+//       setReason("");
+//       setPosition(null);
+//       setDistance(null);
+//     } catch (err) {
+//       alert(err.response?.data?.message || "Check-out failed.");
+//     } finally {
+//       setSubmitting(false);
+//     }
+//   };
+
+//   return (
+//     <div className="flex flex-col items-center min-h-screen p-2 bg-gray-100">
+//       <div className="flex flex-col w-full max-w-md gap-2 p-2 bg-white shadow-lg rounded-xl">
+//         <h2 className="text-3xl font-bold text-center">Attendance Capture</h2>
+
+//         {employeeId && (
+//           <div className="p-2 rounded-md bg-green-50">
+//             <p className="font-bold text-green-600">
+//               Employee ID: {employeeId}
+//             </p>
+//              {employeeName && (
+//               <p className="mt-1 font-bold text-green-600">Name: {employeeName}</p>
+//             )}
+//             {employeeEmail && (
+//               <p className="mt-1 font-bold text-green-600">Email: {employeeEmail}</p>
+//             )}
+//           </div>
+//         )}
+
+//         {loadingLocation ? (
+//           <div className="p-0 rounded-md bg-blue-50">
+//             <p className="text-blue-700">Loading location information...</p>
+//           </div>
+//         ) : assignedLocation ? (
+//           <div className="p-0 rounded-md bg-blue-50">
+//             <h5 className="font-bold text-blue-700">
+//               Assigned Location: {assignedLocation.name}
+//             </h5>
+//             <p>Onsite Radius: {ONSITE_RADIUS_M} meters</p>
+//           </div>
+//         ) : (
+//           <div className="p-0 rounded-md bg-red-50">
+//             <p className="font-medium text-red-600">{error || "Location not found"}</p>
+//             <p className="mt-1 text-sm text-gray-600">
+//               Please contact admin to assign a location for your employee account.
+//             </p>
+//           </div>
+//         )}
+
+//         <div className="p-4 rounded-md bg-gray-50">
+//           <button
+//             onClick={fetchLocation}
+//             className={`bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition ${
+//               !assignedLocation ? "opacity-50 cursor-not-allowed" : ""
+//             }`}
+//             disabled={!assignedLocation}
+//           >
+//             {!position ? "Get My Current Location" : "Update My Location"}
+//           </button>
+
+//           {!assignedLocation ? (
+//             <p className="mt-2 text-sm text-red-500">
+//               You need an assigned location to capture attendance.
+//             </p>
+//           ) : locationError ? (
+//             <p className="mt-2 text-sm text-red-500">{locationError}</p>
+//           ) : null}
+
+//           {position && (
+//             <div className="p-3 mt-4 rounded-md bg-green-50">
+//               <p className="font-medium text-green-700">📍 Location Captured Successfully!</p>
+
+//               {distance != null && (
+//                 <p className="mt-2">
+//                   Distance from assigned location:{" "}
+//                   <strong>{distance} m</strong> -{" "}
+//                   <span
+//                     className={
+//                       distance <= ONSITE_RADIUS_M
+//                         ? "text-green-600 font-semibold"
+//                         : "text-red-600 font-semibold"
+//                     }
+//                   >
+//                     {distance <= ONSITE_RADIUS_M
+//                       ? "Inside Assigned Area"
+//                       : "Outside Assigned Area"}
+//                   </span>
+//                 </p>
+//               )}
+//             </div>
+//           )}
+//         </div>
+
+//         {distance > ONSITE_RADIUS_M && (
+//           <div className="flex flex-col">
+//             <label className="mb-1 font-medium text-gray-700">
+//               Reason (required since you're outside the assigned area):
+//             </label>
+//             <select
+//               value={reason}
+//               onChange={(e) => setReason(e.target.value)}
+//               className="p-2 border rounded-md"
+//             >
+//               <option value="">-- Select Reason --</option>
+//               <option value="Field Work">Field Work</option>
+//               <option value="Work From Home">Work From Home</option>
+//             </select>
+//           </div>
+//         )}
+
+//         {!checkedIn ? (
+//           <button
+//             onClick={handleCheckIn}
+//             disabled={submitting || !position || !employeeId || !assignedLocation}
+//             className={`w-full py-3 text-white rounded-lg text-lg font-semibold transition ${
+//               submitting || !position || !employeeId || !assignedLocation
+//                 ? "bg-gray-400 cursor-not-allowed"
+//                 : "bg-blue-600 hover:bg-blue-700"
+//             }`}
+//           >
+//             {submitting ? "Checking In..." : "Check In"}
+//           </button>
+//         ) : (
+//           <button
+//             onClick={handleCheckOut}
+//             disabled={submitting || !position || !employeeId || !assignedLocation}
+//             className={`w-full py-3 text-white rounded-lg text-lg font-semibold transition ${
+//               submitting || !position || !employeeId || !assignedLocation
+//                 ? "bg-gray-400 cursor-not-allowed"
+//                 : "bg-red-600 hover:bg-red-700"
+//             }`}
+//           >
+//             {submitting ? "Checking Out..." : "Check Out"}
+//           </button>
+//         )}
+
+//         {checkedIn && (
+//           <div className="p-3 text-center rounded-md bg-yellow-50">
+//             <p className="font-medium text-yellow-700">
+//               ✅ You are currently checked in
+//             </p>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// }
+
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const BASE_URL = "https://api.timelyhealth.in/";
@@ -1815,6 +2193,11 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 export default function AttendanceCapture() {
   const navigate = useNavigate();
   const routerLocation = useLocation();
+  
+  // Swipe related refs and state
+  const swipeAreaRef = useRef(null);
+  const [swipeProgress, setSwipeProgress] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
 
   const [employeeId, setEmployeeId] = useState(null);
   const [employeeEmail, setEmployeeEmail] = useState(null);
@@ -1828,6 +2211,9 @@ export default function AttendanceCapture() {
   const [error, setError] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(true);
   const [locationError, setLocationError] = useState("");
+  
+  // Current time state
+  const [currentTime, setCurrentTime] = useState("");
 
   // Get employeeId & email
   useEffect(() => {
@@ -1861,12 +2247,11 @@ export default function AttendanceCapture() {
       setLoadingLocation(true);
       try {
         const res = await axios.get(`${BASE_URL}api/employees/mylocation/${employeeId}`);
-        console.log("Location API Response:", res.data);
         
         if (res.data.success && res.data.data) {
           setAssignedLocation(res.data.data.location);
           
-          // ✅ Extract employee name from API response
+          // Extract employee name from API response
           if (res.data.data.employee && res.data.data.employee.name) {
             setEmployeeName(res.data.data.employee.name);
           } else {
@@ -1876,12 +2261,12 @@ export default function AttendanceCapture() {
           
           setError("");
         } else {
-          setError("❌ No assigned location found for this employee.");
+          setError("No assigned location found for this employee.");
           setAssignedLocation(null);
         }
       } catch (err) {
         console.error("Error fetching employee location:", err);
-        setError("❌ Failed to fetch employee location. Please try again.");
+        setError("Failed to fetch employee location. Please try again.");
         setAssignedLocation(null);
       } finally {
         setLoadingLocation(false);
@@ -1901,7 +2286,7 @@ export default function AttendanceCapture() {
         const res = await axios.get(`${BASE_URL}api/attendance/myattendance/${employeeId}`);
         const data = res.data;
         
-        // ✅ Get employee name from attendance API response too
+        // Get employee name from attendance API response too
         if (data.employeeName) {
           setEmployeeName(data.employeeName);
         }
@@ -1922,6 +2307,17 @@ export default function AttendanceCapture() {
     }
   }, [employeeId]);
 
+  // Update current time
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Get current live location
   const fetchLocation = () => {
     setLocationError("");
@@ -1937,7 +2333,6 @@ export default function AttendanceCapture() {
       (pos) => {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setPosition(coords);
-        console.log("Geolocation captured:", coords);
 
         if (assignedLocation) {
           const dist = haversineDistance(
@@ -1947,7 +2342,6 @@ export default function AttendanceCapture() {
             assignedLocation.longitude
           );
           setDistance(dist);
-          console.log("Distance calculated:", dist, "meters");
         } else {
           setLocationError("No assigned location found. Please contact admin.");
         }
@@ -1986,7 +2380,6 @@ export default function AttendanceCapture() {
       alert(res.data.message);
       setCheckedIn(true);
       
-      // ✅ Update employee name from response
       if (res.data.employeeName) {
         setEmployeeName(res.data.employeeName);
       }
@@ -1997,12 +2390,11 @@ export default function AttendanceCapture() {
     }
   };
 
-  // Handle Check-Out - ✅ Added confirmation dialog
+  // Handle Check-Out
   const handleCheckOut = async () => {
     if (!position) return alert("Please capture your current location first.");
     if (!employeeId) return alert("Employee data missing.");
     
-    // ✅ CONFIRMATION DIALOG ADDED HERE
     const isConfirmed = window.confirm("Are you sure you want to check out?");
     if (!isConfirmed) return;
 
@@ -2030,139 +2422,424 @@ export default function AttendanceCapture() {
     }
   };
 
+  // Manual swipe handler with click/touch
+  const handleManualSwipe = () => {
+    if (submitting || !position || !employeeId || !assignedLocation) {
+      alert("Please capture your location first and make sure all data is loaded.");
+      return;
+    }
+
+    // Animate the swipe
+    setIsSwiping(true);
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 0.1;
+      setSwipeProgress(progress);
+      
+      if (progress >= 1) {
+        clearInterval(interval);
+        setTimeout(() => {
+          if (!checkedIn) {
+            handleCheckIn();
+          } else {
+            handleCheckOut();
+          }
+          setIsSwiping(false);
+          setSwipeProgress(0);
+        }, 300);
+      }
+    }, 30);
+  };
+
+  // Simple mouse/touch handlers
+  useEffect(() => {
+    const swipeArea = swipeAreaRef.current;
+    if (!swipeArea) return;
+
+    let startX = 0;
+    let isDragging = false;
+    const minSwipeDistance = 100;
+
+    const onStart = (clientX) => {
+      if (submitting || !position || !employeeId || !assignedLocation) return;
+      startX = clientX;
+      isDragging = true;
+      setIsSwiping(true);
+    };
+
+    const onMove = (clientX) => {
+      if (!isDragging) return;
+      
+      const diff = clientX - startX;
+      
+      if (!checkedIn && diff > 0) {
+        // Check-in: right swipe
+        const progress = Math.min(diff / minSwipeDistance, 1);
+        setSwipeProgress(progress);
+      } else if (checkedIn && diff < 0) {
+        // Check-out: left swipe
+        const progress = Math.min(Math.abs(diff) / minSwipeDistance, 1);
+        setSwipeProgress(progress);
+      }
+    };
+
+    const onEnd = (clientX) => {
+      if (!isDragging) return;
+      
+      isDragging = false;
+      const diff = clientX - startX;
+      
+      if (!checkedIn && diff >= minSwipeDistance) {
+        // Successful right swipe for check-in
+        handleCheckIn();
+      } else if (checkedIn && diff <= -minSwipeDistance) {
+        // Successful left swipe for check-out
+        handleCheckOut();
+      }
+      
+      // Reset after a delay
+      setTimeout(() => {
+        setSwipeProgress(0);
+        setIsSwiping(false);
+      }, 300);
+    };
+
+    // Mouse events
+    const handleMouseDown = (e) => {
+      onStart(e.clientX);
+    };
+
+    const handleMouseMove = (e) => {
+      onMove(e.clientX);
+    };
+
+    const handleMouseUp = (e) => {
+      onEnd(e.clientX);
+    };
+
+    // Touch events
+    const handleTouchStart = (e) => {
+      onStart(e.touches[0].clientX);
+    };
+
+    const handleTouchMove = (e) => {
+      onMove(e.touches[0].clientX);
+    };
+
+    const handleTouchEnd = (e) => {
+      const clientX = e.changedTouches[0]?.clientX || 0;
+      onEnd(clientX);
+    };
+
+    // Add event listeners
+    swipeArea.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    swipeArea.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      // Cleanup
+      swipeArea.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      
+      swipeArea.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [checkedIn, submitting, position, employeeId, assignedLocation]);
+
   return (
-    <div className="flex flex-col items-center min-h-screen p-2 bg-gray-100">
-      <div className="flex flex-col w-full max-w-md gap-2 p-2 bg-white shadow-lg rounded-xl">
-        <h2 className="text-3xl font-bold text-center">Attendance Capture</h2>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-0">
+      {/* Header */}
+      <div className="flex justify-between items-center p-2 bg-white shadow-sm">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Attendance</h1>
+        </div>
+        <div className="text-right">
+          <div className="text-2xl font-bold text-blue-600">{currentTime}</div>
+          <div className="text-xs text-gray-500">Current Time</div>
+        </div>
+      </div>
 
-        {employeeId && (
-          <div className="p-2 rounded-md bg-green-50">
-            <p className="font-bold text-green-600">
-              Employee ID: {employeeId}
-            </p>
-             {employeeName && (
-              <p className="mt-1 font-bold text-green-600">Name: {employeeName}</p>
-            )}
-            {employeeEmail && (
-              <p className="mt-1 font-bold text-green-600">Email: {employeeEmail}</p>
-            )}
-          </div>
-        )}
-
-        {loadingLocation ? (
-          <div className="p-0 rounded-md bg-blue-50">
-            <p className="text-blue-700">Loading location information...</p>
-          </div>
-        ) : assignedLocation ? (
-          <div className="p-0 rounded-md bg-blue-50">
-            <h5 className="font-bold text-blue-700">
-              Assigned Location: {assignedLocation.name}
-            </h5>
-            <p>Onsite Radius: {ONSITE_RADIUS_M} meters</p>
-          </div>
-        ) : (
-          <div className="p-0 rounded-md bg-red-50">
-            <p className="font-medium text-red-600">{error || "Location not found"}</p>
-            <p className="mt-1 text-sm text-gray-600">
-              Please contact admin to assign a location for your employee account.
-            </p>
-          </div>
-        )}
-
-        <div className="p-4 rounded-md bg-gray-50">
-          <button
-            onClick={fetchLocation}
-            className={`bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition ${
-              !assignedLocation ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            disabled={!assignedLocation}
-          >
-            {!position ? "Get My Current Location" : "Update My Location"}
-          </button>
-
-          {!assignedLocation ? (
-            <p className="mt-2 text-sm text-red-500">
-              You need an assigned location to capture attendance.
-            </p>
-          ) : locationError ? (
-            <p className="mt-2 text-sm text-red-500">{locationError}</p>
-          ) : null}
-
-          {position && (
-            <div className="p-3 mt-4 rounded-md bg-green-50">
-              <p className="font-medium text-green-700">📍 Location Captured Successfully!</p>
-
-              {distance != null && (
-                <p className="mt-2">
-                  Distance from assigned location:{" "}
-                  <strong>{distance} m</strong> -{" "}
-                  <span
-                    className={
-                      distance <= ONSITE_RADIUS_M
-                        ? "text-green-600 font-semibold"
-                        : "text-red-600 font-semibold"
-                    }
-                  >
-                    {distance <= ONSITE_RADIUS_M
-                      ? "Inside Assigned Area"
-                      : "Outside Assigned Area"}
-                  </span>
-                </p>
+      {/* Main Content Container - Reduced padding */}
+      <div className="p-3 max-w-md mx-auto">
+        
+        {/* Employee Info Card - Compact */}
+        <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold">
+                {employeeName ? employeeName.charAt(0).toUpperCase() : "U"}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              {employeeName && (
+                <h2 className="text-base font-bold text-gray-900 truncate">{employeeName}</h2>
               )}
+              {employeeId && (
+                <p className="text-xs text-gray-600">ID: {employeeId}</p>
+              )}
+              {employeeEmail && (
+                <p className="text-xs text-gray-500 truncate">{employeeEmail}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Location Card - Compact */}
+        <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-sm font-semibold text-gray-900">Location Status</h3>
+            <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+              position ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+            }`}>
+              {position ? 'Captured ✓' : 'Required'}
+            </div>
+          </div>
+          
+          {loadingLocation ? (
+            <div className="animate-pulse">
+              <div className="h-3 bg-gray-200 rounded w-3/4 mb-1"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          ) : assignedLocation ? (
+            <div>
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-medium text-gray-900 truncate">{assignedLocation.name}</h4>
+                  <p className="text-xs text-gray-600">Assigned Location • Radius: {ONSITE_RADIUS_M}m</p>
+                </div>
+              </div>
+              
+              {position && distance != null && (
+                <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs text-gray-700">Distance:</span>
+                    <span className={`text-sm font-bold ${
+                      distance <= ONSITE_RADIUS_M ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {distance}m
+                    </span>
+                  </div>
+                  <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full ${
+                        distance <= ONSITE_RADIUS_M ? 'bg-green-500' : 'bg-red-500'
+                      }`}
+                      style={{ width: `${Math.min((distance / ONSITE_RADIUS_M) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                  <p className={`text-xs mt-1 font-medium ${
+                    distance <= ONSITE_RADIUS_M ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {distance <= ONSITE_RADIUS_M ? '✓ Within office radius' : '⚠ Outside office radius'}
+                  </p>
+                </div>
+              )}
+              
+              <button
+                onClick={fetchLocation}
+                className={`w-full mt-2 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center space-x-1 transition ${
+                  !assignedLocation 
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                    : position
+                    ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
+                disabled={!assignedLocation}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <span>{!position ? "Get Current Location" : "Update Location"}</span>
+              </button>
+            </div>
+          ) : (
+            <div className="text-center py-2">
+              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-1">
+                <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+              </div>
+              <p className="text-xs text-gray-700 mb-0.5">No location assigned</p>
+              <p className="text-xs text-gray-500">Please contact admin</p>
             </div>
           )}
         </div>
 
+        {/* Reason Selection (if outside radius) - Compact */}
         {distance > ONSITE_RADIUS_M && (
-          <div className="flex flex-col">
-            <label className="mb-1 font-medium text-gray-700">
-              Reason (required since you're outside the assigned area):
-            </label>
+          <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Reason Required</h3>
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="p-2 border rounded-md"
+              className="w-full p-2 text-sm border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200 outline-none"
             >
               <option value="">-- Select Reason --</option>
               <option value="Field Work">Field Work</option>
               <option value="Work From Home">Work From Home</option>
+              <option value="Client Meeting">Client Meeting</option>
+              <option value="Other">Other</option>
             </select>
+            <p className="text-xs text-gray-500 mt-1">You're outside the assigned area ({distance}m)</p>
           </div>
         )}
 
-        {!checkedIn ? (
-          <button
-            onClick={handleCheckIn}
-            disabled={submitting || !position || !employeeId || !assignedLocation}
-            className={`w-full py-3 text-white rounded-lg text-lg font-semibold transition ${
-              submitting || !position || !employeeId || !assignedLocation
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            {submitting ? "Checking In..." : "Check In"}
-          </button>
-        ) : (
-          <button
-            onClick={handleCheckOut}
-            disabled={submitting || !position || !employeeId || !assignedLocation}
-            className={`w-full py-3 text-white rounded-lg text-lg font-semibold transition ${
-              submitting || !position || !employeeId || !assignedLocation
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-red-600 hover:bg-red-700"
-            }`}
-          >
-            {submitting ? "Checking Out..." : "Check Out"}
-          </button>
-        )}
+        {/* Attendance Card - Compact */}
+        <div className="bg-white rounded-xl shadow-sm p-3">
+          {/* Status Header */}
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">Today's Attendance</h3>
+              <p className="text-xs text-gray-600">
+                {checkedIn ? 'You are currently checked in' : 'Ready to check in'}
+              </p>
+            </div>
+            <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+              checkedIn ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+            }`}>
+              {checkedIn ? 'Checked In' : 'Not Checked In'}
+            </div>
+          </div>
 
-        {checkedIn && (
-          <div className="p-3 text-center rounded-md bg-yellow-50">
-            <p className="font-medium text-yellow-700">
-              ✅ You are currently checked in
+          {/* Swipe Instructions */}
+          <div className="text-center mb-3">
+            <p className="text-sm text-gray-700 font-medium">
+              {!checkedIn 
+                ? "Swipe right → to check in"
+                : "Swipe left ← to check out"
+              }
             </p>
           </div>
-        )}
+
+          {/* Swipe Button Container */}
+          <div className="mb-3">
+            <div 
+              ref={swipeAreaRef}
+              className={`relative overflow-hidden rounded-lg ${
+                !position || !assignedLocation || submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-[0.98] transition-transform'
+              }`}
+              onClick={handleManualSwipe}
+            >
+              {!checkedIn ? (
+                // Check-in swipe button
+                <div className="relative bg-gradient-to-r from-blue-500 to-blue-600 h-12">
+                  {/* Swipe progress overlay */}
+                  <div 
+                    className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500"
+                    style={{ 
+                      width: `${swipeProgress * 100}%`,
+                      transition: isSwiping ? 'none' : 'width 0.2s ease-out'
+                    }}
+                  ></div>
+                  
+                  {/* Content */}
+                  <div className="absolute inset-0 flex items-center justify-between px-3">
+                    <div className="flex items-center gap-1 text-white">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                      </svg>
+                      <span className="text-sm font-bold">CHECK IN</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-1 text-white">
+                      <span className="text-xs">Swipe →</span>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Check-out swipe button
+                <div className="relative bg-gradient-to-r from-red-500 to-red-600 h-12">
+                  {/* Swipe progress overlay */}
+                  <div 
+                    className="absolute right-0 top-0 bottom-0 bg-gradient-to-r from-red-400 to-red-500"
+                    style={{ 
+                      width: `${swipeProgress * 100}%`,
+                      transition: isSwiping ? 'none' : 'width 0.2s ease-out'
+                    }}
+                  ></div>
+                  
+                  {/* Content */}
+                  <div className="absolute inset-0 flex items-center justify-between px-3">
+                    <div className="flex items-center gap-1 text-white">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                      </svg>
+                      <span className="text-xs">← Swipe</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-1 text-white">
+                      <span className="text-sm font-bold">CHECK OUT</span>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Help text */}
+            <p className="text-center text-xs text-gray-500 mt-1">
+              {!position ? "Capture location first" : "Click or drag to swipe"}
+            </p>
+          </div>
+
+          {/* Loading State */}
+          {submitting && (
+            <div className="text-center py-2 mb-2">
+              <div className="inline-flex items-center justify-center gap-1">
+                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-xs text-gray-700">
+                  {!checkedIn ? "Processing Check In..." : "Processing Check Out..."}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Status Message - Only when checked in and not submitting */}
+          {checkedIn && !submitting && (
+            <div className="text-center py-2 border-t border-gray-100">
+              <div className="inline-flex flex-col items-center gap-0">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-green-800">You are checked in</p>
+                  <p className="text-xs text-green-600">Remember to check out when leaving</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Simple Footer */}
+          {/* <div className="text-center text-gray-500 text-xs mt-2 pt-2 border-t border-gray-100">
+            <p>Swipe right to check in • Swipe left to check out</p>
+          </div> */}
+        </div>
+
+        {/* Global Footer */}
+        <div className="text-center text-gray-400 text-xs mt-2 pt-2 border-t border-gray-200">
+          <p>Make sure location is captured before checking in/out</p>
+        </div>
+
       </div>
     </div>
   );

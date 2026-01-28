@@ -1,8 +1,3 @@
-
-
-
-
-
 import { useEffect, useState } from "react";
 import {
   FiCalendar,
@@ -11,29 +6,14 @@ import {
   FiUser,
 } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
-import EmployeeNavbar from "../Components/EmployeeNavbar"; // ✅ Updated import
-import EmployeeSidebar from "../Components/EmployeeSidebar";
 
 const EmployeeDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ Sidebar state (for responsiveness)
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
   // ✅ Email from location or localStorage
   const email = location.state?.email || localStorage.getItem("employeeEmail");
   const [profile, setProfile] = useState(null);
-
-  // ✅ Detect screen size
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   // ✅ Fetch employee details
   useEffect(() => {
@@ -55,49 +35,22 @@ const EmployeeDashboard = () => {
   if (!profile) return <p className="p-6 text-center">Loading...</p>;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
-      {/* Sidebar */}
-      <EmployeeSidebar
-        isCollapsed={isCollapsed}
-        isMobile={isMobile}
-        onClose={() => setIsSidebarOpen(false)}
-      />
+    <div className="min-h-screen bg-gray-100">
+      <main className="p-2">
+        <p className="text-2xl font-bold text-gray-800 mb-4">
+          Welcome back, {profile.name} 👋
+        </p>
 
-      {/* Overlay for mobile */}
-      {isMobile && !isCollapsed && isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-      )}
-
-      {/* Main Content Area */}
-      <div className="flex flex-col flex-1 overflow-hidden">
-        {/* ✅ Employee Navbar */}
-        <EmployeeNavbar
-          setIsCollapsed={setIsCollapsed}
-          isCollapsed={isCollapsed}
-          isMobile={isMobile}
-          toggleMobileSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        />
-
-        {/* ✅ Main Dashboard Content */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-          <h1 className="text-2xl font-bold text-gray-800">
-            Employee Dashboard
-          </h1>
-          <p className="text-gray-500">
-            Welcome back, {profile.name} 👋
-          </p>
-
+        {/* Top Row: Profile Card and Mark Attendance */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Profile Card */}
-          <div className="p-4 mt-6 bg-white shadow-md rounded-xl md:p-6">
-            <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-              <div className="p-4 text-blue-600 bg-blue-100 rounded-full">
-                <FiUser className="text-3xl" />
+          <div className="p-4 bg-white shadow-md rounded-xl">
+            <div className="flex items-center gap-4">
+              <div className="p-3 text-blue-600 bg-blue-100 rounded-full">
+                <FiUser className="text-2xl" />
               </div>
-              <div>
-                <h2 className="text-lg font-semibold md:text-xl">
+              <div className="flex-1">
+                <h2 className="text-lg font-semibold">
                   {profile.name}
                 </h2>
                 <p className="text-sm text-gray-500">
@@ -111,45 +64,43 @@ const EmployeeDashboard = () => {
             </div>
           </div>
 
-          {/* Dashboard Cards */}
-          <div className="grid grid-cols-1 gap-4 mt-8 sm:grid-cols-2 lg:grid-cols-3 text-lg">
-            <DashboardCard
-              icon={<FiCamera className="text-lg text-green-600" />}
-              title="Mark Attendance"
-              subtitle="Capture photo & location"
-              onClick={() => navigate("/attendance-capture")}
-            />
-            <DashboardCard
-              icon={<FiClock className="text-lg text-blue-600" />}
-              title="My Records"
-              subtitle="View attendance records"
-              onClick={() => navigate("/myattendance")}
-            />
-            <DashboardCard
-              icon={<FiCalendar className="text-lg text-purple-600" />}
-              title="Leave Request"
-              subtitle="Apply for leave"
-              onClick={() => navigate("/leave-application")}
-            />
-          </div>
+          {/* Mark Attendance Card */}
+          <DashboardCard
+            icon={<FiCamera className="text-xl text-green-600" />}
+            title="Mark Attendance"
+            subtitle="Capture photo & location"
+            onClick={() => navigate("/attendance-capture")}
+          />
+        </div>
 
-          {/* My Leave Requests Section */}
+        {/* Bottom Row: My Records, My Leaves, Leave Request */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <DashboardCard
+            icon={<FiClock className="text-xl text-blue-600" />}
+            title="My Records"
+            subtitle="View attendance records"
+            onClick={() => navigate("/myattendance")}
+          />
+          
           <div
             onClick={() => navigate("/myleaves")}
-            className="p-6 mt-10 transition bg-white shadow-md cursor-pointer rounded-xl hover:shadow-lg"
+            className="flex flex-col items-center justify-center p-6 transition transform bg-white shadow-md cursor-pointer rounded-xl hover:scale-105 hover:shadow-lg"
           >
-            <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-              <FiCalendar /> My Leave Requests
-            </h3>
-            <p className="text-sm text-gray-500">
-              Track your leave applications and their status
-            </p>
-            <div className="flex justify-center mt-10 text-gray-400">
-              <FiCalendar className="text-4xl" />
+            <div className="p-4 mb-3 bg-gray-100 rounded-full">
+              <FiCalendar className="text-xl text-purple-600" />
             </div>
+            <h4 className="font-semibold text-gray-800">My Leaves</h4>
+            <p className="text-sm text-gray-500">Track leave applications</p>
           </div>
-        </main>
-      </div>
+          
+          <DashboardCard
+            icon={<FiCalendar className="text-xl text-orange-600" />}
+            title="Leave Request"
+            subtitle="Apply for leave"
+            onClick={() => navigate("/leave-application")}
+          />
+        </div>
+      </main>
     </div>
   );
 };

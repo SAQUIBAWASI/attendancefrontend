@@ -856,8 +856,8 @@
 // }
 
 import axios from "axios";
-import { Calendar, Eye, FileText, Search, X } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { Calendar, Download, Eye, FileText, RefreshCw, Search, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../Images/Timely-Health-Logo.png";
 
@@ -872,23 +872,82 @@ export default function EmployeeDashboard() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState("");
   const [isLoadingMonth, setIsLoadingMonth] = useState(false);
-  const [allMonths, setAllMonths] = useState([]);
-  const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [employeesMasterData, setEmployeesMasterData] = useState({});
   const [employeeLeaves, setEmployeeLeaves] = useState({});
+  const [monthDays, setMonthDays] = useState(30);
+  const [monthInfo, setMonthInfo] = useState({
+    isHistorical: false,
+    isCurrent: false,
+    includeWeekOff: false,
+    canDownload: false
+  });
 
   const recordsPerPage = 10;
-
   const navigate = useNavigate();
   const BASE_URL = "https://api.timelyhealth.in";
 
   // ✅ Get current logged-in employee data
   const getCurrentEmployee = () => {
     const employeeData = JSON.parse(localStorage.getItem("employeeData"));
-    return employeeData;
+    return employeeData || {};
   };
 
-  // ✅ Process Leaves Data (Logic from PayRoll.js)
+  // ✅ Check if month is historical
+  const isHistoricalMonth = (month) => {
+    if (!month) return false;
+    
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1;
+    
+    const [year, monthNum] = month.split('-').map(Number);
+    
+    if (year < currentYear) return true;
+    if (year === currentYear && monthNum < currentMonth) return true;
+    
+    return false;
+  };
+
+  // ✅ Check if month is current month
+  const isCurrentMonth = (month) => {
+    if (!month) return true;
+    
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1;
+    
+    const [year, monthNum] = month.split('-').map(Number);
+    
+    return year === currentYear && monthNum === currentMonth;
+  };
+
+  // ✅ Check if week-off should be included in salary
+  const shouldIncludeWeekOffInSalary = (month) => {
+    if (isHistoricalMonth(month)) return true;
+    
+    if (isCurrentMonth(month)) {
+      const today = new Date();
+      const currentDay = today.getDate();
+      return currentDay >= 26;
+    }
+    
+    return true;
+  };
+
+  // ✅ Check if payslip download is allowed
+  const isPayslipDownloadAllowed = (month) => {
+    if (isHistoricalMonth(month)) return true;
+    
+    if (isCurrentMonth(month)) {
+      const today = new Date();
+      const currentDay = today.getDate();
+      return currentDay >= 30;
+    }
+    
+    return true;
+  };
+
+  // ✅ Process Leaves Data
   const processLeavesData = useCallback((leavesData) => {
     const leavesMap = {};
 
@@ -989,22 +1048,17 @@ export default function EmployeeDashboard() {
     };
   };
 
-  // ✅ Helper to Calculate Week Offs
-  const calculateWeekOffDays = (employee) => {
-    return employee.weekOffs || 0;
-  };
-
   // ✅ Calculate Daily Rate
   const calculateDailyRate = (employee) => {
-    const empData = employeesMasterData[employee.employeeId];
+    const empData = getEmployeeData(employee);
     if (!empData || !empData.salaryPerMonth) return 0;
-    const daysInMonth = employee.monthDays || 30;
+    const daysInMonth = employee.monthDays || monthDays || 30;
     return (empData.salaryPerMonth / daysInMonth).toFixed(2);
   };
 
   // ✅ Format month for display
   const formatMonthDisplay = (monthStr) => {
-    if (!monthStr || monthStr === "Not specified") return "All Months";
+    if (!monthStr || monthStr === "Not specified") return "Current Month";
     const [year, month] = monthStr.split("-");
     const monthNames = [
       'January', 'February', 'March', 'April', 'May', 'June',
@@ -1041,9 +1095,13 @@ export default function EmployeeDashboard() {
     return months;
   };
 
-  // ✅ Fetch ALL months data for current employee
-  const fetchAllMonthsData = async () => {
+  // ✅ Fetch salary data for current employee
+  const fetchSalaryData = async (month = "") => {
     try {
+      setLoading(true);
+      setIsLoadingMonth(true);
+      setError(null);
+
       const employeeData = getCurrentEmployee();
       const employeeId = employeeData?.employeeId;
 
@@ -1053,78 +1111,91 @@ export default function EmployeeDashboard() {
         return;
       }
 
-      console.log("📥 Fetching ALL months salary data for employee:", employeeId);
-      setIsLoadingMonth(true);
+      console.log("📥 Fetching salary data for employee:", employeeId, "Month:", month || "Current");
 
-      // Fetch ALL salaries without month filter
-      const salaryRes = await fetch(`${BASE_URL}/api/attendancesummary/getsalaries`);
+      // Update month info
+      const isHistorical = isHistoricalMonth(month);
+      const isCurrent = isCurrentMonth(month);
+      const includeWeekOff = shouldIncludeWeekOffInSalary(month);
+      const canDownload = isPayslipDownloadAllowed(month);
 
-      // Fetch Summary as fallback
-      const summaryRes = await fetch(`${BASE_URL}/api/attendancesummary/get`);
+      setMonthInfo({
+        isHistorical,
+        isCurrent,
+        includeWeekOff,
+        canDownload
+      });
 
+      // Fetch salary data with or without month filter
+      const salaryUrl = month 
+        ? `${BASE_URL}/api/attendancesummary/getsalaries?month=${month}`
+        : `${BASE_URL}/api/attendancesummary/getsalaries`;
+
+      const salaryRes = await fetch(salaryUrl);
+      
       if (!salaryRes.ok) {
         throw new Error(`Failed to fetch salary data: ${salaryRes.status}`);
       }
 
       const salaryData = await salaryRes.json();
-      let summaryData = [];
-      if (summaryRes.ok) {
-        const summaryJson = await summaryRes.json();
-        summaryData = summaryJson.summary || [];
-      }
-
-      console.log("💰 All Salaries API Response:", salaryData);
+      console.log("💰 Salary API Response:", salaryData);
 
       let employeeSalaryRecords = [];
 
       if (salaryData.success && salaryData.salaries && salaryData.salaries.length > 0) {
-        // Filter only current employee's records from ALL salaries
+        // Filter only current employee's records
         employeeSalaryRecords = salaryData.salaries
           .filter(salary => salary.employeeId === employeeId)
           .map(salary => {
-            // Find summary match for fallback fields
-            const summary = summaryData.find(s => s.employeeId === salary.employeeId && s.month === salary.month) || {};
+            const actualWeekOffDays = salary.weekOffs || 0;
+            const weekOffDaysForSalary = includeWeekOff ? actualWeekOffDays : 0;
+            
+            // Adjust calculated salary if week-off not included
+            let calculatedSalary = salary.calculatedSalary || 0;
+            if (!includeWeekOff && calculatedSalary > 0) {
+              const daysInMonth = salaryData.monthDays || 30;
+              const dailyRate = (salary.salaryPerMonth || 0) / daysInMonth;
+              const weekOffAmount = actualWeekOffDays * dailyRate;
+              calculatedSalary = Math.max(0, calculatedSalary - weekOffAmount);
+            }
 
             return {
               ...salary,
               employeeId: salary.employeeId,
               name: salary.name,
               presentDays: salary.presentDays || 0,
-              lateDays: salary.lateDays || 0,
-              halfDays: salary.halfDayWorking || 0,
-              calculatedSalary: salary.calculatedSalary || 0,
-              month: salary.month || "Not specified",
-              monthFormatted: formatMonthDisplay(salary.month),
               workingDays: salary.totalWorkingDays || salary.workingDays || 0,
-              weekOffs: salary.weekOffs || summary.weekOffPerMonth || 0,
+              totalWorkingDays: salary.totalWorkingDays || salary.workingDays || 0,
+              halfDays: salary.halfDayWorking || 0,
+              calculatedSalary: calculatedSalary,
+              month: salary.month || month || "Not specified",
+              monthFormatted: formatMonthDisplay(salary.month || month),
+              weekOffs: actualWeekOffDays,
+              weekOffsForSalary: weekOffDaysForSalary,
               totalLeaves: salary.totalLeaves || 0,
               salaryPerMonth: salary.salaryPerMonth || 0,
-              extraWork: salary.extraWork || {}, // ✅ Ensure extraWork is captured
-              fullDayLeaves: salary.fullDayLeaves || summary.fullDayLeaves || 0,
-              halfDayLeaves: salary.halfDayLeaves || summary.halfDayLeaves || 0,
-              monthDays: salary.monthDays || 30
+              extraWork: salary.extraWork || {},
+              monthDays: salaryData.monthDays || 30,
+              isHistoricalMonth: isHistorical,
+              isCurrentMonth: isCurrent,
+              includeWeekOffInSalary: includeWeekOff,
+              canDownload: canDownload
             };
           });
+
+        if (salaryData.monthDays) {
+          setMonthDays(salaryData.monthDays);
+        }
       }
-
-      // Extract unique months for filter dropdown
-      const months = [...new Set(employeeSalaryRecords
-        .map(record => record.month)
-        .filter(month => month && month !== "Not specified")
-        .sort((a, b) => b.localeCompare(a)) // Latest first
-      )];
-
-      setAllMonths(months);
 
       // Sort by latest month first
       const sortedRecords = employeeSalaryRecords.sort((a, b) => {
         const monthA = a.month || "";
         const monthB = b.month || "";
-        return monthB.localeCompare(monthA); // Descending order
+        return monthB.localeCompare(monthA);
       });
 
-      console.log("✅ Current Employee ALL Salary Records:", sortedRecords);
-      console.log("📅 Available Months:", months);
+      console.log("✅ Employee Salary Records:", sortedRecords);
 
       setRecords(sortedRecords);
       setFilteredRecords(sortedRecords);
@@ -1138,116 +1209,34 @@ export default function EmployeeDashboard() {
     }
   };
 
-  // ✅ Fetch specific month data
-  const fetchMonthData = async (month) => {
-    try {
-      setIsLoadingMonth(true);
-      const employeeData = getCurrentEmployee();
-      const employeeId = employeeData?.employeeId;
-
-      if (!employeeId) {
-        setError("❌ Employee ID not found. Please log in again.");
-        return;
-      }
-
-      console.log(`📥 Fetching ${month} salary data for employee:`, employeeId);
-
-      // Fetch salaries with month filter
-      const salaryRes = await fetch(
-        `${BASE_URL}/api/attendancesummary/getsalaries?month=${month}`
-      );
-
-      const summaryRes = await fetch(
-        `${BASE_URL}/api/attendancesummary/get?month=${month}`
-      );
-
-      if (!salaryRes.ok) {
-        throw new Error(`Failed to fetch salary data: ${salaryRes.status}`);
-      }
-
-      const salaryData = await salaryRes.json();
-      let summaryData = [];
-      if (summaryRes.ok) {
-        const summaryJson = await summaryRes.json();
-        summaryData = summaryJson.summary || [];
-      }
-
-      let employeeSalaryRecords = [];
-
-      if (salaryData.success && salaryData.salaries && salaryData.salaries.length > 0) {
-        // Filter only current employee's records for selected month
-        const monthRecords = salaryData.salaries
-          .filter(salary => salary.employeeId === employeeId)
-          .map(salary => {
-            const summary = summaryData.find(s => s.employeeId === salary.employeeId) || {};
-            return {
-              ...salary,
-              employeeId: salary.employeeId,
-              name: salary.name,
-              presentDays: salary.presentDays || 0,
-              lateDays: salary.lateDays || 0,
-              halfDays: salary.halfDayWorking || 0,
-              calculatedSalary: salary.calculatedSalary || 0,
-              month: salary.month || month,
-              monthFormatted: formatMonthDisplay(salary.month || month),
-              workingDays: salary.totalWorkingDays || salary.workingDays || 0,
-              weekOffs: salary.weekOffs || summary.weekOffPerMonth || 0,
-              totalLeaves: salary.totalLeaves || 0,
-              salaryPerMonth: salary.salaryPerMonth || 0,
-              extraWork: salary.extraWork || {},
-              fullDayLeaves: salary.fullDayLeaves || summary.fullDayLeaves || 0,
-              halfDayLeaves: salary.halfDayLeaves || summary.halfDayLeaves || 0,
-              monthDays: salary.monthDays || 30
-            };
-          });
-
-        employeeSalaryRecords = monthRecords;
-      }
-
-      console.log(`✅ ${month} Salary Records:`, employeeSalaryRecords);
-
-      setRecords(employeeSalaryRecords);
-      setFilteredRecords(employeeSalaryRecords);
-
-    } catch (err) {
-      console.error(`❌ ${month} Salary fetch error:`, err);
-      setError(err.message || "Failed to load salary data for selected month");
-    } finally {
-      setIsLoadingMonth(false);
-    }
-  };
-
   // ✅ Initial load - fetch all data
   useEffect(() => {
-    fetchAllMonthsData();
+    fetchSalaryData();
   }, []);
 
-  // ✅ Handle month selection from calendar
+  // ✅ Handle month selection
   const handleMonthSelect = (e) => {
     const monthValue = e.target.value;
     if (monthValue) {
-      // Convert YYYY-MM format from input
-      const formattedMonth = monthValue.replace("-", "-");
-      setSelectedMonth(formattedMonth);
-      fetchMonthData(formattedMonth);
-      setShowMonthPicker(false);
+      setSelectedMonth(monthValue);
+      fetchSalaryData(monthValue);
     }
   };
 
   // ✅ Handle quick month selection
   const handleQuickMonthSelect = (month) => {
     setSelectedMonth(month);
-    fetchMonthData(month);
+    fetchSalaryData(month);
   };
 
   // ✅ Handle clear filter
   const handleClearFilter = () => {
     setSelectedMonth("");
     setSearchTerm("");
-    fetchAllMonthsData();
+    fetchSalaryData();
   };
 
-  // ✅ Filter records based on search (only for current employee)
+  // ✅ Filter records based on search
   useEffect(() => {
     let filtered = [...records];
 
@@ -1323,9 +1312,8 @@ export default function EmployeeDashboard() {
     setSelectedEmployee(null);
   };
 
-  // ✅ Generate Invoice HTML (Matching PayRoll.js)
+  // ✅ Generate Invoice HTML with updated structure
   const generateInvoiceHTML = (employee) => {
-    // Get master data for this employee
     const employeeData = getEmployeeData(employee);
 
     if (!employeeData.salaryPerMonth || employeeData.salaryPerMonth === 0) {
@@ -1350,38 +1338,33 @@ export default function EmployeeDashboard() {
       `;
     }
 
-    const totalMonthDays = employee.monthDays || 30;
+    const totalMonthDays = employee.monthDays || monthDays || 30;
     const dailyRate = calculateDailyRate(employee);
     const leaves = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
-    const weekOffDays = calculateWeekOffDays(employee);
+    
+    const actualWeekOffDays = employee.weekOffs || 0;
+    const weekOffDaysForSalary = employee.weekOffsForSalary || 0;
+    const includeWeekOffInSalary = employee.includeWeekOffInSalary || false;
 
-    // Paid component calculations
     const presentDays = employee.presentDays || 0;
-    const halfDays = employee.halfDayWorking || 0;
+    const halfDays = employee.halfDays || 0;
     const paidLeaveDays = (leaves.CL || 0) + (leaves.EL || 0) + (leaves.COFF || 0);
 
-    // Total Paid Days (matches backend logic)
-    const totalPaidDays = presentDays + (halfDays * 0.5) + weekOffDays + paidLeaveDays;
+    const totalPaidDays = presentDays + (halfDays * 0.5) + weekOffDaysForSalary + paidLeaveDays;
 
-    // Deduction Calculations
-    // 1. Half Day Deduction (0.5 per half day)
     const halfDayDeductionDays = halfDays * 0.5;
     const halfDayDeductionAmount = halfDayDeductionDays * dailyRate;
 
-    // 2. LOP / Absent Deduction (Unaccounted days)
     const totalUnpaidDays = Math.max(0, totalMonthDays - totalPaidDays);
-    const lopDays = Math.max(0, totalUnpaidDays - halfDayDeductionDays); // Remaining is LOP
+    const lopDays = Math.max(0, totalUnpaidDays - halfDayDeductionDays);
     const lopAmount = lopDays * dailyRate;
 
-    // Earnings
     const grossSalary = employeeData.salaryPerMonth || 0;
     const bonus = employee.extraWork?.bonus || 0;
     const extraDaysPay = (employee.extraWork?.extraDays || 0) * dailyRate;
 
-    // Other Deductions
     const otherDeductions = employee.extraWork?.deductions || 0;
 
-    // Totals
     const totalEarnings = grossSalary + bonus + extraDaysPay;
     const totalDeductions = halfDayDeductionAmount + lopAmount + otherDeductions;
     const netPay = totalEarnings - totalDeductions;
@@ -1391,6 +1374,9 @@ export default function EmployeeDashboard() {
       (employee.extraWork.bonus || 0) > 0 ||
       (employee.extraWork.deductions || 0) > 0
     );
+
+    const isHistorical = employee.isHistoricalMonth;
+    const isCurrent = employee.isCurrentMonth;
 
     return `
       <!DOCTYPE html>
@@ -1437,6 +1423,14 @@ export default function EmployeeDashboard() {
             font-size: 11px;
             background-color: #fafafa;
           }
+          
+          .info-note {
+            background-color: #fffde7;
+            border-left: 4px solid #ffc107;
+            padding: 8px;
+            margin: 10px 0;
+            font-size: 11px;
+          }
         </style>
       </head>
       <body>
@@ -1462,6 +1456,10 @@ export default function EmployeeDashboard() {
                 </div>
                 <div style="text-align: center; margin-bottom: 2px;">
                   <span style="font-size: 18px; font-weight: bold; text-decoration: underline; text-underline-offset: 3px; display: inline-block;">PAYSLIP ${formatMonthDisplay(employee.month || selectedMonth).toUpperCase()}</span>
+                  <br>
+                  <span style="font-size: 11px; color: #666;">
+                    ${isHistorical ? 'Historical Month - Full Salary' : isCurrent ? 'Current Month' : 'Future Month'}
+                  </span>
                 </div>
               </td>
             </tr>
@@ -1492,6 +1490,17 @@ export default function EmployeeDashboard() {
               <td>${totalMonthDays} Days</td>
             </tr>
 
+            <!-- WEEKOFF NOTICE FOR CURRENT MONTH -->
+            ${!includeWeekOffInSalary ? `
+            <tr>
+              <td colspan="4" style="border: none; padding: 5px;">
+                <div class="info-note">
+                  <strong>Note:</strong> Weekoff salary for this month will be added after 26th ${formatMonthDisplay(employee.month || selectedMonth).split(' ')[0]}.
+                </div>
+              </td>
+            </tr>
+            ` : ''}
+
             <!-- SALARY BREAKDOWN HEADER -->
             <tr class="section-header">
               <td colspan="2">EARNINGS</td>
@@ -1520,7 +1529,7 @@ export default function EmployeeDashboard() {
 
             <!-- ROW 3: Week Offs -->
             <tr>
-              <td class="label-col">Week Off Days (${weekOffDays})</td>
+              <td class="label-col">Week Off Days (${actualWeekOffDays})</td>
               <td class="amount-col">-</td>
               <td class="label-col">Other Deductions</td>
               <td class="amount-col" style="color:red;">
@@ -1561,10 +1570,22 @@ export default function EmployeeDashboard() {
             </tr>
             ` : ''}
 
+            <!-- DOWNLOAD NOTE FOR CURRENT MONTH -->
+            ${!employee.canDownload ? `
+            <tr>
+              <td colspan="4" style="border: none; padding: 5px;">
+                <div class="info-note">
+                  <strong>Note:</strong> Salary slip for current month will be available for download from 30th onwards.
+                </div>
+              </td>
+            </tr>
+            ` : ''}
+
           </table>
           
           <div style="text-align: center; font-size: 10px; margin-top: 10px;">
-            This is a computer-generated document.
+            This is a computer-generated document.<br>
+            Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
           </div>
 
         </div>
@@ -1573,8 +1594,13 @@ export default function EmployeeDashboard() {
     `;
   };
 
-  // ✅ Download salary slip
+  // ✅ Download salary slip with validation
   const downloadSalarySlip = async (employee) => {
+    if (!employee.canDownload) {
+      alert(`Salary slip for current month will be available for download from 30th ${formatMonthDisplay(employee.month).split(' ')[0]} onwards.`);
+      return;
+    }
+    
     const slipContent = generateInvoiceHTML(employee);
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -1614,9 +1640,22 @@ export default function EmployeeDashboard() {
         console.log("✅ Employee payslip download logged successfully");
       } catch (logError) {
         console.error("❌ Failed to log payslip download activity:", logError);
-        // Don't block the download if logging fails
       }
     }
+  };
+
+  // ✅ Get leave types for display
+  const getLeaveTypes = (employee) => {
+    const leaves = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
+    const leaveStrings = [];
+
+    if (leaves.CL > 0) leaveStrings.push(`CL: ${leaves.CL}`);
+    if (leaves.EL > 0) leaveStrings.push(`EL: ${leaves.EL}`);
+    if (leaves.COFF > 0) leaveStrings.push(`COFF: ${leaves.COFF}`);
+    if (leaves.LOP > 0) leaveStrings.push(`LOP: ${leaves.LOP}`);
+    if (leaves.Other > 0) leaveStrings.push(`Other: ${leaves.Other}`);
+
+    return leaveStrings.length > 0 ? leaveStrings.join(', ') : 'No Leaves';
   };
 
   const currentEmployee = getCurrentEmployee();
@@ -1636,7 +1675,7 @@ export default function EmployeeDashboard() {
         <div className="p-4 text-red-600 bg-red-100 rounded-lg">
           <p className="font-semibold">Error: {error}</p>
           <button
-            onClick={() => fetchAllMonthsData()}
+            onClick={() => fetchSalaryData(selectedMonth)}
             className="px-4 py-2 mt-2 text-white bg-blue-600 rounded hover:bg-blue-700"
           >
             Retry
@@ -1647,40 +1686,49 @@ export default function EmployeeDashboard() {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen p-4 md:p-6 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="mx-auto max-w-7xl">
 
-        {/* Header Section */}
-        {/* <div className="mb-8"> */}
-        {/* <button
-            onClick={() => navigate("/employeedashboard")}
-            className="flex items-center gap-2 px-4 py-2 mb-4 text-white transition bg-gray-700 rounded-lg hover:bg-gray-800"
-          >
-            <ArrowLeft size={18} /> Back to Dashboard
-          </button> */}
-        {/* <h1 className="mb-2 text-3xl font-bold text-gray-800">
-            My Salary History - {currentEmployee?.name || 'Employee'}
-          </h1> */}
-        {/* <p className="text-gray-600">View your salary details and download salary slips</p> */}
-        {/* <div className="flex items-center mt-2">
-            {selectedMonth ? (
-              <span className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-full">
-                Month: {formatMonthDisplay(selectedMonth)}
-              </span>
-            ) : (
-              <span className="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded-full">
-                All Months
-              </span>
-            )}
-            <span className="ml-2 text-sm text-gray-600">
-              Showing {filteredRecords.length} salary records
-            </span>
+        {/* Header Info Card */}
+        {/* <div className="p-4 mb-4 text-white shadow-lg md:p-6 md:mb-6 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl md:rounded-2xl"> */}
+          {/* <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-xl font-bold md:text-2xl">My Salary History</h1>
+              <p className="mt-1 text-sm text-blue-100 md:text-base">
+                {currentEmployee?.name || 'Employee'} • ID: {currentEmployee?.employeeId || 'N/A'}
+              </p>
+              <div className="flex flex-wrap items-center mt-2 space-x-2 md:space-x-4">
+                <div className="px-3 py-1 text-xs bg-white rounded-full md:text-sm bg-opacity-20">
+                  {selectedMonth ? formatMonthDisplay(selectedMonth) : 'Current Month'}
+                </div>
+                <div className="text-xs text-blue-100 md:text-sm">
+                  {filteredRecords.length} salary records
+                </div>
+              </div>
+            </div> */}
+            
+            {/* Important Notes */}
+            {/* <div className="mt-3 md:mt-0">
+              <div className="p-2 text-xs bg-white rounded-lg md:p-3 md:text-sm bg-opacity-10">
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-medium">Important:</span>
+                </div>
+                <ul className="mt-1 ml-1 space-y-1 text-xs">
+                  <li>• Weekoff salary added after 26th of each month</li>
+                  <li>• Current month slip available from 30th onwards</li>
+                  <li>• Previous months slips always available</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div> */}
 
         {/* Search and Filter Section */}
-        <div className="p-6 mb-6 bg-white border border-blue-200 shadow-lg rounded-2xl">
-          <div className="flex flex-col gap-4">
+        <div className="p-4 mb-4 bg-white border border-blue-200 shadow-lg md:p-6 md:mb-6 rounded-xl md:rounded-2xl">
+          <div className="flex flex-col gap-3 md:gap-4">
             {/* Search Bar */}
             <div className="relative">
               <input
@@ -1688,32 +1736,32 @@ export default function EmployeeDashboard() {
                 placeholder="Search by month name, year, or salary amount..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full py-3 pl-12 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg md:py-3 md:pl-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent md:text-base"
               />
-              <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                <Search size={20} className="text-gray-400" />
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none md:pl-4">
+                <Search size={18} className="text-gray-400" />
               </div>
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm("")}
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
                 >
-                  <X size={18} />
+                  <X size={16} />
                 </button>
               )}
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               {/* Month Filter Buttons */}
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={handleClearFilter}
-                  className={`px-4 py-2 rounded-lg border ${!selectedMonth
+                  className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg border text-sm ${!selectedMonth
                     ? 'bg-blue-600 text-white border-blue-600'
                     : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
                     }`}
                 >
-                  All Months
+                  Current Month
                 </button>
 
                 {/* Last 3 months quick buttons */}
@@ -1721,187 +1769,199 @@ export default function EmployeeDashboard() {
                   <button
                     key={index}
                     onClick={() => handleQuickMonthSelect(month.value)}
-                    className={`px-4 py-2 rounded-lg border ${selectedMonth === month.value
+                    className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg border text-sm ${selectedMonth === month.value
                       ? 'bg-green-600 text-white border-green-600'
                       : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
                       }`}
                   >
-                    {month.display}
+                    {month.display.split(' ')[0]}
                   </button>
                 ))}
 
                 {/* Calendar Month Picker */}
                 <div className="relative">
                   <button
-                    onClick={() => setShowMonthPicker(!showMonthPicker)}
-                    className="flex items-center gap-2 px-4 py-2 text-white bg-purple-600 border border-purple-600 rounded-lg hover:bg-purple-700"
+                    onClick={() => document.getElementById('monthPicker').click()}
+                    className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 text-white bg-purple-600 border border-purple-600 rounded-lg hover:bg-purple-700 text-sm"
                   >
-                    <Calendar size={18} />
-                    Select Month
+                    <Calendar size={16} />
+                    <span className="hidden md:inline">Select Month</span>
+                    <span className="md:hidden">Month</span>
                   </button>
-
-                  {showMonthPicker && (
-                    <div className="absolute left-0 z-10 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg">
-                      <input
-                        type="month"
-                        onChange={handleMonthSelect}
-                        className="p-3 border-none focus:ring-0"
-                        max={getCurrentMonth()}
-                      />
-                    </div>
-                  )}
+                  <input
+                    id="monthPicker"
+                    type="month"
+                    onChange={handleMonthSelect}
+                    className="absolute w-1 h-1 opacity-0"
+                    max={getCurrentMonth()}
+                  />
                 </div>
               </div>
 
               {/* Active Filters Display */}
               <div className="flex items-center gap-2">
                 {selectedMonth && (
-                  <div className="flex items-center gap-2 px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">
+                  <div className="flex items-center gap-2 px-2 py-1 text-xs text-blue-800 bg-blue-100 rounded-full md:px-3 md:text-sm">
                     <span>{formatMonthDisplay(selectedMonth)}</span>
                     <button
                       onClick={handleClearFilter}
                       className="text-blue-600 hover:text-blue-800"
                     >
-                      <X size={14} />
+                      <X size={12} />
                     </button>
                   </div>
                 )}
 
                 {/* Refresh Button */}
                 <button
-                  onClick={() => {
-                    if (selectedMonth) {
-                      fetchMonthData(selectedMonth);
-                    } else {
-                      fetchAllMonthsData();
-                    }
-                  }}
+                  onClick={() => fetchSalaryData(selectedMonth)}
                   disabled={isLoadingMonth}
-                  className="flex items-center px-4 py-2 font-semibold text-white transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center px-3 md:px-4 py-1.5 md:py-2 font-medium text-white transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
                   {isLoadingMonth ? (
                     <>
-                      <svg className="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
+                      <RefreshCw className="w-3 h-3 mr-2 md:w-4 md:h-4 animate-spin" />
                       Loading...
                     </>
                   ) : (
                     <>
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Refresh
+                      <RefreshCw className="w-3 h-3 mr-2 md:w-4 md:h-4" />
+                      <span className="hidden md:inline">Refresh</span>
                     </>
                   )}
                 </button>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* Quick Month Selection Grid */}
-            {/* <div className="pt-4 border-t border-gray-200">
-              <p className="mb-2 text-sm font-medium text-gray-600">Quick Select Last 12 Months:</p>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6">
-                {last12Months.map((month, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleQuickMonthSelect(month.value)}
-                    className={`px-3 py-2 text-sm rounded-lg border ${
-                      selectedMonth === month.value
-                        ? 'bg-blue-100 text-blue-800 border-blue-300'
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-300'
-                    }`}
-                  >
-                    {month.display}
-                  </button>
-                ))}
-              </div>
-            </div> */}
+        {/* Month Type Notice */}
+        <div className={`px-3 py-2 mb-4 md:mb-6 rounded-md shadow-sm ${
+          monthInfo.isHistorical 
+            ? 'bg-green-50 border-l-2 border-green-500' 
+            : monthInfo.isCurrent
+            ? (monthInfo.includeWeekOff 
+                ? 'bg-green-50 border-l-2 border-green-500' 
+                : 'bg-yellow-50 border-l-2 border-yellow-500')
+            : 'bg-blue-50 border-l-2 border-blue-500'
+        }`}>
+          <div className="flex items-center">
+            <div className="mr-2">
+              {monthInfo.isHistorical ? (
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              ) : monthInfo.isCurrent ? (
+                monthInfo.includeWeekOff ? (
+                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.406 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                )
+              ) : (
+                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              )}
+            </div>
+            <div>
+              <p className="text-xs font-medium">
+                {monthInfo.isHistorical 
+                  ? "✓ Historical Month - Full salary with week-off included | Payslip download available" 
+                  : monthInfo.isCurrent
+                  ? (monthInfo.includeWeekOff 
+                      ? `✓ Current Month (After 26th) - Week-off included | ${monthInfo.canDownload ? 'Payslip download available' : 'Payslip available after 30th'}`
+                      : `Current Month (Before 26th) - Week-off will be added after 26th | ${monthInfo.canDownload ? 'Payslip download available' : 'Payslip available after 30th'}`)
+                  : "Future Month - Preview only"}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Stats Overview - Only for current employee */}
-        <div className="grid grid-cols-1 gap-6 mb-6 md:grid-cols-3">
-          <div className="p-6 bg-white border-l-4 border-blue-500 shadow-lg rounded-2xl">
+        <div className="grid grid-cols-1 gap-3 mb-4 md:gap-4 md:mb-6 md:grid-cols-3">
+          <div className="p-3 bg-white border-l-2 border-blue-500 shadow md:p-4 md:border-l-4 rounded-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Salary Records</p>
-                <p className="text-2xl font-bold text-gray-800">{filteredRecords.length}</p>
+                <p className="text-xs font-medium text-gray-600 md:text-sm">Total Salary Records</p>
+                <p className="text-lg font-bold text-gray-800 md:text-xl">{filteredRecords.length}</p>
                 <p className="text-xs text-gray-500">{selectedMonth ? 'For selected month' : 'All months'}</p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <FileText className="w-6 h-6 text-blue-600" />
+              <div className="p-2 bg-blue-100 rounded-full md:p-3">
+                <FileText className="w-5 h-5 text-blue-600 md:w-6 md:h-6" />
               </div>
             </div>
           </div>
 
-          <div className="p-6 bg-white border-l-4 border-green-500 shadow-lg rounded-2xl">
+          <div className="p-3 bg-white border-l-2 border-green-500 shadow md:p-4 md:border-l-4 rounded-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Salary Earned</p>
-                <p className="text-2xl font-bold text-gray-800">
+                <p className="text-xs font-medium text-gray-600 md:text-sm">Total Salary Earned</p>
+                <p className="text-lg font-bold text-gray-800 md:text-xl">
                   ₹{filteredRecords.reduce((sum, emp) => sum + (emp.calculatedSalary || 0), 0).toLocaleString()}
                 </p>
                 <p className="text-xs text-gray-500">
                   {selectedMonth ? 'This month' : 'All months total'}
                 </p>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-2 bg-green-100 rounded-full md:p-3">
+                <svg className="w-5 h-5 text-green-600 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
             </div>
           </div>
 
-          <div className="p-6 bg-white border-l-4 border-purple-500 shadow-lg rounded-2xl">
+          <div className="p-3 bg-white border-l-2 border-purple-500 shadow md:p-4 md:border-l-4 rounded-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Average Monthly Salary</p>
-                <p className="text-2xl font-bold text-gray-800">
-                  ₹{filteredRecords.length > 0
-                    ? Math.round(filteredRecords.reduce((sum, emp) => sum + (emp.calculatedSalary || 0), 0) / filteredRecords.length)
-                    : 0}
+                <p className="text-xs font-medium text-gray-600 md:text-sm">Available for Download</p>
+                <p className="text-lg font-bold text-gray-800 md:text-xl">
+                  {filteredRecords.filter(emp => emp.canDownload).length}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {selectedMonth ? 'Current month' : 'Monthly average'}
+                  {filteredRecords.filter(emp => !emp.canDownload).length > 0 
+                    ? `${filteredRecords.filter(emp => !emp.canDownload).length} pending` 
+                    : 'All available'}
                 </p>
               </div>
-              <div className="p-3 bg-purple-100 rounded-full">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div className="p-2 bg-purple-100 rounded-full md:p-3">
+                <Download className="w-5 h-5 text-purple-600 md:w-6 md:h-6" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Table Container - Only current employee data */}
-        <div className="overflow-hidden bg-white border border-blue-200 shadow-xl rounded-2xl">
+        <div className="overflow-hidden bg-white border border-blue-200 shadow-lg rounded-xl md:rounded-2xl">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-max">
               <thead className="text-white bg-gradient-to-r from-blue-600 to-indigo-700">
                 <tr>
-                  <th className="p-4 font-semibold text-left">Month</th>
-                  <th className="p-4 font-semibold text-center">Present Days</th>
-                  <th className="p-4 font-semibold text-center">Working Days</th>
-                  <th className="p-4 font-semibold text-center">Half Days</th>
-                  <th className="p-4 font-semibold text-center">WeekOff Days</th>
-                  <th className="p-4 font-semibold text-center">Leaves</th>
-                  <th className="p-4 font-semibold text-center">Salary</th>
-                  <th className="p-4 font-semibold text-center">Actions</th>
+                  <th className="p-3 text-xs font-semibold text-left md:text-sm">Month</th>
+                  <th className="p-3 text-xs font-semibold text-center md:text-sm">Present Days</th>
+                  <th className="p-3 text-xs font-semibold text-center md:text-sm">Working Days</th>
+                  <th className="p-3 text-xs font-semibold text-center md:text-sm">Half Days</th>
+                  <th className="p-3 text-xs font-semibold text-center md:text-sm">WeekOff Days</th>
+                  <th className="p-3 text-xs font-semibold text-center md:text-sm">Leaves</th>
+                  <th className="p-3 text-xs font-semibold text-center md:text-sm">Salary</th>
+                  <th className="p-3 text-xs font-semibold text-center md:text-sm">Status</th>
+                  <th className="p-3 text-xs font-semibold text-center md:text-sm">Actions</th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-gray-200">
                 {currentRecords.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="p-8 text-center">
+                    <td colSpan="9" className="p-6 text-center md:p-8">
                       <div className="flex flex-col items-center justify-center text-gray-500">
-                        <svg className="w-16 h-16 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-12 h-12 mb-3 text-gray-400 md:w-16 md:h-16 md:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p className="text-lg font-medium">
+                        <p className="text-base font-medium md:text-lg">
                           {selectedMonth
                             ? `No salary record found for ${formatMonthDisplay(selectedMonth)}`
                             : searchTerm
@@ -1909,11 +1969,11 @@ export default function EmployeeDashboard() {
                               : 'No salary records found for you'
                           }
                         </p>
-                        <p className="text-sm">Contact HR if you believe this is an error</p>
+                        <p className="text-xs md:text-sm">Contact HR if you believe this is an error</p>
                         {(selectedMonth || searchTerm) && (
                           <button
                             onClick={handleClearFilter}
-                            className="px-4 py-2 mt-4 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                            className="px-3 md:px-4 py-1.5 md:py-2 mt-3 md:mt-4 text-white bg-blue-600 rounded-lg hover:bg-blue-700 text-sm"
                           >
                             Clear Filters
                           </button>
@@ -1924,6 +1984,7 @@ export default function EmployeeDashboard() {
                 ) : (
                   currentRecords.map((emp, index) => {
                     const dailyRate = calculateDailyRate(emp);
+                    const isCurrentMonth = emp.isCurrentMonth;
 
                     return (
                       <tr
@@ -1931,66 +1992,88 @@ export default function EmployeeDashboard() {
                         className={`hover:bg-blue-50 transition duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                           }`}
                       >
-                        <td className="p-4 font-medium text-gray-900">
+                        <td className="p-3 font-medium text-gray-900 md:p-4">
                           <div>
-                            <div className="font-semibold">{emp.monthFormatted || formatMonthDisplay(emp.month)}</div>
+                            <div className="text-sm font-semibold md:text-base">{emp.monthFormatted || formatMonthDisplay(emp.month)}</div>
                             <div className="text-xs text-gray-500">{emp.monthDays || 30} days in month</div>
+                            {isCurrentMonth && (
+                              <div className="text-xs text-blue-600">Current Month</div>
+                            )}
                           </div>
                         </td>
 
-                        <td className="p-4 text-center">
-                          <span className="px-3 py-1 text-sm font-medium text-green-800 bg-green-100 rounded-full">
+                        <td className="p-3 text-center md:p-4">
+                          <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full md:px-3">
                             {emp.presentDays || 0}
                           </span>
                         </td>
 
-                        <td className="p-4 text-center">
-                          <span className="px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">
+                        <td className="p-3 text-center md:p-4">
+                          <span className="px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full md:px-3">
                             {emp.workingDays || 0}
                           </span>
                         </td>
 
-                        <td className="p-4 text-center">
-                          <span className="px-3 py-1 text-sm font-medium text-yellow-800 bg-yellow-100 rounded-full">
+                        <td className="p-3 text-center md:p-4">
+                          <span className="px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded-full md:px-3">
                             {emp.halfDays || 0}
                           </span>
                         </td>
 
-                        <td className="p-4 text-center">
-                          <span className="px-3 py-1 text-sm font-medium text-purple-800 bg-purple-100 rounded-full">
+                        <td className="p-3 text-center md:p-4">
+                          <span className="px-2 py-1 text-xs font-medium text-purple-800 bg-purple-100 rounded-full md:px-3">
                             {emp.weekOffs || 0}
                           </span>
+                          {!emp.includeWeekOffInSalary && (
+                            <div className="mt-1 text-xs text-gray-500">After 26th</div>
+                          )}
                         </td>
 
-                        <td className="p-4 text-center">
-                          <span className="px-3 py-1 text-sm font-medium text-red-800 bg-red-100 rounded-full">
+                        <td className="p-3 text-center md:p-4">
+                          <span className="px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded-full md:px-3">
                             {emp.totalLeaves || 0}
                           </span>
                         </td>
 
-                        <td className="p-4 text-center">
+                        <td className="p-3 text-center md:p-4">
                           <div>
-                            <div className="font-semibold text-green-700">₹{emp.calculatedSalary || 0}</div>
+                            <div className="text-sm font-semibold text-green-700 md:text-base">₹{emp.calculatedSalary || 0}</div>
                             <div className="text-xs text-gray-500">₹{dailyRate}/day</div>
                           </div>
                         </td>
 
-                        <td className="p-4 text-center">
-                          <div className="flex justify-center space-x-2">
+                        <td className="p-3 text-center md:p-4">
+                          {emp.canDownload ? (
+                            <span className="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full md:px-3">
+                              Available
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded-full md:px-3">
+                              From 30th
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="p-3 text-center md:p-4">
+                          <div className="flex justify-center space-x-1 md:space-x-2">
                             <button
                               onClick={() => handleViewDetails(emp)}
-                              className="p-2 text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600"
+                              className="p-1.5 md:p-2 text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600"
                               title="View Details"
                             >
-                              <Eye size={16} />
+                              <Eye size={14} className="md:w-4 md:h-4" />
                             </button>
 
                             <button
                               onClick={() => downloadSalarySlip(emp)}
-                              className="p-2 text-white transition duration-200 bg-purple-500 rounded-lg hover:bg-purple-600"
-                              title="Download Salary Slip"
+                              disabled={!emp.canDownload}
+                              className={`p-1.5 md:p-2 transition duration-200 rounded-lg ${emp.canDownload
+                                  ? 'text-white bg-purple-500 hover:bg-purple-600'
+                                  : 'text-gray-400 bg-gray-200 cursor-not-allowed'
+                                }`}
+                              title={emp.canDownload ? "Download Salary Slip" : "Available from 30th"}
                             >
-                              <FileText size={16} />
+                              <FileText size={14} className="md:w-4 md:h-4" />
                             </button>
                           </div>
                         </td>
@@ -2004,20 +2087,20 @@ export default function EmployeeDashboard() {
 
           {/* Pagination */}
           {filteredRecords.length > 0 && (
-            <div className="px-6 py-4 bg-white border-t border-gray-200">
-              <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-                <div className="text-sm text-gray-600">
+            <div className="px-4 py-3 bg-white border-t border-gray-200">
+              <div className="flex flex-col items-center justify-between gap-3 md:flex-row">
+                <div className="text-xs text-gray-600 md:text-sm">
                   Showing {indexOfFirstRecord + 1} to {Math.min(indexOfLastRecord, filteredRecords.length)} of {filteredRecords.length} entries
                   {selectedMonth && ` for ${formatMonthDisplay(selectedMonth)}`}
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 md:space-x-2">
                   <button
                     onClick={handlePrevious}
                     disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-lg border ${currentPage === 1
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                    className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg border text-sm ${currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
                       }`}
                   >
                     Previous
@@ -2028,9 +2111,9 @@ export default function EmployeeDashboard() {
                       <button
                         key={pageNumber}
                         onClick={() => handlePageClick(pageNumber)}
-                        className={`px-4 py-2 rounded-lg border ${currentPage === pageNumber
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                        className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg border text-sm ${currentPage === pageNumber
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
                           }`}
                       >
                         {pageNumber}
@@ -2041,9 +2124,9 @@ export default function EmployeeDashboard() {
                   <button
                     onClick={handleNext}
                     disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-lg border ${currentPage === totalPages
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                    className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg border text-sm ${currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
                       }`}
                   >
                     Next
@@ -2055,108 +2138,140 @@ export default function EmployeeDashboard() {
         </div>
       </div>
 
-      {/* ✅ Details Modal - Same Page Par Hi Show Hoga */}
+      {/* ✅ Details Modal */}
       {showDetailsModal && selectedEmployee && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-lg font-bold text-gray-800 md:text-xl">
                 Salary Details - {selectedEmployee.monthFormatted || formatMonthDisplay(selectedEmployee.month)}
               </h2>
               <button
                 onClick={handleCloseModal}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <X size={24} />
+                <X size={20} className="md:w-6 md:h-6" />
               </button>
             </div>
 
-            <div className="p-4 mb-4 rounded-lg bg-gray-50">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
-                  <span className="text-lg font-semibold text-blue-800">
+            {/* Important Info Banner */}
+            {!selectedEmployee.canDownload && (
+              <div className="p-3 mb-4 bg-yellow-100 border border-yellow-300 rounded-lg">
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-yellow-600 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-xs font-medium text-yellow-800 md:text-sm">
+                    This month's salary slip will be available for download from 30th onwards.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {!selectedEmployee.includeWeekOffInSalary && (
+              <div className="p-3 mb-4 bg-blue-100 border border-blue-300 rounded-lg">
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-blue-600 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-xs font-medium text-blue-800 md:text-sm">
+                    Weekoff salary for this month will be added after 26th.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="p-3 mb-4 rounded-lg md:p-4 bg-gray-50">
+              <div className="flex items-center space-x-3 md:space-x-4">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full md:w-12 md:h-12">
+                  <span className="text-base font-semibold text-blue-800 md:text-lg">
                     {currentEmployee?.name?.charAt(0) || selectedEmployee.name?.charAt(0) || 'E'}
                   </span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
+                  <h3 className="text-base font-semibold text-gray-800 md:text-lg">
                     {currentEmployee?.name || selectedEmployee.name}
                   </h3>
-                  <p className="text-sm text-gray-600">ID: {selectedEmployee.employeeId}</p>
-                  <p className="text-sm text-gray-600">Month: {selectedEmployee.monthFormatted || formatMonthDisplay(selectedEmployee.month)}</p>
-                  <p className="text-sm text-gray-600">Days in Month: {selectedEmployee.monthDays || 30}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="p-3 bg-white border rounded-lg">
-                <p className="text-sm text-gray-600">Present Days</p>
-                <p className="text-lg font-semibold text-green-600">{selectedEmployee.presentDays || 0}</p>
-              </div>
-              <div className="p-3 bg-white border rounded-lg">
-                <p className="text-sm text-gray-600">Working Days</p>
-                <p className="text-lg font-semibold text-blue-600">{selectedEmployee.workingDays || 0}</p>
-              </div>
-              <div className="p-3 bg-white border rounded-lg">
-                <p className="text-sm text-gray-600">Half Days</p>
-                <p className="text-lg font-semibold text-yellow-600">{selectedEmployee.halfDays || 0}</p>
-              </div>
-              <div className="p-3 bg-white border rounded-lg">
-                <p className="text-sm text-gray-600">WeekOff Days</p>
-                <p className="text-lg font-semibold text-purple-600">{selectedEmployee.weekOffs || 0}</p>
-              </div>
-              <div className="p-3 bg-white border rounded-lg">
-                <p className="text-sm text-gray-600">Late Days</p>
-                <p className="text-lg font-semibold text-red-600">{selectedEmployee.lateDays || 0}</p>
-              </div>
-              <div className="p-3 bg-white border rounded-lg">
-                <p className="text-sm text-gray-600">Total Leaves</p>
-                <p className="text-lg font-semibold text-orange-600">{selectedEmployee.totalLeaves || 0}</p>
-              </div>
-              <div className="p-3 bg-white border rounded-lg">
-                <p className="text-sm text-gray-600">Month Days</p>
-                <p className="text-lg font-semibold text-gray-800">{selectedEmployee.monthDays || 30}</p>
-              </div>
-              <div className="p-3 bg-white border rounded-lg">
-                <p className="text-sm text-gray-600">Daily Rate</p>
-                <p className="text-lg font-semibold text-blue-700">₹{calculateDailyRate(selectedEmployee)}/day</p>
-              </div>
-            </div>
-
-            <div className="p-4 mb-4 rounded-lg bg-blue-50">
-              <h3 className="mb-2 text-lg font-semibold text-blue-800">Salary Information</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 bg-white border rounded-lg">
-                  <p className="text-sm text-gray-600">Monthly Salary</p>
-                  <p className="text-lg font-semibold text-blue-700">₹{selectedEmployee.salaryPerMonth || 0}</p>
-                </div>
-                <div className="p-3 bg-white border rounded-lg">
-                  <p className="text-sm text-gray-600">Calculated Salary</p>
-                  <p className="text-lg font-semibold text-green-600">₹{selectedEmployee.calculatedSalary || 0}</p>
-                </div>
-                {/* <div className="p-3 bg-white border rounded-lg col-span-2">
-                  <p className="text-sm text-gray-600">Calculation</p>
-                  <p className="text-sm text-gray-700">
-                    ({selectedEmployee.presentDays || 0} present days + 
-                    {(selectedEmployee.halfDays || 0) > 0 ? ` + ${selectedEmployee.halfDays} half days (0.5 each)` : ''} + 
-                    {(selectedEmployee.weekOffs || 0) > 0 ? ` + ${selectedEmployee.weekOffs} weekoff days` : ''}) × 
-                    ₹{calculateDailyRate(selectedEmployee)}/day
+                  <p className="text-xs text-gray-600 md:text-sm">ID: {selectedEmployee.employeeId}</p>
+                  <p className="text-xs text-gray-600 md:text-sm">Month: {selectedEmployee.monthFormatted || formatMonthDisplay(selectedEmployee.month)}</p>
+                  <p className="text-xs text-gray-600 md:text-sm">Days in Month: {selectedEmployee.monthDays || 30}</p>
+                  <p className={`text-xs md:text-sm ${selectedEmployee.isHistoricalMonth ? 'text-green-600' : selectedEmployee.isCurrentMonth ? 'text-blue-600' : 'text-gray-600'}`}>
+                    {selectedEmployee.isHistoricalMonth 
+                      ? 'Historical Month - Full salary' 
+                      : selectedEmployee.isCurrentMonth 
+                      ? `Current Month - ${selectedEmployee.includeWeekOffInSalary ? 'Week-off included' : 'Week-off after 26th'}` 
+                      : 'Future Month'}
                   </p>
-                </div> */}
+                </div>
               </div>
             </div>
 
-            <div className="flex justify-end pt-4 border-t border-gray-200">
+            <div className="grid grid-cols-2 gap-3 mb-4 md:gap-4 md:mb-6">
+              <div className="p-2 bg-white border rounded-lg md:p-3">
+                <p className="text-xs text-gray-600 md:text-sm">Present Days</p>
+                <p className="text-base font-semibold text-green-600 md:text-lg">{selectedEmployee.presentDays || 0}</p>
+              </div>
+              <div className="p-2 bg-white border rounded-lg md:p-3">
+                <p className="text-xs text-gray-600 md:text-sm">Working Days</p>
+                <p className="text-base font-semibold text-blue-600 md:text-lg">{selectedEmployee.workingDays || 0}</p>
+              </div>
+              <div className="p-2 bg-white border rounded-lg md:p-3">
+                <p className="text-xs text-gray-600 md:text-sm">Half Days</p>
+                <p className="text-base font-semibold text-yellow-600 md:text-lg">{selectedEmployee.halfDays || 0}</p>
+              </div>
+              <div className="p-2 bg-white border rounded-lg md:p-3">
+                <p className="text-xs text-gray-600 md:text-sm">WeekOff Days</p>
+                <p className="text-base font-semibold text-purple-600 md:text-lg">{selectedEmployee.weekOffs || 0}</p>
+                {!selectedEmployee.includeWeekOffInSalary && (
+                  <p className="text-xs text-gray-500">(After 26th)</p>
+                )}
+              </div>
+              <div className="p-2 bg-white border rounded-lg md:p-3">
+                <p className="text-xs text-gray-600 md:text-sm">Total Leaves</p>
+                <p className="text-base font-semibold text-orange-600 md:text-lg">{selectedEmployee.totalLeaves || 0}</p>
+              </div>
+              <div className="p-2 bg-white border rounded-lg md:p-3">
+                <p className="text-xs text-gray-600 md:text-sm">Month Days</p>
+                <p className="text-base font-semibold text-gray-800 md:text-lg">{selectedEmployee.monthDays || 30}</p>
+              </div>
+              <div className="p-2 bg-white border rounded-lg md:p-3">
+                <p className="text-xs text-gray-600 md:text-sm">Daily Rate</p>
+                <p className="text-base font-semibold text-blue-700 md:text-lg">₹{calculateDailyRate(selectedEmployee)}/day</p>
+              </div>
+              <div className="col-span-2 p-2 bg-white border rounded-lg md:p-3">
+                <p className="text-xs text-gray-600 md:text-sm">Approved Leaves</p>
+                <p className="text-sm font-semibold text-red-600 md:text-base">{getLeaveTypes(selectedEmployee)}</p>
+              </div>
+            </div>
+
+            <div className="p-3 mb-4 rounded-lg md:p-4 bg-blue-50">
+              <h3 className="mb-2 text-base font-semibold text-blue-800 md:text-lg">Salary Information</h3>
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
+                <div className="p-2 bg-white border rounded-lg md:p-3">
+                  <p className="text-xs text-gray-600 md:text-sm">Monthly Salary</p>
+                  <p className="text-base font-semibold text-blue-700 md:text-lg">₹{selectedEmployee.salaryPerMonth || 0}</p>
+                </div>
+                <div className="p-2 bg-white border rounded-lg md:p-3">
+                  <p className="text-xs text-gray-600 md:text-sm">Calculated Salary</p>
+                  <p className="text-base font-semibold text-green-600 md:text-lg">₹{selectedEmployee.calculatedSalary || 0}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col justify-end pt-4 space-y-2 border-t border-gray-200 md:flex-row md:space-y-0 md:space-x-2">
               <button
                 onClick={() => downloadSalarySlip(selectedEmployee)}
-                className="px-4 py-2 mr-2 text-white transition duration-200 bg-purple-500 rounded-lg hover:bg-purple-600"
+                disabled={!selectedEmployee.canDownload}
+                className={`px-4 py-2 transition duration-200 rounded-lg text-sm ${selectedEmployee.canDownload
+                    ? 'text-white bg-purple-500 hover:bg-purple-600'
+                    : 'text-gray-400 bg-gray-200 cursor-not-allowed'
+                  }`}
               >
-                Download Slip
+                {selectedEmployee.canDownload ? 'Download Slip' : 'Available from 30th'}
               </button>
               <button
                 onClick={handleCloseModal}
-                className="px-6 py-2 text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600"
+                className="px-4 py-2 text-sm text-white transition duration-200 bg-blue-500 rounded-lg md:px-6 hover:bg-blue-600"
               >
                 Close
               </button>
