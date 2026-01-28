@@ -144,7 +144,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/admin-login" element={<Login />} />
       <Route path="/employee-login" element={<Login />} />
-      <Route path="/employeedashboard" element={<EmployeeDashboard />} />
+      <Route path="/employeedashboard" element={<EmployeeLayout><EmployeeDashboard /></EmployeeLayout>} />
       <Route path="/leave-application" element={<EmployeeLayout><LeaveApplication /></EmployeeLayout>} />
       <Route path="/myleaves" element={<EmployeeLayout><EmployeeLeaves /></EmployeeLayout>} />
       <Route path="/attendance-capture" element={<EmployeeLayout><AttendanceCapture /></EmployeeLayout>} />

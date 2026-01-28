@@ -3,22 +3,34 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 // import EmployeeSidebar from "../Components/EmployeeSidebar";
 
-
-const LeaveRequestForm = ({ defaultEmployeeId = "", defaultEmployeeName = "" }) => {
+const LeaveRequestForm = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    employeeId: defaultEmployeeId,
-    employeeName: defaultEmployeeName,
-    leaveType: "Enter Leave Type",
-    startDate: "Enter Start Date",
-    endDate: "Enter End Date",
+    employeeId: "",
+    employeeName: "",
+    leaveType: "casual",
+    startDate: "",
+    endDate: "",
     days: 0,
     reason: "",
   });
 
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Get employee details from localStorage
+  useEffect(() => {
+    const employeeData = JSON.parse(localStorage.getItem("employeeData"));
+    
+    if (employeeData) {
+      setFormData(prev => ({
+        ...prev,
+        employeeId: employeeData.employeeId || "",
+        employeeName: employeeData.name || employeeData.employeeName || ""
+      }));
+    }
+  }, []);
 
   // Automatically calculate days if start or end date changes
   useEffect(() => {
@@ -84,11 +96,11 @@ const LeaveRequestForm = ({ defaultEmployeeId = "", defaultEmployeeName = "" }) 
       }
 
       setFormData({
-        employeeId: defaultEmployeeId,
-        employeeName: defaultEmployeeName,
-        leaveType: "Enter Leave Type",
-        startDate: "Enter Start Date",
-        endDate: "Enter ENd Date",
+        employeeId: formData.employeeId,
+        employeeName: formData.employeeName,
+        leaveType: "casual",
+        startDate: "",
+        endDate: "",
         days: 0,
         reason: "",
       });
@@ -101,10 +113,7 @@ const LeaveRequestForm = ({ defaultEmployeeId = "", defaultEmployeeName = "" }) 
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-
-
       <div className="flex-1 flex flex-col">
-
         <div className="p-6">
           <div className="max-w-md mx-auto bg-white rounded shadow p-6">
             {/* ✅ Back Button */}
@@ -129,16 +138,16 @@ const LeaveRequestForm = ({ defaultEmployeeId = "", defaultEmployeeName = "" }) 
               <input
                 name="employeeId"
                 value={formData.employeeId}
-                onChange={handleChange}
-                className="mb-2 p-2 border rounded w-full"
+                readOnly
+                className="mb-2 p-2 border rounded w-full bg-gray-100 cursor-not-allowed"
                 placeholder="Employee ID"
                 required
               />
               <input
                 name="employeeName"
                 value={formData.employeeName}
-                onChange={handleChange}
-                className="mb-2 p-2 border rounded w-full"
+                readOnly
+                className="mb-2 p-2 border rounded w-full bg-gray-100 cursor-not-allowed"
                 placeholder="Employee Name"
                 required
               />
