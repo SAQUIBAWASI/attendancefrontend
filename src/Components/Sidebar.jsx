@@ -140,6 +140,11 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
       path: "/useractivity" 
     },
     { 
+      icon: <i className="ri-lock-2-fill"></i>,
+      name: "User Access",
+      path: "/useraccess" 
+    },
+    { 
       icon: <i className="ri-file-chart-fill"></i>, 
       name: "Reports", 
       path: "/leaves-report" 

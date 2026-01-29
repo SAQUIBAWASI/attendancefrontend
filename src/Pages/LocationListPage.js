@@ -190,7 +190,10 @@ const LocationListPage = () => {
 
           {/* Add Location Button */}
           <button
-            onClick={() => navigate("/addlocation")}
+            onClick={() => {
+              const isEmployee = window.location.pathname.startsWith("/emp-");
+              navigate(isEmployee ? "/emp-add-location" : "/addlocation");
+            }}
             className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
           >
             📍 Add Location

@@ -164,6 +164,25 @@ function App() {
       <Route path="/whoweserve" element={<WhoWeServePage />}></Route>
       <Route path="/contact" element={<ContactPage />}></Route>
       <Route path="/mysalary" element={<EmployeeLayout><EmployeeSalary /></EmployeeLayout>} />
+      
+      {/* ✅ Shared Admin Features for Employees (Wrapped in EmployeeLayout) */}
+      <Route path="/emp-employees" element={<EmployeeLayout><EmployeeList /></EmployeeLayout>} />
+      <Route path="/emp-attendance-summary" element={<EmployeeLayout><AttendanceSummary /></EmployeeLayout>} />
+      <Route path="/emp-attendance-records" element={<EmployeeLayout><AttendanceList /></EmployeeLayout>} />
+      <Route path="/emp-today-attendance" element={<EmployeeLayout><TodayAttendance /></EmployeeLayout>} />
+      <Route path="/emp-absent-today" element={<EmployeeLayout><AbsentToday /></EmployeeLayout>} />
+      <Route path="/emp-leaves" element={<EmployeeLayout><LeavesList /></EmployeeLayout>} />
+      <Route path="/emp-payroll" element={<EmployeeLayout><PayRoll /></EmployeeLayout>} />
+      <Route path="/emp-reports" element={<EmployeeLayout><LeavesReport /></EmployeeLayout>} />
+      <Route path="/emp-locations" element={<EmployeeLayout><LocationListPage /></EmployeeLayout>} />
+      <Route path="/emp-locations" element={<EmployeeLayout><LocationListPage /></EmployeeLayout>} />
+      <Route path="/emp-shifts" element={<EmployeeLayout><ShiftManagement /></EmployeeLayout>} />
+      <Route path="/emp-user-activity" element={<EmployeeLayout><UserActivity /></EmployeeLayout>} />
+      <Route path="/emp-add-employee" element={<EmployeeLayout><AddEmployeePage /></EmployeeLayout>} />
+      <Route path="/emp-admin-dashboard" element={<EmployeeLayout><Dashboard /></EmployeeLayout>} />
+      <Route path="/emp-user-access" element={<EmployeeLayout><UserAccessManagement /></EmployeeLayout>} />
+      <Route path="/emp-add-location" element={<EmployeeLayout><AddLocationPage /></EmployeeLayout>} />
+
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"

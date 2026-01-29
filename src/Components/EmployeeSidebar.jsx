@@ -266,13 +266,58 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
     return dropdownItems.some(item => isActive(item.path));
   };
 
+<<<<<<< HEAD
   const elements = [
+=======
+  // Permissions State
+  const [permissions, setPermissions] = useState([]);
+
+  // Fetch permissions on mount
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      const storedId = localStorage.getItem("employeeId");
+      if (!storedId) return;
+
+      try {
+        const response = await axios.get(`http://localhost:5000/api/employees/get-employee?employeeId=${storedId}`);
+        if (response.data && response.data.data) {
+          const fetchedPermissions = response.data.data.permissions || [];
+          setPermissions(fetchedPermissions);
+          // Also update local storage to keep it in sync
+          localStorage.setItem("employeePermissions", JSON.stringify(fetchedPermissions));
+        }
+      } catch (error) {
+        console.error("Failed to fetch permissions", error);
+        // Fallback to local storage if API fails
+        const localPermissions = JSON.parse(localStorage.getItem("employeePermissions") || "[]");
+        setPermissions(localPermissions);
+      }
+    };
+
+    fetchPermissions();
+  }, []);
+
+  // Helper to check permission
+  const hasPermission = (permission) => {
+    // If no permissions are set (legacy or new user), maybe restrict or allow all? 
+    // For safety, if permissions array exists but is empty, restrict. 
+    // If it doesn't exist (null), maybe allow basic? 
+    // Let's assume if it exists, we stick to it.
+    if (!permissions.length) return false;
+    return permissions.includes(permission);
+  };
+
+  const allElements = [
+    // --- Standard Employee Features (Always Visible) ---
+>>>>>>> 0d6be5ea1a47e30f9190624f14fa9d289cf7d9e1
     {
       icon: <i className="ri-dashboard-fill"></i>,
       name: "Dashboard",
       path: "/employeedashboard",
-      exact: true
+      exact: true,
+      permission: "ALLOW_ALWAYS" // Default for employees
     },
+<<<<<<< HEAD
 
     {
       icon: <i className="ri-calendar-close-fill"></i>,
@@ -283,28 +328,139 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
       icon: <i className="ri-calendar-close-fill"></i>,
       name: "My Permissions",
       path: "/mypermissions"
+=======
+    {
+      icon: <i className="ri-calendar-close-fill"></i>,
+      name: "Leave",
+      path: "/leave-application",
+      permission: "ALLOW_ALWAYS"
+>>>>>>> 0d6be5ea1a47e30f9190624f14fa9d289cf7d9e1
     },
     {
       icon: <i className="ri-file-chart-fill"></i>,
       name: "Attendance",
       dropdown: [
-        { name: "Check In", path: "/attendance-capture" },
-        { name: "Attendance Report", path: "/myattendance" },
-        { name: "My Shift", path: "/my-shift" },
-        { name: "My Assigned Location", path: "/mylocation" },
+        { name: "Check In", path: "/attendance-capture", permission: "ALLOW_ALWAYS" },
+        { name: "Attendance Report", path: "/myattendance", permission: "ALLOW_ALWAYS" },
+        { name: "My Shift", path: "/my-shift", permission: "ALLOW_ALWAYS" },
+        { name: "My Assigned Location", path: "/mylocation", permission: "ALLOW_ALWAYS" },
       ],
+      permission: "ALLOW_ALWAYS"
     },
     {
       icon: <i className="ri-money-dollar-box-fill"></i>,
       name: "Salary",
+<<<<<<< HEAD
       path: "/mysalary"
     },
     {
       icon: <i className="ri-logout-box-fill"></i>,
       name: "Logout",
       action: handleLogout
+=======
+      path: "/mysalary",
+      permission: "ALLOW_ALWAYS"
+    },
+
+    // --- Admin Features (Requires Permission) ---
+    {
+      icon: <i className="ri-dashboard-3-fill"></i>,
+      name: "Main Dashboard",
+      path: "/emp-admin-dashboard",
+      permission: "dashboard_view"
+    },
+    {
+      icon: <i className="ri-user-fill"></i>,
+      name: "Employee",
+      path: "/emp-employees",
+      permission: "employee_view_all"
+    },
+    {
+      icon: <i className="ri-user-add-fill"></i>,
+      name: "Add Employee",
+      path: "/emp-add-employee",
+      permission: "employee_add"
+    },
+    {
+      icon: <i className="ri-calendar-check-fill"></i>,
+      name: "All Attendance",
+      dropdown: [
+        { name: "Attendance Summary", path: "/emp-attendance-summary", permission: "attendance_view_all" },
+        { name: "Attendance Records", path: "/emp-attendance-records", permission: "attendance_view_all" },
+        { name: "Today Attendance", path: "/emp-today-attendance", permission: "attendance_view_all" },
+        { name: "Absent Today", path: "/emp-absent-today", permission: "attendance_view_all" },
+      ],
+      permission: "attendance_view_all"
+    },
+    {
+      icon: <i className="ri-calendar-event-fill"></i>,
+      name: "Leave Approval",
+      path: "/emp-leaves",
+      permission: "leave_approve"
+    },
+    {
+      icon: <i className="ri-money-dollar-circle-fill"></i>,
+      name: "Payroll",
+      path: "/emp-payroll",
+      permission: "payroll_manage"
+    },
+    {
+      icon: <i className="ri-bar-chart-2-fill"></i>,
+      name: "Reports",
+      path: "/emp-reports",
+      permission: "reports_view"
+    },
+    {
+      icon: <i className="ri-map-pin-user-fill"></i>,
+      name: "Locations",
+      path: "/emp-locations",
+      permission: "locations_manage"
+    },
+    {
+      icon: <i className="ri-time-line"></i>,
+      name: "Shift",
+      path: "/emp-shifts",
+      permission: "shifts_manage"
+    },
+    {
+      icon: <i className="ri-user-search-fill"></i>,
+      name: "User Activity",
+      path: "/emp-user-activity",
+      permission: "user_activity_view"
+    },
+    {
+      icon: <i className="ri-lock-2-fill"></i>,
+      name: "User Access",
+      path: "/emp-user-access",
+      permission: "user_access_manage"
+    },
+
+    {
+      icon: <i className="ri-logout-box-fill"></i>,
+      name: "Logout",
+      action: handleLogout,
+      permission: "ALLOW_ALWAYS"
+>>>>>>> 0d6be5ea1a47e30f9190624f14fa9d289cf7d9e1
     },
   ];
+
+  const elements = allElements.filter(item => {
+    if (item.permission === "ALLOW_ALWAYS") return true;
+
+    // Check main item permission
+    if (item.permission && !hasPermission(item.permission)) return false;
+
+    // Filter dropdown items if they exist
+    if (item.dropdown) {
+      item.dropdown = item.dropdown.filter(sub =>
+        !sub.permission || hasPermission(sub.permission)
+      );
+      // If no dropdown items remain, hide the main item
+      if (item.dropdown.length === 0) return false;
+    }
+
+    return true;
+  });
 
   return (
     <>
@@ -430,7 +586,11 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
                             <Link
                               to={sub.path}
                               onClick={handleAnyClick}
+<<<<<<< HEAD
                               className={`flex items-center gap-2.5 py-1.5 px-0 text-[13px] transition-colors rounded ${isActive(sub.path)
+=======
+                              className={`flex items-center gap-2.5 py-1.5 px-3 text-[13px] transition-colors rounded ${isActive(sub.path)
+>>>>>>> 0d6be5ea1a47e30f9190624f14fa9d289cf7d9e1
                                 ? 'text-emerald-300 font-semibold bg-emerald-900/20'
                                 : 'text-blue-100 hover:text-emerald-300 hover:bg-blue-800/40'
                                 }`}

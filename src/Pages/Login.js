@@ -35,7 +35,8 @@ const LoginPage = () => {
       }
 
       // 2. Second Attempt (if Admin fails): Employee Login
-      const empResponse = await fetch("https://api.timelyhealth.in/api/employees/login", {
+      // Use local backend for development
+      const empResponse = await fetch("http://localhost:5000/api/employees/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -46,6 +47,7 @@ const LoginPage = () => {
       if (empResponse.ok) {
         // Success: Employee Login
         localStorage.setItem("employeeData", JSON.stringify(empData.employee));
+        localStorage.setItem("employeePermissions", JSON.stringify(empData.employee.permissions)); // ✅ Store permissions
         localStorage.setItem("employeeId", empData.employee._id);
         localStorage.setItem("employeeEmail", empData.employee.email);
         localStorage.setItem("employeeName", empData.employee.name);
