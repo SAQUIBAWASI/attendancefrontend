@@ -360,7 +360,27 @@
 //     };
 
 //     fetchTodayStatus();
+//     fetchTodayStatus();
 //   }, [employeeId, storageKey, today]);
+// 
+// // ✅ Fetch Active Permissions
+// // useEffect(() => {
+// //   const fetchPermissions = async () => {
+// //     if (!employeeId) return;
+// //     try {
+// //       const res = await fetch(`${BASE_URL}/api/permissions/my-permissions/${employeeId}`);
+// //       const data = await res.json();
+// //       if (res.ok) {
+// //         // Find if there is any APPROVED permission that is NOT COMPLETED
+// //         const active = data.find(p => p.status === "APPROVED");
+// //         setActivePermission(active);
+// //       }
+// //     } catch (err) {
+// //       console.error("Error fetching permissions:", err);
+// //     }
+// //   };
+// //   fetchPermissions();
+// // }, [employeeId]);
 
 //   // ✅ Fetch Geolocation
 //   const fetchLocation = () => {
@@ -1857,15 +1877,15 @@
 //   useEffect(() => {
 //     const fetchAssignedLocation = async () => {
 //       if (!employeeId) return;
-      
+
 //       setLoadingLocation(true);
 //       try {
 //         const res = await axios.get(`${BASE_URL}api/employees/mylocation/${employeeId}`);
 //         console.log("Location API Response:", res.data);
-        
+
 //         if (res.data.success && res.data.data) {
 //           setAssignedLocation(res.data.data.location);
-          
+
 //           // ✅ Extract employee name from API response
 //           if (res.data.data.employee && res.data.data.employee.name) {
 //             setEmployeeName(res.data.data.employee.name);
@@ -1873,7 +1893,7 @@
 //             const username = employeeEmail ? employeeEmail.split('@')[0] : '';
 //             setEmployeeName(username);
 //           }
-          
+
 //           setError("");
 //         } else {
 //           setError("❌ No assigned location found for this employee.");
@@ -1887,7 +1907,7 @@
 //         setLoadingLocation(false);
 //       }
 //     };
-    
+
 //     if (employeeId) {
 //       fetchAssignedLocation();
 //     }
@@ -1900,12 +1920,12 @@
 //       try {
 //         const res = await axios.get(`${BASE_URL}api/attendance/myattendance/${employeeId}`);
 //         const data = res.data;
-        
+
 //         // ✅ Get employee name from attendance API response too
 //         if (data.employeeName) {
 //           setEmployeeName(data.employeeName);
 //         }
-        
+
 //         const today = new Date();
 //         today.setHours(0, 0, 0, 0);
 //         const todayCheckIn = data.records?.find(
@@ -1916,7 +1936,7 @@
 //         console.error("Error fetching today attendance:", err);
 //       }
 //     };
-    
+
 //     if (employeeId) {
 //       fetchTodayAttendance();
 //     }
@@ -1925,14 +1945,14 @@
 //   // Get current live location
 //   const fetchLocation = () => {
 //     setLocationError("");
-    
+
 //     if (!navigator.geolocation) {
 //       setLocationError("Geolocation is not supported by your browser.");
 //       return alert("Geolocation is not supported by your browser.");
 //     }
 
 //     setPosition(null);
-    
+
 //     navigator.geolocation.getCurrentPosition(
 //       (pos) => {
 //         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -1985,7 +2005,7 @@
 
 //       alert(res.data.message);
 //       setCheckedIn(true);
-      
+
 //       // ✅ Update employee name from response
 //       if (res.data.employeeName) {
 //         setEmployeeName(res.data.employeeName);
@@ -2001,7 +2021,7 @@
 //   const handleCheckOut = async () => {
 //     if (!position) return alert("Please capture your current location first.");
 //     if (!employeeId) return alert("Employee data missing.");
-    
+
 //     // ✅ CONFIRMATION DIALOG ADDED HERE
 //     const isConfirmed = window.confirm("Are you sure you want to check out?");
 //     if (!isConfirmed) return;
@@ -2184,8 +2204,8 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) ** 2;
+    Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return Math.round(R * c);
 }
@@ -2193,7 +2213,7 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 export default function AttendanceCapture() {
   const navigate = useNavigate();
   const routerLocation = useLocation();
-  
+
   // Swipe related refs and state
   const swipeAreaRef = useRef(null);
   const [swipeProgress, setSwipeProgress] = useState(0);
@@ -2211,7 +2231,7 @@ export default function AttendanceCapture() {
   const [error, setError] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(true);
   const [locationError, setLocationError] = useState("");
-  
+
   // Current time state
   const [currentTime, setCurrentTime] = useState("");
 
@@ -2243,14 +2263,14 @@ export default function AttendanceCapture() {
   useEffect(() => {
     const fetchAssignedLocation = async () => {
       if (!employeeId) return;
-      
+
       setLoadingLocation(true);
       try {
         const res = await axios.get(`${BASE_URL}api/employees/mylocation/${employeeId}`);
-        
+
         if (res.data.success && res.data.data) {
           setAssignedLocation(res.data.data.location);
-          
+
           // Extract employee name from API response
           if (res.data.data.employee && res.data.data.employee.name) {
             setEmployeeName(res.data.data.employee.name);
@@ -2258,7 +2278,7 @@ export default function AttendanceCapture() {
             const username = employeeEmail ? employeeEmail.split('@')[0] : '';
             setEmployeeName(username);
           }
-          
+
           setError("");
         } else {
           setError("No assigned location found for this employee.");
@@ -2272,7 +2292,7 @@ export default function AttendanceCapture() {
         setLoadingLocation(false);
       }
     };
-    
+
     if (employeeId) {
       fetchAssignedLocation();
     }
@@ -2285,12 +2305,12 @@ export default function AttendanceCapture() {
       try {
         const res = await axios.get(`${BASE_URL}api/attendance/myattendance/${employeeId}`);
         const data = res.data;
-        
+
         // Get employee name from attendance API response too
         if (data.employeeName) {
           setEmployeeName(data.employeeName);
         }
-        
+
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const todayCheckIn = data.records?.find(
@@ -2301,7 +2321,7 @@ export default function AttendanceCapture() {
         console.error("Error fetching today attendance:", err);
       }
     };
-    
+
     if (employeeId) {
       fetchTodayAttendance();
     }
@@ -2321,14 +2341,14 @@ export default function AttendanceCapture() {
   // Get current live location
   const fetchLocation = () => {
     setLocationError("");
-    
+
     if (!navigator.geolocation) {
       setLocationError("Geolocation is not supported by your browser.");
       return alert("Geolocation is not supported by your browser.");
     }
 
     setPosition(null);
-    
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -2351,10 +2371,10 @@ export default function AttendanceCapture() {
         setLocationError(errorMessage);
         alert(errorMessage);
       },
-      { 
-        enableHighAccuracy: true, 
+      {
+        enableHighAccuracy: true,
         timeout: 15000,
-        maximumAge: 0 
+        maximumAge: 0
       }
     );
   };
@@ -2379,7 +2399,7 @@ export default function AttendanceCapture() {
 
       alert(res.data.message);
       setCheckedIn(true);
-      
+
       if (res.data.employeeName) {
         setEmployeeName(res.data.employeeName);
       }
@@ -2394,7 +2414,7 @@ export default function AttendanceCapture() {
   const handleCheckOut = async () => {
     if (!position) return alert("Please capture your current location first.");
     if (!employeeId) return alert("Employee data missing.");
-    
+
     const isConfirmed = window.confirm("Are you sure you want to check out?");
     if (!isConfirmed) return;
 
@@ -2435,7 +2455,7 @@ export default function AttendanceCapture() {
     const interval = setInterval(() => {
       progress += 0.1;
       setSwipeProgress(progress);
-      
+
       if (progress >= 1) {
         clearInterval(interval);
         setTimeout(() => {
@@ -2469,9 +2489,9 @@ export default function AttendanceCapture() {
 
     const onMove = (clientX) => {
       if (!isDragging) return;
-      
+
       const diff = clientX - startX;
-      
+
       if (!checkedIn && diff > 0) {
         // Check-in: right swipe
         const progress = Math.min(diff / minSwipeDistance, 1);
@@ -2485,10 +2505,10 @@ export default function AttendanceCapture() {
 
     const onEnd = (clientX) => {
       if (!isDragging) return;
-      
+
       isDragging = false;
       const diff = clientX - startX;
-      
+
       if (!checkedIn && diff >= minSwipeDistance) {
         // Successful right swipe for check-in
         handleCheckIn();
@@ -2496,7 +2516,7 @@ export default function AttendanceCapture() {
         // Successful left swipe for check-out
         handleCheckOut();
       }
-      
+
       // Reset after a delay
       setTimeout(() => {
         setSwipeProgress(0);
@@ -2535,7 +2555,7 @@ export default function AttendanceCapture() {
     swipeArea.addEventListener('mousedown', handleMouseDown);
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-    
+
     swipeArea.addEventListener('touchstart', handleTouchStart);
     document.addEventListener('touchmove', handleTouchMove);
     document.addEventListener('touchend', handleTouchEnd);
@@ -2545,7 +2565,7 @@ export default function AttendanceCapture() {
       swipeArea.removeEventListener('mousedown', handleMouseDown);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
-      
+
       swipeArea.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
@@ -2567,7 +2587,7 @@ export default function AttendanceCapture() {
 
       {/* Main Content Container - Reduced padding */}
       <div className="p-3 max-w-md mx-auto">
-        
+
         {/* Employee Info Card - Compact */}
         <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
           <div className="flex items-center space-x-3">
@@ -2594,13 +2614,12 @@ export default function AttendanceCapture() {
         <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-sm font-semibold text-gray-900">Location Status</h3>
-            <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-              position ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-            }`}>
+            <div className={`px-2 py-1 rounded-full text-xs font-medium ${position ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+              }`}>
               {position ? 'Captured ✓' : 'Required'}
             </div>
           </div>
-          
+
           {loadingLocation ? (
             <div className="animate-pulse">
               <div className="h-3 bg-gray-200 rounded w-3/4 mb-1"></div>
@@ -2620,42 +2639,38 @@ export default function AttendanceCapture() {
                   <p className="text-xs text-gray-600">Assigned Location • Radius: {ONSITE_RADIUS_M}m</p>
                 </div>
               </div>
-              
+
               {position && distance != null && (
                 <div className="mt-2 p-2 bg-gray-50 rounded-lg">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-xs text-gray-700">Distance:</span>
-                    <span className={`text-sm font-bold ${
-                      distance <= ONSITE_RADIUS_M ? 'text-green-600' : 'text-red-600'
-                    }`}>
+                    <span className={`text-sm font-bold ${distance <= ONSITE_RADIUS_M ? 'text-green-600' : 'text-red-600'
+                      }`}>
                       {distance}m
                     </span>
                   </div>
                   <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full ${
-                        distance <= ONSITE_RADIUS_M ? 'bg-green-500' : 'bg-red-500'
-                      }`}
+                    <div
+                      className={`h-full ${distance <= ONSITE_RADIUS_M ? 'bg-green-500' : 'bg-red-500'
+                        }`}
                       style={{ width: `${Math.min((distance / ONSITE_RADIUS_M) * 100, 100)}%` }}
                     ></div>
                   </div>
-                  <p className={`text-xs mt-1 font-medium ${
-                    distance <= ONSITE_RADIUS_M ? 'text-green-600' : 'text-red-600'
-                  }`}>
+                  <p className={`text-xs mt-1 font-medium ${distance <= ONSITE_RADIUS_M ? 'text-green-600' : 'text-red-600'
+                    }`}>
                     {distance <= ONSITE_RADIUS_M ? '✓ Within office radius' : '⚠ Outside office radius'}
                   </p>
                 </div>
               )}
-              
+
               <button
                 onClick={fetchLocation}
-                className={`w-full mt-2 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center space-x-1 transition ${
-                  !assignedLocation 
-                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-                    : position
+                className={`w-full mt-2 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center space-x-1 transition ${!assignedLocation
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  : position
                     ? 'bg-amber-500 hover:bg-amber-600 text-white'
                     : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
+                  }`}
                 disabled={!assignedLocation}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2707,9 +2722,8 @@ export default function AttendanceCapture() {
                 {checkedIn ? 'You are currently checked in' : 'Ready to check in'}
               </p>
             </div>
-            <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-              checkedIn ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-            }`}>
+            <div className={`px-2 py-1 rounded-full text-xs font-medium ${checkedIn ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+              }`}>
               {checkedIn ? 'Checked In' : 'Not Checked In'}
             </div>
           </div>
@@ -2717,7 +2731,7 @@ export default function AttendanceCapture() {
           {/* Swipe Instructions */}
           <div className="text-center mb-3">
             <p className="text-sm text-gray-700 font-medium">
-              {!checkedIn 
+              {!checkedIn
                 ? "Swipe right → to check in"
                 : "Swipe left ← to check out"
               }
@@ -2726,25 +2740,24 @@ export default function AttendanceCapture() {
 
           {/* Swipe Button Container */}
           <div className="mb-3">
-            <div 
+            <div
               ref={swipeAreaRef}
-              className={`relative overflow-hidden rounded-lg ${
-                !position || !assignedLocation || submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-[0.98] transition-transform'
-              }`}
+              className={`relative overflow-hidden rounded-lg ${!position || !assignedLocation || submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-[0.98] transition-transform'
+                }`}
               onClick={handleManualSwipe}
             >
               {!checkedIn ? (
                 // Check-in swipe button
                 <div className="relative bg-gradient-to-r from-blue-500 to-blue-600 h-12">
                   {/* Swipe progress overlay */}
-                  <div 
+                  <div
                     className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500"
-                    style={{ 
+                    style={{
                       width: `${swipeProgress * 100}%`,
                       transition: isSwiping ? 'none' : 'width 0.2s ease-out'
                     }}
                   ></div>
-                  
+
                   {/* Content */}
                   <div className="absolute inset-0 flex items-center justify-between px-3">
                     <div className="flex items-center gap-1 text-white">
@@ -2753,7 +2766,7 @@ export default function AttendanceCapture() {
                       </svg>
                       <span className="text-sm font-bold">CHECK IN</span>
                     </div>
-                    
+
                     <div className="flex items-center gap-1 text-white">
                       <span className="text-xs">Swipe →</span>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2766,14 +2779,14 @@ export default function AttendanceCapture() {
                 // Check-out swipe button
                 <div className="relative bg-gradient-to-r from-red-500 to-red-600 h-12">
                   {/* Swipe progress overlay */}
-                  <div 
+                  <div
                     className="absolute right-0 top-0 bottom-0 bg-gradient-to-r from-red-400 to-red-500"
-                    style={{ 
+                    style={{
                       width: `${swipeProgress * 100}%`,
                       transition: isSwiping ? 'none' : 'width 0.2s ease-out'
                     }}
                   ></div>
-                  
+
                   {/* Content */}
                   <div className="absolute inset-0 flex items-center justify-between px-3">
                     <div className="flex items-center gap-1 text-white">
@@ -2782,7 +2795,7 @@ export default function AttendanceCapture() {
                       </svg>
                       <span className="text-xs">← Swipe</span>
                     </div>
-                    
+
                     <div className="flex items-center gap-1 text-white">
                       <span className="text-sm font-bold">CHECK OUT</span>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2793,7 +2806,7 @@ export default function AttendanceCapture() {
                 </div>
               )}
             </div>
-            
+
             {/* Help text */}
             <p className="text-center text-xs text-gray-500 mt-1">
               {!position ? "Capture location first" : "Click or drag to swipe"}

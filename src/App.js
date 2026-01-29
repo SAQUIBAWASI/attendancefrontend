@@ -11,7 +11,7 @@ import AboutUsFormPage from "./Pages/AboutUsFormPage.js";
 import AbsentToday from "./Pages/AbsentToday.js";
 import AcceptedAppointmentsList from "./Pages/AcceptedAppointmentsList.js";
 import AddEmployeePage from "./Pages/AddEmployeePage.js";
-import AdminNotifications from "./Pages/AdminNotifications.js";
+
 import AllFunFactsTable from "./Pages/AllFunFactsTable.js";
 import AllPayments from "./Pages/AllPayments.js";
 import AllQuizzesTable from "./Pages/AllQuizzesTable.js";
@@ -58,6 +58,7 @@ import DoctorList from "./Pages/DoctorList.js";
 import DocumentTable from "./Pages/DocumentTable.js";
 import EmployeeDashboard from "./Pages/EmployeeDashboard.jsx";
 import EmployeeLeaves from "./Pages/EmployeeLeaves.js";
+
 import EmployeeList from "./Pages/EmployeeList.js";
 import GetAboutUsPage from "./Pages/GetAboutUsPage.js";
 import GetContactUsPage from "./Pages/GetContactUsPage.js";
@@ -133,6 +134,8 @@ import TimelyFooter from "./Pages/TimelyFooter.js";
 import UserAccessManagement from "./Pages/UserAccessManagement.js";
 import UserActivity from "./Pages/UserActivity.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
+import MyPermission from "./Pages/MyPermission.js"
+import { Permissions } from "./Pages/Permissions.js";
 // import EmpManagment from "./Pages/EmpManagment.js";
 function App() {
   return (
@@ -150,6 +153,8 @@ function App() {
       <Route path="/attendance-capture" element={<EmployeeLayout><AttendanceCapture /></EmployeeLayout>} />
       <Route path="/myattendance" element={<EmployeeLayout><MyAttendance /></EmployeeLayout>} />
       <Route path="/my-shift" element={<EmployeeLayout><MyShift /></EmployeeLayout>} />
+      <Route path="/mypermissions" element={<EmployeeLayout><MyPermission /></EmployeeLayout>} />
+
       <Route path="/mylocation" element={<EmployeeLayout><EmployeeLocation /></EmployeeLayout>} />
       <Route path="/superadmin" element={<SuperAdminMedicalMonitor />} />
       <Route path="/timelynavbar" element={<TimelyNavbar />}></Route>
@@ -257,14 +262,14 @@ function App() {
               <Route path="/quizzes" element={<AllQuizzesTable />} />
               <Route path="/add-bulk-funfacts" element={<BulkFunFactUploader />} />
               <Route path="/allfanfacts" element={<AllFunFactsTable />} />
-              <Route path="/notifications" element={<AdminNotifications />} />
+
 
 
               <Route path="/addemployee" element={<AddEmployeePage />} />
               <Route path="/employeelist" element={<EmployeeList />} />
               <Route path="/attendancelist" element={<AttendanceList />} />
               <Route path="/leavelist" element={<LeavesList />} />
-
+              <Route path="/permissions" element={<Permissions />} />
               <Route path="/today-attendance" element={<TodayAttendance />} />
               <Route path="/pendings-attendance" element={<PendingAttendance />} />
               <Route path="/absent-today" element={<AbsentToday />} />

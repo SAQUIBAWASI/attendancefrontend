@@ -42,6 +42,7 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
       "/roledashboard": "Roles",
       "/addlocation": "Add Location",
       "/empmanagement": "Employee Management",
+      "/permissions": "Permissions"
     };
     
     return pathMap[path] || "Dashboard";
@@ -121,6 +122,12 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
       icon: <i className="ri-calendar-close-fill"></i>,
       name: "Leaves",
       path: "/leavelist"
+    },
+
+     {
+      icon: <i className="ri-calendar-close-fill"></i>,
+      name: "Permissions",
+      path: "/permissions"
     },
     { 
       icon: <i className="ri-money-dollar-box-fill"></i>, 

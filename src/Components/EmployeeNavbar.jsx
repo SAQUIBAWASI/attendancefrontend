@@ -51,10 +51,15 @@
 
 
 import { RiMenu2Line, RiMenu3Line } from "react-icons/ri";
-import { useLocation } from "react-router-dom";
+import { FiBell } from "react-icons/fi";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+
 
   const titles = {
     "/employeedashboard": "Employee Dashboard",
@@ -74,7 +79,7 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
   };
 
   return (
-    <nav className="bg-blue-800 text-white sticky top-0 w-full h-16 px-4 flex items-center justify-between shadow-md z-40">
+    <nav className="bg-blue-800 text-white sticky top-0 w-full h-14 px-4 flex items-center justify-between shadow-md z-40">
       <div className="flex items-center gap-4">
         {/* Menu Button */}
         <button
@@ -96,16 +101,21 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
         </div>
       </div>
 
-      {/* Right: Logo */}
-      <div className="flex items-center gap-2">
-        <img
-          src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
-          alt="Logo"
-          className="w-10 h-10 object-cover rounded-lg"
-        />
-        <span className="font-semibold text-lg hidden sm:block">
-          Attendance
-        </span>
+      {/* Right Section: Notifications & Logo */}
+      <div className="flex items-center gap-4">
+
+
+        {/* Logo */}
+        <div className="flex items-center gap-2">
+          <img
+            src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
+            alt="Logo"
+            className="w-10 h-10 object-cover rounded-lg"
+          />
+          <span className="font-semibold text-lg hidden sm:block">
+            Attendance
+          </span>
+        </div>
       </div>
     </nav>
   );

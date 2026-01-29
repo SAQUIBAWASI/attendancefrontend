@@ -194,7 +194,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
   useEffect(() => {
     const path = location.pathname;
     setActiveItem(path);
-    
+
     const pageName = getPageNameFromPath(path);
     setCurrentPage(pageName);
   }, [location]);
@@ -209,9 +209,11 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
       "/my-shift": "My Shift",
       "/mylocation": "My Assigned Location",
       "/mysalary": "My Salary",
+      "/mypermissions": "My Permissions",
       "/myleaves": "My Leaves",
+      "/notifications": "Notifications",
     };
-    
+
     return pathMap[path] || "Dashboard";
   };
 
@@ -265,16 +267,22 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
   };
 
   const elements = [
-    { 
-      icon: <i className="ri-dashboard-fill"></i>, 
-      name: "Dashboard", 
+    {
+      icon: <i className="ri-dashboard-fill"></i>,
+      name: "Dashboard",
       path: "/employeedashboard",
       exact: true
     },
-    { 
-      icon: <i className="ri-calendar-close-fill"></i>, 
-      name: "Leave", 
-      path: "/leave-application" 
+
+    {
+      icon: <i className="ri-calendar-close-fill"></i>,
+      name: "Leave",
+      path: "/leave-application"
+    },
+    {
+      icon: <i className="ri-calendar-close-fill"></i>,
+      name: "My Permissions",
+      path: "/mypermissions"
     },
     {
       icon: <i className="ri-file-chart-fill"></i>,
@@ -286,15 +294,15 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
         { name: "My Assigned Location", path: "/mylocation" },
       ],
     },
-    { 
-      icon: <i className="ri-money-dollar-box-fill"></i>, 
-      name: "Salary", 
-      path: "/mysalary" 
+    {
+      icon: <i className="ri-money-dollar-box-fill"></i>,
+      name: "Salary",
+      path: "/mysalary"
     },
-    { 
-      icon: <i className="ri-logout-box-fill"></i>, 
-      name: "Logout", 
-      action: handleLogout 
+    {
+      icon: <i className="ri-logout-box-fill"></i>,
+      name: "Logout",
+      action: handleLogout
     },
   ];
 
@@ -358,13 +366,12 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
               {item.dropdown ? (
                 <>
                   <div
-                    className={`group flex items-center justify-between px-3 py-1.5 transition-all duration-200 rounded-md cursor-pointer ${
-                      isDropdownActive(item.dropdown)
-                        ? 'bg-emerald-600/80 text-white shadow-lg'
-                        : openDropdown === item.name 
-                          ? 'bg-blue-700/70' 
-                          : 'hover:bg-blue-700/60'
-                    }`}
+                    className={`group flex items-center justify-between px-3 py-1.5 transition-all duration-200 rounded-md cursor-pointer ${isDropdownActive(item.dropdown)
+                      ? 'bg-emerald-600/80 text-white shadow-lg'
+                      : openDropdown === item.name
+                        ? 'bg-blue-700/70'
+                        : 'hover:bg-blue-700/60'
+                      }`}
                     onClick={() => {
                       navigate(item.dropdown[0].path);
                       handleAnyClick();
@@ -374,19 +381,17 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
                     onMouseLeave={() => isCollapsed && !isMobile && setHoveredItem(null)}
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className={`text-lg transition-colors duration-200 ${
-                        isDropdownActive(item.dropdown) 
-                          ? 'text-white' 
-                          : openDropdown === item.name 
-                            ? 'text-emerald-300' 
-                            : 'text-blue-100 group-hover:text-emerald-300'
-                      }`}>
+                      <span className={`text-lg transition-colors duration-200 ${isDropdownActive(item.dropdown)
+                        ? 'text-white'
+                        : openDropdown === item.name
+                          ? 'text-emerald-300'
+                          : 'text-blue-100 group-hover:text-emerald-300'
+                        }`}>
                         {item.icon}
                       </span>
                       {!isCollapsed && (
-                        <span className={`text-[14px] font-medium leading-none ${
-                          isDropdownActive(item.dropdown) ? 'text-white' : ''
-                        }`}>
+                        <span className={`text-[14px] font-medium leading-none ${isDropdownActive(item.dropdown) ? 'text-white' : ''
+                          }`}>
                           {item.name}
                         </span>
                       )}
@@ -399,15 +404,14 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
                         )}
                         <FaChevronDown
                           onClick={(e) => toggleDropdown(e, item.name)}
-                          className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600/50 rounded cursor-pointer ${
-                            isDropdownActive(item.dropdown) 
-                              ? 'text-white' 
-                              : openDropdown === item.name 
-                                ? 'text-emerald-300' 
-                                : 'text-blue-300 hover:text-white'
-                          } ${openDropdown === item.name ? "rotate-180" : ""}`}
-                          style={{ 
-                            width: '20px', 
+                          className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600/50 rounded cursor-pointer ${isDropdownActive(item.dropdown)
+                            ? 'text-white'
+                            : openDropdown === item.name
+                              ? 'text-emerald-300'
+                              : 'text-blue-300 hover:text-white'
+                            } ${openDropdown === item.name ? "rotate-180" : ""}`}
+                          style={{
+                            width: '20px',
                             height: '20px',
                             minWidth: '20px',
                             minHeight: '20px'
@@ -426,11 +430,10 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
                             <Link
                               to={sub.path}
                               onClick={handleAnyClick}
-                              className={`flex items-center gap-2.5 py-1.5 px-3 text-[13px] transition-colors rounded ${
-                                isActive(sub.path)
-                                  ? 'text-emerald-300 font-semibold bg-emerald-900/20'
-                                  : 'text-blue-100 hover:text-emerald-300 hover:bg-blue-800/40'
-                              }`}
+                              className={`flex items-center gap-2.5 py-1.5 px-0 text-[13px] transition-colors rounded ${isActive(sub.path)
+                                ? 'text-emerald-300 font-semibold bg-emerald-900/20'
+                                : 'text-blue-100 hover:text-emerald-300 hover:bg-blue-800/40'
+                                }`}
                             >
                               <div className="flex items-center w-full gap-2">
                                 {isActive(sub.path) ? (
@@ -458,24 +461,21 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
                   onMouseEnter={(e) => isCollapsed && !isMobile && handleMouseMove(e, item.name)}
                   onMouseMove={(e) => isCollapsed && !isMobile && handleMouseMove(e, item.name)}
                   onMouseLeave={() => isCollapsed && !isMobile && setHoveredItem(null)}
-                  className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
-                    isActive(item.path)
-                      ? 'bg-emerald-600/80 text-white shadow-lg'
-                      : 'hover:bg-blue-700/60'
-                  }`}
+                  className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${isActive(item.path)
+                    ? 'bg-emerald-600/80 text-white shadow-lg'
+                    : 'hover:bg-blue-700/60'
+                    }`}
                 >
-                  <span className={`text-lg transition-colors duration-200 ${
-                    isActive(item.path) 
-                      ? 'text-white' 
-                      : 'text-blue-100 group-hover:text-emerald-300'
-                  }`}>
+                  <span className={`text-lg transition-colors duration-200 ${isActive(item.path)
+                    ? 'text-white'
+                    : 'text-blue-100 group-hover:text-emerald-300'
+                    }`}>
                     {item.icon}
                   </span>
                   {!isCollapsed && (
                     <div className="flex items-center flex-1 min-w-0 gap-2">
-                      <span className={`text-[14px] font-medium leading-none truncate ${
-                        isActive(item.path) ? 'text-white' : ''
-                      }`}>
+                      <span className={`text-[14px] font-medium leading-none truncate ${isActive(item.path) ? 'text-white' : ''
+                        }`}>
                         {item.name}
                       </span>
                       {isActive(item.path) && (
