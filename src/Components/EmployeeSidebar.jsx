@@ -266,9 +266,9 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
     return dropdownItems.some(item => isActive(item.path));
   };
 
-<<<<<<< HEAD
-  const elements = [
-=======
+
+  // const elements = [
+
   // Permissions State
   const [permissions, setPermissions] = useState([]);
 
@@ -309,7 +309,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
 
   const allElements = [
     // --- Standard Employee Features (Always Visible) ---
->>>>>>> 0d6be5ea1a47e30f9190624f14fa9d289cf7d9e1
+
     {
       icon: <i className="ri-dashboard-fill"></i>,
       name: "Dashboard",
@@ -317,7 +317,6 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
       exact: true,
       permission: "ALLOW_ALWAYS" // Default for employees
     },
-<<<<<<< HEAD
 
     {
       icon: <i className="ri-calendar-close-fill"></i>,
@@ -328,13 +327,13 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
       icon: <i className="ri-calendar-close-fill"></i>,
       name: "My Permissions",
       path: "/mypermissions"
-=======
+    },
     {
       icon: <i className="ri-calendar-close-fill"></i>,
       name: "Leave",
       path: "/leave-application",
       permission: "ALLOW_ALWAYS"
->>>>>>> 0d6be5ea1a47e30f9190624f14fa9d289cf7d9e1
+
     },
     {
       icon: <i className="ri-file-chart-fill"></i>,
@@ -350,14 +349,14 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
     {
       icon: <i className="ri-money-dollar-box-fill"></i>,
       name: "Salary",
-<<<<<<< HEAD
+
       path: "/mysalary"
     },
     {
       icon: <i className="ri-logout-box-fill"></i>,
       name: "Logout",
-      action: handleLogout
-=======
+      action: handleLogout,
+
       path: "/mysalary",
       permission: "ALLOW_ALWAYS"
     },
@@ -440,7 +439,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
       name: "Logout",
       action: handleLogout,
       permission: "ALLOW_ALWAYS"
->>>>>>> 0d6be5ea1a47e30f9190624f14fa9d289cf7d9e1
+
     },
   ];
 
@@ -586,11 +585,11 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
                             <Link
                               to={sub.path}
                               onClick={handleAnyClick}
-<<<<<<< HEAD
+
                               className={`flex items-center gap-2.5 py-1.5 px-0 text-[13px] transition-colors rounded ${isActive(sub.path)
-=======
-                              className={`flex items-center gap-2.5 py-1.5 px-3 text-[13px] transition-colors rounded ${isActive(sub.path)
->>>>>>> 0d6be5ea1a47e30f9190624f14fa9d289cf7d9e1
+
+                              // className={`flex items-center gap-2.5 py-1.5 px-3 text-[13px] transition-colors rounded ${isActive(sub.path)
+
                                 ? 'text-emerald-300 font-semibold bg-emerald-900/20'
                                 : 'text-blue-100 hover:text-emerald-300 hover:bg-blue-800/40'
                                 }`}
