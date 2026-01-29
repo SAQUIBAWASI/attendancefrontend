@@ -194,7 +194,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
   useEffect(() => {
     const path = location.pathname;
     setActiveItem(path);
-    
+
     const pageName = getPageNameFromPath(path);
     setCurrentPage(pageName);
   }, [location]);
@@ -211,7 +211,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
       "/mysalary": "My Salary",
       "/myleaves": "My Leaves",
     };
-    
+
     return pathMap[path] || "Dashboard";
   };
 
@@ -264,39 +264,175 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
     return dropdownItems.some(item => isActive(item.path));
   };
 
-  const elements = [
-    { 
-      icon: <i className="ri-dashboard-fill"></i>, 
-      name: "Dashboard", 
+  // Permissions State
+  const [permissions, setPermissions] = useState([]);
+
+  // Fetch permissions on mount
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      const storedId = localStorage.getItem("employeeId");
+      if (!storedId) return;
+
+      try {
+        const response = await axios.get(`http://localhost:5000/api/employees/get-employee?employeeId=${storedId}`);
+        if (response.data && response.data.data) {
+          const fetchedPermissions = response.data.data.permissions || [];
+          setPermissions(fetchedPermissions);
+          // Also update local storage to keep it in sync
+          localStorage.setItem("employeePermissions", JSON.stringify(fetchedPermissions));
+        }
+      } catch (error) {
+        console.error("Failed to fetch permissions", error);
+        // Fallback to local storage if API fails
+        const localPermissions = JSON.parse(localStorage.getItem("employeePermissions") || "[]");
+        setPermissions(localPermissions);
+      }
+    };
+
+    fetchPermissions();
+  }, []);
+
+  // Helper to check permission
+  const hasPermission = (permission) => {
+    // If no permissions are set (legacy or new user), maybe restrict or allow all? 
+    // For safety, if permissions array exists but is empty, restrict. 
+    // If it doesn't exist (null), maybe allow basic? 
+    // Let's assume if it exists, we stick to it.
+    if (!permissions.length) return false;
+    return permissions.includes(permission);
+  };
+
+  const allElements = [
+    // --- Standard Employee Features (Always Visible) ---
+    {
+      icon: <i className="ri-dashboard-fill"></i>,
+      name: "Dashboard",
       path: "/employeedashboard",
-      exact: true
+      exact: true,
+      permission: "ALLOW_ALWAYS" // Default for employees
     },
-    { 
-      icon: <i className="ri-calendar-close-fill"></i>, 
-      name: "Leave", 
-      path: "/leave-application" 
+    {
+      icon: <i className="ri-calendar-close-fill"></i>,
+      name: "Leave",
+      path: "/leave-application",
+      permission: "ALLOW_ALWAYS"
     },
     {
       icon: <i className="ri-file-chart-fill"></i>,
       name: "Attendance",
       dropdown: [
-        { name: "Check In", path: "/attendance-capture" },
-        { name: "Attendance Report", path: "/myattendance" },
-        { name: "My Shift", path: "/my-shift" },
-        { name: "My Assigned Location", path: "/mylocation" },
+        { name: "Check In", path: "/attendance-capture", permission: "ALLOW_ALWAYS" },
+        { name: "Attendance Report", path: "/myattendance", permission: "ALLOW_ALWAYS" },
+        { name: "My Shift", path: "/my-shift", permission: "ALLOW_ALWAYS" },
+        { name: "My Assigned Location", path: "/mylocation", permission: "ALLOW_ALWAYS" },
       ],
+      permission: "ALLOW_ALWAYS"
     },
-    { 
-      icon: <i className="ri-money-dollar-box-fill"></i>, 
-      name: "Salary", 
-      path: "/mysalary" 
+    {
+      icon: <i className="ri-money-dollar-box-fill"></i>,
+      name: "Salary",
+      path: "/mysalary",
+      permission: "ALLOW_ALWAYS"
     },
-    { 
-      icon: <i className="ri-logout-box-fill"></i>, 
-      name: "Logout", 
-      action: handleLogout 
+
+    // --- Admin Features (Requires Permission) ---
+    {
+      icon: <i className="ri-dashboard-3-fill"></i>,
+      name: "Main Dashboard",
+      path: "/emp-admin-dashboard",
+      permission: "dashboard_view"
+    },
+    {
+      icon: <i className="ri-user-fill"></i>,
+      name: "Employee",
+      path: "/emp-employees",
+      permission: "employee_view_all"
+    },
+    {
+      icon: <i className="ri-user-add-fill"></i>,
+      name: "Add Employee",
+      path: "/emp-add-employee",
+      permission: "employee_add"
+    },
+    {
+      icon: <i className="ri-calendar-check-fill"></i>,
+      name: "All Attendance",
+      dropdown: [
+        { name: "Attendance Summary", path: "/emp-attendance-summary", permission: "attendance_view_all" },
+        { name: "Attendance Records", path: "/emp-attendance-records", permission: "attendance_view_all" },
+        { name: "Today Attendance", path: "/emp-today-attendance", permission: "attendance_view_all" },
+        { name: "Absent Today", path: "/emp-absent-today", permission: "attendance_view_all" },
+      ],
+      permission: "attendance_view_all"
+    },
+    {
+      icon: <i className="ri-calendar-event-fill"></i>,
+      name: "Leave Approval",
+      path: "/emp-leaves",
+      permission: "leave_approve"
+    },
+    {
+      icon: <i className="ri-money-dollar-circle-fill"></i>,
+      name: "Payroll",
+      path: "/emp-payroll",
+      permission: "payroll_manage"
+    },
+    {
+      icon: <i className="ri-bar-chart-2-fill"></i>,
+      name: "Reports",
+      path: "/emp-reports",
+      permission: "reports_view"
+    },
+    {
+      icon: <i className="ri-map-pin-user-fill"></i>,
+      name: "Locations",
+      path: "/emp-locations",
+      permission: "locations_manage"
+    },
+    {
+      icon: <i className="ri-time-line"></i>,
+      name: "Shift",
+      path: "/emp-shifts",
+      permission: "shifts_manage"
+    },
+    {
+      icon: <i className="ri-user-search-fill"></i>,
+      name: "User Activity",
+      path: "/emp-user-activity",
+      permission: "user_activity_view"
+    },
+    {
+      icon: <i className="ri-lock-2-fill"></i>,
+      name: "User Access",
+      path: "/emp-user-access",
+      permission: "user_access_manage"
+    },
+
+    {
+      icon: <i className="ri-logout-box-fill"></i>,
+      name: "Logout",
+      action: handleLogout,
+      permission: "ALLOW_ALWAYS"
     },
   ];
+
+  const elements = allElements.filter(item => {
+    if (item.permission === "ALLOW_ALWAYS") return true;
+
+    // Check main item permission
+    if (item.permission && !hasPermission(item.permission)) return false;
+
+    // Filter dropdown items if they exist
+    if (item.dropdown) {
+      item.dropdown = item.dropdown.filter(sub =>
+        !sub.permission || hasPermission(sub.permission)
+      );
+      // If no dropdown items remain, hide the main item
+      if (item.dropdown.length === 0) return false;
+    }
+
+    return true;
+  });
 
   return (
     <>
@@ -358,13 +494,12 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
               {item.dropdown ? (
                 <>
                   <div
-                    className={`group flex items-center justify-between px-3 py-1.5 transition-all duration-200 rounded-md cursor-pointer ${
-                      isDropdownActive(item.dropdown)
-                        ? 'bg-emerald-600/80 text-white shadow-lg'
-                        : openDropdown === item.name 
-                          ? 'bg-blue-700/70' 
-                          : 'hover:bg-blue-700/60'
-                    }`}
+                    className={`group flex items-center justify-between px-3 py-1.5 transition-all duration-200 rounded-md cursor-pointer ${isDropdownActive(item.dropdown)
+                      ? 'bg-emerald-600/80 text-white shadow-lg'
+                      : openDropdown === item.name
+                        ? 'bg-blue-700/70'
+                        : 'hover:bg-blue-700/60'
+                      }`}
                     onClick={() => {
                       navigate(item.dropdown[0].path);
                       handleAnyClick();
@@ -374,19 +509,17 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
                     onMouseLeave={() => isCollapsed && !isMobile && setHoveredItem(null)}
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className={`text-lg transition-colors duration-200 ${
-                        isDropdownActive(item.dropdown) 
-                          ? 'text-white' 
-                          : openDropdown === item.name 
-                            ? 'text-emerald-300' 
-                            : 'text-blue-100 group-hover:text-emerald-300'
-                      }`}>
+                      <span className={`text-lg transition-colors duration-200 ${isDropdownActive(item.dropdown)
+                        ? 'text-white'
+                        : openDropdown === item.name
+                          ? 'text-emerald-300'
+                          : 'text-blue-100 group-hover:text-emerald-300'
+                        }`}>
                         {item.icon}
                       </span>
                       {!isCollapsed && (
-                        <span className={`text-[14px] font-medium leading-none ${
-                          isDropdownActive(item.dropdown) ? 'text-white' : ''
-                        }`}>
+                        <span className={`text-[14px] font-medium leading-none ${isDropdownActive(item.dropdown) ? 'text-white' : ''
+                          }`}>
                           {item.name}
                         </span>
                       )}
@@ -399,15 +532,14 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
                         )}
                         <FaChevronDown
                           onClick={(e) => toggleDropdown(e, item.name)}
-                          className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600/50 rounded cursor-pointer ${
-                            isDropdownActive(item.dropdown) 
-                              ? 'text-white' 
-                              : openDropdown === item.name 
-                                ? 'text-emerald-300' 
-                                : 'text-blue-300 hover:text-white'
-                          } ${openDropdown === item.name ? "rotate-180" : ""}`}
-                          style={{ 
-                            width: '20px', 
+                          className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600/50 rounded cursor-pointer ${isDropdownActive(item.dropdown)
+                            ? 'text-white'
+                            : openDropdown === item.name
+                              ? 'text-emerald-300'
+                              : 'text-blue-300 hover:text-white'
+                            } ${openDropdown === item.name ? "rotate-180" : ""}`}
+                          style={{
+                            width: '20px',
                             height: '20px',
                             minWidth: '20px',
                             minHeight: '20px'
@@ -426,11 +558,10 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
                             <Link
                               to={sub.path}
                               onClick={handleAnyClick}
-                              className={`flex items-center gap-2.5 py-1.5 px-3 text-[13px] transition-colors rounded ${
-                                isActive(sub.path)
-                                  ? 'text-emerald-300 font-semibold bg-emerald-900/20'
-                                  : 'text-blue-100 hover:text-emerald-300 hover:bg-blue-800/40'
-                              }`}
+                              className={`flex items-center gap-2.5 py-1.5 px-3 text-[13px] transition-colors rounded ${isActive(sub.path)
+                                ? 'text-emerald-300 font-semibold bg-emerald-900/20'
+                                : 'text-blue-100 hover:text-emerald-300 hover:bg-blue-800/40'
+                                }`}
                             >
                               <div className="flex items-center w-full gap-2">
                                 {isActive(sub.path) ? (
@@ -458,24 +589,21 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
                   onMouseEnter={(e) => isCollapsed && !isMobile && handleMouseMove(e, item.name)}
                   onMouseMove={(e) => isCollapsed && !isMobile && handleMouseMove(e, item.name)}
                   onMouseLeave={() => isCollapsed && !isMobile && setHoveredItem(null)}
-                  className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
-                    isActive(item.path)
-                      ? 'bg-emerald-600/80 text-white shadow-lg'
-                      : 'hover:bg-blue-700/60'
-                  }`}
+                  className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${isActive(item.path)
+                    ? 'bg-emerald-600/80 text-white shadow-lg'
+                    : 'hover:bg-blue-700/60'
+                    }`}
                 >
-                  <span className={`text-lg transition-colors duration-200 ${
-                    isActive(item.path) 
-                      ? 'text-white' 
-                      : 'text-blue-100 group-hover:text-emerald-300'
-                  }`}>
+                  <span className={`text-lg transition-colors duration-200 ${isActive(item.path)
+                    ? 'text-white'
+                    : 'text-blue-100 group-hover:text-emerald-300'
+                    }`}>
                     {item.icon}
                   </span>
                   {!isCollapsed && (
                     <div className="flex items-center flex-1 min-w-0 gap-2">
-                      <span className={`text-[14px] font-medium leading-none truncate ${
-                        isActive(item.path) ? 'text-white' : ''
-                      }`}>
+                      <span className={`text-[14px] font-medium leading-none truncate ${isActive(item.path) ? 'text-white' : ''
+                        }`}>
                         {item.name}
                       </span>
                       {isActive(item.path) && (
