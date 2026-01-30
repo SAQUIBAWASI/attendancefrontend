@@ -54,30 +54,30 @@
 //   // Check if selected month is current month
 //   const isCurrentMonth = (month) => {
 //     if (!month) return true; // If no month selected, assume current month
-    
+
 //     const today = new Date();
 //     const currentYear = today.getFullYear();
 //     const currentMonth = today.getMonth() + 1; // 1-12
-    
+
 //     const [year, monthNum] = month.split('-').map(Number);
-    
+
 //     return year === currentYear && monthNum === currentMonth;
 //   };
 
 //   // Check if month is in the past (historical month)
 //   const isHistoricalMonth = (month) => {
 //     if (!month) return false;
-    
+
 //     const today = new Date();
 //     const currentYear = today.getFullYear();
 //     const currentMonth = today.getMonth() + 1;
-    
+
 //     const [year, monthNum] = month.split('-').map(Number);
-    
+
 //     // Check if month is before current month
 //     if (year < currentYear) return true;
 //     if (year === currentYear && monthNum < currentMonth) return true;
-    
+
 //     return false;
 //   };
 
@@ -86,14 +86,14 @@
 //   const shouldIncludeWeekOffInSalary = (month) => {
 //     // If historical month, always include week-off
 //     if (isHistoricalMonth(month)) return true;
-    
+
 //     // For current month, check date
 //     if (isCurrentMonth(month)) {
 //       const today = new Date();
 //       const currentDay = today.getDate();
 //       return currentDay >= 26; // Only include week-off in salary after 26th for current month
 //     }
-    
+
 //     // For future months or if month not specified, return true
 //     return true;
 //   };
@@ -103,14 +103,14 @@
 //   const isPayslipDownloadAllowed = (month) => {
 //     // If historical month, always allow download
 //     if (isHistoricalMonth(month)) return true;
-    
+
 //     // For current month, check date
 //     if (isCurrentMonth(month)) {
 //       const today = new Date();
 //       const currentDay = today.getDate();
 //       return currentDay >= 30; // Only allow download on or after 30th for current month
 //     }
-    
+
 //     // For future months or if month not specified, return true
 //     return true;
 //   };
@@ -180,7 +180,7 @@
 //       const includeWeekOffInSalary = shouldIncludeWeekOffInSalary(month);
 //       const isHistorical = isHistoricalMonth(month);
 //       const isCurrent = isCurrentMonth(month);
-      
+
 //       console.log(`📅 Month analysis: ${month || "current"} | Historical: ${isHistorical} | Current: ${isCurrent} | Include week-off: ${includeWeekOffInSalary}`);
 
 //       // STEP 0 → Fetch Attendance Summary Data First (with month filter)
@@ -233,10 +233,10 @@
 
 //       // EMPLOYEES MAP
 //       const employeesMap = {};
-      
+
 //       // ✅ Filter out inactive employees
 //       const activeEmployees = employeesData.filter(emp => !isEmployeeHidden(emp));
-      
+
 //       activeEmployees.forEach(emp => {
 //         employeesMap[emp.employeeId] = {
 //           salaryPerMonth: emp.salaryPerMonth || 0,
@@ -267,17 +267,17 @@
 
 //           // Get actual week-off days (for display)
 //           const actualWeekOffDays = summary.weekOffPerMonth ?? emp.weekOffs ?? 0;
-          
+
 //           // Calculate salary based on month type
 //           let calculatedSalary = emp.calculatedSalary || 0;
-          
+
 //           // If it's current month and before 26th, remove week-off amount
 //           if (!includeWeekOffInSalary && calculatedSalary > 0) {
 //             // Calculate daily rate
 //             const employeeData = employeesMap[emp.employeeId];
 //             const daysInMonth = salaryData.monthDays || 30;
 //             const dailyRate = employeeData?.salaryPerMonth / daysInMonth || 0;
-            
+
 //             // Remove week-off amount from salary if before 26th (current month only)
 //             const weekOffAmount = actualWeekOffDays * dailyRate;
 //             calculatedSalary = Math.max(0, calculatedSalary - weekOffAmount);
@@ -312,12 +312,12 @@
 //           const actualWeekOffDays = emp.weekOffPerMonth || 0;
 //           const daysInMonth = salaryData.monthDays || 30;
 //           const dailyRate = employeeData?.salaryPerMonth / daysInMonth || 0;
-          
+
 //           // Calculate salary based on month type
 //           let calculatedSalary = 0;
 //           if (employeeData?.salaryPerMonth) {
 //             const paidDays = (emp.totalWorkingDays || 0) + (emp.halfDayWorking || 0) * 0.5;
-            
+
 //             // Add week-off based on month type
 //             const totalPaidDays = includeWeekOffInSalary ? paidDays + actualWeekOffDays : paidDays;
 //             calculatedSalary = (totalPaidDays * dailyRate);
@@ -698,10 +698,10 @@
 //   const downloadInvoice = async (employee) => {
 //     // Get employee's month or use selected month
 //     const employeeMonth = employee.month || selectedMonth;
-    
+
 //     // Check if payslip download is allowed for this month
 //     const allowed = isPayslipDownloadAllowed(employeeMonth);
-    
+
 //     if (!allowed) {
 //       alert("Payslip download for current month is only allowed on or after 30th.");
 //       return;
@@ -779,7 +779,7 @@
 //     const totalMonthDays = employee.monthDays || monthDays || 30;
 //     const dailyRate = calculateDailyRate(employee);
 //     const leaves = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
-    
+
 //     // Week-off calculations
 //     const actualWeekOffDays = getWeekOffDaysForDisplay(employee);
 //     const weekOffDaysForSalary = getWeekOffDaysForSalary(employee);
@@ -852,7 +852,7 @@
 //             vertical-align: middle;
 //           }
 //           .header-cell { border: none; padding: 2px 2px; text-align: center; border-bottom: 1px solid #000; }
-          
+
 //           .section-header { 
 //             background-color: #f0f0f0; 
 //             font-weight: bold; 
@@ -861,7 +861,7 @@
 //           }
 //           .amount-col { text-align: right; width: 15%; }
 //           .label-col { text-align: left; width: 35%; }
-          
+
 //           .notes-box { 
 //             margin: 10px; 
 //             padding: 5px; 
@@ -873,10 +873,10 @@
 //       </head>
 //       <body>
 //         <div class="invoice-container">
-          
+
 //           <!-- MAIN LAYOUT TABLE -->
 //           <table>
-            
+
 //             <!-- HEADER -->
 //             <tr>
 //               <td colspan="4" class="header-cell">
@@ -943,7 +943,7 @@
 //                 ${lopAmount > 0 ? '-' : ''}₹${Math.round(lopAmount).toFixed(2)}
 //               </td>
 //             </tr>
-            
+
 //             <!-- ROW 2: Days Info -->
 //             <tr>
 //               <td class="label-col">Working Days (Full: ${presentDays})</td>
@@ -998,7 +998,7 @@
 //             ` : ''}
 
 //           </table>
-          
+
 //           <div style="text-align: center; font-size: 10px; margin-top: 10px;">
 //             This is a computer-generated document.
 //           </div>
@@ -1798,6 +1798,38 @@ const PayRoll = () => {
     manualDays: ""
   });
 
+  // Template State
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templateConfig, setTemplateConfig] = useState({
+    companyName: "Timely Health Tech Pvt Ltd",
+    address: "H. No: 1-98/9/25/p, # 301, 3rd Floor, Sri Sai Balaji Avenue,\nArunodaya Colony, Madhapur, Hyderabad, TG - 500081",
+    logo: logo
+  });
+
+  useEffect(() => {
+    const savedTemplate = localStorage.getItem("payrollTemplateConfig");
+    if (savedTemplate) {
+      setTemplateConfig(JSON.parse(savedTemplate));
+    }
+  }, []);
+
+  const handleTemplateSave = () => {
+    localStorage.setItem("payrollTemplateConfig", JSON.stringify(templateConfig));
+    setShowTemplateModal(false);
+    alert("✅ Template settings saved successfully!");
+  };
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setTemplateConfig(prev => ({ ...prev, logo: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const recordsPerPage = 10;
 
   // API endpoints
@@ -1816,55 +1848,55 @@ const PayRoll = () => {
   // Check if selected month is current month
   const isCurrentMonth = (month) => {
     if (!month) return true;
-    
+
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth() + 1;
-    
+
     const [year, monthNum] = month.split('-').map(Number);
-    
+
     return year === currentYear && monthNum === currentMonth;
   };
 
   // Check if month is in the past (historical month)
   const isHistoricalMonth = (month) => {
     if (!month) return false;
-    
+
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth() + 1;
-    
+
     const [year, monthNum] = month.split('-').map(Number);
-    
+
     if (year < currentYear) return true;
     if (year === currentYear && monthNum < currentMonth) return true;
-    
+
     return false;
   };
 
   // Function to check if week-off should be included in salary calculation
   const shouldIncludeWeekOffInSalary = (month) => {
     if (isHistoricalMonth(month)) return true;
-    
+
     if (isCurrentMonth(month)) {
       const today = new Date();
       const currentDay = today.getDate();
       return currentDay >= 26;
     }
-    
+
     return true;
   };
 
   // Function to check if payslip download is allowed
   const isPayslipDownloadAllowed = (month) => {
     if (isHistoricalMonth(month)) return true;
-    
+
     if (isCurrentMonth(month)) {
       const today = new Date();
       const currentDay = today.getDate();
       return currentDay >= 30;
     }
-    
+
     return true;
   };
 
@@ -1922,12 +1954,12 @@ const PayRoll = () => {
   // ✅ Add this function to filter inactive employees from payroll data
   const filterInactiveEmployees = useCallback((payrollData, employeesMap) => {
     if (!Array.isArray(payrollData)) return [];
-    
+
     return payrollData.filter(item => {
       // Get employee data from master map
       const employeeData = employeesMap[item.employeeId];
       if (!employeeData) return false;
-      
+
       // Check if employee is active
       return !isEmployeeHidden(employeeData);
     });
@@ -1945,7 +1977,7 @@ const PayRoll = () => {
       const includeWeekOffInSalary = shouldIncludeWeekOffInSalary(month);
       const isHistorical = isHistoricalMonth(month);
       const isCurrent = isCurrentMonth(month);
-      
+
       console.log(`📅 Month analysis: ${month || "current"} | Historical: ${isHistorical} | Current: ${isCurrent} | Include week-off: ${includeWeekOffInSalary}`);
 
       // STEP 0 → Fetch Attendance Summary Data First (with month filter)
@@ -1997,15 +2029,15 @@ const PayRoll = () => {
 
       // EMPLOYEES MAP
       const employeesMap = {};
-      
+
       // ✅ Store all employees
       if (isMounted) {
         setAllEmployees(employeesData);
       }
-      
+
       // ✅ Filter out inactive employees for display
       const activeEmployees = employeesData.filter(emp => !isEmployeeHidden(emp));
-      
+
       activeEmployees.forEach(emp => {
         employeesMap[emp.employeeId] = {
           salaryPerMonth: emp.salaryPerMonth || 0,
@@ -2036,14 +2068,14 @@ const PayRoll = () => {
           const summary = summaryData.find(x => x.employeeId === emp.employeeId) || {};
 
           const actualWeekOffDays = summary.weekOffPerMonth ?? emp.weekOffs ?? 0;
-          
+
           let calculatedSalary = emp.calculatedSalary || 0;
-          
+
           if (!includeWeekOffInSalary && calculatedSalary > 0) {
             const employeeData = employeesMap[emp.employeeId];
             const daysInMonth = salaryData.monthDays || 30;
             const dailyRate = employeeData?.salaryPerMonth / daysInMonth || 0;
-            
+
             const weekOffAmount = actualWeekOffDays * dailyRate;
             calculatedSalary = Math.max(0, calculatedSalary - weekOffAmount);
           }
@@ -2076,11 +2108,11 @@ const PayRoll = () => {
           const actualWeekOffDays = emp.weekOffPerMonth || 0;
           const daysInMonth = salaryData.monthDays || 30;
           const dailyRate = employeeData?.salaryPerMonth / daysInMonth || 0;
-          
+
           let calculatedSalary = 0;
           if (employeeData?.salaryPerMonth) {
             const paidDays = (emp.totalWorkingDays || 0) + (emp.halfDayWorking || 0) * 0.5;
-            
+
             const totalPaidDays = includeWeekOffInSalary ? paidDays + actualWeekOffDays : paidDays;
             calculatedSalary = (totalPaidDays * dailyRate);
           }
@@ -2111,7 +2143,7 @@ const PayRoll = () => {
 
       // ✅ Filter out inactive employees from processed salaries
       const activeProcessedSalaries = filterInactiveEmployees(processedSalaries, employeesMap);
-      
+
       if (isMounted) {
         setRecords(activeProcessedSalaries);
         setFilteredRecords(activeProcessedSalaries);
@@ -2465,9 +2497,9 @@ const PayRoll = () => {
   // Download invoice with smart restrictions
   const downloadInvoice = async (employee) => {
     const employeeMonth = employee.month || selectedMonth;
-    
+
     const allowed = isPayslipDownloadAllowed(employeeMonth);
-    
+
     if (!allowed) {
       alert("Payslip download for current month is only allowed on or after 30th.");
       return;
@@ -2543,7 +2575,7 @@ const PayRoll = () => {
     const totalMonthDays = employee.monthDays || monthDays || 30;
     const dailyRate = calculateDailyRate(employee);
     const leaves = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
-    
+
     const actualWeekOffDays = getWeekOffDaysForDisplay(employee);
     const weekOffDaysForSalary = getWeekOffDaysForSalary(employee);
     const includeWeekOffInSalary = shouldIncludeWeekOffInSalary(employee.month || selectedMonth);
@@ -2637,13 +2669,12 @@ const PayRoll = () => {
               <td colspan="4" class="header-cell">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0px;">
                   <div style="width: 130px; text-align: left;">
-                    <img src="${logo}" alt="Logo" style="height: 110px; width: auto; max-width: 130px; object-fit: contain; display: block;">
+                    <img src="${templateConfig.logo}" alt="Logo" style="height: 110px; width: auto; max-width: 130px; object-fit: contain; display: block;">
                   </div>
                   <div style="flex: 1; text-align: center; margin-right: 130px;">
-                    <h1 style="margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">Timely Health Tech Pvt Ltd</h1>
+                    <h1 style="margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">${templateConfig.companyName}</h1>
                     <p style="margin: 0px 0 0 0; font-size: 11px; line-height: 1.1;">
-                      H. No: 1-98/9/25/p, # 301, 3rd Floor, Sri Sai Balaji Avenue,<br> 
-                      Arunodaya Colony, Madhapur, Hyderabad, TG - 500081
+                      ${templateConfig.address.replace(/\n/g, '<br>')}
                     </p>
                   </div>
                 </div>
@@ -2865,6 +2896,13 @@ const PayRoll = () => {
               />
 
               <button
+                onClick={() => setShowTemplateModal(true)}
+                className="px-3 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 shadow-sm"
+              >
+                ⚙️ Template
+              </button>
+
+              <button
                 onClick={() => {
                   setSelectedMonth("");
                   fetchData();
@@ -2977,15 +3015,14 @@ const PayRoll = () => {
         </div>
 
         {/* Month Type Notice */}
-        <div className={`px-3 py-2 mb-3 rounded-md shadow-sm ${
-          isHistoricalMonth(selectedMonth) 
-            ? 'bg-green-50 border-l-2 border-green-500' 
+        <div className={`px-3 py-2 mb-3 rounded-md shadow-sm ${isHistoricalMonth(selectedMonth)
+            ? 'bg-green-50 border-l-2 border-green-500'
             : isCurrentMonth(selectedMonth)
-            ? (shouldIncludeWeekOffInSalary(selectedMonth) 
-                ? 'bg-green-50 border-l-2 border-green-500' 
+              ? (shouldIncludeWeekOffInSalary(selectedMonth)
+                ? 'bg-green-50 border-l-2 border-green-500'
                 : 'bg-yellow-50 border-l-2 border-yellow-500')
-            : 'bg-blue-50 border-l-2 border-blue-500'
-        }`}>
+              : 'bg-blue-50 border-l-2 border-blue-500'
+          }`}>
           <div className="flex items-center">
             <div className="mr-2">
               {isHistoricalMonth(selectedMonth) ? (
@@ -3010,13 +3047,13 @@ const PayRoll = () => {
             </div>
             <div>
               <p className="text-xs font-medium">
-                {isHistoricalMonth(selectedMonth) 
-                  ? "✓ Historical Month - Full salary with week-off included | Payslip download available" 
+                {isHistoricalMonth(selectedMonth)
+                  ? "✓ Historical Month - Full salary with week-off included | Payslip download available"
                   : isCurrentMonth(selectedMonth)
-                  ? (shouldIncludeWeekOffInSalary(selectedMonth) 
+                    ? (shouldIncludeWeekOffInSalary(selectedMonth)
                       ? `✓ Current Month (After 26th) - Week-off included | ${isPayslipDownloadAllowed(selectedMonth) ? 'Payslip download available' : 'Payslip available after 30th'}`
                       : `Current Month (Before 26th) - Week-off will be added after 26th | ${isPayslipDownloadAllowed(selectedMonth) ? 'Payslip download available' : 'Payslip available after 30th'}`)
-                  : "Future Month - Preview only"}
+                    : "Future Month - Preview only"}
               </p>
             </div>
           </div>
@@ -3113,14 +3150,14 @@ const PayRoll = () => {
                         </button>
                         <button
                           onClick={() => downloadInvoice(item)}
-                          className={`p-1.5 rounded-md transition duration-150 ${isPayslipDownloadAllowed(item.month || selectedMonth) 
-                            ? 'text-purple-600 hover:bg-purple-50' 
+                          className={`p-1.5 rounded-md transition duration-150 ${isPayslipDownloadAllowed(item.month || selectedMonth)
+                            ? 'text-purple-600 hover:bg-purple-50'
                             : 'text-gray-400 hover:bg-gray-100 cursor-not-allowed'}`}
-                          title={isPayslipDownloadAllowed(item.month || selectedMonth) 
-                            ? "Download Payslip" 
-                            : item.isHistoricalMonth 
-                            ? "Download Payslip (Historical Month)" 
-                            : "Payslip download available only on or after 30th for current month"}
+                          title={isPayslipDownloadAllowed(item.month || selectedMonth)
+                            ? "Download Payslip"
+                            : item.isHistoricalMonth
+                              ? "Download Payslip (Historical Month)"
+                              : "Payslip download available only on or after 30th for current month"}
                           disabled={!isPayslipDownloadAllowed(item.month || selectedMonth)}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3204,7 +3241,7 @@ const PayRoll = () => {
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-gray-500 hover:bg-gray-50'
                         }`}
-                      >
+                    >
                       <span className="sr-only">Next</span>
                       <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
@@ -3259,11 +3296,11 @@ const PayRoll = () => {
                   <p className="text-sm text-gray-600">ID: {selectedEmployee.employeeId}</p>
                   <p className="text-sm text-gray-600">Month: {selectedEmployee.month || selectedMonth || "Current"} ({selectedEmployee.monthDays || monthDays} days)</p>
                   <p className={`text-sm ${selectedEmployee.isHistoricalMonth ? 'text-green-600' : selectedEmployee.isCurrentMonth ? 'text-blue-600' : 'text-gray-600'}`}>
-                    {selectedEmployee.isHistoricalMonth 
-                      ? 'Historical Month - Full salary with week-off' 
-                      : selectedEmployee.isCurrentMonth 
-                      ? `Current Month - ${shouldIncludeWeekOffInSalary(selectedEmployee.month || selectedMonth) ? 'Week-off included (After 26th)' : 'Week-off will be added after 26th'}` 
-                      : 'Future Month'}
+                    {selectedEmployee.isHistoricalMonth
+                      ? 'Historical Month - Full salary with week-off'
+                      : selectedEmployee.isCurrentMonth
+                        ? `Current Month - ${shouldIncludeWeekOffInSalary(selectedEmployee.month || selectedMonth) ? 'Week-off included (After 26th)' : 'Week-off will be added after 26th'}`
+                        : 'Future Month'}
                   </p>
                   <p className="text-sm text-green-600">
                     Status: {selectedEmployee.status === 'inactive' ? 'Inactive' : 'Active'}
@@ -3315,8 +3352,8 @@ const PayRoll = () => {
               <button
                 onClick={() => downloadInvoice(selectedEmployee)}
                 disabled={!isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth)}
-                className={`px-6 py-2 rounded-lg transition duration-200 ${isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth) 
-                  ? 'bg-purple-500 text-white hover:bg-purple-600' 
+                className={`px-6 py-2 rounded-lg transition duration-200 ${isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth)
+                  ? 'bg-purple-500 text-white hover:bg-purple-600'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
               >
                 Download Payslip
@@ -3508,6 +3545,72 @@ const PayRoll = () => {
         </div>
       )}
 
+      {/* Template Settings Modal */}
+      {showTemplateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-800">Edit Payslip Template</h2>
+              <button onClick={() => setShowTemplateModal(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                <input
+                  type="text"
+                  value={templateConfig.companyName}
+                  onChange={(e) => setTemplateConfig({ ...templateConfig, companyName: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <textarea
+                  rows="3"
+                  value={templateConfig.address}
+                  onChange={(e) => setTemplateConfig({ ...templateConfig, address: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Upload New Logo</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                  className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <p className="text-xs text-gray-500 mt-1">Recommended: PNG/JPEG, Max 130px width</p>
+              </div>
+
+              {templateConfig.logo && (
+                <div className="mt-2 text-center p-2 border rounded bg-gray-50">
+                  <p className="text-xs text-gray-500 mb-1">Current Logo Preview:</p>
+                  <img src={templateConfig.logo} alt="Preview" className="h-16 mx-auto object-contain" />
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowTemplateModal(false)}
+                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleTemplateSave}
+                  className="flex-1 px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                >
+                  Save Settings
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
