@@ -60,11 +60,7 @@ const EmployeeDashboard = () => {
             const activePermsCount = permRes.data?.filter(p => p.status === "APPROVED").length || 0;
             setStats(prev => ({ ...prev, activePermissions: activePermsCount }));
           } catch (e) {
-            try {
-              const permRes = await axios.get(`${API_5000}api/permissions/my-permissions/${targetId}`);
-              const activePermsCount = permRes.data?.filter(p => p.status === "APPROVED").length || 0;
-              setStats(prev => ({ ...prev, activePermissions: activePermsCount }));
-            } catch (err) { console.warn("Permissions fetch failed"); }
+            console.warn("Permissions fetch failed", e);
           }
 
           // 5. Assigned Location
@@ -203,7 +199,7 @@ const EmployeeDashboard = () => {
                   title="Leave Request"
                   desc="Apply now"
                   color="orange"
-                  onClick={() => navigate("/leave-application")}
+                  onClick={() => navigate("/myleaves")}
                 />
               </div>
             </div>

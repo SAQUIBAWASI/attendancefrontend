@@ -13,6 +13,9 @@ const EmployeePermissions = () => {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [position, setPosition] = useState(null);
   const [submittingDuty, setSubmittingDuty] = useState(false);
+  const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
+  const [permissionForm, setPermissionForm] = useState({ reason: "", duration: "" });
+  const [permissionLoading, setPermissionLoading] = useState(false);
   const navigate = useNavigate();
 
   const fetchLocation = () => {
@@ -136,6 +139,53 @@ const EmployeePermissions = () => {
     }
   };
 
+  const handlePermissionSubmit = async (e) => {
+    e.preventDefault();
+    setPermissionLoading(true);
+
+    const rawData = localStorage.getItem("employeeData");
+    let employeeData = null;
+    try { if (rawData) employeeData = JSON.parse(rawData); } catch (e) { }
+
+    const id = employeeData?.employeeId || localStorage.getItem("employeeId");
+    // Some basic fail-safe for name, though usually permissions are by ID
+    const name = employeeData?.name || localStorage.getItem("employeeName") || "Employee";
+    const durationNum = parseInt(permissionForm.duration);
+
+    if (!id) {
+      alert("❌ Employee ID not found. Please log out and log in again.");
+      setPermissionLoading(false);
+      return;
+    }
+
+    if (!permissionForm.reason || isNaN(durationNum)) {
+      alert("❌ Please provide a valid reason and duration.");
+      setPermissionLoading(false);
+      return;
+    }
+
+    try {
+      const res = await axios.post(`${BASE_URL}api/permissions/request`, {
+        employeeId: id,
+        employeeName: name,
+        reason: permissionForm.reason,
+        duration: durationNum,
+      });
+
+      if (res.status === 201) {
+        alert("✅ Permission Requested Successfully!");
+        setIsPermissionModalOpen(false);
+        setPermissionForm({ reason: "", duration: "" });
+        // Refresh permissions
+        window.location.reload();
+      }
+    } catch (err) {
+      alert("❌ " + (err.response?.data?.message || err.message));
+    } finally {
+      setPermissionLoading(false);
+    }
+  };
+
   if (loading) return <p className="p-4">Loading...</p>;
   if (error) return <p className="p-4 text-red-600">{error}</p>;
 
@@ -144,9 +194,17 @@ const EmployeePermissions = () => {
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
         <div className="max-w-6xl p-6 mx-auto bg-white rounded-lg shadow-md">
           <div className="flex flex-col gap-4 mb-6 md:flex-row md:justify-between md:items-center">
-            <h2 className="text-2xl font-bold text-blue-900">
-              My Permission Requests
-            </h2>
+            <div className="flex items-center gap-4">
+              <h2 className="text-2xl font-bold text-blue-900">
+                My Permission Requests
+              </h2>
+              <button
+                onClick={() => setIsPermissionModalOpen(true)}
+                className="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+              >
+                + Request Permission
+              </button>
+            </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <div className="flex flex-col">
@@ -230,6 +288,35 @@ const EmployeePermissions = () => {
           )}
         </div>
       </main>
+
+      {/* Permission Modal */}
+      {isPermissionModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Request Permission</h3>
+              <button onClick={() => setIsPermissionModalOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+
+            <form onSubmit={handlePermissionSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                <textarea required className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" rows="3" value={permissionForm.reason} onChange={(e) => setPermissionForm({ ...permissionForm, reason: e.target.value })} placeholder="Why do you need permission?"></textarea>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
+                <input type="number" required min="1" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={permissionForm.duration} onChange={(e) => setPermissionForm({ ...permissionForm, duration: e.target.value })} placeholder="e.g. 30" />
+              </div>
+
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setIsPermissionModalOpen(false)} className="flex-1 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                <button type="submit" disabled={permissionLoading} className="flex-1 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">{permissionLoading ? "Submitting..." : "Request"}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

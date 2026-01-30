@@ -326,7 +326,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
     {
       icon: <i className="ri-calendar-close-fill"></i>,
       name: "Leave",
-      path: "/leave-application",
+      path: "/myleaves",
       permission: "ALLOW_ALWAYS"
 
     },

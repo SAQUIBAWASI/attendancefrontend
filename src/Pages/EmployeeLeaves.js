@@ -156,6 +156,19 @@ const EmployeeLeaves = () => {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
 
+  // Modal & Form State
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const [submittingLeave, setSubmittingLeave] = useState(false);
+  const [leaveFormData, setLeaveFormData] = useState({
+    employeeId: "",
+    employeeName: "",
+    leaveType: "casual",
+    startDate: "",
+    endDate: "",
+    days: 0,
+    reason: "",
+  });
+
   useEffect(() => {
     const employeeDataRaw = localStorage.getItem("employeeData");
     if (!employeeDataRaw) {
@@ -242,20 +255,94 @@ const EmployeeLeaves = () => {
     setFilteredLeaves(filtered);
   };
 
+  // Handle Form Change & Date Calculation
+  const handleLeaveChange = (e) => {
+    const { name, value } = e.target;
+    setLeaveFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+      if (name === "startDate" || name === "endDate") {
+        if (updated.startDate && updated.endDate) {
+          const start = new Date(updated.startDate);
+          const end = new Date(updated.endDate);
+          const diffTime = end - start;
+          const diffDays = diffTime >= 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 : 0;
+          updated.days = diffDays;
+        }
+      }
+      return updated;
+    });
+  };
+
+  // Handle Leave Submit
+  const handleLeaveSubmit = async (e) => {
+    e.preventDefault();
+    setSubmittingLeave(true);
+
+    const rawData = localStorage.getItem("employeeData");
+    let employeeData = null;
+    try { if (rawData) employeeData = JSON.parse(rawData); } catch (e) { }
+
+    const id = leaveFormData.employeeId || employeeData?.employeeId || localStorage.getItem("employeeId");
+    const name = leaveFormData.employeeName || employeeData?.name || localStorage.getItem("employeeName") || employeeData?.employeeName;
+
+    if (!id) {
+      alert("❌ Employee details missing. Please re-login.");
+      setSubmittingLeave(false);
+      return;
+    }
+
+    const payload = {
+      ...leaveFormData,
+      employeeId: id,
+      employeeName: name
+    };
+
+    try {
+      const response = await axios.post("https://api.timelyhealth.in/api/leaves/add-leave", payload);
+      if (response.status === 201) {
+        alert("✅ Leave application submitted successfully!");
+        setLeaveFormData({
+          employeeId: "",
+          employeeName: "",
+          leaveType: "casual",
+          startDate: "",
+          endDate: "",
+          days: 0,
+          reason: "",
+        });
+        setIsLeaveModalOpen(false);
+        // Refresh leaves list
+        window.location.reload();
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "❌ Failed to submit leave application.");
+    } finally {
+      setSubmittingLeave(false);
+    }
+  };
+
   if (loading) return <p className="p-4">Loading...</p>;
   if (error) return <p className="p-4 text-red-600">{error}</p>;
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
-    
+
 
       {/* Page content */}
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
         <div className="max-w-6xl p-6 mx-auto bg-white rounded-lg shadow-md">
           <div className="flex flex-col gap-4 mb-6 md:flex-row md:justify-between md:items-center">
-            <h2 className="text-2xl font-bold text-blue-900">
-              My Leave Requests
-            </h2>
+            <div className="flex items-center gap-4">
+              <h2 className="text-2xl font-bold text-blue-900">
+                My Leave Requests
+              </h2>
+              <button
+                onClick={() => setIsLeaveModalOpen(true)}
+                className="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+              >
+                + Apply Leave
+              </button>
+            </div>
 
             <div className="flex flex-col items-stretch w-full gap-3 sm:flex-row md:items-center md:w-auto">
               {/* <button
@@ -325,13 +412,12 @@ const EmployeeLeaves = () => {
                       <td className="p-2 border">{leave.reason}</td>
                       <td className="p-2 border">
                         <span
-                          className={`px-2 py-1 rounded text-xs font-semibold ${
-                            leave.status === "approved"
-                              ? "bg-green-200 text-green-800"
-                              : leave.status === "rejected"
+                          className={`px-2 py-1 rounded text-xs font-semibold ${leave.status === "approved"
+                            ? "bg-green-200 text-green-800"
+                            : leave.status === "rejected"
                               ? "bg-red-200 text-red-800"
                               : "bg-yellow-200 text-yellow-800"
-                          }`}
+                            }`}
                         >
                           {leave.status}
                         </span>
@@ -344,6 +430,55 @@ const EmployeeLeaves = () => {
           )}
         </div>
       </main>
+
+      {/* Apply Leave Modal */}
+      {isLeaveModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Apply for Leave</h3>
+              <button onClick={() => setIsLeaveModalOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+
+            <form onSubmit={handleLeaveSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
+                <select name="leaveType" value={leaveFormData.leaveType} onChange={handleLeaveChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required>
+                  <option value="casual">Casual</option>
+                  <option value="sick">Sick</option>
+                  <option value="earned">Earned</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                  <input name="startDate" type="date" value={leaveFormData.startDate} onChange={handleLeaveChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                  <input name="endDate" type="date" value={leaveFormData.endDate} onChange={handleLeaveChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Total Days</label>
+                <input name="days" type="number" value={leaveFormData.days} readOnly className="w-full p-2 bg-gray-100 border rounded-lg outline-none" placeholder="0" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                <textarea name="reason" value={leaveFormData.reason} onChange={handleLeaveChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" rows="3" placeholder="Reason for leave" required></textarea>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setIsLeaveModalOpen(false)} className="flex-1 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                <button type="submit" disabled={submittingLeave} className="flex-1 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">{submittingLeave ? "Applying..." : "Apply Leave"}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
