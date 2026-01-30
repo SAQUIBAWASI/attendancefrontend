@@ -10888,18 +10888,18 @@ export default function AttendanceSummary() {
             <table className="min-w-full">
               <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
                 <tr>
-                  <th className="py-3 text-center">Employee ID</th>
-                  <th className="py-3 text-center ">Name</th>
-                  <th className="py-3 text-center">Month</th>
-                  <th className="py-3 text-center">Present</th>
-                  <th className="py-3 text-center">Late</th>
-                  <th className="py-3 text-center">Onsite</th>
-                  <th className="py-3 text-center">Half Day</th>
-                  <th className="py-3 text-center">Full Day</th>
-                  <th className="py-3 text-center">Over Time</th>
-                  <th className="py-3 text-center">Working Days</th>
+                  <th className="py-2 text-center">Employee ID</th>
+                  <th className="py-2 text-center ">Name</th>
+                  <th className="py-2 text-center">Month</th>
+                  <th className="py-2 text-center">Present</th>
+                  <th className="py-2 text-center">Late</th>
+                  <th className="py-2 text-center">Onsite</th>
+                  <th className="py-2 text-center">Half Day</th>
+                  <th className="py-2 text-center">Full Day</th>
+                  <th className="py-2 text-center">Over Time</th>
+                  <th className="py-2 text-center">Working Days</th>
                   {/* ✅ NEW DOWNLOAD COLUMN HEADER */}
-                  <th className="py-3 text-center">Download</th>
+                  <th className="py-2 text-center">Download</th>
                 </tr>
               </thead>
 
@@ -10966,7 +10966,7 @@ export default function AttendanceSummary() {
                     disabled={currentPage === 1}
                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
                       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                      : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                      : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
                       }`}
                   >
                     Previous

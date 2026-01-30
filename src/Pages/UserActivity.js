@@ -171,7 +171,7 @@ const UserActivity = () => {
 
         {/* Statistics Cards */}
         {/* {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-blue-500">
               <div className="flex items-center justify-between">
                 <div>
@@ -310,19 +310,19 @@ const UserActivity = () => {
             <table className="min-w-full">
               <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
                 <tr>
-                  <th className="py-3 text-center">
+                  <th className="py-2 text-center">
                     Timestamp
                   </th>
-                  <th className="py-3 text-center">
+                  <th className="py-2 text-center">
                     User
                   </th>
-                  <th className="py-3 text-center">
+                  <th className="py-2 text-center">
                     Role
                   </th>
-                  <th className="py-3 text-center">
+                  <th className="py-2 text-center">
                     Action
                   </th>
-                  <th className="py-3 text-center">
+                  <th className="py-2 text-center">
                     Details
                   </th>
                 </tr>
@@ -333,7 +333,7 @@ const UserActivity = () => {
                     <td colSpan="5" className="px-6 py-12 text-center">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                        <span className="ml-3 text-gray-600">
+                        <span className="ml-2 text-gray-600">
                           Loading activities...
                         </span>
                       </div>
@@ -380,7 +380,7 @@ const UserActivity = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`px-3 py-1 text-xs font-semibold rounded-full ${getActionBadgeColor(
+                          className={`px-2 py-1 text-xs font-semibold rounded-full ${getActionBadgeColor(
                             activity.action
                           )}`}
                         >
@@ -449,7 +449,7 @@ const UserActivity = () => {
                               currentPage: page,
                             }))
                           }
-                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === page
+                          className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === page
                             ? "bg-blue-600 text-white"
                             : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                             }`}

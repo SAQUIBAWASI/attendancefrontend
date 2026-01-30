@@ -1250,18 +1250,18 @@ const EmployeeList = () => {
         <table className="min-w-full">
           <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
             <tr>
-              <th className="py-3 text-center">Employee ID</th>
-              <th className="py-3 text-center"> Name</th>
-              <th className="py-3 text-center">Phone</th>
-              <th className="py-3 text-center">Department</th>
-              <th className="py-3 text-center">Role</th>
-              <th className="py-3 text-center">Join Date</th>
-              <th className="py-3 text-center">Salary</th>
-              <th className="py-3 text-center">Shift</th>
-              <th className="py-3 text-center">Week Off</th>
-              <th className="py-3 text-center">Location</th>
-              <th className="py-3 text-center">Status</th>
-              <th className="py-3 text-center">Actions</th>
+              <th className=" py-2 text-center">Employee ID</th>
+              <th className=" py-2 text-center"> Name</th>
+              <th className=" py-2 text-center">Phone</th>
+              <th className=" py-2 text-center">Department</th>
+              <th className=" py-2 text-center">Role</th>
+              <th className=" py-2 text-center">Join Date</th>
+              <th className=" py-2 text-center">Salary</th>
+              <th className=" py-2 text-center">Shift</th>
+              <th className=" py-2 text-center">Week Off</th>
+              <th className=" py-2 text-center">Location</th>
+              <th className=" py-2 text-center">Status</th>
+              <th className=" py-2 text-center">Actions</th>
             </tr>
           </thead>
 

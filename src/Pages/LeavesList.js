@@ -1183,13 +1183,13 @@ const LeavesList = () => {
           <table className="min-w-full">
             <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
               <tr>
-                <th className="px-4 py-3 rounded-tl-lg">Name</th>
-                {/* <th className="px-4 py-3">Leave Type</th> */}
-                <th className="px-4 py-3">Dates</th>
-                <th className="px-4 py-3">Days</th>
-                <th className="px-4 py-3">Reason</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 rounded-tr-lg">Actions</th>
+                <th className="px-4 py-2 rounded-tl-lg">Name</th>
+                {/* <th className="px-4 py-2">Leave Type</th> */}
+                <th className="px-4 py-2">Dates</th>
+                <th className="px-4 py-2">Days</th>
+                <th className="px-4 py-2">Reason</th>
+                <th className="px-4 py-2">Status</th>
+                <th className="px-4 py-2 rounded-tr-lg">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -1199,7 +1199,7 @@ const LeavesList = () => {
                     key={l._id}
                     className="transition border-b hover:bg-gray-50"
                   >
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2">
                       <div className="font-semibold">{l.employeeName}</div>
                       {/* <div className="text-xs text-gray-500">
                         ID: {l.employeeId}
@@ -1208,55 +1208,55 @@ const LeavesList = () => {
                         {new Date(l.createdAt).toLocaleDateString()}
                       </div> */}
                     </td>
-                    {/* <td className="px-4 py-3">
-                      <span className="px-3 py-1 text-xs text-gray-700 bg-gray-100 rounded-full">
+                    {/* <td className="px-4 py-2">
+                      <span className="px-2 py-1 text-xs text-gray-700 bg-gray-100 rounded-full">
                         {l.leaveType || "Enter Leave Type"}
                       </span>
                     </td> */}
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-4 py-2 text-sm text-gray-600">
                       {new Date(l.startDate).toLocaleDateString()} <br />
                       <span className="text-xs text-gray-400">to</span> <br />
                       {new Date(l.endDate).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="px-3 py-1 text-xs text-blue-700 bg-blue-100 rounded-full">
+                    <td className="px-4 py-2">
+                      <span className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded-full">
                         {l.days} days
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-4 py-2 text-sm text-gray-700">
                       {l.reason}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2">
                       {l.status === "approved" && (
-                        <span className="px-3 py-1 text-xs text-green-700 bg-green-100 rounded-full">
+                        <span className="px-2 py-1 text-xs text-green-700 bg-green-100 rounded-full">
                           ✅ Approved
                         </span>
                       )}
                       {l.status === "pending" && (
-                        <span className="px-3 py-1 text-xs text-yellow-700 bg-yellow-100 rounded-full">
+                        <span className="px-2 py-1 text-xs text-yellow-700 bg-yellow-100 rounded-full">
                           ⏳ Pending
                         </span>
                       )}
                       {l.status === "rejected" && (
-                        <span className="px-3 py-1 text-xs text-red-700 bg-red-100 rounded-full">
+                        <span className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded-full">
                           ❌ Rejected
                         </span>
                       )}
                     </td>
 
                     {/* ✅ Approve / Reject Buttons */}
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-2 text-right">
                       {l.status === "pending" ? (
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => updateLeaveStatus(l._id, "approved")}
-                            className="px-3 py-1 text-xs text-white transition bg-green-500 rounded-md hover:bg-green-600"
+                            className="px-2 py-1 text-xs text-white transition bg-green-500 rounded-md hover:bg-green-600"
                           >
                             ✅ Approve
                           </button>
                           <button
                             onClick={() => updateLeaveStatus(l._id, "rejected")}
-                            className="px-3 py-1 text-xs text-white transition bg-red-500 rounded-md hover:bg-red-600"
+                            className="px-2 py-1 text-xs text-white transition bg-red-500 rounded-md hover:bg-red-600"
                           >
                             ❌ Reject
                           </button>

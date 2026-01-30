@@ -25,13 +25,13 @@
 //         <table className="min-w-full text-sm border border-gray-300">
 //           <thead className="text-gray-700 bg-gray-100">
 //             <tr>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Employee</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Leave Type</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Start Date</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">End Date</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Days</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Reason</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Status</th>
+//               <th className="px-4 py-2 border">Employee</th>
+//               <th className="px-4 py-2 border">Leave Type</th>
+//               <th className="px-4 py-2 border">Start Date</th>
+//               <th className="px-4 py-2 border">End Date</th>
+//               <th className="px-4 py-2 border">Days</th>
+//               <th className="px-4 py-2 border">Reason</th>
+//               <th className="px-4 py-2 border">Status</th>
 //             </tr>
 //           </thead>
 //           <tbody>
@@ -103,12 +103,12 @@
 //         <table className="min-w-full text-sm border border-gray-300">
 //           <thead className="text-gray-700 bg-gray-100">
 //             <tr>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Employee</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Leave Type</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Start Date</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">End Date</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Days</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Reason</th>
+//               <th className="px-4 py-2 border">Employee</th>
+//               <th className="px-4 py-2 border">Leave Type</th>
+//               <th className="px-4 py-2 border">Start Date</th>
+//               <th className="px-4 py-2 border">End Date</th>
+//               <th className="px-4 py-2 border">Days</th>
+//               <th className="px-4 py-2 border">Reason</th>
 //             </tr>
 //           </thead>
 //           <tbody>
@@ -208,12 +208,12 @@
 //         <table className="min-w-full text-sm border border-gray-300">
 //           <thead className="text-gray-700 bg-gray-100">
 //             <tr>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Employee</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Leave Type</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Start Date</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">End Date</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Days</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Reason</th>
+//               <th className="px-4 py-2 border">Employee</th>
+//               <th className="px-4 py-2 border">Leave Type</th>
+//               <th className="px-4 py-2 border">Start Date</th>
+//               <th className="px-4 py-2 border">End Date</th>
+//               <th className="px-4 py-2 border">Days</th>
+//               <th className="px-4 py-2 border">Reason</th>
 //             </tr>
 //           </thead>
 //           <tbody>
@@ -341,7 +341,7 @@
 //             type="month"
 //             value={selectedMonth}
 //             onChange={handleMonthChange}
-//             className="px-3 p-2 borderp-4 text-sm font-medium border-gray-300 rounded focus:outline-none focus:ring focus:ring-green-200"
+//             className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-green-200"
 //           />
 //           <button
 //             onClick={downloadCSV}
@@ -368,12 +368,12 @@
 //         <table className="min-w-full text-sm border border-gray-300">
 //           <thead className="text-gray-700 bg-gray-100">
 //             <tr>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Employee</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Leave Type</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Start Date</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">End Date</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Days</th>
-//               <th className="px-4 p-2 borderp-4 text-sm font-medium">Reason</th>
+//               <th className="px-4 py-2 border">Employee</th>
+//               <th className="px-4 py-2 border">Leave Type</th>
+//               <th className="px-4 py-2 border">Start Date</th>
+//               <th className="px-4 py-2 border">End Date</th>
+//               <th className="px-4 py-2 border">Days</th>
+//               <th className="px-4 py-2 border">Reason</th>
 //             </tr>
 //           </thead>
 //           <tbody>
@@ -576,13 +576,13 @@ const LeaveReport = () => {
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-3 p-2 borderp-4 text-sm font-medium border-gray-300 rounded focus:outline-none focus:ring focus:ring-green-200"
+            className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-green-200"
           />
 
           <select
             value={selectedEmployee}
             onChange={(e) => setSelectedEmployee(e.target.value)}
-            className="px-3 p-2 borderp-4 text-sm font-medium border-gray-300 rounded"
+            className="px-3 py-2 border border-gray-300 rounded"
           >
             <option value="">All Employees</option>
             {employees.map((name) => (
@@ -595,7 +595,7 @@ const LeaveReport = () => {
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="px-3 p-2 borderp-4 text-sm font-medium border-gray-300 rounded"
+            className="px-3 py-2 border border-gray-300 rounded"
           >
             <option value="">All Leave Types</option>
             {leaveTypes.map((t) => (
@@ -689,12 +689,12 @@ const LeaveReport = () => {
         <table className="min-w-full">
           <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
             <tr>
-              <th className="px-4 p-2 border p-4 text-sm font-medium">Name</th>
-              <th className="px-4 p-2 border p-4 text-sm font-medium">Leave Type</th>
-              <th className="px-4 p-2 border p-4 text-sm font-medium">Start Date</th>
-              <th className="px-4 p-2 border p-4 text-sm font-medium">End Date</th>
-              <th className="px-4 p-2 border p-4 text-sm font-medium">Days</th>
-              <th className="px-4 p-2 border p-4 text-sm font-medium">Reason</th>
+              <th className="px-4 py-2 border">Name</th>
+              <th className="px-4 py-2 border">Leave Type</th>
+              <th className="px-4 py-2 border">Start Date</th>
+              <th className="px-4 py-2 border">End Date</th>
+              <th className="px-4 py-2 border">Days</th>
+              <th className="px-4 py-2 border">Reason</th>
             </tr>
           </thead>
           <tbody>

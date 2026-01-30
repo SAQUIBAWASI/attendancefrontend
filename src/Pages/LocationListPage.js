@@ -224,23 +224,23 @@ const LocationListPage = () => {
           <table className="min-w-full">
             <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
               <tr>
-                <th className="py-3 text-center">#</th>
-                <th className="py-3 text-center">Location Name</th>
-                <th className="py-3 text-center">Full Address</th>
-                <th className="py-3 text-center">Latitude</th>
-                <th className="py-3 text-center">Longitude</th>
-                <th className="py-3 text-center">Actions</th>
+                <th className="py-2 text-center">#</th>
+                <th className="py-2 text-center">Location Name</th>
+                <th className="py-2 text-center">Full Address</th>
+                <th className="py-2 text-center">Latitude</th>
+                <th className="py-2 text-center">Longitude</th>
+                <th className="py-2 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filteredLocations.map((loc, index) => (
                 <tr key={loc._id} className="transition hover:bg-blue-50">
-                  <td className="px-4 py-3 text-sm text-gray-700">{index + 1}</td>
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">{loc.name}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{loc.fullAddress}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{loc.latitude}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{loc.longitude}</td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-2 text-sm text-gray-700">{index + 1}</td>
+                  <td className="px-4 py-2 text-sm font-medium text-gray-900">{loc.name}</td>
+                  <td className="px-4 py-2 text-sm text-gray-600">{loc.fullAddress}</td>
+                  <td className="px-4 py-2 text-sm text-gray-600">{loc.latitude}</td>
+                  <td className="px-4 py-2 text-sm text-gray-600">{loc.longitude}</td>
+                  <td className="px-4 py-2 text-center">
                     <div className="flex items-center justify-center gap-3">
                       <button
                         onClick={() => openEditModal(loc)}

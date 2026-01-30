@@ -66,28 +66,28 @@ export const Permissions = () => {
               <table className="min-w-full">
                 <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
                   <tr>
-                    <th className="p-3 border">Name</th>
-                    <th className="p-3 border">Date</th>
-                    <th className="p-3 border">Duration</th>
-                    <th className="p-3 border">Reason</th>
-                    <th className="p-3 border">Status</th>
-                    <th className="p-3 border">Actions</th>
+                    <th className="px-4 py-2 border">Name</th>
+                    <th className="px-4 py-2 border">Date</th>
+                    <th className="px-4 py-2 border">Duration</th>
+                    <th className="px-4 py-2 border">Reason</th>
+                    <th className="px-4 py-2 border">Status</th>
+                    <th className="px-4 py-2 border">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {permissions.map((p) => (
                     <tr key={p._id} className="hover:bg-gray-50 transition-colors">
-                      <td className="p-3 border p-4 text-sm font-medium text-gray-800">{p.employeeName}</td>
-                      <td className="p-3 border text-gray-600">
+                      <td className="px-4 py-2 border p-4 text-sm font-medium text-gray-800">{p.employeeName}</td>
+                      <td className="px-4 py-2 border text-gray-600">
                         {new Date(p.createdAt).toLocaleDateString()}
                         <br />
                         <span className="text-xs">{new Date(p.createdAt).toLocaleTimeString()}</span>
                       </td>
-                      <td className="p-3 border font-semibold text-[#1E40AF]">{p.duration} mins</td>
-                      <td className="p-3 border max-w-xs overflow-hidden text-ellipsis italic text-gray-700">
+                      <td className="px-4 py-2 border font-semibold text-[#1E40AF]">{p.duration} mins</td>
+                      <td className="px-4 py-2 border max-w-xs overflow-hidden text-ellipsis italic text-gray-700">
                         "{p.reason}"
                       </td>
-                      <td className="p-3 border">
+                      <td className="px-4 py-2 border">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${p.status === "APPROVED"
                             ? "bg-green-100 text-green-700 border border-green-200"
@@ -108,7 +108,7 @@ export const Permissions = () => {
                           </div>
                         )}
                       </td>
-                      <td className="p-3 border text-center">
+                      <td className="px-4 py-2 border text-center">
                         {p.status === "PENDING" ? (
                           <div className="flex gap-2 justify-center">
                             <button

@@ -3065,15 +3065,15 @@ const PayRoll = () => {
             <table className="min-w-full">
               <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
                 <tr>
-                  <th className="py-3 text-center">ID</th>
-                  <th className="py-3 text-center">Name</th>
-                  <th className="p-3 text-center">Working Days</th>
-                  <th className="p-3 text-center">Present Days</th>
-                  <th className="p-3 text-center">Half Days</th>
-                  <th className="p-3 text-center">Week Offs</th>
-                  <th className="p-3 text-center">Monthly Salary</th>
-                  <th className="p-3 text-center">Calculated Salary</th>
-                  <th className="p-3 text-center">Actions</th>
+                  <th className="py-2 text-center">Employee ID</th>
+                  <th className="py-2 text-center">Name</th>
+                  <th className="p-2 text-center">Working Days</th>
+                  <th className="p-2 text-center">Present Days</th>
+                  <th className="p-2 text-center">Half Days</th>
+                  <th className="p-2 text-center">Week Offs</th>
+                  <th className="p-2 text-center">Monthly Salary</th>
+                  <th className="p-2 text-center">Calculated Salary</th>
+                  <th className="p-2 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
