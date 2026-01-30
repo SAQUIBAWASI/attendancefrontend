@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const BASE_URL = "http://localhost:5001/";
+const BASE_URL = "http://localhost:5000/";
 
 const LeaveRequestForm = () => {
   const navigate = useNavigate();
@@ -102,7 +102,7 @@ const LeaveRequestForm = () => {
     setErrorMessage("");
 
     try {
-      const response = await axios.post("http://localhost:5001/api/leaves/apply", formData);
+      const response = await axios.post("http://localhost:5000/api/leaves/add-leave", formData);
       if (response.status === 201) {
         setSuccessMessage("✅ Leave application submitted successfully!");
         setFormData({
@@ -273,7 +273,7 @@ const LeaveRequestForm = () => {
 
               <div className="flex gap-3">
                 <button type="button" onClick={() => setIsPermissionModalOpen(false)} className="flex-1 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
-                <button onClick={()=>navigate('/mypermissions')} type="submit" disabled={permissionLoading} className="flex-1 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">{permissionLoading ? "Submitting..." : "Request"}</button>
+                <button onClick={() => navigate('/mypermissions')} type="submit" disabled={permissionLoading} className="flex-1 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">{permissionLoading ? "Submitting..." : "Request"}</button>
               </div>
             </form>
           </div>

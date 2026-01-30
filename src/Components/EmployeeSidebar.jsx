@@ -320,11 +320,6 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
 
     {
       icon: <i className="ri-calendar-close-fill"></i>,
-      name: "Leave",
-      path: "/leave-application"
-    },
-    {
-      icon: <i className="ri-calendar-close-fill"></i>,
       name: "My Permissions",
       path: "/mypermissions"
     },
@@ -349,14 +344,6 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
     {
       icon: <i className="ri-money-dollar-box-fill"></i>,
       name: "Salary",
-
-      path: "/mysalary"
-    },
-    {
-      icon: <i className="ri-logout-box-fill"></i>,
-      name: "Logout",
-      action: handleLogout,
-
       path: "/mysalary",
       permission: "ALLOW_ALWAYS"
     },
@@ -588,7 +575,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
 
                               className={`flex items-center gap-2.5 py-1.5 px-0 text-[13px] transition-colors rounded ${isActive(sub.path)
 
-                              // className={`flex items-center gap-2.5 py-1.5 px-3 text-[13px] transition-colors rounded ${isActive(sub.path)
+                                // className={`flex items-center gap-2.5 py-1.5 px-3 text-[13px] transition-colors rounded ${isActive(sub.path)
 
                                 ? 'text-emerald-300 font-semibold bg-emerald-900/20'
                                 : 'text-blue-100 hover:text-emerald-300 hover:bg-blue-800/40'

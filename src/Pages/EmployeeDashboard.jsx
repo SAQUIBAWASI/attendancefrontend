@@ -34,7 +34,6 @@ const EmployeeDashboard = () => {
     const fetchData = async () => {
       try {
         const BASE_URL = "https://api.timelyhealth.in/";
-        const API_5001 = "http://localhost:5001/";
         const API_5000 = "http://localhost:5000/";
 
         // 1. Fetch Profile
@@ -57,7 +56,7 @@ const EmployeeDashboard = () => {
 
           // 4. Permissions Stats
           try {
-            const permRes = await axios.get(`${API_5001}api/permissions/my-permissions/${targetId}`);
+            const permRes = await axios.get(`${API_5000}api/permissions/my-permissions/${targetId}`);
             const activePermsCount = permRes.data?.filter(p => p.status === "APPROVED").length || 0;
             setStats(prev => ({ ...prev, activePermissions: activePermsCount }));
           } catch (e) {
@@ -77,7 +76,7 @@ const EmployeeDashboard = () => {
           };
 
           try {
-            let locName = await fetchLocation(API_5001);
+            let locName = await fetchLocation(API_5000);
             if (!locName) locName = await fetchLocation(API_5000);
             if (!locName && profileData.location?.name) locName = profileData.location.name;
             setAssignedLocation(locName || "Not Assigned");
@@ -96,7 +95,7 @@ const EmployeeDashboard = () => {
 
           try {
             let shiftTime = await fetchShift(API_5000); // 5000 first since user confirmed my-shift works
-            if (!shiftTime) shiftTime = await fetchShift(API_5001);
+            if (!shiftTime) shiftTime = await fetchShift(API_5000);
             setShiftTiming(shiftTime || "No Shift Assigned");
           } catch (e) {
             setShiftTiming("Not Assigned");
