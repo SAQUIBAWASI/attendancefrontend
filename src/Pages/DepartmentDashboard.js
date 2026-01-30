@@ -652,9 +652,9 @@ const DepartmentDashboard = () => {
       )}
 
       {/* Departments Table */}
-      <div className="overflow-x-auto border rounded-lg">
-        <table className="w-full text-bold min-w-[600px]">
-          <thead className="bg-gray-200">
+      <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+        <table className="min-w-full">
+          <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
             <tr>
               <th className="p-2 font-bold text-left text-gray-800">Department Name</th>
               <th className="p-2 font-bold text-left text-gray-800">Description</th>
@@ -860,15 +860,15 @@ const DepartmentDashboard = () => {
                   <p className="ml-3 text-gray-800">Loading employees...</p>
                 </div>
               ) : filteredEmployees.length > 0 ? (
-                <table className="w-full text-bold min-w-[600px]">
-                  <thead className="bg-gray-200">
+                <table className="min-w-full">
+                 <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
                     <tr>
-                      <th className="p-2 font-bold text-left text-gray-800 border">Emp ID</th>
-                      <th className="p-2 font-bold text-left text-gray-800 border">Name</th>
-                      <th className="p-2 font-bold text-left text-gray-800 border">Phone</th>
-                      <th className="p-2 font-bold text-left text-gray-800 border">Department</th>
-                      <th className="p-2 font-bold text-left text-gray-800 border">Role</th>
-                      <th className="p-2 font-bold text-left text-gray-800 border">Join Date</th>
+                      <th className="py-3 text-center">Emp ID</th>
+                      <th className="py-3 text-center">Name</th>
+                      <th className="py-3 text-center">Phone</th>
+                      <th className="py-3 text-center">Department</th>
+                      <th className="py-3 text-center">Role</th>
+                      <th className="py-3 text-center">Join Date</th>
                       {/* <th className="p-3 font-semibold text-left text-gray-700 border">Salary</th>
                       <th className="p-3 font-semibold text-left text-gray-700 border">Shift</th>
                       <th className="p-3 font-semibold text-left text-gray-700 border">Week Off</th>

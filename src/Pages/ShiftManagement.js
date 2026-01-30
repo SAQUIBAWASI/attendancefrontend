@@ -84,7 +84,7 @@
 //         <form onSubmit={handleSubmit} className="space-y-4">
 //           {/* Employee ID */}
 //           <div>
-//             <label className="block mb-1 text-sm font-medium text-gray-700">
+//             <label className="block mb-1 text-sm text-sm text-gray-700">
 //               Employee ID *
 //             </label>
 //             <input
@@ -4183,16 +4183,16 @@ const ShiftManagement = () => {
             <h2 className="text-xl font-bold text-gray-800">Assigned Employees ({employeeAssignments.length})</h2>
             {/* <p className="text-sm text-gray-500">List of all active shift assignments</p> */}
           </div>
-          <div className="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
-            <table className="w-full">
-              <thead className="border-b border-gray-200 bg-gray-50">
+          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+            <table className="min-w-full">
+              <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
                 <tr>
-                  <th className="px-4 py-3 font-bold tracking-wider text-left uppercase text-S text-black-600">Employee ID</th>
-                  <th className="px-4 py-3 font-bold tracking-wider text-left uppercase text-S text-black-600">Employee Name</th>
-                  <th className="px-4 py-3 font-bold tracking-wider text-left uppercase text-S text-black-600">Shift</th>
-                  <th className="px-4 py-3 font-bold tracking-wider text-left uppercase text-S text-black-600">Time Slot</th>
-                  <th className="px-4 py-3 font-bold tracking-wider text-left uppercase text-S text-black-600">Description</th>
-                  <th className="px-4 py-3 font-bold tracking-wider text-left uppercase text-S text-black-600">Actions</th>
+                  <th className="py-3 text-center">Employee ID</th>
+                  <th className="py-3 text-center">Employee Name</th>
+                  <th className="py-3 text-center">Shift</th>
+                  <th className="py-3 text-center">Time Slot</th>
+                  <th className="py-3 text-center">Description</th>
+                  <th className="py-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -4207,25 +4207,25 @@ const ShiftManagement = () => {
                   return (
                     <tr key={assignment._id} className={`${rowColor} transition-colors duration-150`}>
                       <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900">{employeeId}</div>
+                        <div className="p-4 text-sm font-medium text-gray-900">{employeeId}</div>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900">{employeeName}</div>
+                        <div className="p-4 text-sm font-medium text-gray-900">{employeeName}</div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${getBadgeColor(assignment.shiftType)}`}>
+                        <span className={`p-4 text-sm font-medium rounded-full ${getBadgeColor(assignment.shiftType)}`}>
                           Shift {assignment.shiftType} {isBrakeShift && '(Brake)'}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900">
+                        <div className="p-4 text-sm font-medium text-gray-900">
                           {isBrakeShift ? 
                             "07:00-13:00 & 17:00-21:30" : 
                             getEmployeeTimeRange(assignment)}
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="text-sm text-gray-600">
+                        <div className="p-4 text-sm font-medium text-gray-900">
                           {isBrakeShift ? 
                             "Brake shift with afternoon break" : 
                             (assignment.employeeAssignment?.selectedDescription || timeSlot?.description || "Shift timing")}
@@ -4281,7 +4281,7 @@ const ShiftManagement = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block mb-1.5 text-sm font-medium text-gray-700">
+                    <label className="block mb-1.5 text-sm text-sm text-gray-700">
                       Shift Type (Letter A-Z) *
                     </label>
                     <input
@@ -4300,7 +4300,7 @@ const ShiftManagement = () => {
                   </div>
                   
                   <div>
-                    <label className="block mb-1.5 text-sm font-medium text-gray-700">
+                    <label className="block mb-1.5 text-sm text-sm text-gray-700">
                       Shift Name *
                     </label>
                     <input
@@ -4316,7 +4316,7 @@ const ShiftManagement = () => {
 
                 {/* Single Time Slot Configuration */}
                 <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                  <label className="block mb-2 text-sm text-sm text-gray-700">
                     Time Slot Configuration *
                   </label>
                   
@@ -4350,7 +4350,7 @@ const ShiftManagement = () => {
                 {/* Preview */}
                 {createForm.shiftType && createForm.timeSlots[0].timeRange && (
                   <div className="p-3 border border-gray-200 rounded-lg bg-gray-50">
-                    <h4 className="mb-1.5 text-sm font-medium text-gray-800">Preview:</h4>
+                    <h4 className="mb-1.5 text-sm text-sm text-gray-800">Preview:</h4>
                     <p className="text-sm text-gray-700">
                       Shift {createForm.shiftType}: {createForm.shiftName}
                     </p>
@@ -4396,7 +4396,7 @@ const ShiftManagement = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block mb-1.5 text-sm font-medium text-gray-700">
+                    <label className="block mb-1.5 text-sm text-sm text-gray-700">
                       Shift Type (Letter A-Z) *
                     </label>
                     <input
@@ -4415,7 +4415,7 @@ const ShiftManagement = () => {
                   </div>
                   
                   <div>
-                    <label className="block mb-1.5 text-sm font-medium text-gray-700">
+                    <label className="block mb-1.5 text-sm text-sm text-gray-700">
                       Shift Name *
                     </label>
                     <input
@@ -4431,14 +4431,14 @@ const ShiftManagement = () => {
 
                 {/* Brake Shift Information */}
                 <div className="p-3 border border-purple-200 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50">
-                  <h4 className="mb-2 text-sm font-medium text-purple-800">Brake Shift Details</h4>
+                  <h4 className="mb-2 text-sm text-sm text-purple-800">Brake Shift Details</h4>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="flex items-center justify-center bg-purple-100 rounded-full w-7 h-7">
                         <FaClock className="text-xs text-purple-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-800">07:00 - 13:00</p>
+                        <p className="text-sm text-sm text-gray-800">07:00 - 13:00</p>
                         <p className="text-xs text-gray-600">First shift before break</p>
                       </div>
                     </div>
@@ -4448,7 +4448,7 @@ const ShiftManagement = () => {
                         <FaClock className="text-xs text-pink-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-800">17:00 - 21:30</p>
+                        <p className="text-sm text-sm text-gray-800">17:00 - 21:30</p>
                         <p className="text-xs text-gray-600">Second shift after break</p>
                       </div>
                     </div>
@@ -4462,7 +4462,7 @@ const ShiftManagement = () => {
                 {/* Preview */}
                 {createForm.shiftType && (
                   <div className="p-3 border border-purple-200 rounded-lg bg-purple-50">
-                    <h4 className="mb-1.5 text-sm font-medium text-purple-800">Preview:</h4>
+                    <h4 className="mb-1.5 text-sm text-sm text-purple-800">Preview:</h4>
                     <p className="text-sm text-purple-700">
                       Shift {createForm.shiftType} (Brake): {createForm.shiftName}
                     </p>
@@ -4509,7 +4509,7 @@ const ShiftManagement = () => {
             <form onSubmit={editingAssignment ? handleUpdateAssignment : handleAssignShift} className="p-4">
               <div className="space-y-3">
                 <div>
-                  <label className="block mb-1.5 text-sm font-medium text-gray-700">
+                  <label className="block mb-1.5 text-sm text-sm text-gray-700">
                     Employee ID {editingAssignment && '(Cannot change)'}
                   </label>
                   <input
@@ -4524,7 +4524,7 @@ const ShiftManagement = () => {
                 </div>
 
                 <div>
-                  <label className="block mb-1.5 text-sm font-medium text-gray-700">
+                  <label className="block mb-1.5 text-sm text-sm text-gray-700">
                     Employee Name *
                   </label>
                   <input
@@ -4538,7 +4538,7 @@ const ShiftManagement = () => {
                 </div>
 
                 <div>
-                  <label className="block mb-1.5 text-sm font-medium text-gray-700">
+                  <label className="block mb-1.5 text-sm text-sm text-gray-700">
                     Select Shift Type *
                   </label>
                   <select
@@ -4651,13 +4651,13 @@ const ShiftManagement = () => {
                     return (
                       <tr key={emp._id} className={`${rowColor} transition-colors duration-150`}>
                         <td className="px-4 py-3">
-                          <div className="font-medium text-gray-900">{emp.employeeAssignment?.employeeId || emp.employeeId}</div>
+                          <div className="text-sm text-gray-900">{emp.employeeAssignment?.employeeId || emp.employeeId}</div>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="font-medium text-gray-900">{emp.employeeAssignment?.employeeName || emp.employeeName}</div>
+                          <div className="text-sm text-gray-900">{emp.employeeAssignment?.employeeName || emp.employeeName}</div>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="font-medium text-gray-900">
+                          <div className="text-sm text-gray-900">
                             {isBrakeShift ? "07:00-13:00 & 17:00-21:30" : getEmployeeTimeRange(emp)}
                           </div>
                         </td>
@@ -4704,7 +4704,7 @@ const ShiftManagement = () => {
             <div className="p-4 border-t border-gray-200 bg-gray-50">
               <button
                 onClick={() => setShowViewModal(false)}
-                className="w-full py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 text-sm font-medium transition-colors"
+                className="w-full py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 text-sm text-sm transition-colors"
               >
                 Close
               </button>

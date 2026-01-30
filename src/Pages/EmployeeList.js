@@ -1246,22 +1246,22 @@ const EmployeeList = () => {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto border rounded-lg">
-        <table className="w-full text-sm min-w-[600px]">
-          <thead className="bg-gray-200">
+      <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+        <table className="min-w-full">
+          <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
             <tr>
-              <th className="p-2 border">Emp ID</th>
-              <th className="p-2 border">Name</th>
-              <th className="p-2 border">Phone</th>
-              <th className="p-2 border">Department</th>
-              <th className="p-2 border">Role</th>
-              <th className="p-2 border">Join Date</th>
-              <th className="p-2 border">Salary</th>
-              <th className="p-2 border">Shift</th>
-              <th className="p-2 border">Week Off</th>
-              <th className="p-2 border">Location</th>
-              <th className="p-2 border">Status</th>
-              <th className="p-2 border">Actions</th>
+              <th className="py-3 text-center">Employee ID</th>
+              <th className="py-3 text-center"> Name</th>
+              <th className="py-3 text-center">Phone</th>
+              <th className="py-3 text-center">Department</th>
+              <th className="py-3 text-center">Role</th>
+              <th className="py-3 text-center">Join Date</th>
+              <th className="py-3 text-center">Salary</th>
+              <th className="py-3 text-center">Shift</th>
+              <th className="py-3 text-center">Week Off</th>
+              <th className="py-3 text-center">Location</th>
+              <th className="py-3 text-center">Status</th>
+              <th className="py-3 text-center">Actions</th>
             </tr>
           </thead>
 
@@ -1274,7 +1274,7 @@ const EmployeeList = () => {
                     key={emp._id} 
                     className={`border-b hover:bg-gray-50 ${isHidden ? 'bg-red-50 hover:bg-red-100' : ''}`}
                   >
-                    <td className="p-2 border">
+                    <td className="p-2 borderp-4 text-sm font-medium">
                       <div className="flex items-center gap-2">
                         <span>{emp.employeeId}</span>
                         {isHidden && (
@@ -1284,22 +1284,22 @@ const EmployeeList = () => {
                         )}
                       </div>
                     </td>
-                    <td className="p-2 border">
+                    <td className="p-2 borderp-4 text-sm font-medium">
                       <div className="flex items-center gap-2">
                         {emp.name}
                       </div>
                     </td>
-                    <td className="p-2 border">{emp.phone}</td>
-                    <td className="p-2 border">{emp.department}</td>
-                    <td className="p-2 border">{emp.role}</td>
-                    <td className="p-2 border">
+                    <td className="p-2 borderp-4 text-sm font-medium">{emp.phone}</td>
+                    <td className="p-2 borderp-4 text-sm font-medium">{emp.department}</td>
+                    <td className="p-2 borderp-4 text-sm font-medium">{emp.role}</td>
+                    <td className="p-2 borderp-4 text-sm font-medium">
                       {emp.joinDate ? new Date(emp.joinDate).toLocaleDateString() : "-"}
                     </td>
-                    <td className="p-2 border">₹{emp.salaryPerMonth || 0}</td>
-                    <td className="p-2 border">{emp.shiftHours || 8}</td>
-                    <td className="p-2 border">{emp.weekOffPerMonth || 0}</td>
-                    <td className="p-2 border">{getLocationName(emp.location)}</td>
-                    <td className="p-2 border">
+                    <td className="p-2 borderp-4 text-sm font-medium">₹{emp.salaryPerMonth || 0}</td>
+                    <td className="p-2 borderp-4 text-sm font-medium">{emp.shiftHours || 8}</td>
+                    <td className="p-2 borderp-4 text-sm font-medium">{emp.weekOffPerMonth || 0}</td>
+                    <td className="p-2 borderp-4 text-sm font-medium">{getLocationName(emp.location)}</td>
+                    <td className="p-2 borderp-4 text-sm font-medium">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${isHidden ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
                         {isHidden ? 'INACTIVE' : 'ACTIVE'}
                       </span>
@@ -1414,7 +1414,7 @@ const EmployeeList = () => {
             <select
               value={selectedLocationId}
               onChange={(e) => setSelectedLocationId(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 borderp-4 text-sm font-medium rounded"
             >
               <option value="">Select Location</option>
               {locations.map((loc) => (

@@ -62,11 +62,11 @@ export const Permissions = () => {
               No permission requests found.
             </div>
           ) : (
-            <div className="overflow-x-auto border rounded-lg">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead className="bg-[#1E40AF] text-white">
+            <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+              <table className="min-w-full">
+                <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
                   <tr>
-                    <th className="p-3 border">Employee Name</th>
+                    <th className="p-3 border">Name</th>
                     <th className="p-3 border">Date</th>
                     <th className="p-3 border">Duration</th>
                     <th className="p-3 border">Reason</th>
@@ -77,7 +77,7 @@ export const Permissions = () => {
                 <tbody className="divide-y divide-gray-200">
                   {permissions.map((p) => (
                     <tr key={p._id} className="hover:bg-gray-50 transition-colors">
-                      <td className="p-3 border font-medium text-gray-800">{p.employeeName}</td>
+                      <td className="p-3 border p-4 text-sm font-medium text-gray-800">{p.employeeName}</td>
                       <td className="p-3 border text-gray-600">
                         {new Date(p.createdAt).toLocaleDateString()}
                         <br />

@@ -1,12 +1,8 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FiCalendar,
-  FiDownload,
-  FiFilter,
-  FiRefreshCw,
-  FiSearch,
-  FiUser,
+  FiSearch
 } from "react-icons/fi";
 
 const UserActivity = () => {
@@ -310,23 +306,23 @@ const UserActivity = () => {
 
         {/* Activities Table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gradient-to-r from-blue-600 to-blue-700">
+          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+            <table className="min-w-full">
+              <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th className="py-3 text-center">
                     Timestamp
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th className="py-3 text-center">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th className="py-3 text-center">
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th className="py-3 text-center">
                     Action
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th className="py-3 text-center">
                     Details
                   </th>
                 </tr>

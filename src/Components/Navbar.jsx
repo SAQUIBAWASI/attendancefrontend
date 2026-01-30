@@ -83,6 +83,9 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
       '/permission-settings': 'Permission Settings',
       '/addlocation': 'Add Location',
       '/locationlist': 'Location List',
+      "/useractivity": "User Activity",
+      "/useraccess": "User Access",
+      "/permissions": "Permissions",
       '/shift': 'Shift Management',
       '/shiftlist': 'Shift List',
     };

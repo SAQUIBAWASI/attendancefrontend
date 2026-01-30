@@ -51,10 +51,7 @@
 
 
 import { RiMenu2Line, RiMenu3Line } from "react-icons/ri";
-import { FiBell } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import axios from "axios";
 
 const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
   const location = useLocation();
@@ -70,6 +67,8 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
     "/my-shift": "My Shift",
     "/mylocation": "My Assigned Location",
     "/mysalary": "My Salary",
+    "/mypermissions": "My Permissions",
+    "/notifications": "Notifications",
   };
 
   const handleMenuClick = () => {

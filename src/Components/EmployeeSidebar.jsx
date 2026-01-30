@@ -212,6 +212,20 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
       "/mypermissions": "My Permissions",
       "/myleaves": "My Leaves",
       "/notifications": "Notifications",
+      "/emp-admin-dashboard": "Main Dashboard",
+      "/emp-employees": "Employee Management",
+      "/emp-add-employee": "Add Employee",
+      "/emp-attendance-summary": "Attendance Summary",
+      "/emp-attendance-records": "Attendance Records",
+      "/emp-today-attendance": "Today's Attendance",
+      "/emp-absent-today": "Absent Today",
+      "/emp-leaves": "Leave Approval",
+      "/emp-payroll": "Payroll",
+      "/emp-reports": "Reports",
+      "/emp-locations": "Locations",
+      "/emp-shifts": "Shift Management",
+      "/emp-user-activity": "User Activity",
+      "/emp-user-access": "User Access",
     };
 
     return pathMap[path] || "Dashboard";
@@ -319,7 +333,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
     },
 
     {
-      icon: <i className="ri-calendar-close-fill"></i>,
+      icon: <i className="ri-shield-keyhole-fill"></i>,
       name: "My Permissions",
       path: "/mypermissions"
     },

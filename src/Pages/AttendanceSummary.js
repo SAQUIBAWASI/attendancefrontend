@@ -177,14 +177,14 @@
 //               <table className="w-full text-sm border border-gray-200">
 //                 <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
 //                   <tr>
-//                     <th className="px-6 py-3 text-left">Employee ID</th>
-//                     <th className="px-6 py-3 text-left">Email</th>
-//                     <th className="px-6 py-3 text-left">Total Days</th>
-//                     <th className="px-6 py-3 text-left">Present</th>
-//                     <th className="px-6 py-3 text-left">Late</th>
-//                     <th className="px-6 py-3 text-left">Onsite</th>
-//                     <th className="px-6 py-3 text-left">Half-Day Leave</th>
-//                     <th className="px-6 py-3 text-left">Full-Day Leave</th>
+//                     <th className="px-6 py-4 text-left">Employee ID</th>
+//                     <th className="px-6 py-4 text-left">Email</th>
+//                     <th className="px-6 py-4 text-left">Total Days</th>
+//                     <th className="px-6 py-4 text-left">Present</th>
+//                     <th className="px-6 py-4 text-left">Late</th>
+//                     <th className="px-6 py-4 text-left">Onsite</th>
+//                     <th className="px-6 py-4 text-left">Half-Day Leave</th>
+//                     <th className="px-6 py-4 text-left">Full-Day Leave</th>
 //                   </tr>
 //                 </thead>
 //                 <tbody>
@@ -193,26 +193,26 @@
 //                       key={emp.employeeId}
 //                       className="transition border-t hover:bg-blue-50"
 //                     >
-//                       <td className="px-6 py-3 font-semibold text-gray-900">
+//                       <td className="px-6 py-4 font-semibold text-gray-900">
 //                         {emp.employeeId}
 //                       </td>
-//                       <td className="px-6 py-3 text-gray-700">
+//                       <td className="px-6 py-4 text-gray-700">
 //                         {emp.employeeEmail}
 //                       </td>
-//                       <td className="px-6 py-3">{emp.totalDays}</td>
-//                       <td className="px-6 py-3 font-semibold text-green-700">
+//                       <td className="px-6 py-4">{emp.totalDays}</td>
+//                       <td className="px-6 py-4 font-semibold text-green-700">
 //                         {emp.presentDays}
 //                       </td>
-//                       <td className="px-6 py-3 font-semibold text-orange-700">
+//                       <td className="px-6 py-4 font-semibold text-orange-700">
 //                         {emp.lateDays}
 //                       </td>
-//                       <td className="px-6 py-3 font-semibold text-blue-700">
+//                       <td className="px-6 py-4 font-semibold text-blue-700">
 //                         {emp.onsiteDays}
 //                       </td>
-//                       <td className="px-6 py-3 font-semibold text-yellow-700">
+//                       <td className="px-6 py-4 font-semibold text-yellow-700">
 //                         {emp.halfDayLeaves}
 //                       </td>
-//                       <td className="px-6 py-3 font-semibold text-red-700">
+//                       <td className="px-6 py-4 font-semibold text-red-700">
 //                         {emp.fullDayLeaves}
 //                       </td>
 //                     </tr>
@@ -435,14 +435,14 @@
 //               <table className="w-full text-sm border border-gray-200">
 //                 <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
 //                   <tr>
-//                     <th className="px-6 py-3 text-left">Employee ID</th>
-//                     <th className="px-6 py-3 text-left">Email</th>
-//                     <th className="px-6 py-3 text-left">Total Days</th>
-//                     <th className="px-6 py-3 text-left">Present</th>
-//                     <th className="px-6 py-3 text-left">Late</th>
-//                     <th className="px-6 py-3 text-left">Onsite</th>
-//                     <th className="px-6 py-3 text-left">Half-Day Leave</th>
-//                     <th className="px-6 py-3 text-left">Full-Day Leave</th>
+//                     <th className="px-6 py-4 text-left">Employee ID</th>
+//                     <th className="px-6 py-4 text-left">Email</th>
+//                     <th className="px-6 py-4 text-left">Total Days</th>
+//                     <th className="px-6 py-4 text-left">Present</th>
+//                     <th className="px-6 py-4 text-left">Late</th>
+//                     <th className="px-6 py-4 text-left">Onsite</th>
+//                     <th className="px-6 py-4 text-left">Half-Day Leave</th>
+//                     <th className="px-6 py-4 text-left">Full-Day Leave</th>
 //                   </tr>
 //                 </thead>
 //                 <tbody>
@@ -451,17 +451,17 @@
 //                       key={emp.employeeId}
 //                       className="transition border-t hover:bg-blue-50"
 //                     >
-//                       <td className="px-6 py-3 font-semibold text-gray-900">
+//                       <td className="px-6 py-4 font-semibold text-gray-900">
 //                         {emp.employeeId}
 //                       </td>
-//                       <td className="px-6 py-3 text-gray-700">
+//                       <td className="px-6 py-4 text-gray-700">
 //                         {emp.employeeEmail}
 //                       </td>
-//                       <td className="px-6 py-3">{emp.totalDays}</td>
-//                       <td className="px-6 py-3 font-semibold text-green-700">
+//                       <td className="px-6 py-4">{emp.totalDays}</td>
+//                       <td className="px-6 py-4 font-semibold text-green-700">
 //                         {emp.presentDays}
 //                       </td>
-//                       <td className="px-6 py-3 font-semibold text-orange-700">
+//                       <td className="px-6 py-4 font-semibold text-orange-700">
 //                         {emp.lateDays}
 //                       </td>
 //                       <td className="px-6 py-3 font-semibold text-blue-700">
@@ -10860,7 +10860,7 @@ export default function AttendanceSummary() {
         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-2xl font-semibold text-purple-700">
-              👥 Attendance Summary for {selectedMonth} ({employeeSummary.length} employees)
+              👥 Attendance Summary for ({employeeSummary.length} employees)
             </h2>
 
             <div className="flex flex-wrap items-center gap-4">
@@ -10884,22 +10884,22 @@ export default function AttendanceSummary() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border">
-              <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
+          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+            <table className="min-w-full">
+              <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
                 <tr>
-                  <th className="py-3 text-left">Employee ID</th>
-                  <th className="py-3 text-left">Name</th>
-                  <th className="py-3">Month</th>
-                  <th className="py-3">Present</th>
-                  <th className="py-3">Late</th>
-                  <th className="py-3">Onsite</th>
-                  <th className="py-3">Half Day</th>
-                  <th className="py-3">Full Day</th>
-                  <th className="py-3">Over Time</th>
-                  <th className="py-3">Working Days</th>
+                  <th className="py-3 text-center">Employee ID</th>
+                  <th className="py-3 text-center ">Name</th>
+                  <th className="py-3 text-center">Month</th>
+                  <th className="py-3 text-center">Present</th>
+                  <th className="py-3 text-center">Late</th>
+                  <th className="py-3 text-center">Onsite</th>
+                  <th className="py-3 text-center">Half Day</th>
+                  <th className="py-3 text-center">Full Day</th>
+                  <th className="py-3 text-center">Over Time</th>
+                  <th className="py-3 text-center">Working Days</th>
                   {/* ✅ NEW DOWNLOAD COLUMN HEADER */}
-                  <th className="py-3">Download</th>
+                  <th className="py-3 text-center">Download</th>
                 </tr>
               </thead>
 
@@ -10916,22 +10916,22 @@ export default function AttendanceSummary() {
                       onClick={() => handleViewDetails(emp.employeeId)}
                       className="border-t cursor-pointer hover:bg-blue-50"
                     >
-                      <td className="py-3">{emp.employeeId}</td>
-                      <td className="py-3">{emp.name}</td>
-                      <td className="py-3 font-medium text-gray-700">{emp.month}</td>
-                      <td className="py-3 text-green-700">{emp.presentDays}</td>
-                      <td className="py-3 text-orange-700">{lateDays}</td>
-                      <td className="py-3 text-blue-700">{onsiteDays}</td>
-                      <td className="py-3 text-yellow-700">
+                      <td className="p-4 text-sm font-medium text-gray-900">{emp.employeeId}</td>
+                      <td className="p-4 text-sm font-medium text-gray-900">{emp.name}</td>
+                      <td className="py-4 font-medium text-gray-900">{emp.month}</td>
+                      <td className="py-4 text-green-700">{emp.presentDays}</td>
+                      <td className="py-4 text-orange-700">{lateDays}</td>
+                      <td className="py-4 text-blue-700">{onsiteDays}</td>
+                      <td className="py-4 text-yellow-700">
                         {emp.halfDayWorking ?? 0}
                       </td>
-                      <td className="px-6 py-3 text-red-700">
+                      <td className="px-6 py-4 text-red-700">
                         {emp.fullDayNotWorking ?? 0}
                       </td>
                       <td className="px-4 py-2 font-semibold text-indigo-700">
                         {calculateEmployeeOT(emp.employeeId).toFixed(2)}
                       </td>
-                      <td className="px-6 py-3 font-bold text-purple-700">
+                      <td className="px-6 py-4 font-bold text-purple-700">
                         {workingDays.toFixed(1)}
                       </td>
                       {/* ✅ NEW DOWNLOAD BUTTON CELL */}
@@ -10941,7 +10941,7 @@ export default function AttendanceSummary() {
                             e.stopPropagation();
                             downloadSingleEmployeeExcel(emp.employeeId);
                           }}
-                          className="flex items-center justify-center px-3 py-1 text-sm text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
+                          className="flex items-center justify-center px-4 py-1 text-sm text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
                           title={`Download ${emp.name}'s report (ZIP)`}
                         >
                           ⬇
@@ -10964,7 +10964,7 @@ export default function AttendanceSummary() {
                   <button
                     onClick={handlePrevPage}
                     disabled={currentPage === 1}
-                    className={`px-3 py-1 text-sm border rounded-lg ${currentPage === 1
+                    className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
                       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                       }`}
@@ -10976,7 +10976,7 @@ export default function AttendanceSummary() {
                     <button
                       key={page}
                       onClick={() => handlePageClick(page)}
-                      className={`px-3 py-1 text-sm border rounded-lg ${currentPage === page
+                      className={`px-4 py-1 text-sm border rounded-lg ${currentPage === page
                         ? "text-white bg-blue-600 border-blue-600"
                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                         }`}
@@ -10988,7 +10988,7 @@ export default function AttendanceSummary() {
                   <button
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
-                    className={`px-3 py-1 text-sm border rounded-lg ${currentPage === totalPages
+                    className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
                       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                       }`}
@@ -11045,7 +11045,7 @@ export default function AttendanceSummary() {
                 </div>
 
                 {/* 🔹 SUMMARY */}
-                <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
+                <div className="p-4 mb-4 border border-blue-200 rounded-lg bg-blue-50">
                   <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
                     <div>
                       <span className="font-semibold text-blue-700">Employee ID:</span>
@@ -11156,7 +11156,7 @@ export default function AttendanceSummary() {
                             <button
                               disabled={!rec || !(edited?.comment || rec?.comment)}
                               onClick={() => handleSave(rec, dateKey)}
-                              className={`px-3 py-1 text-white rounded ${rec && (edited?.comment || rec?.comment)
+                              className={`px-4 py-1 text-white rounded ${rec && (edited?.comment || rec?.comment)
                                 ? "bg-green-600 hover:bg-green-700"
                                 : "bg-gray-400 cursor-not-allowed"
                                 }`}

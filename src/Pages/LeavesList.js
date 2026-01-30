@@ -1183,7 +1183,7 @@ const LeavesList = () => {
           <table className="min-w-full">
             <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
               <tr>
-                <th className="px-4 py-3 rounded-tl-lg">Employee</th>
+                <th className="px-4 py-3 rounded-tl-lg">Name</th>
                 {/* <th className="px-4 py-3">Leave Type</th> */}
                 <th className="px-4 py-3">Dates</th>
                 <th className="px-4 py-3">Days</th>

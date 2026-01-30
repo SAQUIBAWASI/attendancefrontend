@@ -3061,19 +3061,19 @@ const PayRoll = () => {
 
         {/* Payroll Table */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+            <table className="min-w-full">
+              <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
                 <tr>
-                  <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">ID</th>
-                  <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Name</th>
-                  <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Working Days</th>
-                  <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Present Days</th>
-                  <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Half Days</th>
-                  <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Week Offs</th>
-                  <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Monthly Salary</th>
-                  <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Calculated Salary</th>
-                  <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Actions</th>
+                  <th className="py-3 text-center">ID</th>
+                  <th className="py-3 text-center">Name</th>
+                  <th className="p-3 text-center">Working Days</th>
+                  <th className="p-3 text-center">Present Days</th>
+                  <th className="p-3 text-center">Half Days</th>
+                  <th className="p-3 text-center">Week Offs</th>
+                  <th className="p-3 text-center">Monthly Salary</th>
+                  <th className="p-3 text-center">Calculated Salary</th>
+                  <th className="p-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">

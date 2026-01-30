@@ -220,16 +220,16 @@ const LocationListPage = () => {
 
       {/* Table */}
       {!loading && filteredLocations.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-200 rounded-md">
-            <thead className="bg-blue-600">
+        <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+          <table className="min-w-full">
+            <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
               <tr>
-                <th className="px-4 py-3 text-sm font-semibold text-left text-white">#</th>
-                <th className="px-4 py-3 text-sm font-semibold text-left text-white">Location Name</th>
-                <th className="px-4 py-3 text-sm font-semibold text-left text-white">Full Address</th>
-                <th className="px-4 py-3 text-sm font-semibold text-left text-white">Latitude</th>
-                <th className="px-4 py-3 text-sm font-semibold text-left text-white">Longitude</th>
-                <th className="px-4 py-3 text-sm font-semibold text-center text-white">Actions</th>
+                <th className="py-3 text-center">#</th>
+                <th className="py-3 text-center">Location Name</th>
+                <th className="py-3 text-center">Full Address</th>
+                <th className="py-3 text-center">Latitude</th>
+                <th className="py-3 text-center">Longitude</th>
+                <th className="py-3 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
