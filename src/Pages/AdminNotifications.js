@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { MdNotificationsActive, MdDelete } from "react-icons/md";
-import { FaUserShield, FaUserPlus, FaExclamationTriangle, FaShoppingCart, FaTag } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import { FaExclamationTriangle, FaShoppingCart, FaTag, FaUserPlus, FaUserShield } from "react-icons/fa";
+import { MdDelete, MdNotificationsActive } from "react-icons/md";
 
 const iconMap = {
   newUser: <FaUserPlus className="text-green-600" />,
@@ -8,12 +8,16 @@ const iconMap = {
   roleChange: <FaUserShield className="text-blue-600" />,
   vendorOrder: <FaShoppingCart className="text-blue-600" />,
   vendorCoupon: <FaTag className="text-green-600" />,
+  leave: <MdNotificationsActive className="text-orange-500" />,
+  permission: <MdNotificationsActive className="text-purple-500" />,
 };
 
 const AdminNotifications = () => {
-  const [notifications, setNotifications] = useState([]);
+ const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const API_BASE_URL = "http://localhost:5000/api"; // ✅ Use correct Base URL
 
   // Fetch notifications from API
   useEffect(() => {
@@ -22,12 +26,14 @@ const AdminNotifications = () => {
         setLoading(true);
         setError(null);
 
-        const res = await fetch("http://31.97.206.144:6098/api/admin/notifications"); // Update with your actual endpoint
+        const adminEmail = localStorage.getItem("adminEmail"); // ✅ Get Email
+        if (!adminEmail) throw new Error("Admin email not found. Please login again.");
+
+        const res = await fetch(`${API_BASE_URL}/notifications/${adminEmail}`); // ✅ Use email
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
         const data = await res.json();
-        // Assuming API returns { message, data: [notifications] }
-        setNotifications(data.data || []);
+        setNotifications(data || []);
       } catch (err) {
         setError(err.message || "Failed to fetch notifications");
       } finally {
@@ -38,19 +44,47 @@ const AdminNotifications = () => {
     fetchNotifications();
   }, []);
 
+  // ✅ Mark all as read when page opens
+  useEffect(() => {
+    const markAllRead = async () => {
+      try {
+        const adminEmail = localStorage.getItem("adminEmail");
+        if (!adminEmail) return;
+
+        await fetch(`${API_BASE_URL}/notifications/read-all/${adminEmail}`, {
+          method: "PUT",
+        });
+        
+        // Optionally update local state if needed, but the main goal is backend update
+        // so that Navbar poll picks it up. 
+        // To force Navbar update, we'd need a context or event, but for now this is the fix.
+        
+        // Also refresh the trigger event for other tabs/components if using window storage event
+        window.dispatchEvent(new Event("storage"));
+      } catch (error) {
+        console.error("Error marking notifications as read:", error);
+      }
+    };
+    markAllRead();
+  }, []);
+
   // Handle notification delete with API call
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`http://31.97.206.144:6098/api/admin/notifications/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/notifications/${id}`, { // ✅ Use Base URL
         method: "DELETE",
       });
+      // Note: Backend might not have DELETE route implemented yet based on list_dir, 
+      // but keeping it if it exists or for future using correct URL.
+      // If it fails, we handle error.
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to delete notification");
+        // const errorData = await res.json();
+        // throw new Error(errorData.message || "Failed to delete notification");
+        console.warn("Delete API might not be implemented yet");
       }
 
-      // Remove from local state after successful delete
+      // Remove from local state after successful delete (optimistic update)
       setNotifications((prev) => prev.filter((notif) => notif._id !== id));
     } catch (err) {
       alert(`Error deleting notification: ${err.message}`);

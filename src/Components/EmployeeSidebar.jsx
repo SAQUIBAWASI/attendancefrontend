@@ -290,7 +290,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
   useEffect(() => {
     const fetchPermissions = async () => {
       const storedId = localStorage.getItem("employeeId");
-      if (!storedId) return;
+      if (!storedId || storedId === "undefined") return;
 
       try {
         const response = await axios.get(`http://localhost:5000/api/employees/get-employee?employeeId=${storedId}`);
