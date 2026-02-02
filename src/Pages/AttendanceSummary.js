@@ -9460,23 +9460,23 @@ export default function AttendanceSummary() {
   // ✅ Get Employee Shift Time from Master Shifts
   const getEmployeeShift = (employeeId) => {
     // Find the shift assignment for this employee
-    const shiftAssignment = shiftsData.find(s => 
-      s.employeeAssignment?.employeeId === employeeId || 
+    const shiftAssignment = shiftsData.find(s =>
+      s.employeeAssignment?.employeeId === employeeId ||
       s.employeeId === employeeId
     );
-    
+
     if (!shiftAssignment) return null;
-    
+
     const shiftType = shiftAssignment.shiftType;
-    
+
     // Find the master shift details
     const masterShift = masterShifts.find(shift => shift.shiftType === shiftType);
-    
+
     if (!masterShift) {
       // If no master shift found, use default based on shift type
       return getDefaultShiftTime(shiftType);
     }
-    
+
     // Check if it's a brake shift
     if (masterShift.isBrakeShift && masterShift.timeSlots && masterShift.timeSlots.length >= 2) {
       return {
@@ -9486,7 +9486,7 @@ export default function AttendanceSummary() {
         isBrakeShift: true
       };
     }
-    
+
     // Regular shift with single time slot
     if (masterShift.timeSlots && masterShift.timeSlots.length > 0) {
       const timeSlot = masterShift.timeSlots[0];
@@ -9500,7 +9500,7 @@ export default function AttendanceSummary() {
         };
       }
     }
-    
+
     // Fallback to default
     return getDefaultShiftTime(shiftType);
   };
@@ -9519,7 +9519,7 @@ export default function AttendanceSummary() {
       "I": { start: "07:00", end: "17:00", grace: 5, isBrakeShift: false },
       "BR": { start: "07:00", end: "21:30", grace: 5, isBrakeShift: true },
     };
-    
+
     return shiftTimes[shiftType] || { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
   };
 
@@ -9527,13 +9527,13 @@ export default function AttendanceSummary() {
   const getEmployeeShiftHours = (employeeId) => {
     const shift = getEmployeeShift(employeeId);
     if (!shift) return 9; // Default 9 hours
-    
+
     const [startHour, startMinute] = shift.start.split(':').map(Number);
     const [endHour, endMinute] = shift.end.split(':').map(Number);
-    
+
     const startMinutes = startHour * 60 + startMinute;
     const endMinutes = endHour * 60 + endMinute;
-    
+
     const totalMinutes = endMinutes - startMinutes;
     return totalMinutes / 60; // Convert to hours
   };
@@ -9542,7 +9542,7 @@ export default function AttendanceSummary() {
   const calculateDayType = (employeeId, hours) => {
     const numericHours = parseFloat(hours) || 0;
     const shiftHours = getEmployeeShiftHours(employeeId);
-    
+
     // For 3,4,5,6 hour shifts
     if (shiftHours >= 3 && shiftHours <= 6) {
       if (numericHours >= 3.5) {
@@ -9579,20 +9579,20 @@ export default function AttendanceSummary() {
   const calculateOT = (employeeId, hours, checkInTime) => {
     const shift = getEmployeeShift(employeeId);
     if (!shift) return 0;
-    
+
     const h = Number(hours) || 0;
-    
+
     // Parse shift end time
     const [endHour, endMinute] = shift.end.split(':').map(Number);
-    
+
     // If check-in time is provided, calculate actual overtime
     if (checkInTime) {
       const checkInDate = new Date(checkInTime);
       const shiftEndTime = new Date(checkInDate);
       shiftEndTime.setHours(endHour, endMinute, 0, 0);
-      
+
       const checkOutTime = new Date(checkInDate.getTime() + (h * 60 * 60 * 1000));
-      
+
       // Overtime is time worked after shift end time
       if (checkOutTime > shiftEndTime) {
         const overtimeMs = checkOutTime - shiftEndTime;
@@ -9600,7 +9600,7 @@ export default function AttendanceSummary() {
         return overtimeHours > 0 ? overtimeHours : 0;
       }
     }
-    
+
     // Fallback: If no check-in time, calculate based on standard shift hours
     const shiftHours = getEmployeeShiftHours(employeeId);
     return h > shiftHours ? h - shiftHours : 0;
@@ -9610,7 +9610,7 @@ export default function AttendanceSummary() {
   const calculateEmployeeOT = (employeeId) => {
     let totalOT = 0;
     const shift = getEmployeeShift(employeeId);
-    
+
     if (!shift) return 0;
 
     records.forEach((rec) => {
@@ -9640,7 +9640,7 @@ export default function AttendanceSummary() {
     let presentDays = 0;
     let halfDays = 0;
     let fullLeaveDays = 0;
-    
+
     records.forEach((rec) => {
       if (rec.employeeId !== employeeId) return;
 
@@ -9658,7 +9658,7 @@ export default function AttendanceSummary() {
 
       const hours = rec.hours || rec.totalHours || 0;
       const dayType = calculateDayType(employeeId, hours);
-      
+
       if (dayType === "full") {
         presentDays++;
       } else if (dayType === "half") {
@@ -9667,7 +9667,7 @@ export default function AttendanceSummary() {
         fullLeaveDays++;
       }
     });
-    
+
     // Working days = full days + (half days * 0.5)
     return presentDays + (halfDays * 0.5);
   };
@@ -9676,7 +9676,7 @@ export default function AttendanceSummary() {
   const calculateEmployeeLateDays = (employeeId) => {
     let lateDays = 0;
     const shift = getEmployeeShift(employeeId);
-    
+
     if (!shift) return 0;
 
     records.forEach((rec) => {
@@ -9697,13 +9697,13 @@ export default function AttendanceSummary() {
       if (rec.checkInTime) {
         const checkInDateTime = new Date(rec.checkInTime);
         const [hours, minutes] = shift.start.split(':').map(Number);
-        
+
         const shiftStartTime = new Date(checkInDateTime);
         shiftStartTime.setHours(hours, minutes, 0, 0);
-        
+
         const graceTime = new Date(shiftStartTime);
         graceTime.setMinutes(graceTime.getMinutes() + shift.grace);
-        
+
         if (checkInDateTime > graceTime) {
           lateDays++;
         }
@@ -9715,7 +9715,7 @@ export default function AttendanceSummary() {
 
   const calculateEmployeeOnsiteDays = (employeeId) => {
     let onsiteDays = 0;
-    
+
     records.forEach((rec) => {
       if (rec.employeeId !== employeeId) return;
 
@@ -9737,6 +9737,32 @@ export default function AttendanceSummary() {
     });
 
     return onsiteDays;
+  };
+
+  const calculateEmployeeRemoteDays = (employeeId) => {
+    let remoteDays = 0;
+
+    records.forEach((rec) => {
+      if (rec.employeeId !== employeeId) return;
+
+      // ✅ Apply month filter
+      if (selectedMonth && rec.checkInTime) {
+        const recMonth = new Date(rec.checkInTime).toISOString().slice(0, 7);
+        if (recMonth !== selectedMonth) return;
+      }
+
+      // ✅ Apply date range filter if specified
+      if (fromDate && toDate && rec.checkInTime) {
+        const recordDate = new Date(rec.checkInTime).toISOString().split('T')[0];
+        if (recordDate < fromDate || recordDate > toDate) return;
+      }
+
+      if (rec.reason === "Work From Home") {
+        remoteDays++;
+      }
+    });
+
+    return remoteDays;
   };
 
   // ✅ Single Employee Excel Download Function - ZIP Version
@@ -9962,6 +9988,7 @@ export default function AttendanceSummary() {
         const correctedPresent = Math.min(emp.presentDays, currentDay);
         const correctedLate = Math.min(emp.lateDays, currentDay);
         const correctedOnsite = Math.min(emp.onsiteDays, currentDay);
+        const correctedRemote = Math.min(emp.reasonCount?.workFromHome || 0, currentDay);
         const correctedHalf = Math.min(emp.halfDayWorking, currentDay);
         const correctedFullLeave = Math.min(emp.fullDayNotWorking, currentDay);
         const correctedTotal = correctedPresent + (correctedHalf * 0.5);
@@ -9973,6 +10000,10 @@ export default function AttendanceSummary() {
           presentDays: correctedPresent,
           lateDays: correctedLate,
           onsiteDays: correctedOnsite,
+          reasonCount: {
+            ...emp.reasonCount,
+            workFromHome: correctedRemote
+          },
           halfDayWorking: correctedHalf,
           fullDayNotWorking: correctedFullLeave,
           totalWorkingDays: correctedTotal
@@ -10403,7 +10434,7 @@ export default function AttendanceSummary() {
 
   const getDayTypeBadge = (hours) => {
     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
-    
+
     const dayType = calculateDayType(selectedEmployee, hours);
     switch (dayType) {
       case "full":
@@ -10436,7 +10467,7 @@ export default function AttendanceSummary() {
         const shift = getEmployeeShift(emp.employeeId);
         const shiftInfo = shift ? `${shift.start} - ${shift.end}` : "Not Assigned";
         const shiftHours = getEmployeeShiftHours(emp.employeeId);
-        
+
         return {
           "Employee ID": emp.employeeId,
           "Name": emp.name,
@@ -10849,7 +10880,7 @@ export default function AttendanceSummary() {
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Download 
+                Download
               </button>
 
             </div>
@@ -10894,6 +10925,7 @@ export default function AttendanceSummary() {
                   <th className="py-2 text-center">Present</th>
                   <th className="py-2 text-center">Late</th>
                   <th className="py-2 text-center">Onsite</th>
+                  <th className="py-2 text-center">Remote</th>
                   <th className="py-2 text-center">Half Day</th>
                   <th className="py-2 text-center">Full Day</th>
                   <th className="py-2 text-center">Over Time</th>
@@ -10909,7 +10941,7 @@ export default function AttendanceSummary() {
                   const workingDays = calculateEmployeeWorkingDays(emp.employeeId);
                   const lateDays = calculateEmployeeLateDays(emp.employeeId);
                   const onsiteDays = calculateEmployeeOnsiteDays(emp.employeeId);
-                  
+
                   return (
                     <tr
                       key={emp.employeeId}
@@ -10919,29 +10951,30 @@ export default function AttendanceSummary() {
                       <td className="p-4 text-sm font-medium text-gray-900">{emp.employeeId}</td>
                       <td className="p-4 text-sm font-medium text-gray-900">{emp.name}</td>
                       <td className="py-4 font-medium text-gray-900">{emp.month}</td>
-                      <td className="py-4 text-green-700">{emp.presentDays}</td>
-                      <td className="py-4 text-orange-700">{lateDays}</td>
-                      <td className="py-4 text-blue-700">{onsiteDays}</td>
-                      <td className="py-4 text-yellow-700">
+                      <td className="py-4 text-green-700 text-center">{emp.presentDays}</td>
+                      <td className="py-4 text-orange-700 text-center">{lateDays}</td>
+                      <td className="py-4 text-blue-700 text-center">{onsiteDays}</td>
+                      <td className="py-4 text-teal-700 text-center">{calculateEmployeeRemoteDays(emp.employeeId)}</td>
+                      <td className="py-4 text-yellow-700 text-center">
                         {emp.halfDayWorking ?? 0}
                       </td>
-                      <td className="px-6 py-4 text-red-700">
+                      <td className="py-4 text-red-700 text-center">
                         {emp.fullDayNotWorking ?? 0}
                       </td>
-                      <td className="px-4 py-2 font-semibold text-indigo-700">
+                      <td className="py-4 font-semibold text-indigo-700 text-center">
                         {calculateEmployeeOT(emp.employeeId).toFixed(2)}
                       </td>
-                      <td className="px-6 py-4 font-bold text-purple-700">
+                      <td className="py-4 font-bold text-purple-700 text-center">
                         {workingDays.toFixed(1)}
                       </td>
                       {/* ✅ NEW DOWNLOAD BUTTON CELL */}
-                      <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             downloadSingleEmployeeExcel(emp.employeeId);
                           }}
-                          className="flex items-center justify-center px-4 py-1 text-sm text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
+                          className="inline-flex items-center justify-center px-4 py-1 text-sm text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
                           title={`Download ${emp.name}'s report (ZIP)`}
                         >
                           ⬇

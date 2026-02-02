@@ -1967,6 +1967,9 @@ export default function AttendanceCapture() {
   const [error, setError] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(true);
   const [locationError, setLocationError] = useState("");
+  const [allLocations, setAllLocations] = useState([]);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Current time state
   const [currentTime, setCurrentTime] = useState("");
@@ -2033,6 +2036,35 @@ export default function AttendanceCapture() {
       fetchAssignedLocation();
     }
   }, [employeeId, employeeEmail]);
+
+  // Fetch All Locations for Selection
+  useEffect(() => {
+    const fetchAllLocations = async () => {
+      try {
+        const res = await axios.get(`${BASE_URL}api/location/alllocation`);
+        if (res.data.locations) {
+          setAllLocations(res.data.locations);
+        }
+      } catch (err) {
+        console.error("Error fetching all locations:", err);
+      }
+    };
+    fetchAllLocations();
+  }, []);
+
+  const handleSelectLocation = (loc) => {
+    setAssignedLocation(loc);
+    setIsLocationModalOpen(false);
+    // Clear previous position/distance to force update for new location
+    setPosition(null);
+    setDistance(null);
+    alert(`Switched to location: ${loc.name}`);
+  };
+
+  const filteredLocations = allLocations.filter(loc =>
+    loc.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    loc.fullAddress?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Fetch today's attendance
   useEffect(() => {
@@ -2350,6 +2382,12 @@ export default function AttendanceCapture() {
         <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-sm font-semibold text-gray-900">Location Status</h3>
+            <button
+              onClick={() => setIsLocationModalOpen(true)}
+              className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Select Location
+            </button>
             <div className={`px-2 py-1 rounded-full text-xs font-medium ${position ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
               }`}>
               {position ? 'Captured ✓' : 'Required'}
@@ -2590,6 +2628,111 @@ export default function AttendanceCapture() {
         </div>
 
       </div>
+
+      {/* Location Selection Modal */}
+      {isLocationModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col animate-fade-in-up">
+            <div className="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+              <h3 className="text-lg font-bold text-gray-900">Select Site Location</h3>
+              <button
+                onClick={() => setIsLocationModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-4 bg-white">
+              <div className="relative mb-4">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search site or address..."
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              <div className="overflow-y-auto max-h-[50vh] space-y-2 pr-1 custom-scrollbar">
+                {filteredLocations.length > 0 ? (
+                  filteredLocations.map((loc) => (
+                    <div
+                      key={loc._id}
+                      onClick={() => handleSelectLocation(loc)}
+                      className="p-3 border border-gray-100 rounded-xl hover:bg-blue-50 hover:border-blue-200 cursor-pointer transition-all flex items-start space-x-3 group"
+                    >
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors text-blue-600">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-bold text-gray-900 group-hover:text-blue-700 transition-colors truncate">{loc.name}</h4>
+                        <p className="text-xs text-gray-500 truncate mt-0.5">{loc.fullAddress || "No address provided"}</p>
+                      </div>
+                      <div className="flex-shrink-0 self-center">
+                        <svg className="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500 text-sm">No locations found matching your search.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="p-4 bg-gray-50 border-t rounded-b-2xl">
+              <p className="text-xs text-gray-500 text-center">
+                Select a site to update your capture radius
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in-up {
+          animation: fade-in-up 0.3s ease-out;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+      `}</style>
+
     </div>
   );
 }
