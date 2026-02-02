@@ -137,6 +137,7 @@ import WhoWeServePage from "./Pages/WhoWeServePage.js";
 import MyPermission from "./Pages/MyPermission.js"
 import { Permissions } from "./Pages/Permissions.js";
 // import EmpManagment from "./Pages/EmpManagment.js";
+import JobPost from "./Pages/JobPost.jsx";
 function App() {
   return (
     <Routes>
@@ -309,6 +310,7 @@ function App() {
               <Route path="/roledashboard" element={<RoleDashboard />} />
               <Route path="/employeedetailsmodel" element={<EmployeeDetailsModal />} />
               <Route path="/useraccess" element={<UserAccessManagement />} />
+              <Route path="/jobpost" element={<JobPost />} />
             </Routes>
           </AdminLayout>
         }
