@@ -28,6 +28,7 @@ const LoginPage = () => {
         // Success: Admin Login
         localStorage.setItem('adminToken', adminData.token);
         localStorage.setItem('adminId', adminData.admin.id);
+        localStorage.setItem('adminEmail', adminData.admin.email); // ✅ Store Email for Notifications
         localStorage.setItem('adminName', adminData.admin.name);
         localStorage.setItem('userRole', 'admin');
         navigate('/dashboard');

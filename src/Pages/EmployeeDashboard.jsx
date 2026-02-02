@@ -1,17 +1,14 @@
-import { useEffect, useState } from "react";
 import axios from "axios";
+import { useEffect, useState } from "react";
 import {
   FiCalendar,
   FiCamera,
-  FiClock,
-  FiUser,
   FiCheckCircle,
-  FiList,
-  FiArrowRight,
   FiClock as FiHistory,
-  FiActivity
+  FiList
 } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
+import { subscribeToPushNotifications } from "../utils/pushNotification";
 
 
 const EmployeeDashboard = () => {
@@ -25,7 +22,7 @@ const EmployeeDashboard = () => {
   const [stats, setStats] = useState({
     presentDays: 0,
     pendingLeaves: 0,
-    activePermissions: 0
+    activePermissions: 0,
   });
 
   useEffect(() => {
@@ -33,7 +30,7 @@ const EmployeeDashboard = () => {
 
     const fetchData = async () => {
       try {
-        const BASE_URL = "https://api.timelyhealth.in/";
+        const BASE_URL = "http://localhost:5000/";
         const API_5000 = "http://localhost:5000/";
 
         // 1. Fetch Profile
@@ -41,7 +38,13 @@ const EmployeeDashboard = () => {
         const profileData = profileRes.data.data || profileRes.data;
         setProfile(profileData);
 
-        if (profileData?.employeeId) {
+        if (profileData) {
+          // Subscribe to Push Notifications using the unique _id
+          if (profileData._id) {
+            subscribeToPushNotifications(profileData._id);
+          }
+
+          // Also support using employeeId if _id is missing (fallback)
           const empId = profileData.employeeId;
           const localStorageId = JSON.parse(localStorage.getItem("employeeData"))?.employeeId;
           const targetId = empId || localStorageId;
@@ -90,12 +93,14 @@ const EmployeeDashboard = () => {
           };
 
           try {
-            let shiftTime = await fetchShift(API_5000); // 5000 first since user confirmed my-shift works
+            let shiftTime = await fetchShift(API_5000);
             if (!shiftTime) shiftTime = await fetchShift(API_5000);
             setShiftTiming(shiftTime || "No Shift Assigned");
           } catch (e) {
             setShiftTiming("Not Assigned");
           }
+
+
 
           setStats(prev => ({
             ...prev,
@@ -173,6 +178,7 @@ const EmployeeDashboard = () => {
             <div className="space-y-4">
               <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Quick Actions</h3>
               <div className="grid grid-cols-2 gap-4">
+
                 <SleekAction
                   icon={<FiCamera />}
                   title="Attendance"
@@ -238,8 +244,9 @@ const CompactStat = ({ label, value, icon, color }) => {
   );
 };
 
-const SleekAction = ({ icon, title, desc, color, onClick }) => {
+const SleekAction = ({ icon, title, desc, color, onClick, badge }) => { // ✅ Added badge prop
   const themes = {
+    rose: "bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white border-rose-100",
     emerald: "bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white border-emerald-100",
     blue: "bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white border-blue-100",
     purple: "bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white border-purple-100",
@@ -249,8 +256,15 @@ const SleekAction = ({ icon, title, desc, color, onClick }) => {
   return (
     <div
       onClick={onClick}
-      className={`group p-3 rounded-xl border cursor-pointer transition-all duration-300 flex items-center gap-3 ${themes[color]} hover:shadow-lg hover:translate-y-[-2px]`}
+      className={`relative group p-3 rounded-xl border cursor-pointer transition-all duration-300 flex items-center gap-3 ${themes[color]} hover:shadow-lg hover:translate-y-[-2px]`}
     >
+      {/* ✅ Badge Indicator */}
+      {badge > 0 && (
+        <div className="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-white shadow-sm z-10">
+          {badge > 99 ? '99+' : badge}
+        </div>
+      )}
+
       <div className="text-xl">{icon}</div>
       <div>
         <h4 className="text-[13px] font-bold tracking-tight leading-none mb-0.5">{title}</h4>

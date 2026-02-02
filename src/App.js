@@ -58,6 +58,7 @@ import DoctorList from "./Pages/DoctorList.js";
 import DocumentTable from "./Pages/DocumentTable.js";
 import EmployeeDashboard from "./Pages/EmployeeDashboard.jsx";
 import EmployeeLeaves from "./Pages/EmployeeLeaves.js";
+import EmployeeNotifications from "./Pages/EmployeeNotifications.js";
 
 import EmployeeList from "./Pages/EmployeeList.js";
 import GetAboutUsPage from "./Pages/GetAboutUsPage.js";
@@ -113,6 +114,7 @@ import TimelyNavbar from "./Components/TimelyNavbar.js";
 import EmployeeLayout from "./Layout/EmployeeLayout.jsx";
 import AboutPage from "./Pages/AboutPage.js";
 import AdminEmployeeLocations from "./Pages/AdminEmployeeLocations.js";
+import AdminNotifications from "./Pages/AdminNotifications.js";
 import AssignLocation from "./Pages/AssignLocation.js";
 import AttendanceSummary from "./Pages/AttendanceSummary.js";
 import ContactPage from "./Pages/ContactPage.js";
@@ -123,8 +125,10 @@ import HomePage from "./Pages/HomePage.js";
 import LeavesReport from "./Pages/LeavesReport.js";
 import AddLocationPage from "./Pages/Location.js";
 import LocationListPage from "./Pages/LocationListPage.js";
+import MyPermission from "./Pages/MyPermission.js";
 import MyShift from "./Pages/MyShift.js";
 import PayRoll from "./Pages/PayRoll.js";
+import { Permissions } from "./Pages/Permissions.js";
 import RoleDashboard from "./Pages/RoleDashboard.js";
 import ServicesPage from "./Pages/ServicesPage.js";
 import ShiftList from "./Pages/ShiftList.js";
@@ -134,8 +138,6 @@ import TimelyFooter from "./Pages/TimelyFooter.js";
 import UserAccessManagement from "./Pages/UserAccessManagement.js";
 import UserActivity from "./Pages/UserActivity.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
-import MyPermission from "./Pages/MyPermission.js"
-import { Permissions } from "./Pages/Permissions.js";
 // import EmpManagment from "./Pages/EmpManagment.js";
 function App() {
   return (
@@ -181,6 +183,7 @@ function App() {
       <Route path="/emp-admin-dashboard" element={<EmployeeLayout><Dashboard /></EmployeeLayout>} />
       <Route path="/emp-user-access" element={<EmployeeLayout><UserAccessManagement /></EmployeeLayout>} />
       <Route path="/emp-add-location" element={<EmployeeLayout><AddLocationPage /></EmployeeLayout>} />
+      <Route path="/emp-notifications" element={<EmployeeLayout><EmployeeNotifications /></EmployeeLayout>} />
 
       {/* All other routes inside AdminLayout */}
       <Route
@@ -309,6 +312,7 @@ function App() {
               <Route path="/roledashboard" element={<RoleDashboard />} />
               <Route path="/employeedetailsmodel" element={<EmployeeDetailsModal />} />
               <Route path="/useraccess" element={<UserAccessManagement />} />
+              <Route path="/admin-notifications" element={<AdminNotifications />} />
             </Routes>
           </AdminLayout>
         }

@@ -1801,149 +1801,201 @@ const AttendanceDashboard = () => {
 
         {/* Leave Distribution */}
         <div className="bg-white px-5 py-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[380px]">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-base font-bold text-gray-800">Leave Utilization</h3>
-              <p className="text-xs text-gray-500">Approved leave counts by employee</p>
-            </div>
-            <button onClick={() => navigate("/leavelist")} className="text-xs font-semibold transition-colors text-rose-600 hover:text-rose-800">Analyze Leaves →</button>
-          </div>
-          <div className="flex-1 w-full">
-            {leavesChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={leavesChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorLeaves" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.8} />
-                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.1} />
-                    </linearGradient>
-                    <linearGradient id="colorLine" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#10b981" />
-                      <stop offset="30%" stopColor="#eab308" />
-                      <stop offset="70%" stopColor="#f97316" />
-                      <stop offset="100%" stopColor="#ef4444" />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="1 1" stroke="#f1f5f9" vertical={false} />
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }} 
-                    angle={-25} 
-                    textAnchor="end" 
-                    interval={0} 
-                    height={60}
-                    tickMargin={5}
-                  />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#64748b', fontSize: 11 }}
-                    tickCount={6}
-                    domain={[0, 'auto']}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      borderRadius: '12px', 
-                      border: '1px solid #e5e7eb', 
-                      fontSize: '12px',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                      background: 'white'
-                    }}
-                    formatter={(value, name, props) => {
-                      return [`${value} days`, 'Leaves Taken'];
-                    }}
-                    labelStyle={{ fontWeight: 'bold', color: '#374151' }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="count" 
-                    stroke="url(#colorLine)"
-                    strokeWidth={3}
-                    fill="url(#colorLeaves)" 
-                    fillOpacity={0.6}
-                    activeDot={{ 
-                      r: 6, 
-                      stroke: '#ffffff', 
-                      strokeWidth: 2,
-                      fill: '#8b5cf6'
-                    }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full text-sm text-gray-400">No leave data available</div>
-            )}
-          </div>
-        </div>
+  <div className="flex items-center justify-between mb-4">
+    <div>
+      <h3 className="text-base font-bold text-gray-800">Leave Utilization</h3>
+      <p className="text-xs text-gray-500">Approved leave counts by employee</p>
+    </div>
+    <button
+      onClick={() => navigate("/leavelist")}
+      className="text-xs font-semibold transition-colors text-rose-600 hover:text-rose-800"
+    >
+      Analyze Leaves →
+    </button>
+  </div>
+
+  <div className="flex-1 w-full">
+    {leavesChartData.length > 0 ? (
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart
+          data={leavesChartData}
+          margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+        >
+          <defs>
+            <linearGradient id="colorLeaves" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.8} />
+              <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.1} />
+            </linearGradient>
+
+            {/* COLOR SWAPPED: LOW → RED, HIGH → GREEN */}
+            <linearGradient id="colorLine" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="30%" stopColor="#f97316" />
+              <stop offset="70%" stopColor="#eab308" />
+              <stop offset="100%" stopColor="#10b981" />
+            </linearGradient>
+          </defs>
+
+          <CartesianGrid
+            strokeDasharray="1 1"
+            stroke="#f1f5f9"
+            vertical={false}
+          />
+
+          <XAxis
+            dataKey="name"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#64748b", fontSize: 11, fontWeight: 500 }}
+            angle={-25}
+            textAnchor="end"
+            interval={0}
+            height={60}
+            tickMargin={5}
+          />
+
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#64748b", fontSize: 11 }}
+            tickCount={6}
+            domain={[0, "auto"]}
+          />
+
+          <Tooltip
+            contentStyle={{
+              borderRadius: "12px",
+              border: "1px solid #e5e7eb",
+              fontSize: "12px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              background: "white",
+            }}
+            formatter={(value) => [`${value} days`, "Leaves Taken"]}
+            labelStyle={{ fontWeight: "bold", color: "#374151" }}
+          />
+
+          <Area
+            type="monotone"
+            dataKey="count"
+            stroke="url(#colorLine)"
+            strokeWidth={3}
+            fill="url(#colorLeaves)"
+            fillOpacity={0.6}
+            activeDot={{
+              r: 6,
+              stroke: "#ffffff",
+              strokeWidth: 2,
+              fill: "#8b5cf6",
+            }}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    ) : (
+      <div className="flex items-center justify-center h-full text-sm text-gray-400">
+        No leave data available
       </div>
+    )}
+  </div>
+</div>
+</div>
 
       {/* 3. Late Today and Absent Today - BOTH IN ONE ROW */}
       <div className="grid grid-cols-1 gap-8 mb-8 lg:grid-cols-2">
         {/* Late Today Analysis */}
         <div className="bg-white px-5 py-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[380px]">
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <h3 className="text-base font-bold text-gray-800">Late Analysis</h3>
-              <p className="text-xs text-gray-500">Late minutes by employee</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <FiCalendar className="text-gray-400 text-sm" />
-              <input
-                type="date"
-                value={lateDate}
-                onChange={(e) => setLateDate(e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
-                className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+  <div className="flex items-center justify-between mb-2">
+    <div>
+      <h3 className="text-base font-bold text-gray-800">Late Analysis</h3>
+      <p className="text-xs text-gray-500">Late minutes by employee</p>
+    </div>
+    <div className="flex items-center gap-2">
+      <FiCalendar className="text-gray-400 text-sm" />
+      <input
+        type="date"
+        value={lateDate}
+        onChange={(e) => setLateDate(e.target.value)}
+        max={new Date().toISOString().split("T")[0]}
+        className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+      />
+      <button
+        onClick={() => navigate("/late-today")}
+        className="text-xs font-semibold transition-colors text-amber-600 hover:text-amber-800 whitespace-nowrap"
+      >
+        View Details →
+      </button>
+    </div>
+  </div>
+
+  <div className="flex-1 w-full">
+    {lateChartData.data.length > 0 ? (
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={lateChartData.data}
+          margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+        >
+          <CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+            stroke="#f1f5f9"
+          />
+
+          <XAxis
+            dataKey="name"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#64748b", fontSize: 10 }}
+            angle={-25}
+            textAnchor="end"
+            interval={0}
+            height={60}
+          />
+
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#64748b", fontSize: 10 }}
+            domain={[-5, 70]}
+            ticks={[-5, 5, 10, 20, 30, 45, 55, 65]}
+          />
+
+          <Tooltip
+            cursor={{ fill: "#f8fafc" }}
+            contentStyle={{
+              borderRadius: "12px",
+              border: "none",
+              fontSize: "12px",
+            }}
+            formatter={(value) => [`${value} minutes late`, "Late Duration"]}
+          />
+
+          <Bar
+            dataKey="value"
+            radius={[4, 4, 0, 0]}
+            barSize={lateChartData.barSize}
+          >
+            {/* COLOR SWAPPED */}
+            {lateChartData.data.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={
+                  lateChartData.data[
+                    lateChartData.data.length - 1 - index
+                  ].color
+                }
               />
-              <button onClick={() => navigate("/late-today")} className="text-xs font-semibold transition-colors text-amber-600 hover:text-amber-800 whitespace-nowrap">View Details →</button>
-            </div>
-          </div>
-          <div className="flex-1 w-full">
-            {lateChartData.data.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={lateChartData.data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#64748b', fontSize: 10 }} 
-                    angle={-25} 
-                    textAnchor="end" 
-                    interval={0} 
-                    height={60} 
-                  />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#64748b', fontSize: 10 }}
-                    domain={[-5, 70]}
-                    ticks={[-5, 5, 10, 20, 30, 45, 55, 65]}
-                  />
-                  <Tooltip 
-                    cursor={{ fill: '#f8fafc' }} 
-                    contentStyle={{ borderRadius: '12px', border: 'none', fontSize: '12px' }}
-                    formatter={(value, name, props) => {
-                      return [`${value} minutes late`, 'Late Duration'];
-                    }}
-                  />
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={lateChartData.barSize}>
-                    {lateChartData.data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-sm text-gray-400">
-                <FiClock className="w-10 h-10 mb-2 opacity-20" />
-                <p>No late arrivals on {lateDate}</p>
-              </div>
-            )}
-          </div>
-        </div>
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    ) : (
+      <div className="flex flex-col items-center justify-center h-full text-sm text-gray-400">
+        <FiClock className="w-10 h-10 mb-2 opacity-20" />
+        <p>No late arrivals on {lateDate}</p>
+      </div>
+    )}
+  </div>
+</div>
+
 
         {/* Absent Today Analysis */}
         <div className="bg-white px-5 py-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[380px]">
