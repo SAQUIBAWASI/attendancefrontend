@@ -1801,6 +1801,7 @@ const AttendanceDashboard = () => {
 
         {/* Leave Distribution */}
         <div className="bg-white px-5 py-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[380px]">
+
   <div className="flex items-center justify-between mb-4">
     <div>
       <h3 className="text-base font-bold text-gray-800">Leave Utilization</h3>
@@ -1893,8 +1894,84 @@ const AttendanceDashboard = () => {
     ) : (
       <div className="flex items-center justify-center h-full text-sm text-gray-400">
         No leave data available
-      </div>
-    )}
+
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-base font-bold text-gray-800">Leave Utilization</h3>
+              <p className="text-xs text-gray-500">Approved leaves counts by employee</p>
+            </div>
+            <button onClick={() => navigate("/leavelist")} className="text-xs font-semibold transition-colors text-rose-600 hover:text-rose-800">Analyze Leaves →</button>
+          </div>
+          <div className="flex-1 w-full">
+            {leavesChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={leavesChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorLeaves" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.8} />
+                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.1} />
+                    </linearGradient>
+                    <linearGradient id="colorLine" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#10b981" />
+                      <stop offset="30%" stopColor="#eab308" />
+                      <stop offset="70%" stopColor="#f97316" />
+                      <stop offset="100%" stopColor="#ef4444" />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="1 1" stroke="#f1f5f9" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }} 
+                    angle={-25} 
+                    textAnchor="end" 
+                    interval={0} 
+                    height={60}
+                    tickMargin={5}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#64748b', fontSize: 11 }}
+                    tickCount={6}
+                    domain={[0, 'auto']}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      borderRadius: '12px', 
+                      border: '1px solid #e5e7eb', 
+                      fontSize: '12px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                      background: 'white'
+                    }}
+                    formatter={(value, name, props) => {
+                      return [`${value} days`, 'Leaves Taken'];
+                    }}
+                    labelStyle={{ fontWeight: 'bold', color: '#374151' }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="count" 
+                    stroke="url(#colorLine)"
+                    strokeWidth={3}
+                    fill="url(#colorLeaves)" 
+                    fillOpacity={0.6}
+                    activeDot={{ 
+                      r: 6, 
+                      stroke: '#ffffff', 
+                      strokeWidth: 2,
+                      fill: '#8b5cf6'
+                    }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-sm text-gray-400">No leave data available</div>
+            )}
+          </div>
+        </div>
+      )}
   </div>
 </div>
 </div>
@@ -2062,8 +2139,7 @@ const AttendanceDashboard = () => {
           </div>
         </div>
       </div>
-
-    </div>
+ </div>
   );
 };
 
