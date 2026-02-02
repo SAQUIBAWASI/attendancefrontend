@@ -1804,7 +1804,7 @@ const AttendanceDashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-base font-bold text-gray-800">Leave Utilization</h3>
-              <p className="text-xs text-gray-500">Approved leave counts by employee</p>
+              <p className="text-xs text-gray-500">Approved leaves counts by employee</p>
             </div>
             <button onClick={() => navigate("/leavelist")} className="text-xs font-semibold transition-colors text-rose-600 hover:text-rose-800">Analyze Leaves →</button>
           </div>
