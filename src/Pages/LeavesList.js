@@ -1107,7 +1107,7 @@ const LeavesList = () => {
         <div className="p-3 mb-3 bg-white border border-gray-200 shadow-md rounded-xl">
 
           {/* Filters – Single Row */}
-          <div className="flex items-end gap-10 flex-nowrap">
+          <div className="flex items-end gap-4 flex-nowrap">
 
             {/* Search */}
             <div className="flex flex-col w-64">
@@ -1171,7 +1171,13 @@ const LeavesList = () => {
               onClick={clearFilters}
               className="h-9 px-5 mb-[2px] text-sm font-medium text-white bg-gray-500 rounded-md hover:bg-gray-600 transition"
             >
-              Clear Filters
+              Clear
+            </button>
+              <button onClick={() => navigate("/leaves-report")}
+              
+              className="h-9 px-5 mb-[2px] text-sm font-medium text-white bg-gray-500 rounded-md hover:bg-gray-600 transition"
+            >
+              Leaves
             </button>
 
           </div>

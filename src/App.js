@@ -139,6 +139,7 @@ import UserAccessManagement from "./Pages/UserAccessManagement.js";
 import UserActivity from "./Pages/UserActivity.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
 // import EmpManagment from "./Pages/EmpManagment.js";
+import JobPost from "./Pages/JobPost.jsx";
 function App() {
   return (
     <Routes>
@@ -312,7 +313,11 @@ function App() {
               <Route path="/roledashboard" element={<RoleDashboard />} />
               <Route path="/employeedetailsmodel" element={<EmployeeDetailsModal />} />
               <Route path="/useraccess" element={<UserAccessManagement />} />
+<<<<<<< HEAD
+              <Route path="/jobpost" element={<JobPost />} />
+=======
               <Route path="/admin-notifications" element={<AdminNotifications />} />
+>>>>>>> 590b80282374a35e12a11c06d5042f2ad1c5bc3c
             </Routes>
           </AdminLayout>
         }
