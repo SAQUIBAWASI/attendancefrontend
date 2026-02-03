@@ -313,11 +313,11 @@ function App() {
               <Route path="/roledashboard" element={<RoleDashboard />} />
               <Route path="/employeedetailsmodel" element={<EmployeeDetailsModal />} />
               <Route path="/useraccess" element={<UserAccessManagement />} />
-<<<<<<< HEAD
+
               <Route path="/jobpost" element={<JobPost />} />
-=======
+
               <Route path="/admin-notifications" element={<AdminNotifications />} />
->>>>>>> 590b80282374a35e12a11c06d5042f2ad1c5bc3c
+
             </Routes>
           </AdminLayout>
         }
