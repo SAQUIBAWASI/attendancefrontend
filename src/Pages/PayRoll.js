@@ -613,40 +613,8 @@
 //   };
 
 //   // Handle edit submit
-//   const handleEditSubmit = (e) => {
-//     e.preventDefault();
-
-//     if (!selectedEmployee) return;
-
-//     const employeeData = getEmployeeData(selectedEmployee);
-//     const leaves = employeeLeaves[selectedEmployee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
-//     const weekOffDays = editFormData.weekOffDays || getWeekOffDaysForSalary(selectedEmployee);
-//     const holidays = editFormData.holidays || calculateHolidays(selectedEmployee);
-//     const unpaidLeaves = leaves.LOP;
-
-//     // Use actual month days for daily rate
-//     const daysInMonth = selectedEmployee.monthDays || monthDays || 30;
-//     const dailyRate = employeeData.salaryPerMonth / daysInMonth;
-
-//     // Calculate effective working days
-//     const workingDays = editFormData.workingDays || 0;
-//     const halfDays = editFormData.halfDayWorking || 0;
-//     const effectiveWorkingDays = workingDays + (0.5 * halfDays);
-
-//     const paidLeaveDays = (leaves.CL || 0) + (leaves.EL || 0) + (leaves.COFF || 0);
-
-//     // CORRECT CALCULATION: (Working days + WeekOffs + Paid Leaves)
-//     const paidDays = Math.max(0, effectiveWorkingDays + weekOffDays + paidLeaveDays);
-//     const baseSalary = paidDays * dailyRate;
-
-//     // Extra work calculation
-//     const extraDaysAmount = (extraWorkData.extraDays || 0) * dailyRate;
-//     const bonus = extraWorkData.bonus || 0;
-//     const deductions = extraWorkData.deductions || 0;
-//     const totalExtraAmount = extraDaysAmount + bonus - deductions;
-//     const finalSalary = baseSalary + totalExtraAmount;
-
-//     const updatedData = {
+//   // Handle edit submit
+// ... (cleaned up redundant code)
 //       ...editFormData,
 //       calculatedSalary: Math.round(finalSalary),
 //       extraWork: {
@@ -1951,6 +1919,13 @@ const PayRoll = () => {
     return diffDays;
   };
 
+  // ✅ HELPER: Get correct days in month
+  const getDaysInMonth = (monthStr) => {
+    if (!monthStr) return new Date().getDate(); // Default to today if no month
+    const [year, month] = monthStr.split('-');
+    return new Date(year, month, 0).getDate();
+  };
+
   // ✅ Add this function to filter inactive employees from payroll data
   const filterInactiveEmployees = useCallback((payrollData, employeesMap) => {
     if (!Array.isArray(payrollData)) return [];
@@ -2008,8 +1983,11 @@ const PayRoll = () => {
           salaryData = await salaryRes.json();
           console.log(`💰 Salary API for ${month || "current month"}:`, salaryData.salaries?.length || 0, "salaries");
 
-          if (salaryData.monthDays && isMounted) {
-            setMonthDays(salaryData.monthDays);
+          // ✅ SET MONTH DAYS FROM API OR CALCULATE
+          const apiMonthDays = salaryData.monthDays || getDaysInMonth(month || "");
+          if (isMounted) {
+             setMonthDays(apiMonthDays);
+             console.log(`📅 Month Days set to: ${apiMonthDays}`);
           }
         }
       } catch (err) {
@@ -2095,7 +2073,7 @@ const PayRoll = () => {
             month: salaryData.month || month || emp.month || "Not specified",
             salaryPerDay: emp.salaryPerDay || 0,
             calculatedSalary: calculatedSalary,
-            monthDays: salaryData.monthDays || 30,
+            monthDays: salaryData.monthDays || getDaysInMonth(month || ""),
             includeWeekOffInSalary: includeWeekOffInSalary,
             isHistoricalMonth: isHistorical,
             isCurrentMonth: isCurrent
@@ -2106,7 +2084,7 @@ const PayRoll = () => {
         processedSalaries = activeEmployees.map(emp => {
           const employeeData = employeesMap[emp.employeeId];
           const actualWeekOffDays = emp.weekOffPerMonth || 0;
-          const daysInMonth = salaryData.monthDays || 30;
+          const daysInMonth = salaryData.monthDays || getDaysInMonth(month || "");
           const dailyRate = employeeData?.salaryPerMonth / daysInMonth || 0;
 
           let calculatedSalary = 0;
@@ -2132,7 +2110,7 @@ const PayRoll = () => {
             totalLeaves: 0,
             leaveTypes: {},
             month: month || "No Month",
-            monthDays: salaryData.monthDays || 30,
+            monthDays: salaryData.monthDays || getDaysInMonth(month || ""),
             includeWeekOffInSalary: includeWeekOffInSalary,
             isHistoricalMonth: isHistorical,
             isCurrentMonth: isCurrent,
@@ -2187,7 +2165,8 @@ const PayRoll = () => {
     const employeeData = employeesMasterData[employee.employeeId];
     if (!employeeData || !employeeData.salaryPerMonth || employeeData.salaryPerMonth === 0) return 0;
 
-    const daysInMonth = employee.monthDays || monthDays || 30;
+    // ✅ USE CORRECT MONTH DAYS
+    const daysInMonth = employee.monthDays || monthDays || getDaysInMonth(employee.month || selectedMonth);
     return (employeeData.salaryPerMonth / daysInMonth).toFixed(2);
   };
 
@@ -2417,7 +2396,7 @@ const PayRoll = () => {
   };
 
   // Handle edit submit
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
 
     if (!selectedEmployee) return;
@@ -2428,7 +2407,8 @@ const PayRoll = () => {
     const holidays = editFormData.holidays || calculateHolidays(selectedEmployee);
     const unpaidLeaves = leaves.LOP;
 
-    const daysInMonth = selectedEmployee.monthDays || monthDays || 30;
+    // ✅ CORRECT DAY COUNT LOGIC
+    const daysInMonth = selectedEmployee.monthDays || monthDays || getDaysInMonth(selectedEmployee.month || selectedMonth);
     const dailyRate = employeeData.salaryPerMonth / daysInMonth;
 
     const workingDays = editFormData.workingDays || 0;
@@ -2461,15 +2441,61 @@ const PayRoll = () => {
       }
     };
 
-    const updatedRecords = records.map(record =>
-      record.employeeId === selectedEmployee.employeeId
-        ? { ...record, ...updatedData }
-        : record
-    );
+    try {
+      // ✅ SAVE TO BACKEND (Use Localhost for testing)
+      // const response = await fetch("https://api.timelyhealth.in/api/attendancesummary/updatePayroll", {
+      const response = await fetch("http://localhost:5000/api/attendancesummary/updatePayroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employeeId: selectedEmployee.employeeId,
+          month: selectedEmployee.month || selectedMonth,
+          calculatedSalary: Math.round(finalSalary),
+          extraWork: updatedData.extraWork,
+          presentDays: editFormData.presentDays,
+          workingDays: editFormData.workingDays,
+          halfDayWorking: editFormData.halfDayWorking,
+          fullDayNotWorking: editFormData.fullDayNotWorking,
+          weekOffDays: weekOffDays,
+          holidays: holidays
+        })
+      });
 
-    setRecords(updatedRecords);
-    setShowEditModal(false);
-    alert("Salary details updated successfully!");
+      if (!response.ok) {
+        throw new Error("Failed to save changes");
+      }
+
+      const result = await response.json(); // ✅ Parse correct response
+
+      // Update local state with SERVER data (Single Source of Truth)
+      const updatedRecords = records.map(record => {
+        if (record.employeeId === selectedEmployee.employeeId) {
+           const serverSummary = result.summary;
+           return {
+             ...record,
+             ...updatedData, // Keep UI form data primarily
+             extraWork: serverSummary.extraWork || updatedData.extraWork,
+             calculatedSalary: serverSummary.calculatedSalary || updatedData.calculatedSalary,
+             // Sync day counts if server returned them
+             presentDays: serverSummary.presentDays ?? record.presentDays,
+             totalWorkingDays: serverSummary.totalWorkingDays ?? record.totalWorkingDays
+           };
+        }
+        return record;
+      });
+
+      setRecords(updatedRecords);
+      setFilteredRecords(prev => prev.map(r => 
+        r.employeeId === selectedEmployee.employeeId ? updatedRecords.find(ur => ur.employeeId === selectedEmployee.employeeId) : r
+      ));
+      
+      setShowEditModal(false);
+      alert("Salary details updated & synced successfully!");
+
+    } catch (error) {
+      console.error("Error saving payroll:", error);
+      alert("Failed to save payroll changes: " + error.message);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -2486,6 +2512,53 @@ const PayRoll = () => {
       ...prev,
       [name]: name === 'reason' ? value : (parseFloat(value) || 0)
     }));
+  };
+
+
+
+  // ✅ NEW: Reset to Actual (System Calculation)
+  const handleReset = () => {
+    if (!selectedEmployee) return;
+
+    // Recalculate based on pure attendance data
+    const employeeData = getEmployeeData(selectedEmployee);
+    const leaves = employeeLeaves[selectedEmployee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
+    const weekOffDays = getWeekOffDaysForSalary(selectedEmployee);
+    
+    // Use correct month days
+    const daysInMonth = selectedEmployee.monthDays || monthDays || getDaysInMonth(selectedEmployee.month || selectedMonth);
+    const dailyRate = employeeData.salaryPerMonth / daysInMonth;
+
+    const workingDays = selectedEmployee.totalWorkingDays || 0;
+    const halfDays = selectedEmployee.halfDayWorking || 0;
+    const effectiveWorkingDays = workingDays; // totalWorkingDays already includes half-day logic usually? 
+    // Let's re-derive to be safe if totalWorkingDays is raw count
+    // But typically totalWorkingDays in summary = Full + (Half * 0.5)
+    
+    const paidLeaveDays = (leaves.CL || 0) + (leaves.EL || 0) + (leaves.COFF || 0);
+    const paidDays = Math.max(0, workingDays + weekOffDays + paidLeaveDays);
+    
+    const systemCalculatedSalary = Math.round(paidDays * dailyRate);
+
+    // Reset Form Data
+    setEditFormData({
+      ...editFormData,
+      calculatedSalary: systemCalculatedSalary,
+      weekOffDays: weekOffDays, // Reset manual weekoffs if any?
+      // Keep other days from selectedEmployee as they are base attendance
+    });
+
+    // Reset Extra Work
+    setExtraWorkData({
+      extraDays: 0,
+      extraHours: 0,
+      overtimeRate: 0,
+      bonus: 0,
+      deductions: 0,
+      reason: "Reset to system calculation"
+    });
+
+    alert("Values reset to system calculation. Click 'Save Changes' to apply.");
   };
 
   // Handle view
@@ -2572,7 +2645,9 @@ const PayRoll = () => {
       `;
     }
 
-    const totalMonthDays = employee.monthDays || monthDays || 30;
+    // ✅ CORRECT DAY COUNT LOGIC
+    const daysInMonth = employee.monthDays || monthDays || getDaysInMonth(employee.month || selectedMonth);
+    const totalMonthDays = daysInMonth; // Strict usage
     const dailyRate = calculateDailyRate(employee);
     const leaves = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
 
@@ -3526,6 +3601,13 @@ const PayRoll = () => {
               </div>
 
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-200 mr-auto"
+                >
+                  Reset to Actual
+                </button>
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
