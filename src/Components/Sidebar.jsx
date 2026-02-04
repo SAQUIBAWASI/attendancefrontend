@@ -415,7 +415,8 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
       "/payroll": "Payroll",
       "/useractivity": "User Activity",
       "/useraccess": "User Access",
-      "/leaves-report": "Reports",
+      // "/leaves-report": "Reports",
+      "/jobpost": "Job Posts",
       "/locationlist": "Locations",
       "/shift": "Shifts",
       "/addemployee": "Add Employee",
@@ -525,11 +526,17 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
       name: "User Access",
       path: "/useraccess" 
     },
-    { 
-      icon: <i className="ri-file-chart-fill"></i>, 
-      name: "Reports", 
-      path: "/leaves-report" 
-    },
+    // { 
+    //   icon: <i className="ri-file-chart-fill"></i>, 
+    //   name: "Reports", 
+    //   path: "/leaves-report" 
+    // },
+    {
+  icon: <i className="ri-briefcase-fill"></i>,
+  name: "Job Posts",
+  path: "/jobpost"
+},
+
     { 
       icon: <i className="ri-map-pin-2-fill"></i>, 
       name: "Locations", 
