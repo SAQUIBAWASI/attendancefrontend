@@ -33,7 +33,7 @@
 //       try {
 //         setLoading(true);
 //         const res = await axios.get(
-//           `http://localhost:5000/api/shifts/employee/${employeeId}`
+//           `https://api.timelyhealth.in/api/shifts/employee/${employeeId}`
 //         );
 
 //         if (res.data) {
@@ -236,7 +236,7 @@ const EmployeeShift = () => {
         console.log("🔍 Fetching shift for employee:", employeeId);
         
         const res = await axios.get(
-          `http://localhost:5000/api/shifts/employee/${employeeId}`
+          `https://api.timelyhealth.in/api/shifts/employee/${employeeId}`
         );
 
         console.log("📱 API Response:", res.data); // Debug log

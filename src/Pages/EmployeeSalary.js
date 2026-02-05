@@ -895,55 +895,55 @@ export default function EmployeeDashboard() {
   // ✅ Check if month is historical
   const isHistoricalMonth = (month) => {
     if (!month) return false;
-    
+
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth() + 1;
-    
+
     const [year, monthNum] = month.split('-').map(Number);
-    
+
     if (year < currentYear) return true;
     if (year === currentYear && monthNum < currentMonth) return true;
-    
+
     return false;
   };
 
   // ✅ Check if month is current month
   const isCurrentMonth = (month) => {
     if (!month) return true;
-    
+
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth() + 1;
-    
+
     const [year, monthNum] = month.split('-').map(Number);
-    
+
     return year === currentYear && monthNum === currentMonth;
   };
 
   // ✅ Check if week-off should be included in salary
   const shouldIncludeWeekOffInSalary = (month) => {
     if (isHistoricalMonth(month)) return true;
-    
+
     if (isCurrentMonth(month)) {
       const today = new Date();
       const currentDay = today.getDate();
       return currentDay >= 26;
     }
-    
+
     return true;
   };
 
   // ✅ Check if payslip download is allowed
   const isPayslipDownloadAllowed = (month) => {
     if (isHistoricalMonth(month)) return true;
-    
+
     if (isCurrentMonth(month)) {
       const today = new Date();
       const currentDay = today.getDate();
       return currentDay >= 30;
     }
-    
+
     return true;
   };
 
@@ -1127,12 +1127,12 @@ export default function EmployeeDashboard() {
       });
 
       // Fetch salary data with or without month filter
-      const salaryUrl = month 
+      const salaryUrl = month
         ? `${BASE_URL}/api/attendancesummary/getsalaries?month=${month}`
         : `${BASE_URL}/api/attendancesummary/getsalaries`;
 
       const salaryRes = await fetch(salaryUrl);
-      
+
       if (!salaryRes.ok) {
         throw new Error(`Failed to fetch salary data: ${salaryRes.status}`);
       }
@@ -1149,7 +1149,7 @@ export default function EmployeeDashboard() {
           .map(salary => {
             const actualWeekOffDays = salary.weekOffs || 0;
             const weekOffDaysForSalary = includeWeekOff ? actualWeekOffDays : 0;
-            
+
             // Adjust calculated salary if week-off not included
             let calculatedSalary = salary.calculatedSalary || 0;
             if (!includeWeekOff && calculatedSalary > 0) {
@@ -1340,8 +1340,11 @@ export default function EmployeeDashboard() {
 
     const totalMonthDays = employee.monthDays || monthDays || 30;
     const dailyRate = calculateDailyRate(employee);
+    // ✅ Define number version for math
+    const dailyRateNumber = parseFloat(dailyRate) || 0;
+
     const leaves = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
-    
+
     const actualWeekOffDays = employee.weekOffs || 0;
     const weekOffDaysForSalary = employee.weekOffsForSalary || 0;
     const includeWeekOffInSalary = employee.includeWeekOffInSalary || false;
@@ -1353,21 +1356,27 @@ export default function EmployeeDashboard() {
     const totalPaidDays = presentDays + (halfDays * 0.5) + weekOffDaysForSalary + paidLeaveDays;
 
     const halfDayDeductionDays = halfDays * 0.5;
-    const halfDayDeductionAmount = halfDayDeductionDays * dailyRate;
+    const halfDayDeductionAmount = halfDayDeductionDays * dailyRateNumber;
 
     const totalUnpaidDays = Math.max(0, totalMonthDays - totalPaidDays);
     const lopDays = Math.max(0, totalUnpaidDays - halfDayDeductionDays);
-    const lopAmount = lopDays * dailyRate;
 
     const grossSalary = employeeData.salaryPerMonth || 0;
     const bonus = employee.extraWork?.bonus || 0;
-    const extraDaysPay = (employee.extraWork?.extraDays || 0) * dailyRate;
+    const extraDaysPay = (employee.extraWork?.extraDays || 0) * dailyRateNumber;
 
     const otherDeductions = employee.extraWork?.deductions || 0;
 
     const totalEarnings = grossSalary + bonus + extraDaysPay;
+
+    // ✅ SOURCE OF TRUTH: Use the salary displayed in the table (Backend Value)
+    // This allows manual edits (via Admin) to be respected in the PDF
+    const netPay = employee.calculatedSalary || (totalEarnings - (halfDayDeductionAmount + (lopDays * dailyRateNumber) + otherDeductions));
+
+    // Reverse-calculate LOP amount to match the Net Pay exactly
+    const lopAmount = Math.max(0, totalEarnings - netPay - halfDayDeductionAmount - otherDeductions);
+
     const totalDeductions = halfDayDeductionAmount + lopAmount + otherDeductions;
-    const netPay = totalEarnings - totalDeductions;
 
     const hasExtraWork = employee.extraWork && (
       (employee.extraWork.extraDays || 0) > 0 ||
@@ -1600,7 +1609,7 @@ export default function EmployeeDashboard() {
       alert(`Salary slip for current month will be available for download from 30th ${formatMonthDisplay(employee.month).split(' ')[0]} onwards.`);
       return;
     }
-    
+
     const slipContent = generateInvoiceHTML(employee);
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -1622,7 +1631,7 @@ export default function EmployeeDashboard() {
           month: employee.month
         });
 
-        await axios.post("https://api.timelyhealth.in/api/user-activity/log", {
+        await axios.post("https://api.timelyhealth.in/user-activity/log", {
           userId: employeeId,
           userName: employeeName,
           userEmail: employeeEmail,
@@ -1691,7 +1700,7 @@ export default function EmployeeDashboard() {
 
         {/* Header Info Card */}
         {/* <div className="p-4 mb-4 text-white shadow-lg md:p-6 md:mb-6 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl md:rounded-2xl"> */}
-          {/* <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+        {/* <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-xl font-bold md:text-2xl">My Salary History</h1>
               <p className="mt-1 text-sm text-blue-100 md:text-base">
@@ -1706,9 +1715,9 @@ export default function EmployeeDashboard() {
                 </div>
               </div>
             </div> */}
-            
-            {/* Important Notes */}
-            {/* <div className="mt-3 md:mt-0">
+
+        {/* Important Notes */}
+        {/* <div className="mt-3 md:mt-0">
               <div className="p-2 text-xs bg-white rounded-lg md:p-3 md:text-sm bg-opacity-10">
                 <div className="flex items-center space-x-2">
                   <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -1836,15 +1845,14 @@ export default function EmployeeDashboard() {
         </div>
 
         {/* Month Type Notice */}
-        <div className={`px-3 py-2 mb-4 md:mb-6 rounded-md shadow-sm ${
-          monthInfo.isHistorical 
-            ? 'bg-green-50 border-l-2 border-green-500' 
+        <div className={`px-3 py-2 mb-4 md:mb-6 rounded-md shadow-sm ${monthInfo.isHistorical
+            ? 'bg-green-50 border-l-2 border-green-500'
             : monthInfo.isCurrent
-            ? (monthInfo.includeWeekOff 
-                ? 'bg-green-50 border-l-2 border-green-500' 
+              ? (monthInfo.includeWeekOff
+                ? 'bg-green-50 border-l-2 border-green-500'
                 : 'bg-yellow-50 border-l-2 border-yellow-500')
-            : 'bg-blue-50 border-l-2 border-blue-500'
-        }`}>
+              : 'bg-blue-50 border-l-2 border-blue-500'
+          }`}>
           <div className="flex items-center">
             <div className="mr-2">
               {monthInfo.isHistorical ? (
@@ -1869,13 +1877,13 @@ export default function EmployeeDashboard() {
             </div>
             <div>
               <p className="text-xs font-medium">
-                {monthInfo.isHistorical 
-                  ? "✓ Historical Month - Full salary with week-off included | Payslip download available" 
+                {monthInfo.isHistorical
+                  ? "✓ Historical Month - Full salary with week-off included | Payslip download available"
                   : monthInfo.isCurrent
-                  ? (monthInfo.includeWeekOff 
+                    ? (monthInfo.includeWeekOff
                       ? `✓ Current Month (After 26th) - Week-off included | ${monthInfo.canDownload ? 'Payslip download available' : 'Payslip available after 30th'}`
                       : `Current Month (Before 26th) - Week-off will be added after 26th | ${monthInfo.canDownload ? 'Payslip download available' : 'Payslip available after 30th'}`)
-                  : "Future Month - Preview only"}
+                    : "Future Month - Preview only"}
               </p>
             </div>
           </div>
@@ -1923,8 +1931,8 @@ export default function EmployeeDashboard() {
                   {filteredRecords.filter(emp => emp.canDownload).length}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {filteredRecords.filter(emp => !emp.canDownload).length > 0 
-                    ? `${filteredRecords.filter(emp => !emp.canDownload).length} pending` 
+                  {filteredRecords.filter(emp => !emp.canDownload).length > 0
+                    ? `${filteredRecords.filter(emp => !emp.canDownload).length} pending`
                     : 'All available'}
                 </p>
               </div>
@@ -2068,8 +2076,8 @@ export default function EmployeeDashboard() {
                               onClick={() => downloadSalarySlip(emp)}
                               disabled={!emp.canDownload}
                               className={`p-1.5 md:p-2 transition duration-200 rounded-lg ${emp.canDownload
-                                  ? 'text-white bg-purple-500 hover:bg-purple-600'
-                                  : 'text-gray-400 bg-gray-200 cursor-not-allowed'
+                                ? 'text-white bg-purple-500 hover:bg-purple-600'
+                                : 'text-gray-400 bg-gray-200 cursor-not-allowed'
                                 }`}
                               title={emp.canDownload ? "Download Salary Slip" : "Available from 30th"}
                             >
@@ -2099,8 +2107,8 @@ export default function EmployeeDashboard() {
                     onClick={handlePrevious}
                     disabled={currentPage === 1}
                     className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg border text-sm ${currentPage === 1
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
                       }`}
                   >
                     Previous
@@ -2112,8 +2120,8 @@ export default function EmployeeDashboard() {
                         key={pageNumber}
                         onClick={() => handlePageClick(pageNumber)}
                         className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg border text-sm ${currentPage === pageNumber
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
                           }`}
                       >
                         {pageNumber}
@@ -2125,8 +2133,8 @@ export default function EmployeeDashboard() {
                     onClick={handleNext}
                     disabled={currentPage === totalPages}
                     className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg border text-sm ${currentPage === totalPages
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
                       }`}
                   >
                     Next
@@ -2196,11 +2204,11 @@ export default function EmployeeDashboard() {
                   <p className="text-xs text-gray-600 md:text-sm">Month: {selectedEmployee.monthFormatted || formatMonthDisplay(selectedEmployee.month)}</p>
                   <p className="text-xs text-gray-600 md:text-sm">Days in Month: {selectedEmployee.monthDays || 30}</p>
                   <p className={`text-xs md:text-sm ${selectedEmployee.isHistoricalMonth ? 'text-green-600' : selectedEmployee.isCurrentMonth ? 'text-blue-600' : 'text-gray-600'}`}>
-                    {selectedEmployee.isHistoricalMonth 
-                      ? 'Historical Month - Full salary' 
-                      : selectedEmployee.isCurrentMonth 
-                      ? `Current Month - ${selectedEmployee.includeWeekOffInSalary ? 'Week-off included' : 'Week-off after 26th'}` 
-                      : 'Future Month'}
+                    {selectedEmployee.isHistoricalMonth
+                      ? 'Historical Month - Full salary'
+                      : selectedEmployee.isCurrentMonth
+                        ? `Current Month - ${selectedEmployee.includeWeekOffInSalary ? 'Week-off included' : 'Week-off after 26th'}`
+                        : 'Future Month'}
                   </p>
                 </div>
               </div>
@@ -2263,8 +2271,8 @@ export default function EmployeeDashboard() {
                 onClick={() => downloadSalarySlip(selectedEmployee)}
                 disabled={!selectedEmployee.canDownload}
                 className={`px-4 py-2 transition duration-200 rounded-lg text-sm ${selectedEmployee.canDownload
-                    ? 'text-white bg-purple-500 hover:bg-purple-600'
-                    : 'text-gray-400 bg-gray-200 cursor-not-allowed'
+                  ? 'text-white bg-purple-500 hover:bg-purple-600'
+                  : 'text-gray-400 bg-gray-200 cursor-not-allowed'
                   }`}
               >
                 {selectedEmployee.canDownload ? 'Download Slip' : 'Available from 30th'}

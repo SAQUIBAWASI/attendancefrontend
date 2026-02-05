@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { FiCalendar, FiClock, FiSun } from "react-icons/fi";
 import { MdCheckCircle, MdError, MdNotificationsActive } from "react-icons/md";
+import { API_BASE_URL } from "../config";
 
 const EmployeeNotifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -37,8 +38,7 @@ const EmployeeNotifications = () => {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      // Using localhost as per current dev setup, should be dynamic in prod
-      const res = await axios.get(`http://localhost:5000/api/notifications/${employeeId}`);
+      const res = await axios.get(`${API_BASE_URL}/notifications/${employeeId}`);
       setNotifications(res.data || []);
     } catch (err) {
       console.error("Fetch error:", err);
@@ -50,7 +50,7 @@ const EmployeeNotifications = () => {
 
   const markAsRead = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/notifications/${id}/read`);
+      await axios.put(`${API_BASE_URL}/notifications/read/${id}`);
       // Update local state to reflect read status
       setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
     } catch (err) {
@@ -60,7 +60,7 @@ const EmployeeNotifications = () => {
 
   const markAllRead = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/notifications/read-all/${employeeId}`);
+      await axios.put(`${API_BASE_URL}/notifications/read-all/${employeeId}`);
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     } catch (err) {
       console.error("Error marking all as read:", err);
@@ -88,7 +88,7 @@ const EmployeeNotifications = () => {
           My Notifications
         </h1>
         {notifications.some(n => !n.isRead) && (
-          <button 
+          <button
             onClick={markAllRead}
             className="text-sm text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors font-medium"
           >
@@ -104,8 +104,8 @@ const EmployeeNotifications = () => {
               key={notif._id}
               onClick={() => !notif.isRead && markAsRead(notif._id)}
               className={`relative flex gap-3 p-3 rounded-lg transition-all border cursor-pointer
-                ${notif.isRead 
-                  ? "bg-white border-gray-100" 
+                ${notif.isRead
+                  ? "bg-white border-gray-100"
                   : "bg-blue-50/50 border-blue-100 hover:bg-blue-50"
                 } shadow-sm hover:shadow-md`}
             >

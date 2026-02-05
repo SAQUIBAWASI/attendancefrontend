@@ -911,6 +911,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { FaCalendarAlt, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
 const LeavesList = () => {
   const [leaves, setLeaves] = useState([]);
@@ -924,12 +925,14 @@ const LeavesList = () => {
   const [startDateFilter, setStartDateFilter] = useState("");
   const [endDateFilter, setEndDateFilter] = useState("");
 
+  // https://api.timelyhealth.in
+
   // ✅ Fetch all leaves
   const fetchLeaves = async () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        "https://api.timelyhealth.in/api/leaves/leaves"
+        `${API_BASE_URL}/leaves/leaves`
       );
       const leavesData = res.data.records || res.data || [];
       const sorted = leavesData.sort(
@@ -958,7 +961,7 @@ const LeavesList = () => {
       const adminEmail = localStorage.getItem("adminEmail") || "";
 
       const res = await axios.put(
-        `https://api.timelyhealth.in/api/leaves/updateleaves/${id}`,
+        `${API_BASE_URL}/leaves/updateleaves/${id}`,
         {
           status,
           adminName,
@@ -1173,8 +1176,8 @@ const LeavesList = () => {
             >
               Clear
             </button>
-              <button onClick={() => navigate("/leaves-report")}
-              
+            <button onClick={() => navigate("/leaves-report")}
+
               className="h-9 px-5 mb-[2px] text-sm font-medium text-white bg-gray-500 rounded-md hover:bg-gray-600 transition"
             >
               Leaves

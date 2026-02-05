@@ -4,6 +4,7 @@ import {
   FiCalendar,
   FiSearch
 } from "react-icons/fi";
+import { API_BASE_URL } from "../config";
 
 const UserActivity = () => {
   const [activities, setActivities] = useState([]);
@@ -39,7 +40,7 @@ const UserActivity = () => {
       );
 
       const response = await axios.get(
-        "https://api.timelyhealth.in/api/user-activity/all",
+        `${API_BASE_URL}/user-activity/all`,
         { params }
       );
 
@@ -62,7 +63,7 @@ const UserActivity = () => {
       if (filters.endDate) params.endDate = filters.endDate;
 
       const response = await axios.get(
-        "https://api.timelyhealth.in/api/user-activity/stats",
+        `${API_BASE_URL}/user-activity/stats`,
         { params }
       );
 
@@ -211,7 +212,7 @@ const UserActivity = () => {
         )} */}
 
         {/* Filters */}
-        
+
         <div className="bg-white rounded-lg shadow-md p-3 mb-3">
           {/* <div className="flex items-center gap-2 mb-4">
             <FiFilter className="text-blue-600 text-xl" />

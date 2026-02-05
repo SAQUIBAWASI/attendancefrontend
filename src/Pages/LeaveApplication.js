@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const BASE_URL = "http://localhost:5000/";
+const BASE_URL = "https://api.timelyhealth.in/";
 
 const LeaveRequestForm = () => {
   const navigate = useNavigate();
@@ -102,7 +102,7 @@ const LeaveRequestForm = () => {
     setErrorMessage("");
 
     try {
-      const response = await axios.post("http://localhost:5000/api/leaves/add-leave", formData);
+      const response = await axios.post("https://api.timelyhealth.in/api/leaves/add-leave", formData);
       if (response.status === 201) {
         setSuccessMessage("✅ Leave application submitted successfully!");
         setFormData({

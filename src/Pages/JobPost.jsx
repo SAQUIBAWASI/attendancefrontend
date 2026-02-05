@@ -3,10 +3,12 @@ import axios from "axios";
 import {
   FiBriefcase, FiList, FiCode, FiDollarSign,
   FiClipboard, FiCopy, FiCheckCircle, FiPlus,
-  FiX, FiExternalLink, FiSearch, FiMoreVertical
+  FiX, FiExternalLink, FiSearch, FiMoreVertical,
+  FiEdit2, FiEye, FiTrash2
 } from "react-icons/fi";
+import { API_BASE_URL } from "../config";
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = API_BASE_URL;
 
 function JobPost() {
   const [formData, setFormData] = useState({
@@ -26,6 +28,10 @@ function JobPost() {
   const [message, setMessage] = useState({ type: "", text: "" });
   const [copiedId, setCopiedId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentJobId, setCurrentJobId] = useState(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
 
   // Fetch Jobs and Quizzes
   useEffect(() => {
@@ -61,6 +67,51 @@ function JobPost() {
     }
   };
 
+  const openCreateModal = () => {
+    setIsEditing(false);
+    setCurrentJobId(null);
+    setFormData({
+      role: "",
+      responsibilities: "",
+      skills: "",
+      salary: "",
+      assessmentId: "",
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (job) => {
+    setIsEditing(true);
+    setCurrentJobId(job._id);
+    setFormData({
+      role: job.role,
+      responsibilities: job.responsibilities,
+      skills: job.skills,
+      salary: job.salary,
+      assessmentId: job.assessmentId?._id || job.assessmentId || "",
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleViewDetails = (job) => {
+    setSelectedJob(job);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this job post?")) return;
+    try {
+      const res = await axios.delete(`${API_BASE}/jobs/${id}`);
+      if (res.data.success) {
+        setMessage({ type: "success", text: "Job post deleted successfully!" });
+        fetchJobs();
+      }
+    } catch (err) {
+      console.error("Failed to delete job:", err);
+      setMessage({ type: "error", text: "Failed to delete job." });
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -72,9 +123,15 @@ function JobPost() {
     setMessage({ type: "", text: "" });
 
     try {
-      const response = await axios.post(`${API_BASE}/jobs/create`, formData);
+      let response;
+      if (isEditing) {
+        response = await axios.put(`${API_BASE}/jobs/${currentJobId}`, formData);
+      } else {
+        response = await axios.post(`${API_BASE}/jobs/create`, formData);
+      }
+
       if (response.data.success) {
-        setMessage({ type: "success", text: "Job post created successfully!" });
+        setMessage({ type: "success", text: isEditing ? "Job post updated successfully!" : "Job post created successfully!" });
         setFormData({
           role: "",
           responsibilities: "",
@@ -111,33 +168,42 @@ function JobPost() {
   return (
     <div className="min-h-screen bg-gray-50/50 p-4 lg:p-8 font-poppins">
       {/* Header Section */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-2xl font-black text-gray-800 tracking-tight">
+      <div className="max-w-7xl mx-auto mb-10">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-gray-100">
+          <div className="shrink-0">
+            <h1 className="text-2xl md:text-3xl font-black text-gray-800 tracking-tight flex items-center gap-3">
+              <span className="w-2 h-8 bg-indigo-600 rounded-full"></span>
               Recruitment Dashboard
             </h1>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">Manage job openings and candidate assessments</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-2 ml-5">Manage job openings and candidate assessments</p>
           </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-sm hover:shadow-lg active:scale-95 group"
-          >
-            <FiPlus className="text-lg group-hover:rotate-90 transition-transform duration-300" />
-            <span>Post New Job</span>
-          </button>
-        </div>
 
-        {/* Search and Filters */}
-        <div className="mt-8 bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
-          <FiSearch className="text-gray-400 ml-2" />
-          <input
-            type="text"
-            placeholder="Search by role or skills..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent outline-none text-sm font-medium text-gray-600 placeholder:text-gray-400 py-1"
-          />
+          {/* Search Bar - Professional Integration */}
+          <div className="flex-1 max-w-xl group">
+            <div className="relative flex items-center transition-all duration-300">
+              <div className="absolute left-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors z-10">
+                <FiSearch className="text-xl" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search positions, teams, or skills..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-gray-50/50 border-2 border-transparent group-focus-within:border-indigo-600/10 group-focus-within:bg-white pl-12 pr-4 py-3.5 rounded-2xl outline-none text-sm font-bold text-gray-700 placeholder:text-gray-400 shadow-inner group-focus-within:shadow-indigo-100 transition-all"
+              />
+              <div className="absolute right-4 hidden md:block">
+                <span className="text-[10px] font-black text-gray-300 bg-white px-2 py-1 rounded-md border border-gray-100 uppercase tracking-tighter">Enter</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={openCreateModal}
+            className="flex items-center justify-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-2xl font-black transition-all shadow-lg shadow-indigo-100 hover:shadow-indigo-200 active:scale-95 group shrink-0"
+          >
+            <FiPlus className="text-xl group-hover:rotate-90 transition-transform duration-300" />
+            <span className="text-sm">Post New Job</span>
+          </button>
         </div>
       </div>
 
@@ -160,9 +226,29 @@ function JobPost() {
                     <div className="w-10 h-10 flex items-center justify-center bg-indigo-50 text-indigo-600 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                       <FiBriefcase className="text-lg" />
                     </div>
-                    <button className="text-gray-300 hover:text-gray-600 p-1 transition-colors">
-                      <FiMoreVertical />
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleViewDetails(job)}
+                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                        title="View Details"
+                      >
+                        <FiEye />
+                      </button>
+                      <button
+                        onClick={() => handleEdit(job)}
+                        className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
+                        title="Edit Job"
+                      >
+                        <FiEdit2 />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(job._id)}
+                        className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                        title="Delete Job"
+                      >
+                        <FiTrash2 />
+                      </button>
+                    </div>
                   </div>
 
                   <h3 className="text-lg font-black text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors">
@@ -200,8 +286,8 @@ function JobPost() {
                     <button
                       onClick={() => copyToClipboard(job.link, job._id)}
                       className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${copiedId === job._id
-                          ? "bg-emerald-600 text-white"
-                          : "bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white"
+                        ? "bg-emerald-600 text-white"
+                        : "bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white"
                         }`}
                     >
                       {copiedId === job._id ? (
@@ -241,8 +327,12 @@ function JobPost() {
             {/* Modal Header */}
             <div className="px-8 pt-8 pb-4 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-black text-gray-800">Post New Opening</h2>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Configure recruitment details</p>
+                <h2 className="text-xl font-black text-gray-800">
+                  {isEditing ? "Update Job Opening" : "Post New Opening"}
+                </h2>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                  {isEditing ? "Modify recruitment details" : "Configure recruitment details"}
+                </p>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -256,8 +346,8 @@ function JobPost() {
             <div className="p-8 pt-4 max-h-[75vh] overflow-y-auto no-scrollbar">
               {message.text && (
                 <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === "success"
-                    ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                    : "bg-rose-50 text-rose-600 border border-rose-100"
+                  ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                  : "bg-rose-50 text-rose-600 border border-rose-100"
                   }`}>
                   {message.type === "success" ? <FiCheckCircle className="text-lg" /> : <FiX className="text-lg" />}
                   <span className="text-sm font-bold">{message.text}</span>
@@ -390,11 +480,113 @@ function JobPost() {
                         <span>Deploying...</span>
                       </div>
                     ) : (
-                      "Publish Position"
+                      isEditing ? "Update Position" : "Publish Position"
                     )}
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Details Modal */}
+      {isDetailsModalOpen && selectedJob && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-100">
+            {/* Modal Header */}
+            <div className="px-8 pt-8 pb-4 flex items-center justify-between border-b border-gray-50">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 flex items-center justify-center bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-100">
+                  <FiBriefcase className="text-xl" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-gray-800">{selectedJob.role}</h2>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Detailed Job Specifications</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsDetailsModalOpen(false)}
+                className="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all"
+              >
+                <FiX className="text-lg" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-8 max-h-[70vh] overflow-y-auto no-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Compensation</h4>
+                    <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100/50">
+                      <FiDollarSign className="text-emerald-600 text-xl" />
+                      <span className="text-sm font-black text-gray-800">{selectedJob.salary || "Competitive Salary"}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Assessment Hook</h4>
+                    <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100/50">
+                      <FiClipboard className="text-amber-600 text-xl" />
+                      <span className="text-sm font-bold text-gray-800">
+                        {selectedJob.assessmentId?.topic || selectedJob.assessmentId?.title || "No Assessment Linked"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Required Stack</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedJob.skills.split(",").map((skill, idx) => (
+                      <span key={idx} className="bg-indigo-50 text-indigo-600 text-[10px] font-bold px-3 py-2 rounded-xl border border-indigo-100/50 uppercase tracking-wider">
+                        {skill.trim()}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Core Responsibilities</h4>
+                  <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 leading-relaxed text-sm text-gray-600 whitespace-pre-line">
+                    {selectedJob.responsibilities}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Public Access Link</h4>
+                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <code className="flex-1 text-xs text-indigo-600 font-bold overflow-hidden text-ellipsis whitespace-nowrap">
+                      {window.location.origin + selectedJob.link}
+                    </code>
+                    <button
+                      onClick={() => copyToClipboard(selectedJob.link, selectedJob._id)}
+                      className="p-2 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-all"
+                    >
+                      <FiCopy />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-8 pt-4 border-t border-gray-50 flex gap-4">
+              <button
+                onClick={() => {
+                  setIsDetailsModalOpen(false);
+                  handleEdit(selectedJob);
+                }}
+                className="flex-1 flex items-center justify-center gap-2 py-4 px-6 rounded-2xl font-bold bg-amber-50 text-amber-600 hover:bg-amber-100 transition-all"
+              >
+                <FiEdit2 /> Edit Position
+              </button>
+              <button
+                onClick={() => setIsDetailsModalOpen(false)}
+                className="flex-1 py-4 px-6 rounded-2xl font-bold bg-gray-900 text-white hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
+              >
+                Close View
+              </button>
             </div>
           </div>
         </div>

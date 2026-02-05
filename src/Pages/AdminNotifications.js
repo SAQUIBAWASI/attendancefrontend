@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FaExclamationTriangle, FaShoppingCart, FaTag, FaUserPlus, FaUserShield } from "react-icons/fa";
 import { MdDelete, MdNotificationsActive } from "react-icons/md";
+import { API_BASE_URL } from "../config";
 
 const iconMap = {
   newUser: <FaUserPlus className="text-green-600" />,
@@ -13,11 +14,10 @@ const iconMap = {
 };
 
 const AdminNotifications = () => {
- const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  const API_BASE_URL = "http://localhost:5000/api"; // ✅ Use correct Base URL
+
 
   // Fetch notifications from API
   useEffect(() => {
@@ -54,11 +54,11 @@ const AdminNotifications = () => {
         await fetch(`${API_BASE_URL}/notifications/read-all/${adminEmail}`, {
           method: "PUT",
         });
-        
+
         // Optionally update local state if needed, but the main goal is backend update
         // so that Navbar poll picks it up. 
         // To force Navbar update, we'd need a context or event, but for now this is the fix.
-        
+
         // Also refresh the trigger event for other tabs/components if using window storage event
         window.dispatchEvent(new Event("storage"));
       } catch (error) {

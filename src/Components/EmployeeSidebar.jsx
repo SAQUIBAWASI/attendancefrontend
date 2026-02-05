@@ -293,7 +293,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
       if (!storedId || storedId === "undefined") return;
 
       try {
-        const response = await axios.get(`http://localhost:5000/api/employees/get-employee?employeeId=${storedId}`);
+        const response = await axios.get(`https://api.timelyhealth.in/employees/get-employee?employeeId=${storedId}`);
         if (response.data && response.data.data) {
           const fetchedPermissions = response.data.data.permissions || [];
           setPermissions(fetchedPermissions);

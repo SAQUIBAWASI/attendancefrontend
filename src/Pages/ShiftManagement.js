@@ -40,7 +40,7 @@
 //     try {
 //       setLoading(true);
 //       const res = await axios.post(
-//         "http://localhost:5000//api/shifts/assign",
+//         "https://api.timelyhealth.in//api/shifts/assign",
 //         formData
 //       );
 
@@ -252,7 +252,7 @@
 //     try {
 //       setLoading(true);
 //       const res = await axios.post(
-//         "http://localhost:5000/api/shifts/assign",
+//         "https://api.timelyhealth.in/api/shifts/assign",
 //         formData
 //       );
 
@@ -461,7 +461,7 @@
 //       console.log("🔄 Fetching data...");
       
 //       // Fetch master shifts
-//       const shiftsRes = await axios.get('http://localhost:5000/api/shifts/master');
+//       const shiftsRes = await axios.get('https://api.timelyhealth.in/api/shifts/master');
 //       console.log("Master shifts response:", shiftsRes.data);
       
 //       if (shiftsRes.data.success) {
@@ -471,7 +471,7 @@
 //       }
       
 //       // Fetch employee assignments
-//       const assignedRes = await axios.get('http://localhost:5000/api/shifts/assignments');
+//       const assignedRes = await axios.get('https://api.timelyhealth.in/api/shifts/assignments');
 //       console.log("Assignments response:", assignedRes.data);
       
 //       if (assignedRes.data.success) {
@@ -514,7 +514,7 @@
 //         return;
 //       }
 
-//       const response = await axios.post('http://localhost:5000/api/shifts/create', {
+//       const response = await axios.post('https://api.timelyhealth.in/api/shifts/create', {
 //         shiftType: createForm.shiftType,
 //         shiftName: createForm.shiftName,
 //         timeSlots: validSlots
@@ -663,7 +663,7 @@
 //       });
 
 //       // ✅ API call
-//       const response = await axios.post('http://localhost:5000/api/shifts/assign', {
+//       const response = await axios.post('https://api.timelyhealth.in/api/shifts/assign', {
 //         employeeId,
 //         employeeName,
 //         shiftType,
@@ -730,7 +730,7 @@
 //       });
 
 //       const response = await axios.put(
-//         `http://localhost:5000/api/shifts/assignments/${editingAssignment._id}`,
+//         `https://api.timelyhealth.in/api/shifts/assignments/${editingAssignment._id}`,
 //         {
 //           employeeName,
 //           shiftType,
@@ -766,7 +766,7 @@
 //   const handleDeleteAssignment = async (id) => {
 //     if (window.confirm('Are you sure you want to delete this assignment?')) {
 //       try {
-//         const response = await axios.delete(`http://localhost:5000/api/shifts/assignments/${id}`);
+//         const response = await axios.delete(`https://api.timelyhealth.in/api/shifts/assignments/${id}`);
 //         if (response.data.success) {
 //           setSuccess('Shift assignment removed successfully');
 //           fetchData();
@@ -781,7 +781,7 @@
 //   const handleDeleteMasterShift = async (id, shiftName) => {
 //     if (window.confirm(`Delete ${shiftName}? This will remove all assignments.`)) {
 //       try {
-//         const response = await axios.delete(`http://localhost:5000/api/shifts/master/${id}`);
+//         const response = await axios.delete(`https://api.timelyhealth.in/api/shifts/master/${id}`);
 //         if (response.data.success) {
 //           setSuccess(response.data.message);
 //           fetchData();
@@ -795,7 +795,7 @@
 //   // ✅ VIEW EMPLOYEES BY SHIFT TYPE
 //   const handleViewEmployees = async (shiftType, shiftName) => {
 //     try {
-//       const response = await axios.get(`http://localhost:5000/api/shifts/type/${shiftType}/employees`);
+//       const response = await axios.get(`https://api.timelyhealth.in/api/shifts/type/${shiftType}/employees`);
 //       if (response.data.success) {
 //         setViewShiftInfo({
 //           shiftType,
@@ -1064,7 +1064,7 @@
 //               setTimeout(() => {
 //                 const quickCreate = async () => {
 //                   try {
-//                     const response = await axios.post('http://localhost:5000/api/shifts/create', {
+//                     const response = await axios.post('https://api.timelyhealth.in/api/shifts/create', {
 //                       shiftType: shiftType,
 //                       shiftName: shiftNames[shiftType] || shiftType
 //                     });
@@ -1580,7 +1580,7 @@
 //       console.log("🔄 Fetching data...");
       
 //       // Fetch master shifts
-//       const shiftsRes = await axios.get('http://localhost:5000/api/shifts/master');
+//       const shiftsRes = await axios.get('https://api.timelyhealth.in/api/shifts/master');
       
 //       if (shiftsRes.data.success) {
 //         setMasterShifts(shiftsRes.data.data);
@@ -1589,14 +1589,14 @@
 //       }
       
 //       // Fetch employee assignments
-//       const assignedRes = await axios.get('http://localhost:5000/api/shifts/assignments');
+//       const assignedRes = await axios.get('https://api.timelyhealth.in/api/shifts/assignments');
       
 //       if (assignedRes.data.success) {
 //         setEmployeeAssignments(assignedRes.data.data);
 //       }
       
 //       // Fetch employee counts by shift
-//       const countRes = await axios.get('http://localhost:5000/api/shifts/employee-count');
+//       const countRes = await axios.get('https://api.timelyhealth.in/api/shifts/employee-count');
       
 //       if (countRes.data.success) {
 //         setEmployeeCounts(countRes.data.data);
@@ -1633,7 +1633,7 @@
 //         return;
 //       }
 
-//       const response = await axios.post('http://localhost:5000/api/shifts/create', {
+//       const response = await axios.post('https://api.timelyhealth.in/api/shifts/create', {
 //         shiftType: createForm.shiftType,
 //         shiftName: createForm.shiftName,
 //         timeSlots: [slot]
@@ -1784,7 +1784,7 @@
 //         return;
 //       }
 
-//       const response = await axios.post('http://localhost:5000/api/shifts/assign', {
+//       const response = await axios.post('https://api.timelyhealth.in/api/shifts/assign', {
 //         employeeId,
 //         employeeName,
 //         shiftType
@@ -1823,7 +1823,7 @@
 //       }
 
 //       const response = await axios.put(
-//         `http://localhost:5000/api/shifts/assignments/${editingAssignment._id}`,
+//         `https://api.timelyhealth.in/api/shifts/assignments/${editingAssignment._id}`,
 //         {
 //           employeeName,
 //           shiftType
@@ -1853,7 +1853,7 @@
 //   const handleDeleteAssignment = async (id) => {
 //     if (window.confirm('Are you sure you want to delete this assignment?')) {
 //       try {
-//         const response = await axios.delete(`http://localhost:5000/api/shifts/assignments/${id}`);
+//         const response = await axios.delete(`https://api.timelyhealth.in/api/shifts/assignments/${id}`);
 //         if (response.data.success) {
 //           setSuccess('Shift assignment removed successfully');
 //           fetchData();
@@ -1868,7 +1868,7 @@
 //   const handleDeleteMasterShift = async (id, shiftName) => {
 //     if (window.confirm(`Delete ${shiftName}? This will remove all assignments.`)) {
 //       try {
-//         const response = await axios.delete(`http://localhost:5000/api/shifts/master/${id}`);
+//         const response = await axios.delete(`https://api.timelyhealth.in/api/shifts/master/${id}`);
 //         if (response.data.success) {
 //           setSuccess(response.data.message);
 //           fetchData();
@@ -1882,7 +1882,7 @@
 //   // ✅ VIEW EMPLOYEES BY SHIFT TYPE
 //   const handleViewEmployees = async (shiftType, shiftName) => {
 //     try {
-//       const response = await axios.get(`http://localhost:5000/api/shifts/type/${shiftType}/employees`);
+//       const response = await axios.get(`https://api.timelyhealth.in/api/shifts/type/${shiftType}/employees`);
 //       if (response.data.success) {
 //         setViewShiftInfo({
 //           shiftType,
@@ -1900,7 +1900,7 @@
 //   // ✅ CREATE DEFAULT SHIFTS A-D
 //   const handleCreateDefaultShifts = async () => {
 //     try {
-//       const response = await axios.post('http://localhost:5000/api/shifts/create-defaults');
+//       const response = await axios.post('https://api.timelyhealth.in/api/shifts/create-defaults');
 //       if (response.data.success) {
 //         setSuccess(`✅ Created ${response.data.createdCount} default shifts (A-D)`);
 //         fetchData();
@@ -2576,7 +2576,7 @@
       
 //       // ✅ Fetch all employees first
 //       try {
-//         const employeesRes = await axios.get('http://localhost:5000/api/employees/get-employees');
+//         const employeesRes = await axios.get('https://api.timelyhealth.in/api/employees/get-employees');
 //         if (Array.isArray(employeesRes.data)) {
 //           setAllEmployees(employeesRes.data);
 //         }
@@ -2585,7 +2585,7 @@
 //       }
       
 //       // Fetch master shifts
-//       const shiftsRes = await axios.get('http://localhost:5000/api/shifts/master');
+//       const shiftsRes = await axios.get('https://api.timelyhealth.in/api/shifts/master');
       
 //       if (shiftsRes.data.success) {
 //         setMasterShifts(shiftsRes.data.data);
@@ -2594,7 +2594,7 @@
 //       }
       
 //       // Fetch employee assignments
-//       const assignedRes = await axios.get('http://localhost:5000/api/shifts/assignments');
+//       const assignedRes = await axios.get('https://api.timelyhealth.in/api/shifts/assignments');
       
 //       if (assignedRes.data.success) {
 //         // ✅ Filter out inactive employees from assignments
@@ -2603,7 +2603,7 @@
 //       }
       
 //       // Fetch employee counts by shift
-//       const countRes = await axios.get('http://localhost:5000/api/shifts/employee-count');
+//       const countRes = await axios.get('https://api.timelyhealth.in/api/shifts/employee-count');
       
 //       if (countRes.data.success) {
 //         setEmployeeCounts(countRes.data.data);
@@ -2639,7 +2639,7 @@
 //         return;
 //       }
 
-//       const response = await axios.post('http://localhost:5000/api/shifts/create', {
+//       const response = await axios.post('https://api.timelyhealth.in/api/shifts/create', {
 //         shiftType: createForm.shiftType,
 //         shiftName: createForm.shiftName,
 //         timeSlots: [slot]
@@ -2800,7 +2800,7 @@
 //         return;
 //       }
 
-//       const response = await axios.post('http://localhost:5000/api/shifts/assign', {
+//       const response = await axios.post('https://api.timelyhealth.in/api/shifts/assign', {
 //         employeeId,
 //         employeeName,
 //         shiftType
@@ -2839,7 +2839,7 @@
 //       }
 
 //       const response = await axios.put(
-//         `http://localhost:5000/api/shifts/assignments/${editingAssignment._id}`,
+//         `https://api.timelyhealth.in/api/shifts/assignments/${editingAssignment._id}`,
 //         {
 //           employeeName,
 //           shiftType
@@ -2869,7 +2869,7 @@
 //   const handleDeleteAssignment = async (id) => {
 //     if (window.confirm('Are you sure you want to delete this assignment?')) {
 //       try {
-//         const response = await axios.delete(`http://localhost:5000/api/shifts/assignments/${id}`);
+//         const response = await axios.delete(`https://api.timelyhealth.in/api/shifts/assignments/${id}`);
 //         if (response.data.success) {
 //           setSuccess('Shift assignment removed successfully');
 //           fetchData();
@@ -2884,7 +2884,7 @@
 //   const handleDeleteMasterShift = async (id, shiftName) => {
 //     if (window.confirm(`Delete ${shiftName}? This will remove all assignments.`)) {
 //       try {
-//         const response = await axios.delete(`http://localhost:5000/api/shifts/master/${id}`);
+//         const response = await axios.delete(`https://api.timelyhealth.in/api/shifts/master/${id}`);
 //         if (response.data.success) {
 //           setSuccess(response.data.message);
 //           fetchData();
@@ -2898,7 +2898,7 @@
 //   // ✅ VIEW EMPLOYEES BY SHIFT TYPE
 //   const handleViewEmployees = async (shiftType, shiftName) => {
 //     try {
-//       const response = await axios.get(`http://localhost:5000/api/shifts/type/${shiftType}/employees`);
+//       const response = await axios.get(`https://api.timelyhealth.in/api/shifts/type/${shiftType}/employees`);
 //       if (response.data.success) {
 //         // ✅ Filter out inactive employees
 //         const employees = response.data.data.employees || [];
@@ -2920,7 +2920,7 @@
 //   // ✅ CREATE DEFAULT SHIFTS A-D
 //   const handleCreateDefaultShifts = async () => {
 //     try {
-//       const response = await axios.post('http://localhost:5000/api/shifts/create-defaults');
+//       const response = await axios.post('https://api.timelyhealth.in/api/shifts/create-defaults');
 //       if (response.data.success) {
 //         setSuccess(`✅ Created ${response.data.createdCount} default shifts (A-D)`);
 //         fetchData();
@@ -3584,7 +3584,7 @@ const ShiftManagement = () => {
       console.log("🔄 Fetching data...");
       
       try {
-        const employeesRes = await axios.get('http://localhost:5000/api/employees/get-employees');
+        const employeesRes = await axios.get('https://api.timelyhealth.in/api/employees/get-employees');
         if (Array.isArray(employeesRes.data)) {
           setAllEmployees(employeesRes.data);
         }
@@ -3592,7 +3592,7 @@ const ShiftManagement = () => {
         console.error('❌ Error fetching employees:', e);
       }
       
-      const shiftsRes = await axios.get('http://localhost:5000/api/shifts/master');
+      const shiftsRes = await axios.get('https://api.timelyhealth.in/api/shifts/master');
       
       if (shiftsRes.data.success) {
         setMasterShifts(shiftsRes.data.data);
@@ -3600,14 +3600,14 @@ const ShiftManagement = () => {
         setError(shiftsRes.data.message);
       }
       
-      const assignedRes = await axios.get('http://localhost:5000/api/shifts/assignments');
+      const assignedRes = await axios.get('https://api.timelyhealth.in/api/shifts/assignments');
       
       if (assignedRes.data.success) {
         const filteredAssignments = filterInactiveAssignments(assignedRes.data.data);
         setEmployeeAssignments(filteredAssignments);
       }
       
-      const countRes = await axios.get('http://localhost:5000/api/shifts/employee-count');
+      const countRes = await axios.get('https://api.timelyhealth.in/api/shifts/employee-count');
       
       if (countRes.data.success) {
         setEmployeeCounts(countRes.data.data);
@@ -3642,7 +3642,7 @@ const ShiftManagement = () => {
         return;
       }
 
-      const response = await axios.post('http://localhost:5000/api/shifts/create', {
+      const response = await axios.post('https://api.timelyhealth.in/api/shifts/create', {
         shiftType: createForm.shiftType,
         shiftName: createForm.shiftName,
         timeSlots: [slot],
@@ -3679,7 +3679,7 @@ const ShiftManagement = () => {
         return;
       }
 
-      const response = await axios.post('http://localhost:5000/api/shifts/create', {
+      const response = await axios.post('https://api.timelyhealth.in/api/shifts/create', {
         shiftType: createForm.shiftType,
         shiftName: createForm.shiftName,
         isBrakeShift: true
@@ -3858,7 +3858,7 @@ const ShiftManagement = () => {
         return;
       }
 
-      const response = await axios.post('http://localhost:5000/api/shifts/assign', {
+      const response = await axios.post('https://api.timelyhealth.in/api/shifts/assign', {
         employeeId,
         employeeName,
         shiftType
@@ -3896,7 +3896,7 @@ const ShiftManagement = () => {
       }
 
       const response = await axios.put(
-        `http://localhost:5000/api/shifts/assignments/${editingAssignment._id}`,
+        `https://api.timelyhealth.in/api/shifts/assignments/${editingAssignment._id}`,
         {
           employeeName,
           shiftType
@@ -3925,7 +3925,7 @@ const ShiftManagement = () => {
   const handleDeleteAssignment = async (id) => {
     if (window.confirm('Are you sure you want to delete this assignment?')) {
       try {
-        const response = await axios.delete(`http://localhost:5000/api/shifts/assignments/${id}`);
+        const response = await axios.delete(`https://api.timelyhealth.in/api/shifts/assignments/${id}`);
         if (response.data.success) {
           setSuccess('Shift assignment removed successfully');
           fetchData();
@@ -3939,7 +3939,7 @@ const ShiftManagement = () => {
   const handleDeleteMasterShift = async (id, shiftName) => {
     if (window.confirm(`Delete ${shiftName}? This will remove all assignments.`)) {
       try {
-        const response = await axios.delete(`http://localhost:5000/api/shifts/master/${id}`);
+        const response = await axios.delete(`https://api.timelyhealth.in/api/shifts/master/${id}`);
         if (response.data.success) {
           setSuccess(response.data.message);
           fetchData();
@@ -3952,7 +3952,7 @@ const ShiftManagement = () => {
 
   const handleViewEmployees = async (shiftType, shiftName) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/shifts/type/${shiftType}/employees`);
+      const response = await axios.get(`https://api.timelyhealth.in/api/shifts/type/${shiftType}/employees`);
       if (response.data.success) {
         const employees = response.data.data.employees || [];
         const filteredEmployees = filterInactiveAssignments(employees);
@@ -3973,7 +3973,7 @@ const ShiftManagement = () => {
 
   const handleCreateDefaultShifts = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/api/shifts/create-defaults');
+      const response = await axios.post('https://api.timelyhealth.in/api/shifts/create-defaults');
       if (response.data.success) {
         setSuccess(`✅ Created ${response.data.createdCount} default shifts (A-D + Brake Shift)`);
         fetchData();

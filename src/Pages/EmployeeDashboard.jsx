@@ -30,8 +30,8 @@ const EmployeeDashboard = () => {
 
     const fetchData = async () => {
       try {
-        const BASE_URL = "http://localhost:5000/";
-        const API_5000 = "http://localhost:5000/";
+        const BASE_URL = "https://api.timelyhealth.in/";
+        const API_5000 = "https://api.timelyhealth.in/";
 
         // 1. Fetch Profile
         const profileRes = await axios.get(`${BASE_URL}api/employees/get-employee?email=${email}`);

@@ -26,7 +26,7 @@
 //   const fetchDepartments = async () => {
 //     try {
 //       setLoading(true);
-//       const response = await axios.get('http://localhost:5000/api/department/all');
+//       const response = await axios.get('https://api.timelyhealth.in/department/all');
       
 //       if (response.data.success) {
 //         setDepartments(response.data.data);
@@ -60,7 +60,7 @@
 //       if (editingDept) {
 //         // Update department
 //         const response = await axios.put(
-//           `http://localhost:5000/api/departments/update/${editingDept._id}`,
+//           `https://api.timelyhealth.in/departments/update/${editingDept._id}`,
 //           formData
 //         );
         
@@ -74,7 +74,7 @@
 //       } else {
 //         // Add new department
 //         const response = await axios.post(
-//           'http://localhost:5000/api/department/create',
+//           'https://api.timelyhealth.in/department/create',
 //           formData
 //         );
         
@@ -97,7 +97,7 @@
 //     if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
 
 //     try {
-//       const response = await axios.delete(`http://localhost:5000/api/department/delete/${id}`);
+//       const response = await axios.delete(`https://api.timelyhealth.in/department/delete/${id}`);
       
 //       if (response.data.success) {
 //         setSuccess('Department deleted successfully');
@@ -412,7 +412,7 @@ const DepartmentDashboard = () => {
   const fetchDepartments = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/department/all');
+      const response = await axios.get('https://api.timelyhealth.in/department/all');
       
       if (response.data.success) {
         setDepartments(response.data.data);
@@ -431,7 +431,7 @@ const DepartmentDashboard = () => {
   const fetchEmployeesForDepartment = async (departmentId) => {
     try {
       setEmployeeLoading(true);
-      const response = await axios.get(`http://localhost:5000/api/department/${departmentId}/employees`);
+      const response = await axios.get(`https://api.timelyhealth.in/department/${departmentId}/employees`);
       
       console.log('API Response:', response.data); // Debug ke liye
       
@@ -486,7 +486,7 @@ const DepartmentDashboard = () => {
     try {
       if (editingDept) {
         const response = await axios.put(
-          `http://localhost:5000/api/departments/update/${editingDept._id}`,
+          `https://api.timelyhealth.in/departments/update/${editingDept._id}`,
           formData
         );
         
@@ -499,7 +499,7 @@ const DepartmentDashboard = () => {
         }
       } else {
         const response = await axios.post(
-          'http://localhost:5000/api/department/create',
+          'https://api.timelyhealth.in/department/create',
           formData
         );
         
@@ -522,7 +522,7 @@ const DepartmentDashboard = () => {
     if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
 
     try {
-      const response = await axios.delete(`http://localhost:5000/api/department/delete/${id}`);
+      const response = await axios.delete(`https://api.timelyhealth.in/department/delete/${id}`);
       
       if (response.data.success) {
         setSuccess('Department deleted successfully');

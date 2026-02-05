@@ -67,7 +67,7 @@
 //         const employeeId = localStorage.getItem("employeeId");
 //         if (!employeeId) return;
 
-//         const API_BASE_URL = "http://localhost:5000/api";
+//         const API_BASE_URL = "https://api.timelyhealth.in";
 //         const res = await fetch(`${API_BASE_URL}/notifications/unread/${employeeId}`);
 //         if (res.ok) {
 //           const data = await res.json();
@@ -170,6 +170,7 @@ import { useEffect, useState } from "react";
 import { MdNotificationsNone } from "react-icons/md";
 import { RiMenu2Line, RiMenu3Line } from "react-icons/ri";
 import { useLocation, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
 const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
   const location = useLocation();
@@ -190,14 +191,12 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
         }
 
         console.log("Fetching notifications for employeeId:", employeeId);
-        
-        const API_BASE_URL = "http://localhost:5000/api";
-        
+
         // Method 1: Try with axios first
         try {
           const response = await axios.get(`${API_BASE_URL}/notifications/unread/${employeeId}`);
           console.log("Notifications API response:", response.data);
-          
+
           if (response.data && response.data.unreadCount !== undefined) {
             setUnreadCount(response.data.unreadCount);
           } else if (response.data && response.data.count !== undefined) {
@@ -207,14 +206,14 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
           }
         } catch (axiosError) {
           console.error("Axios error fetching notifications:", axiosError);
-          
+
           // Method 2: Fallback to fetch API
           try {
             const res = await fetch(`${API_BASE_URL}/notifications/unread/${employeeId}`);
             if (res.ok) {
               const data = await res.json();
               console.log("Fetch API notifications data:", data);
-              
+
               if (data.unreadCount !== undefined) {
                 setUnreadCount(data.unreadCount);
               } else if (data.count !== undefined) {
@@ -238,17 +237,17 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
     };
 
     fetchUnreadCount();
-    
+
     // Poll every 10 seconds for real-time updates
     const interval = setInterval(fetchUnreadCount, 10000);
-    
+
     // Listen for custom events from other components
     const handleNotificationUpdate = () => {
       fetchUnreadCount();
     };
-    
+
     window.addEventListener('notification-updated', handleNotificationUpdate);
-    
+
     return () => {
       clearInterval(interval);
       window.removeEventListener('notification-updated', handleNotificationUpdate);
@@ -259,10 +258,10 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
   const handleNotificationClick = () => {
     // Reset counter
     setUnreadCount(0);
-    
+
     // Dispatch event for other components
     window.dispatchEvent(new Event('notification-read'));
-    
+
     // Navigate to notifications page
     navigate("/emp-notifications");
   };
@@ -320,13 +319,13 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
           disabled={isLoading}
         >
           <MdNotificationsNone className="text-2xl text-white" />
-          
+
           {!isLoading && unreadCount > 0 && (
             <span className="absolute flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full -top-1 -right-1 animate-pulse">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}
-          
+
           {isLoading && (
             <span className="absolute flex items-center justify-center w-4 h-4 text-xs font-bold text-white bg-blue-500 rounded-full -top-1 -right-1">
               ...

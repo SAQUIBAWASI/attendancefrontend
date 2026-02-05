@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { filterActiveRecords } from "../utils/employeeStatus";
 
-const BASE_URL = "https://api.timelyhealth.in";
+const BASE_URL = "http://localhost:5000";
 
 export default function AttendanceList() {
   const [records, setRecords] = useState([]);
@@ -19,7 +19,7 @@ export default function AttendanceList() {
     const fetchAllAttendance = async () => {
       try {
         // Fetch employees first to check their status
-        const empRes = await fetch("https://api.timelyhealth.in/api/employees/get-employees");
+        const empRes = await fetch("https://api.timelyhealth.in/employees/get-employees");
         const employees = empRes.ok ? await empRes.json() : [];
 
         const res = await fetch(`${BASE_URL}/api/attendance/allattendance`);
