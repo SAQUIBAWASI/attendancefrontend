@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 
-const BASE_URL = "http://localhost:5000/";
+const BASE_URL = "https://api.timelyhealth.in/";
 
 export const Permissions = () => {
   const [permissions, setPermissions] = useState([]);
