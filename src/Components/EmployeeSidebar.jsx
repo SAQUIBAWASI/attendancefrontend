@@ -256,7 +256,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
   const handleLogout = async () => {
     try {
       await axios.post(
-        "https://credenhealth.onrender.com/api/employees/logout",
+        "http://localhost:5000/api/employees/logout",
         {},
         { withCredentials: true }
       );
@@ -293,9 +293,12 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
       if (!storedId || storedId === "undefined") return;
 
       try {
-        const response = await axios.get(`https://api.timelyhealth.in/employees/get-employee?employeeId=${storedId}`);
-        if (response.data && response.data.data) {
-          const fetchedPermissions = response.data.data.permissions || [];
+        // Added timestamp to prevent caching
+        const response = await axios.get(`http://localhost:5000/api/employees/get-employee?employeeId=${storedId}&t=${new Date().getTime()}`);
+        console.log("🔍 Permissions API Response:", response.data);
+        if (response.data) {
+          const fetchedPermissions = response.data.data?.permissions || response.data.permissions || [];
+          console.log("✅ Extracted Permissions:", fetchedPermissions);
           setPermissions(fetchedPermissions);
           // Also update local storage to keep it in sync
           localStorage.setItem("employeePermissions", JSON.stringify(fetchedPermissions));

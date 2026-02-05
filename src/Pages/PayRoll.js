@@ -1729,9 +1729,9 @@
 
 import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
+import { API_BASE_URL } from "../config";
 import logo from "../Images/Timely-Health-Logo.png";
 import { isEmployeeHidden } from "../utils/employeeStatus";
-import { API_BASE_URL } from "../config";
 
 const PayRoll = () => {
   const [records, setRecords] = useState([]);
@@ -1806,6 +1806,9 @@ const PayRoll = () => {
   const ATTENDANCE_DETAILS_API_URL = `${API_BASE_URL}/attendance/allattendance`;
   const LEAVES_API_URL = `${API_BASE_URL}/leaves/leaves?status=approved`;
   const EMPLOYEES_API_URL = `${API_BASE_URL}/employees/get-employees`;
+
+ const UPDATE_PAYROLL_API_URL = `${API_BASE_URL}/attendancesummary/updatePayroll`;
+
 
   // Dynamic Salary API URL with month parameter
   const getSalaryApiUrl = (month) => {
@@ -2235,7 +2238,7 @@ const PayRoll = () => {
         requestBody.weekOffPerMonth = parseInt(manualDays);
       }
 
-      const response = await fetch("https://api.timelyhealth.in/attendancesummary/updateWeekOffConfig", {
+      const response = await fetch("http://localhost:5000/api/attendancesummary/updateWeekOffConfig", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2462,7 +2465,7 @@ const PayRoll = () => {
     try {
       // ✅ SAVE TO BACKEND (Use Localhost for testing)
       // const response = await fetch("https://api.timelyhealth.in/attendancesummary/updatePayroll", {
-      const response = await fetch("https://api.timelyhealth.in/attendancesummary/updatePayroll", {
+      const response = await fetch("http://localhost:5000/api/attendancesummary/updatePayroll", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
