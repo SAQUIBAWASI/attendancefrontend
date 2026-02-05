@@ -50,7 +50,7 @@
 //     setErrorMessage("");
 
 //     try {
-//       const response = await fetch("http://localhost:5000/api/employees/add-employee", {
+//       const response = await fetch("https://api.timelyhealth.in/api/employees/add-employee", {
 //         method: "POST",
 //         headers: { "Content-Type": "application/json" },
 //         body: JSON.stringify({
@@ -349,7 +349,7 @@
 //     const fetchLocations = async () => {
 //       try {
 //         const res = await axios.get(
-//           "http://localhost:5000/api/location/alllocation"
+//           "https://api.timelyhealth.in/api/location/alllocation"
 //         );
 //         if (res.data && res.data.locations) {
 //           setLocations(res.data.locations);
@@ -371,7 +371,7 @@
 //     try {
 //       // Step 1: Create Employee
 //       const response = await fetch(
-//         "http://localhost:5000/api/employees/add-employee",
+//         "https://api.timelyhealth.in/api/employees/add-employee",
 //         {
 //           method: "POST",
 //           headers: { "Content-Type": "application/json" },
@@ -397,7 +397,7 @@
 //       // Step 2: Assign Location (only if locationId selected)
 //       if (locationId) {
 //         await axios.put(
-//           `http://localhost:5000/api/employees/assign-location/${employeeId}`,
+//           `https://api.timelyhealth.in/api/employees/assign-location/${employeeId}`,
 //           { locationId }
 //         );
 //       }
@@ -730,7 +730,7 @@
 //     const fetchLocations = async () => {
 //       try {
 //         const res = await axios.get(
-//           "http://localhost:5000/api/location/alllocation"
+//           "https://api.timelyhealth.in/api/location/alllocation"
 //         );
 //         if (res.data?.locations) setLocations(res.data.locations);
 //       } catch (err) {
@@ -768,14 +768,14 @@
 //       // Step 2: Assign Location
 //       if (locationId) {
 //         await axios.put(
-//           `http://localhost:5000/api/employees/assign-location/${employeeId}`,
+//           `https://api.timelyhealth.in/api/employees/assign-location/${employeeId}`,
 //           { locationId }
 //         );
 //       }
 
 //       // Step 3: Add Salary (WeekOff Included)
 //       await axios.post(
-//         "http://localhost:5000/api/salary/set-salary",
+//         "https://api.timelyhealth.in/api/salary/set-salary",
 //         {
 //           employeeId,
 //           name,
@@ -1100,7 +1100,7 @@
 //     const fetchLocations = async () => {
 //       try {
 //         const res = await axios.get(
-//           "http://localhost:5000/api/location/alllocation"
+//           "https://api.timelyhealth.in/api/location/alllocation"
 //         );
 //         if (res.data?.locations) setLocations(res.data.locations);
 //       } catch (err) {
@@ -1139,7 +1139,7 @@
 //         if (password) profilePayload.password = password;
 
 //         await axios.put(
-//           `http://localhost:5000/api/employees/update/${editingEmployee._id}`,
+//           `https://api.timelyhealth.in/api/employees/update/${editingEmployee._id}`,
 //           profilePayload
 //         );
 
@@ -1147,7 +1147,7 @@
 //         if (salaryPerMonth || shiftHours || weekOffPerMonth) {
 //           try {
 //             await axios.put(
-//               `http://localhost:5000/api/salary/update-salary/${editingEmployee.employeeId}`,
+//               `https://api.timelyhealth.in/api/salary/update-salary/${editingEmployee.employeeId}`,
 //               {
 //                 employeeId: editingEmployee.employeeId,
 //                 salaryPerMonth: Number(salaryPerMonth) || 0,
@@ -1164,7 +1164,7 @@
 //       } else {
 //         // ================= ADD EMPLOYEE =================
 //         await axios.post(
-//           "http://localhost:5000/api/employees/add-employee",
+//           "https://api.timelyhealth.in/api/employees/add-employee",
 //           {
 //             name,
 //             email,
@@ -1181,7 +1181,7 @@
 
 //         // ================= ADD SALARY =================
 //         await axios.post(
-//           "http://localhost:5000/api/salary/set-salary",
+//           "https://api.timelyhealth.in/api/salary/set-salary",
 //           {
 //             employeeId,
 //             name,
@@ -1502,7 +1502,7 @@
 //     if (!editingEmployee?.employeeId) return;
 
 //     try {
-//       const res = await axios.get(`http://localhost:5000/api/shifts/employee/${editingEmployee.employeeId}`);
+//       const res = await axios.get(`https://api.timelyhealth.in/api/shifts/employee/${editingEmployee.employeeId}`);
 //       if (res.data && !res.data.message) {
 //         setShiftType(res.data.shiftType);
 //         setShiftStartTime(res.data.startTime || "09:00");
@@ -1517,7 +1517,7 @@
 //   useEffect(() => {
 //     const fetchLocations = async () => {
 //       try {
-//         const res = await axios.get("http://localhost:5000/api/location/alllocation");
+//         const res = await axios.get("https://api.timelyhealth.in/api/location/alllocation");
 //         if (res.data?.locations) setLocations(res.data.locations);
 //       } catch (err) {
 //         console.error(err);
@@ -1530,7 +1530,7 @@
 //   useEffect(() => {
 //     const fetchAllShifts = async () => {
 //       try {
-//         const res = await axios.get("http://localhost:5000/api/shifts/all");
+//         const res = await axios.get("https://api.timelyhealth.in/api/shifts/all");
 //         console.log("All shifts data:", res.data);
 
 //         if (res.data && Array.isArray(res.data)) {
@@ -1577,7 +1577,7 @@
 //       };
 
 //       const response = await axios.post(
-//         "http://localhost:5000/api/shifts/assign",
+//         "https://api.timelyhealth.in/api/shifts/assign",
 //         shiftData
 //       );
 
@@ -1645,7 +1645,7 @@
 
 //         // 1. Update employee
 //         await axios.put(
-//           `http://localhost:5000/api/employees/update/${editingEmployee._id}`,
+//           `https://api.timelyhealth.in/api/employees/update/${editingEmployee._id}`,
 //           profilePayload
 //         );
 
@@ -1666,7 +1666,7 @@
 //         if (salaryPerMonth || shiftHours || weekOffPerMonth) {
 //           try {
 //             await axios.put(
-//               `http://localhost:5000/api/salary/update-salary/${editingEmployee.employeeId}`,
+//               `https://api.timelyhealth.in/api/salary/update-salary/${editingEmployee.employeeId}`,
 //               {
 //                 employeeId: editingEmployee.employeeId,
 //                 salaryPerMonth: Number(salaryPerMonth) || 0,
@@ -1695,7 +1695,7 @@
 //         // ================= ADD NEW EMPLOYEE =================
 //         // 1. Add employee
 //         await axios.post(
-//           "http://localhost:5000/api/employees/add-employee",
+//           "https://api.timelyhealth.in/api/employees/add-employee",
 //           {
 //             name,
 //             email,
@@ -1725,7 +1725,7 @@
 
 //         // 3. Add salary
 //         await axios.post(
-//           "http://localhost:5000/api/salary/set-salary",
+//           "https://api.timelyhealth.in/api/salary/set-salary",
 //           {
 //             employeeId,
 //             name,
@@ -2223,7 +2223,7 @@
 
 //   const fetchDepartments = async () => {
 //     try {
-//       const response = await axios.get('http://localhost:5000/api/department/all');
+//       const response = await axios.get('https://api.timelyhealth.in/api/department/all');
 //       if (response.data.success) {
 //         setDepartments(response.data.data);
 //       }
@@ -2247,7 +2247,7 @@
 //   // ✅ Fetch roles from backend
 //   const fetchRoles = async () => {
 //     try {
-//       const response = await axios.get('http://localhost:5000/api/roles/all');
+//       const response = await axios.get('https://api.timelyhealth.in/api/roles/all');
 //       if (response.data.success) {
 //         setRoles(response.data.data);
 //       }
@@ -2296,7 +2296,7 @@
 //     if (!editingEmployee?.employeeId) return;
 
 //     try {
-//       const res = await axios.get(`http://localhost:5000/api/shifts/employee/${editingEmployee.employeeId}`);
+//       const res = await axios.get(`https://api.timelyhealth.in/api/shifts/employee/${editingEmployee.employeeId}`);
 //       if (res.data && !res.data.message) {
 //         setShiftType(res.data.shiftType);
 //         setShiftStartTime(res.data.startTime || "09:00");
@@ -2310,7 +2310,7 @@
 //   useEffect(() => {
 //     const fetchLocations = async () => {
 //       try {
-//         const res = await axios.get("http://localhost:5000/api/location/alllocation");
+//         const res = await axios.get("https://api.timelyhealth.in/api/location/alllocation");
 //         if (res.data?.locations) setLocations(res.data.locations);
 //       } catch (err) {
 //         console.error(err);
@@ -2322,7 +2322,7 @@
 //   useEffect(() => {
 //     const fetchAllShifts = async () => {
 //       try {
-//         const res = await axios.get("http://localhost:5000/api/shifts/all");
+//         const res = await axios.get("https://api.timelyhealth.in/api/shifts/all");
 //         console.log("All shifts data:", res.data);
 
 //         if (res.data && Array.isArray(res.data)) {
@@ -2365,7 +2365,7 @@
 //       };
 
 //       const response = await axios.post(
-//         "http://localhost:5000/api/shifts/assign",
+//         "https://api.timelyhealth.in/api/shifts/assign",
 //         shiftData
 //       );
 
@@ -2453,7 +2453,7 @@
 
 //         // 1. Update employee
 //         await axios.put(
-//           `http://localhost:5000/api/employees/update/${editingEmployee._id}`,
+//           `https://api.timelyhealth.in/api/employees/update/${editingEmployee._id}`,
 //           profilePayload
 //         );
 
@@ -2474,7 +2474,7 @@
 //         if (salaryPerMonth || shiftHours || weekOffPerMonth) {
 //           try {
 //             await axios.put(
-//               `http://localhost:5000/api/salary/update-salary/${editingEmployee.employeeId}`,
+//               `https://api.timelyhealth.in/api/salary/update-salary/${editingEmployee.employeeId}`,
 //               {
 //                 employeeId: editingEmployee.employeeId,
 //                 salaryPerMonth: Number(salaryPerMonth) || 0,
@@ -2503,7 +2503,7 @@
 //         // ================= ADD NEW EMPLOYEE =================
 //         // 1. Add employee
 //         await axios.post(
-//           "http://localhost:5000/api/employees/add-employee",
+//           "https://api.timelyhealth.in/api/employees/add-employee",
 //           {
 //             name,
 //             email,
@@ -2533,7 +2533,7 @@
 
 //         // 3. Add salary
 //         await axios.post(
-//           "http://localhost:5000/api/salary/set-salary",
+//           "https://api.timelyhealth.in/api/salary/set-salary",
 //           {
 //             employeeId,
 //             name,
@@ -3116,7 +3116,7 @@
 //   // ✅ Fetch departments
 //   const fetchDepartments = async () => {
 //     try {
-//       const response = await axios.get('http://localhost:5000/api/department/all');
+//       const response = await axios.get('https://api.timelyhealth.in/api/department/all');
 //       if (response.data.success) {
 //         setDepartments(response.data.data);
 //       }
@@ -3129,7 +3129,7 @@
 //   // ✅ Fetch roles
 //   const fetchRoles = async () => {
 //     try {
-//       const response = await axios.get('http://localhost:5000/api/roles/all');
+//       const response = await axios.get('https://api.timelyhealth.in/api/roles/all');
 //       if (response.data.success) {
 //         setRoles(response.data.data);
 //       }
@@ -3142,7 +3142,7 @@
 //   // ✅ Fetch locations
 //   const fetchLocations = async () => {
 //     try {
-//       const res = await axios.get("http://localhost:5000/api/location/alllocation");
+//       const res = await axios.get("https://api.timelyhealth.in/api/location/alllocation");
 //       if (res.data?.locations) setLocations(res.data.locations);
 //     } catch (err) {
 //       console.error(err);
@@ -3152,7 +3152,7 @@
 //   // ✅ Fetch shifts
 //   const fetchAllShifts = async () => {
 //     try {
-//       const res = await axios.get("http://localhost:5000/api/shifts/master");
+//       const res = await axios.get("https://api.timelyhealth.in/api/shifts/master");
 //       if (res.data && res.data.success && Array.isArray(res.data.data)) {
 //         const shifts = res.data.data;
 //         setMasterShifts(shifts);
@@ -3183,7 +3183,7 @@
 //       };
 
 //       const response = await axios.post(
-//         "http://localhost:5000/api/shifts/assign",
+//         "https://api.timelyhealth.in/api/shifts/assign",
 //         shiftData
 //       );
 //       return { success: true, data: response.data };
@@ -3229,7 +3229,7 @@
 //         if (password) profilePayload.password = password;
 
 //         await axios.put(
-//           `http://localhost:5000/api/employees/update/${editingEmployee._id}`,
+//           `https://api.timelyhealth.in/api/employees/update/${editingEmployee._id}`,
 //           profilePayload
 //         );
 
@@ -3246,7 +3246,7 @@
 //         if (salaryPerMonth || shiftHours || weekOffPerMonth) {
 //           try {
 //             await axios.put(
-//               `http://localhost:5000/api/salary/update-salary/${editingEmployee.employeeId}`,
+//               `https://api.timelyhealth.in/api/salary/update-salary/${editingEmployee.employeeId}`,
 //               {
 //                 employeeId: editingEmployee.employeeId,
 //                 salaryPerMonth: Number(salaryPerMonth) || 0,
@@ -3263,7 +3263,7 @@
 //       } else {
 //         // Add new employee
 //         await axios.post(
-//           "http://localhost:5000/api/employees/add-employee",
+//           "https://api.timelyhealth.in/api/employees/add-employee",
 //           {
 //             name,
 //             email,
@@ -3289,7 +3289,7 @@
 
 //         // Add salary
 //         await axios.post(
-//           "http://localhost:5000/api/salary/set-salary",
+//           "https://api.timelyhealth.in/api/salary/set-salary",
 //           {
 //             employeeId,
 //             name,
@@ -3332,7 +3332,7 @@
 //         return;
 //       }
 
-//       const response = await axios.post('http://localhost:5000/api/shifts/create', {
+//       const response = await axios.post('https://api.timelyhealth.in/api/shifts/create', {
 //         shiftType: createShiftForm.shiftType,
 //         shiftName: createShiftForm.shiftName,
 //         timeSlots: validSlots
@@ -3398,7 +3398,7 @@
 //         return;
 //       }
 
-//       const response = await axios.post('http://localhost:5000/api/department/create', {
+//       const response = await axios.post('https://api.timelyhealth.in/api/department/create', {
 //         name: deptForm.name,
 //         description: deptForm.description
 //       });
@@ -3430,7 +3430,7 @@
 //         return;
 //       }
 
-//       const response = await axios.post('http://localhost:5000/api/roles/create', {
+//       const response = await axios.post('https://api.timelyhealth.in/api/roles/create', {
 //         name: roleForm.name,
 //         description: roleForm.description
 //       });
@@ -3502,7 +3502,7 @@
 //         return;
 //       }
 
-//       const response = await axios.post("http://localhost:5000/api/location/add-location", {
+//       const response = await axios.post("https://api.timelyhealth.in/api/location/add-location", {
 //         name: locationForm.name,
 //         latitude: locationForm.latitude,
 //         longitude: locationForm.longitude,
@@ -4615,7 +4615,7 @@
 
 //   const fetchDepartments = async () => {
 //     try {
-//       const response = await axios.get('http://localhost:5000/api/department/all');
+//       const response = await axios.get('https://api.timelyhealth.in/api/department/all');
 //       if (response.data.success) {
 //         setDepartments(response.data.data);
 //       }
@@ -4627,7 +4627,7 @@
 
 //   const fetchRoles = async () => {
 //     try {
-//       const response = await axios.get('http://localhost:5000/api/roles/all');
+//       const response = await axios.get('https://api.timelyhealth.in/api/roles/all');
 //       if (response.data.success) {
 //         setRoles(response.data.data);
 //       }
@@ -4639,7 +4639,7 @@
 
 //   const fetchLocations = async () => {
 //     try {
-//       const res = await axios.get("http://localhost:5000/api/location/alllocation");
+//       const res = await axios.get("https://api.timelyhealth.in/api/location/alllocation");
 //       if (res.data?.locations) setLocations(res.data.locations);
 //     } catch (err) {
 //       console.error(err);
@@ -4648,7 +4648,7 @@
 
 //   const fetchAllShifts = async () => {
 //     try {
-//       const res = await axios.get("http://localhost:5000/api/shifts/master");
+//       const res = await axios.get("https://api.timelyhealth.in/api/shifts/master");
 //       if (res.data && res.data.success && Array.isArray(res.data.data)) {
 //         const shifts = res.data.data;
 //         const shiftOptions = shifts.map(shift => ({
@@ -4721,7 +4721,7 @@
 //         startTime: startTime,
 //         endTime: endTime
 //       };
-//       const response = await axios.post("http://localhost:5000/api/shifts/assign", shiftData);
+//       const response = await axios.post("https://api.timelyhealth.in/api/shifts/assign", shiftData);
 //       return { success: true, data: response.data };
 //     } catch (error) {
 //       console.error("Shift assignment error:", error.response?.data || error.message);
@@ -4797,13 +4797,13 @@
 //       if (password) payload.password = password;
 
 //       if (editingEmployee) {
-//         await axios.put(`http://localhost:5000/api/employees/update/${editingEmployee._id}`, payload);
+//         await axios.put(`https://api.timelyhealth.in/api/employees/update/${editingEmployee._id}`, payload);
         
 //         if (showShiftDetails) {
 //           await assignShiftToEmployee(editingEmployee.employeeId, name, shiftType, shiftStartTime, shiftEndTime);
 //         }
 
-//         await axios.put(`http://localhost:5000/api/salary/update-salary/${editingEmployee.employeeId}`, {
+//         await axios.put(`https://api.timelyhealth.in/api/salary/update-salary/${editingEmployee.employeeId}`, {
 //           employeeId: editingEmployee.employeeId,
 //           salaryPerMonth: Number(salaryPerMonth) || 0,
 //           shiftHours: Number(shiftHours) || 8,
@@ -4812,13 +4812,13 @@
 
 //         setSuccessMessage("✅ Employee updated successfully!");
 //       } else {
-//         await axios.post("http://localhost:5000/api/employees/add-employee", payload);
+//         await axios.post("https://api.timelyhealth.in/api/employees/add-employee", payload);
         
 //         if (showShiftDetails) {
 //           await assignShiftToEmployee(employeeId, name, shiftType, shiftStartTime, shiftEndTime);
 //         }
 
-//         await axios.post("http://localhost:5000/api/salary/set-salary", {
+//         await axios.post("https://api.timelyhealth.in/api/salary/set-salary", {
 //           employeeId,
 //           name,
 //           salaryPerMonth: Number(salaryPerMonth),
@@ -4849,7 +4849,7 @@
 //         return;
 //       }
 
-//       const response = await axios.post('http://localhost:5000/api/shifts/create', {
+//       const response = await axios.post('https://api.timelyhealth.in/api/shifts/create', {
 //         shiftType: createShiftForm.shiftType.toUpperCase(),
 //         shiftName: createShiftForm.shiftName,
 //         timeSlots: [{
@@ -4887,7 +4887,7 @@
 //         setErrorMessage('Please enter department name');
 //         return;
 //       }
-//       const response = await axios.post('http://localhost:5000/api/department/create', {
+//       const response = await axios.post('https://api.timelyhealth.in/api/department/create', {
 //         name: deptForm.name,
 //         description: deptForm.description
 //       });
@@ -4915,7 +4915,7 @@
 //         setErrorMessage('Please enter role name');
 //         return;
 //       }
-//       const response = await axios.post('http://localhost:5000/api/roles/create', {
+//       const response = await axios.post('https://api.timelyhealth.in/api/roles/create', {
 //         name: roleForm.name,
 //         description: roleForm.description
 //       });
@@ -4983,7 +4983,7 @@
 //         setErrorMessage('Please fill all required fields');
 //         return;
 //       }
-//       const response = await axios.post("http://localhost:5000/api/location/add-location", {
+//       const response = await axios.post("https://api.timelyhealth.in/api/location/add-location", {
 //         name: locationForm.name,
 //         latitude: locationForm.latitude,
 //         longitude: locationForm.longitude,
@@ -5964,7 +5964,7 @@ import {
 } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "https://api.timelyhealth.in/api";
 
 // ✅ Pin Code Utility Functions
 const PINCODE_DATA = {
