@@ -1054,7 +1054,7 @@
 //                 className="w-full py-1.5 pl-8 pr-3 text-sm border rounded-md focus:ring-1 focus:ring-blue-400"
 //               />
 //               <svg
-//                 className="absolute w-4 h-4 text-gray-400 left-2 top-1/2 -translate-y-1/2"
+//                 className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-2 top-1/2"
 //                 fill="none"
 //                 stroke="currentColor"
 //                 viewBox="0 0 24 24"
@@ -1064,7 +1064,7 @@
 //             </div>
 
 //             {/* Actions */}
-//             <div className="flex gap-2 items-center">
+//             <div className="flex items-center gap-2">
 //               <input
 //                 type="month"
 //                 value={selectedMonth}
@@ -1117,7 +1117,7 @@
 //                 <p className="text-[10px] text-gray-500 leading-tight">
 //                   Total Employees
 //                 </p>
-//                 <p className="text-sm font-semibold text-gray-800 leading-tight">
+//                 <p className="text-sm font-semibold leading-tight text-gray-800">
 //                   {filteredRecords.length}
 //                 </p>
 //               </div>
@@ -1136,7 +1136,7 @@
 //                 <p className="text-[10px] text-gray-500 leading-tight">
 //                   Total Salary
 //                 </p>
-//                 <p className="text-sm font-semibold text-gray-800 leading-tight">
+//                 <p className="text-sm font-semibold leading-tight text-gray-800">
 //                   ₹{filteredRecords.reduce((s, e) => s + (e.calculatedSalary || 0), 0).toLocaleString()}
 //                 </p>
 //               </div>
@@ -1155,7 +1155,7 @@
 //                 <p className="text-[10px] text-gray-500 leading-tight">
 //                   Active This Month
 //                 </p>
-//                 <p className="text-sm font-semibold text-gray-800 leading-tight">
+//                 <p className="text-sm font-semibold leading-tight text-gray-800">
 //                   {filteredRecords.filter(e => (e.totalWorkingDays || 0) > 0).length}
 //                 </p>
 //               </div>
@@ -1174,7 +1174,7 @@
 //                 <p className="text-[10px] text-gray-500 leading-tight">
 //                   On Leave
 //                 </p>
-//                 <p className="text-sm font-semibold text-gray-800 leading-tight">
+//                 <p className="text-sm font-semibold leading-tight text-gray-800">
 //                   {filteredRecords.filter(emp => {
 //                     const leaves = employeeLeaves[emp.employeeId];
 //                     return leaves && (leaves.CL + leaves.EL + leaves.COFF + leaves.LOP) > 0;
@@ -1238,20 +1238,20 @@
 //         </div>
 
 //         {/* Payroll Table */}
-//         <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+//         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //           <div className="overflow-x-auto">
 //             <table className="w-full">
-//               <thead className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+//               <thead className="text-white bg-gradient-to-r from-blue-600 to-blue-800">
 //                 <tr>
-//                   <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">ID</th>
-//                   <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Name</th>
-//                   <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Working Days</th>
-//                   <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Present Days</th>
-//                   <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Half Days</th>
-//                   <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Week Offs</th>
-//                   <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Monthly Salary</th>
-//                   <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Calculated Salary</th>
-//                   <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider">Actions</th>
+//                   <th className="p-3 text-xs font-semibold tracking-wider text-left uppercase">ID</th>
+//                   <th className="p-3 text-xs font-semibold tracking-wider text-left uppercase">Name</th>
+//                   <th className="p-3 text-xs font-semibold tracking-wider text-left uppercase">Working Days</th>
+//                   <th className="p-3 text-xs font-semibold tracking-wider text-left uppercase">Present Days</th>
+//                   <th className="p-3 text-xs font-semibold tracking-wider text-left uppercase">Half Days</th>
+//                   <th className="p-3 text-xs font-semibold tracking-wider text-left uppercase">Week Offs</th>
+//                   <th className="p-3 text-xs font-semibold tracking-wider text-left uppercase">Monthly Salary</th>
+//                   <th className="p-3 text-xs font-semibold tracking-wider text-left uppercase">Calculated Salary</th>
+//                   <th className="p-3 text-xs font-semibold tracking-wider text-left uppercase">Actions</th>
 //                 </tr>
 //               </thead>
 //               <tbody className="divide-y divide-gray-200">
@@ -1263,7 +1263,7 @@
 //                     <td className="p-4 text-sm font-medium text-gray-900">{item.employeeId}</td>
 //                     <td className="p-4">
 //                       <div className="flex items-center">
-//                         <div className="flex-shrink-0 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+//                         <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 mr-3 bg-blue-100 rounded-full">
 //                           <span className="text-sm font-medium text-blue-800">
 //                             {item.name?.charAt(0) || 'E'}
 //                           </span>
@@ -1299,7 +1299,7 @@
 //                         </div>
 //                       </div>
 //                     </td>
-//                     <td className="p-4 text-right font-medium text-gray-900">
+//                     <td className="p-4 font-medium text-right text-gray-900">
 //                       ₹{(item.salaryPerMonth || 0).toLocaleString()}
 //                     </td>
 //                     <td className="p-4 text-right">
@@ -1353,8 +1353,8 @@
 
 //           {/* Pagination */}
 //           {filteredRecords.length > 0 && (
-//             <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-//               <div className="flex-1 flex justify-between sm:hidden">
+//             <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 sm:px-6">
+//               <div className="flex justify-between flex-1 sm:hidden">
 //                 <button
 //                   onClick={handlePrevious}
 //                   disabled={currentPage === 1}
@@ -1387,7 +1387,7 @@
 //                   </p>
 //                 </div>
 //                 <div>
-//                   <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+//                   <nav className="relative z-0 inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
 //                     <button
 //                       onClick={handlePrevious}
 //                       disabled={currentPage === 1}
@@ -1397,7 +1397,7 @@
 //                         }`}
 //                     >
 //                       <span className="sr-only">Previous</span>
-//                       <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+//                       <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 //                         <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
 //                       </svg>
 //                     </button>
@@ -1422,7 +1422,7 @@
 //                         }`}
 //                     >
 //                       <span className="sr-only">Next</span>
-//                       <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+//                       <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 //                         <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
 //                       </svg>
 //                     </button>
@@ -1433,8 +1433,8 @@
 //           )}
 
 //           {filteredRecords.length === 0 && !loading && (
-//             <div className="text-center py-12">
-//               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//             <div className="py-12 text-center">
+//               <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 //               </svg>
 //               <h3 className="mt-2 text-sm font-medium text-gray-900">No employees found</h3>
@@ -1451,7 +1451,7 @@
 //       {showViewModal && selectedEmployee && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
 //           <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
-//             <div className="flex justify-between items-center mb-4 sticky top-0 bg-white z-10">
+//             <div className="sticky top-0 z-10 flex items-center justify-between mb-4 bg-white">
 //               <h2 className="text-xl font-bold text-gray-800">Employee Details</h2>
 //               <button
 //                 onClick={() => setShowViewModal(false)}
@@ -1463,7 +1463,7 @@
 //               </button>
 //             </div>
 
-//             <div className="bg-gray-50 p-4 rounded-lg mb-4">
+//             <div className="p-4 mb-4 rounded-lg bg-gray-50">
 //               <div className="flex items-center space-x-4">
 //                 <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
 //                   <span className="text-lg font-semibold text-blue-800">
@@ -1486,41 +1486,41 @@
 //             </div>
 
 //             <div className="grid grid-cols-2 gap-4 mb-6">
-//               <div className="bg-white p-3 rounded-lg border">
+//               <div className="p-3 bg-white border rounded-lg">
 //                 <p className="text-sm text-gray-600">Present Days</p>
 //                 <p className="text-lg font-semibold text-green-600">{selectedEmployee.presentDays || 0}</p>
 //               </div>
-//               <div className="bg-white p-3 rounded-lg border">
+//               <div className="p-3 bg-white border rounded-lg">
 //                 <p className="text-sm text-gray-600">Working Days</p>
 //                 <p className="text-lg font-semibold text-blue-600">{selectedEmployee.totalWorkingDays || 0}</p>
 //               </div>
-//               <div className="bg-white p-3 rounded-lg border">
+//               <div className="p-3 bg-white border rounded-lg">
 //                 <p className="text-sm text-gray-600">Half Days</p>
 //                 <p className="text-lg font-semibold text-yellow-600">{selectedEmployee.halfDayWorking || 0}</p>
 //               </div>
-//               <div className="bg-white p-3 rounded-lg border">
+//               <div className="p-3 bg-white border rounded-lg">
 //                 <p className="text-sm text-gray-600">WeekOff Days</p>
 //                 <p className="text-lg font-semibold text-purple-600">{getWeekOffDaysForDisplay(selectedEmployee)}</p>
 //               </div>
-//               <div className="bg-white p-3 rounded-lg border">
+//               <div className="p-3 bg-white border rounded-lg">
 //                 <p className="text-sm text-gray-600">Month Days</p>
 //                 <p className="text-lg font-semibold text-gray-800">{selectedEmployee.monthDays || monthDays}</p>
 //               </div>
-//               <div className="bg-white p-3 rounded-lg border">
+//               <div className="p-3 bg-white border rounded-lg">
 //                 <p className="text-sm text-gray-600">Monthly Salary</p>
 //                 <p className="text-lg font-semibold text-blue-600">₹{getEmployeeData(selectedEmployee).salaryPerMonth || 0}</p>
 //               </div>
-//               <div className="bg-white p-3 rounded-lg border">
+//               <div className="p-3 bg-white border rounded-lg">
 //                 <p className="text-sm text-gray-600">Daily Rate</p>
 //                 <p className="text-lg font-semibold text-gray-800">₹{calculateDailyRate(selectedEmployee)}/day</p>
 //               </div>
-//               <div className="bg-white p-3 rounded-lg border">
+//               <div className="p-3 bg-white border rounded-lg">
 //                 <p className="text-sm text-gray-600">Calculated Salary</p>
 //                 <p className="text-lg font-semibold text-green-600">₹{calculateSalary(selectedEmployee)}</p>
 //               </div>
-//               <div className="bg-white p-3 rounded-lg border col-span-2">
+//               <div className="col-span-2 p-3 bg-white border rounded-lg">
 //                 <p className="text-sm text-gray-600">Approved Leaves</p>
-//                 <p className="text font-semibold text-red-600">{getLeaveTypes(selectedEmployee)}</p>
+//                 <p className="font-semibold text-red-600 text">{getLeaveTypes(selectedEmployee)}</p>
 //               </div>
 //             </div>
 
@@ -1536,7 +1536,7 @@
 //               </button>
 //               <button
 //                 onClick={() => setShowViewModal(false)}
-//                 className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
+//                 className="px-6 py-2 text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600"
 //               >
 //                 Close
 //               </button>
@@ -1549,7 +1549,7 @@
 //       {showEditModal && selectedEmployee && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
 //           <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-//             <div className="flex justify-between items-center mb-4">
+//             <div className="flex items-center justify-between mb-4">
 //               <h2 className="text-xl font-bold text-gray-800">Edit Salary Details - {selectedEmployee.name}</h2>
 //               <button
 //                 onClick={() => setShowEditModal(false)}
@@ -1561,7 +1561,7 @@
 //               </button>
 //             </div>
 
-//             <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+//             <div className="p-3 mb-4 rounded-lg bg-blue-50">
 //               <p className="text-sm text-blue-700">
 //                 <strong>Month:</strong> {selectedEmployee.month || selectedMonth || "Current Month"} |
 //                 <strong> Days in Month:</strong> {selectedEmployee.monthDays || monthDays} |
@@ -1571,9 +1571,9 @@
 //             </div>
 
 //             <form onSubmit={handleEditSubmit}>
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+//               <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2">
 //                 <div>
-//                   <label className="block text-sm font-medium mb-1 text-gray-700">Present Days</label>
+//                   <label className="block mb-1 text-sm font-medium text-gray-700">Present Days</label>
 //                   <input
 //                     type="number"
 //                     name="presentDays"
@@ -1585,7 +1585,7 @@
 //                   />
 //                 </div>
 //                 <div>
-//                   <label className="block text-sm font-medium mb-1 text-gray-700">Working Days</label>
+//                   <label className="block mb-1 text-sm font-medium text-gray-700">Working Days</label>
 //                   <input
 //                     type="number"
 //                     name="workingDays"
@@ -1597,7 +1597,7 @@
 //                   />
 //                 </div>
 //                 <div>
-//                   <label className="block text-sm font-medium mb-1 text-gray-700">Half Days</label>
+//                   <label className="block mb-1 text-sm font-medium text-gray-700">Half Days</label>
 //                   <input
 //                     type="number"
 //                     name="halfDayWorking"
@@ -1608,7 +1608,7 @@
 //                   />
 //                 </div>
 //                 <div>
-//                   <label className="block text-sm font-medium mb-1 text-gray-700">Full Day Leaves</label>
+//                   <label className="block mb-1 text-sm font-medium text-gray-700">Full Day Leaves</label>
 //                   <input
 //                     type="number"
 //                     name="fullDayNotWorking"
@@ -1619,26 +1619,26 @@
 //                   />
 //                 </div>
 //                 <div>
-//                   <label className="block text-sm font-medium mb-1 text-gray-700">Daily Rate (₹)</label>
+//                   <label className="block mb-1 text-sm font-medium text-gray-700">Daily Rate (₹)</label>
 //                   <input
 //                     type="text"
 //                     value={editFormData.dailyRate || calculateDailyRate(selectedEmployee)}
-//                     className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+//                     className="w-full p-3 text-gray-600 bg-gray-100 border border-gray-300 rounded-lg"
 //                     readOnly
 //                   />
 //                 </div>
 //                 <div>
-//                   <label className="block text-sm font-medium mb-1 text-gray-700">Week-off Days</label>
+//                   <label className="block mb-1 text-sm font-medium text-gray-700">Week-off Days</label>
 //                   <input
 //                     type="number"
 //                     name="weekOffDays"
 //                     value={getWeekOffDaysForDisplay(selectedEmployee)}
-//                     className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+//                     className="w-full p-3 text-gray-600 border border-gray-300 rounded-lg bg-gray-50"
 //                     readOnly
 //                   />
 //                 </div>
 //                 <div>
-//                   <label className="block text-sm font-medium mb-1 text-gray-700">Calculated Salary (₹)</label>
+//                   <label className="block mb-1 text-sm font-medium text-gray-700">Calculated Salary (₹)</label>
 //                   <input
 //                     type="number"
 //                     name="calculatedSalary"
@@ -1652,10 +1652,10 @@
 //               </div>
 
 //               <div className="mb-6">
-//                 <h3 className="text-lg font-semibold mb-3 text-gray-800">Extra Work & Adjustments</h3>
-//                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//                 <h3 className="mb-3 text-lg font-semibold text-gray-800">Extra Work & Adjustments</h3>
+//                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //                   <div>
-//                     <label className="block text-sm font-medium mb-1 text-gray-700">Extra Days</label>
+//                     <label className="block mb-1 text-sm font-medium text-gray-700">Extra Days</label>
 //                     <input
 //                       type="number"
 //                       name="extraDays"
@@ -1666,7 +1666,7 @@
 //                     />
 //                   </div>
 //                   <div>
-//                     <label className="block text-sm font-medium mb-1 text-gray-700">Bonus (₹)</label>
+//                     <label className="block mb-1 text-sm font-medium text-gray-700">Bonus (₹)</label>
 //                     <input
 //                       type="number"
 //                       name="bonus"
@@ -1677,7 +1677,7 @@
 //                     />
 //                   </div>
 //                   <div>
-//                     <label className="block text-sm font-medium mb-1 text-gray-700">Deductions (₹)</label>
+//                     <label className="block mb-1 text-sm font-medium text-gray-700">Deductions (₹)</label>
 //                     <input
 //                       type="number"
 //                       name="deductions"
@@ -1688,7 +1688,7 @@
 //                     />
 //                   </div>
 //                   <div className="md:col-span-2">
-//                     <label className="block text-sm font-medium mb-1 text-gray-700">Reason</label>
+//                     <label className="block mb-1 text-sm font-medium text-gray-700">Reason</label>
 //                     <input
 //                       type="text"
 //                       name="reason"
@@ -1701,17 +1701,17 @@
 //                 </div>
 //               </div>
 
-//               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+//               <div className="flex justify-end pt-4 space-x-3 border-t border-gray-200">
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowEditModal(false)}
-//                   className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-200"
+//                   className="px-6 py-3 text-gray-700 transition duration-200 border border-gray-300 rounded-lg hover:bg-gray-50"
 //                 >
 //                   Cancel
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-200"
+//                   className="px-6 py-3 text-white transition duration-200 bg-green-500 rounded-lg hover:bg-green-600"
 //                 >
 //                   Save Changes
 //                 </button>
@@ -2238,7 +2238,7 @@ const PayRoll = () => {
         requestBody.weekOffPerMonth = parseInt(manualDays);
       }
 
-      const response = await fetch("http://localhost:5000/api/attendancesummary/updateWeekOffConfig", {
+      const response = await fetch("https://api.timelyhealth.in/attendancesummary/updateWeekOffConfig", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2465,7 +2465,7 @@ const PayRoll = () => {
     try {
       // ✅ SAVE TO BACKEND (Use Localhost for testing)
       // const response = await fetch("https://api.timelyhealth.in/attendancesummary/updatePayroll", {
-      const response = await fetch("http://localhost:5000/api/attendancesummary/updatePayroll", {
+      const response = await fetch("https://api.timelyhealth.in/attendancesummary/updatePayroll", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2958,7 +2958,7 @@ const PayRoll = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="mx-auto max-w-8xl">
 
         {/* Search and Filter Section */}
@@ -2972,10 +2972,10 @@ const PayRoll = () => {
                 placeholder="Search by ID or Name"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full py-1.5 pl-8 pr-3 text-sm border rounded-md focus:ring-1 focus:ring-blue-400"
+                className="w-full py-1 pl-6 pr-3 text-sm border rounded-md focus:ring-1 focus:ring-blue-400"
               />
               <svg
-                className="absolute w-4 h-4 text-gray-400 left-2 top-1/2 -translate-y-1/2"
+                className="absolute w-2 h-2 text-gray-400 -translate-y-1/2 left-2 top-1/2"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -2985,7 +2985,7 @@ const PayRoll = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2 items-center">
+            <div className="flex items-center gap-2">
               <input
                 type="month"
                 value={selectedMonth}
@@ -2995,12 +2995,12 @@ const PayRoll = () => {
                   monthValue ? fetchData(monthValue) : fetchData();
                 }}
                 onFocus={(e) => e.target.click()}
-                className="px-2 py-1.5 text-sm border rounded-md cursor-pointer"
+                className="px-2 py-1 text-sm border rounded-md cursor-pointer"
               />
 
               <button
                 onClick={() => setShowTemplateModal(true)}
-                className="px-3 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 shadow-sm"
+                className="px-2 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50"
               >
                 ⚙️ Template
               </button>
@@ -3010,7 +3010,7 @@ const PayRoll = () => {
                   setSelectedMonth("");
                   fetchData();
                 }}
-                className="px-3 py-1.5 text-sm text-gray-700 bg-gray-100 border rounded-md hover:bg-gray-200"
+                className="px-2 py-1 text-sm text-gray-700 bg-gray-100 border rounded-md hover:bg-gray-200"
               >
                 Current
               </button>
@@ -3021,7 +3021,7 @@ const PayRoll = () => {
                 className="flex items-center px-3 py-1.5 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
               >
                 {isLoadingMonth ? (
-                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-2 h-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9" />
                   </svg>
                 ) : (
@@ -3043,7 +3043,7 @@ const PayRoll = () => {
                 <p className="text-[10px] text-gray-500 leading-tight">
                   Active Employees
                 </p>
-                <p className="text-sm font-semibold text-gray-800 leading-tight">
+                <p className="text-sm font-semibold leading-tight text-gray-800">
                   {filteredRecords.length}
                 </p>
               </div>
@@ -3062,7 +3062,7 @@ const PayRoll = () => {
                 <p className="text-[10px] text-gray-500 leading-tight">
                   Total Salary
                 </p>
-                <p className="text-sm font-semibold text-gray-800 leading-tight">
+                <p className="text-sm font-semibold leading-tight text-gray-800">
                   ₹{filteredRecords.reduce((s, e) => s + (e.calculatedSalary || 0), 0).toLocaleString()}
                 </p>
               </div>
@@ -3081,7 +3081,7 @@ const PayRoll = () => {
                 <p className="text-[10px] text-gray-500 leading-tight">
                   Active This Month
                 </p>
-                <p className="text-sm font-semibold text-gray-800 leading-tight">
+                <p className="text-sm font-semibold leading-tight text-gray-800">
                   {filteredRecords.filter(e => (e.totalWorkingDays || 0) > 0).length}
                 </p>
               </div>
@@ -3100,7 +3100,7 @@ const PayRoll = () => {
                 <p className="text-[10px] text-gray-500 leading-tight">
                   On Leave
                 </p>
-                <p className="text-sm font-semibold text-gray-800 leading-tight">
+                <p className="text-sm font-semibold leading-tight text-gray-800">
                   {filteredRecords.filter(emp => {
                     const leaves = employeeLeaves[emp.employeeId];
                     return leaves && (leaves.CL + leaves.EL + leaves.COFF + leaves.LOP) > 0;
@@ -3163,10 +3163,10 @@ const PayRoll = () => {
         </div>
 
         {/* Payroll Table */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+        <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
-              <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
+              <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
                 <tr>
                   <th className="py-2 text-center">Employee ID</th>
                   <th className="py-2 text-center">Name</th>
@@ -3188,7 +3188,7 @@ const PayRoll = () => {
                     <td className="p-4 text-sm font-medium text-gray-900">{item.employeeId}</td>
                     <td className="p-4">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                        <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 mr-3 bg-blue-100 rounded-full">
                           <span className="text-sm font-medium text-blue-800">
                             {item.name?.charAt(0) || 'E'}
                           </span>
@@ -3223,7 +3223,7 @@ const PayRoll = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="p-4 text-right font-medium text-gray-900">
+                    <td className="p-4 font-medium text-right text-gray-900">
                       ₹{(item.salaryPerMonth || 0).toLocaleString()}
                     </td>
                     <td className="p-4 text-right">
@@ -3278,8 +3278,8 @@ const PayRoll = () => {
 
           {/* Pagination */}
           {filteredRecords.length > 0 && (
-            <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-              <div className="flex-1 flex justify-between sm:hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 sm:px-6">
+              <div className="flex justify-between flex-1 sm:hidden">
                 <button
                   onClick={handlePrevious}
                   disabled={currentPage === 1}
@@ -3312,7 +3312,7 @@ const PayRoll = () => {
                   </p>
                 </div>
                 <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <nav className="relative z-0 inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
                     <button
                       onClick={handlePrevious}
                       disabled={currentPage === 1}
@@ -3322,7 +3322,7 @@ const PayRoll = () => {
                         } `}
                     >
                       <span className="sr-only">Previous</span>
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </button>
@@ -3347,7 +3347,7 @@ const PayRoll = () => {
                         } `}
                     >
                       <span className="sr-only">Next</span>
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                       </svg>
                     </button>
@@ -3358,8 +3358,8 @@ const PayRoll = () => {
           )}
 
           {filteredRecords.length === 0 && !loading && (
-            <div className="text-center py-12">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="py-12 text-center">
+              <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <h3 className="mt-2 text-sm font-medium text-gray-900">No active employees found</h3>
@@ -3376,7 +3376,7 @@ const PayRoll = () => {
       {showViewModal && selectedEmployee && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4 sticky top-0 bg-white z-10">
+            <div className="sticky top-0 z-10 flex items-center justify-between mb-4 bg-white">
               <h2 className="text-xl font-bold text-gray-800">Employee Details</h2>
               <button
                 onClick={() => setShowViewModal(false)}
@@ -3388,7 +3388,7 @@ const PayRoll = () => {
               </button>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg mb-4">
+            <div className="p-4 mb-4 rounded-lg bg-gray-50">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
                   <span className="text-lg font-semibold text-blue-800">
@@ -3414,41 +3414,41 @@ const PayRoll = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Present Days</p>
                 <p className="text-lg font-semibold text-green-600">{selectedEmployee.presentDays || 0}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Working Days</p>
                 <p className="text-lg font-semibold text-blue-600">{selectedEmployee.totalWorkingDays || 0}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Half Days</p>
                 <p className="text-lg font-semibold text-yellow-600">{selectedEmployee.halfDayWorking || 0}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">WeekOff Days</p>
                 <p className="text-lg font-semibold text-purple-600">{getWeekOffDaysForDisplay(selectedEmployee)}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Month Days</p>
                 <p className="text-lg font-semibold text-gray-800">{selectedEmployee.monthDays || monthDays}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Monthly Salary</p>
                 <p className="text-lg font-semibold text-blue-600">₹{getEmployeeData(selectedEmployee).salaryPerMonth || 0}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Daily Rate</p>
                 <p className="text-lg font-semibold text-gray-800">₹{calculateDailyRate(selectedEmployee)}/day</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Calculated Salary</p>
                 <p className="text-lg font-semibold text-green-600">₹{calculateSalary(selectedEmployee)}</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border col-span-2">
+              <div className="col-span-2 p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Approved Leaves</p>
-                <p className="text font-semibold text-red-600">{getLeaveTypes(selectedEmployee)}</p>
+                <p className="font-semibold text-red-600 text">{getLeaveTypes(selectedEmployee)}</p>
               </div>
             </div>
 
@@ -3465,7 +3465,7 @@ const PayRoll = () => {
               </button>
               <button
                 onClick={() => setShowViewModal(false)}
-                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
+                className="px-6 py-2 text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600"
               >
                 Close
               </button>
@@ -3478,7 +3478,7 @@ const PayRoll = () => {
       {showEditModal && selectedEmployee && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-800">Edit Salary Details - {selectedEmployee.name}</h2>
               <button
                 onClick={() => setShowEditModal(false)}
@@ -3490,7 +3490,7 @@ const PayRoll = () => {
               </button>
             </div>
 
-            <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+            <div className="p-3 mb-4 rounded-lg bg-blue-50">
               <p className="text-sm text-blue-700">
                 <strong>Month:</strong> {selectedEmployee.month || selectedMonth || "Current Month"} |
                 <strong> Days in Month:</strong> {selectedEmployee.monthDays || monthDays} |
@@ -3500,9 +3500,9 @@ const PayRoll = () => {
             </div>
 
             <form onSubmit={handleEditSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Present Days</label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Present Days</label>
                   <input
                     type="number"
                     name="presentDays"
@@ -3514,7 +3514,7 @@ const PayRoll = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Working Days</label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Working Days</label>
                   <input
                     type="number"
                     name="workingDays"
@@ -3526,7 +3526,7 @@ const PayRoll = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Half Days</label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Half Days</label>
                   <input
                     type="number"
                     name="halfDayWorking"
@@ -3537,7 +3537,7 @@ const PayRoll = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Full Day Leaves</label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Full Day Leaves</label>
                   <input
                     type="number"
                     name="fullDayNotWorking"
@@ -3548,26 +3548,26 @@ const PayRoll = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Daily Rate (₹)</label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Daily Rate (₹)</label>
                   <input
                     type="text"
                     value={editFormData.dailyRate || calculateDailyRate(selectedEmployee)}
-                    className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                    className="w-full p-3 text-gray-600 bg-gray-100 border border-gray-300 rounded-lg"
                     readOnly
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Week-off Days</label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Week-off Days</label>
                   <input
                     type="number"
                     name="weekOffDays"
                     value={getWeekOffDaysForDisplay(selectedEmployee)}
-                    className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                    className="w-full p-3 text-gray-600 border border-gray-300 rounded-lg bg-gray-50"
                     readOnly
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Calculated Salary (₹)</label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Calculated Salary (₹)</label>
                   <input
                     type="number"
                     name="calculatedSalary"
@@ -3581,10 +3581,10 @@ const PayRoll = () => {
               </div>
 
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-3 text-gray-800">Extra Work & Adjustments</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <h3 className="mb-3 text-lg font-semibold text-gray-800">Extra Work & Adjustments</h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Extra Days</label>
+                    <label className="block mb-1 text-sm font-medium text-gray-700">Extra Days</label>
                     <input
                       type="number"
                       name="extraDays"
@@ -3595,7 +3595,7 @@ const PayRoll = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Bonus (₹)</label>
+                    <label className="block mb-1 text-sm font-medium text-gray-700">Bonus (₹)</label>
                     <input
                       type="number"
                       name="bonus"
@@ -3606,7 +3606,7 @@ const PayRoll = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Deductions (₹)</label>
+                    <label className="block mb-1 text-sm font-medium text-gray-700">Deductions (₹)</label>
                     <input
                       type="number"
                       name="deductions"
@@ -3617,7 +3617,7 @@ const PayRoll = () => {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Reason</label>
+                    <label className="block mb-1 text-sm font-medium text-gray-700">Reason</label>
                     <input
                       type="text"
                       name="reason"
@@ -3630,24 +3630,24 @@ const PayRoll = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <div className="flex justify-end pt-4 space-x-3 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-200 mr-auto"
+                  className="px-6 py-3 mr-auto text-white transition duration-200 bg-yellow-500 rounded-lg hover:bg-yellow-600"
                 >
                   Reset to Actual
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-200"
+                  className="px-6 py-3 text-gray-700 transition duration-200 border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-200"
+                  className="px-6 py-3 text-white transition duration-200 bg-green-500 rounded-lg hover:bg-green-600"
                 >
                   Save Changes
                 </button>
@@ -3660,15 +3660,15 @@ const PayRoll = () => {
       {/* Template Settings Modal */}
       {showTemplateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
+          <div className="w-full max-w-md p-6 mx-4 bg-white rounded-lg">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-800">Edit Payslip Template</h2>
               <button onClick={() => setShowTemplateModal(false)} className="text-gray-500 hover:text-gray-700">✕</button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Company Name</label>
                 <input
                   type="text"
                   value={templateConfig.companyName}
@@ -3678,7 +3678,7 @@ const PayRoll = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Address</label>
                 <textarea
                   rows="3"
                   value={templateConfig.address}
@@ -3688,20 +3688,20 @@ const PayRoll = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Upload New Logo</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Upload New Logo</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleLogoChange}
                   className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
-                <p className="text-xs text-gray-500 mt-1">Recommended: PNG/JPEG, Max 130px width</p>
+                <p className="mt-1 text-xs text-gray-500">Recommended: PNG/JPEG, Max 130px width</p>
               </div>
 
               {templateConfig.logo && (
-                <div className="mt-2 text-center p-2 border rounded bg-gray-50">
-                  <p className="text-xs text-gray-500 mb-1">Current Logo Preview:</p>
-                  <img src={templateConfig.logo} alt="Preview" className="h-16 mx-auto object-contain" />
+                <div className="p-2 mt-2 text-center border rounded bg-gray-50">
+                  <p className="mb-1 text-xs text-gray-500">Current Logo Preview:</p>
+                  <img src={templateConfig.logo} alt="Preview" className="object-contain h-16 mx-auto" />
                 </div>
               )}
 

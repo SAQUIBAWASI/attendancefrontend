@@ -543,7 +543,7 @@ const LeaveReport = () => {
           <p className="text-[11px] text-gray-500 leading-tight">
             Approved Leaves
           </p>
-          <h2 className="text-sm font-semibold text-green-700 leading-tight">
+          <h2 className="text-sm font-semibold leading-tight text-green-700">
             {filteredLeaves.length}
           </h2>
         </div>
@@ -552,7 +552,7 @@ const LeaveReport = () => {
           <p className="text-[11px] text-gray-500 leading-tight">
             Employees
           </p>
-          <h2 className="text-sm font-semibold text-blue-700 leading-tight">
+          <h2 className="text-sm font-semibold leading-tight text-blue-700">
             {employees.length}
           </h2>
         </div>
@@ -561,7 +561,7 @@ const LeaveReport = () => {
           <p className="text-[11px] text-gray-500 leading-tight">
             Leave Types
           </p>
-          <h2 className="text-sm font-semibold text-yellow-700 leading-tight">
+          <h2 className="text-sm font-semibold leading-tight text-yellow-700">
             {leaveTypes.length}
           </h2>
         </div>
@@ -638,7 +638,7 @@ const LeaveReport = () => {
     <p className="text-[11px] text-gray-500 leading-tight">
       Approved Leaves
     </p>
-    <h2 className="text-sm font-semibold text-green-700 leading-tight">
+    <h2 className="text-sm font-semibold leading-tight text-green-700">
       {filteredLeaves.length}
     </h2>
   </div>
@@ -647,7 +647,7 @@ const LeaveReport = () => {
     <p className="text-[11px] text-gray-500 leading-tight">
       Employees
     </p>
-    <h2 className="text-sm font-semibold text-blue-700 leading-tight">
+    <h2 className="text-sm font-semibold leading-tight text-blue-700">
       {employees.length}
     </h2>
   </div>
@@ -656,7 +656,7 @@ const LeaveReport = () => {
     <p className="text-[11px] text-gray-500 leading-tight">
       Leave Types
     </p>
-    <h2 className="text-sm font-semibold text-yellow-700 leading-tight">
+    <h2 className="text-sm font-semibold leading-tight text-yellow-700">
       {leaveTypes.length}
     </h2>
   </div>
@@ -687,7 +687,7 @@ const LeaveReport = () => {
       {/* ✅ Leave Table */}
       <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
         <table className="min-w-full">
-          <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
+          <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
             <tr>
               <th className="px-4 py-2 border">Name</th>
               <th className="px-4 py-2 border">Leave Type</th>

@@ -856,7 +856,7 @@
 // }
 
 import axios from "axios";
-import { Calendar, Download, Eye, FileText, RefreshCw, Search, X } from "lucide-react";
+import { Download, Eye, FileText, RefreshCw, Search, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../Images/Timely-Health-Logo.png";
@@ -1221,12 +1221,6 @@ export default function EmployeeDashboard() {
       setSelectedMonth(monthValue);
       fetchSalaryData(monthValue);
     }
-  };
-
-  // ✅ Handle quick month selection
-  const handleQuickMonthSelect = (month) => {
-    setSelectedMonth(month);
-    fetchSalaryData(month);
   };
 
   // ✅ Handle clear filter
@@ -1695,152 +1689,99 @@ export default function EmployeeDashboard() {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-6 bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="mx-auto max-w-7xl">
+    <div className="min-h-screen p-2 md:p-4 bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="mx-auto max-w-8xl">
 
-        {/* Header Info Card */}
-        {/* <div className="p-4 mb-4 text-white shadow-lg md:p-6 md:mb-6 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl md:rounded-2xl"> */}
-        {/* <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-xl font-bold md:text-2xl">My Salary History</h1>
-              <p className="mt-1 text-sm text-blue-100 md:text-base">
-                {currentEmployee?.name || 'Employee'} • ID: {currentEmployee?.employeeId || 'N/A'}
-              </p>
-              <div className="flex flex-wrap items-center mt-2 space-x-2 md:space-x-4">
-                <div className="px-3 py-1 text-xs bg-white rounded-full md:text-sm bg-opacity-20">
-                  {selectedMonth ? formatMonthDisplay(selectedMonth) : 'Current Month'}
-                </div>
-                <div className="text-xs text-blue-100 md:text-sm">
-                  {filteredRecords.length} salary records
-                </div>
-              </div>
-            </div> */}
-
-        {/* Important Notes */}
-        {/* <div className="mt-3 md:mt-0">
-              <div className="p-2 text-xs bg-white rounded-lg md:p-3 md:text-sm bg-opacity-10">
-                <div className="flex items-center space-x-2">
-                  <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                  <span className="font-medium">Important:</span>
-                </div>
-                <ul className="mt-1 ml-1 space-y-1 text-xs">
-                  <li>• Weekoff salary added after 26th of each month</li>
-                  <li>• Current month slip available from 30th onwards</li>
-                  <li>• Previous months slips always available</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div> */}
-
-        {/* Search and Filter Section */}
+        {/* Search and Filter Section - Payroll Style */}
         <div className="p-4 mb-4 bg-white border border-blue-200 shadow-lg md:p-6 md:mb-6 rounded-xl md:rounded-2xl">
           <div className="flex flex-col gap-3 md:gap-4">
-            {/* Search Bar */}
+            {/* Search Bar - Compact Style */}
             <div className="relative">
-              <input
-                type="text"
-                placeholder="Search by month name, year, or salary amount..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg md:py-3 md:pl-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent md:text-base"
-              />
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none md:pl-4">
-                <Search size={18} className="text-gray-400" />
-              </div>
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm("")}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              {/* Month Filter Buttons */}
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={handleClearFilter}
-                  className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg border text-sm ${!selectedMonth
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
-                    }`}
-                >
-                  Current Month
-                </button>
-
-                {/* Last 3 months quick buttons */}
-                {last12Months.slice(0, 3).map((month, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleQuickMonthSelect(month.value)}
-                    className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg border text-sm ${selectedMonth === month.value
-                      ? 'bg-green-600 text-white border-green-600'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
-                      }`}
-                  >
-                    {month.display.split(' ')[0]}
-                  </button>
-                ))}
-
-                {/* Calendar Month Picker */}
-                <div className="relative">
-                  <button
-                    onClick={() => document.getElementById('monthPicker').click()}
-                    className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 text-white bg-purple-600 border border-purple-600 rounded-lg hover:bg-purple-700 text-sm"
-                  >
-                    <Calendar size={16} />
-                    <span className="hidden md:inline">Select Month</span>
-                    <span className="md:hidden">Month</span>
-                  </button>
-                  <input
-                    id="monthPicker"
-                    type="month"
-                    onChange={handleMonthSelect}
-                    className="absolute w-1 h-1 opacity-0"
-                    max={getCurrentMonth()}
-                  />
-                </div>
-              </div>
-
-              {/* Active Filters Display */}
               <div className="flex items-center gap-2">
-                {selectedMonth && (
-                  <div className="flex items-center gap-2 px-2 py-1 text-xs text-blue-800 bg-blue-100 rounded-full md:px-3 md:text-sm">
-                    <span>{formatMonthDisplay(selectedMonth)}</span>
-                    <button
-                      onClick={handleClearFilter}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      <X size={12} />
-                    </button>
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    placeholder="Search by month, salary, or days..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full py-2 pl-8 pr-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <Search size={10} className="text-gray-400" />
                   </div>
-                )}
-
-                {/* Refresh Button */}
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm("")}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={handleMonthSelect}
+                  className="px-2 py-1 text-sm border border-gray-300 rounded-lg cursor-pointer focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  max={getCurrentMonth()}
+                />
+                <button
+                  onClick={() => setSelectedMonth("")}
+                  className="px-2 py-1 text-sm text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200"
+                >
+                  Current
+                </button>
                 <button
                   onClick={() => fetchSalaryData(selectedMonth)}
                   disabled={isLoadingMonth}
-                  className="flex items-center px-3 md:px-4 py-1.5 md:py-2 font-medium text-white transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="flex items-center px-2 py-1 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoadingMonth ? (
                     <>
-                      <RefreshCw className="w-3 h-3 mr-2 md:w-4 md:h-4 animate-spin" />
+                      <RefreshCw className="w-3 h-3 mr-2 animate-spin" />
                       Loading...
                     </>
                   ) : (
                     <>
-                      <RefreshCw className="w-3 h-3 mr-2 md:w-4 md:h-4" />
-                      <span className="hidden md:inline">Refresh</span>
+                      <RefreshCw className="w-2 h-2 mr-1" />
+                      Refresh
                     </>
                   )}
                 </button>
               </div>
             </div>
+
+            {/* Active Filters Display */}
+            {selectedMonth && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 px-2 py-1 text-xs text-blue-800 bg-blue-100 rounded-full">
+                  <span>Month: {formatMonthDisplay(selectedMonth)}</span>
+                  <button
+                    onClick={() => setSelectedMonth("")}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+                {searchTerm && (
+                  <div className="flex items-center gap-2 px-2 py-1 text-xs text-green-800 bg-green-100 rounded-full">
+                    <span>Search: "{searchTerm}"</span>
+                    <button
+                      onClick={() => setSearchTerm("")}
+                      className="text-green-600 hover:text-green-800"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                )}
+                <button
+                  onClick={handleClearFilter}
+                  className="ml-auto text-xs text-gray-600 hover:text-gray-800"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1889,44 +1830,44 @@ export default function EmployeeDashboard() {
           </div>
         </div>
 
-        {/* Stats Overview - Only for current employee */}
-        <div className="grid grid-cols-1 gap-3 mb-4 md:gap-4 md:mb-6 md:grid-cols-3">
-          <div className="p-3 bg-white border-l-2 border-blue-500 shadow md:p-4 md:border-l-4 rounded-xl">
+        {/* Stats Overview - Payroll Style */}
+        <div className="grid grid-cols-2 gap-2 mb-3 md:grid-cols-4">
+          <div className="px-3 py-2 bg-white border-l-2 border-blue-500 rounded-md shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-600 md:text-sm">Total Salary Records</p>
+                <p className="text-[10px] text-gray-500 leading-tight">Salary Records</p>
                 <p className="text-lg font-bold text-gray-800 md:text-xl">{filteredRecords.length}</p>
-                <p className="text-xs text-gray-500">{selectedMonth ? 'For selected month' : 'All months'}</p>
+                <p className="text-xs text-gray-500">{selectedMonth ? 'Selected month' : 'All months'}</p>
               </div>
-              <div className="p-2 bg-blue-100 rounded-full md:p-3">
-                <FileText className="w-5 h-5 text-blue-600 md:w-6 md:h-6" />
+              <div className="p-1.5 bg-blue-100 rounded-full">
+                <FileText className="w-4 h-4 text-blue-600 md:w-5 md:h-5" />
               </div>
             </div>
           </div>
 
-          <div className="p-3 bg-white border-l-2 border-green-500 shadow md:p-4 md:border-l-4 rounded-xl">
+          <div className="px-3 py-2 bg-white border-l-2 border-green-500 rounded-md shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-600 md:text-sm">Total Salary Earned</p>
+                <p className="text-[10px] text-gray-500 leading-tight">Total Salary Earned</p>
                 <p className="text-lg font-bold text-gray-800 md:text-xl">
                   ₹{filteredRecords.reduce((sum, emp) => sum + (emp.calculatedSalary || 0), 0).toLocaleString()}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {selectedMonth ? 'This month' : 'All months total'}
+                  {selectedMonth ? 'This month' : 'All months'}
                 </p>
               </div>
               <div className="p-2 bg-green-100 rounded-full md:p-3">
-                <svg className="w-5 h-5 text-green-600 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-green-600 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
             </div>
           </div>
 
-          <div className="p-3 bg-white border-l-2 border-purple-500 shadow md:p-4 md:border-l-4 rounded-xl">
+          <div className="px-3 py-2 bg-white border-l-2 border-purple-500 rounded-md shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-600 md:text-sm">Available for Download</p>
+                <p className="text-[10px] text-gray-500 leading-tight">Available for Download</p>
                 <p className="text-lg font-bold text-gray-800 md:text-xl">
                   {filteredRecords.filter(emp => emp.canDownload).length}
                 </p>
@@ -1937,27 +1878,48 @@ export default function EmployeeDashboard() {
                 </p>
               </div>
               <div className="p-2 bg-purple-100 rounded-full md:p-3">
-                <Download className="w-5 h-5 text-purple-600 md:w-6 md:h-6" />
+                <Download className="w-4 h-4 text-purple-600 md:w-5 md:h-5" />
+              </div>
+            </div>
+          </div>
+
+          <div className="px-3 py-2 bg-white border-l-2 border-orange-500 rounded-md shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-gray-500 leading-tight">Average Salary</p>
+                <p className="text-lg font-bold text-gray-800 md:text-xl">
+                  ₹{filteredRecords.length > 0 
+                    ? Math.round(filteredRecords.reduce((sum, emp) => sum + (emp.calculatedSalary || 0), 0) / filteredRecords.length).toLocaleString()
+                    : '0'}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Per month average
+                </p>
+              </div>
+              <div className="p-2 bg-orange-100 rounded-full md:p-3">
+                <svg className="w-4 h-4 text-orange-600 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Table Container - Only current employee data */}
-        <div className="overflow-hidden bg-white border border-blue-200 shadow-lg rounded-xl md:rounded-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-max">
-              <thead className="text-white bg-gradient-to-r from-blue-600 to-indigo-700">
+        {/* Table Container - Payroll Style */}
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+            <table className="min-w-full">
+              <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
                 <tr>
-                  <th className="p-3 text-xs font-semibold text-left md:text-sm">Month</th>
-                  <th className="p-3 text-xs font-semibold text-center md:text-sm">Present Days</th>
-                  <th className="p-3 text-xs font-semibold text-center md:text-sm">Working Days</th>
-                  <th className="p-3 text-xs font-semibold text-center md:text-sm">Half Days</th>
-                  <th className="p-3 text-xs font-semibold text-center md:text-sm">WeekOff Days</th>
-                  <th className="p-3 text-xs font-semibold text-center md:text-sm">Leaves</th>
-                  <th className="p-3 text-xs font-semibold text-center md:text-sm">Salary</th>
-                  <th className="p-3 text-xs font-semibold text-center md:text-sm">Status</th>
-                  <th className="p-3 text-xs font-semibold text-center md:text-sm">Actions</th>
+                  <th className="py-2 text-center">Month</th>
+                  <th className="py-2 text-center">Present Days</th>
+                  <th className="py-2 text-center">Working Days</th>
+                  <th className="py-2 text-center">Half Days</th>
+                  <th className="py-2 text-center">WeekOff Days</th>
+                  <th className="py-2 text-center">Leaves</th>
+                  <th className="py-2 text-center">Salary</th>
+                  <th className="py-2 text-center">Status</th>
+                  <th className="py-2 text-center">Actions</th>
                 </tr>
               </thead>
 
@@ -2093,7 +2055,7 @@ export default function EmployeeDashboard() {
             </table>
           </div>
 
-          {/* Pagination */}
+          {/* Pagination - Payroll Style */}
           {filteredRecords.length > 0 && (
             <div className="px-4 py-3 bg-white border-t border-gray-200">
               <div className="flex flex-col items-center justify-between gap-3 md:flex-row">
