@@ -11,6 +11,8 @@ import AboutUsFormPage from "./Pages/AboutUsFormPage.js";
 import AbsentToday from "./Pages/AbsentToday.js";
 import AcceptedAppointmentsList from "./Pages/AcceptedAppointmentsList.js";
 import AddEmployeePage from "./Pages/AddEmployeePage.js";
+import ClientRequests from "./Pages/ClientRequests.jsx";
+import Register from "./Pages/Register.jsx";
 
 import AllFunFactsTable from "./Pages/AllFunFactsTable.js";
 import AllPayments from "./Pages/AllPayments.js";
@@ -139,8 +141,8 @@ import UserAccessManagement from "./Pages/UserAccessManagement.js";
 import UserActivity from "./Pages/UserActivity.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
 // import EmpManagment from "./Pages/EmpManagment.js";
-import JobPost from "./Pages/JobPost.jsx";
 import JobDetails from "./Pages/JobDetails.jsx";
+import JobPost from "./Pages/JobPost.jsx";
 function App() {
   return (
     <Routes>
@@ -148,6 +150,7 @@ function App() {
       {/* Login page rendered outside AdminLayout */}
       {/* <Route path="/land" element={<LandingPage />} /> */}
       {/* <Route path="/" element={<LoginPage />} /> */}
+      <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
       <Route path="/admin-login" element={<Login />} />
       <Route path="/employee-login" element={<Login />} />
@@ -315,6 +318,7 @@ function App() {
               <Route path="/roledashboard" element={<RoleDashboard />} />
               <Route path="/employeedetailsmodel" element={<EmployeeDetailsModal />} />
               <Route path="/useraccess" element={<UserAccessManagement />} />
+              <Route path="/client-requests" element={<ClientRequests />} />
 
               <Route path="/jobpost" element={<JobPost />} />
 

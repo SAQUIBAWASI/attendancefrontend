@@ -136,6 +136,9 @@ const LoginPage = () => {
               {isLoading ? 'Verifying...' : 'Login'}
             </button>
           </form>
+          <div className="text-center mt-4">
+              <p className="text-sm text-gray-600">Don't have an account? <a href="/register" className="text-blue-600 hover:underline">Register here</a></p>
+            </div>
         </div>
 
         {/* Right Side - Image */}
