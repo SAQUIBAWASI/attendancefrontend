@@ -2238,7 +2238,10 @@ const PayRoll = () => {
         requestBody.weekOffPerMonth = parseInt(manualDays);
       }
 
-      const response = await fetch("https://api.timelyhealth.in/attendancesummary/updateWeekOffConfig", {
+
+      const response = await fetch("https://api.timelyhealth.in/api/attendancesummary/updateWeekOffConfig", {
+      // const response = await fetch("https://api.timelyhealth.in/attendancesummary/updateWeekOffConfig", {
+
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2465,7 +2468,11 @@ const PayRoll = () => {
     try {
       // ✅ SAVE TO BACKEND (Use Localhost for testing)
       // const response = await fetch("https://api.timelyhealth.in/attendancesummary/updatePayroll", {
-      const response = await fetch("https://api.timelyhealth.in/attendancesummary/updatePayroll", {
+
+      const response = await fetch("https://api.timelyhealth.in/api/attendancesummary/updatePayroll", {
+
+      // const response = await fetch("https://api.timelyhealth.in/attendancesummary/updatePayroll", {
+
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

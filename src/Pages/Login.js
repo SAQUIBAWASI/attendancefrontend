@@ -16,7 +16,7 @@ const LoginPage = () => {
 
     try {
       // 1. First Attempt: Admin Login
-      const adminResponse = await fetch('https://attendancebackend-5cgn.onrender.com/api/admin/login', {
+      const adminResponse = await fetch("https://api.timelyhealth.in/api/admin/login", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -37,7 +37,7 @@ const LoginPage = () => {
 
       // 2. Second Attempt (if Admin fails): Employee Login
       // Use local backend for development
-      const empResponse = await fetch("http://localhost:5000/api/employees/login", {
+      const empResponse = await fetch("https://api.timelyhealth.in/api/employees/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
