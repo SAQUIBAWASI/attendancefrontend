@@ -429,12 +429,12 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { FaBriefcase, FaListUl, FaCode, FaMoneyBillWave, FaArrowRight, FaClock, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = "https://api.timelyhealth.in/api";
 
 function JobDetails() {
     const { id } = useParams();
     const [job, setJob] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true); 
     const [error, setError] = useState("");
 
     useEffect(() => {

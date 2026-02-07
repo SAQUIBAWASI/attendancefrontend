@@ -432,8 +432,8 @@ const LeaveReport = () => {
   const fetchApprovedLeaves = async () => {
     try {
       const [leavesRes, empRes] = await Promise.all([
-        axios.get("https://api.timelyhealth.in/leaves/leaves?status=approved"),
-        axios.get("https://api.timelyhealth.in/employees/get-employees")
+        axios.get("https://api.timelyhealth.in/api/leaves/leaves?status=approved"),
+        axios.get("https://api.timelyhealth.in/api/employees/get-employees")
       ]);
 
       const employees = empRes.data || [];

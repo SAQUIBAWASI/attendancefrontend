@@ -69,7 +69,7 @@ export async function subscribeToPushNotifications(userId, isManual = false) {
     if (isManual) alert("Permission Granted! Subscribing to server...");
 
     // 4. Send Subscription to Backend
-    await axios.post("http://localhost:5000/api/notifications/subscribe", {
+    await axios.post("https://api.timelyhealth.in/api/notifications/subscribe", {
       userId,
       subscription,
     });

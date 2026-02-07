@@ -674,7 +674,7 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
 
                   {/* DROPDOWN ITEMS */}
                   {openDropdown === item.name && !isCollapsed && (
-                    <ul className="mt-0.5 ml-9 space-y-0.5 relative before:absolute before:left-[-1.1rem] before:top-0 before:bottom-1 before:w-[1px] before:bg-blue-700">
+                    <ul className="mt-0.5  space-y-0.5 relative before:absolute before:left-[-1.1rem] before:top-0 before:bottom-1 before:w-[1px] before:bg-blue-700">
                       {item.dropdown.map((sub, i) => (
                         <li key={i}>
                           <Link
