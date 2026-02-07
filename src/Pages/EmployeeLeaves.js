@@ -338,7 +338,7 @@ const EmployeeLeaves = () => {
               </h2>
               <button
                 onClick={() => setIsLeaveModalOpen(true)}
-                className="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                className="px-4 py-2 text-sm font-bold text-white transition-all bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700"
               >
                 + Apply Leave
               </button>
@@ -383,16 +383,16 @@ const EmployeeLeaves = () => {
           {filteredLeaves.length === 0 ? (
             <p className="text-gray-500">No leave records found.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border text-sm min-w-[600px]">
-                <thead className="text-gray-700 bg-gray-200">
+            <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+              <table className="min-w-full">
+                <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
                   <tr>
-                    <th className="p-2 border">Leave Type</th>
-                    <th className="p-2 border">Start Date</th>
-                    <th className="p-2 border">End Date</th>
-                    <th className="p-2 border">Days</th>
-                    <th className="p-2 border">Reason</th>
-                    <th className="p-2 border">Status</th>
+                    <th className="px-4 py-2">Leave Type</th>
+                    <th className="px-4 py-2">Start Date</th>
+                    <th className="px-4 py-2">End Date</th>
+                    <th className="px-4 py-2">Days</th>
+                    <th className="px-4 py-2">Reason</th>
+                    <th className="px-4 py-2">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -433,17 +433,17 @@ const EmployeeLeaves = () => {
 
       {/* Apply Leave Modal */}
       {isLeaveModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <div className="flex justify-between items-center mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-800">Apply for Leave</h3>
               <button onClick={() => setIsLeaveModalOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
             </div>
 
             <form onSubmit={handleLeaveSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
-                <select name="leaveType" value={leaveFormData.leaveType} onChange={handleLeaveChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Leave Type</label>
+                <select name="leaveType" value={leaveFormData.leaveType} onChange={handleLeaveChange} className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" required>
                   <option value="casual">Casual</option>
                   <option value="sick">Sick</option>
                   <option value="earned">Earned</option>
@@ -452,23 +452,23 @@ const EmployeeLeaves = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                  <input name="startDate" type="date" value={leaveFormData.startDate} onChange={handleLeaveChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Start Date</label>
+                  <input name="startDate" type="date" value={leaveFormData.startDate} onChange={handleLeaveChange} className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                  <input name="endDate" type="date" value={leaveFormData.endDate} onChange={handleLeaveChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
+                  <label className="block mb-1 text-sm font-medium text-gray-700">End Date</label>
+                  <input name="endDate" type="date" value={leaveFormData.endDate} onChange={handleLeaveChange} className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" required />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Total Days</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Total Days</label>
                 <input name="days" type="number" value={leaveFormData.days} readOnly className="w-full p-2 bg-gray-100 border rounded-lg outline-none" placeholder="0" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
-                <textarea name="reason" value={leaveFormData.reason} onChange={handleLeaveChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" rows="3" placeholder="Reason for leave" required></textarea>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Reason</label>
+                <textarea name="reason" value={leaveFormData.reason} onChange={handleLeaveChange} className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Reason for leave" required></textarea>
               </div>
 
               <div className="flex gap-3 pt-2">

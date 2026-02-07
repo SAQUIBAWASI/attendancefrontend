@@ -1,6 +1,5 @@
 // src/pages/MyAttendance.jsx
 import { useEffect, useState } from "react";
-import { CSVLink } from "react-csv";
 import { useNavigate } from "react-router-dom";
 
 
@@ -136,24 +135,24 @@ export default function MyAttendance() {
       <div className="flex flex-col flex-1">
 
 
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 flex justify-center items-start">
-          <div className="w-full max-w-7xl bg-white shadow-xl rounded-2xl p-4 sm:p-6 lg:p-8">
+        <div className="flex items-start justify-center flex-1 p-4 sm:p-6 lg:p-8">
+          <div className="w-full p-4 bg-white shadow-xl max-w-7xl rounded-2xl sm:p-6 lg:p-8">
             {/* Header Section */}
-            {/* <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
+            {/* <div className="flex flex-col items-start justify-between gap-4 mb-6 lg:flex-row lg:items-center">
               <div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-teal-600">
+                <h2 className="text-2xl font-extrabold text-transparent sm:text-3xl bg-clip-text bg-gradient-to-r from-green-600 to-teal-600">
                   📅 My Attendance Records
                 </h2>
-                <p className="text-gray-600 mt-1">View and manage your attendance history</p>
+                <p className="mt-1 text-gray-600">View and manage your attendance history</p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+              <div className="flex flex-col w-full gap-3 sm:flex-row lg:w-auto">
              
 
                 <CSVLink
                   data={csvData}
                   filename={`my_attendance_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-semibold text-center flex items-center justify-center gap-2"
+                  className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-center text-white transition bg-green-600 rounded-lg hover:bg-green-700"
                 >
                   ⬇ Download CSV
                 </CSVLink>
@@ -161,11 +160,11 @@ export default function MyAttendance() {
             </div> */}
 
             {/* Search and Filter Section */}
-            <div className="bg-blue-50 rounded-xl p-4 mb-6 border border-blue-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 mb-6 border border-blue-200 bg-blue-50 rounded-xl">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {/* Date Search */}
                 <div>
-                  <label className="block text-sm font-semibold text-blue-800 mb-2">
+                  <label className="block mb-2 text-sm font-semibold text-blue-800">
                     📅 Search by Date
                   </label>
                   <input
@@ -178,7 +177,7 @@ export default function MyAttendance() {
 
                 {/* Status Filter */}
                 <div>
-                  <label className="block text-sm font-semibold text-blue-800 mb-2">
+                  <label className="block mb-2 text-sm font-semibold text-blue-800">
                     📊 Status Filter
                   </label>
                   <select
@@ -194,7 +193,7 @@ export default function MyAttendance() {
 
                 {/* Onsite Filter */}
                 <div>
-                  <label className="block text-sm font-semibold text-blue-800 mb-2">
+                  <label className="block mb-2 text-sm font-semibold text-blue-800">
                     🏢 Onsite Filter
                   </label>
                   <select
@@ -212,7 +211,7 @@ export default function MyAttendance() {
                 <div className="flex items-end">
                   <button
                     onClick={clearFilters}
-                    className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition text-sm font-semibold"
+                    className="w-full px-4 py-2 text-sm font-semibold text-white transition bg-gray-600 rounded-lg hover:bg-gray-700"
                   >
                     🗑️ Clear Filters
                   </button>
@@ -220,12 +219,12 @@ export default function MyAttendance() {
               </div>
 
               {/* Results Count */}
-              <div className="mt-4 flex flex-col sm:flex-row justify-between items-center text-sm text-blue-700">
+              <div className="flex flex-col items-center justify-between mt-4 text-sm text-blue-700 sm:flex-row">
                 <span>
                   Showing <strong>{filteredRecords.length}</strong> of <strong>{records.length}</strong> records
                 </span>
                 {filteredRecords.length !== records.length && (
-                  <span className="text-orange-600 font-semibold">
+                  <span className="font-semibold text-orange-600">
                     🔍 Filters applied
                   </span>
                 )}
@@ -234,29 +233,29 @@ export default function MyAttendance() {
 
             {/* Loading / Error / No Data */}
             {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-                <p className="text-gray-600 mt-4 text-lg">Loading your attendance records...</p>
+              <div className="py-12 text-center">
+                <div className="w-12 h-12 mx-auto border-b-2 border-green-600 rounded-full animate-spin"></div>
+                <p className="mt-4 text-lg text-gray-600">Loading your attendance records...</p>
               </div>
             ) : error ? (
-              <div className="text-center py-8 bg-red-50 rounded-lg border border-red-200">
-                <p className="text-red-600 text-lg font-semibold">{error}</p>
+              <div className="py-8 text-center border border-red-200 rounded-lg bg-red-50">
+                <p className="text-lg font-semibold text-red-600">{error}</p>
                 <button
                   onClick={() => window.location.reload()}
-                  className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                  className="px-6 py-2 mt-4 text-white transition bg-red-600 rounded-lg hover:bg-red-700"
                 >
                   🔄 Retry
                 </button>
               </div>
             ) : filteredRecords.length === 0 ? (
-              <div className="text-center py-12 bg-yellow-50 rounded-lg border border-yellow-200">
-                <p className="text-yellow-700 text-lg font-semibold">
+              <div className="py-12 text-center border border-yellow-200 rounded-lg bg-yellow-50">
+                <p className="text-lg font-semibold text-yellow-700">
                   {records.length === 0 ? "No attendance records found." : "No records match your filters."}
                 </p>
                 {records.length > 0 && (
                   <button
                     onClick={clearFilters}
-                    className="mt-4 px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition"
+                    className="px-6 py-2 mt-4 text-white transition bg-yellow-600 rounded-lg hover:bg-yellow-700"
                   >
                     🔄 Clear Filters
                   </button>
@@ -265,18 +264,18 @@ export default function MyAttendance() {
             ) : (
               <>
                 {/* Table */}
-                <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-gradient-to-r from-green-100 to-teal-100 text-gray-700">
+                <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+                  <table className="min-w-full">
+                    <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
                       <tr>
-                        <th className="px-4 py-3 text-left font-semibold">Date</th>
-                        <th className="px-4 py-3 text-left font-semibold">Check-In Time</th>
-                        <th className="px-4 py-3 text-left font-semibold">Check-Out Time</th>
-                        <th className="px-4 py-3 text-left font-semibold">Total Hours</th>
-                        <th className="px-4 py-3 text-left font-semibold">Distance (m)</th>
-                        <th className="px-4 py-3 text-left font-semibold">Onsite</th>
-                        <th className="px-4 py-3 text-left font-semibold">Reason</th>
-                        <th className="px-4 py-3 text-left font-semibold">Status</th>
+                        <th className="px-4 py-2 font-semibold text-left">Date</th>
+                        <th className="px-4 py-2 font-semibold text-left">Check-In Time</th>
+                        <th className="px-4 py-2 font-semibold text-left">Check-Out Time</th>
+                        <th className="px-4 py-2 font-semibold text-left">Total Hours</th>
+                        <th className="px-4 py-2 font-semibold text-left">Distance (m)</th>
+                        <th className="px-4 py-2 font-semibold text-left">Onsite</th>
+                        <th className="px-4 py-2 font-semibold text-left">Reason</th>
+                        <th className="px-4 py-2 font-semibold text-left">Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -286,34 +285,34 @@ export default function MyAttendance() {
                           className={`border-t transition-all duration-200 ${idx % 2 === 0 ? "bg-gray-50" : "bg-white"
                             } hover:bg-green-50 hover:shadow-sm`}
                         >
-                          <td className="px-4 py-3 font-medium text-gray-900">
+                          <td className="px-4 py-2 font-medium text-gray-900">
                             {formatDate(rec.checkInTime || rec.createdAt)}
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2">
                             <div className="flex items-center gap-2">
                               <span className="text-green-600">🟢</span>
                               {formatTime(rec.checkInTime)}
                             </div>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2">
                             <div className="flex items-center gap-2">
                               <span className="text-red-600">🔴</span>
                               {formatTime(rec.checkOutTime)}
                             </div>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2">
                             <span className={`font-semibold ${rec.totalHours >= 8 ? 'text-green-600' :
                                 rec.totalHours >= 4 ? 'text-orange-600' : 'text-red-600'
                               }`}>
                               {rec.totalHours ? rec.totalHours.toFixed(2) : "0.00"}h
                             </span>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2">
                             <span className="font-mono text-gray-700">
                               {rec.distance?.toFixed(0) || "0"}m
                             </span>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2">
                             <span
                               className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.onsite
                                   ? "bg-green-200 text-green-800 border border-green-300"
@@ -323,12 +322,12 @@ export default function MyAttendance() {
                               {rec.onsite ? "🏢 Yes" : "🏠 No"}
                             </span>
                           </td>
-                          <td className="px-4 py-3">
-                            <span className="text-sm text-gray-700 bg-gray-100 px-2 py-1 rounded">
+                          <td className="px-4 py-2">
+                            <span className="px-2 py-1 text-sm text-gray-700 bg-gray-100 rounded">
                               {rec.reason || "Not specified"}
                             </span>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-2">
                             <span
                               className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.status === "checked-in"
                                   ? "bg-blue-200 text-blue-800 border border-blue-300"
@@ -346,7 +345,7 @@ export default function MyAttendance() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
+                  <div className="flex flex-col items-center justify-between gap-2 mt-4 sm:flex-row">
                     <div className="text-sm text-gray-600">
                       Showing <strong>{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredRecords.length)}</strong> of{" "}
                       <strong>{filteredRecords.length}</strong> records
@@ -356,7 +355,7 @@ export default function MyAttendance() {
                       <button
                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
-                        className={`px-4 py-2 rounded-lg transition ${currentPage === 1
+                        className={`px-2 py-1 rounded-lg transition ${currentPage === 1
                             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                             : "bg-blue-600 text-white hover:bg-blue-700"
                           }`}
@@ -381,7 +380,7 @@ export default function MyAttendance() {
                             <button
                               key={pageNum}
                               onClick={() => setCurrentPage(pageNum)}
-                              className={`px-3 py-2 rounded-lg transition ${currentPage === pageNum
+                              className={`px-2 py-2 rounded-lg transition ${currentPage === pageNum
                                   ? "bg-green-600 text-white font-semibold"
                                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                                 }`}
@@ -395,7 +394,7 @@ export default function MyAttendance() {
                       <button
                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                         disabled={currentPage === totalPages}
-                        className={`px-4 py-2 rounded-lg transition ${currentPage === totalPages
+                        className={`px-2 py-1 rounded-lg transition ${currentPage === totalPages
                             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                             : "bg-blue-600 text-white hover:bg-blue-700"
                           }`}
@@ -407,24 +406,24 @@ export default function MyAttendance() {
                 )}
 
                 {/* Summary Stats */}
-                <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="grid grid-cols-2 gap-4 mt-6 text-center md:grid-cols-4">
+                  <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
                     <div className="text-2xl font-bold text-blue-600">{records.length}</div>
                     <div className="text-sm text-blue-800">Total Records</div>
                   </div>
-                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <div className="p-4 border border-green-200 rounded-lg bg-green-50">
                     <div className="text-2xl font-bold text-green-600">
                       {records.filter(r => r.onsite).length}
                     </div>
                     <div className="text-sm text-green-800">Onsite Days</div>
                   </div>
-                  <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                  <div className="p-4 border border-orange-200 rounded-lg bg-orange-50">
                     <div className="text-2xl font-bold text-orange-600">
                       {records.filter(r => r.status === 'checked-in').length}
                     </div>
                     <div className="text-sm text-orange-800">Checked In</div>
                   </div>
-                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                  <div className="p-4 border border-purple-200 rounded-lg bg-purple-50">
                     <div className="text-2xl font-bold text-purple-600">
                       {records.filter(r => r.totalHours >= 8).length}
                     </div>
