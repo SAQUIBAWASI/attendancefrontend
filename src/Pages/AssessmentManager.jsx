@@ -52,7 +52,7 @@ const AssessmentManager = () => {
         try {
             const res = await axios.get(`${API_BASE_URL}/roles/all`);
             if (res.data.success) {
-                setRoles(res.data.roles || []);
+                setRoles(res.data.data || []);
             }
         } catch (err) {
             console.error("Fetch roles error:", err);
@@ -73,6 +73,7 @@ const AssessmentManager = () => {
     };
 
     const openCreateModal = () => {
+        fetchRoles();
         setIsEditing(false);
         setFormData({
             title: "",
@@ -86,6 +87,7 @@ const AssessmentManager = () => {
     };
 
     const openEditModal = (quiz) => {
+        fetchRoles();
         setIsEditing(true);
         setFormData({
             _id: quiz._id,
@@ -529,6 +531,14 @@ const AssessmentManager = () => {
                                         ))}
                                     </div>
                                 </div>
+
+                                   <button
+                                            type="button"
+                                            onClick={addQuestion}
+                                            className="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-blue-600 hover:text-white transition-all flex items-center gap-2"
+                                        >
+                                            <FaPlusCircle /> Add Question
+                                        </button>
 
                                 {/* Modal Footer */}
                                 <div className="pt-6 border-t border-gray-50 flex gap-4 sticky bottom-0 bg-white pb-2">
