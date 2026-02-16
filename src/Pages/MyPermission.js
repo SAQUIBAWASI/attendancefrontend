@@ -1,8 +1,9 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL, API_DOMAIN } from "../config";
 
-const BASE_URL = "https://api.timelyhealth.in/";
+const BASE_URL = API_DOMAIN;
 
 const EmployeePermissions = () => {
   const [permissions, setPermissions] = useState([]);
@@ -55,7 +56,7 @@ const EmployeePermissions = () => {
     const fetchPermissions = async () => {
       try {
         const res = await axios.get(
-          `https://api.timelyhealth.in/api/permissions/my-permissions/${employeeId}`
+          `${API_BASE_URL}/permissions/my-permissions/${employeeId}`
         );
 
         if (Array.isArray(res.data)) {

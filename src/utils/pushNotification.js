@@ -1,4 +1,5 @@
 import axios from "axios";
+import { API_BASE_URL } from "../config";
 
 const PUBLIC_VAPID_KEY = "BOFQxoNLt_G7fyVy9hcbd9NAHowswnwky_6B-wVgRm-j8JF0oZRkE4yezPUdMAN3BpMrZ1HGldgH7lTw34W5yBQ";
 
@@ -36,15 +37,15 @@ export async function subscribeToPushNotifications(userId, isManual = false) {
   }
 
   if (!userId) {
-      console.error("User ID is missing!");
-      if (isManual) alert("Error: User ID is missing! Cannot subscribe.");
-      return;
+    console.error("User ID is missing!");
+    if (isManual) alert("Error: User ID is missing! Cannot subscribe.");
+    return;
   }
 
   if (Notification.permission === 'denied') {
-      console.warn("Notifications blocked.");
-      if (isManual) alert("Notifications are BLOCKED! Please click the lock icon in the URL bar and 'Reset Permissions' or Allow Notifications.");
-      return;
+    console.warn("Notifications blocked.");
+    if (isManual) alert("Notifications are BLOCKED! Please click the lock icon in the URL bar and 'Reset Permissions' or Allow Notifications.");
+    return;
   }
 
   try {
@@ -52,7 +53,7 @@ export async function subscribeToPushNotifications(userId, isManual = false) {
 
     // 1. Register Service Worker
     const register = await navigator.serviceWorker.register("/sw.js", {
-        scope: "/",
+      scope: "/",
     });
     console.log("Service Worker Registered...");
 
@@ -69,7 +70,7 @@ export async function subscribeToPushNotifications(userId, isManual = false) {
     if (isManual) alert("Permission Granted! Subscribing to server...");
 
     // 4. Send Subscription to Backend
-    await axios.post("https://api.timelyhealth.in/api/notifications/subscribe", {
+    await axios.post(`${API_BASE_URL}/notifications/subscribe`, {
       userId,
       subscription,
     });

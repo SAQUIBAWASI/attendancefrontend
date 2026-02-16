@@ -162,6 +162,7 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 
 const RegisterPage = () => {
     const [formData, setFormData] = useState({
@@ -189,7 +190,7 @@ const RegisterPage = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:5000/api/client-requests/register', {
+            const response = await fetch(`${API_BASE_URL}/client-requests/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
@@ -240,24 +241,24 @@ const RegisterPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Full Name *</label>
-                                <input 
-                                    type="text" 
-                                    name="fullName" 
-                                    value={formData.fullName} 
-                                    onChange={handleChange} 
-                                    required 
-                                    className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                <input
+                                    type="text"
+                                    name="fullName"
+                                    value={formData.fullName}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Email *</label>
-                                <input 
-                                    type="email" 
-                                    name="email" 
-                                    value={formData.email} 
-                                    onChange={handleChange} 
-                                    required 
-                                    className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
                         </div>
@@ -265,24 +266,24 @@ const RegisterPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Mobile Number *</label>
-                                <input 
-                                    type="text" 
-                                    name="mobileNumber" 
-                                    value={formData.mobileNumber} 
-                                    onChange={handleChange} 
-                                    required 
-                                    className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                <input
+                                    type="text"
+                                    name="mobileNumber"
+                                    value={formData.mobileNumber}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Company Name *</label>
-                                <input 
-                                    type="text" 
-                                    name="companyName" 
-                                    value={formData.companyName} 
-                                    onChange={handleChange} 
-                                    required 
-                                    className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                <input
+                                    type="text"
+                                    name="companyName"
+                                    value={formData.companyName}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
                         </div>
@@ -290,11 +291,11 @@ const RegisterPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Number of Employees *</label>
-                                <select 
-                                    name="numberOfEmployees" 
-                                    value={formData.numberOfEmployees} 
-                                    onChange={handleChange} 
-                                    required 
+                                <select
+                                    name="numberOfEmployees"
+                                    value={formData.numberOfEmployees}
+                                    onChange={handleChange}
+                                    required
                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="">Select</option>
@@ -308,26 +309,26 @@ const RegisterPage = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Country *</label>
-                                <input 
-                                    type="text" 
-                                    name="country" 
-                                    value={formData.country} 
-                                    onChange={handleChange} 
-                                    required 
-                                    className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                <input
+                                    type="text"
+                                    name="country"
+                                    value={formData.country}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Address *</label>
-                            <input 
-                                type="text" 
-                                name="address" 
-                                value={formData.address} 
-                                onChange={handleChange} 
-                                required 
-                                className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            <input
+                                type="text"
+                                name="address"
+                                value={formData.address}
+                                onChange={handleChange}
+                                required
+                                className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
 

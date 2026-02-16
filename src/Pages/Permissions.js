@@ -1,7 +1,8 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { API_BASE_URL } from "../config";
 
-const BASE_URL = "https://api.timelyhealth.in/";
+const BASE_URL = API_BASE_URL;
 
 export const Permissions = () => {
   const [permissions, setPermissions] = useState([]);
@@ -10,7 +11,7 @@ export const Permissions = () => {
 
   const fetchAllPermissions = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}api/permissions/all`);
+      const res = await axios.get(`${BASE_URL}/permissions/all`);
       setPermissions(res.data);
     } catch (err) {
       console.error("Error fetching permissions:", err);

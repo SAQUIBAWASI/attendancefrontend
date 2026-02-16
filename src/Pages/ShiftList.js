@@ -111,6 +111,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
 export default function ShiftList() {
   const [shifts, setShifts] = useState([]);
@@ -120,7 +121,7 @@ export default function ShiftList() {
   const fetchShifts = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("https://api.timelyhealth.in/api/shifts/all");
+      const res = await axios.get(`${API_BASE_URL}/shifts/all`);
 
       console.log("Shifts API Response:", res.data);
 
@@ -146,7 +147,7 @@ export default function ShiftList() {
     if (!window.confirm("Are you sure you want to delete this shift?")) return;
 
     try {
-      await axios.delete(`https://api.timelyhealth.in/api/shifts/${id}`);
+      await axios.delete(`${API_BASE_URL}/shifts/${id}`);
       alert("✅ Shift deleted successfully");
       fetchShifts(); // Refresh list after deletion
     } catch (err) {

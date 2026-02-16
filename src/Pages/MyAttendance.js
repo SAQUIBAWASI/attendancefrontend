@@ -1,5 +1,5 @@
 // src/pages/MyAttendance.jsx
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 
@@ -302,7 +302,7 @@ export default function MyAttendance() {
                           </td>
                           <td className="px-4 py-2">
                             <span className={`font-semibold ${rec.totalHours >= 8 ? 'text-green-600' :
-                                rec.totalHours >= 4 ? 'text-orange-600' : 'text-red-600'
+                              rec.totalHours >= 4 ? 'text-orange-600' : 'text-red-600'
                               }`}>
                               {rec.totalHours ? rec.totalHours.toFixed(2) : "0.00"}h
                             </span>
@@ -315,8 +315,8 @@ export default function MyAttendance() {
                           <td className="px-4 py-2">
                             <span
                               className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.onsite
-                                  ? "bg-green-200 text-green-800 border border-green-300"
-                                  : "bg-red-200 text-red-800 border border-red-300"
+                                ? "bg-green-200 text-green-800 border border-green-300"
+                                : "bg-red-200 text-red-800 border border-red-300"
                                 }`}
                             >
                               {rec.onsite ? "🏢 Yes" : "🏠 No"}
@@ -330,8 +330,8 @@ export default function MyAttendance() {
                           <td className="px-4 py-2">
                             <span
                               className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.status === "checked-in"
-                                  ? "bg-blue-200 text-blue-800 border border-blue-300"
-                                  : "bg-purple-200 text-purple-800 border border-purple-300"
+                                ? "bg-blue-200 text-blue-800 border border-blue-300"
+                                : "bg-purple-200 text-purple-800 border border-purple-300"
                                 }`}
                             >
                               {rec.status}
@@ -356,8 +356,8 @@ export default function MyAttendance() {
                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
                         className={`px-2 py-1 rounded-lg transition ${currentPage === 1
-                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            : "bg-blue-600 text-white hover:bg-blue-700"
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
                           }`}
                       >
                         ← Previous
@@ -381,8 +381,8 @@ export default function MyAttendance() {
                               key={pageNum}
                               onClick={() => setCurrentPage(pageNum)}
                               className={`px-2 py-2 rounded-lg transition ${currentPage === pageNum
-                                  ? "bg-green-600 text-white font-semibold"
-                                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                ? "bg-green-600 text-white font-semibold"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                                 }`}
                             >
                               {pageNum}
@@ -395,8 +395,8 @@ export default function MyAttendance() {
                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                         disabled={currentPage === totalPages}
                         className={`px-2 py-1 rounded-lg transition ${currentPage === totalPages
-                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            : "bg-blue-600 text-white hover:bg-blue-700"
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
                           }`}
                       >
                         Next →

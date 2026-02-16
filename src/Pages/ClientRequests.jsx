@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { FaBuilding, FaCheck, FaMapMarkerAlt, FaTimes, FaUsers } from "react-icons/fa";
+import { API_BASE_URL } from "../config";
 
 const ClientRequests = () => {
     const [requests, setRequests] = useState([]);
@@ -13,7 +14,7 @@ const ClientRequests = () => {
 
     const fetchRequests = async () => {
         try {
-            const response = await axios.get("http://localhost:5000/api/client-requests/requests");
+            const response = await axios.get(`${API_BASE_URL}/client-requests/requests`);
             if (response.data.success) {
                 setRequests(response.data.requests);
             } else {
@@ -30,7 +31,7 @@ const ClientRequests = () => {
         if (!window.confirm(`Are you sure you want to ${status === 'Approved' ? 'Accept' : 'Reject'} this request?`)) return;
 
         try {
-            const response = await axios.put(`http://localhost:5000/api/client-requests/request/${id}`, { status });
+            const response = await axios.put(`${API_BASE_URL}/client-requests/request/${id}`, { status });
             if (response.data.success) {
                 alert(response.data.message);
                 fetchRequests(); // Refresh list
@@ -86,9 +87,9 @@ const ClientRequests = () => {
                                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                         <div className="text-center">
                                             <p className="text-gray-900 font-medium">
-                                                {new Date(req.createdAt).toLocaleDateString('en-US', { 
-                                                    month: 'short', 
-                                                    day: 'numeric' 
+                                                {new Date(req.createdAt).toLocaleDateString('en-US', {
+                                                    month: 'short',
+                                                    day: 'numeric'
                                                 })}
                                             </p>
                                             <p className="text-gray-500 text-xs">

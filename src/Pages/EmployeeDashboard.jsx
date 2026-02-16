@@ -9,6 +9,7 @@ import {
 } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { subscribeToPushNotifications } from "../utils/pushNotification";
+import { API_BASE_URL } from "../config";
 
 
 const EmployeeDashboard = () => {
@@ -30,8 +31,8 @@ const EmployeeDashboard = () => {
 
     const fetchData = async () => {
       try {
-        const BASE_URL = "https://api.timelyhealth.in/";
-        const API_5000 = "https://api.timelyhealth.in/";
+        const BASE_URL = API_BASE_URL.replace(/\/api$/, "/");
+        const API_5000 = API_BASE_URL.replace(/\/api$/, "/");
 
         // 1. Fetch Profile
         const profileRes = await axios.get(`${BASE_URL}api/employees/get-employee?email=${email}`);

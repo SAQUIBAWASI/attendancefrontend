@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,7 +17,7 @@ const LoginPage = () => {
 
     try {
       // 1. First Attempt: Admin Login
-      const adminResponse = await fetch("https://api.timelyhealth.in/api/admin/login", {
+      const adminResponse = await fetch(`${API_BASE_URL}/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -37,7 +38,7 @@ const LoginPage = () => {
 
       // 2. Second Attempt (if Admin fails): Employee Login
       // Use local backend for development
-      const empResponse = await fetch("https://api.timelyhealth.in/api/employees/login", {
+      const empResponse = await fetch(`${API_BASE_URL}/employees/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -75,7 +76,7 @@ const LoginPage = () => {
         <div className="p-8 md:p-12 flex flex-col justify-center">
           <div className="text-center mb-6">
             <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
-              LOG IN 
+              LOG IN
             </h1>
             <p className="text-gray-600 text-sm mt-1">Unified Login Access</p>
           </div>
@@ -137,8 +138,8 @@ const LoginPage = () => {
             </button>
           </form>
           <div className="text-center mt-4">
-              <p className="text-sm text-gray-600">Don't have an account? <a href="/register" className="text-blue-600 hover:underline">Register here</a></p>
-            </div>
+            <p className="text-sm text-gray-600">Don't have an account? <a href="/register" className="text-blue-600 hover:underline">Register here</a></p>
+          </div>
         </div>
 
         {/* Right Side - Image */}

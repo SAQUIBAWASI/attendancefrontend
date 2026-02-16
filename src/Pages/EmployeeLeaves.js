@@ -145,6 +145,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
 
 const EmployeeLeaves = () => {
@@ -196,7 +197,7 @@ const EmployeeLeaves = () => {
     const fetchLeaves = async () => {
       try {
         const resp = await axios.get(
-          `https://api.timelyhealth.in/api/leaves/employeeleaves/${employeeId}`
+          `${API_BASE_URL}/leaves/employeeleaves/${employeeId}`
         );
 
         if (resp.data && resp.data.success) {
@@ -298,7 +299,7 @@ const EmployeeLeaves = () => {
     };
 
     try {
-      const response = await axios.post("https://api.timelyhealth.in/api/leaves/add-leave", payload);
+      const response = await axios.post(`${API_BASE_URL}/leaves/add-leave`, payload);
       if (response.status === 201) {
         alert("✅ Leave application submitted successfully!");
         setLeaveFormData({

@@ -94,9 +94,9 @@
 
 //   return (
 //     <div className="flex min-h-screen bg-gray-100">
-    
+
 //       <div className="flex flex-col flex-1">
-        
+
 
 //         <main className="p-4 sm:p-6 lg:p-8">
 //           <div className="max-w-5xl p-6 mx-auto bg-white rounded-lg shadow-md">
@@ -234,7 +234,7 @@
 //       try {
 //         setLoading(true);
 //         console.log("🔍 Fetching shift for employee:", employeeId);
-        
+
 //         const res = await axios.get(
 //           `https://api.timelyhealth.in/api/shifts/employee/${employeeId}`
 //         );
@@ -265,15 +265,15 @@
 //   // ✅ FIX: Update determineShiftStatus function
 //   const determineShiftStatus = (shiftData) => {
 //     if (!shiftData) return;
-    
+
 //     const now = new Date();
-    
+
 //     // ✅ Extract startTime and endTime from shiftData
 //     const startTimeStr = shiftData.startTime || "10:00";
 //     const endTimeStr = shiftData.endTime || "19:00";
-    
+
 //     console.log("⏰ Time check:", { startTimeStr, endTimeStr });
-    
+
 //     const [startH, startM] = startTimeStr.split(":").map(Number);
 //     const [endH, endM] = endTimeStr.split(":").map(Number);
 
@@ -405,7 +405,7 @@
 //                         {status}
 //                       </span>
 //                     </div>
-                    
+
 //                     <div className="space-y-3">
 //                       <div className="flex items-center justify-between">
 //                         <span className="font-medium text-gray-700">Shift Type</span>
@@ -451,6 +451,7 @@
 
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config";
 
 const EmployeeShift = () => {
   const [shifts, setShifts] = useState([]);
@@ -482,7 +483,7 @@ const EmployeeShift = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `https://api.timelyhealth.in/api/shifts/employee/${employeeId}`
+          `${API_BASE_URL}/shifts/employee/${employeeId}`
         );
 
         if (res.data && res.data.success && res.data.data) {
@@ -508,14 +509,14 @@ const EmployeeShift = () => {
   // Determine shift status for each shift
   const determineShiftStatus = (shift) => {
     if (!shift) return "Not Available";
-    
+
     const now = new Date();
     const today = now.toISOString().split('T')[0];
     const shiftDate = shift.date || today;
-    
+
     const startTimeStr = shift.startTime || "10:00";
     const endTimeStr = shift.endTime || "19:00";
-    
+
     const [startH, startM] = startTimeStr.split(":").map(Number);
     const [endH, endM] = endTimeStr.split(":").map(Number);
 
@@ -612,13 +613,12 @@ const EmployeeShift = () => {
                       <td className="p-2 border">{shift.endTime}</td>
                       <td className="p-2 border">
                         <span
-                          className={`px-2 py-1 rounded text-xs font-semibold ${
-                            statusUpdates[index] === "Ongoing"
+                          className={`px-2 py-1 rounded text-xs font-semibold ${statusUpdates[index] === "Ongoing"
                               ? "bg-green-200 text-green-800"
                               : statusUpdates[index] === "Upcoming"
                                 ? "bg-blue-200 text-blue-800"
                                 : "bg-gray-200 text-gray-800"
-                          }`}
+                            }`}
                         >
                           {statusUpdates[index] || "Checking..."}
                         </span>

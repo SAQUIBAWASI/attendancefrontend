@@ -3,7 +3,9 @@ import { utils, writeFile } from 'xlsx';
 import axios from 'axios';
 import { FaTrash } from 'react-icons/fa';
 
-const API = 'http://31.97.206.144:6098/api/admin';
+import { API_BASE_URL } from '../config';
+
+const API = `${API_BASE_URL}/admin`;
 
 const AllQuizzesTable = () => {
   const [quizzes, setQuizzes] = useState([]);
@@ -156,9 +158,8 @@ const AllQuizzesTable = () => {
               <button
                 key={i}
                 onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 rounded ${
-                  currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'
-                }`}
+                className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                  }`}
               >
                 {i + 1}
               </button>

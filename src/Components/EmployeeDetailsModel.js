@@ -1,18 +1,19 @@
 // src/components/EmployeeDetailsModal.jsx
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { API_BASE_URL } from '../config';
 import {
-    FaBuilding,
-    FaCalendar,
-    FaClock,
-    FaEnvelope,
-    FaIdCard,
-    FaMapMarkerAlt,
-    FaPhone,
-    FaSearch,
-    FaTimes,
-    FaUser,
-    FaUserTie
+  FaBuilding,
+  FaCalendar,
+  FaClock,
+  FaEnvelope,
+  FaIdCard,
+  FaMapMarkerAlt,
+  FaPhone,
+  FaSearch,
+  FaTimes,
+  FaUser,
+  FaUserTie
 } from 'react-icons/fa';
 
 const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
@@ -29,16 +30,16 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
     try {
       setLoading(true);
       setError('');
-      
+
       let endpoint = '';
       if (type === 'department') {
-        endpoint = `http://localhost:5000/api/department/${id}/employees`;
+        endpoint = `${API_BASE_URL}/department/${id}/employees`;
       } else if (type === 'role') {
-        endpoint = `http://localhost:5000/api/roles/${id}/employees`;
+        endpoint = `${API_BASE_URL}/roles/${id}/employees`;
       }
-      
+
       const response = await axios.get(endpoint);
-      
+
       if (response.data.success) {
         setEmployees(response.data.data.employees || []);
       } else {
@@ -54,7 +55,7 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
 
   const filteredEmployees = employees.filter(employee => {
     if (!employee) return false;
-    
+
     return (
       (employee.name?.toLowerCase().includes(searchTerm.toLowerCase()) || '') ||
       (employee.email?.toLowerCase().includes(searchTerm.toLowerCase()) || '') ||
@@ -88,8 +89,8 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
                 <span className="text-lg text-gray-600">- {getTypeName()} Employees</span>
               </h3>
               <p className="text-gray-600 mt-1">
-                {type === 'department' 
-                  ? 'All employees in this department' 
+                {type === 'department'
+                  ? 'All employees in this department'
                   : 'All employees with this role'}
               </p>
             </div>
@@ -245,8 +246,8 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
                 {searchTerm ? 'No employees found' : 'No employees yet'}
               </h3>
               <p className="text-gray-500">
-                {searchTerm 
-                  ? 'Try a different search term' 
+                {searchTerm
+                  ? 'Try a different search term'
                   : `No employees are assigned to this ${type} yet`}
               </p>
             </div>

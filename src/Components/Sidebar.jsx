@@ -16,7 +16,7 @@
 //   useEffect(() => {
 //     const path = location.pathname;
 //     setActiveItem(path);
-    
+
 //     const pageName = getPageNameFromPath(path);
 //     setCurrentPage(pageName);
 //   }, [location]);
@@ -44,7 +44,7 @@
 //       "/empmanagement": "Employee Management",
 //       "/permissions": "Permissions"
 //     };
-    
+
 //     return pathMap[path] || "Dashboard";
 //   };
 
@@ -397,7 +397,7 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
   useEffect(() => {
     const path = location.pathname;
     setActiveItem(path);
-    
+
     const pageName = getPageNameFromPath(path);
     setCurrentPage(pageName);
   }, [location]);
@@ -427,7 +427,7 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
       "/empmanagement": "Employee Management",
       "/permissions": "Permissions"
     };
-    
+
     return pathMap[path] || "Dashboard";
   };
 
@@ -480,16 +480,16 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
   };
 
   const elements = [
-    { 
-      icon: <i className="ri-dashboard-fill"></i>, 
-      name: "Dashboard", 
+    {
+      icon: <i className="ri-dashboard-fill"></i>,
+      name: "Dashboard",
       path: "/dashboard",
       exact: true
     },
-    { 
-      icon: <i className="ri-user-fill"></i>, 
-      name: "Employees", 
-      path: "/employeelist" 
+    {
+      icon: <i className="ri-user-fill"></i>,
+      name: "Employees",
+      path: "/employeelist"
     },
     {
       icon: <i className="ri-calendar-check-fill"></i>,
@@ -511,20 +511,20 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
       name: "Permissions",
       path: "/permissions"
     },
-    { 
-      icon: <i className="ri-money-dollar-box-fill"></i>, 
-      name: "Payroll", 
-      path: "/payroll" 
+    {
+      icon: <i className="ri-money-dollar-box-fill"></i>,
+      name: "Payroll",
+      path: "/payroll"
     },
-    { 
-      icon: <i className="ri-history-fill"></i>, 
-      name: "User Activity", 
-      path: "/useractivity" 
+    {
+      icon: <i className="ri-history-fill"></i>,
+      name: "User Activity",
+      path: "/useractivity"
     },
-    { 
+    {
       icon: <i className="ri-shield-user-fill"></i>,
       name: "User Access",
-      path: "/useraccess" 
+      path: "/useraccess"
     },
     // { 
     //   icon: <i className="ri-file-chart-fill"></i>, 
@@ -532,25 +532,31 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
     //   path: "/leaves-report" 
     // },
     {
-  icon: <i className="ri-briefcase-fill"></i>,
-  name: "Job Posts",
-  path: "/jobpost"
-},
+      icon: <i className="ri-briefcase-fill"></i>,
+      name: "Recruitment",
+      dropdown: [
+        { name: "Job Posts", path: "/jobpost" },
+        { name: "Job Applicants", path: "/job-applicants" },
+        { name: "Score Board", path: "/score" },
+        { name: "Assessments", path: "/assessment-manager" },
+        { name: "Documents", path: "/documents" },
+      ],
+    },
 
-    { 
-      icon: <i className="ri-map-pin-2-fill"></i>, 
-      name: "Locations", 
-      path: "/locationlist" 
+    {
+      icon: <i className="ri-map-pin-2-fill"></i>,
+      name: "Locations",
+      path: "/locationlist"
     },
-    { 
-      icon: <i className="ri-time-fill"></i>, 
-      name: "Shifts", 
-      path: "/shift" 
+    {
+      icon: <i className="ri-time-fill"></i>,
+      name: "Shifts",
+      path: "/shift"
     },
-    { 
-      icon: <i className="ri-logout-box-r-line"></i>, 
-      name: "Logout", 
-      action: handleLogout 
+    {
+      icon: <i className="ri-logout-box-r-line"></i>,
+      name: "Logout",
+      action: handleLogout
     },
   ];
 
@@ -614,13 +620,12 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
               {item.dropdown ? (
                 <>
                   <div
-                    className={`group flex items-center justify-between px-3 py-1.5 transition-all duration-200 rounded-md cursor-pointer ${
-                      isDropdownActive(item.dropdown)
+                    className={`group flex items-center justify-between px-3 py-1.5 transition-all duration-200 rounded-md cursor-pointer ${isDropdownActive(item.dropdown)
                         ? 'bg-emerald-600/80 text-white shadow-lg'
-                        : openDropdown === item.name 
-                          ? 'bg-blue-700/70' 
+                        : openDropdown === item.name
+                          ? 'bg-blue-700/70'
                           : 'hover:bg-blue-700/60'
-                    }`}
+                      }`}
                     onClick={() => {
                       navigate(item.dropdown[0].path);
                       handleAnyClick();
@@ -630,19 +635,17 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
                     onMouseLeave={() => isCollapsed && !isMobile && setHoveredItem(null)}
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className={`text-lg transition-colors duration-200 ${
-                        isDropdownActive(item.dropdown) 
-                          ? 'text-white' 
-                          : openDropdown === item.name 
-                            ? 'text-emerald-300' 
+                      <span className={`text-lg transition-colors duration-200 ${isDropdownActive(item.dropdown)
+                          ? 'text-white'
+                          : openDropdown === item.name
+                            ? 'text-emerald-300'
                             : 'text-blue-100 group-hover:text-emerald-300'
-                      }`}>
+                        }`}>
                         {item.icon}
                       </span>
                       {!isCollapsed && (
-                        <span className={`text-[14px] font-medium leading-none ${
-                          isDropdownActive(item.dropdown) ? 'text-white' : ''
-                        }`}>
+                        <span className={`text-[14px] font-medium leading-none ${isDropdownActive(item.dropdown) ? 'text-white' : ''
+                          }`}>
                           {item.name}
                         </span>
                       )}
@@ -680,11 +683,10 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
                           <Link
                             to={sub.path}
                             onClick={handleAnyClick}
-                            className={`block py-1 text-[13px] transition-colors relative before:absolute before:left-[-1.1rem] before:top-1/2 before:w-2 before:h-[1px] before:bg-blue-700 ${
-                              isActive(sub.path)
+                            className={`block py-1 text-[13px] transition-colors relative before:absolute before:left-[-1.1rem] before:top-1/2 before:w-2 before:h-[1px] before:bg-blue-700 ${isActive(sub.path)
                                 ? 'text-emerald-300 font-semibold'
                                 : 'text-blue-100 hover:text-emerald-300'
-                            }`}
+                              }`}
                           >
                             <div className="flex items-center gap-2">
                               {isActive(sub.path) && (
@@ -709,24 +711,21 @@ const Sidebar = ({ isCollapsed, isMobile, onLinkClick }) => {
                   onMouseEnter={(e) => isCollapsed && !isMobile && handleMouseMove(e, item.name)}
                   onMouseMove={(e) => isCollapsed && !isMobile && handleMouseMove(e, item.name)}
                   onMouseLeave={() => isCollapsed && !isMobile && setHoveredItem(null)}
-                  className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
-                    isActive(item.path)
+                  className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${isActive(item.path)
                       ? 'bg-emerald-600/80 text-white shadow-lg'
                       : 'hover:bg-blue-700/60'
-                  }`}
+                    }`}
                 >
-                  <span className={`text-lg transition-colors duration-200 ${
-                    isActive(item.path) 
-                      ? 'text-white' 
+                  <span className={`text-lg transition-colors duration-200 ${isActive(item.path)
+                      ? 'text-white'
                       : 'text-blue-100 group-hover:text-emerald-300'
-                  }`}>
+                    }`}>
                     {item.icon}
                   </span>
                   {!isCollapsed && (
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <span className={`text-[14px] font-medium leading-none truncate ${
-                        isActive(item.path) ? 'text-white' : ''
-                      }`}>
+                      <span className={`text-[14px] font-medium leading-none truncate ${isActive(item.path) ? 'text-white' : ''
+                        }`}>
                         {item.name}
                       </span>
                       {isActive(item.path) && (

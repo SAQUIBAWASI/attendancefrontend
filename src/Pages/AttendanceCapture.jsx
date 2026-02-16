@@ -1924,11 +1924,12 @@
 //   );
 // }
 
+import { API_BASE_URL, API_DOMAIN } from "../config";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const BASE_URL = "https://api.timelyhealth.in/";
+const BASE_URL = API_BASE_URL; // Use imported API_BASE_URL
 const ONSITE_RADIUS_M = 50;
 
 // Haversine formula

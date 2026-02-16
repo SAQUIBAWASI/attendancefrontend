@@ -417,19 +417,19 @@
 //   const [masterShifts, setMasterShifts] = useState([]);
 //   const [employeeAssignments, setEmployeeAssignments] = useState([]);
 //   const [loading, setLoading] = useState(true);
-  
+
 //   // Modals
 //   const [showCreateModal, setShowCreateModal] = useState(false);
 //   const [showCustomCreateModal, setShowCustomCreateModal] = useState(false);
 //   const [showAssignModal, setShowAssignModal] = useState(false);
 //   const [showViewModal, setShowViewModal] = useState(false);
-  
+
 //   // Data
 //   const [editingAssignment, setEditingAssignment] = useState(null);
 //   const [viewingShiftType, setViewingShiftType] = useState('');
 //   const [viewEmployees, setViewEmployees] = useState([]);
 //   const [viewShiftInfo, setViewShiftInfo] = useState({});
-  
+
 //   // Forms
 //   const [createForm, setCreateForm] = useState({
 //     shiftType: '',
@@ -441,14 +441,14 @@
 //       { slotId: `${Date.now()}_4`, timeRange: '', description: '' }
 //     ]
 //   });
-  
+
 //   const [assignForm, setAssignForm] = useState({
 //     employeeId: '',
 //     employeeName: '',
 //     shiftType: '',
 //     selectedSlotId: ''
 //   });
-  
+
 //   const [error, setError] = useState('');
 //   const [success, setSuccess] = useState('');
 
@@ -457,27 +457,27 @@
 //     try {
 //       setLoading(true);
 //       setError('');
-      
+
 //       console.log("🔄 Fetching data...");
-      
+
 //       // Fetch master shifts
 //       const shiftsRes = await axios.get('https://api.timelyhealth.in/api/shifts/master');
 //       console.log("Master shifts response:", shiftsRes.data);
-      
+
 //       if (shiftsRes.data.success) {
 //         setMasterShifts(shiftsRes.data.data);
 //       } else {
 //         setError(shiftsRes.data.message);
 //       }
-      
+
 //       // Fetch employee assignments
 //       const assignedRes = await axios.get('https://api.timelyhealth.in/api/shifts/assignments');
 //       console.log("Assignments response:", assignedRes.data);
-      
+
 //       if (assignedRes.data.success) {
 //         setEmployeeAssignments(assignedRes.data.data);
 //       }
-      
+
 //     } catch (error) {
 //       console.error('❌ Fetch error:', error);
 //       setError('Server connection failed. Check if backend is running.');
@@ -498,7 +498,7 @@
 
 //     try {
 //       console.log("Creating custom shift:", createForm);
-      
+
 //       if (!createForm.shiftType || !createForm.shiftName) {
 //         setError('Please enter shift type and name');
 //         return;
@@ -508,7 +508,7 @@
 //       const validSlots = createForm.timeSlots.filter(slot => 
 //         slot.timeRange.trim() !== '' && slot.description.trim() !== ''
 //       );
-      
+
 //       if (validSlots.length === 0) {
 //         setError('Please add at least one time slot');
 //         return;
@@ -519,9 +519,9 @@
 //         shiftName: createForm.shiftName,
 //         timeSlots: validSlots
 //       });
-      
+
 //       console.log("Create custom response:", response.data);
-      
+
 //       if (response.data.success) {
 //         setSuccess(`✅ Custom Shift ${createForm.shiftType} created successfully!`);
 //         fetchData();
@@ -634,7 +634,7 @@
 
 //     try {
 //       const { employeeId, employeeName, shiftType, selectedSlotId } = assignForm;
-      
+
 //       if (!employeeId || !employeeName || !shiftType) {
 //         setError('Please fill all required fields');
 //         return;
@@ -643,7 +643,7 @@
 //       // Get time slot details
 //       let selectedTimeRange = "10:00 - 19:00";
 //       let selectedDescription = "Morning shift";
-      
+
 //       if (selectedSlotId) {
 //         const timeSlots = getShiftTimeSlots(shiftType);
 //         const selectedSlot = timeSlots.find(slot => slot.slotId === selectedSlotId);
@@ -701,7 +701,7 @@
 
 //     try {
 //       const { employeeName, shiftType, selectedSlotId } = assignForm;
-      
+
 //       if (!employeeName || !shiftType) {
 //         setError('Please fill all required fields');
 //         return;
@@ -710,7 +710,7 @@
 //       // Get time slot details
 //       let selectedTimeRange = "10:00 - 19:00";
 //       let selectedDescription = "Morning shift";
-      
+
 //       if (selectedSlotId) {
 //         const timeSlots = getShiftTimeSlots(shiftType);
 //         const selectedSlot = timeSlots.find(slot => slot.slotId === selectedSlotId);
@@ -896,7 +896,7 @@
 //                         {shift.timeSlots?.length || 0} slots
 //                       </span>
 //                     </div>
-                    
+
 //                     {/* Time Slots Preview */}
 //                     <div className="mt-2">
 //                       <div className="space-y-1 overflow-y-auto max-h-16">
@@ -985,7 +985,7 @@
 //                     <p className="text-xs text-gray-600">
 //                       ID: {assignment.employeeAssignment?.employeeId || assignment.employeeId}
 //                     </p>
-                    
+
 //                     {/* Time Slot Display */}
 //                     <div className="p-2 mt-2 text-xs rounded bg-gray-50">
 //                       <p className="font-medium text-gray-700">
@@ -1047,19 +1047,19 @@
 //                 setError('Please select a shift type');
 //                 return;
 //               }
-              
+
 //               const shiftNames = {
 //                 "A": "Morning Shift",
 //                 "B": "Evening Shift", 
 //                 "C": "Night Shift",
 //                 "D": "General Shift"
 //               };
-              
+
 //               setCreateForm(prev => ({ 
 //                 ...prev, 
 //                 shiftName: shiftNames[shiftType] || shiftType 
 //               }));
-              
+
 //               // Simulate form submission
 //               setTimeout(() => {
 //                 const quickCreate = async () => {
@@ -1068,7 +1068,7 @@
 //                       shiftType: shiftType,
 //                       shiftName: shiftNames[shiftType] || shiftType
 //                     });
-                    
+
 //                     if (response.data.success) {
 //                       setSuccess(`✅ Shift ${shiftType} created successfully!`);
 //                       fetchData();
@@ -1181,7 +1181,7 @@
 //                     />
 //                     <p className="mt-1 text-xs text-gray-500">Enter a single letter (E, F, G, H, etc.)</p>
 //                   </div>
-                  
+
 //                   <div>
 //                     <label className="block mb-2 text-sm font-medium text-gray-700">
 //                       Shift Name *
@@ -1211,7 +1211,7 @@
 //                       + Add Slot
 //                     </button>
 //                   </div>
-                  
+
 //                   <div className="space-y-3">
 //                     {createForm.timeSlots.map((slot, index) => (
 //                       <div key={slot.slotId} className="p-3 border rounded-lg bg-gray-50">
@@ -1227,7 +1227,7 @@
 //                             </button>
 //                           )}
 //                         </div>
-                        
+
 //                         <div className="grid grid-cols-2 gap-3">
 //                           <div>
 //                             <label className="block mb-1 text-xs text-gray-600">Time Range *</label>
@@ -1240,7 +1240,7 @@
 //                               required
 //                             />
 //                           </div>
-                          
+
 //                           <div>
 //                             <label className="block mb-1 text-xs text-gray-600">Description *</label>
 //                             <input
@@ -1454,7 +1454,7 @@
 //                 &times;
 //               </button>
 //             </div>
-            
+
 //             {/* Modal Body - Scrollable */}
 //             <div className="flex-1 overflow-y-auto">
 //               <table className="w-full">
@@ -1515,7 +1515,7 @@
 //                 </tbody>
 //               </table>
 //             </div>
-            
+
 //             {/* Modal Footer */}
 //             <div className="p-4 border-t">
 //               <button
@@ -1542,32 +1542,32 @@
 //   const [employeeAssignments, setEmployeeAssignments] = useState([]);
 //   const [employeeCounts, setEmployeeCounts] = useState([]);
 //   const [loading, setLoading] = useState(true);
-  
+
 //   // Modals
 //   const [showCreateModal, setShowCreateModal] = useState(false);
 //   const [showCustomCreateModal, setShowCustomCreateModal] = useState(false);
 //   const [showAssignModal, setShowAssignModal] = useState(false);
 //   const [showViewModal, setShowViewModal] = useState(false);
-  
+
 //   // Data
 //   const [editingAssignment, setEditingAssignment] = useState(null);
 //   const [viewingShiftType, setViewingShiftType] = useState('');
 //   const [viewEmployees, setViewEmployees] = useState([]);
 //   const [viewShiftInfo, setViewShiftInfo] = useState({});
-  
+
 //   // Forms
 //   const [createForm, setCreateForm] = useState({
 //     shiftType: '',
 //     shiftName: '',
 //     timeSlots: [{ slotId: `${Date.now()}_1`, timeRange: '', description: '' }]
 //   });
-  
+
 //   const [assignForm, setAssignForm] = useState({
 //     employeeId: '',
 //     employeeName: '',
 //     shiftType: ''
 //   });
-  
+
 //   const [error, setError] = useState('');
 //   const [success, setSuccess] = useState('');
 
@@ -1576,32 +1576,32 @@
 //     try {
 //       setLoading(true);
 //       setError('');
-      
+
 //       console.log("🔄 Fetching data...");
-      
+
 //       // Fetch master shifts
 //       const shiftsRes = await axios.get('https://api.timelyhealth.in/api/shifts/master');
-      
+
 //       if (shiftsRes.data.success) {
 //         setMasterShifts(shiftsRes.data.data);
 //       } else {
 //         setError(shiftsRes.data.message);
 //       }
-      
+
 //       // Fetch employee assignments
 //       const assignedRes = await axios.get('https://api.timelyhealth.in/api/shifts/assignments');
-      
+
 //       if (assignedRes.data.success) {
 //         setEmployeeAssignments(assignedRes.data.data);
 //       }
-      
+
 //       // Fetch employee counts by shift
 //       const countRes = await axios.get('https://api.timelyhealth.in/api/shifts/employee-count');
-      
+
 //       if (countRes.data.success) {
 //         setEmployeeCounts(countRes.data.data);
 //       }
-      
+
 //     } catch (error) {
 //       console.error('❌ Fetch error:', error);
 //       setError('Server connection failed. Check if backend is running.');
@@ -1638,7 +1638,7 @@
 //         shiftName: createForm.shiftName,
 //         timeSlots: [slot]
 //       });
-      
+
 //       if (response.data.success) {
 //         setSuccess(`✅ Custom Shift ${createForm.shiftType} created successfully!`);
 //         fetchData();
@@ -1778,7 +1778,7 @@
 
 //     try {
 //       const { employeeId, employeeName, shiftType } = assignForm;
-      
+
 //       if (!employeeId || !employeeName || !shiftType) {
 //         setError('Please fill all required fields');
 //         return;
@@ -1816,7 +1816,7 @@
 
 //     try {
 //       const { employeeName, shiftType } = assignForm;
-      
+
 //       if (!employeeName || !shiftType) {
 //         setError('Please fill all required fields');
 //         return;
@@ -1979,7 +1979,7 @@
 //           <h2 className="text-xl font-bold text-gray-800">Available Shifts ({masterShifts.length})</h2>
 //           <p className="text-sm text-gray-500">Manage all created shifts</p>
 //         </div>
-        
+
 //         {masterShifts.length === 0 ? (
 //           <div className="py-12 text-center rounded-lg bg-gray-50">
 //             <div className="mb-4 text-6xl text-gray-400">⏰</div>
@@ -2000,7 +2000,7 @@
 //               const shiftColor = getShiftColor(shift.shiftType);
 //               const textColor = getShiftTextColor(shift.shiftType);
 //               const badgeColor = getBadgeColor(shift.shiftType);
-              
+
 //               return (
 //                 <div 
 //                   key={shift._id} 
@@ -2019,13 +2019,13 @@
 //                         <div className="text-xs text-gray-500">{shift.shiftName}</div>
 //                       </div>
 //                     </div>
-                    
+
 //                     <div className={`text-right ${textColor}`}>
 //                       <div className="text-2xl font-bold">{employeeCount}</div>
 //                       <div className="text-xs">employees</div>
 //                     </div>
 //                   </div>
-                  
+
 //                   {/* Time Slot */}
 //                   <div className="mb-4">
 //                     <div className="flex items-center gap-2 mb-1">
@@ -2037,7 +2037,7 @@
 //                       {timeSlot?.description || "No description"}
 //                     </p>
 //                   </div>
-                  
+
 //                   {/* Shift ID */}
 //                   {/* <div className="mb-5">
 //                     <div className="mb-1 text-xs text-gray-500">Shift ID</div>
@@ -2045,7 +2045,7 @@
 //                       {shift._id.substring(0, 12)}...
 //                     </div>
 //                   </div> */}
-                  
+
 //                   {/* Actions */}
 //                   <div className="flex gap-2">
 //                     <button
@@ -2115,7 +2115,7 @@
 //                   const employeeId = getEmployeeId(assignment);
 //                   const rowBgColor = getRowBgColor(assignment.shiftType);
 //                   const textColor = getShiftTextColor(assignment.shiftType);
-                  
+
 //                   return (
 //                     <tr key={assignment._id} className={rowBgColor}>
 //                       <td className="px-4 py-3">
@@ -2204,7 +2204,7 @@
 //                     />
 //                     <p className="mt-1 text-xs text-gray-500">Enter a single letter (A-Z)</p>
 //                   </div>
-                  
+
 //                   <div>
 //                     <label className="block mb-2 text-sm font-medium text-gray-700">
 //                       Shift Name *
@@ -2225,7 +2225,7 @@
 //                   <label className="block mb-3 text-sm font-medium text-gray-700">
 //                     Time Slot Configuration *
 //                   </label>
-                  
+
 //                   <div className="p-3 space-y-3 border rounded-lg bg-gray-50">
 //                     <div>
 //                       <label className="block mb-1 text-xs text-gray-600">Time Range *</label>
@@ -2238,7 +2238,7 @@
 //                         required
 //                       />
 //                     </div>
-                    
+
 //                     <div>
 //                       <label className="block mb-1 text-xs text-gray-600">Description *</label>
 //                       <input
@@ -2361,7 +2361,7 @@
 //                       ))
 //                     }
 //                   </select>
-                  
+
 //                   {/* Show selected shift timing */}
 //                   {assignForm.shiftType && masterShifts.find(s => s.shiftType === assignForm.shiftType) && (
 //                     <div className="p-2 mt-2 text-xs rounded bg-blue-50">
@@ -2421,7 +2421,7 @@
 //                 &times;
 //               </button>
 //             </div>
-            
+
 //             <div className="flex-1 overflow-y-auto">
 //               <table className="w-full">
 //                 <thead className="sticky top-0 bg-gray-50">
@@ -2437,7 +2437,7 @@
 //                   {viewEmployees.map((emp) => {
 //                     const rowBgColor = getRowBgColor(emp.shiftType);
 //                     const textColor = getShiftTextColor(emp.shiftType);
-                    
+
 //                     return (
 //                       <tr key={emp._id} className={rowBgColor}>
 //                         <td className="px-4 py-3">
@@ -2486,7 +2486,7 @@
 //                 </tbody>
 //               </table>
 //             </div>
-            
+
 //             <div className="p-4 border-t">
 //               <button
 //                 onClick={() => setShowViewModal(false)}
@@ -2515,52 +2515,52 @@
 //   const [allEmployees, setAllEmployees] = useState([]); // ✅ Add this
 //   const [employeeCounts, setEmployeeCounts] = useState([]);
 //   const [loading, setLoading] = useState(true);
-  
+
 //   // Modals
 //   const [showCreateModal, setShowCreateModal] = useState(false);
 //   const [showCustomCreateModal, setShowCustomCreateModal] = useState(false);
 //   const [showAssignModal, setShowAssignModal] = useState(false);
 //   const [showViewModal, setShowViewModal] = useState(false);
-  
+
 //   // Data
 //   const [editingAssignment, setEditingAssignment] = useState(null);
 //   const [viewingShiftType, setViewingShiftType] = useState('');
 //   const [viewEmployees, setViewEmployees] = useState([]);
 //   const [viewShiftInfo, setViewShiftInfo] = useState({});
-  
+
 //   // Forms
 //   const [createForm, setCreateForm] = useState({
 //     shiftType: '',
 //     shiftName: '',
 //     timeSlots: [{ slotId: `${Date.now()}_1`, timeRange: '', description: '' }]
 //   });
-  
+
 //   const [assignForm, setAssignForm] = useState({
 //     employeeId: '',
 //     employeeName: '',
 //     shiftType: ''
 //   });
-  
+
 //   const [error, setError] = useState('');
 //   const [success, setSuccess] = useState('');
 
 //   // ✅ Add this function to filter out inactive employees
 //   const filterInactiveAssignments = (assignments) => {
 //     if (!Array.isArray(assignments) || !allEmployees.length) return assignments;
-    
+
 //     return assignments.filter(assignment => {
 //       // Get employee ID from assignment
 //       const employeeId = assignment.employeeAssignment?.employeeId || assignment.employeeId;
 //       if (!employeeId) return true;
-      
+
 //       // Find employee in allEmployees
 //       const employee = allEmployees.find(emp => 
 //         emp.employeeId === employeeId || emp._id === employeeId
 //       );
-      
+
 //       // If employee not found, keep the assignment
 //       if (!employee) return true;
-      
+
 //       // Check if employee is inactive
 //       return !isEmployeeHidden(employee);
 //     });
@@ -2571,9 +2571,9 @@
 //     try {
 //       setLoading(true);
 //       setError('');
-      
+
 //       console.log("🔄 Fetching data...");
-      
+
 //       // ✅ Fetch all employees first
 //       try {
 //         const employeesRes = await axios.get('https://api.timelyhealth.in/api/employees/get-employees');
@@ -2583,32 +2583,32 @@
 //       } catch (e) {
 //         console.error('❌ Error fetching employees:', e);
 //       }
-      
+
 //       // Fetch master shifts
 //       const shiftsRes = await axios.get('https://api.timelyhealth.in/api/shifts/master');
-      
+
 //       if (shiftsRes.data.success) {
 //         setMasterShifts(shiftsRes.data.data);
 //       } else {
 //         setError(shiftsRes.data.message);
 //       }
-      
+
 //       // Fetch employee assignments
 //       const assignedRes = await axios.get('https://api.timelyhealth.in/api/shifts/assignments');
-      
+
 //       if (assignedRes.data.success) {
 //         // ✅ Filter out inactive employees from assignments
 //         const filteredAssignments = filterInactiveAssignments(assignedRes.data.data);
 //         setEmployeeAssignments(filteredAssignments);
 //       }
-      
+
 //       // Fetch employee counts by shift
 //       const countRes = await axios.get('https://api.timelyhealth.in/api/shifts/employee-count');
-      
+
 //       if (countRes.data.success) {
 //         setEmployeeCounts(countRes.data.data);
 //       }
-      
+
 //     } catch (error) {
 //       console.error('❌ Fetch error:', error);
 //       setError('Server connection failed. Check if backend is running.');
@@ -2644,7 +2644,7 @@
 //         shiftName: createForm.shiftName,
 //         timeSlots: [slot]
 //       });
-      
+
 //       if (response.data.success) {
 //         setSuccess(`✅ Custom Shift ${createForm.shiftType} created successfully!`);
 //         fetchData();
@@ -2784,7 +2784,7 @@
 
 //     try {
 //       const { employeeId, employeeName, shiftType } = assignForm;
-      
+
 //       if (!employeeId || !employeeName || !shiftType) {
 //         setError('Please fill all required fields');
 //         return;
@@ -2794,7 +2794,7 @@
 //       const employee = allEmployees.find(emp => 
 //         emp.employeeId === employeeId || emp._id === employeeId
 //       );
-      
+
 //       if (employee && isEmployeeHidden(employee)) {
 //         setError(`Cannot assign shift to inactive employee: ${employeeName}`);
 //         return;
@@ -2832,7 +2832,7 @@
 
 //     try {
 //       const { employeeName, shiftType } = assignForm;
-      
+
 //       if (!employeeName || !shiftType) {
 //         setError('Please fill all required fields');
 //         return;
@@ -2903,7 +2903,7 @@
 //         // ✅ Filter out inactive employees
 //         const employees = response.data.data.employees || [];
 //         const filteredEmployees = filterInactiveAssignments(employees);
-        
+
 //         setViewShiftInfo({
 //           shiftType,
 //           shiftName
@@ -2999,7 +2999,7 @@
 //           <h2 className="text-xl font-bold text-gray-800">Available Shifts ({masterShifts.length})</h2>
 //           <p className="text-sm text-gray-500">Active employees only</p>
 //         </div>
-        
+
 //         {masterShifts.length === 0 ? (
 //           <div className="py-12 text-center rounded-lg bg-gray-50">
 //             <div className="mb-4 text-6xl text-gray-400">⏰</div>
@@ -3020,7 +3020,7 @@
 //               const shiftColor = getShiftColor(shift.shiftType);
 //               const textColor = getShiftTextColor(shift.shiftType);
 //               const badgeColor = getBadgeColor(shift.shiftType);
-              
+
 //               return (
 //                 <div 
 //                   key={shift._id} 
@@ -3039,13 +3039,13 @@
 //                         <div className="text-xs text-gray-500">{shift.shiftName}</div>
 //                       </div>
 //                     </div>
-                    
+
 //                     <div className={`text-right ${textColor}`}>
 //                       <div className="text-2xl font-bold">{employeeCount}</div>
 //                       <div className="text-xs">active employees</div>
 //                     </div>
 //                   </div>
-                  
+
 //                   {/* Time Slot */}
 //                   <div className="mb-4">
 //                     <div className="flex items-center gap-2 mb-1">
@@ -3057,7 +3057,7 @@
 //                       {timeSlot?.description || "No description"}
 //                     </p>
 //                   </div>
-                  
+
 //                   {/* Actions */}
 //                   <div className="flex gap-2">
 //                     <button
@@ -3127,7 +3127,7 @@
 //                   const employeeId = getEmployeeId(assignment);
 //                   const rowBgColor = getRowBgColor(assignment.shiftType);
 //                   const textColor = getShiftTextColor(assignment.shiftType);
-                  
+
 //                   return (
 //                     <tr key={assignment._id} className={rowBgColor}>
 //                       <td className="px-4 py-3">
@@ -3216,7 +3216,7 @@
 //                     />
 //                     <p className="mt-1 text-xs text-gray-500">Enter a single letter (A-Z)</p>
 //                   </div>
-                  
+
 //                   <div>
 //                     <label className="block mb-2 text-sm font-medium text-gray-700">
 //                       Shift Name *
@@ -3237,7 +3237,7 @@
 //                   <label className="block mb-3 text-sm font-medium text-gray-700">
 //                     Time Slot Configuration *
 //                   </label>
-                  
+
 //                   <div className="p-3 space-y-3 border rounded-lg bg-gray-50">
 //                     <div>
 //                       <label className="block mb-1 text-xs text-gray-600">Time Range *</label>
@@ -3250,7 +3250,7 @@
 //                         required
 //                       />
 //                     </div>
-                    
+
 //                     <div>
 //                       <label className="block mb-1 text-xs text-gray-600">Description *</label>
 //                       <input
@@ -3373,7 +3373,7 @@
 //                       ))
 //                     }
 //                   </select>
-                  
+
 //                   {/* Show selected shift timing */}
 //                   {assignForm.shiftType && masterShifts.find(s => s.shiftType === assignForm.shiftType) && (
 //                     <div className="p-2 mt-2 text-xs rounded bg-blue-50">
@@ -3433,7 +3433,7 @@
 //                 &times;
 //               </button>
 //             </div>
-            
+
 //             <div className="flex-1 overflow-y-auto">
 //               <table className="w-full">
 //                 <thead className="sticky top-0 bg-gray-50">
@@ -3449,7 +3449,7 @@
 //                   {viewEmployees.map((emp) => {
 //                     const rowBgColor = getRowBgColor(emp.shiftType);
 //                     const textColor = getShiftTextColor(emp.shiftType);
-                    
+
 //                     return (
 //                       <tr key={emp._id} className={rowBgColor}>
 //                         <td className="px-4 py-3">
@@ -3498,7 +3498,7 @@
 //                 </tbody>
 //               </table>
 //             </div>
-            
+
 //             <div className="p-4 border-t">
 //               <button
 //                 onClick={() => setShowViewModal(false)}
@@ -3521,6 +3521,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { FaClock, FaEdit, FaEye, FaPlus, FaTimes, FaTrash } from 'react-icons/fa';
 import { isEmployeeHidden } from '../utils/employeeStatus';
+import { API_BASE_URL } from '../config';
 
 const ShiftManagement = () => {
   const [masterShifts, setMasterShifts] = useState([]);
@@ -3528,20 +3529,20 @@ const ShiftManagement = () => {
   const [allEmployees, setAllEmployees] = useState([]);
   const [employeeCounts, setEmployeeCounts] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showCustomCreateModal, setShowCustomCreateModal] = useState(false);
   const [showBrakeShiftModal, setShowBrakeShiftModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  
+
   // Data
   const [editingAssignment, setEditingAssignment] = useState(null);
   const [viewingShiftType, setViewingShiftType] = useState('');
   const [viewEmployees, setViewEmployees] = useState([]);
   const [viewShiftInfo, setViewShiftInfo] = useState({});
-  
+
   // Forms
   const [createForm, setCreateForm] = useState({
     shiftType: '',
@@ -3549,29 +3550,29 @@ const ShiftManagement = () => {
     timeSlots: [{ slotId: `${Date.now()}_1`, timeRange: '', description: '' }],
     isBrakeShift: false
   });
-  
+
   const [assignForm, setAssignForm] = useState({
     employeeId: '',
     employeeName: '',
     shiftType: ''
   });
-  
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const filterInactiveAssignments = (assignments) => {
     if (!Array.isArray(assignments) || !allEmployees.length) return assignments;
-    
+
     return assignments.filter(assignment => {
       const employeeId = assignment.employeeAssignment?.employeeId || assignment.employeeId;
       if (!employeeId) return true;
-      
-      const employee = allEmployees.find(emp => 
+
+      const employee = allEmployees.find(emp =>
         emp.employeeId === employeeId || emp._id === employeeId
       );
-      
+
       if (!employee) return true;
-      
+
       return !isEmployeeHidden(employee);
     });
   };
@@ -3580,39 +3581,39 @@ const ShiftManagement = () => {
     try {
       setLoading(true);
       setError('');
-      
+
       console.log("🔄 Fetching data...");
-      
+
       try {
-        const employeesRes = await axios.get('https://api.timelyhealth.in/api/employees/get-employees');
+        const employeesRes = await axios.get(`${API_BASE_URL}/employees/get-employees`);
         if (Array.isArray(employeesRes.data)) {
           setAllEmployees(employeesRes.data);
         }
       } catch (e) {
         console.error('❌ Error fetching employees:', e);
       }
-      
-      const shiftsRes = await axios.get('https://api.timelyhealth.in/api/shifts/master');
-      
+
+      const shiftsRes = await axios.get(`${API_BASE_URL}/shifts/master`);
+
       if (shiftsRes.data.success) {
         setMasterShifts(shiftsRes.data.data);
       } else {
         setError(shiftsRes.data.message);
       }
-      
-      const assignedRes = await axios.get('https://api.timelyhealth.in/api/shifts/assignments');
-      
+
+      const assignedRes = await axios.get(`${API_BASE_URL}/shifts/assignments`);
+
       if (assignedRes.data.success) {
         const filteredAssignments = filterInactiveAssignments(assignedRes.data.data);
         setEmployeeAssignments(filteredAssignments);
       }
-      
-      const countRes = await axios.get('https://api.timelyhealth.in/api/shifts/employee-count');
-      
+
+      const countRes = await axios.get(`${API_BASE_URL}/shifts/employee-count`);
+
       if (countRes.data.success) {
         setEmployeeCounts(countRes.data.data);
       }
-      
+
     } catch (error) {
       console.error('❌ Fetch error:', error);
       setError('Server connection failed. Check if backend is running.');
@@ -3642,13 +3643,13 @@ const ShiftManagement = () => {
         return;
       }
 
-      const response = await axios.post('https://api.timelyhealth.in/api/shifts/create', {
+      const response = await axios.post(`${API_BASE_URL}/shifts/create`, {
         shiftType: createForm.shiftType,
         shiftName: createForm.shiftName,
         timeSlots: [slot],
         isBrakeShift: false
       });
-      
+
       if (response.data.success) {
         setSuccess(`✅ Custom Shift ${createForm.shiftType} created successfully!`);
         fetchData();
@@ -3679,12 +3680,12 @@ const ShiftManagement = () => {
         return;
       }
 
-      const response = await axios.post('https://api.timelyhealth.in/api/shifts/create', {
+      const response = await axios.post(`${API_BASE_URL}/shifts/create`, {
         shiftType: createForm.shiftType,
         shiftName: createForm.shiftName,
         isBrakeShift: true
       });
-      
+
       if (response.data.success) {
         setSuccess(`✅ Brake Shift ${createForm.shiftType} created successfully!`);
         fetchData();
@@ -3705,9 +3706,9 @@ const ShiftManagement = () => {
   };
 
   const updateTimeSlot = (field, value) => {
-    setCreateForm(prev => ({ 
-      ...prev, 
-      timeSlots: [{ ...prev.timeSlots[0], [field]: value }] 
+    setCreateForm(prev => ({
+      ...prev,
+      timeSlots: [{ ...prev.timeSlots[0], [field]: value }]
     }));
   };
 
@@ -3741,7 +3742,7 @@ const ShiftManagement = () => {
       "H": "bg-pink-600",      // Pink
       "I": "bg-yellow-600",    // Yellow
       "J": "bg-cyan-600",      // Cyan
-      
+
       // Extended Colors (if needed)
       "K": "bg-lime-600",
       "L": "bg-amber-600",
@@ -3759,11 +3760,11 @@ const ShiftManagement = () => {
       "X": "bg-red-500",
       "Y": "bg-blue-500",
       "Z": "bg-green-500",
-      
+
       // Special Shifts
       "BR": "bg-gradient-to-r from-purple-600 to-pink-600"  // Brake Shift
     };
-    
+
     return colorMap[type] || "bg-gray-600";
   };
 
@@ -3771,7 +3772,7 @@ const ShiftManagement = () => {
   const getShiftRowColor = (type) => {
     const colorMap = {
       "A": "bg-blue-50 hover:bg-blue-100",
-      "B": "bg-green-50 hover:bg-green-100", 
+      "B": "bg-green-50 hover:bg-green-100",
       "C": "bg-purple-50 hover:bg-purple-100",
       "D": "bg-orange-50 hover:bg-orange-100",
       "E": "bg-red-50 hover:bg-red-100",
@@ -3782,7 +3783,7 @@ const ShiftManagement = () => {
       "J": "bg-cyan-50 hover:bg-cyan-100",
       "BR": "bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100"
     };
-    
+
     return colorMap[type] || "bg-gray-50 hover:bg-gray-100";
   };
 
@@ -3804,7 +3805,7 @@ const ShiftManagement = () => {
       "J": "border-cyan-200",
       "BR": "border-purple-200"
     };
-    
+
     return colorMap[type] || "border-gray-200";
   };
 
@@ -3823,7 +3824,7 @@ const ShiftManagement = () => {
       "J": "bg-cyan-100 text-cyan-800 border border-cyan-200",
       "BR": "bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 border border-purple-200"
     };
-    
+
     return colorMap[type] || "bg-gray-100 text-gray-800 border border-gray-200";
   };
 
@@ -3843,22 +3844,22 @@ const ShiftManagement = () => {
 
     try {
       const { employeeId, employeeName, shiftType } = assignForm;
-      
+
       if (!employeeId || !employeeName || !shiftType) {
         setError('Please fill all required fields');
         return;
       }
 
-      const employee = allEmployees.find(emp => 
+      const employee = allEmployees.find(emp =>
         emp.employeeId === employeeId || emp._id === employeeId
       );
-      
+
       if (employee && isEmployeeHidden(employee)) {
         setError(`Cannot assign shift to inactive employee: ${employeeName}`);
         return;
       }
 
-      const response = await axios.post('https://api.timelyhealth.in/api/shifts/assign', {
+      const response = await axios.post(`${API_BASE_URL}/shifts/assign`, {
         employeeId,
         employeeName,
         shiftType
@@ -3889,14 +3890,14 @@ const ShiftManagement = () => {
 
     try {
       const { employeeName, shiftType } = assignForm;
-      
+
       if (!employeeName || !shiftType) {
         setError('Please fill all required fields');
         return;
       }
 
       const response = await axios.put(
-        `https://api.timelyhealth.in/api/shifts/assignments/${editingAssignment._id}`,
+        `${API_BASE_URL}/shifts/assignments/${editingAssignment._id}`,
         {
           employeeName,
           shiftType
@@ -3925,7 +3926,7 @@ const ShiftManagement = () => {
   const handleDeleteAssignment = async (id) => {
     if (window.confirm('Are you sure you want to delete this assignment?')) {
       try {
-        const response = await axios.delete(`https://api.timelyhealth.in/api/shifts/assignments/${id}`);
+        const response = await axios.delete(`${API_BASE_URL}/shifts/assignments/${id}`);
         if (response.data.success) {
           setSuccess('Shift assignment removed successfully');
           fetchData();
@@ -3939,7 +3940,7 @@ const ShiftManagement = () => {
   const handleDeleteMasterShift = async (id, shiftName) => {
     if (window.confirm(`Delete ${shiftName}? This will remove all assignments.`)) {
       try {
-        const response = await axios.delete(`https://api.timelyhealth.in/api/shifts/master/${id}`);
+        const response = await axios.delete(`${API_BASE_URL}/shifts/master/${id}`);
         if (response.data.success) {
           setSuccess(response.data.message);
           fetchData();
@@ -3952,11 +3953,11 @@ const ShiftManagement = () => {
 
   const handleViewEmployees = async (shiftType, shiftName) => {
     try {
-      const response = await axios.get(`https://api.timelyhealth.in/api/shifts/type/${shiftType}/employees`);
+      const response = await axios.get(`${API_BASE_URL}/shifts/type/${shiftType}/employees`);
       if (response.data.success) {
         const employees = response.data.data.employees || [];
         const filteredEmployees = filterInactiveAssignments(employees);
-        
+
         setViewShiftInfo({
           shiftType,
           shiftName,
@@ -3973,7 +3974,7 @@ const ShiftManagement = () => {
 
   const handleCreateDefaultShifts = async () => {
     try {
-      const response = await axios.post('https://api.timelyhealth.in/api/shifts/create-defaults');
+      const response = await axios.post(`${API_BASE_URL}/shifts/create-defaults`);
       if (response.data.success) {
         setSuccess(`✅ Created ${response.data.createdCount} default shifts (A-D + Brake Shift)`);
         fetchData();
@@ -4056,7 +4057,7 @@ const ShiftManagement = () => {
           <h2 className="text-xl font-bold text-gray-800">Available Shifts ({masterShifts.length})</h2>
           {/* <p className="text-sm text-gray-500">Click to view or assign employees</p> */}
         </div>
-        
+
         {masterShifts.length === 0 ? (
           <div className="py-12 text-center border border-gray-200 rounded-lg bg-gray-50">
             <div className="mb-4 text-6xl text-gray-400">⏰</div>
@@ -4086,10 +4087,10 @@ const ShiftManagement = () => {
               const textColor = getShiftTextColor();
               const borderColor = getShiftBorderColor(shift.shiftType);
               const isBrakeShift = shift.isBrakeShift;
-              
+
               return (
-                <div 
-                  key={shift._id} 
+                <div
+                  key={shift._id}
                   className={`p-4 border rounded-lg shadow-sm transition-all duration-200 hover:shadow-md ${shiftColor} ${borderColor} ${textColor}`}
                 >
                   {/* Shift Header */}
@@ -4107,13 +4108,13 @@ const ShiftManagement = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="text-right">
                       <div className="text-xl font-bold">{employeeCount}</div>
                       <div className="text-xs text-white/80">employees</div>
                     </div>
                   </div>
-                  
+
                   {/* Time Slot */}
                   <div className="mb-3">
                     <div className="flex items-center gap-1 mb-0.5">
@@ -4127,22 +4128,21 @@ const ShiftManagement = () => {
                       )}
                     </div>
                     <p className="text-xs text-white/80 line-clamp-1">
-                      {isBrakeShift ? 
-                        "07:00-13:00 & 17:00-21:30 with break" : 
+                      {isBrakeShift ?
+                        "07:00-13:00 & 17:00-21:30 with break" :
                         (timeSlot?.description || "No description")}
                     </p>
                   </div>
-                  
+
                   {/* Actions */}
                   <div className="flex gap-1.5">
                     <button
                       onClick={() => handleViewEmployees(shift.shiftType, shift.shiftName)}
                       disabled={employeeCount === 0}
-                      className={`flex-1 px-2 py-1.5 text-xs rounded flex items-center justify-center gap-1 ${
-                        employeeCount > 0
-                          ? 'bg-white/20 text-white hover:bg-white/30 transition-colors'
-                          : 'bg-white/10 text-white/50 cursor-not-allowed'
-                      }`}
+                      className={`flex-1 px-2 py-1.5 text-xs rounded flex items-center justify-center gap-1 ${employeeCount > 0
+                        ? 'bg-white/20 text-white hover:bg-white/30 transition-colors'
+                        : 'bg-white/10 text-white/50 cursor-not-allowed'
+                        }`}
                     >
                       <FaEye className="text-xs" /> View
                     </button>
@@ -4203,7 +4203,7 @@ const ShiftManagement = () => {
                   const shift = masterShifts.find(s => s.shiftType === assignment.shiftType);
                   const isBrakeShift = shift?.isBrakeShift || false;
                   const rowColor = getShiftRowColor(assignment.shiftType);
-                  
+
                   return (
                     <tr key={assignment._id} className={`${rowColor} transition-colors duration-150`}>
                       <td className="px-4 py-3">
@@ -4219,15 +4219,15 @@ const ShiftManagement = () => {
                       </td>
                       <td className="px-4 py-3">
                         <div className="p-4 text-sm font-medium text-gray-900">
-                          {isBrakeShift ? 
-                            "07:00-13:00 & 17:00-21:30" : 
+                          {isBrakeShift ?
+                            "07:00-13:00 & 17:00-21:30" :
                             getEmployeeTimeRange(assignment)}
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="p-4 text-sm font-medium text-gray-900">
-                          {isBrakeShift ? 
-                            "Brake shift with afternoon break" : 
+                          {isBrakeShift ?
+                            "Brake shift with afternoon break" :
                             (assignment.employeeAssignment?.selectedDescription || timeSlot?.description || "Shift timing")}
                         </div>
                       </td>
@@ -4288,8 +4288,8 @@ const ShiftManagement = () => {
                       type="text"
                       maxLength="1"
                       value={createForm.shiftType}
-                      onChange={(e) => setCreateForm(prev => ({ 
-                        ...prev, 
+                      onChange={(e) => setCreateForm(prev => ({
+                        ...prev,
                         shiftType: e.target.value.toUpperCase().replace(/[^A-Z]/g, '')
                       }))}
                       className="w-full px-3 py-2 text-sm uppercase transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -4298,7 +4298,7 @@ const ShiftManagement = () => {
                     />
                     <p className="mt-1 text-xs text-gray-500">Enter a single letter (A-Z)</p>
                   </div>
-                  
+
                   <div>
                     <label className="block mb-1.5 text-sm text-sm text-gray-700">
                       Shift Name *
@@ -4319,7 +4319,7 @@ const ShiftManagement = () => {
                   <label className="block mb-2 text-sm text-sm text-gray-700">
                     Time Slot Configuration *
                   </label>
-                  
+
                   <div className="p-3 space-y-3 border border-gray-200 rounded-lg bg-gray-50">
                     <div>
                       <label className="block mb-1 text-xs text-gray-600">Time Range *</label>
@@ -4332,7 +4332,7 @@ const ShiftManagement = () => {
                         required
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block mb-1 text-xs text-gray-600">Description *</label>
                       <input
@@ -4403,8 +4403,8 @@ const ShiftManagement = () => {
                       type="text"
                       maxLength="2"
                       value={createForm.shiftType}
-                      onChange={(e) => setCreateForm(prev => ({ 
-                        ...prev, 
+                      onChange={(e) => setCreateForm(prev => ({
+                        ...prev,
                         shiftType: e.target.value.toUpperCase().replace(/[^A-Z]/g, '')
                       }))}
                       className="w-full px-3 py-2 text-sm uppercase transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -4413,7 +4413,7 @@ const ShiftManagement = () => {
                     />
                     <p className="mt-1 text-xs text-gray-500">Enter letter(s) for brake shift</p>
                   </div>
-                  
+
                   <div>
                     <label className="block mb-1.5 text-sm text-sm text-gray-700">
                       Shift Name *
@@ -4442,7 +4442,7 @@ const ShiftManagement = () => {
                         <p className="text-xs text-gray-600">First shift before break</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <div className="flex items-center justify-center bg-pink-100 rounded-full w-7 h-7">
                         <FaClock className="text-xs text-pink-600" />
@@ -4452,7 +4452,7 @@ const ShiftManagement = () => {
                         <p className="text-xs text-gray-600">Second shift after break</p>
                       </div>
                     </div>
-                    
+
                     <div className="p-1.5 text-xs text-gray-600 bg-white/50 rounded">
                       Total working hours: 10.5 hours with afternoon break
                     </div>
@@ -4550,14 +4550,14 @@ const ShiftManagement = () => {
                     <option value="">Select Shift Type</option>
                     {masterShifts.map(shift => (
                       <option key={shift._id} value={shift.shiftType}>
-                        Shift {shift.shiftType}: {shift.shiftName} {shift.isBrakeShift && '(Brake)'} 
+                        Shift {shift.shiftType}: {shift.shiftName} {shift.isBrakeShift && '(Brake)'}
                         ({shift.isBrakeShift ? '07:00-13:00 & 17:00-21:30' : shift.timeSlots?.[0]?.timeRange})
                       </option>
                     ))}
                     {employeeAssignments
                       .map(a => a.shiftType)
-                      .filter((type, index, self) => 
-                        self.indexOf(type) === index && 
+                      .filter((type, index, self) =>
+                        self.indexOf(type) === index &&
                         !masterShifts.find(s => s.shiftType === type)
                       )
                       .map(type => (
@@ -4567,14 +4567,14 @@ const ShiftManagement = () => {
                       ))
                     }
                   </select>
-                  
+
                   {assignForm.shiftType && masterShifts.find(s => s.shiftType === assignForm.shiftType) && (
                     <div className="p-2 mt-1.5 text-xs rounded bg-blue-50 border border-blue-100">
                       <p className="text-blue-700">
                         Time: {
                           masterShifts.find(s => s.shiftType === assignForm.shiftType)?.isBrakeShift ?
-                          "07:00-13:00 & 17:00-21:30 (Brake Shift)" :
-                          getShiftTimeSlot(assignForm.shiftType)?.timeRange || "Not specified"
+                            "07:00-13:00 & 17:00-21:30 (Brake Shift)" :
+                            getShiftTimeSlot(assignForm.shiftType)?.timeRange || "Not specified"
                         }
                       </p>
                     </div>
@@ -4623,14 +4623,14 @@ const ShiftManagement = () => {
                   Shift {viewShiftInfo.shiftType} • {viewEmployees.length} active employees
                 </p>
               </div>
-              <button 
-                onClick={() => setShowViewModal(false)} 
+              <button
+                onClick={() => setShowViewModal(false)}
                 className="text-xl text-gray-400 transition-colors hover:text-gray-600"
               >
                 &times;
               </button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto">
               <table className="w-full">
                 <thead className="sticky top-0 border-b border-gray-200 bg-gray-50">
@@ -4647,7 +4647,7 @@ const ShiftManagement = () => {
                     const rowColor = getShiftRowColor(emp.shiftType);
                     const shift = masterShifts.find(s => s.shiftType === emp.shiftType);
                     const isBrakeShift = shift?.isBrakeShift || false;
-                    
+
                     return (
                       <tr key={emp._id} className={`${rowColor} transition-colors duration-150`}>
                         <td className="px-4 py-3">
@@ -4700,7 +4700,7 @@ const ShiftManagement = () => {
                 </tbody>
               </table>
             </div>
-            
+
             <div className="p-4 border-t border-gray-200 bg-gray-50">
               <button
                 onClick={() => setShowViewModal(false)}

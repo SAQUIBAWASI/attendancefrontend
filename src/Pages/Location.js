@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
 const AddLocationPage = () => {
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ const AddLocationPage = () => {
 
     try {
       const response = await fetch(
-        "https://api.timelyhealth.in/api/location/add-location",
+        `${API_BASE_URL}/location/add-location`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -4,7 +4,7 @@ import { FiCheckSquare, FiLayout, FiSearch, FiSettings, FiTrash2, FiUser, FiUser
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const API_BASE_URL = "https://api.timelyhealth.in/api";
+import { API_BASE_URL } from "../config";
 
 const UserAccessManagement = () => {
   const [employees, setEmployees] = useState([]);
@@ -180,8 +180,8 @@ const UserAccessManagement = () => {
               key={dept}
               onClick={() => setSelectedDepartment(dept)}
               className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex justify-between items-center ${selectedDepartment === dept
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-100"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-100"
+                : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                 }`}
             >
               <span>{dept}</span>

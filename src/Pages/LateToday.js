@@ -109,16 +109,13 @@
 //       )}
 //     </div>
 //   );
-// };
-
-// export default LateToday;
-
 // src/pages/LateToday.jsx
 import axios from "axios";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { isEmployeeHidden } from "../utils/employeeStatus";
+import { API_BASE_URL } from "../config";
 
-const BASE_URL = "https://api.timelyhealth.in";
+const BASE_URL = API_BASE_URL;
 
 const LateToday = () => {
   const [records, setRecords] = useState([]);
@@ -132,7 +129,7 @@ const LateToday = () => {
   const fetchLateAttendance = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch all required data
       const [
         empResp,
@@ -140,22 +137,22 @@ const LateToday = () => {
         masterShiftsResp,
         attendanceResp,
       ] = await Promise.all([
-        axios.get(`${BASE_URL}/api/employees/get-employees`),
-        axios.get(`${BASE_URL}/api/shifts/assignments`),
-        axios.get(`${BASE_URL}/api/shifts/master`),
-        axios.get(`${BASE_URL}/api/attendance/allattendance`)
+        axios.get(`${BASE_URL}/employees/get-employees`),
+        axios.get(`${BASE_URL}/shifts/assignments`),
+        axios.get(`${BASE_URL}/shifts/master`),
+        axios.get(`${BASE_URL}/attendance/allattendance`)
       ]);
 
       const employees = empResp.data || [];
-      
+
       // Get shift data
       const shiftsData = shiftsResp.data.success ? shiftsResp.data.data || [] : [];
       const masterShifts = masterShiftsResp.data.success ? masterShiftsResp.data.data || [] : [];
-      
+
       // Process attendance data
       const attendanceData = attendanceResp.data || [];
-      const allAttendance = Array.isArray(attendanceData) 
-        ? attendanceData 
+      const allAttendance = Array.isArray(attendanceData)
+        ? attendanceData
         : attendanceData.records || attendanceData.allAttendance || [];
 
       // Process late records
@@ -172,16 +169,16 @@ const LateToday = () => {
 
   // Get Employee Shift Time
   const getEmployeeShift = (employeeId, shiftsData, masterShifts) => {
-    const shiftAssignment = shiftsData.find(s => 
-      s.employeeAssignment?.employeeId === employeeId || 
+    const shiftAssignment = shiftsData.find(s =>
+      s.employeeAssignment?.employeeId === employeeId ||
       s.employeeId === employeeId
     );
-    
+
     if (!shiftAssignment) return null;
-    
+
     const shiftType = shiftAssignment.shiftType;
     const masterShift = masterShifts.find(shift => shift.shiftType === shiftType);
-    
+
     if (!masterShift) {
       // Default shift times
       const shiftTimes = {
@@ -196,10 +193,10 @@ const LateToday = () => {
         "I": { start: "07:00", end: "17:00", grace: 5, isBrakeShift: false },
         "BR": { start: "07:00", end: "21:30", grace: 5, isBrakeShift: true },
       };
-      
+
       return shiftTimes[shiftType] || { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
     }
-    
+
     // Check if it's a brake shift
     if (masterShift.isBrakeShift && masterShift.timeSlots && masterShift.timeSlots.length >= 2) {
       return {
@@ -209,7 +206,7 @@ const LateToday = () => {
         isBrakeShift: true
       };
     }
-    
+
     // Regular shift
     if (masterShift.timeSlots && masterShift.timeSlots.length > 0) {
       const timeSlot = masterShift.timeSlots[0];
@@ -223,7 +220,7 @@ const LateToday = () => {
         };
       }
     }
-    
+
     return { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
   };
 
@@ -231,21 +228,21 @@ const LateToday = () => {
   const calculateLateMinutes = (employeeId, checkInTime, shiftsData, masterShifts) => {
     const shift = getEmployeeShift(employeeId, shiftsData, masterShifts);
     if (!shift || !checkInTime) return 0;
-    
+
     const checkInDateTime = new Date(checkInTime);
     const [hours, minutes] = shift.start.split(':').map(Number);
-    
+
     const shiftStartTime = new Date(checkInDateTime);
     shiftStartTime.setHours(hours, minutes, 0, 0);
-    
+
     const graceTime = new Date(shiftStartTime);
     graceTime.setMinutes(graceTime.getMinutes() + shift.grace);
-    
+
     if (checkInDateTime > graceTime) {
       const diffMs = checkInDateTime - graceTime;
       return Math.floor(diffMs / (1000 * 60));
     }
-    
+
     return 0;
   };
 
@@ -256,22 +253,22 @@ const LateToday = () => {
 
     attendanceData.forEach(record => {
       if (!record.checkInTime) return;
-      
+
       const recordDate = new Date(record.checkInTime).toISOString().split('T')[0];
       if (recordDate !== today) return;
-      
+
       const id = (typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId);
       if (!id) return;
-      
+
       const lateMinutes = calculateLateMinutes(id, record.checkInTime, shiftsData, masterShifts);
       if (lateMinutes > 0) {
         const emp = employees.find(e => e.employeeId === id || e._id === id);
-        
+
         // Skip inactive employees
         if (emp && isEmployeeHidden(emp)) return;
-        
+
         const shift = getEmployeeShift(id, shiftsData, masterShifts);
-        
+
         lateRecords.push({
           _id: record._id || id + Date.now(),
           employeeId: id,

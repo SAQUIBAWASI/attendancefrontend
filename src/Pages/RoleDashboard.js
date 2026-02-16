@@ -13,7 +13,7 @@
 //   const [formData, setFormData] = useState({ name: '', description: '' });
 //   const [error, setError] = useState('');
 //   const [success, setSuccess] = useState('');
-  
+
 //   // ✅ Modal State
 //   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
 //   const [selectedRoleForModal, setSelectedRoleForModal] = useState(null);
@@ -26,7 +26,7 @@
 //     try {
 //       setLoading(true);
 //       const response = await axios.get('http://localhost:5000/api/roles/all');
-      
+
 //       if (response.data.success) {
 //         setRoles(response.data.data);
 //       } else {
@@ -59,7 +59,7 @@
 //           `http://localhost:5000/api/roles/update/${editingRole._id}`,
 //           formData
 //         );
-        
+
 //         if (response.data.success) {
 //           setSuccess('Role updated successfully');
 //           fetchRoles();
@@ -72,7 +72,7 @@
 //           'http://localhost:5000/api/roles/create',
 //           formData
 //         );
-        
+
 //         if (response.data.success) {
 //           setSuccess('Role added successfully');
 //           fetchRoles();
@@ -92,7 +92,7 @@
 
 //     try {
 //       const response = await axios.delete(`http://localhost:5000/api/roles/delete/${id}`);
-      
+
 //       if (response.data.success) {
 //         setSuccess('Role deleted successfully');
 //         fetchRoles();
@@ -367,6 +367,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { FaEdit, FaEye, FaPlus, FaSearch, FaTrash, FaUserTie } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 
 const RoleDashboard = () => {
   const [roles, setRoles] = useState([]);
@@ -377,14 +378,14 @@ const RoleDashboard = () => {
   const [formData, setFormData] = useState({ name: '', description: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
+
   // Modal State
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [selectedRoleForModal, setSelectedRoleForModal] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [employeeLoading, setEmployeeLoading] = useState(false);
   const [employeeSearch, setEmployeeSearch] = useState('');
-  
+
   const location = useLocation();
 
   useEffect(() => {
@@ -402,8 +403,8 @@ const RoleDashboard = () => {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/roles/all');
-      
+      const response = await axios.get(`${API_BASE_URL}/roles/all`);
+
       if (response.data.success) {
         setRoles(response.data.data);
       } else {
@@ -421,13 +422,13 @@ const RoleDashboard = () => {
   const fetchEmployeesForRole = async (roleId) => {
     try {
       setEmployeeLoading(true);
-      const response = await axios.get(`http://localhost:5000/api/roles/${roleId}/employees`);
-      
+      const response = await axios.get(`${API_BASE_URL}/roles/${roleId}/employees`);
+
       console.log('Role Employees API Response:', response.data);
-      
+
       // Handle different response formats
       let employeesData = [];
-      
+
       if (response.data.success) {
         if (Array.isArray(response.data.employees)) {
           employeesData = response.data.employees;
@@ -439,7 +440,7 @@ const RoleDashboard = () => {
           employeesData = response.data;
         }
       }
-      
+
       setEmployees(employeesData || []);
     } catch (error) {
       console.error('Error fetching role employees:', error);
@@ -468,10 +469,10 @@ const RoleDashboard = () => {
     try {
       if (editingRole) {
         const response = await axios.put(
-          `http://localhost:5000/api/roles/update/${editingRole._id}`,
+          `${API_BASE_URL}/roles/update/${editingRole._id}`,
           formData
         );
-        
+
         if (response.data.success) {
           setSuccess('Role updated successfully');
           fetchRoles();
@@ -481,10 +482,10 @@ const RoleDashboard = () => {
         }
       } else {
         const response = await axios.post(
-          'http://localhost:5000/api/roles/create',
+          `${API_BASE_URL}/roles/create`,
           formData
         );
-        
+
         if (response.data.success) {
           setSuccess('Role added successfully');
           fetchRoles();
@@ -504,8 +505,8 @@ const RoleDashboard = () => {
     if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
 
     try {
-      const response = await axios.delete(`http://localhost:5000/api/roles/delete/${id}`);
-      
+      const response = await axios.delete(`${API_BASE_URL}/roles/delete/${id}`);
+
       if (response.data.success) {
         setSuccess('Role deleted successfully');
         fetchRoles();
@@ -569,20 +570,20 @@ const RoleDashboard = () => {
   );
 
   // Filter employees with safe checks
-  const filteredEmployees = Array.isArray(employees) 
+  const filteredEmployees = Array.isArray(employees)
     ? employees.filter((emp) => {
-        if (!emp) return false;
-        const searchTerm = employeeSearch.toLowerCase().trim();
-        
-        const nameMatch = emp.name && emp.name.toLowerCase().includes(searchTerm);
-        const emailMatch = emp.email && emp.email.toLowerCase().includes(searchTerm);
-        const phoneMatch = emp.phone && emp.phone.toString().includes(searchTerm);
-        const empIdMatch = emp.employeeId && emp.employeeId.toLowerCase().includes(searchTerm);
-        const roleMatch = emp.role && emp.role.toLowerCase().includes(searchTerm);
-        const departmentMatch = emp.department && emp.department.toLowerCase().includes(searchTerm);
-        
-        return nameMatch || emailMatch || phoneMatch || empIdMatch || roleMatch || departmentMatch;
-      })
+      if (!emp) return false;
+      const searchTerm = employeeSearch.toLowerCase().trim();
+
+      const nameMatch = emp.name && emp.name.toLowerCase().includes(searchTerm);
+      const emailMatch = emp.email && emp.email.toLowerCase().includes(searchTerm);
+      const phoneMatch = emp.phone && emp.phone.toString().includes(searchTerm);
+      const empIdMatch = emp.employeeId && emp.employeeId.toLowerCase().includes(searchTerm);
+      const roleMatch = emp.role && emp.role.toLowerCase().includes(searchTerm);
+      const departmentMatch = emp.department && emp.department.toLowerCase().includes(searchTerm);
+
+      return nameMatch || emailMatch || phoneMatch || empIdMatch || roleMatch || departmentMatch;
+    })
     : [];
 
   if (loading) {
@@ -597,7 +598,7 @@ const RoleDashboard = () => {
     <div className="p-6">
       {/* Top Bar: Search + Button */}
       <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
-        
+
         {/* Search Bar */}
         <div className="relative w-full md:max-w-md">
           <FaSearch className="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
@@ -644,7 +645,7 @@ const RoleDashboard = () => {
               <th className="p-2 font-bold text-left text-gray-800">Actions</th>
             </tr>
           </thead>
-          
+
           <tbody>
             {filteredRoles.map((role) => (
               <tr key={role._id} className="border-b hover:bg-gray-50">
@@ -671,11 +672,10 @@ const RoleDashboard = () => {
                     <button
                       onClick={() => handleViewEmployees(role)}
                       disabled={!role.employeeCount || role.employeeCount === 0}
-                      className={`px-3 py-1 text-sm font-medium rounded-lg flex items-center gap-2 ${
-                        role.employeeCount > 0
+                      className={`px-3 py-1 text-sm font-medium rounded-lg flex items-center gap-2 ${role.employeeCount > 0
                           ? 'bg-green-100 text-green-700 hover:bg-green-200'
                           : 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                      }`}
+                        }`}
                     >
                       <FaEye size={14} /> View
                     </button>
@@ -793,7 +793,7 @@ const RoleDashboard = () => {
       {showEmployeeModal && selectedRoleForModal && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-2 overflow-y-auto bg-black bg-opacity-50">
           <div className="w-full my-8 bg-white rounded-lg shadow-xl max-w-7xl">
-            
+
             {/* Modal Header */}
             <div className="flex items-center justify-between p-2 border-b">
               <div>
@@ -842,7 +842,7 @@ const RoleDashboard = () => {
                 </div>
               ) : filteredEmployees.length > 0 ? (
                 <table className="min-w-full">
-                <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
+                  <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
                     <tr>
                       <th className="py-3 text-center">Emp ID</th>
                       <th className="py-3 text-center">Name</th>
@@ -852,7 +852,7 @@ const RoleDashboard = () => {
                       <th className="py-3 text-center">Join Date</th>
                     </tr>
                   </thead>
-                  
+
                   <tbody>
                     {filteredEmployees.map((emp) => (
                       <tr key={emp._id || emp.id} className="border-b hover:bg-gray-50">

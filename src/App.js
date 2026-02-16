@@ -143,6 +143,17 @@ import WhoWeServePage from "./Pages/WhoWeServePage.js";
 // import EmpManagment from "./Pages/EmpManagment.js";
 import JobDetails from "./Pages/JobDetails.jsx";
 import JobPost from "./Pages/JobPost.jsx";
+import Score from "./Pages/Score.jsx";
+import SendOffer from "./Pages/SendOffer.jsx";
+import JobApplicants from "./Pages/JobApplicants.jsx";
+import CandidateDashboard from "./Pages/CandidateDashboard.jsx";
+import AssessmentManager from "./Pages/AssessmentManager.jsx";
+import TakeAssessment from "./Pages/TakeAssessment.jsx";
+import CandidateLogin from "./Pages/CandidateLogin.jsx";
+import CandidateRegister from "./Pages/CandidateRegister.jsx";
+import Documents from "./Pages/Documents.jsx";
+import Medical from "./Pages/Medical.jsx";
+
 function App() {
   return (
     <Routes>
@@ -154,6 +165,8 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/admin-login" element={<Login />} />
       <Route path="/employee-login" element={<Login />} />
+      <Route path="/candidate-login" element={<CandidateLogin />} />
+      <Route path="/candidate-register" element={<CandidateRegister />} />
       <Route path="/employeedashboard" element={<EmployeeLayout><EmployeeDashboard /></EmployeeLayout>} />
       <Route path="/leave-application" element={<EmployeeLayout><LeaveApplication /></EmployeeLayout>} />
       <Route path="/myleaves" element={<EmployeeLayout><EmployeeLeaves /></EmployeeLayout>} />
@@ -164,6 +177,9 @@ function App() {
 
       <Route path="/mylocation" element={<EmployeeLayout><EmployeeLocation /></EmployeeLayout>} />
       <Route path="/jobs/:id" element={<JobDetails />} />
+      <Route path="/assessment/:jobId/:applicationId" element={<TakeAssessment />} />
+      <Route path="/assessment/:jobId/:applicationId/:quizId" element={<TakeAssessment />} />
+      <Route path="/candidate-dashboard" element={<CandidateDashboard />} />
       <Route path="/superadmin" element={<SuperAdminMedicalMonitor />} />
       <Route path="/timelynavbar" element={<TimelyNavbar />}></Route>
       <Route path="timelyfooter" element={<TimelyFooter />}></Route>
@@ -311,7 +327,7 @@ function App() {
               <Route path="/addlocation" element={<AddLocationPage />} />
               <Route path="/locationlist" element={<LocationListPage />} />
               <Route path="attedancesummary" element={<AttendanceSummary />} />
-              {/* <Route path="/empmanagement" element={<EmpManagment />} /> */}
+              {/* <Route path="/empmanagement" element={<EmpManagment />} */}
               <Route path="/payroll" element={<PayRoll />} />
               <Route path="/useractivity" element={<UserActivity />} />
               <Route path="/departmentdashboard" element={<DepartmentDashboard />} />
@@ -321,8 +337,13 @@ function App() {
               <Route path="/client-requests" element={<ClientRequests />} />
 
               <Route path="/jobpost" element={<JobPost />} />
-
+              <Route path="/score" element={<Score />} />
+              <Route path="/sendoffer" element={<SendOffer />} />
+              <Route path="/job-applicants" element={<JobApplicants />} />
+              <Route path="/assessment-manager" element={<AssessmentManager />} />
+              <Route path="/documents" element={<Documents />} />
               <Route path="/admin-notifications" element={<AdminNotifications />} />
+              <Route path="/medical" element={<Medical/>}/>
 
             </Routes>
           </AdminLayout>

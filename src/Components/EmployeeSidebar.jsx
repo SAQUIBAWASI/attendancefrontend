@@ -180,6 +180,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
 const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -256,7 +257,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
   const handleLogout = async () => {
     try {
       await axios.post(
-        "http://localhost:5000/api/employees/logout",
+        `${API_BASE_URL}/employees/logout`,
         {},
         { withCredentials: true }
       );
@@ -294,7 +295,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
 
       try {
         // Added timestamp to prevent caching
-        const response = await axios.get(`http://localhost:5000/api/employees/get-employee?employeeId=${storedId}&t=${new Date().getTime()}`);
+        const response = await axios.get(`${API_BASE_URL}/employees/get-employee?employeeId=${storedId}&t=${new Date().getTime()}`);
         console.log("🔍 Permissions API Response:", response.data);
         if (response.data) {
           const fetchedPermissions = response.data.data?.permissions || response.data.permissions || [];

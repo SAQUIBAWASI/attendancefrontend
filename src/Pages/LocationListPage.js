@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FiEdit, FiSearch, FiTrash2 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
 const LocationListPage = () => {
   const [locations, setLocations] = useState([]);
@@ -20,7 +21,7 @@ const LocationListPage = () => {
   // Fetch all locations
   const fetchLocations = async () => {
     try {
-      const response = await fetch("https://api.timelyhealth.in/api/location/alllocation");
+      const response = await fetch(`${API_BASE_URL}/location/alllocation`);
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.message || "Failed to fetch locations");
@@ -60,7 +61,7 @@ const LocationListPage = () => {
     if (!window.confirm("Are you sure you want to delete this location?")) return;
 
     try {
-      const response = await fetch(`https://api.timelyhealth.in/api/location/deletelocation/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/location/deletelocation/${id}`, {
         method: "DELETE",
       });
       const data = await response.json();
@@ -84,7 +85,7 @@ const LocationListPage = () => {
     if (!window.confirm(confirmMsg)) return;
 
     try {
-      const response = await fetch(`https://api.timelyhealth.in/api/location/updatelocation/${location._id}`, {
+      const response = await fetch(`${API_BASE_URL}/location/updatelocation/${location._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -119,7 +120,7 @@ const LocationListPage = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`https://api.timelyhealth.in/api/location/updatelocation/${editLocation._id}`, {
+      const response = await fetch(`${API_BASE_URL}/location/updatelocation/${editLocation._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -251,8 +252,8 @@ const LocationListPage = () => {
                       <button
                         onClick={() => handleToggleStatus(loc)}
                         className={`px-2 py-1 text-[10px] font-bold rounded uppercase transition ${loc.status === "inactive"
-                            ? "bg-gray-100 text-gray-500 hover:bg-green-100 hover:text-green-700"
-                            : "bg-green-100 text-green-700 hover:bg-gray-200 hover:text-gray-700"
+                          ? "bg-gray-100 text-gray-500 hover:bg-green-100 hover:text-green-700"
+                          : "bg-green-100 text-green-700 hover:bg-gray-200 hover:text-gray-700"
                           }`}
                         title={loc.status === "inactive" ? "Make Active" : "Make Inactive"}
                       >

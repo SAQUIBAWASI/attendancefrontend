@@ -1,4 +1,6 @@
 import { useState, useRef } from "react";
+import axios from "axios";
+import { API_BASE_URL } from "../config";
 import { FaCloudUploadAlt } from "react-icons/fa";
 
 const BulkQuizUploader = () => {
@@ -18,21 +20,16 @@ const BulkQuizUploader = () => {
         return;
       }
 
-      const res = await fetch("http://31.97.206.144:6098/api/admin/add-bulkquizzes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(jsonData),
-      });
+      const res = await axios.post(`${API_BASE_URL}/admin/add-bulkquizzes`, jsonData);
 
-      const result = await res.json();
-      if (res.ok) {
+      if (res.data.success) {
         setUploadResult({ success: true, message: "Quizzes uploaded successfully!" });
         setQuizzes(jsonData.quizzes);
       } else {
-        setUploadResult({ success: false, message: result.message || "Upload failed" });
+        setUploadResult({ success: false, message: res.data.message || "Upload failed" });
       }
     } catch (error) {
-      setUploadResult({ success: false, message: "Error parsing or uploading file" });
+      setUploadResult({ success: false, message: error.response?.data?.message || "Error parsing or uploading file" });
     }
   };
 
@@ -73,7 +70,7 @@ const BulkQuizUploader = () => {
       <div className="mb-10 bg-gray-50 p-4 border rounded">
         <h2 className="font-semibold mb-2">📄 JSON Format Example:</h2>
         <pre className="bg-white p-3 text-xs rounded border overflow-auto">
-{`{
+          {`{
   "quizzes": [
     {
       "topic": "Entertainment: Film",

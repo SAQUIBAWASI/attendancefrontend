@@ -255,6 +255,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { isEmployeeHidden } from "../utils/employeeStatus";
+import { API_BASE_URL } from "../config";
 
 const TodayAttendance = () => {
   const [todayRecords, setTodayRecords] = useState([]);
@@ -272,14 +273,14 @@ const TodayAttendance = () => {
 
       // 1️⃣ Fetch attendance
       const attendanceResp = await axios.get(
-        "https://api.timelyhealth.in/api/attendance/today"
+        `${API_BASE_URL}/attendance/today`
       );
 
       const attendance = attendanceResp.data.records || [];
 
       // 2️⃣ Fetch employee list
       const empResp = await axios.get(
-        "https://api.timelyhealth.in/api/employees/get-employees"
+        `${API_BASE_URL}/employees/get-employees`
       );
       const employees = empResp.data || [];
 
