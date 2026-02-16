@@ -12953,7 +12953,7 @@ import JSZip from "jszip";
 import { useEffect, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://api.timelyhealth.in/api";
 
 export default function AttendanceSummary() {
   const [editedRows, setEditedRows] = useState({});
@@ -13673,7 +13673,7 @@ export default function AttendanceSummary() {
       setLoading(true);
       setError("");
 
-      const empRes = await fetch(`${BASE_URL}/api/employees/get-employees`);
+      const empRes = await fetch(`${BASE_URL}/employees/get-employees`);
       if (!empRes.ok) throw new Error("Failed to fetch employees");
       const empData = await empRes.json();
       const INACTIVE_EMPLOYEE_IDS = ['EMP002', 'EMP003', 'EMP004', 'EMP008', 'EMP010', 'EMP018', 'EMP019'];
@@ -13685,7 +13685,7 @@ export default function AttendanceSummary() {
       setEmployees(activeEmployees);
 
       try {
-        const shiftsRes = await fetch(`${BASE_URL}/api/shifts/master`);
+        const shiftsRes = await fetch(`${BASE_URL}/shifts/master`);
         if (shiftsRes.ok) {
           const shiftsResult = await shiftsRes.json();
           if (shiftsResult.success) {
@@ -13693,7 +13693,7 @@ export default function AttendanceSummary() {
           }
         }
 
-        const assignmentsRes = await fetch(`${BASE_URL}/api/shifts/assignments`);
+        const assignmentsRes = await fetch(`${BASE_URL}/shifts/assignments`);
         if (assignmentsRes.ok) {
           const assignmentsResult = await assignmentsRes.json();
           if (assignmentsResult.success) {
@@ -13704,7 +13704,7 @@ export default function AttendanceSummary() {
         console.error("Error fetching shift data:", shiftError);
       }
 
-      const attRes = await fetch(`${BASE_URL}/api/attendance/allattendance`);
+      const attRes = await fetch(`${BASE_URL}/attendance/allattendance`);
       if (!attRes.ok) throw new Error("Failed to fetch attendance records");
       const attData = await attRes.json();
 
@@ -13727,7 +13727,7 @@ export default function AttendanceSummary() {
 
   const calculateSummaryFromBackend = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/api/attendancesummary/calculate`, {
+      const response = await fetch(`${BASE_URL}/attendancesummary/calculate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -13774,7 +13774,7 @@ export default function AttendanceSummary() {
       setLoading(true);
       showSaveStatus("🔧 Fixing wrong data...");
 
-      const response = await fetch(`${BASE_URL}/api/attendancesummary/fix-summary-data`, {
+      const response = await fetch(`${BASE_URL}/attendancesummary/fix-summary-data`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -13802,7 +13802,7 @@ export default function AttendanceSummary() {
 
   const updateAttendanceRecord = async (attendanceId, hours, region, comment, reason) => {
     try {
-      const response = await fetch(`${BASE_URL}/api/attendancesummary/update`, {
+      const response = await fetch(`${BASE_URL}/attendancesummary/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -13844,7 +13844,7 @@ export default function AttendanceSummary() {
 
       console.log("📤 Sending Update/Create Request:", payload);
 
-      const response = await fetch(`${BASE_URL}/api/attendancesummary/update`, {
+      const response = await fetch(`${BASE_URL}/attendancesummary/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -13886,7 +13886,7 @@ export default function AttendanceSummary() {
     lastSaveTimestampRef.current = changeTimestamp || Date.now();
 
     try {
-      const response = await fetch(`${BASE_URL}/api/attendancesummary/save`, {
+      const response = await fetch(`${BASE_URL}/attendancesummary/save`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -13936,7 +13936,7 @@ export default function AttendanceSummary() {
 
       console.log(`📥 Fetching details for ${employeeId} with params:`, params.toString());
 
-      const response = await fetch(`${BASE_URL}/api/attendancesummary/employee-details?${params}`);
+      const response = await fetch(`${BASE_URL}/attendancesummary/employee-details?${params}`);
       const result = await response.json();
 
       if (result.success) {
