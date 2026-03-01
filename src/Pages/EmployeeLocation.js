@@ -233,12 +233,12 @@ const EmployeeLocation = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
-      <main className="flex-1 p-4 sm:p-6 lg:p-8">
-        <div className="max-w-6xl p-6 mx-auto bg-white rounded-lg shadow-md">
+      <main className="flex-1 p-0 sm:p-0 lg:p-8">
+        <div className="max-w-9xl p-0 mx-auto bg-white rounded-lg shadow-md">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-blue-900">
+            {/* <h2 className="text-2xl font-bold text-blue-900">
               My Assigned Locations
-            </h2>
+            </h2> */}
           </div>
 
           {locations.length === 0 ? (
@@ -246,17 +246,18 @@ const EmployeeLocation = () => {
               No location assigned yet. Please contact admin.
             </p>
           ) : (
+            <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
             <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
               <table className="min-w-full">
-                <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
+                <thead className="text-left text-sm text-white bg-gradient-to-r from-green-500 to-blue-600">
                   <tr>
-                    <th className="px-4 py-2">Employee Name</th>
-                    <th className="px-4 py-2">Employee ID</th>
-                    <th className="px-4 py-2">Location Name</th>
-                    <th className="px-4 py-2">Full Address</th>
-                    <th className="px-4 py-2">Latitude</th>
-                    <th className="px-4 py-2">Longitude</th>
-                    <th className="px-4 py-2">Assigned Date</th>
+                    <th className=" py-2 text-center">Employee ID</th>
+                    <th className=" py-2 text-center"> Name</th>
+                    <th className=" py-2 text-center">Location </th>
+                    <th className=" py-2 text-center">Full Address</th>
+                    <th className=" py-2 text-center">Latitude</th>
+                    <th className=" py-2 text-center">Longitude</th>
+                    {/* <th className="px-2 py-2 text-center">Assigned Date</th> */}
                   </tr>
                 </thead>
                 <tbody>
@@ -266,10 +267,10 @@ const EmployeeLocation = () => {
                       className="border-b hover:bg-gray-50"
                     >
                       <td className="p-2 border">
-                        {location?.employee?.name || "N/A"}
+                        {location?.employee?.employeeId || "N/A"}
                       </td>
                       <td className="p-2 border">
-                        {location?.employee?.employeeId || "N/A"}
+                        {location?.employee?.name || "N/A"}
                       </td>
                       <td className="p-2 border">
                         {location?.location?.name || "N/A"}
@@ -283,16 +284,17 @@ const EmployeeLocation = () => {
                       <td className="p-2 border">
                         {location?.location?.longitude ?? "N/A"}
                       </td>
-                      <td className="p-2 border">
+                      {/* <td className="p-2 border">
                         {location.assignDate || location.createdAt 
                           ? new Date(location.assignDate || location.createdAt).toLocaleDateString()
                           : "N/A"
                         }
-                      </td>
+                      </td> */}
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
             </div>
           )}
         </div>

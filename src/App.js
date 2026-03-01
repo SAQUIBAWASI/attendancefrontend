@@ -1,5 +1,5 @@
 import { Route, Routes } from "react-router-dom";
-
+import './index.css'; // ✅ YEH BHI ADD KAR DO
 // Import your components
 import Login from "../src/Pages/Login.js";
 import CompanySidebar from "./Components/CompanySidebar.js";
@@ -142,6 +142,7 @@ import UserAccessManagement from "./Pages/UserAccessManagement.js";
 import UserActivity from "./Pages/UserActivity.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
 // import EmpManagment from "./Pages/EmpManagment.js";
+<<<<<<< HEAD
 import JobDetails from "./Pages/JobDetails.jsx";
 import JobPost from "./Pages/JobPost.jsx";
 import Score from "./Pages/Score.jsx";
@@ -149,10 +150,13 @@ import SendOffer from "./Pages/SendOffer.jsx";
 import JobApplicants from "./Pages/JobApplicants.jsx";
 import CandidateDashboard from "./Pages/CandidateDashboard.jsx";
 import PersonalDocuments from "./Pages/PersonalDocuments.jsx";
+=======
+>>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
 import AssessmentManager from "./Pages/AssessmentManager.jsx";
-import TakeAssessment from "./Pages/TakeAssessment.jsx";
+import CandidateDashboard from "./Pages/CandidateDashboard.jsx";
 import CandidateLogin from "./Pages/CandidateLogin.jsx";
 import CandidateRegister from "./Pages/CandidateRegister.jsx";
+<<<<<<< HEAD
 // import Documents from "./Pages/Documents.jsx";
 // import PersonalDocuments from "./Pages/PersonalDocuments.jsx";
 import Medical from "./Pages/Medical.jsx";
@@ -172,6 +176,16 @@ import EmployeeJourney from "./Pages/EmployeeJourney.jsx";
 import ExpenseManagement from "./Pages/ExpenseManagement.jsx";
 import AllExpensives from "./Pages/AllExpensives.jsx";
 
+=======
+import Documents from "./Pages/Documents.jsx";
+import JobApplicants from "./Pages/JobApplicants.jsx";
+import JobDetails from "./Pages/JobDetails.jsx";
+import JobPost from "./Pages/JobPost.jsx";
+import Medical from "./Pages/Medical.jsx";
+import Score from "./Pages/Score.jsx";
+import SendOffer from "./Pages/SendOffer.jsx";
+import TakeAssessment from "./Pages/TakeAssessment.jsx";
+>>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
 
 function App() {
   return (
@@ -239,7 +253,11 @@ function App() {
       <Route path="/emp-user-access" element={<EmployeeLayout><UserAccessManagement /></EmployeeLayout>} />
       <Route path="/emp-add-location" element={<EmployeeLayout><AddLocationPage /></EmployeeLayout>} />
       <Route path="/emp-notifications" element={<EmployeeLayout><EmployeeNotifications /></EmployeeLayout>} />
-
+      <Route path="/emp-job-posts" element={<EmployeeLayout><JobPost /></EmployeeLayout>} />
+      <Route path="/emp-job-applicants" element={<EmployeeLayout><JobApplicants /></EmployeeLayout>} />
+      <Route path="/emp-score-board" element={<EmployeeLayout><Score /></EmployeeLayout>} />
+      <Route path="/emp-assessments" element={<EmployeeLayout><AssessmentManager /></EmployeeLayout>} />
+      <Route path="/emp-documents" element={<EmployeeLayout><Documents /></EmployeeLayout>} />
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"
