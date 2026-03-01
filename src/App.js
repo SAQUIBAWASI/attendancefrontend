@@ -113,8 +113,8 @@ import WeeklyHoliday from "./Pages/WeeklyHoliday.js";
 // import LandingPage from "./Pages/LandingPage.js";
 import EmployeeDetailsModal from "./Components/EmployeeDetailsModel.js";
 import TimelyNavbar from "./Components/TimelyNavbar.js";
-import EmployeeLayout from "./Layout/EmployeeLayout.jsx";
 import CandidateLayout from "./Layout/CandidateLayout.jsx";
+import EmployeeLayout from "./Layout/EmployeeLayout.jsx";
 import AboutPage from "./Pages/AboutPage.js";
 import AdminEmployeeLocations from "./Pages/AdminEmployeeLocations.js";
 import AdminNotifications from "./Pages/AdminNotifications.js";
@@ -143,13 +143,13 @@ import UserActivity from "./Pages/UserActivity.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
 // import EmpManagment from "./Pages/EmpManagment.js";
 
+import CandidateDashboard from "./Pages/CandidateDashboard.jsx";
+import JobApplicants from "./Pages/JobApplicants.jsx";
 import JobDetails from "./Pages/JobDetails.jsx";
 import JobPost from "./Pages/JobPost.jsx";
+import PersonalDocuments from "./Pages/PersonalDocuments.jsx";
 import Score from "./Pages/Score.jsx";
 import SendOffer from "./Pages/SendOffer.jsx";
-import JobApplicants from "./Pages/JobApplicants.jsx";
-import CandidateDashboard from "./Pages/CandidateDashboard.jsx";
-import PersonalDocuments from "./Pages/PersonalDocuments.jsx";
 
 import AssessmentManager from "./Pages/AssessmentManager.jsx";
 // import CandidateDashboard from "./Pages/CandidateDashboard.jsx";
@@ -161,19 +161,19 @@ import CandidateRegister from "./Pages/CandidateRegister.jsx";
 import Medical from "./Pages/Medical.jsx";
 // import PersonalDocumets from "./Pages/PersonalDocumets.jsx";
 // import PersonalDocuments from "./Pages/PersonalDocuments.jsx";
-import EmployeeResignation from "./Pages/EmployeeResignation.jsx";
-import RecruitmentDashboard from "./Pages/RecruitmentDashboard.jsx";
 import AllJobs from "./Pages/AllJobs.jsx";
 import AppliedJobs from "./Pages/AppliedJobs.jsx";
-import Interview from "./Pages/Interview.jsx";
-import Letters from "./Pages/Letters.jsx";
 import CandidateDocuments from "./Pages/CandidateDocuments.jsx";
 import CandidatePersonalDocuments from "./Pages/CandidatePersonalDocuments.jsx";
-import MyJobs from "./Pages/MyJobs.jsx";
 import EmployeeJourney from "./Pages/EmployeeJourney.jsx";
+import EmployeeResignation from "./Pages/EmployeeResignation.jsx";
+import Interview from "./Pages/Interview.jsx";
+import Letters from "./Pages/Letters.jsx";
+import MyJobs from "./Pages/MyJobs.jsx";
+import RecruitmentDashboard from "./Pages/RecruitmentDashboard.jsx";
 // import ExpenseManagement from "./Pages/ExpenseManagement.jsx";
-import ExpenseManagement from "./Pages/ExpenseManagement.jsx";
 import AllExpensives from "./Pages/AllExpensives.jsx";
+import ExpenseManagement from "./Pages/ExpenseManagement.jsx";
 
 import Documents from "./Pages/Documents.jsx";
 // import JobApplicants from "./Pages/JobApplicants.jsx";
@@ -256,6 +256,7 @@ function App() {
       <Route path="/emp-score-board" element={<EmployeeLayout><Score /></EmployeeLayout>} />
       <Route path="/emp-assessments" element={<EmployeeLayout><AssessmentManager /></EmployeeLayout>} />
       <Route path="/emp-documents" element={<EmployeeLayout><Documents /></EmployeeLayout>} />
+      <Route path="/emp-all-expensives-management" element={<EmployeeLayout><AllExpensives /></EmployeeLayout>} />
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"

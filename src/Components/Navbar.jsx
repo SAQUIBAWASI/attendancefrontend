@@ -450,6 +450,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
       "/permissions": "Permissions",
       "/shift": "Shift Management",
       "/shiftlist": "Shift List",
+      "/all-expensives": "Expenses",
     };
 
     return routes[location.pathname] || "Dashboard";

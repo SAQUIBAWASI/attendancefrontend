@@ -819,7 +819,8 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/job-applicants": "Job Applicants",
       "/score": "Score Board",
       "/assessment-manager": "Assessments",
-      "/documents": "Documents"
+      "/documents": "Documents",
+      "/all-expensives": "Expenses"
     };
     return pathMap[path] || "Dashboard";
   };

@@ -298,6 +298,7 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
       "/emp-score-board": "Score Board",
       "/emp-assessments": "Assessments",
       "/emp-documents": "Documents",
+      "/emp-all-expensives-management": "Expenses",
   };
 
   const handleMenuClick = () => {
