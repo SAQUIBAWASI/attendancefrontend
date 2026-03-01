@@ -636,7 +636,7 @@ const RoleDashboard = () => {
       {/* Roles Table */}
       <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
         <table className="min-w-full">
-          <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
+          <thead className="text-left text-sm text-white bg-gradient-to-r from-green-500 to-blue-600">
             <tr>
               <th className="p-2 font-bold text-left text-gray-800">Role Name</th>
               <th className="p-2 font-bold text-left text-gray-800">Description</th>

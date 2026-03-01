@@ -565,12 +565,12 @@ const EmployeeShift = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
-      <main className="flex-1 p-4 sm:p-6 lg:p-8">
-        <div className="max-w-6xl p-6 mx-auto bg-white rounded-lg shadow-md">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-blue-900">
+      <main className="flex-1 p-0 sm:p-0 lg:p-8">
+        <div className="max-w-9xl p-0 mx-auto bg-white rounded-lg shadow-md">
+          <div className="mb-0">
+            {/* <h2 className="text-2xl font-bold text-blue-900">
               My Shift Schedule
-            </h2>
+            </h2> */}
           </div>
 
           {shifts.length === 0 ? (
@@ -584,7 +584,7 @@ const EmployeeShift = () => {
           ) : (
             <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
               <table className="min-w-full">
-                <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
+                <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
                   <tr>
                     <th className="px-4 py-2">Shift Type</th>
                     <th className="px-4 py-2">Shift Name</th>

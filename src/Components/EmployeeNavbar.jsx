@@ -278,6 +278,26 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
     "/mypermissions": "My Permissions",
     "/notifications": "Notifications",
     "/emp-notifications": "Notifications",
+     "/emp-admin-dashboard": "Main Dashboard",
+      "/emp-employees": "Employee Management",
+      "/emp-add-employee": "Add Employee",
+      "/emp-attendance-summary": "Attendance Summary",
+      "/emp-attendance-records": "Attendance Records",
+      "/emp-today-attendance": "Today's Attendance",
+      "/emp-absent-today": "Absent Today",
+      "/emp-leaves": "Leave Approval",
+      "/emp-payroll": "Payroll",
+      "/emp-reports": "Reports",
+      "/emp-locations": "Locations",
+      "/emp-shifts": "Shift Management",
+      "/emp-user-activity": "User Activity",
+      "/emp-user-access": "User Access",
+      // Recruitment Routes
+      "/emp-job-posts": "Job Posts",
+      "/emp-job-applicants": "Job Applicants",
+      "/emp-score-board": "Score Board",
+      "/emp-assessments": "Assessments",
+      "/emp-documents": "Documents",
   };
 
   const handleMenuClick = () => {

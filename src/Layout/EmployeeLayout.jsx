@@ -72,6 +72,93 @@
 //   );
 // }
 
+// import { useEffect, useState } from "react";
+// import { useLocation } from "react-router-dom";
+// import EmployeeNavbar from "../Components/EmployeeNavbar";
+// import EmployeeSidebar from "../Components/EmployeeSidebar";
+
+// export default function EmployeeLayout({ children }) {
+//   const location = useLocation();
+//   const [isMobile, setIsMobile] = useState(false);
+//   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+
+//   // Check screen size
+//   useEffect(() => {
+//     const checkMobile = () => {
+//       const mobile = window.innerWidth <= 768;
+//       setIsMobile(mobile);
+//       if (mobile) {
+//         setIsSidebarCollapsed(true);
+//       }
+//     };
+
+//     checkMobile();
+//     window.addEventListener("resize", checkMobile);
+//     return () => window.removeEventListener("resize", checkMobile);
+//   }, []);
+
+//   // Auto-close sidebar on mobile when route changes
+//   useEffect(() => {
+//     if (isMobile) {
+//       setIsSidebarCollapsed(true);
+//     }
+//   }, [location.pathname, isMobile]);
+
+//   const toggleSidebar = () => {
+//     setIsSidebarCollapsed(!isSidebarCollapsed);
+//   };
+
+//   const closeSidebar = () => {
+//     setIsSidebarCollapsed(true);
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-gray-100">
+//       {/* Sidebar */}
+//       <div className={`fixed top-0 left-0 h-full z-30 transition-all duration-300 ${
+//         isMobile 
+//           ? (isSidebarCollapsed ? "-translate-x-full" : "translate-x-0") 
+//           : ""
+//       } ${isSidebarCollapsed ? "w-16" : "w-52"}`}>
+//         <EmployeeSidebar
+//           isCollapsed={isSidebarCollapsed}
+//           isMobile={isMobile}
+//           onClose={closeSidebar}
+//         />
+//       </div>
+
+//       {/* Main Content Area */}
+//       <div className={`min-h-screen transition-all duration-300 ${
+//         isMobile 
+//           ? "ml-0" 
+//           : isSidebarCollapsed ? "ml-16" : "ml-52"
+//       }`}>
+//         {/* Navbar */}
+//         <div className="sticky top-0 z-20">
+//           <EmployeeNavbar
+//             isCollapsed={isSidebarCollapsed}
+//             setIsCollapsed={setIsSidebarCollapsed}
+//           />
+//         </div>
+
+//         {/* Page Content */}
+//         <main className="p-3 sm:p-4 md:p-6">
+//           {children}
+//         </main>
+//       </div>
+
+//       {/* Mobile Overlay - Shows when sidebar is open on mobile */}
+//       {isMobile && !isSidebarCollapsed && (
+//         <div
+//           className="fixed inset-0 z-10 bg-black bg-opacity-50"
+//           onClick={closeSidebar}
+//         />
+//       )}
+//     </div>
+//   );
+// }
+
+
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import EmployeeNavbar from "../Components/EmployeeNavbar";
@@ -122,6 +209,7 @@ export default function EmployeeLayout({ children }) {
       } ${isSidebarCollapsed ? "w-16" : "w-52"}`}>
         <EmployeeSidebar
           isCollapsed={isSidebarCollapsed}
+          setIsCollapsed={setIsSidebarCollapsed}  // ✅ IMPORTANT: Yeh prop add karo
           isMobile={isMobile}
           onClose={closeSidebar}
         />
