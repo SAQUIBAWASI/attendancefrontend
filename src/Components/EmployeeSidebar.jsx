@@ -227,6 +227,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
       "/emp-shifts": "Shift Management",
       "/emp-user-activity": "User Activity",
       "/emp-user-access": "User Access",
+      "/expense-management": "Expense Management"
     };
 
     return pathMap[path] || "Dashboard";
@@ -366,6 +367,13 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
       permission: "ALLOW_ALWAYS"
     },
 
+    {
+      icon: <i className="ri-money-dollar-circle-fill"></i>,
+      name: "My Expenses",
+      path: "/expense-management",
+      permission: "ALLOW_ALWAYS"
+    },
+
     // --- Admin Features (Requires Permission) ---
     {
       icon: <i className="ri-dashboard-3-fill"></i>,
@@ -408,6 +416,7 @@ const EmployeeSidebar = ({ isCollapsed, isMobile, onClose }) => {
       path: "/emp-payroll",
       permission: "payroll_manage"
     },
+
     {
       icon: <i className="ri-bar-chart-2-fill"></i>,
       name: "Reports",

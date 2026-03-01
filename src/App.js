@@ -114,6 +114,7 @@ import WeeklyHoliday from "./Pages/WeeklyHoliday.js";
 import EmployeeDetailsModal from "./Components/EmployeeDetailsModel.js";
 import TimelyNavbar from "./Components/TimelyNavbar.js";
 import EmployeeLayout from "./Layout/EmployeeLayout.jsx";
+import CandidateLayout from "./Layout/CandidateLayout.jsx";
 import AboutPage from "./Pages/AboutPage.js";
 import AdminEmployeeLocations from "./Pages/AdminEmployeeLocations.js";
 import AdminNotifications from "./Pages/AdminNotifications.js";
@@ -147,12 +148,30 @@ import Score from "./Pages/Score.jsx";
 import SendOffer from "./Pages/SendOffer.jsx";
 import JobApplicants from "./Pages/JobApplicants.jsx";
 import CandidateDashboard from "./Pages/CandidateDashboard.jsx";
+import PersonalDocuments from "./Pages/PersonalDocuments.jsx";
 import AssessmentManager from "./Pages/AssessmentManager.jsx";
 import TakeAssessment from "./Pages/TakeAssessment.jsx";
 import CandidateLogin from "./Pages/CandidateLogin.jsx";
 import CandidateRegister from "./Pages/CandidateRegister.jsx";
-import Documents from "./Pages/Documents.jsx";
+// import Documents from "./Pages/Documents.jsx";
+// import PersonalDocuments from "./Pages/PersonalDocuments.jsx";
 import Medical from "./Pages/Medical.jsx";
+// import PersonalDocumets from "./Pages/PersonalDocumets.jsx";
+// import PersonalDocuments from "./Pages/PersonalDocuments.jsx";
+import EmployeeResignation from "./Pages/EmployeeResignation.jsx";
+import RecruitmentDashboard from "./Pages/RecruitmentDashboard.jsx";
+import AllJobs from "./Pages/AllJobs.jsx";
+import AppliedJobs from "./Pages/AppliedJobs.jsx";
+import Interview from "./Pages/Interview.jsx";
+import Letters from "./Pages/Letters.jsx";
+import CandidateDocuments from "./Pages/CandidateDocuments.jsx";
+import CandidatePersonalDocuments from "./Pages/CandidatePersonalDocuments.jsx";
+import MyJobs from "./Pages/MyJobs.jsx";
+import EmployeeJourney from "./Pages/EmployeeJourney.jsx";
+// import ExpenseManagement from "./Pages/ExpenseManagement.jsx";
+import ExpenseManagement from "./Pages/ExpenseManagement.jsx";
+import AllExpensives from "./Pages/AllExpensives.jsx";
+
 
 function App() {
   return (
@@ -174,12 +193,26 @@ function App() {
       <Route path="/myattendance" element={<EmployeeLayout><MyAttendance /></EmployeeLayout>} />
       <Route path="/my-shift" element={<EmployeeLayout><MyShift /></EmployeeLayout>} />
       <Route path="/mypermissions" element={<EmployeeLayout><MyPermission /></EmployeeLayout>} />
-
+      {/* <Route path="/expense-management" element={<ExpenseManagement />} />   */}
+      <Route path="/expense-management" element={<EmployeeLayout><ExpenseManagement /></EmployeeLayout>} />
+   
       <Route path="/mylocation" element={<EmployeeLayout><EmployeeLocation /></EmployeeLayout>} />
       <Route path="/jobs/:id" element={<JobDetails />} />
       <Route path="/assessment/:jobId/:applicationId" element={<TakeAssessment />} />
       <Route path="/assessment/:jobId/:applicationId/:quizId" element={<TakeAssessment />} />
-      <Route path="/candidate-dashboard" element={<CandidateDashboard />} />
+
+      {/* ✅ Candidate Portal Routes with Shared Layout */}
+      <Route element={<CandidateLayout />}>
+        <Route path="/candidate-dashboard" element={<CandidateDashboard />} />
+        <Route path="/all-jobs" element={<AllJobs />} />
+        <Route path="/applied-jobs" element={<AppliedJobs />} />
+        <Route path="/interview" element={<Interview />} />
+        <Route path="/letters" element={<Letters />} />
+        <Route path="/candidate-documents" element={<CandidateDocuments />} />
+        <Route path="/candidate-personal-documents" element={<CandidatePersonalDocuments />} />
+        <Route path="/my-jobs" element={<MyJobs />} />
+      </Route>
+
       <Route path="/superadmin" element={<SuperAdminMedicalMonitor />} />
       <Route path="/timelynavbar" element={<TimelyNavbar />}></Route>
       <Route path="timelyfooter" element={<TimelyFooter />}></Route>
@@ -341,10 +374,21 @@ function App() {
               <Route path="/sendoffer" element={<SendOffer />} />
               <Route path="/job-applicants" element={<JobApplicants />} />
               <Route path="/assessment-manager" element={<AssessmentManager />} />
-              <Route path="/documents" element={<Documents />} />
+              {/* <Route path="/documents" element={<PersonalDocuments />} /> */}
               <Route path="/admin-notifications" element={<AdminNotifications />} />
-              <Route path="/medical" element={<Medical/>}/>
-
+              <Route path="/medical" element={<Medical />} />
+              <Route path="/personaldocuments" element={<PersonalDocuments />} />
+              <Route path="/employee-resignation" element={<EmployeeResignation />} />
+              <Route path="/recruitment-dashboard" element={<RecruitmentDashboard />} />
+              <Route path="/all-jobs" element={<AllJobs />} />
+              <Route path="/applied-jobs" element={<AppliedJobs />} />
+              <Route path="/interview" element={<Interview />} />
+              <Route path="/letters" element={<Letters />} />
+              <Route path="/candidate-documents" element={<CandidateDocuments />} />
+              <Route path="/candidate-personal-documents" element={<CandidatePersonalDocuments />} />
+              <Route path="/employee-journey" element={<EmployeeJourney />} />
+              <Route path="/all-expensives" element={<AllExpensives />} />
+            
             </Routes>
           </AdminLayout>
         }

@@ -2006,7 +2006,7 @@ export default function AttendanceCapture() {
 
       setLoadingLocation(true);
       try {
-        const res = await axios.get(`${BASE_URL}api/employees/mylocation/${employeeId}`);
+        const res = await axios.get(`${BASE_URL}/employees/mylocation/${employeeId}`);
 
         if (res.data.success && res.data.data) {
           setAssignedLocation(res.data.data.location);
@@ -2042,7 +2042,7 @@ export default function AttendanceCapture() {
   useEffect(() => {
     const fetchAllLocations = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}api/location/alllocation`);
+        const res = await axios.get(`${BASE_URL}/location/alllocation`);
         if (res.data.locations) {
           setAllLocations(res.data.locations);
         }
@@ -2072,7 +2072,7 @@ export default function AttendanceCapture() {
     const fetchTodayAttendance = async () => {
       if (!employeeId) return;
       try {
-        const res = await axios.get(`${BASE_URL}api/attendance/myattendance/${employeeId}`);
+        const res = await axios.get(`${BASE_URL}/attendance/myattendance/${employeeId}`);
         const data = res.data;
 
         // Get employee name from attendance API response too
@@ -2158,7 +2158,7 @@ export default function AttendanceCapture() {
 
     setSubmitting(true);
     try {
-      const res = await axios.post(`${BASE_URL}api/attendance/checkin`, {
+      const res = await axios.post(`${BASE_URL}/attendance/checkin`, {
         employeeId,
         employeeEmail,
         latitude: position.lat,
@@ -2192,7 +2192,7 @@ export default function AttendanceCapture() {
 
     setSubmitting(true);
     try {
-      const res = await axios.post(`${BASE_URL}api/attendance/checkout`, {
+      const res = await axios.post(`${BASE_URL}/attendance/checkout`, {
         employeeId,
         latitude: position.lat,
         longitude: position.lng,

@@ -11,6 +11,15 @@ import {
     FiUser, FiMail, FiPhone, FiLock, FiBriefcase, FiDollarSign,
     FiCheckCircle, FiX, FiArrowRight, FiFileText, FiMapPin, FiAward
 } from "react-icons/fi";
+import { FaUserTie } from "react-icons/fa";
+import { FiBookOpen, FiLayers } from "react-icons/fi";
+import { FiPercent, FiCalendar, FiClock } from "react-icons/fi";
+import { FiTrendingUp } from "react-icons/fi";
+
+
+
+
+
 
 import { API_BASE_URL } from "../config";
 
@@ -34,17 +43,55 @@ function JobDetails() {
     const [showPassword, setShowPassword] = useState(false);
     const [hasApplied, setHasApplied] = useState(false);
 
+    // const [formData, setFormData] = useState({
+    //     firstName: "",
+    //     lastName: "",
+    //     email: "",
+    //     mobile: "",
+    //     password: "", // New Field
+    //     currentCompany: "",
+    //     currentCTC: "",
+    //     expectedCTC: "",
+    //     resume: null
+    // });
+
+
     const [formData, setFormData] = useState({
+        // Login / Register
+        password: "",
+
+        // Basic Details
         firstName: "",
         lastName: "",
         email: "",
         mobile: "",
-        password: "", // New Field
+        address: "",
+
+        // Qualification
+        highestQualification: "",
+        institution: "",
+        department: "",
+        percentage: "",
+        passingYear: "",
+
+        // Experience
+        companyName: "",
+        role: "",
+        totalExperience: "",   // we mapped this in backend
         currentCompany: "",
+        currentLocation: "",
         currentCTC: "",
         expectedCTC: "",
+
+        // Additional
+        noticePeriod: "",
+        skills: "",
+        dateOfJoining: "",
+
+        // Resume
         resume: null
     });
+
 
     useEffect(() => {
         // Check if already logged in as candidate
@@ -65,9 +112,10 @@ function JobDetails() {
                         const appRes = await axios.get(`${API_BASE}/candidate/applications`, {
                             headers: { Authorization: `Bearer ${token}` }
                         });
-                        const alreadyApplied = appRes.data.some(app =>
-                            (app.jobId?._id || app.jobId) === id
-                        );
+                        const alreadyApplied = appRes.data.some(app => {
+                            const appId = app.jobId?._id || app.jobId;
+                            return appId && appId.toString() === id.toString();
+                        });
                         setHasApplied(alreadyApplied);
                     } catch (err) {
                         console.error("Failed to fetch applications for duplicate check", err);
@@ -138,15 +186,25 @@ function JobDetails() {
             });
 
             // Pre-fill
-            const [fname, ...lname] = profileRes.data.name.split(' ');
+            const candidateData = profileRes.data;
+            const [fname, ...lname] = (candidateData.name || "").split(' ');
             setFormData(prev => ({
                 ...prev,
                 firstName: fname,
                 lastName: lname.join(' '),
-                mobile: profileRes.data.phone || prev.mobile,
-                currentCompany: profileRes.data.currentCompany || prev.currentCompany,
-                currentCTC: profileRes.data.currentCTC || prev.currentCTC,
-                expectedCTC: profileRes.data.expectedCTC || prev.expectedCTC
+                mobile: candidateData.phone || prev.mobile,
+                currentCompany: candidateData.currentCompany || prev.currentCompany,
+                currentCTC: candidateData.currentCTC || prev.currentCTC,
+                expectedCTC: candidateData.expectedCTC || prev.expectedCTC,
+                skills: candidateData.skills || prev.skills,
+                address: candidateData.address || prev.address,
+                highestQualification: candidateData.highestQualification || prev.highestQualification,
+                institution: candidateData.institution || prev.institution,
+                department: candidateData.department || prev.department,
+                percentage: candidateData.percentage || prev.percentage,
+                passingYear: candidateData.passingYear || prev.passingYear,
+                totalExperience: candidateData.experience || prev.totalExperience,
+                currentLocation: candidateData.currentLocation || prev.currentLocation,
             }));
 
             localStorage.setItem("candidateToken", token);
@@ -158,9 +216,10 @@ function JobDetails() {
                 const appRes = await axios.get(`${API_BASE}/candidate/applications`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                const alreadyApplied = appRes.data.some(app =>
-                    (app.jobId?._id || app.jobId) === id
-                );
+                const alreadyApplied = appRes.data.some(app => {
+                    const appId = app.jobId?._id || app.jobId;
+                    return appId && appId.toString() === id.toString();
+                });
                 setHasApplied(alreadyApplied);
                 if (alreadyApplied) {
                     setMessage({ type: "info", text: "You have already applied for this position." });
@@ -254,13 +313,13 @@ function JobDetails() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50">
                 <div className="flex flex-col items-center gap-6">
                     <div className="relative">
-                        <div className="w-16 h-16 border-4 border-indigo-100 rounded-2xl animate-pulse"></div>
-                        <div className="absolute inset-0 w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-2xl animate-spin"></div>
+                        <div className="w-16 h-16 border-4 border-blue-100 rounded-2xl animate-pulse"></div>
+                        <div className="absolute inset-0 w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-2xl animate-spin"></div>
                     </div>
-                    <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.3em] animate-pulse">Initializing Portal...</p>
+                    <p className="text-blue-400 font-bold text-[10px] uppercase tracking-[0.3em] animate-pulse">Initializing Portal...</p>
                 </div>
             </div>
         );
@@ -268,14 +327,14 @@ function JobDetails() {
 
     if (error || !job) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-                <div className="max-w-lg w-full bg-white p-12 rounded-[2.5rem] shadow-2xl shadow-slate-950/5 text-center border border-slate-100 animate-in zoom-in-95 duration-500">
-                    <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-8">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 p-6">
+                <div className="max-w-lg w-full bg-white p-12 rounded-2xl shadow-2xl shadow-blue-900/5 text-center border border-blue-50 animate-in zoom-in-95 duration-500">
+                    <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-inner">
                         <FaExclamationTriangle size={32} />
                     </div>
-                    <h2 className="text-3xl font-black text-slate-800 mb-4 tracking-tight">Post Not Found</h2>
-                    <p className="text-slate-500 mb-10 leading-relaxed font-medium">{error || "This job posting may have been archived or the link might be incorrect."}</p>
-                    <a href="/" className="inline-block bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black text-sm hover:bg-indigo-700 transition-all hover:shadow-xl shadow-indigo-100 transform active:scale-95 uppercase tracking-widest">
+                    <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">Post Not Found</h2>
+                    <p className="text-gray-500 mb-10 leading-relaxed font-medium">{error || "This job posting may have been archived or the link might be incorrect."}</p>
+                    <a href="/" className="inline-block bg-blue-600 text-white px-10 py-4 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all hover:shadow-xl shadow-blue-100 transform active:scale-95 uppercase tracking-widest">
                         Return to Careers
                     </a>
                 </div>
@@ -284,142 +343,227 @@ function JobDetails() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-20 font-sans">
-            {/* Odoo-Inspired Premium Hero Section */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#1E293B] via-[#334155] to-[#1E293B] text-white pt-24 pb-32 px-4">
-                {/* Abstract Background Element */}
-                <div className="absolute top-0 right-0 -mr-24 -mt-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 pb-20 font-sans text-slate-800">
+            {/* Professional Career Portal Hero */}
+            <div className="relative overflow-hidden bg-white border-b border-blue-100 pt-20 pb-28 px-4">
+                {/* Subtle Background Accents */}
+                <div className="absolute top-0 right-0 -mr-24 -mt-24 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-72 h-72 bg-purple-500/5 rounded-full blur-3xl"></div>
 
                 <div className="max-w-6xl mx-auto relative z-10">
-                    <div className="flex flex-wrap items-center gap-2 mb-8 animate-in fade-in slide-in-from-left-4 duration-500">
-                        <span className="bg-white/10 backdrop-blur-md text-indigo-100 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border border-white/10">
-                            Remote Potential
+                    <div className="flex flex-wrap items-center gap-2 mb-6 animate-in fade-in slide-in-from-left-4 duration-500">
+                        <span className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border border-blue-100 shadow-sm">
+                            Career Opportunity
                         </span>
-                        <span className="bg-emerald-500/20 backdrop-blur-md text-emerald-400 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-500/20 flex items-center gap-2">
-                            <FaCheckCircle className="text-xs" /> Accepting Applications
+                        <span className="bg-emerald-50 text-emerald-600 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-2 shadow-sm">
+                            <FaCheckCircle className="text-xs" /> Now Hiring
                         </span>
                     </div>
 
-                    <h1 className="text-4xl md:text-7xl font-black mb-8 tracking-tight leading-[1.1] animate-in fade-in slide-in-from-left-6 duration-700 max-w-4xl">
+                    <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight leading-tight text-gray-900 animate-in fade-in slide-in-from-left-6 duration-700 max-w-4xl">
                         {job.role}
                     </h1>
 
-                    <div className="flex flex-wrap items-center gap-6 text-slate-300 font-bold animate-in fade-in slide-in-from-left-8 duration-1000">
-                        <div className="flex items-center gap-3 bg-white/5 px-5 py-2.5 rounded-2xl backdrop-blur-sm border border-white/5">
-                            <FaMoneyBillWave className="text-emerald-400 text-xl" />
-                            <span className="text-white font-black">{job.salary || "Competitive Market Rate"}</span>
+                    <div className="flex flex-wrap items-center gap-6 text-gray-600 font-bold animate-in fade-in slide-in-from-left-8 duration-1000">
+                        <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border border-blue-100 shadow-sm">
+                            <FaMoneyBillWave className="text-blue-500 text-xl" />
+                            <span className="text-gray-900 font-black">{job.salary || "Competitive Market Rate"}</span>
                         </div>
-                        <div className="flex items-center gap-3 opacity-60">
-                            <FaClock className="text-indigo-400" />
-                            <span className="text-[10px] uppercase tracking-[0.2em]">Posted {new Date(job.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}</span>
+                        <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border border-gray-100 shadow-sm">
+                            <FaClock className="text-purple-500" />
+                            <span className="text-[10px] uppercase tracking-widest font-black text-gray-400">
+                                Posted {job.createdAt && !isNaN(new Date(job.createdAt).getTime())
+                                    ? new Date(job.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })
+                                    : "Recently"}
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Main Content Integration */}
-            <div className="max-w-6xl mx-auto px-4 -mt-16 relative z-20">
+            <div className="max-w-6xl mx-auto px-4 -mt-12 relative z-20">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     {/* Left Column - Details */}
-                    <div className="lg:col-span-3 space-y-8">
-                        <div className="bg-white rounded-3xl shadow-2xl shadow-slate-900/5 overflow-hidden border border-slate-100 p-8 md:p-16">
-                            <div className="space-y-16">
+                    <div className="lg:col-span-3 space-y-8 animate-in slide-in-from-bottom-8 duration-700">
+                        <div className="bg-white rounded-2xl shadow-xl shadow-blue-900/5 overflow-hidden border border-blue-50 p-8 md:p-12">
+                            <div className="space-y-12">
                                 {/* Responsibilities Card */}
-                                <section className="space-y-8">
-                                    <div className="flex items-center gap-5">
-                                        <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-sm">
-                                            <FaListUl className="text-2xl" />
+                                <section className="space-y-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-100">
+                                            <FaListUl className="text-xl" />
                                         </div>
                                         <div>
-                                            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Core Responsibilities</h2>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">What the role involves on a daily basis</p>
+                                            <h2 className="text-xl font-black text-gray-900 tracking-tight">Job Description</h2>
+                                            <p className="text-[9px] text-blue-400 font-bold uppercase tracking-widest mt-0.5">Primary role expectations</p>
                                         </div>
                                     </div>
-                                    <div className="text-slate-600 leading-[2] whitespace-pre-wrap pl-8 border-l-4 border-indigo-500/10 text-base font-medium">
+                                    {/* <div className="text-gray-600 leading-relaxed whitespace-pre-wrap pl-4 border-l-4 border-blue-100 text-base font-medium">
                                         {job.responsibilities}
+                                    </div> */}
+                                    <div className="text-gray-600 leading-relaxed whitespace-pre-wrap pl-4 border-l-4 border-blue-100 text-base font-medium">
+                                        {job.description || job.responsibilities || "No description provided."}
                                     </div>
+
                                 </section>
 
                                 {/* Skills Card */}
-                                <section className="space-y-8">
-                                    <div className="flex items-center gap-5">
-                                        <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-sm">
-                                            <FaCode className="text-2xl" />
+                                {/* <section className="space-y-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-700 text-white rounded-xl flex items-center justify-center shadow-lg shadow-purple-100">
+                                            <FaCode className="text-xl" />
                                         </div>
                                         <div>
-                                            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Required Expertise</h2>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Key skills and technologies preferred</p>
+                                            <h2 className="text-xl font-black text-gray-900 tracking-tight">Required Skills</h2>
+                                            <p className="text-[9px] text-purple-400 font-bold uppercase tracking-widest mt-0.5">Key technical qualifications</p>
                                         </div>
                                     </div>
-                                    <div className="flex flex-wrap gap-4 pt-2">
+                                    <div className="flex flex-wrap gap-3 pt-2">
                                         {job.skills.split(',').map((skill, idx) => (
-                                            <span key={idx} className="bg-slate-50 text-slate-700 px-6 py-3.5 rounded-2xl text-[10px] font-black border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/50 hover:text-indigo-700 transition-all cursor-default uppercase tracking-widest">
+                                            <span key={idx} className="bg-blue-50/50 text-blue-700 px-5 py-3 rounded-xl text-[10px] font-black border border-blue-100 hover:bg-blue-600 hover:text-white transition-all cursor-default uppercase tracking-widest">
                                                 {skill.trim()}
                                             </span>
                                         ))}
                                     </div>
+                                 
+
+                                </section> */}
+                                <section className="space-y-10">
+
+                                    {/* 🔹 Job Overview Section */}
+                                    <div className="grid md:grid-cols-2 gap-8">
+
+                                        {/* Work Location */}
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-700 text-white rounded-xl flex items-center justify-center shadow-lg shadow-red-100">
+                                                <FaMapMarkerAlt className="text-xl" />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-xl font-black text-gray-900 tracking-tight">
+                                                    Work Location
+                                                </h2>
+                                                {/* <p className="text-[9px] text-red-400 font-bold uppercase tracking-widest mt-0.5">
+                    Job location details
+                </p> */}
+                                                <p className="text-gray-600 leading-relaxed whitespace-pre-wrap pl-4 border-l-4 border-blue-100 text-base font-medium">
+                                                    {job?.location}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Experience Required */}
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-xl flex items-center justify-center shadow-lg shadow-indigo-100">
+                                                <FaUserTie className="text-xl" />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-xl font-black text-gray-900 tracking-tight">
+                                                    Experience Required
+                                                </h2>
+                                                {/* <p className="text-[9px] text-indigo-400 font-bold uppercase tracking-widest mt-0.5">
+                    Minimum qualification level
+                </p> */}
+                                                <p className="text-gray-600 leading-relaxed whitespace-pre-wrap pl-4 border-l-4 border-blue-100 text-base font-medium">
+                                                    {job?.experience}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+
+                                    {/* 🔹 Required Skills Section */}
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-700 text-white rounded-xl flex items-center justify-center shadow-lg shadow-purple-100">
+                                                <FaCode className="text-xl" />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-xl font-black text-gray-900 tracking-tight">
+                                                    Required Skills
+                                                </h2>
+                                                {/* <p className="text-[9px] text-purple-400 font-bold uppercase tracking-widest mt-0.5">
+                    Key technical qualifications
+                </p> */}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-3 pt-2">
+                                            {job?.skills ? (
+                                                job.skills.split(',').filter(s => s.trim()).map((skill, idx) => (
+                                                    <span
+                                                        key={idx}
+                                                        className="bg-blue-50/50 text-blue-700 px-5 py-3 rounded-xl text-[10px] font-black border border-blue-100 hover:bg-blue-600 hover:text-white transition-all cursor-default uppercase tracking-widest"
+                                                    >
+                                                        {skill.trim()}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="text-gray-400 text-xs italic">No specific skills listed</span>
+                                            )}
+                                        </div>
+                                    </div>
+
                                 </section>
+
                             </div>
                         </div>
                     </div>
 
                     {/* Right Column - Action Card */}
-                    <div className="lg:col-span-1">
+                    <div className="lg:col-span-1 animate-in slide-in-from-right-8 duration-700">
                         <div className="sticky top-24 space-y-6">
-                            <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-indigo-900/10 border border-slate-100 p-10 text-center group">
-                                <div className="w-24 h-24 flex items-center justify-center bg-indigo-50 rounded-[2rem] mx-auto mb-8 transition-transform group-hover:scale-110 duration-500">
-                                    <FaBriefcase className="text-5xl text-indigo-600" />
+                            <div className="bg-white rounded-2xl shadow-2xl shadow-blue-900/10 border border-blue-50 p-8 text-center group">
+                                <div className="w-20 h-20 flex items-center justify-center bg-blue-50/50 rounded-2xl mx-auto mb-6 transition-transform group-hover:scale-105 duration-500 border border-blue-100">
+                                    <FaBriefcase className="text-4xl text-blue-600" />
                                 </div>
-                                <h3 className="text-2xl font-black text-slate-800 mb-4">Start your journey here</h3>
+                                <h3 className="text-xl font-black text-gray-900 mb-4">Join our team</h3>
 
                                 {((job.assessmentIds && job.assessmentIds.length > 0) || job.assessmentId) && (
-                                    <div className="mb-6 bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl flex items-center justify-center gap-2 border border-amber-100/50">
-                                        <FaClock className="animate-pulse" /> Skill Assessment Included
+                                    <div className="mb-6 bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl flex items-center justify-center gap-2 border border-blue-100/50">
+                                        <FaClock className="animate-pulse" /> Assessment Enclosed
                                     </div>
                                 )}
 
-                                <p className="text-slate-500 mb-10 leading-relaxed text-sm font-medium">
+                                <p className="text-gray-500 mb-8 leading-relaxed text-xs font-medium">
                                     {((job.assessmentIds && job.assessmentIds.length > 0) || job.assessmentId)
-                                        ? "Apply today to unlock the technical skill assessment phase."
-                                        : "Join the Timely Health team. Submit your profile for review."}
+                                        ? "Apply to begin the screening and assessment process."
+                                        : "Submit your official application for team evaluation."}
                                 </p>
 
                                 <button
                                     onClick={() => setIsModalOpen(true)}
                                     disabled={hasApplied}
-                                    className={`w-full px-8 py-4 rounded-2xl font-black text-lg transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 ${hasApplied
-                                        ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
-                                        : "bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-2xl shadow-indigo-100"
+                                    className={`w-full px-8 py-4 rounded-xl font-black text-sm transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 shadow-lg ${hasApplied
+                                        ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                                        : "bg-gradient-to-r from-blue-600 to-indigo-700 text-white hover:shadow-blue-200"
                                         }`}
                                 >
-                                    {hasApplied ? "Already Applied" : "Apply Now"}
-                                    {!hasApplied && <FaArrowRight className="transition-transform group-hover:translate-x-1" />}
+                                    {hasApplied ? "Applied" : "Apply Now"}
+                                    {!hasApplied && <FaArrowRight className="text-xs transition-transform group-hover:translate-x-1" />}
                                 </button>
-
-                                <p className="mt-8 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                    Registration takes <span className="text-indigo-600">under 2 mins</span>
-                                </p>
                             </div>
 
-                            {/* Trust Analytics */}
-                            <div className="bg-slate-800/5 rounded-3xl p-8 flex items-center justify-around border border-slate-200/50">
+                            {/* Response Metrics */}
+                            <div className="bg-white rounded-2xl p-6 flex items-center justify-around border border-blue-50 shadow-sm">
                                 <div className="text-center">
-                                    <span className="block text-xl font-black text-slate-800">24h</span>
-                                    <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Response</span>
+                                    <span className="block text-lg font-black text-gray-900">24h</span>
+                                    <span className="text-[10px] uppercase font-bold tracking-widest text-gray-400">Response</span>
                                 </div>
-                                <div className="w-px h-10 bg-slate-200"></div>
+                                <div className="w-px h-8 bg-blue-50"></div>
                                 <div className="text-center">
-                                    <span className="block text-xl font-black text-slate-800">4.8/5</span>
-                                    <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Rating</span>
+                                    <span className="block text-lg font-black text-gray-900">Fast</span>
+                                    <span className="text-[10px] uppercase font-bold tracking-widest text-gray-400">Review</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="mt-24 text-center">
-                    <div className="inline-block px-10 py-4 bg-white rounded-full border border-slate-100 text-[9px] font-black uppercase tracking-[0.4em] text-slate-300 shadow-sm">
-                        Timely Health Recruitment Platform
+                <div className="mt-20 text-center">
+                    <div className="inline-block px-8 py-3 bg-white rounded-full border border-blue-50 text-[9px] font-black uppercase tracking-[0.4em] text-blue-300 shadow-sm">
+                        Timely Health Recruitment
                     </div>
                 </div>
             </div>
@@ -434,7 +578,8 @@ function JobDetails() {
                                 <h2 className="text-xl text-gray-800">
                                     Apply for {job.role}
                                 </h2>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+
+                                <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mt-1">
                                     {emailChecked ? "Complete your profile details" : "Start your recruitment journey"}
                                 </p>
                             </div>
@@ -445,7 +590,7 @@ function JobDetails() {
                                     setCandidateExists(false);
                                     setMessage({ type: "", text: "" });
                                 }}
-                                className="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all"
+                                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
                             >
                                 <FiX className="text-lg" />
                             </button>
@@ -455,7 +600,7 @@ function JobDetails() {
                         <div className="p-8 pt-4 max-h-[75vh] overflow-y-auto no-scrollbar">
                             {message.text && (
                                 <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 animate-in slide-in-from-top-4 ${message.type === "success" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
-                                    message.type === "info" ? "bg-indigo-50 text-indigo-600 border border-indigo-100" :
+                                    message.type === "info" ? "bg-blue-50 text-blue-600 border border-blue-100" :
                                         "bg-rose-50 text-rose-600 border border-rose-100"
                                     }`}>
                                     {message.type === "success" ? <FiCheckCircle className="text-lg shrink-0" /> : <FiX className="text-lg shrink-0" />}
@@ -468,7 +613,7 @@ function JobDetails() {
                                     <div className="space-y-1.5">
                                         <label className="block mb-1 text-sm font-medium text-gray-700">Email Address</label>
                                         <div className="relative group">
-                                            <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors z-10" />
+                                            <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
                                             <input
                                                 type="email" name="email" required
                                                 value={formData.email} onChange={handleChange}
@@ -482,7 +627,7 @@ function JobDetails() {
                                         <button
                                             onClick={handleEmailCheck}
                                             disabled={isCheckingExistence || !formData.email}
-                                            className="w-full py-4 px-8 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg shadow-indigo-100 transition-all transform active:scale-95 disabled:bg-indigo-300 disabled:shadow-none flex items-center justify-center gap-3"
+                                            className="w-full py-4 px-8 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 hover:shadow-lg shadow-blue-100 transition-all transform active:scale-95 disabled:bg-blue-300 disabled:shadow-none flex items-center justify-center gap-3"
                                         >
                                             {isCheckingExistence ? (
                                                 <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Validating...</>
@@ -499,7 +644,7 @@ function JobDetails() {
                                             <div className="space-y-1.5">
                                                 <label className="block mb-1 text-sm font-medium text-gray-700">Existing Account Password</label>
                                                 <div className="relative group">
-                                                    <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors z-10" />
+                                                    <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
                                                     <input
                                                         type="password" name="password" required
                                                         value={formData.password} onChange={handleChange}
@@ -512,7 +657,7 @@ function JobDetails() {
                                                 <button
                                                     onClick={handleLogin}
                                                     disabled={submitting || !formData.password}
-                                                    className="w-full py-4 px-8 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all transform active:scale-95 shadow-lg shadow-indigo-100 flex items-center justify-center gap-3"
+                                                    className="w-full py-4 px-8 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all transform active:scale-95 shadow-lg shadow-blue-100 flex items-center justify-center gap-3"
                                                 >
                                                     {submitting ? "Authenticating..." : "Login & Auto-fill"}
                                                 </button>
@@ -524,7 +669,7 @@ function JobDetails() {
                                                 <div className="space-y-1.5">
                                                     <label className="block mb-1 text-sm font-medium text-gray-700">Create Security Password</label>
                                                     <div className="relative group">
-                                                        <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors z-10" />
+                                                        <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
                                                         <input
                                                             type="password" name="password" required
                                                             value={formData.password} onChange={handleChange}
@@ -534,6 +679,8 @@ function JobDetails() {
                                                     </div>
                                                 </div>
                                             )}
+
+                                            <label style={{ textAlign: 'center' }} className="block mb-1 text-sm  font-medium text-blue-400">Candidate Basic Details</label>
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                                 <div className="space-y-1.5">
@@ -560,7 +707,7 @@ function JobDetails() {
                                                 <div className="space-y-1.5">
                                                     <label className="block mb-1 text-sm font-medium text-gray-700">Mobile</label>
                                                     <div className="relative group">
-                                                        <FiPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors z-10" />
+                                                        <FiPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
                                                         <input
                                                             type="tel" name="mobile" required
                                                             value={formData.mobile} onChange={handleChange}
@@ -569,10 +716,27 @@ function JobDetails() {
                                                         />
                                                     </div>
                                                 </div>
+
+
                                                 <div className="space-y-1.5">
+                                                    <label className="block mb-1 text-sm font-medium text-gray-700">Adress</label>
+                                                    <div className="relative group">
+                                                        <FiBriefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+                                                        <input
+                                                            type="text" name="currentCompany"
+                                                            value={formData.currentCompany} onChange={handleChange}
+                                                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                            placeholder="Hyderabad,india."
+                                                        />
+                                                    </div>
+                                                </div>
+
+
+
+                                                {/* <div className="space-y-1.5">
                                                     <label className="block mb-1 text-sm font-medium text-gray-700">Company</label>
                                                     <div className="relative group">
-                                                        <FiBriefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors z-10" />
+                                                        <FiBriefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
                                                         <input
                                                             type="text" name="currentCompany"
                                                             value={formData.currentCompany} onChange={handleChange}
@@ -580,14 +744,31 @@ function JobDetails() {
                                                             placeholder="Current Org"
                                                         />
                                                     </div>
-                                                </div>
+                                                </div> */}
                                             </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            <label style={{ textAlign: 'center' }} className="block mb-1 text-sm  font-medium text-blue-400">Qualification Details</label>
+
+                                            {/* <div className="space-y-1.5">
+                                                <label className="block mb-1 text-sm font-medium text-gray-700">Qualification</label>
+                                                <div className="relative group">
+                                                    <FiFileText className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+                                                    <input
+                                                        type="text" name="highestQualification"
+                                                        value={formData.highestQualification} onChange={handleChange}
+                                                        className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                        placeholder="Highest Degree"
+                                                    />
+                                                </div>
+                                            </div> */}
+
+
+
+                                            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                                 <div className="space-y-1.5">
                                                     <label className="block mb-1 text-sm font-medium text-gray-700">Current CTC</label>
                                                     <div className="relative group">
-                                                        <FiDollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors z-10" />
+                                                        <FiDollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
                                                         <input
                                                             type="text" name="currentCTC"
                                                             value={formData.currentCTC} onChange={handleChange}
@@ -599,7 +780,194 @@ function JobDetails() {
                                                 <div className="space-y-1.5">
                                                     <label className="block mb-1 text-sm font-medium text-gray-700">Expected CTC</label>
                                                     <div className="relative group">
-                                                        <FiAward className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors z-10" />
+                                                        <FiAward className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+                                                        <input
+                                                            type="text" name="expectedCTC"
+                                                            value={formData.expectedCTC} onChange={handleChange}
+                                                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                            placeholder="e.g. 15 LPA"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div> */}
+
+                                            <div className="space-y-1.5">
+                                                <label className="block mb-1 text-sm font-medium text-gray-700">Qualification</label>
+                                                <div className="relative group">
+                                                    <FiFileText className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+                                                    <input
+                                                        type="text" name="highestQualification"
+                                                        value={formData.highestQualification} onChange={handleChange}
+                                                        className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                        placeholder="Highest Degree"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                                                {/* College / University / School */}
+                                                <div className="space-y-1.5">
+                                                    <label className="block mb-1 text-sm font-medium text-gray-700">
+                                                        College / University / School
+                                                    </label>
+                                                    <div className="relative group">
+                                                        <FiBookOpen className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+                                                        <input
+                                                            type="text"
+                                                            name="institution"
+                                                            value={formData.institution}
+                                                            onChange={handleChange}
+                                                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                            placeholder="Enter your College / University / School"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* Department */}
+                                                <div className="space-y-1.5">
+                                                    <label className="block mb-1 text-sm font-medium text-gray-700">
+                                                        Department
+                                                    </label>
+                                                    <div className="relative group">
+                                                        <FiLayers className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+                                                        <input
+                                                            type="text"
+                                                            name="department"
+                                                            value={formData.department}
+                                                            onChange={handleChange}
+                                                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                            placeholder="Enter your Department (e.g. Computer Science)"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                                                {/* Percentage */}
+                                                <div className="space-y-1.5">
+                                                    <label className="block mb-1 text-sm font-medium text-gray-700">
+                                                        Percentage
+                                                    </label>
+                                                    <div className="relative group">
+                                                        <FiPercent className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+                                                        <input
+                                                            type="number"
+                                                            name="percentage"
+                                                            value={formData.percentage}
+                                                            onChange={handleChange}
+                                                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                            placeholder="Enter your Percentage (e.g. 85)"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* Passed Out Year */}
+                                                {/* <div className="space-y-1.5">
+                                                    <label className="block mb-1 text-sm font-medium text-gray-700">
+                                                        Passed Out Year
+                                                    </label>
+                                                    <div className="relative group">
+                                                        <FiCalendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+                                                        <input
+                                                            type="number"
+                                                            name="passedOutYear"
+                                                            // value={formData.passedOutYear}
+                                                            // onChange={handleChange}
+
+                                                            value={formData.passingYear}
+
+                                                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                            placeholder="Enter your Passed Out Year (e.g. 2023)"
+                                                        />
+                                                    </div>
+                                                </div> */}
+
+                                                <div className="space-y-1.5">
+                                                    <label className="block mb-1 text-sm font-medium text-gray-700">
+                                                        Passed Out Year
+                                                    </label>
+
+                                                    <div className="relative group">
+                                                        <FiCalendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+
+                                                        <input
+                                                            type="number"
+                                                            name="passingYear"   // ✅ must match state key
+                                                            value={formData.passingYear}
+                                                            onChange={handleChange}  // ✅ required
+                                                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                            placeholder="Enter your Passed Out Year (e.g. 2023)"
+                                                        />
+                                                    </div>
+                                                </div>
+
+
+                                            </div>
+
+                                            <label style={{ textAlign: 'center' }} className="block mb-1 text-sm  font-medium text-blue-400">Experience</label>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                                                {/* Company Name */}
+                                                <div className="space-y-1.5">
+                                                    <label className="block mb-1 text-sm font-medium text-gray-700">
+                                                        Company Name
+                                                    </label>
+                                                    <div className="relative group">
+                                                        <FiBriefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+                                                        <input
+                                                            type="text"
+                                                            name="companyName"
+                                                            value={formData.companyName}
+                                                            onChange={handleChange}
+                                                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                            placeholder="Enter your Company Name"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* Role */}
+                                                <div className="space-y-1.5">
+                                                    <label className="block mb-1 text-sm font-medium text-gray-700">
+                                                        Role
+                                                    </label>
+                                                    <div className="relative group">
+                                                        <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+                                                        <input
+                                                            type="text"
+                                                            name="role"
+                                                            value={formData.role}
+                                                            onChange={handleChange}
+                                                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                            placeholder="Enter your Role (e.g. Frontend Developer)"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                                <div className="space-y-1.5">
+                                                    <label className="block mb-1 text-sm font-medium text-gray-700">Current CTC</label>
+                                                    <div className="relative group">
+                                                        <FiDollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+                                                        <input
+                                                            type="text" name="currentCTC"
+                                                            value={formData.currentCTC} onChange={handleChange}
+                                                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                            placeholder="e.g. 12 LPA"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <label className="block mb-1 text-sm font-medium text-gray-700">Expected CTC</label>
+                                                    <div className="relative group">
+                                                        <FiAward className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
                                                         <input
                                                             type="text" name="expectedCTC"
                                                             value={formData.expectedCTC} onChange={handleChange}
@@ -610,25 +978,104 @@ function JobDetails() {
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-1.5">
-                                                <label className="block mb-1 text-sm font-medium text-gray-700">Qualification</label>
-                                                <div className="relative group">
-                                                    <FiFileText className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors z-10" />
-                                                    <input
-                                                        type="text" name="highestQualification"
-                                                        value={formData.highestQualification} onChange={handleChange}
-                                                        className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
-                                                        placeholder="Highest Degree"
-                                                    />
+
+
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                                                {/* Office Location */}
+                                                <div className="space-y-1.5">
+                                                    <label className="block mb-1 text-sm font-medium text-gray-700">
+                                                        Office Location
+                                                    </label>
+                                                    <div className="relative group">
+                                                        <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+                                                        <input
+                                                            type="text"
+                                                            // name="officeLocation"
+                                                            // value={formData.officeLocation}
+                                                            name="currentLocation"
+                                                            value={formData.currentLocation}
+
+                                                            onChange={handleChange}
+                                                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                            placeholder="Enter your Office Location (e.g. Bangalore)"
+                                                        />
+                                                    </div>
                                                 </div>
+
+                                                {/* Total Experience */}
+                                                <div className="space-y-1.5">
+                                                    <label className="block mb-1 text-sm font-medium text-gray-700">
+                                                        Total Experience (Years)
+                                                    </label>
+                                                    <div className="relative group">
+                                                        <FiTrendingUp className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+                                                        <input
+                                                            type="number"
+                                                            name="totalExperience"
+                                                            value={formData.totalExperience}
+                                                            onChange={handleChange}
+                                                            min="0"
+                                                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                            placeholder="Enter total experience (e.g. 2)"
+                                                        />
+                                                    </div>
+                                                </div>
+
                                             </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                                                {/* Notice Period */}
+                                                <div className="space-y-1.5">
+                                                    <label className="block mb-1 text-sm font-medium text-gray-700">
+                                                        Notice Period (Days)
+                                                    </label>
+                                                    <div className="relative group">
+                                                        <FiClock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+                                                        <input
+                                                            type="text"
+                                                            name="noticePeriod"
+                                                            value={formData.noticePeriod}
+                                                            onChange={handleChange}
+                                                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                            placeholder="e.g. 30 Days"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* Date of Joining */}
+                                                <div className="space-y-1.5">
+                                                    <label className="block mb-1 text-sm font-medium text-gray-700">
+                                                        Expected Date of Joining
+                                                    </label>
+                                                    <div className="relative group">
+                                                        <FiCalendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" />
+                                                        <input
+                                                            type="date"
+                                                            name="dateOfJoining"
+                                                            value={formData.dateOfJoining}
+                                                            onChange={handleChange}
+                                                            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
+
+
+
+
+
 
                                             <div className="space-y-1.5">
                                                 <label className="block mb-1 text-sm font-medium text-gray-700">Resume Upload (PDF)</label>
                                                 <input
                                                     type="file" accept=".pdf,.doc,.docx"
                                                     onChange={handleFileChange}
-                                                    className="w-full px-4 py-6 rounded-xl border-2 border-dashed border-gray-100 hover:bg-indigo-50/30 hover:border-indigo-200 transition-all font-bold text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer"
+                                                    className="w-full px-4 py-6 rounded-xl border-2 border-dashed border-gray-100 hover:bg-blue-50/30 hover:border-blue-200 transition-all font-bold text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"
                                                 />
                                             </div>
 
@@ -643,7 +1090,7 @@ function JobDetails() {
                                                 <button
                                                     type="submit"
                                                     disabled={submitting}
-                                                    className="flex-[1.5] py-3.5 px-8 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg shadow-indigo-100 transition-all transform active:scale-95 disabled:bg-indigo-300 flex items-center justify-center gap-3"
+                                                    className="flex-[1.5] py-3.5 px-8 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 hover:shadow-lg shadow-blue-100 transition-all transform active:scale-95 disabled:bg-blue-300 flex items-center justify-center gap-3"
                                                 >
                                                     {submitting ? (
                                                         <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Sending...</>

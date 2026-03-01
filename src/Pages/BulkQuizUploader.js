@@ -79,7 +79,8 @@ const BulkQuizUploader = () => {
         "The Rocky Horror Picture Show",
         "Enchanted",
         "Dead Man Walking",
-        "Thelma and Louise"
+        "Thelma and Louise",
+        "The Hunger Games"
       ],
       "answer": "The Rocky Horror Picture Show",
       "explanation": "She filmed in freezing rain wearing only a corset and fishnets."

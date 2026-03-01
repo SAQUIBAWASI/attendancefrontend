@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 import {
@@ -6,7 +6,7 @@ import {
     FaPlusCircle, FaTimes, FaQuestionCircle, FaSave,
     FaRegClock, FaLayerGroup, FaAward
 } from "react-icons/fa";
-import { FiX, FiCheck, FiInfo } from "react-icons/fi";
+import { FiX, FiCheck, FiInfo, FiSearch, FiBriefcase, FiCalendar, FiFilter, FiRefreshCw } from "react-icons/fi";
 
 const AssessmentManager = () => {
     const [quizzes, setQuizzes] = useState([]);
@@ -15,6 +15,13 @@ const AssessmentManager = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [roleFilter, setRoleFilter] = useState("");
+    const [experienceFilter, setExperienceFilter] = useState("");
+    const [dateFilter, setDateFilter] = useState("");
+    const [roleSearchQuery, setRoleSearchQuery] = useState("");
+    const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+    const roleDropdownRef = useRef(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -24,7 +31,7 @@ const AssessmentManager = () => {
         experienceLevel: "Fresher",
         duration: 30,
         questions: [
-            { questionText: "", options: ["", "", "", ""], correctAnswer: "", marks: 5 }
+            { questionText: "", options: ["", "", "", "", ""], correctAnswer: "", marks: 5 }
         ]
     });
 
@@ -33,6 +40,14 @@ const AssessmentManager = () => {
     useEffect(() => {
         fetchQuizzes();
         fetchRoles();
+
+        const handleClickOutside = (event) => {
+            if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target)) {
+                setIsRoleDropdownOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const fetchQuizzes = async () => {
@@ -81,7 +96,7 @@ const AssessmentManager = () => {
             role: "",
             experienceLevel: "Fresher",
             duration: 30,
-            questions: [{ questionText: "", options: ["", "", "", ""], correctAnswer: "", marks: 5 }]
+            questions: [{ questionText: "", options: ["", "", "", "", ""], correctAnswer: "", marks: 5 }]
         });
         setModalOpen(true);
     };
@@ -99,11 +114,11 @@ const AssessmentManager = () => {
             questions: quiz.questions && quiz.questions.length > 0
                 ? quiz.questions.map(q => ({
                     questionText: q.questionText || "",
-                    options: Array.isArray(q.options) ? [...q.options] : ["", "", "", ""],
+                    options: Array.isArray(q.options) ? [...q.options] : ["", "", "", "", ""],
                     correctAnswer: q.correctAnswer || "",
                     marks: Number(q.marks) || 5
                 }))
-                : [{ questionText: "", options: ["", "", "", ""], correctAnswer: "", marks: 5 }]
+                : [{ questionText: "", options: ["", "", "", "", ""], correctAnswer: "", marks: 5 }]
         });
         setModalOpen(true);
     };
@@ -128,7 +143,7 @@ const AssessmentManager = () => {
     const addQuestion = () => {
         setFormData(prev => ({
             ...prev,
-            questions: [...prev.questions, { questionText: "", options: ["", "", "", ""], correctAnswer: "", marks: 5 }]
+            questions: [...prev.questions, { questionText: "", options: ["", "", "", "", ""], correctAnswer: "", marks: 5 }]
         }));
     };
 
@@ -138,6 +153,33 @@ const AssessmentManager = () => {
             ...prev,
             questions: prev.questions.filter((_, i) => i !== index)
         }));
+    };
+
+    const filteredQuizzes = quizzes.filter(quiz => {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+            (quiz.title || quiz.name || "").toLowerCase().includes(query) ||
+            (quiz.role || quiz.category || "").toLowerCase().includes(query);
+
+        const matchesRole = roleFilter ? (quiz.role === roleFilter || quiz.category === roleFilter) : true;
+
+        const matchesExperience = experienceFilter ? (quiz.experienceLevel === experienceFilter) : true;
+
+        let matchesDate = true;
+        if (dateFilter && quiz.createdAt) {
+            const quizDate = new Date(quiz.createdAt).toISOString().split('T')[0];
+            matchesDate = quizDate === dateFilter;
+        }
+
+        return matchesSearch && matchesRole && matchesExperience && matchesDate;
+    });
+
+    const resetFilters = () => {
+        setSearchQuery("");
+        setRoleFilter("");
+        setExperienceFilter("");
+        setDateFilter("");
+        setRoleSearchQuery("");
     };
 
     const handleSubmit = async (e) => {
@@ -178,28 +220,173 @@ const AssessmentManager = () => {
     );
 
     return (
-        <div className="p-3 mx-auto bg-white rounded-lg shadow-md max-w-9xl min-h-screen">
+        <div className="w-full min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8">
             {/* Header Section */}
-            <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        Assessments
-                    </h1>
+            <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-center xl:justify-between">
+                <div className="flex-shrink-0">
+                    <h2 className="text-base font-bold text-gray-800">Assessment Manager</h2>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                    <button
-                        onClick={() => window.location.href = "/add-bulk-quiz"}
-                        className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-all shadow-sm"
-                    >
-                        Bulk Upload
-                    </button>
-                    <button
-                        onClick={openCreateModal}
-                        className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-all shadow-sm flex items-center gap-2"
-                    >
-                        <FaPlus /> New Assessment
-                    </button>
+                <div className="flex flex-wrap items-center justify-start xl:justify-end gap-3 w-full xl:w-auto">
+                    {/* Date Filter */}
+                    <div className="relative group w-full sm:w-40">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+                            <FiCalendar className="text-sm" />
+                        </div>
+                        <input
+                            type="date"
+                            className="w-full pl-10 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold text-gray-700 focus:ring-2 focus:ring-blue-500 transition-all outline-none shadow-sm"
+                            value={dateFilter}
+                            onChange={(e) => setDateFilter(e.target.value)}
+                        />
+                        {dateFilter && (
+                            <button
+                                onClick={() => setDateFilter("")}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-rose-500 transition-colors"
+                            >
+                                <FiX className="text-sm" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Searchable Role Filter */}
+                    <div className="relative group w-full sm:w-56" ref={roleDropdownRef}>
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors z-10">
+                            <FiBriefcase className="text-sm" />
+                        </div>
+                        <div
+                            className="w-full pl-10 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold text-gray-700 focus:ring-2 focus:ring-blue-500 transition-all outline-none cursor-pointer relative overflow-hidden text-ellipsis whitespace-nowrap shadow-sm"
+                            onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+                        >
+                            {roleFilter || "Select Role"}
+                        </div>
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center z-10">
+                            {roleFilter ? (
+                                <FiX
+                                    className="text-xs text-gray-400 hover:text-rose-500 cursor-pointer transition-colors"
+                                    onClick={(e) => { e.stopPropagation(); setRoleFilter(""); }}
+                                />
+                            ) : (
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 pointer-events-none"><path d="m6 9 6 6 6-6" /></svg>
+                            )}
+                        </div>
+
+                        {isRoleDropdownOpen && (
+                            <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="p-3 border-b border-gray-100 bg-gray-50/50">
+                                    <div className="relative">
+                                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                                        <input
+                                            type="text"
+                                            className="w-full py-2 pl-9 pr-4 text-xs bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                                            placeholder="Search roles..."
+                                            value={roleSearchQuery}
+                                            onChange={(e) => setRoleSearchQuery(e.target.value)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            autoFocus
+                                        />
+                                    </div>
+                                </div>
+                                <div className="max-h-64 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-gray-200">
+                                    <div
+                                        className={`px-4 py-2.5 text-xs font-bold cursor-pointer hover:bg-gray-50 transition-colors ${!roleFilter ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-600'}`}
+                                        onClick={() => { setRoleFilter(""); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
+                                    >
+                                        All Roles
+                                    </div>
+                                    {roles
+                                        .filter(r => r.name.toLowerCase().includes(roleSearchQuery.toLowerCase()))
+                                        .map((r) => (
+                                            <div
+                                                key={r._id}
+                                                className={`px-4 py-2.5 text-xs font-bold cursor-pointer hover:bg-gray-50 border-l-2 transition-all ${roleFilter === r.name ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-600 border-transparent'}`}
+                                                onClick={() => { setRoleFilter(r.name); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
+                                            >
+                                                {r.name}
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Experience Filter */}
+                    <div className="relative group w-full sm:w-40">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+                            <FiFilter className="text-sm" />
+                        </div>
+                        <select
+                            className="w-full pl-10 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold text-gray-700 appearance-none focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+                            value={experienceFilter}
+                            onChange={(e) => setExperienceFilter(e.target.value)}
+                        >
+                            <option value="">All Levels</option>
+                            <option value="Fresher">Fresher</option>
+                            <option value="Junior">Junior</option>
+                            <option value="Mid">Mid Level</option>
+                            <option value="Senior">Senior</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                        </div>
+                        {experienceFilter && (
+                            <button
+                                onClick={() => setExperienceFilter("")}
+                                className="absolute inset-y-0 right-8 pr-1 flex items-center text-gray-400 hover:text-rose-500 transition-colors"
+                            >
+                                <FiX className="text-sm" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Search Bar */}
+                    <div className="relative group w-full sm:w-auto sm:min-w-[250px] md:min-w-[300px]">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+                            <FiSearch className="text-sm" />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search title or role..."
+                            className="w-full pl-10 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery("")}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-rose-500 transition-colors"
+                            >
+                                <FiX className="text-sm" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2">
+                        {(searchQuery || roleFilter || experienceFilter || dateFilter) && (
+                            <button
+                                onClick={resetFilters}
+                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-colors border border-gray-200"
+                                title="Reset all filters"
+                            >
+                                <FiRefreshCw className="text-sm" />
+                                <span className="hidden sm:inline">Reset</span>
+                            </button>
+                        )}
+                        <button
+                            onClick={() => window.location.href = "/add-bulk-quiz"}
+                            className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-gray-50 transition-all shadow-sm"
+                        >
+                            Bulk Upload
+                        </button>
+                        <button
+                            onClick={openCreateModal}
+                            className="px-5 py-2 bg-indigo-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-indigo-700 transition-all shadow-md flex items-center gap-2"
+                        >
+                            <FaPlus className="text-[10px]" /> New Assessment
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -210,7 +397,7 @@ const AssessmentManager = () => {
                         <div className="w-10 h-10 border-4 border-indigo-50 border-t-indigo-600 rounded-full animate-spin"></div>
                         <p className="text-xs font-bold text-gray-400 animate-pulse uppercase tracking-wider">Syncing assessments...</p>
                     </div>
-                ) : quizzes.length > 0 ? (
+                ) : filteredQuizzes.length > 0 ? (
                     <table className="min-w-full">
                         <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
                             <tr>
@@ -222,7 +409,7 @@ const AssessmentManager = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {quizzes.map((quiz) => (
+                            {filteredQuizzes.map((quiz) => (
                                 <tr key={quiz._id} className="border-b hover:bg-gray-50 transition-colors">
                                     <td className="p-4 text-sm font-medium text-center">
                                         <div className="font-bold text-gray-800">{quiz.title || quiz.name}</div>
@@ -438,7 +625,8 @@ const AssessmentManager = () => {
                                                     <button
                                                         type="button"
                                                         onClick={() => removeQuestion(qIdx)}
-                                                        className="absolute -top-2.5 -right-2.5 p-2 bg-white text-gray-400 hover:text-red-600 border border-gray-100 rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                                                        className="absolute -top-2.5 -right-2.5 p-2 bg-white text-gray-400 hover:text-red-600 border border-gray-100 rounded-lg transition-all shadow-sm"
+
                                                     >
                                                         <FaTimes className="text-[10px]" />
                                                     </button>
@@ -446,7 +634,7 @@ const AssessmentManager = () => {
 
                                                 <div className="space-y-5">
                                                     <div className="space-y-1.5">
-                                                        <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                                        <label className="text-[10px] font-bold uppercase tracking-widest">
                                                             Question Label
                                                         </label>
                                                         <input
@@ -459,8 +647,8 @@ const AssessmentManager = () => {
                                                         />
                                                     </div>
 
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        {(q.options || ["", "", "", ""]).map((opt, oIdx) => (
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                        {(q.options || ["", "", "", "", ""]).map((opt, oIdx) => (
                                                             <div key={oIdx} className="space-y-1.5">
                                                                 <div className="flex justify-between items-center px-1">
                                                                     <label className="text-[9px] font-bold uppercase tracking-wide text-gray-400">Option {String.fromCharCode(65 + oIdx)}</label>
@@ -472,15 +660,6 @@ const AssessmentManager = () => {
                                                                             onChange={() => handleQuestionChange(qIdx, "correctAnswer", opt)}
                                                                             className="hidden"
                                                                         />
-                                                                        {/* <div className={`w-4 h-4 rounded-full border-purple-600 border flex items-center justify-center transition-all ${q.correctAnswer === opt && opt !== ""
-                                                                            ? "bg-emerald-500 border-emerald-500 shadow-sm"
-                                                                            : "border-purple-600  bg-white"
-                                                                            }`}
-                                                                        >
-                                                                            {q.correctAnswer === opt && opt !== "" && (
-                                                                                <FiCheck className="text-white border-purple-600  text-[10px] font-bold" />
-                                                                            )}
-                                                                        </div> */}
                                                                         <div
                                                                             className={`w-5 h-5 rounded-full border-2 border-purple-600 flex items-center justify-center transition-all
     ${q.correctAnswer === opt && opt !== ""
@@ -532,13 +711,13 @@ const AssessmentManager = () => {
                                     </div>
                                 </div>
 
-                                   <button
-                                            type="button"
-                                            onClick={addQuestion}
-                                            className="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-blue-600 hover:text-white transition-all flex items-center gap-2"
-                                        >
-                                            <FaPlusCircle /> Add Question
-                                        </button>
+                                <button
+                                    type="button"
+                                    onClick={addQuestion}
+                                    className="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-blue-600 hover:text-white transition-all flex items-center gap-2"
+                                >
+                                    <FaPlusCircle /> Add Question
+                                </button>
 
                                 {/* Modal Footer */}
                                 <div className="pt-6 border-t border-gray-50 flex gap-4 sticky bottom-0 bg-white pb-2">

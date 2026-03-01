@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaClock, FaCheckCircle, FaExclamationTriangle, FaArrowRight, FaArrowLeft, FaTasks } from "react-icons/fa";
+import { FiCheckCircle } from "react-icons/fi";
 import { API_BASE_URL } from "../config";
 
 const TakeAssessment = () => {
@@ -9,6 +10,7 @@ const TakeAssessment = () => {
     const navigate = useNavigate();
 
     const [quiz, setQuiz] = useState(null);
+    const [application, setApplication] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -53,7 +55,10 @@ const TakeAssessment = () => {
 
                     if (assessment) {
                         setQuiz(assessment);
-                        setTimeLeft(assessment.duration * 60);
+                        setApplication(myApp);
+                        // Fix Timer Initialization: Ensure duration exists and is set correctly
+                        const durationInSeconds = (assessment.duration || 30) * 60;
+                        setTimeLeft(durationInSeconds);
                     } else {
                         setError("Assessment not found.");
                     }
@@ -77,7 +82,7 @@ const TakeAssessment = () => {
         } else if (timeLeft === 0 && quiz && !isSubmitted && !showInstructions) {
             handleSubmit();
         }
-    }, [timeLeft, isSubmitted, quiz]);
+    }, [timeLeft, isSubmitted, quiz, showInstructions]); // Added showInstructions to fix timer start issue
 
     const handleOptionSelect = (option) => {
         setAnswers({
@@ -92,12 +97,24 @@ const TakeAssessment = () => {
         let rawScore = 0;
         let totalRawMarks = 0;
 
-        quiz.questions.forEach((q, index) => {
+        const detailedAnswers = quiz.questions.map((q, index) => {
             const questionMarks = q.marks || 1;
-            totalRawMarks += questionMarks;
-            if (answers[index] === q.correctAnswer) {
+            const selectedOption = answers[index] || "Not Answered";
+            const isCorrect = selectedOption === q.correctAnswer;
+
+            if (isCorrect) {
                 rawScore += questionMarks;
             }
+            totalRawMarks += questionMarks;
+
+            return {
+                questionText: q.questionText,
+                options: q.options || [],
+                selectedOption,
+                correctAnswer: q.correctAnswer,
+                isCorrect,
+                marks: questionMarks
+            };
         });
 
         // Scoring Logic: Always scaled to 100 marks as per user clarification
@@ -126,7 +143,8 @@ const TakeAssessment = () => {
                 quizId: quiz._id,
                 score: scaledScore,
                 totalQuestions: totalQuestions,
-                targetTotal: targetTotal
+                targetTotal: targetTotal,
+                answers: detailedAnswers // Send full answer details
             });
 
         } catch (err) {
@@ -142,49 +160,49 @@ const TakeAssessment = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans">
-            <div className="text-center space-y-4">
-                <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p className="text-indigo-900 font-black uppercase tracking-widest text-xs">Initializing Secure Environment...</p>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 font-sans">
+            <div className="text-center space-y-6">
+                <div className="relative">
+                    <div className="w-16 h-16 border-4 border-blue-100 rounded-2xl animate-pulse"></div>
+                    <div className="absolute inset-0 w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-2xl animate-spin mx-auto"></div>
+                </div>
+                <p className="text-blue-400 font-bold uppercase tracking-[0.3em] text-[10px] animate-pulse">Initializing Portal Environment...</p>
             </div>
         </div>
     );
 
     if (error) return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 font-sans">
-            <div className="max-w-md w-full bg-white p-10 rounded-[2.5rem] shadow-2xl border border-rose-100 text-center">
-                <FaExclamationTriangle className="text-5xl text-rose-500 mx-auto mb-6" />
-                <h2 className="text-2xl font-black text-gray-800 mb-2">Access Denied</h2>
-                <p className="text-gray-500 mb-8 font-medium">{error}</p>
-                <button onClick={() => navigate(-1)} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all">
-                    Return to Job Details
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 p-4 font-sans">
+            <div className="max-w-md w-full bg-white p-12 rounded-2xl shadow-2xl shadow-blue-950/10 border border-blue-50 text-center">
+                <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-inner">
+                    <FaExclamationTriangle className="text-3xl" />
+                </div>
+                <h2 className="text-2xl font-black text-gray-900 mb-4 tracking-tight">Access Denied</h2>
+                <p className="text-gray-500 mb-10 font-medium leading-relaxed">{error}</p>
+                <button
+                    onClick={() => navigate(-1)}
+                    className="w-full py-4 bg-blue-600 text-white rounded-xl font-black text-sm hover:bg-blue-700 transition-all hover:shadow-xl shadow-blue-100 transform active:scale-95 uppercase tracking-widest"
+                >
+                    Return to Careers
                 </button>
             </div>
         </div>
     );
 
     if (isSubmitted) return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 font-sans">
-            <div className="max-w-xl w-full bg-white p-12 rounded-[3rem] shadow-2xl border border-gray-100 text-center">
-                <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-lg shadow-emerald-100">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 p-4 font-sans text-slate-800">
+            <div className="max-w-xl w-full bg-white p-12 rounded-2xl shadow-2xl shadow-blue-900/10 border border-blue-50 text-center">
+                <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-emerald-900/5">
                     <FaCheckCircle className="text-4xl" />
                 </div>
-                <h2 className="text-3xl font-black text-gray-800 mb-4 tracking-tight">Assessment Completed!</h2>
-                <p className="text-gray-500 mb-10 font-medium leading-relaxed">
-                    Your responses have been securely recorded. Our recruitment team will review your performance and reach out shortly.
+                <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">Assessment Completed!</h2>
+                <p className="text-gray-500 mb-10 font-bold leading-relaxed">
+                    Thank you {application?.firstName || "Candidate"}. Your responses have been securely recorded. Our recruitment team will review your performance and reach out shortly.
                 </p>
-
-                {/* Score hidden as per user request */}
-                {/* <div className="bg-gray-50 p-8 rounded-[2rem] mb-10 border border-gray-100">
-                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Your Performance Record</div>
-                    <div className="text-4xl font-black text-indigo-600">
-                        {score} <span className="text-sm text-gray-400 font-bold uppercase tracking-widest">/ 100 Marks</span>
-                    </div>
-                </div> */}
 
                 <button
                     onClick={() => navigate('/candidate-dashboard')}
-                    className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-lg hover:bg-indigo-700 hover:shadow-2xl shadow-indigo-100 transition-all active:scale-95"
+                    className="w-full py-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-black text-sm hover:shadow-2xl shadow-blue-100 transition-all active:scale-95 uppercase tracking-widest"
                 >
                     Return to Homepage
                 </button>
@@ -193,53 +211,48 @@ const TakeAssessment = () => {
     );
 
     if (showInstructions) return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 font-sans">
-            <div className="max-w-2xl w-full bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl border border-gray-100">
-                <div className="flex items-center gap-4 mb-8">
-                    <div className="w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 p-4 font-sans text-slate-800">
+            <div className="max-w-2xl w-full bg-white p-8 md:p-12 rounded-2xl shadow-2xl shadow-blue-900/10 border border-blue-50">
+                <div className="flex items-center gap-5 mb-10">
+                    <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-100">
                         <FaTasks className="text-2xl" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-black text-gray-800 tracking-tight">Assessment Instructions</h2>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Read carefully before starting</p>
+                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">Assessment Instructions</h2>
+                        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Read carefully before starting</p>
                     </div>
                 </div>
 
-                <div className="space-y-6 mb-10">
-                    <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
-                        <p className="text-emerald-800 font-bold leading-relaxed">
-                            Thank you for applying! We're excited to evaluate your skills for this position.
-                        </p>
+                <div className="space-y-8 mb-12">
+                    <div className="p-6 bg-blue-50 text-blue-700 rounded-2xl border border-blue-100 font-black text-sm">
+                        Hello {application?.firstName || "Candidate"}! We're excited to evaluate your skills for the {quiz?.title} phase.
                     </div>
 
-                    <div className="space-y-4 text-gray-600">
-                        <div className="flex gap-4 items-start">
-                            <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-xs shrink-0 mt-0.5">1</div>
-                            <p className="text-sm font-medium">This is a Multiple Choice Question (MCQ) assessment. Each question will have 4 options.</p>
-                        </div>
-                        <div className="flex gap-4 items-start">
-                            <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-xs shrink-0 mt-0.5">2</div>
-                            <p className="text-sm font-medium">Select the most appropriate answer. There is <span className="text-indigo-600 font-black italic underline">no negative marking</span> for incorrect answers.</p>
-                        </div>
-                        <div className="flex gap-4 items-start">
-                            <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-xs shrink-0 mt-0.5">3</div>
-                            <p className="text-sm font-medium">After choosing an answer, click <span className="font-black text-gray-800">"Next"</span> to proceed. You can also go back to previous questions.</p>
-                        </div>
-                        <div className="flex gap-4 items-start">
-                            <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-xs shrink-0 mt-0.5">4</div>
-                            <p className="text-sm font-medium">Upon answering all questions, click <span className="font-black text-emerald-600">"Finish Assessment"</span> to submit your final responses.</p>
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[
+                            { id: 1, text: "Multiple Choice Question (MCQ) format with 5 unique options." },
+                            { id: 2, text: "No negative marking. Feel free to attempt all questions." },
+                            { id: 3, text: "Click \"Next\" to proceed. You can revisit previous questions." },
+                            { id: 4, text: "Click \"Finish\" once all questions are correctly answered." }
+                        ].map(item => (
+                            <div key={item.id} className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100/50">
+                                <div className="w-6 h-6 rounded-lg bg-white text-blue-600 flex items-center justify-center font-black text-[10px] shadow-sm shrink-0">{item.id}</div>
+                                <p className="text-[11px] font-bold text-gray-600 leading-normal">{item.text}</p>
+                            </div>
+                        ))}
                     </div>
 
-                    <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-center gap-3">
-                        <FaClock className="text-amber-500 animate-pulse" />
-                        <span className="text-xs font-bold text-amber-700">The timer ({quiz?.duration || 0} mins) will start once you click the button below.</span>
+                    <div className="p-5 bg-amber-50 rounded-xl border border-amber-100 flex items-center gap-4">
+                        <FaClock className="text-amber-500 text-xl animate-pulse" />
+                        <span className="text-[11px] font-black text-amber-800 uppercase tracking-tight">
+                            The timer ({quiz?.duration || 0} mins) will start once you click start.
+                        </span>
                     </div>
                 </div>
 
                 <button
                     onClick={() => setShowInstructions(false)}
-                    className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 hover:shadow-2xl shadow-indigo-100 transition-all flex items-center justify-center gap-3 group"
+                    className="w-full py-5 bg-blue-600 text-white rounded-xl font-black text-sm hover:bg-blue-700 hover:shadow-2xl shadow-blue-100 transition-all flex items-center justify-center gap-3 group uppercase tracking-widest"
                 >
                     Start Assessment Now
                     <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
@@ -251,100 +264,107 @@ const TakeAssessment = () => {
     const currentQuestion = quiz.questions[currentQuestionIndex];
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans pb-12">
-            {/* Header */}
-            <div className="bg-white border-b border-gray-100 sticky top-0 z-50 px-4 py-6 shadow-sm">
-                <div className="max-w-5xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100">
-                            <FaTasks className="text-xl" />
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 font-sans pb-12 text-gray-800">
+            {/* Responsive Header - Optimized for Mobile/Tablet */}
+            <div className="bg-gradient-to-r from-purple-500 to-blue-600 sticky top-0 z-50 px-4 py-3 md:py-4 shadow-lg">
+                <div className="max-w-5xl mx-auto flex flex-row items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 md:gap-4 min-w-0">
+                        <div className="w-8 h-8 md:w-10 md:h-10 shrink-0 bg-white/20 backdrop-blur-md text-white rounded-lg flex items-center justify-center border border-white/30">
+                            <FaTasks className="text-sm md:text-lg" />
                         </div>
-                        <div>
-                            <h1 className="text-lg font-black text-gray-800 tracking-tight">{quiz.title}</h1>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Candidate Assessment Phase</p>
+                        <div className="truncate">
+                            <h1 className="text-xs md:text-base font-bold text-white tracking-tight truncate leading-tight">
+                                {application?.firstName || "Hello"}, {quiz.title}
+                            </h1>
+                            <p className="hidden xs:block text-[9px] md:text-[10px] font-medium text-blue-100 uppercase tracking-widest opacity-80 truncate">Assignment Phase</p>
                         </div>
                     </div>
 
-                    <div className={`px-6 py-3 rounded-2xl border flex items-center gap-3 transition-colors ${timeLeft < 60 ? "bg-rose-50 border-rose-100 text-rose-600" : "bg-indigo-50 border-indigo-100 text-indigo-600"
+                    <div className={`shrink-0 px-3 py-1.5 md:px-5 md:py-2 rounded-lg border flex items-center gap-2 md:gap-3 transition-all duration-500 shadow-sm ${timeLeft < 60 ? "bg-red-500 border-red-400 text-white animate-pulse" : "bg-white/10 border-white/20 text-white"
                         }`}>
-                        <FaClock className={timeLeft < 60 ? "animate-pulse" : ""} />
-                        <span className="font-black tabular-nums">{formatTime(timeLeft)}</span>
+                        <FaClock className="text-xs md:text-sm" />
+                        <span className="font-bold tabular-nums text-xs md:text-sm">{formatTime(timeLeft)}</span>
                     </div>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="max-w-3xl mx-auto px-4 mt-12">
+            <div className="max-w-3xl mx-auto px-4 mt-6 md:mt-10">
                 {/* Progress Bar */}
-                <div className="mb-10 space-y-3">
+                <div className="mb-6 md:mb-8 space-y-2 md:space-y-3">
                     <div className="flex justify-between items-end">
-                        <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Question {currentQuestionIndex + 1} of {quiz.questions.length}</span>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{Math.round(((currentQuestionIndex + 1) / quiz.questions.length) * 100)}% Complete</span>
+                        <span className="text-[9px] md:text-[10px] font-bold text-blue-600 uppercase tracking-widest">Question {currentQuestionIndex + 1} / {quiz.questions.length}</span>
+                        <span className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest">{Math.round(((currentQuestionIndex + 1) / quiz.questions.length) * 100)}%</span>
                     </div>
-                    <div className="h-3 bg-gray-100 rounded-full overflow-hidden p-0.5 border border-gray-50 shadow-inner">
+                    <div className="h-2 bg-white rounded-full overflow-hidden p-0.5 border border-gray-200 shadow-sm">
                         <div
-                            className="h-full bg-indigo-600 rounded-full transition-all duration-500 shadow-sm"
+                            className="h-full bg-gradient-to-r from-purple-500 to-blue-600 rounded-full transition-all duration-1000"
                             style={{ width: `${((currentQuestionIndex + 1) / quiz.questions.length) * 100}%` }}
                         ></div>
                     </div>
                 </div>
 
-                {/* Question Card */}
-                <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-indigo-900/5 border border-gray-100 p-8 md:p-12 overflow-hidden animate-in slide-in-from-bottom-8 duration-500">
-                    <div className="mb-10">
-                        <div className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-4">Prompt</div>
-                        <h2 className="text-xl md:text-2xl font-black text-gray-800 leading-tight">
+                {/* Question Card - Matches UserActivity sleekness */}
+                <div className="bg-white rounded-xl shadow-md border border-gray-200 p-5 md:p-8 overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="mb-5 md:mb-6">
+                        <div className="text-[8px] md:text-[9px] font-bold text-blue-500 uppercase tracking-[0.2em] mb-1 md:mb-2">Current Question</div>
+                        <h2 className="text-base md:text-lg font-bold text-gray-800 leading-snug">
                             {currentQuestion.questionText}
                         </h2>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                         {currentQuestion.options.map((option, idx) => (
                             <button
                                 key={idx}
                                 onClick={() => handleOptionSelect(option)}
-                                className={`w-full text-left p-6 rounded-2xl border-2 transition-all flex items-center justify-between group ${answers[currentQuestionIndex] === option
-                                    ? "bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-100 scale-[1.02]"
-                                    : "bg-white border-gray-100 text-gray-600 hover:border-indigo-200 hover:bg-indigo-50/30"
+                                className={`w-full text-left px-4 py-3 md:px-5 md:py-3.5 rounded-lg border transition-all flex items-center justify-between group ${answers[currentQuestionIndex] === option
+                                    ? "bg-blue-50 border-blue-500 text-blue-700 shadow-sm"
+                                    : "bg-white border-gray-200 text-gray-600 hover:border-blue-300 hover:bg-blue-50/20"
                                     }`}
                             >
-                                <span className="font-bold">{option}</span>
-                                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${answers[currentQuestionIndex] === option
-                                    ? "bg-white border-white text-indigo-600"
-                                    : "border-gray-100 group-hover:border-indigo-300"
+                                <span className="font-semibold text-[11px] md:text-xs leading-tight">{option}</span>
+                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ml-3 transition-all ${answers[currentQuestionIndex] === option
+                                    ? "bg-blue-600 border-blue-600 text-white"
+                                    : "border-gray-200 group-hover:border-blue-300"
                                     }`}>
-                                    {answers[currentQuestionIndex] === option && <FaCheckCircle className="text-xs" />}
+                                    {answers[currentQuestionIndex] === option && <FiCheckCircle className="text-[8px]" />}
                                 </div>
                             </button>
                         ))}
                     </div>
 
-                    <div className="mt-12 pt-8 border-t border-gray-50 flex items-center justify-between gap-4">
-                        <button
-                            disabled={currentQuestionIndex === 0}
-                            onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
-                            className="flex items-center gap-2 px-6 py-4 rounded-xl font-black text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all disabled:opacity-0"
-                        >
-                            <FaArrowLeft /> Previous
-                        </button>
+                    {/* Responsive Navigation Buttons */}
+                    <div className="mt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 justify-between">
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <button
+                                disabled={currentQuestionIndex === 0}
+                                onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-lg font-bold text-[10px] md:text-xs uppercase tracking-wider text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all disabled:opacity-0 active:scale-95 border border-transparent hover:border-blue-100"
+                            >
+                                <FaArrowLeft /> Back
+                            </button>
+                        </div>
 
-                        {currentQuestionIndex === quiz.questions.length - 1 ? (
-                            <button
-                                onClick={handleSubmit}
-                                disabled={!answers[currentQuestionIndex]}
-                                className="flex items-center gap-3 px-10 py-4 bg-emerald-600 text-white rounded-xl font-black shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all transform active:scale-90 disabled:bg-gray-200 disabled:shadow-none"
-                            >
-                                Finish Assessment <FaCheckCircle />
-                            </button>
-                        ) : (
-                            <button
-                                disabled={!answers[currentQuestionIndex]}
-                                onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
-                                className="flex items-center gap-3 px-10 py-4 bg-indigo-600 text-white rounded-xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all transform active:scale-90 disabled:bg-gray-200 disabled:shadow-none"
-                            >
-                                Next Question <FaArrowRight />
-                            </button>
-                        )}
+                        <div className="w-full sm:w-auto">
+                            {currentQuestionIndex === quiz.questions.length - 1 ? (
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={!answers[currentQuestionIndex]}
+                                    className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-3 md:py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg font-bold text-[11px] md:text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all transform active:scale-95 disabled:bg-gray-200 disabled:shadow-none"
+                                >
+                                    Finish Assessment <FaCheckCircle />
+                                </button>
+                            ) : (
+                                <button
+                                    disabled={!answers[currentQuestionIndex]}
+                                    onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
+                                    className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-3 md:py-3.5 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-lg font-bold text-[11px] md:text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all transform active:scale-95 disabled:bg-gray-200 disabled:shadow-none"
+                                >
+                                    Next Question <FaArrowRight />
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 

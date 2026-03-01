@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
   FiBriefcase, FiList, FiCode, FiDollarSign,
   FiClipboard, FiCopy, FiCheckCircle, FiPlus,
   FiX, FiExternalLink, FiSearch, FiMoreVertical,
-  FiEdit2, FiEye, FiTrash2
+  FiEdit2, FiEye, FiTrash2, FiRefreshCw
 } from "react-icons/fi";
 import { API_BASE_URL } from "../config";
 import { useNavigate } from "react-router-dom";
@@ -14,8 +14,10 @@ const API_BASE = API_BASE_URL;
 function JobPost() {
   const [formData, setFormData] = useState({
     role: "",
-    responsibilities: "",
+    description: "",
     skills: "",
+    experience: "",
+    location: "",
     salary: "",
     assessmentIds: [],
   });
@@ -30,6 +32,11 @@ function JobPost() {
   const [message, setMessage] = useState({ type: "", text: "" });
   const [copiedId, setCopiedId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+  const [roleSearchQuery, setRoleSearchQuery] = useState("");
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const roleDropdownRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentJobId, setCurrentJobId] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -41,6 +48,14 @@ function JobPost() {
     fetchJobs();
     fetchQuizzes();
     fetchRoles();
+
+    const handleClickOutside = (event) => {
+      if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target)) {
+        setIsRoleDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const fetchJobs = async () => {
@@ -87,9 +102,11 @@ function JobPost() {
     setCurrentJobId(null);
     setFormData({
       role: "",
-      responsibilities: "",
+      description: "",
       skills: "",
       salary: "",
+      experience: "",
+      location: "",
       assessmentIds: [],
     });
     setIsModalOpen(true);
@@ -100,9 +117,11 @@ function JobPost() {
     setCurrentJobId(job._id);
     setFormData({
       role: job.role,
-      responsibilities: job.responsibilities,
+      description: job.description,
       skills: job.skills,
       salary: job.salary,
+      location: job.location,
+      experience: job.experience,
       assessmentIds: job.assessmentIds ? job.assessmentIds.map(a => a._id || a) : [], // Changed from assessmentId
     });
     setIsModalOpen(true);
@@ -166,9 +185,11 @@ function JobPost() {
         setMessage({ type: "success", text: isEditing ? "Job post updated successfully!" : "Job post created successfully!" });
         setFormData({
           role: "",
-          responsibilities: "",
+          description: "",
           skills: "",
           salary: "",
+          experience: "",
+          location: "",
           assessmentIds: [],
         });
         fetchJobs();
@@ -185,54 +206,247 @@ function JobPost() {
     }
   };
 
-  const copyToClipboard = (link, id) => {
-    const fullLink = window.location.origin + link;
-    navigator.clipboard.writeText(fullLink);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(""), 2000);
+  const copyToClipboard = (job) => {
+    const fullLink = window.location.origin + job.link;
+    const experienceLabel = job.experience ? (job.experience === "Fresher" ? "Fresher" : `${job.experience} Years`) : "Not Specified";
+    const jobDesc = job.description || job.responsibilities || "";
+
+    const template = `🚀 Hiring: ${job.role}
+
+📍 Location: ${job.location || "Not Specified"}
+💰 Salary / Package: ${job.salary || "Competitive"}
+⏳ Experience: ${experienceLabel}
+
+// 📌 Job Description:
+// ${jobDesc ? jobDesc.split('\n').filter(l => l.trim()).map(l => `• ${l.trim()}`).join('\n') : "• Information available on request"}
+
+🛠 Required Skills:
+${job.skills ? job.skills.split(',').filter(s => s.trim()).map(s => `• ${s.trim()}`).join('\n') : "• Relevant skills required"}
+
+📩 Interested candidates can share their resume.
+Direct Apply Link: ${fullLink}`;
+
+    navigator.clipboard.writeText(template);
+    setCopiedId(job._id);
+    setTimeout(() => setCopiedId(""), 2200);
   };
 
-  const filteredJobs = jobs.filter(job =>
-    job.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    job.skills.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredJobs = jobs.filter(job => {
+    const matchesSearch = job.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.skills.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = roleFilter ? job.role === roleFilter : true;
+    const matchesDate = dateFilter
+      ? new Date(job.createdAt || job.appliedAt).toISOString().slice(0, 10) === dateFilter
+      : true;
+    return matchesSearch && matchesRole && matchesDate;
+  });
 
   // return (
   return (
-    <div className="p-3 mx-auto bg-white rounded-lg shadow-md max-w-9xl min-h-screen">
+    <div className="w-full min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8">
       {/* Header Section */}
-      <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
-        {/* Search Bar */}
-        <div className="relative w-full md:w-72">
-          <input
-            type="text"
-            className="w-full py-2 pl-10 pr-4 text-sm text-gray-700 placeholder-gray-400 transition-all border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Search positions or skills..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-            <FiSearch />
-          </div>
+      <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex-shrink-0">
+          <h2 className="text-base font-bold text-gray-800">Job Post Management</h2>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* <button
-            onClick={() => navigate("/job-applicants")}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700"
-          >
-            <FiPlus />
-            <span>Job Applicants</span>
-          </button> */}
+        {/* Search Bar & Role Filter */}
+        <div className="flex flex-wrap items-center justify-start xl:justify-end gap-3 flex-grow">
+          {/* Date Filter */}
+          <div className="relative w-full sm:w-auto">
+            <input
+              type="date"
+              className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm sm:w-40"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+            />
+            {dateFilter && (
+              <div
+                className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer text-gray-400 hover:text-red-500 transition-colors"
+                onClick={() => setDateFilter("")}
+                title="Clear date filter"
+              >
+                <FiX className="text-[12px]" />
+              </div>
+            )}
+          </div>
+          
+             {/* Searchable Dept Filter */}
+          <div className="relative w-full sm:w-56" ref={roleDropdownRef}>
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400 z-10">
+              <FiBriefcase />
+            </div>
+            <div
+              className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
+              onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+            >
+              {roleFilter || "Select Role"}
+            </div>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 z-10">
+              {roleFilter ? (
+                <FiX
+                  className="text-xs text-gray-400 hover:text-rose-500 cursor-pointer transition-colors"
+                  onClick={(e) => { e.stopPropagation(); setRoleFilter(""); }}
+                />
+              ) : (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 pointer-events-none"><path d="m6 9 6 6 6-6" /></svg>
+              )}
+            </div>
 
+            {isRoleDropdownOpen && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-2 border-b border-gray-100 bg-gray-50">
+                  <div className="relative">
+                    <FiSearch className="absolute left-2.5 top-2.5 text-gray-400 text-xs" />
+                    <input
+                      type="text"
+                      className="w-full py-1.5 pl-8 pr-4 text-xs bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Search roles..."
+                      value={roleSearchQuery}
+                      onChange={(e) => setRoleSearchQuery(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div className="max-h-60 overflow-y-auto py-1">
+                  <div
+                    className={`px-4 py-2 text-xs font-bold cursor-pointer hover:bg-indigo-50 transition-colors ${!roleFilter ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-600'}`}
+                    onClick={() => { setRoleFilter(""); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
+                  >
+                    All Roles
+                  </div>
+                  {roles
+                    .filter(r => r.name.toLowerCase().includes(roleSearchQuery.toLowerCase()))
+                    .map((r) => (
+                      <div
+                        key={r._id}
+                        className={`px-4 py-2 text-xs font-bold cursor-pointer hover:bg-indigo-50 transition-colors ${roleFilter === r.name ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-600'}`}
+                        onClick={() => { setRoleFilter(r.name); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
+                      >
+                        {r.name}
+                      </div>
+                    ))
+                  }
+                  {roles.filter(r => r.name.toLowerCase().includes(roleSearchQuery.toLowerCase())).length === 0 && (
+                    <div className="px-4 py-3 text-xs text-gray-400 text-center font-medium italic">
+                      No roles found
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+
+          {/* Searchable Dept/Role Filter */}
+          <div className="relative w-full sm:w-56" ref={roleDropdownRef}>
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400 z-10">
+              <FiBriefcase />
+            </div>
+            <div
+              className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
+              onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+            >
+              {roleFilter || "Select Role"}
+            </div>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 z-10">
+              {roleFilter ? (
+                <FiX
+                  className="text-xs text-gray-400 hover:text-rose-500 cursor-pointer transition-colors"
+                  onClick={(e) => { e.stopPropagation(); setRoleFilter(""); }}
+                />
+              ) : (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 pointer-events-none"><path d="m6 9 6 6 6-6" /></svg>
+              )}
+            </div>
+
+            {isRoleDropdownOpen && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-2 border-b border-gray-100 bg-gray-50">
+                  <div className="relative">
+                    <FiSearch className="absolute left-2.5 top-2.5 text-gray-400 text-xs" />
+                    <input
+                      type="text"
+                      className="w-full py-1.5 pl-8 pr-4 text-xs bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Search roles..."
+                      value={roleSearchQuery}
+                      onChange={(e) => setRoleSearchQuery(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div className="max-h-60 overflow-y-auto py-1">
+                  <div
+                    className={`px-4 py-2 text-xs font-bold cursor-pointer hover:bg-indigo-50 transition-colors ${!roleFilter ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-600'}`}
+                    onClick={() => { setRoleFilter(""); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
+                  >
+                    All Roles
+                  </div>
+                  {roles
+                    .filter(r => r.name.toLowerCase().includes(roleSearchQuery.toLowerCase()))
+                    .map((r) => (
+                      <div
+                        key={r._id}
+                        className={`px-4 py-2 text-xs font-bold cursor-pointer hover:bg-indigo-50 transition-colors ${roleFilter === r.name ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-600'}`}
+                        onClick={() => { setRoleFilter(r.name); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
+                      >
+                        {r.name}
+                      </div>
+                    ))
+                  }
+                  {roles.filter(r => r.name.toLowerCase().includes(roleSearchQuery.toLowerCase())).length === 0 && (
+                    <div className="px-4 py-3 text-xs text-gray-400 text-center font-medium italic">
+                      No roles found
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative w-full sm:w-64">
+            <input
+              type="text"
+              className="w-full py-2 pl-10 pr-10 text-sm text-gray-700 placeholder-gray-400 transition-all border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Search positions or skills..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+              <FiSearch />
+            </div>
+            {searchQuery && (
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                <FiX
+                  className="text-xs text-gray-400 hover:text-rose-500 cursor-pointer transition-colors"
+                  onClick={() => setSearchQuery("")}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            {(searchQuery || roleFilter) && (
+              <button
+                onClick={() => { setSearchQuery(""); setRoleFilter(""); setRoleSearchQuery(""); }}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-colors"
+                title="Reset Filters"
+              >
+                <FiRefreshCw className="text-xs" />
+                <span className="hidden sm:inline">Reset</span>
+              </button>
+            )}
             <button
-            onClick={openCreateModal}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700"
-          >
-            <FiPlus />
-            <span>Post New Job</span>
-          </button>
+              onClick={openCreateModal}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700"
+            >
+              <FiPlus />
+              <span>Post New Job</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -301,11 +515,18 @@ function JobPost() {
                         <FiTrash2 />
                       </button>
                       <button
-                        onClick={() => copyToClipboard(job.link, job._id)}
+                        onClick={() => copyToClipboard(job)}
                         className={`text-sm ${copiedId === job._id ? "text-emerald-600" : "text-gray-400 hover:text-indigo-600"}`}
-                        title="Copy Application Link"
+                        title="Copy Formatted Share Template"
                       >
                         {copiedId === job._id ? <FiCheckCircle /> : <FiCopy />}
+                      </button>
+                      <button
+                        onClick={() => window.open(`${window.location.origin}${job.link}`, "_blank")}
+                        className="text-gray-400 hover:text-blue-600"
+                        title="Open Job Page"
+                      >
+                        <FiExternalLink />
                       </button>
                     </div>
                   </td>
@@ -332,7 +553,7 @@ function JobPost() {
             <div className="px-8 pt-8 pb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl  text-gray-800">
-                  {isEditing ? "Update Job Opening" : "Post New Openinga"}
+                  {isEditing ? "Update Job Opening" : "Post New Opening"}
                 </h2>
                 <p className="text-[10px] font-bold  uppercase tracking-widest mt-1">
                   {isEditing ? "Modify recruitment details" : "Configure recruitment details"}
@@ -390,7 +611,7 @@ function JobPost() {
                   {/* Salary */}
                   <div className="space-y-1.5">
                     <label className="block mb-1 text-sm font-medium text-gray-700">
-                      Budget / Package
+                      Salary / Package
                     </label>
                     <div className="relative group">
                       <FiDollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" />
@@ -406,10 +627,51 @@ function JobPost() {
                   </div>
                 </div>
 
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Job Role Dropdown */}
+                  <div>
+                    <label className="text-sm font-medium">Experience</label>
+                    <select
+                      name="experience"
+                      value={formData.experience}
+                      onChange={handleChange}
+                      required
+                      className="w-full p-3 border rounded-xl"
+                    >
+                      <option value="">Select Experience</option>
+                      <option value="Fresher">Fresher</option>
+                      <option value="0-1">0-1 Years</option>
+                      <option value="1-2">1-2 Years</option>
+                      <option value="2-3">2-3 Years</option>
+                      <option value="3-4">3-4 Years</option>
+                      <option value="5+">5+ Years</option>
+                    </select>
+                  </div>
+
+
+                  {/* Salary */}
+                  <div>
+                    <label className="text-sm font-medium">Location</label>
+                    <input
+                      type="text"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleChange}
+                      required
+                      className="w-full p-3 border rounded-xl"
+                      placeholder="Hyderabad / Remote"
+                    />
+                  </div>
+
+                </div>
+
+
+
                 {/* Skills */}
                 <div className="space-y-1.5">
                   <label className="block mb-1 text-sm font-medium text-gray-700">
-                    Required Stack
+                    Required Skills
                   </label>
                   <div className="relative group">
                     <FiCode className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" />
@@ -419,8 +681,8 @@ function JobPost() {
                       value={formData.skills}
                       onChange={handleChange}
                       required
-                      className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm  text-gray-800 placeholder:text-gray-300"
-                      placeholder="React, AWS, TypeScript"
+                      className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm  text-gray-800"
+                      placeholder="Communications skills , Positive Attitude, Ready to learn"
                     />
                   </div>
                 </div>
@@ -500,13 +762,13 @@ function JobPost() {
                 {/* Responsibilities */}
                 <div className="space-y-1.5">
                   <label className="block mb-1 text-sm font-medium text-gray-700">
-                    Role Summary
+                    Job  Description
                   </label>
                   <div className="relative group">
                     <FiList className="absolute left-4 top-4 text-gray-300 group-focus-within:text-indigo-600 transition-colors" />
                     <textarea
-                      name="responsibilities"
-                      value={formData.responsibilities}
+                      name="description"
+                      value={formData.description}
                       onChange={handleChange}
                       required
                       rows="3"
@@ -550,116 +812,157 @@ function JobPost() {
       {/* View Details Modal */}
       {isDetailsModalOpen && selectedJob && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-100">
-            {/* Modal Header */}
-            <div className="px-8 pt-8 pb-4 flex items-center justify-between border-b border-gray-50">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 flex items-center justify-center bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-100">
-                  <FiBriefcase className="text-xl" />
-                </div>
-                <div>
-                  <h2 className="text-xl  text-gray-800">{selectedJob.role}</h2>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Detailed Job Specifications</p>
-                </div>
+          <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-100">
+
+            {/* Header — SAME STYLE AS CREATE MODAL */}
+            <div className="px-8 pt-8 pb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl text-gray-800">
+                  {selectedJob.role}
+                </h2>
+                <p className="text-[10px] font-bold uppercase tracking-widest mt-1 text-gray-400">
+                  Detailed Job Specifications
+                </p>
               </div>
+
               <button
                 onClick={() => setIsDetailsModalOpen(false)}
                 className="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all"
               >
-                <FiX className="text-lg" />
+                Close
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div className="p-8 max-h-[70vh] overflow-y-auto no-scrollbar">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Compensation</h4>
-                    <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100/50">
-                      <FiDollarSign className="text-emerald-600 text-xl" />
-                      <span className="text-sm  text-gray-800">{selectedJob.salary || "Competitive Salary"}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Assessment Hook(s)</h4>
-                    <div className="space-y-2">
-                      {selectedJob.assessmentIds && selectedJob.assessmentIds.length > 0 ? (
-                        selectedJob.assessmentIds.map((assessment, idx) => (
-                          <div key={idx} className="flex items-center gap-3 p-3 bg-amber-50 rounded-xl border border-amber-100/50 hover:bg-amber-100/50 transition-colors">
-                            <FiClipboard className="text-amber-600 text-lg shrink-0" />
-                            <div className="flex flex-col">
-                              <span className="text-xs text-gray-800">
-                                {assessment.topic || assessment.title || "Untitled Assessment"}
-                              </span>
-                              <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">
-                                ID: {assessment._id || assessment}
-                              </span>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                          <FiClipboard className="text-gray-300 text-xl" />
-                          <span className="text-sm font-bold text-gray-400">No Assessment Linked</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Required Stack</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedJob.skills.split(",").map((skill, idx) => (
-                      <span key={idx} className="bg-indigo-50 text-indigo-600 text-[10px] font-bold px-3 py-2 rounded-xl border border-indigo-100/50 uppercase tracking-wider">
-                        {skill.trim()}
-                      </span>
-                    ))}
-                  </div>
+            {/* Body — SAME SPACING SYSTEM */}
+            <div className="p-8 pt-4 max-h-[75vh] overflow-y-auto no-scrollbar space-y-6">
+
+              {/* Salary */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-gray-700">
+                  Salary / Package
+                </label>
+                <div className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800">
+                  {selectedJob.salary || "Competitive Salary"}
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Core Responsibilities</h4>
-                  <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 leading-relaxed text-sm text-gray-600 whitespace-pre-line">
-                    {selectedJob.responsibilities}
-                  </div>
+              {/* Experience */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-gray-700">
+                  Experience
+                </label>
+                <div className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800">
+                  {selectedJob.experience || "Not Specified"}
                 </div>
-                <div>
-                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Public Access Link</h4>
-                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <code className="flex-1 text-xs text-indigo-600 font-bold overflow-hidden text-ellipsis whitespace-nowrap">
-                      {window.location.origin + selectedJob.link}
-                    </code>
-                    <button
-                      onClick={() => copyToClipboard(selectedJob.link, selectedJob._id)}
-                      className="p-2 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-all"
+              </div>
+
+              {/* Location */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-gray-700">
+                  Location
+                </label>
+                <div className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800">
+                  {selectedJob.location || "Not Specified"}
+                </div>
+              </div>
+
+              {/* Skills */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-gray-700">
+                  Required Skills
+                </label>
+
+                <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-gray-200 bg-gray-50">
+                  {selectedJob.skills.split(",").map((skill, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1 text-xs bg-white border border-gray-200 rounded-lg text-gray-700"
                     >
-                      <FiCopy />
-                    </button>
-                  </div>
+                      {skill.trim()}
+                    </span>
+                  ))}
                 </div>
               </div>
-            </div>
 
-            {/* Modal Footer */}
-            <div className="p-8 pt-4 border-t border-gray-50 flex gap-4">
-              <button
-                onClick={() => {
-                  setIsDetailsModalOpen(false);
-                  handleEdit(selectedJob);
-                }}
-                className="flex-1 flex items-center justify-center gap-2 py-4 px-6 rounded-2xl font-bold bg-amber-50 text-amber-600 hover:bg-amber-100 transition-all"
-              >
-                <FiEdit2 /> Edit Position
-              </button>
-              <button
-                onClick={() => setIsDetailsModalOpen(false)}
-                className="flex-1 py-4 px-6 rounded-2xl font-bold bg-gray-900 text-white hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
-              >
-                Close View
-              </button>
+              {/* Assessments */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-gray-700">
+                  Linked Assessments
+                </label>
+
+                <div className="space-y-2 p-3 rounded-xl border border-gray-200 bg-gray-50">
+                  {selectedJob.assessmentIds &&
+                    selectedJob.assessmentIds.length > 0 ? (
+                    selectedJob.assessmentIds.map((assessment, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3 bg-white rounded-lg border border-gray-200 text-sm text-gray-800"
+                      >
+                        {assessment.topic ||
+                          assessment.title ||
+                          "Untitled Assessment"}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm text-gray-400">
+                      No Assessment Linked
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-gray-700">
+                  Job Description
+                </label>
+                <div className="w-full p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 whitespace-pre-line">
+                  {selectedJob.description || selectedJob.responsibilities}
+                </div>
+              </div>
+
+              {/* Public Link */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-gray-700">
+                  Public Access Link
+                </label>
+
+                <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50">
+                  <span className="text-sm text-gray-800 truncate">
+                    {window.location.origin + selectedJob.link}
+                  </span>
+
+                  <button
+                    onClick={() =>
+                      copyToClipboard(selectedJob.link, selectedJob._id)
+                    }
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              {/* Footer — SAME BUTTON STYLE AS CREATE MODAL */}
+              <div className="pt-6 border-t border-gray-100 flex gap-4">
+                <button
+                  onClick={() => {
+                    setIsDetailsModalOpen(false);
+                    handleEdit(selectedJob);
+                  }}
+                  className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all"
+                >
+                  Edit Position
+                </button>
+
+                <button
+                  onClick={() => setIsDetailsModalOpen(false)}
+                  className="flex-[1.5] py-3.5 px-8 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all"
+                >
+                  Close View
+                </button>
+              </div>
+
             </div>
           </div>
         </div>

@@ -109,3 +109,7 @@
     width: 200px;
   }
 }
+.font-black {
+  /* Make heavy 'font-black' appearance closer to 'font-bold' to match UserActivity visual weight */
+  font-weight: 700 !important;
+}

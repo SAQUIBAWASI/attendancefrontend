@@ -692,7 +692,7 @@ const UserAccessManagement = () => {
         <div className="border-b border-gray-100 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
           <div className="flex items-center gap-2">
             <FiSettings className="text-gray-400" />
-            <h1 className="text-lg font-bold text-gray-800">User Access Management</h1>
+            {/* <h1 className="text-lg font-bold text-gray-800">User Access Management</h1> */}
           </div>
 
           {/* Global Search Bar */}
