@@ -142,7 +142,7 @@ import UserAccessManagement from "./Pages/UserAccessManagement.js";
 import UserActivity from "./Pages/UserActivity.js";
 import WhoWeServePage from "./Pages/WhoWeServePage.js";
 // import EmpManagment from "./Pages/EmpManagment.js";
-<<<<<<< HEAD
+
 import JobDetails from "./Pages/JobDetails.jsx";
 import JobPost from "./Pages/JobPost.jsx";
 import Score from "./Pages/Score.jsx";
@@ -150,13 +150,12 @@ import SendOffer from "./Pages/SendOffer.jsx";
 import JobApplicants from "./Pages/JobApplicants.jsx";
 import CandidateDashboard from "./Pages/CandidateDashboard.jsx";
 import PersonalDocuments from "./Pages/PersonalDocuments.jsx";
-=======
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
+
 import AssessmentManager from "./Pages/AssessmentManager.jsx";
-import CandidateDashboard from "./Pages/CandidateDashboard.jsx";
+// import CandidateDashboard from "./Pages/CandidateDashboard.jsx";
 import CandidateLogin from "./Pages/CandidateLogin.jsx";
 import CandidateRegister from "./Pages/CandidateRegister.jsx";
-<<<<<<< HEAD
+
 // import Documents from "./Pages/Documents.jsx";
 // import PersonalDocuments from "./Pages/PersonalDocuments.jsx";
 import Medical from "./Pages/Medical.jsx";
@@ -176,16 +175,15 @@ import EmployeeJourney from "./Pages/EmployeeJourney.jsx";
 import ExpenseManagement from "./Pages/ExpenseManagement.jsx";
 import AllExpensives from "./Pages/AllExpensives.jsx";
 
-=======
 import Documents from "./Pages/Documents.jsx";
-import JobApplicants from "./Pages/JobApplicants.jsx";
-import JobDetails from "./Pages/JobDetails.jsx";
-import JobPost from "./Pages/JobPost.jsx";
-import Medical from "./Pages/Medical.jsx";
-import Score from "./Pages/Score.jsx";
-import SendOffer from "./Pages/SendOffer.jsx";
+// import JobApplicants from "./Pages/JobApplicants.jsx";
+// import JobDetails from "./Pages/JobDetails.jsx";
+// import JobPost from "./Pages/JobPost.jsx";
+// import Medical from "./Pages/Medical.jsx";
+// import Score from "./Pages/Score.jsx";
+// import SendOffer from "./Pages/SendOffer.jsx";
 import TakeAssessment from "./Pages/TakeAssessment.jsx";
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
+
 
 function App() {
   return (

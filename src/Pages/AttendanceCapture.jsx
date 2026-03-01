@@ -2850,9 +2850,6 @@ export default function AttendanceCapture() {
       setError("");
       
       try {
-<<<<<<< HEAD
-        const res = await axios.get(`${BASE_URL}/employees/mylocation/${employeeId}`);
-=======
         // FIXED: Properly construct URL without duplicate 'api'
         const url = `${cleanBaseUrl}/api/employees/mylocation/${employeeId}`;
         console.log("Calling URL:", url);
@@ -2860,7 +2857,6 @@ export default function AttendanceCapture() {
         const res = await axios.get(url);
         console.log("Full API Response:", res);
         console.log("Response data:", res.data);
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
 
         // Check what's in the response
         if (res.data) {
@@ -2946,9 +2942,6 @@ export default function AttendanceCapture() {
   useEffect(() => {
     const fetchAllLocations = async () => {
       try {
-<<<<<<< HEAD
-        const res = await axios.get(`${BASE_URL}/location/alllocation`);
-=======
         // FIXED: Proper URL without duplicate 'api'
         const url = `${cleanBaseUrl}/api/location/alllocation`;
         console.log("Fetching all locations from:", url);
@@ -2956,7 +2949,6 @@ export default function AttendanceCapture() {
         const res = await axios.get(url);
         console.log('All locations response:', res.data);
         
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
         if (res.data.locations) {
           setAllLocations(res.data.locations);
         } else if (res.data.data) {
@@ -2997,9 +2989,6 @@ export default function AttendanceCapture() {
     const fetchTodayAttendance = async () => {
       if (!employeeId) return;
       try {
-<<<<<<< HEAD
-        const res = await axios.get(`${BASE_URL}/attendance/myattendance/${employeeId}`);
-=======
         // FIXED: Proper URL without duplicate 'api'
         const url = `${cleanBaseUrl}/api/attendance/myattendance/${employeeId}`;
         console.log("Fetching attendance from:", url);
@@ -3007,7 +2996,6 @@ export default function AttendanceCapture() {
         const res = await axios.get(url);
         console.log('Attendance response:', res.data);
         
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
         const data = res.data;
 
         // Get employee name from attendance API response too
@@ -3131,13 +3119,9 @@ export default function AttendanceCapture() {
 
     setSubmitting(true);
     try {
-<<<<<<< HEAD
-      const res = await axios.post(`${BASE_URL}/attendance/checkin`, {
-=======
       const url = `${cleanBaseUrl}/api/attendance/checkin`;
       console.log("Checking in with URL:", url);
       console.log("Check-in data:", {
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
         employeeId,
         employeeEmail,
         latitude: position.lat,
@@ -3194,13 +3178,9 @@ export default function AttendanceCapture() {
 
     setSubmitting(true);
     try {
-<<<<<<< HEAD
-      const res = await axios.post(`${BASE_URL}/attendance/checkout`, {
-=======
       const url = `${cleanBaseUrl}/api/attendance/checkout`;
       console.log("Checking out with URL:", url);
       console.log("Checkout data:", {
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
         employeeId,
         latitude: position.lat,
         longitude: position.lng,

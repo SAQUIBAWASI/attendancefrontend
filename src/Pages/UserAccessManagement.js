@@ -2234,19 +2234,10 @@ const UserAccessManagement = () => {
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="mx-auto max-w-9xl">
 
-<<<<<<< HEAD
-      <div className="w-full max-w-8xl bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        {/* Header - Enhanced with Global Search */}
-        <div className="border-b border-gray-100 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
-          <div className="flex items-center gap-2">
-            <FiSettings className="text-gray-400" />
-            {/* <h1 className="text-lg font-bold text-gray-800">User Access Management</h1> */}
-=======
         {/* Header with gradient - matching other components */}
         {/* <div className="p-2 mb-3 bg-white border border-gray-200 shadow-md rounded-xl">
           <div className="flex items-end justify-between">
             <h1 className="text-xl font-bold text-gray-800">User Access Management</h1>
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
           </div>
         </div> */}
 

@@ -1339,16 +1339,13 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/emp-shifts": "Shift Management",
       "/emp-user-activity": "User Activity",
       "/emp-user-access": "User Access",
-<<<<<<< HEAD
-      "/expense-management": "Expense Management"
-=======
+      "/expense-management": "Expense Management",
       // Recruitment Routes
       "/emp-job-posts": "Job Posts",
       "/emp-job-applicants": "Job Applicants",
       "/emp-score-board": "Score Board",
       "/emp-assessments": "Assessments",
       "/emp-documents": "Documents",
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
     };
 
     return pathMap[path] || "Dashboard";
@@ -1589,23 +1586,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       permission: "ALLOW_ALWAYS"
     };
 
-<<<<<<< HEAD
-    {
-      icon: <i className="ri-money-dollar-circle-fill"></i>,
-      name: "My Expenses",
-      path: "/expense-management",
-      permission: "ALLOW_ALWAYS"
-    },
-
-    // --- Admin Features (Requires Permission) ---
-    {
-      icon: <i className="ri-dashboard-3-fill"></i>,
-      name: "Main Dashboard",
-      path: "/emp-admin-dashboard",
-      permission: "dashboard_view"
-    },
-    {
-=======
     // Add admin payroll items if user has permission
     if (hasPermission("payroll_manage")) {
       salaryDropdown.dropdown.push(
@@ -1617,76 +1597,11 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
 
     // 6. Enhanced Employee Management Dropdown
     const employeeDropdown = {
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
       icon: <i className="ri-user-fill"></i>,
       name: "Employee",
       dropdown: [],
       permission: "employee_view_all"
-<<<<<<< HEAD
-    },
-    {
-      icon: <i className="ri-user-add-fill"></i>,
-      name: "Add Employee",
-      path: "/emp-add-employee",
-      permission: "employee_add"
-    },
-    {
-      icon: <i className="ri-calendar-check-fill"></i>,
-      name: "All Attendance",
-      dropdown: [
-        { name: "Attendance Summary", path: "/emp-attendance-summary", permission: "attendance_view_all" },
-        { name: "Attendance Records", path: "/emp-attendance-records", permission: "attendance_view_all" },
-        { name: "Today Attendance", path: "/emp-today-attendance", permission: "attendance_view_all" },
-        { name: "Absent Today", path: "/emp-absent-today", permission: "attendance_view_all" },
-      ],
-      permission: "attendance_view_all"
-    },
-    {
-      icon: <i className="ri-calendar-event-fill"></i>,
-      name: "Leave Approval",
-      path: "/emp-leaves",
-      permission: "leave_approve"
-    },
-    {
-      icon: <i className="ri-money-dollar-circle-fill"></i>,
-      name: "Payroll",
-      path: "/emp-payroll",
-      permission: "payroll_manage"
-    },
-
-    {
-      icon: <i className="ri-bar-chart-2-fill"></i>,
-      name: "Reports",
-      path: "/emp-reports",
-      permission: "reports_view"
-    },
-    {
-      icon: <i className="ri-map-pin-user-fill"></i>,
-      name: "Locations",
-      path: "/emp-locations",
-      permission: "locations_manage"
-    },
-    {
-      icon: <i className="ri-time-line"></i>,
-      name: "Shift",
-      path: "/emp-shifts",
-      permission: "shifts_manage"
-    },
-    {
-      icon: <i className="ri-user-search-fill"></i>,
-      name: "User Activity",
-      path: "/emp-user-activity",
-      permission: "user_activity_view"
-    },
-    {
-      icon: <i className="ri-lock-2-fill"></i>,
-      name: "User Access",
-      path: "/emp-user-access",
-      permission: "user_access_manage"
-    },
-=======
     };
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
 
     // Add employee management items based on permissions
     if (hasPermission("employee_view_all")) {

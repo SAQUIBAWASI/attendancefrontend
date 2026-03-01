@@ -815,18 +815,11 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/roledashboard": "Roles",
       "/addlocation": "Add Location",
       "/empmanagement": "Employee Management",
-<<<<<<< HEAD
-      "/personaldocuments": "Personal Documents",
-      "/permissions": "Permissions",
-      "/all-expensives": " Expensives",
-      "/recruitment-dashboard":"Recruitment Dashboard"
-=======
       "/permissions": "Permissions",
       "/job-applicants": "Job Applicants",
       "/score": "Score Board",
       "/assessment-manager": "Assessments",
       "/documents": "Documents"
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
     };
     return pathMap[path] || "Dashboard";
   };
@@ -1072,17 +1065,6 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
               {item.dropdown ? (
                 <>
                   <div
-<<<<<<< HEAD
-                    className={`group flex items-center justify-between px-3 py-1.5 transition-all duration-200 rounded-md cursor-pointer ${isDropdownActive(item.dropdown)
-                      ? 'bg-emerald-600/80 text-white shadow-lg'
-                      : openDropdown === item.name
-                        ? 'bg-blue-700/70'
-                        : 'hover:bg-blue-700/60'
-                      }`}
-                    onClick={() => {
-                      navigate(item.dropdown[0].path);
-                      handleAnyClick();
-=======
                     className={`group flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
                       isDropdownActive(item.dropdown)
                         ? "bg-emerald-600/80 text-white shadow-lg"
@@ -1100,21 +1082,12 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                         }
                         if (onLinkClick) onLinkClick();
                       }
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
                     }}
                     onMouseEnter={(e) => isCollapsed && !isMobile && handleMouseMove(e, item.name)}
                     onMouseMove={(e) => isCollapsed && !isMobile && handleMouseMove(e, item.name)}
                     onMouseLeave={() => isCollapsed && !isMobile && setHoveredItem(null)}
                   >
                     <div className="flex items-center gap-2.5">
-<<<<<<< HEAD
-                      <span className={`text-lg transition-colors duration-200 ${isDropdownActive(item.dropdown)
-                        ? 'text-white'
-                        : openDropdown === item.name
-                          ? 'text-emerald-300'
-                          : 'text-blue-100 group-hover:text-emerald-300'
-                        }`}>
-=======
                       <span className={`text-lg transition-colors duration-200 ${
                         isDropdownActive(item.dropdown)
                           ? "text-white"
@@ -1122,7 +1095,6 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                           ? "text-emerald-300"
                           : "text-blue-100 group-hover:text-emerald-300"
                       }`}>
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
                         {item.icon}
                       </span>
                       {!isCollapsed && (
@@ -1164,20 +1136,12 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                         <li key={i}>
                           <Link
                             to={sub.path}
-<<<<<<< HEAD
-                            onClick={handleAnyClick}
-                            className={`block py-1 text-[13px] transition-colors relative before:absolute before:left-[-1.1rem] before:top-1/2 before:w-2 before:h-[1px] before:bg-blue-700 ${isActive(sub.path)
-                              ? 'text-emerald-300 font-semibold'
-                              : 'text-blue-100 hover:text-emerald-300'
-                              }`}
-=======
                             onClick={() => handleDropdownItemClick(sub.path)}
                             className={`block py-1 text-[13px] transition-colors pl-8 ${
                               isActive(sub.path)
                                 ? "text-emerald-300 font-semibold"
                                 : "text-blue-100 hover:text-emerald-300"
                             }`}
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
                           >
                             <div className="flex items-center gap-2">
                               {isActive(sub.path) && (
@@ -1197,17 +1161,6 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                   onMouseEnter={(e) => isCollapsed && !isMobile && handleMouseMove(e, item.name)}
                   onMouseMove={(e) => isCollapsed && !isMobile && handleMouseMove(e, item.name)}
                   onMouseLeave={() => isCollapsed && !isMobile && setHoveredItem(null)}
-<<<<<<< HEAD
-                  className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${isActive(item.path)
-                    ? 'bg-emerald-600/80 text-white shadow-lg'
-                    : 'hover:bg-blue-700/60'
-                    }`}
-                >
-                  <span className={`text-lg transition-colors duration-200 ${isActive(item.path)
-                    ? 'text-white'
-                    : 'text-blue-100 group-hover:text-emerald-300'
-                    }`}>
-=======
                   className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
                     isActive(item.path)
                       ? "bg-emerald-600/80 text-white shadow-lg"
@@ -1219,7 +1172,6 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                       ? "text-white"
                       : "text-blue-100 group-hover:text-emerald-300"
                   }`}>
->>>>>>> 3938621476ad962b5a1c70f037c0801f9be7f7e2
                     {item.icon}
                   </span>
                   {!isCollapsed && (
