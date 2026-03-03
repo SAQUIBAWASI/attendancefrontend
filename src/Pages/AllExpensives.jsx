@@ -137,130 +137,185 @@ const AllExpensives = () => {
   const totalGlobalSum = filteredRecords.reduce((sum, exp) => sum + (exp.totalAmount || 0), 0);
 
   return (
-    <div className="w-full min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8 font-sans">
-      {/* Header Section */}
-      <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-center xl:justify-between">
-        <div className="flex-shrink-0">
-          <h2 className="text-base font-bold text-gray-800 uppercase tracking-wider">All Expenses</h2>
-          {/* <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Aggregated Employee Overview</p> */}
-        </div>
+    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100 font-sans">
+      <div className="mx-auto max-w-9xl">
+        {/* Header Options / Filters Section (Mapped from UserActivity style) */}
+        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+          <div className="flex flex-wrap items-center gap-2">
 
-        <div className="flex flex-wrap items-center justify-start xl:justify-end gap-3 w-full xl:w-auto">
-          {/* Global Sum Stats */}
-          <div className="px-4 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm flex items-center gap-3">
-            <span className="text-[10px] font-bold text-gray-400 uppercase">Total Global Reimbursement</span>
-            <span className="text-sm font-black text-indigo-600">₹{totalGlobalSum.toLocaleString()}</span>
-          </div>
+            {/* Search */}
+            <div className="relative flex-1 min-w-[180px]">
+              <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+              <input
+                type="text"
+                placeholder="Search employee or ID..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+              />
+              {searchQuery && (
+                <FaTimes
+                  className="absolute text-[12px] text-gray-400 transform -translate-y-1/2 cursor-pointer right-2 top-1/2 hover:text-red-500"
+                  onClick={() => setSearchQuery("")}
+                />
+              )}
+            </div>
 
-          {/* Rate Management (Replacing Role Filter) */}
-          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg shadow-sm p-1.5 h-[38px]">
-            <span className="text-[10px] font-bold text-gray-400 uppercase px-2 flex items-center gap-1.5 whitespace-nowrap">
-              <FaMoneyBillWave className="text-green-500" /> KM Rate: ₹{kmRate}
-            </span>
-            <div className="h-4 w-[1px] bg-gray-200 mx-1"></div>
-            <div className="relative group">
+            {/* Date Filter */}
+            <div className="relative w-[130px]">
+              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
+                Date:
+              </span>
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                className="w-full pl-10 pr-6 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+              />
+              {dateFilter && (
+                <FaTimes
+                  className="absolute text-[12px] text-gray-400 transform -translate-y-1/2 cursor-pointer right-2 top-1/2 hover:text-red-500"
+                  onClick={() => setDateFilter("")}
+                />
+              )}
+            </div>
+
+            {/* KM Rate Update */}
+            <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-2 h-[30px] bg-gray-50">
+              <span className="text-[10px] font-bold text-gray-500 flex items-center gap-1 whitespace-nowrap">
+                <FaMoneyBillWave className="text-green-500" /> ₹{kmRate}
+              </span>
+              <div className="h-4 w-[1px] bg-gray-300 mx-1"></div>
               <input
                 type="number"
                 placeholder="New rate"
                 value={newRate}
                 onChange={(e) => setNewRate(e.target.value)}
-                className="w-16 h-full bg-gray-50 border-none text-xs font-bold text-gray-700 focus:ring-0 rounded-md px-2 placeholder:text-gray-300"
+                className="w-14 bg-transparent border-none text-xs font-bold text-gray-700 focus:ring-0 p-0 placeholder:text-gray-400 placeholder:font-normal"
               />
+              <button
+                onClick={handleUpdateRate}
+                disabled={isUpdatingRate || newRate === kmRate.toString()}
+                className="text-[10px] font-bold text-blue-600 hover:text-blue-800 disabled:text-gray-400 transition-colors uppercase tracking-wider"
+              >
+                {isUpdatingRate ? <FaSync className="animate-spin" /> : 'Set'}
+              </button>
+              {rateMessage.text && (
+                <span className={`text-[9px] font-bold ml-1 ${rateMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                  {rateMessage.text}
+                </span>
+              )}
             </div>
+
+            {/* Global Sum Stats */}
+            <div className="flex items-center gap-2 border border-blue-200 bg-blue-50 rounded-lg px-3 h-[30px]">
+              <span className="text-[10px] font-bold text-blue-600 uppercase">Total:</span>
+              <span className="text-xs font-black text-blue-700 tabular-nums">₹{totalGlobalSum.toLocaleString()}</span>
+            </div>
+
+            {/* Refresh / Clear Button */}
             <button
-              onClick={handleUpdateRate}
-              disabled={isUpdatingRate || newRate === kmRate.toString()}
-              className="px-3 h-full bg-blue-600 text-white rounded-md text-[10px] font-black uppercase tracking-wider hover:bg-blue-700 transition-all disabled:bg-gray-200 disabled:text-gray-400 flex items-center gap-1"
+              onClick={() => {
+                setSearchQuery('');
+                setDateFilter('');
+                fetchAllExpenses();
+              }}
+              className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 flex items-center gap-1 cursor-pointer"
             >
-              {isUpdatingRate ? <FaSync className="animate-spin" /> : <FaCheckCircle />}
-              Update
+              <FaSync className={`text-[10px] ${loading ? 'animate-spin' : ''}`} /> Sync
             </button>
-            {rateMessage.text && (
-              <div className={`absolute -bottom-6 right-0 text-[9px] font-bold px-2 py-0.5 rounded shadow-sm z-20 ${rateMessage.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                {rateMessage.text}
-              </div>
-            )}
           </div>
-
-          <div className="relative w-full sm:w-auto">
-            <input
-              type="date"
-              className="w-full appearance-none bg-white h-[38px] px-4 pr-10 text-sm text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 shadow-sm sm:w-40"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-            />
-            {dateFilter && (
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer text-gray-400 hover:text-red-500 transition-colors" onClick={() => setDateFilter("")}>
-                <FaTimes className="text-[12px]" />
-              </div>
-            )}
-          </div>
-
-          <div className="relative w-full sm:w-auto sm:min-w-[250px] md:min-w-[300px]">
-            <input type="text" className="w-full h-[38px] py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm" placeholder="Search employee or ID..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"><FaSearch className="text-sm" /></div>
-            {searchQuery && <div className="absolute inset-y-0 right-0 flex items-center pr-3"><FaTimes className="text-[12px] text-gray-400 hover:text-red-500 cursor-pointer" onClick={() => setSearchQuery("")} /></div>}
-          </div>
-
-          <button onClick={fetchAllExpenses} className="h-[38px] w-[38px] flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors shadow-sm"><FaSync className={`text-xs ${loading ? 'animate-spin' : ''}`} /></button>
         </div>
-      </div>
 
-      {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-xs font-bold">{error}</div>}
+        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-xs font-bold">{error}</div>}
 
-      {/* Grouped Table */}
-      <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
-        {loading && expenses.length === 0 ? (
-          <div className="p-20 text-center"><div className="w-10 h-10 border-4 border-gray-100 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div><p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Processing Data...</p></div>
-        ) : groupedExpenses.length > 0 ? (
-          <table className="min-w-full">
-            <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
-              <tr>
-                <th className="py-4 px-6 font-bold text-center">Employee</th>
-                <th className="py-4 px-6 font-bold text-center">Designation</th>
-                <th className="py-4 px-6 font-bold text-center">Total Visits</th>
-                <th className="py-4 px-6 font-bold text-center">Total Distance</th>
-                <th className="py-4 px-6 font-bold text-right whitespace-nowrap">Total Reimbursement</th>
-                <th className="py-4 px-6 font-bold text-center whitespace-nowrap">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 uppercase tracking-tighter">
-              {groupedExpenses.map((group, idx) => (
-                <tr key={idx} className="hover:bg-gray-50 transition-colors group">
-                  <td className="p-4 text-sm font-medium text-center">
-                    <div className="flex flex-col items-center">
-                      <div className="font-bold text-gray-800">{group.employeeDetails?.name || 'Unknown'}</div>
-                      <div className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">ID: {group.employeeId}</div>
-                    </div>
-                  </td>
-                  <td className="p-4 text-sm text-center">
-                    <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{group.employeeDetails?.role || 'Employee'}</span>
-                  </td>
-                  <td className="p-4 text-sm font-medium text-center">
-                    <span className="inline-block px-3 py-1 bg-gray-50 text-gray-600 text-[10px] font-bold rounded-full border border-gray-100">{group.visitCount} Visits</span>
-                  </td>
-                  <td className="p-4 text-sm font-medium text-center">
-                    <span className="inline-block px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full border border-blue-100">{group.totalKm} KM</span>
-                  </td>
-                  <td className="p-4 text-right">
-                    <span className="text-sm font-black text-gray-900 tabular-nums">₹{group.totalAmount.toLocaleString()}</span>
-                  </td>
-                  <td className="p-4 text-center">
-                    <button onClick={() => handleOpenModal(group)} className="text-blue-600 hover:text-blue-800 transition flex items-center justify-center gap-1 font-bold text-xs group/btn mx-auto bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100">
-                      <FaEye className="group-hover/btn:scale-110" /> View Details
-                    </button>
-                  </td>
+        {/* Expenses Table */}
+        <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+            <table className="min-w-full">
+              <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+                <tr>
+                  <th className="py-2 text-center">EMPLOYEE</th>
+                  <th className="py-2 text-center">DESIGNATION</th>
+                  <th className="py-2 text-center">TOTAL VISITS</th>
+                  <th className="py-2 text-center">TOTAL DISTANCE</th>
+                  <th className="py-2 text-center">TOTAL REIMBURSEMENT</th>
+                  <th className="py-2 text-center">ACTIONS</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="p-20 text-center">
-            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-200"><FaMoneyBillWave size={32} /></div>
-            <h3 className="text-lg font-bold text-gray-800 tracking-tight">No Records Found</h3>
-            <p className="text-xs text-gray-400 mt-2 max-w-xs mx-auto font-medium">No expense records match your current filtering criteria.</p>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200 uppercase tracking-tighter">
+                {loading && expenses.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="px-2 py-2 text-center">
+                      <div className="flex items-center justify-center py-10">
+                        <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
+                        <span className="ml-2 text-xs font-bold text-gray-400 tracking-widest">
+                          PROCESSING DATA...
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : groupedExpenses.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="px-2 py-2 text-center">
+                      <div className="py-10">
+                        <FaMoneyBillWave className="text-gray-300 text-3xl mx-auto mb-2" />
+                        <p className="text-gray-500 text-xs font-bold tracking-widest">NO RECORDS FOUND</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  groupedExpenses.map((group, idx) => (
+                    <tr
+                      key={idx}
+                      className="transition-colors hover:bg-gray-50 group"
+                    >
+                      <td className="px-2 py-2 text-center whitespace-nowrap">
+                        <div className="flex flex-col">
+                          <span className="font-medium text-gray-900 text-sm">
+                            {group.employeeDetails?.name || 'UNKNOWN'}
+                          </span>
+                          <span className="text-[10px] text-gray-500 font-bold uppercase">
+                            ID: {group.employeeId}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-2 py-2 text-center whitespace-nowrap">
+                        <span className="px-2 py-1 text-[10px] font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                          {group.employeeDetails?.role || 'EMPLOYEE'}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-center whitespace-nowrap">
+                        <span className="px-2 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                          {group.visitCount} VISITS
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-center whitespace-nowrap">
+                        <span className="px-2 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                          {group.totalKm} KM
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-center whitespace-nowrap">
+                        <span className="text-sm font-black text-gray-900 tabular-nums">
+                          ₹{group.totalAmount.toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-center whitespace-nowrap">
+                        <button
+                          onClick={() => handleOpenModal(group)}
+                          className="text-blue-600 hover:text-blue-800 transition flex items-center justify-center gap-1 font-bold text-[11px] group/btn mx-auto bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100"
+                        >
+                          <FaEye className="group-hover/btn:scale-110" /> VIEW
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Aggregate Details Modal - Sleek Style (AttendanceSummary match) */}

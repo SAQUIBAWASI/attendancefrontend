@@ -39,11 +39,14 @@ const Letters = () => {
 
   const getDocTypeBadge = (type) => {
     const t = (type || "Offer").toLowerCase();
-    if (t === "offer") return "bg-blue-100 text-blue-700";
-    if (t === "appointment") return "bg-green-100 text-green-700";
-    if (t === "experience") return "bg-purple-100 text-purple-700";
-    if (t === "internship") return "bg-orange-100 text-orange-700";
-    return "bg-gray-100 text-gray-600";
+    switch (t) {
+      case "offer": return "bg-blue-100 text-blue-800 border-blue-200";
+      case "appointment": return "bg-emerald-100 text-emerald-800 border-emerald-200";
+      case "experience": return "bg-purple-100 text-purple-800 border-purple-200";
+      case "internship": return "bg-orange-100 text-orange-800 border-orange-200";
+      case "relieving": return "bg-rose-100 text-rose-800 border-rose-200";
+      default: return "bg-gray-100 text-gray-800 border-gray-200";
+    }
   };
 
   const resetFilters = () => {
@@ -55,195 +58,171 @@ const Letters = () => {
   const hasFilters = localSearchQuery || typeFilter || dateFilter;
 
   return (
-    <div className="w-full min-h-screen bg-transparent p-4 md:p-6 lg:p-8 animate-in fade-in duration-700">
+    <div className="min-h-screen p-4 md:p-6 lg:p-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="max-w-9xl mx-auto animate-in fade-in duration-700">
 
-      {/* Header & Filters */}
-      <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-center xl:justify-between">
-        <div className="flex-shrink-0">
-          <h2 className="text-xl font-black text-gray-900 tracking-tight">Offer Letters & Documents</h2>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">Access your formal offer letters and employment agreements</p>
-        </div>
+        {/* Header & Filters Section */}
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-6">
+          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Offer Letters & Documents</h2>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mt-2">Access your formal offer letters and employment agreements</p>
+            </div>
 
-        <div className="flex flex-wrap items-center justify-start xl:justify-end gap-3 w-full xl:w-auto">
-
-          {/* Date Filter */}
-          <div className="relative w-full sm:w-auto">
-            <input
-              type="date"
-              className="w-full appearance-none bg-white py-2.5 px-4 pr-10 text-xs text-gray-700 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold shadow-sm sm:w-40 cursor-pointer"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-            />
-            {dateFilter && (
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer text-gray-400 hover:text-red-500 transition-colors" onClick={() => setDateFilter("")}>
-                <FaTimes className="text-[10px]" />
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Date Filter */}
+              <div className="relative w-full sm:w-auto">
+                <input
+                  type="date"
+                  className="w-full bg-gray-50 py-2.5 px-4 pr-10 text-xs text-gray-700 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold shadow-sm sm:w-40 cursor-pointer transition-all"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                />
               </div>
-            )}
-          </div>
 
-          {/* Document Type Dropdown */}
-          <div className="relative w-full sm:w-52" ref={typeDropdownRef}>
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400 z-10">
-              <FaFilePdf className="text-xs text-red-400" />
-            </div>
-            <div
-              className="w-full bg-white py-2.5 pl-10 pr-10 text-xs text-gray-700 border border-gray-200 rounded-xl font-bold cursor-pointer hover:bg-gray-50 shadow-sm text-ellipsis whitespace-nowrap overflow-hidden"
-              onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
-            >
-              {typeFilter || "Filter by Doc Type"}
-            </div>
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 z-10">
-              {typeFilter ? (
-                <FaTimes className="text-[10px] text-gray-400 hover:text-red-500 cursor-pointer" onClick={(e) => { e.stopPropagation(); setTypeFilter(""); }} />
-              ) : (
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 pointer-events-none"><path d="m6 9 6 6 6-6" /></svg>
-              )}
-            </div>
-            {isTypeDropdownOpen && (
-              <div className="absolute z-[110] w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="max-h-60 overflow-y-auto py-2">
-                  <div
-                    className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-blue-50 transition-colors ${!typeFilter ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
-                    onClick={() => { setTypeFilter(""); setIsTypeDropdownOpen(false); }}
-                  >
-                    All Types
-                  </div>
-                  {docTypes.map(t => (
-                    <div
-                      key={t}
-                      className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-blue-50 transition-colors ${typeFilter === t ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
-                      onClick={() => { setTypeFilter(t); setIsTypeDropdownOpen(false); }}
-                    >
-                      {t}
-                    </div>
-                  ))}
+              {/* Document Type Dropdown */}
+              <div className="relative w-full sm:w-52" ref={typeDropdownRef}>
+                <div
+                  className="w-full bg-gray-50 py-2.5 px-4 text-xs text-gray-700 border border-gray-100 rounded-xl font-bold cursor-pointer hover:bg-gray-100 shadow-sm transition-all flex items-center justify-between"
+                  onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
+                >
+                  <span className="truncate">{typeFilter || "Filter by Doc Type"}</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={`text-gray-400 transition-transform duration-200 ${isTypeDropdownOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
                 </div>
+                {isTypeDropdownOpen && (
+                  <div className="absolute z-[110] w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="max-h-60 overflow-y-auto py-2">
+                      <div
+                        className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-blue-50 transition-colors ${!typeFilter ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
+                        onClick={() => { setTypeFilter(""); setIsTypeDropdownOpen(false); }}
+                      >
+                        All Types
+                      </div>
+                      {docTypes.map(t => (
+                        <div
+                          key={t}
+                          className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-blue-50 transition-colors ${typeFilter === t ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
+                          onClick={() => { setTypeFilter(t); setIsTypeDropdownOpen(false); }}
+                        >
+                          {t}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Search */}
-          <div className="relative w-full sm:w-64">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-              <FaSearch className="text-xs" />
+              {/* Search */}
+              <div className="relative w-full sm:w-64">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                  <FaSearch className="text-xs" />
+                </div>
+                <input
+                  type="text"
+                  className="w-full py-2.5 pl-10 pr-4 bg-gray-50 text-xs text-gray-700 placeholder-gray-400 font-bold border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all"
+                  placeholder="Search role, doc type..."
+                  value={localSearchQuery}
+                  onChange={(e) => setLocalSearchQuery(e.target.value)}
+                />
+              </div>
+
+              {/* Reset */}
+              {hasFilters && (
+                <button onClick={resetFilters} className="p-2.5 text-gray-400 hover:text-rose-500 bg-gray-50 hover:bg-rose-50 border border-gray-100 rounded-xl transition-all shadow-sm" title="Reset Filters">
+                  <FaSync className="text-xs" />
+                </button>
+              )}
+
+              <div className="hidden sm:flex bg-blue-50 px-4 py-2.5 rounded-xl border border-blue-100 shadow-sm items-center gap-2">
+                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">{filteredLetters.length} Documents</span>
+              </div>
             </div>
-            <input
-              type="text"
-              className="w-full py-2.5 pl-10 pr-10 text-xs text-gray-700 placeholder-gray-400 font-bold border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-              placeholder="Search role, doc type..."
-              value={localSearchQuery}
-              onChange={(e) => setLocalSearchQuery(e.target.value)}
-            />
-            {localSearchQuery && (
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <FaTimes className="text-[10px] text-gray-400 hover:text-red-500 cursor-pointer" onClick={() => setLocalSearchQuery("")} />
-              </div>
-            )}
-          </div>
-
-          {/* Reset */}
-          {hasFilters && (
-            <button onClick={resetFilters} className="flex items-center gap-2 px-4 py-2.5 text-xs font-black text-gray-500 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl shadow-sm uppercase tracking-widest transition-all">
-              <FaSync className="text-[10px]" /> Reset
-            </button>
-          )}
-
-          <div className="bg-white px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse"></div>
-            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{filteredLetters.length} Letters</span>
           </div>
         </div>
-      </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto bg-white shadow-xl rounded-3xl border border-gray-100 overflow-hidden">
-        {filteredLetters.length > 0 ? (
-          <table className="min-w-full">
-            <thead className="text-[10px] text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 uppercase tracking-[0.2em] font-black">
-              <tr>
-                <th className="py-5 px-8 text-center">Position / Role</th>
-                <th className="py-5 px-6 text-center">Document Type</th>
-                <th className="py-5 px-6 text-center">Issued On</th>
-                <th className="py-5 px-6 text-center">Ref ID</th>
-                <th className="py-5 px-8 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {filteredLetters.map((app) => (
-                <tr key={app._id} className="group hover:bg-slate-50/80 transition-all duration-300">
-                  {/* Role */}
-                  <td className="py-6 px-8 text-center">
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-400 border border-red-100 group-hover:rotate-6 transition-transform shrink-0">
-                        <FaFilePdf size={14} />
-                      </div>
-                      <div className="text-left">
-                        <div className="font-black text-sm text-gray-900">{app.jobId?.role || "N/A"}</div>
-                        <div className="text-[9px] text-gray-400 uppercase tracking-widest mt-0.5">{app.content ? "Letter Content Available" : "Attachment Available"}</div>
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* Doc Type */}
-                  <td className="py-6 px-6 text-center">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getDocTypeBadge(app.documentType)}`}>
-                      {app.documentType || "Offer"}
-                    </span>
-                  </td>
-
-                  {/* Issued Date */}
-                  <td className="py-6 px-6 text-center text-xs font-bold text-gray-500">
-                    <div className="flex items-center justify-center gap-2">
-                      <FaCalendarAlt className="text-gray-300" size={10} />
-                      {new Date(app.offerSentAt || app.updatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                    </div>
-                  </td>
-
-                  {/* Ref ID */}
-                  <td className="py-6 px-6 text-center">
-                    <span className="font-black text-xs text-gray-400 uppercase tracking-wider">
-                      #{app._id.slice(-6).toUpperCase()}
-                    </span>
-                  </td>
-
-                  {/* Actions */}
-                  <td className="py-6 px-8 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => {
-                          setSelectedOffer(app);
-                          setActiveDocTab("offer");
-                          setIsModalOpen(true);
-                        }}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-sm hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all active:scale-95"
-                        title="View Document"
-                      >
-                        <FaEye size={12} /> View
-                      </button>
-                      <button
-                        onClick={() => handleDownloadOffer(app)}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-gray-200 hover:bg-indigo-600 transition-all active:scale-95 group-hover:translate-x-1"
-                        title="Download PDF"
-                      >
-                        <FaDownload size={10} /> PDF
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="p-24 text-center">
-            <div className="w-20 h-20 bg-gray-50 rounded-[2rem] flex items-center justify-center text-gray-200 mx-auto mb-6 border-2 border-dashed border-gray-100 animate-pulse">
-              <FaInbox size={32} />
+        {/* Table Area */}
+        <div className="bg-white shadow-xl rounded-3xl border border-gray-100 overflow-hidden">
+          {filteredLetters.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="bg-gradient-to-r from-green-500 to-blue-600 text-white text-center uppercase tracking-wider text-[10px] font-bold">
+                    <th className="py-3 px-8">Position / Role</th>
+                    <th className="py-3 px-6">Document Type</th>
+                    <th className="py-3 px-6">Issued On</th>
+                    <th className="py-3 px-6">Ref ID</th>
+                    <th className="py-3 px-8">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50 text-center">
+                  {filteredLetters.map((app) => (
+                    <tr key={app._id} className="group hover:bg-indigo-50/20 transition-all duration-300">
+                      <td className="py-2 px-8">
+                        <div className="flex items-center justify-center gap-3">
+                          <div className="w-8 h-8 bg-rose-50 rounded-lg flex items-center justify-center text-rose-500 border border-rose-100 group-hover:scale-110 transition-transform shrink-0">
+                            <FaFilePdf size={12} />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-bold text-sm text-gray-800 uppercase tracking-tight">{app.jobId?.role || "N/A"}</div>
+                            <div className="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5 font-medium">Formal Documentation</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-2 px-6">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getDocTypeBadge(app.documentType)}`}>
+                          {app.documentType || "Offer"}
+                        </span>
+                      </td>
+                      <td className="py-2 px-6 text-xs font-bold text-gray-600 uppercase tracking-tight">
+                        <div className="flex items-center justify-center gap-2">
+                          <FaCalendarAlt className="text-blue-400" size={10} />
+                          {new Date(app.offerSentAt || app.updatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        </div>
+                      </td>
+                      <td className="py-2 px-6">
+                        <span className="font-bold text-[10px] text-gray-400 border border-gray-100 px-2 py-0.5 rounded bg-gray-50 uppercase tracking-widest">
+                          #{app._id.slice(-6).toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="py-2 px-8">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedOffer(app);
+                              setActiveDocTab("offer");
+                              setIsModalOpen(true);
+                            }}
+                            className="p-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-lg transition-all shadow-sm"
+                            title="View Document"
+                          >
+                            <FaEye size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleDownloadOffer(app)}
+                            className="p-2 bg-gray-900 text-white hover:bg-blue-600 rounded-lg transition-all shadow-sm"
+                            title="Download PDF"
+                          >
+                            <FaDownload size={12} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <h3 className="text-lg font-black text-gray-900 uppercase tracking-widest">No Letters Yet</h3>
-            <p className="text-[10px] font-black text-gray-400 mt-3 uppercase tracking-widest leading-loose max-w-xs mx-auto">
-              Offer letters and official documents will appear here once issued by HR.
-            </p>
-          </div>
-        )}
+          ) : (
+            <div className="p-24 text-center">
+              <div className="w-20 h-20 bg-gray-50 rounded-[2.5rem] flex items-center justify-center text-gray-200 mx-auto mb-6 border-2 border-dashed border-gray-100">
+                <FaInbox size={32} />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 uppercase tracking-widest">No Letters Yet</h3>
+              <p className="text-[10px] font-bold text-gray-400 mt-3 uppercase tracking-widest leading-loose max-w-xs mx-auto">
+                Offer letters and official documents will appear here once issued by HR.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

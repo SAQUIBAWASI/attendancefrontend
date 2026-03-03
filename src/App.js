@@ -183,6 +183,7 @@ import Documents from "./Pages/Documents.jsx";
 // import Score from "./Pages/Score.jsx";
 // import SendOffer from "./Pages/SendOffer.jsx";
 import TakeAssessment from "./Pages/TakeAssessment.jsx";
+import ApplyingJob from "./Pages/ApplyingJob.jsx";
 
 
 function App() {
@@ -212,7 +213,7 @@ function App() {
       <Route path="/jobs/:id" element={<JobDetails />} />
       <Route path="/assessment/:jobId/:applicationId" element={<TakeAssessment />} />
       <Route path="/assessment/:jobId/:applicationId/:quizId" element={<TakeAssessment />} />
-
+      <Route path="/applying-job/:jobId" element={<ApplyingJob />} />
       {/* ✅ Candidate Portal Routes with Shared Layout */}
       <Route element={<CandidateLayout />}>
         <Route path="/candidate-dashboard" element={<CandidateDashboard />} />
@@ -405,6 +406,7 @@ function App() {
               <Route path="/candidate-personal-documents" element={<CandidatePersonalDocuments />} />
               <Route path="/employee-journey" element={<EmployeeJourney />} />
               <Route path="/all-expensives" element={<AllExpensives />} />
+              
             
             </Routes>
           </AdminLayout>

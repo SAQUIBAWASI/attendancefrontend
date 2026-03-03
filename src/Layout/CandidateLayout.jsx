@@ -114,7 +114,6 @@ const CandidateLayout = () => {
             const headers = { Authorization: `Bearer ${token}` };
             const res = await axios.put(`${API_BASE_URL}/candidate/profile`, editForm, { headers });
             if (res.data) {
-                // profileRes.data contains updated candidate
                 setProfile(prev => ({ ...prev, ...res.data.candidate }));
                 setIsEditingProfile(false);
                 toast.success("Profile updated successfully!");
@@ -189,10 +188,8 @@ const CandidateLayout = () => {
         }
     };
 
-    // State for managing the dropdown
     const [isLettersDropdownOpen, setIsLettersDropdownOpen] = useState(false);
 
-    // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (!event.target.closest('.letters-dropdown-container')) {
@@ -218,27 +215,11 @@ const CandidateLayout = () => {
         { path: "/applied-jobs", label: "Applied" },
         { path: "/interview", label: "Interviews" },
         { path: "/my-jobs", label: "Experience" },
-        // We will handle 'Letters' manually as a dropdown containing the other documents
     ];
 
-    const getPageTitle = () => {
-        const item = navItems.find(item => item.path === location.pathname);
-        if (!item) return "Dashboard Overview";
-        switch (item.path) {
-            case "/candidate-dashboard": return "Dashboard Overview";
-            case "/all-jobs": return "Explore Opportunities";
-            case "/applied-jobs": return "My Applications";
-            case "/interview": return "Interview Schedule";
-            case "/letters": return "Offer Letters";
-            case "/candidate-documents": return "Document Center";
-            case "/candidate-personal-documents": return "Personal Records";
-            default: return "Dashboard";
-        }
-    };
-
     return (
-        <div className="w-full min-h-screen bg-gray-50/50 font-sans text-gray-800 flex flex-col">
-            {/* STICKY HEADER SECTION - SaaS Style */}
+        <div className="w-full min-h-screen bg-gray-50 font-sans text-gray-800 flex flex-col">
+            {/* STICKY HEADER SECTION - UserActivity Utility Style */}
             <div className="sticky top-0 z-[100] w-full bg-white border-b border-gray-100 shadow-sm transition-all duration-300">
                 <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex items-center justify-between h-16 sm:h-20">
 
@@ -247,11 +228,11 @@ const CandidateLayout = () => {
                         className="flex items-center gap-3 cursor-pointer shrink-0 group"
                         onClick={() => navigate("/candidate-dashboard")}
                     >
-                        <div className="w-9 h-9 sm:w-11 sm:h-11 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-200 group-hover:scale-105 transition-transform duration-300">
+                        <div className="w-9 h-9 sm:w-11 sm:h-11 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg flex items-center justify-center text-white shadow-md shadow-blue-100 transition-transform duration-300">
                             <FaTasks className="text-sm sm:text-base" />
                         </div>
                         <div className="hidden md:block">
-                            <span className="block font-black text-sm sm:text-base text-gray-900 tracking-tight leading-none group-hover:text-indigo-600 transition-colors">Candidate</span>
+                            <span className="block font-bold text-sm sm:text-base text-gray-900 tracking-tight leading-none">Candidate</span>
                             <span className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-1">Portal</span>
                         </div>
                     </div>
@@ -264,9 +245,9 @@ const CandidateLayout = () => {
                                 <NavLink
                                     key={item.path}
                                     to={item.path}
-                                    className={({ isActive }) => `relative px-4 py-2 rounded-xl text-xs sm:text-[11px] font-black uppercase tracking-wider transition-all duration-300 no-underline ${isActive
-                                        ? "text-white bg-indigo-600 shadow-md shadow-indigo-100"
-                                        : "text-gray-500 hover:text-indigo-600 hover:bg-indigo-50/50"
+                                    className={`relative px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-300 no-underline ${isActive
+                                        ? "text-white bg-gradient-to-r from-green-500 to-blue-600 shadow-md shadow-blue-50"
+                                        : "text-gray-500 hover:text-blue-600 hover:bg-blue-50/50"
                                         }`}
                                 >
                                     {item.label}
@@ -278,9 +259,9 @@ const CandidateLayout = () => {
                         <div className="relative letters-dropdown-container">
                             <button
                                 onClick={() => setIsLettersDropdownOpen(!isLettersDropdownOpen)}
-                                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-[11px] font-black uppercase tracking-wider transition-all duration-300 no-underline ${(location.pathname === '/letters' || location.pathname === '/candidate-documents' || location.pathname === '/candidate-personal-documents')
-                                    ? "text-white bg-indigo-600 shadow-md shadow-indigo-100"
-                                    : "text-gray-500 hover:text-indigo-600 hover:bg-indigo-50/50"
+                                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-300 no-underline ${(location.pathname === '/letters' || location.pathname === '/candidate-documents' || location.pathname === '/candidate-personal-documents')
+                                    ? "text-white bg-gradient-to-r from-green-500 to-blue-600 shadow-md shadow-blue-50"
+                                    : "text-gray-500 hover:text-blue-600 hover:bg-blue-50/50"
                                     }`}
                             >
                                 Letters & Docs
@@ -291,29 +272,22 @@ const CandidateLayout = () => {
 
                             {/* Dropdown Menu */}
                             {isLettersDropdownOpen && (
-                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                                     <div className="py-2 flex flex-col">
-                                        <NavLink
-                                            to="/letters"
-                                            onClick={() => setIsLettersDropdownOpen(false)}
-                                            className={({ isActive }) => `mx-2 my-1 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all no-underline ${isActive ? "bg-indigo-600 text-white shadow-md shadow-indigo-100" : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-600"}`}
-                                        >
-                                            Letters
-                                        </NavLink>
-                                        <NavLink
-                                            to="/candidate-documents"
-                                            onClick={() => setIsLettersDropdownOpen(false)}
-                                            className={({ isActive }) => `mx-2 my-1 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all no-underline ${isActive ? "bg-indigo-600 text-white shadow-md shadow-indigo-100" : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-600"}`}
-                                        >
-                                            Documents
-                                        </NavLink>
-                                        <NavLink
-                                            to="/candidate-personal-documents"
-                                            onClick={() => setIsLettersDropdownOpen(false)}
-                                            className={({ isActive }) => `mx-2 my-1 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all no-underline ${isActive ? "bg-indigo-600 text-white shadow-md shadow-indigo-100" : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-600"}`}
-                                        >
-                                            Personal Docs
-                                        </NavLink>
+                                        {[
+                                            { to: "/letters", label: "Letters" },
+                                            { to: "/candidate-documents", label: "Documents" },
+                                            { to: "/candidate-personal-documents", label: "Personal Docs" }
+                                        ].map(link => (
+                                            <NavLink
+                                                key={link.to}
+                                                to={link.to}
+                                                onClick={() => setIsLettersDropdownOpen(false)}
+                                                className={({ isActive }) => `mx-2 my-1 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all no-underline ${isActive ? "bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-md shadow-blue-50" : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"}`}
+                                            >
+                                                {link.label}
+                                            </NavLink>
+                                        ))}
                                     </div>
                                 </div>
                             )}
@@ -322,25 +296,13 @@ const CandidateLayout = () => {
 
                     {/* Right: User Profile & Actions */}
                     <div className="flex items-center gap-3 sm:gap-5 shrink-0">
-
-                        {/* <div className="relative hidden sm:block w-48 shrink-0">
-                            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                            <input
-                                type="text"
-                                placeholder="Quick search..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full py-1.5 pl-8 pr-4 text-xs font-bold text-gray-700 bg-gray-50 border border-gray-100 rounded-full focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner transition-all hover:bg-gray-100"
-                            />
-                        </div> */}
-
                         <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
 
                         <button
                             onClick={() => setIsProfileModalOpen(true)}
-                            className="flex items-center gap-2.5 p-1 pr-3 sm:pr-4 rounded-full border border-gray-100 bg-white hover:bg-gray-50 hover:border-gray-200 hover:shadow-sm transition-all duration-300 group"
+                            className="flex items-center gap-2.5 p-1 pr-3 sm:pr-4 rounded-full border border-gray-100 bg-white hover:bg-gray-50 hover:border-gray-200 transition-all duration-300 group"
                         >
-                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 text-indigo-700 flex items-center justify-center text-xs sm:text-sm font-black border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center text-xs sm:text-sm font-bold border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
                                 {profile?.name?.charAt(0) || "C"}
                             </div>
                             <span className="hidden sm:block text-xs font-bold text-gray-700 group-hover:text-gray-900 tracking-wide">
@@ -350,7 +312,7 @@ const CandidateLayout = () => {
 
                         <button
                             onClick={logout}
-                            className="w-9 h-9 sm:w-10 sm:h-10 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl flex items-center justify-center transition-all duration-300 border border-transparent hover:border-red-100 group shadow-sm active:scale-95"
+                            className="w-9 h-9 sm:w-10 sm:h-10 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg flex items-center justify-center transition-all duration-300 border border-transparent hover:border-red-100 group shadow-sm active:scale-95"
                             title="Sign Out"
                         >
                             <FaSignOutAlt className="text-[13px] sm:text-sm group-hover:-translate-x-0.5 transition-transform" />
@@ -358,336 +320,162 @@ const CandidateLayout = () => {
                     </div>
                 </nav>
 
-                {/* Mobile Navigation Links (Scrollable row under main bar for small screens) */}
+                {/* Mobile Navigation Links */}
                 <div className="lg:hidden flex items-center gap-1 sm:gap-2 px-4 py-3 overflow-x-auto no-scrollbar border-t border-gray-50 bg-white">
-                    {navItems.map((item) => (
+                    {[...navItems, { path: "/letters", label: "Letters" }, { path: "/candidate-documents", label: "Documents" }, { path: "/candidate-personal-documents", label: "Personal Docs" }].map((item) => (
                         <NavLink
                             key={item.path}
                             to={item.path}
-                            className={({ isActive }) => `flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 no-underline ${isActive
-                                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
+                            className={({ isActive }) => `flex-shrink-0 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-300 no-underline ${isActive
+                                ? "bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-lg shadow-blue-50"
                                 : "text-gray-500 bg-gray-50 hover:bg-gray-100 border border-transparent"
                                 }`}
                         >
                             {item.label}
                         </NavLink>
                     ))}
-                    {/* Add the dropdown links to mobile view explicitly since they are removed from navItems */}
-                    <NavLink
-                        to="/letters"
-                        className={({ isActive }) => `flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 no-underline ${isActive
-                            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
-                            : "text-gray-500 bg-gray-50 hover:bg-gray-100 border border-transparent"
-                            }`}
-                    >
-                        Letters
-                    </NavLink>
-                    <NavLink
-                        to="/candidate-documents"
-                        className={({ isActive }) => `flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 no-underline ${isActive
-                            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
-                            : "text-gray-500 bg-gray-50 hover:bg-gray-100 border border-transparent"
-                            }`}
-                    >
-                        Documents
-                    </NavLink>
-                    <NavLink
-                        to="/candidate-personal-documents"
-                        className={({ isActive }) => `flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 no-underline ${isActive
-                            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
-                            : "text-gray-500 bg-gray-50 hover:bg-gray-100 border border-transparent"
-                            }`}
-                    >
-                        Personal Docs
-                    </NavLink>
                 </div>
             </div>
 
-            {/* Sub Nav / Action Bar removed entirely per user request */}
-
             {/* Main Content Area */}
-            <main className="flex-grow w-full">
+            <main className="flex-grow w-full bg-gradient-to-br from-blue-50 to-indigo-100">
                 <Outlet context={{ profile, appliedJobs, allJobs, personalDocs, searchQuery, setSearchQuery, fetchDashboardData, formatDocumentUrl, handleDownloadOffer, setIsModalOpen, setSelectedOffer, setActiveDocTab }} />
             </main>
 
-            {/* PROFILE MODAL */}
+            {/* PROFILE MODAL - Re-styled for Exact Match */}
             {isProfileModalOpen && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white max-w-2xl w-full rounded-xl shadow-xl overflow-hidden relative animate-in zoom-in-95 duration-500 flex flex-col max-h-[90vh]">
-                        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-white shrink-0">
+                    <div className="bg-white max-w-2xl w-full rounded-xl shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-500 flex flex-col max-h-[90vh] border border-gray-200">
+                        <div className="px-6 py-4 bg-gradient-to-r from-green-500 to-blue-600 flex items-center justify-between shadow-md text-white shrink-0">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center text-xl font-black shadow-lg">
+                                <div className="w-12 h-12 rounded-lg bg-white/20 backdrop-blur-md text-white flex items-center justify-center text-xl font-bold border border-white/30">
                                     {profile?.name?.charAt(0) || "C"}
                                 </div>
-                                <div>
-                                    <h1 className="text-lg font-bold text-gray-800 leading-tight">{profile?.name}</h1>
-                                    <p className="text-xs text-gray-500 mt-0.5">{profile?.email}</p>
+                                <div className="min-w-0">
+                                    <h1 className="text-lg font-bold text-white leading-tight truncate">{profile?.name}</h1>
+                                    <p className="text-xs text-white/80 mt-0.5 truncate">{profile?.email}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-100">
-                                    <FaCircle className="text-[6px] animate-pulse" /> Profile Verified
-                                </span>
-                                <button onClick={() => setIsProfileModalOpen(false)} className="p-1 text-gray-400 hover:text-red-500 transition-colors">
-                                    <FaTimesCircle size={20} />
-                                </button>
-                            </div>
+                            <button onClick={() => setIsProfileModalOpen(false)} className="p-1 text-white hover:text-red-100 transition-colors">
+                                <FaTimesCircle size={22} />
+                            </button>
                         </div>
-                        <div className="p-6 overflow-y-auto space-y-8 bg-white no-scrollbar flex-1">
+
+                        <div className="p-6 overflow-y-auto bg-white no-scrollbar flex-1">
                             {isEditingProfile ? (
                                 <form id="profile-edit-form" onSubmit={handleUpdateProfile} className="space-y-6">
                                     <section>
-                                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                        <h3 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-4 flex items-center gap-2">
                                             <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Basic Information
                                         </h3>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">Full Name</label>
-                                                <input
-                                                    type="text"
-                                                    className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                    value={editForm.name}
-                                                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                                                    required
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">Phone</label>
-                                                <input
-                                                    type="text"
-                                                    className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                    value={editForm.phone}
-                                                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                                                />
-                                            </div>
+                                            {[
+                                                { label: "Full Name", key: "name" },
+                                                { label: "Phone", key: "phone" },
+                                            ].map(field => (
+                                                <div key={field.key}>
+                                                    <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">{field.label}</label>
+                                                    <input
+                                                        type="text"
+                                                        className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium text-gray-700 focus:ring-1 focus:ring-blue-500 outline-none"
+                                                        value={editForm[field.key]}
+                                                        onChange={(e) => setEditForm({ ...editForm, [field.key]: e.target.value })}
+                                                        required={field.key === "name"}
+                                                    />
+                                                </div>
+                                            ))}
                                             <div className="sm:col-span-2">
-                                                <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">Address / Location</label>
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Address / Location</label>
                                                 <textarea
-                                                    className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none resize-none h-16"
+                                                    className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium text-gray-700 focus:ring-1 focus:ring-blue-500 outline-none resize-none h-16"
                                                     value={editForm.address}
                                                     onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
                                                 />
                                             </div>
                                         </div>
                                     </section>
-
                                     <section>
-                                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div> Academic Background
-                                        </h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">Qualification</label>
-                                                <input
-                                                    type="text"
-                                                    className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                    value={editForm.qualification}
-                                                    onChange={(e) => setEditForm({ ...editForm, qualification: e.target.value })}
-                                                    placeholder="e.g. B.Tech"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">Percentage / CGPA</label>
-                                                <input
-                                                    type="text"
-                                                    className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                    value={editForm.percentage}
-                                                    onChange={(e) => setEditForm({ ...editForm, percentage: e.target.value })}
-                                                    placeholder="e.g. 85%"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">Passing Year</label>
-                                                <input
-                                                    type="text"
-                                                    className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                    value={editForm.passingYear}
-                                                    onChange={(e) => setEditForm({ ...editForm, passingYear: e.target.value })}
-                                                    placeholder="e.g. 2022"
-                                                />
-                                            </div>
-                                        </div>
-                                    </section>
-
-                                    <section>
-                                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div> Professional Record
+                                        <h3 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div> Professional Background
                                         </h3>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">Organization</label>
-                                                <input
-                                                    type="text"
-                                                    className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                    value={editForm.currentCompany}
-                                                    onChange={(e) => setEditForm({ ...editForm, currentCompany: e.target.value })}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">Experience</label>
-                                                <input
-                                                    type="text"
-                                                    className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                    value={editForm.experience}
-                                                    onChange={(e) => setEditForm({ ...editForm, experience: e.target.value })}
-                                                    placeholder="e.g. 2 Years"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">Current CTC</label>
-                                                <input
-                                                    type="text"
-                                                    className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                    value={editForm.currentCTC}
-                                                    onChange={(e) => setEditForm({ ...editForm, currentCTC: e.target.value })}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">Expected CTC</label>
-                                                <input
-                                                    type="text"
-                                                    className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                    value={editForm.expectedCTC}
-                                                    onChange={(e) => setEditForm({ ...editForm, expectedCTC: e.target.value })}
-                                                />
-                                            </div>
-                                            <div className="sm:col-span-2">
-                                                <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">Skills (Comma separated)</label>
-                                                <input
-                                                    type="text"
-                                                    className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                    value={editForm.skills}
-                                                    onChange={(e) => setEditForm({ ...editForm, skills: e.target.value })}
-                                                    placeholder="e.g. React, Node.js, Python"
-                                                />
-                                            </div>
+                                            {[
+                                                { label: "Qualification", key: "qualification" },
+                                                { label: "Expected CTC", key: "expectedCTC" },
+                                                { label: "Organization", key: "currentCompany" },
+                                                { label: "Experience", key: "experience" },
+                                            ].map(field => (
+                                                <div key={field.key}>
+                                                    <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">{field.label}</label>
+                                                    <input
+                                                        type="text"
+                                                        className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium text-gray-700 focus:ring-1 focus:ring-blue-500 outline-none"
+                                                        value={editForm[field.key]}
+                                                        onChange={(e) => setEditForm({ ...editForm, [field.key]: e.target.value })}
+                                                    />
+                                                </div>
+                                            ))}
                                         </div>
                                     </section>
                                 </form>
                             ) : (
-                                <>
+                                <div className="space-y-6">
                                     <section>
-                                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                        <h3 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-3 flex items-center gap-2">
                                             <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Basic Information
                                         </h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                            <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                                                <span className="text-xs font-bold text-gray-500">Phone</span>
-                                                <span className="text-xs font-black text-gray-800">{profile?.phone || profile?.mobile || "N/A"}</span>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+                                            <div className="flex justify-between items-center py-1.5 border-b border-gray-50">
+                                                <span className="text-xs font-medium text-gray-500">Phone</span>
+                                                <span className="text-xs font-bold text-gray-800">{profile?.phone || profile?.mobile || "N/A"}</span>
                                             </div>
-                                            <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                                                <span className="text-xs font-bold text-gray-500">Location</span>
-                                                <span className="text-xs font-black text-gray-800 truncate pl-4">{profile?.address || "N/A"}</span>
+                                            <div className="flex justify-between items-center py-1.5 border-b border-gray-50">
+                                                <span className="text-xs font-medium text-gray-500">Location</span>
+                                                <span className="text-xs font-bold text-gray-800 truncate pl-4">{profile?.address || "N/A"}</span>
                                             </div>
                                         </div>
                                     </section>
-
                                     <section>
-                                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div> Academic Background
+                                        <h3 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div> Professional Experience
                                         </h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-                                            <div className="flex flex-col py-2 border-b border-gray-50">
-                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Qualification</span>
-                                                <span className="text-xs font-black text-gray-800 mt-1">{profile?.qualification || "N/A"}</span>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+                                            <div className="flex justify-between items-center py-1.5 border-b border-gray-50">
+                                                <span className="text-xs font-medium text-gray-500">Organization</span>
+                                                <span className="text-xs font-bold text-gray-800">{profile?.currentCompany || profile?.companyName || "N/A"}</span>
                                             </div>
-                                            <div className="flex flex-col py-2 border-b border-gray-50">
-                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Percentage</span>
-                                                <span className="text-xs font-black text-gray-800 mt-1">{profile?.percentage || "N/A"}</span>
-                                            </div>
-                                            <div className="flex flex-col py-2 border-b border-gray-50">
-                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Passing Year</span>
-                                                <span className="text-xs font-black text-gray-800 mt-1">{profile?.passingYear || "N/A"}</span>
+                                            <div className="flex justify-between items-center py-1.5 border-b border-gray-50">
+                                                <span className="text-xs font-medium text-gray-500">Experience</span>
+                                                <span className="text-xs font-bold text-gray-800">{profile?.experience || "N/A"}</span>
                                             </div>
                                         </div>
                                     </section>
-
-                                    <section>
-                                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div> Professional Record
-                                        </h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                            <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                                                <span className="text-xs font-bold text-gray-500">Experience</span>
-                                                <span className="text-xs font-black text-gray-800">{profile?.experience ? (profile.experience === "Fresher" ? "Fresher" : `${profile.experience}`) : "N/A"}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                                                <span className="text-xs font-bold text-gray-500">Organization</span>
-                                                <span className="text-xs font-black text-gray-800">{profile?.currentCompany || profile?.companyName || "N/A"}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                                                <span className="text-xs font-bold text-gray-500">Current CTC</span>
-                                                <span className="text-xs font-black text-gray-800">{profile?.currentCTC || profile?.salary || "N/A"}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                                                <span className="text-xs font-bold text-gray-500">Expected CTC</span>
-                                                <span className="text-xs font-black text-gray-800">{profile?.expectedCTC || profile?.expectedSalary || "N/A"}</span>
-                                            </div>
-                                            <div className="sm:col-span-2">
-                                                <span className="text-[10px] font-black text-gray-400 uppercase mb-2 block">Top Skills</span>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {(profile?.skills || "").split(',').map((skill, idx) => skill.trim() && (
-                                                        <span key={idx} className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-bold border border-indigo-100">
-                                                            {skill.trim()}
-                                                        </span>
-                                                    ))}
-                                                    {!profile?.skills && <span className="text-xs text-gray-400 italic">No skills listed</span>}
-                                                </div>
-                                            </div>
+                                    <section className="bg-gray-50 rounded-lg p-5 border border-gray-100 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <FaFilePdf size={24} className="text-red-500" />
+                                            <span className="text-xs font-bold text-gray-700">Curriculum Vitae</span>
                                         </div>
+                                        {profile?.resume ? (
+                                            <button onClick={() => window.open(formatDocumentUrl(profile.resume), "_blank")} className="px-4 py-1.5 bg-gray-800 text-white rounded text-[10px] font-bold uppercase transition-colors hover:bg-black">Access</button>
+                                        ) : (
+                                            <span className="text-[10px] font-bold text-gray-400 italic">Not Uploaded</span>
+                                        )}
                                     </section>
-                                    <section className="bg-gray-50 rounded-xl p-6 border border-gray-100 mt-4">
-                                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center text-red-500">
-                                                    <FaFilePdf size={24} />
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-black text-gray-800">Resume File</p>
-                                                </div>
-                                            </div>
-                                            {profile?.resume ? (
-                                                <button onClick={() => window.open(formatDocumentUrl(profile.resume), "_blank")} className="w-full sm:w-auto px-6 py-2.5 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-md active:scale-95">Access File</button>
-                                            ) : (
-                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Digital Record Not Filed</span>
-                                            )}
-                                        </div>
-                                    </section>
-                                </>
+                                </div>
                             )}
                         </div>
-                        <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-white shrink-0">
+                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 shrink-0">
                             {isEditingProfile ? (
                                 <>
-                                    <button
-                                        onClick={() => setIsEditingProfile(false)}
-                                        className="px-6 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-gray-100 active:scale-95"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        form="profile-edit-form"
-                                        type="submit"
-                                        disabled={isSavingProfile}
-                                        className="px-8 py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md active:scale-95 flex items-center justify-center min-w-[120px]"
-                                    >
-                                        {isSavingProfile ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : "Save Changes"}
+                                    <button onClick={() => setIsEditingProfile(false)} className="px-5 py-2 text-[10px] font-bold uppercase text-gray-500 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">Cancel</button>
+                                    <button form="profile-edit-form" type="submit" disabled={isSavingProfile} className="px-5 py-2 text-[10px] font-bold uppercase text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all">
+                                        {isSavingProfile ? "Saving..." : "Save Profile"}
                                     </button>
                                 </>
                             ) : (
                                 <>
-                                    <button
-                                        onClick={handleEditToggle}
-                                        className="px-6 py-2.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-indigo-100 active:scale-95"
-                                    >
-                                        Edit Profile
-                                    </button>
-                                    <button
-                                        onClick={() => setIsProfileModalOpen(false)}
-                                        className="px-8 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-gray-100 active:scale-95"
-                                    >
-                                        Close
-                                    </button>
+                                    <button onClick={handleEditToggle} className="px-5 py-2 text-[10px] font-bold uppercase text-blue-600 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-all">Edit Records</button>
+                                    <button onClick={() => setIsProfileModalOpen(false)} className="px-5 py-2 text-[10px] font-bold uppercase text-gray-500 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition-all">Dismiss</button>
                                 </>
                             )}
                         </div>
@@ -695,70 +483,43 @@ const CandidateLayout = () => {
                 </div>
             )}
 
-            {/* SHARED MODAL: DOCUMENT VIEWER */}
+            {/* DOCUMENT VIEWER MODAL - Re-styled for Exact Match */}
             {isModalOpen && selectedOffer && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-                    <div className="bg-white w-full max-w-6xl h-[95vh] sm:h-[92vh] rounded-2xl shadow-3xl flex flex-col overflow-hidden border border-white/20 scale-100 animate-in zoom-in-95 duration-200">
-                        <div className="px-4 py-4 md:px-8 md:py-6 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 flex justify-between items-center shrink-0">
-                            <div className="flex items-center gap-3 md:gap-4">
-                                <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                                    <FaFilePdf className="text-white text-lg md:text-xl" />
-                                </div>
-                                <div className="max-w-[150px] sm:max-w-none">
-                                    <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">{(selectedOffer.documentType || "Official").toUpperCase()} LETTER</h2>
-                                    <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-white/80 mt-0.5">{selectedOffer.jobId?.role}</p>
+                    <div className="bg-white w-full max-w-6xl h-[95vh] rounded-2xl shadow-3xl flex flex-col overflow-hidden border border-gray-200">
+                        <div className="px-5 py-4 bg-gradient-to-r from-green-500 to-blue-600 flex justify-between items-center text-white shrink-0">
+                            <div className="flex items-center gap-3">
+                                <FaFilePdf className="text-xl" />
+                                <div>
+                                    <h2 className="text-lg font-bold">{(selectedOffer.documentType || "OFFICIAL").toUpperCase()} LETTER</h2>
+                                    <p className="text-[10px] font-bold tracking-wider opacity-80 uppercase">{selectedOffer.jobId?.role}</p>
                                 </div>
                             </div>
-                            <div className="flex gap-2 md:gap-3">
+                            <div className="flex gap-2">
                                 {(selectedOffer.adminAttachment || selectedOffer.offerLetter) && (
-                                    <button onClick={() => handleDownloadOffer(selectedOffer)} className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/30 px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-wider text-white hover:bg-white/30 transition-all">
-                                        <FaDownloadIcon size={10} /> <span className="hidden sm:inline">Download</span>
+                                    <button onClick={() => handleDownloadOffer(selectedOffer)} className="bg-white/20 border border-white/30 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase text-white hover:bg-white/30 transition-all">
+                                        Download PDF
                                     </button>
                                 )}
-                                <button onClick={() => setIsModalOpen(false)} className="bg-white/20 backdrop-blur-sm border border-white/30 w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center text-white hover:bg-red-500/80 hover:border-red-400 transition-all"><FaTimes size={14} /></button>
+                                <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 rounded-md bg-white/20 flex items-center justify-center text-white hover:bg-red-500 transition-all"><FaTimes /></button>
                             </div>
                         </div>
-                        <div className="flex-1 overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 p-3 sm:p-6 flex flex-col">
-                            {(selectedOffer.offerLetter && (selectedOffer.adminAgreements || selectedOffer.adminAttachment)) && (
-                                <div className="flex gap-2 mb-4 shrink-0">
-                                    <button onClick={() => setActiveDocTab("offer")} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors border ${activeDocTab === "offer" ? "bg-purple-600 text-white border-purple-600 shadow-md" : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"}`}>{selectedOffer.documentType || "Offer"} Letter</button>
-                                    <button onClick={() => setActiveDocTab("agreement")} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors border ${activeDocTab === "agreement" ? "bg-indigo-600 text-white border-indigo-600 shadow-md" : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"}`}>Employment Agreement</button>
-                                </div>
-                            )}
-                            {activeDocTab === "offer" && (
-                                <div className="w-full h-full overflow-y-auto flex justify-center py-4 md:py-0">
-                                    <div className="w-full max-w-4xl bg-white rounded-xl shadow-lg border border-slate-200 p-6 md:p-16 my-auto relative">
-                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] select-none overflow-hidden">
-                                            <span className="text-[120px] font-black tracking-[20px] -rotate-45 uppercase whitespace-nowrap">{(selectedOffer.documentType || "OFFER")}</span>
-                                        </div>
-                                        <div className="text-xs md:text-sm leading-relaxed whitespace-pre-wrap font-serif text-slate-800 relative z-10">{selectedOffer.content || selectedOffer.offerLetter || "No Content Available."}</div>
-                                    </div>
-                                </div>
-                            )}
-                            {activeDocTab === "agreement" && (
-                                <div className="w-full h-full flex flex-col">
-                                    {selectedOffer.adminAttachment ? (
-                                        <div className="w-full h-full flex flex-col bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
-                                            <iframe src={formatDocumentUrl(selectedOffer.adminAttachment)} className="w-full flex-1 bg-white" title="Agreement Document" />
-                                        </div>
-                                    ) : (
-                                        <div className="w-full h-full overflow-y-auto flex justify-center py-4 md:py-0">
-                                            <div className="w-full max-w-4xl bg-white rounded-xl shadow-lg border border-slate-200 p-6 md:p-16 my-auto">
-                                                <div className="text-[11px] md:text-sm leading-relaxed text-slate-700 whitespace-pre-wrap font-sans">{selectedOffer.adminAgreements || "No Agreement Content."}</div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                        <div className="px-6 py-6 sm:px-10 bg-white border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-6 shrink-0">
-                            <div className="flex items-center gap-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                <span className="truncate">Verification ID: {selectedOffer._id.slice(-12).toUpperCase()}</span>
+                        <div className="flex-1 overflow-hidden bg-gray-50 p-4 md:p-8 flex flex-col items-center">
+                            <div className="w-full max-w-4xl h-full bg-white rounded-lg shadow-inner border border-gray-200 p-8 md:p-14 overflow-y-auto font-sans text-sm leading-relaxed text-gray-800">
+                                {selectedOffer.offerLetter ? (
+                                    <div className="whitespace-pre-wrap">{selectedOffer.offerLetter}</div>
+                                ) : selectedOffer.adminAttachment ? (
+                                    <iframe src={formatDocumentUrl(selectedOffer.adminAttachment)} className="w-full h-full border-0" />
+                                ) : (
+                                    <div className="text-center text-gray-500 mt-20">No content available for this document.</div>
+                                )}
                             </div>
-                            <div className="flex gap-4 w-full sm:w-auto">
-                                <button onClick={() => setIsModalOpen(false)} className="flex-1 sm:flex-none px-8 py-3.5 border-2 border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all active:scale-95">Dismiss</button>
-                                <button className="flex-1 sm:flex-none px-12 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-blue-200 hover:shadow-2xl hover:translate-y-[-2px] active:scale-95 transition-all">Accept & Sign</button>
+                        </div>
+                        <div className="px-6 py-6 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white shrink-0">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Digital Asset Verification ID: {selectedOffer._id.slice(-8).toUpperCase()}</span>
+                            <div className="flex gap-3 w-full sm:w-auto">
+                                <button onClick={() => setIsModalOpen(false)} className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg border border-gray-200 text-[10px] font-bold uppercase text-gray-500 hover:bg-gray-50">Close</button>
+                                <button className="flex-1 sm:flex-none px-8 py-2.5 bg-gray-900 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-all">Accept Offer</button>
                             </div>
                         </div>
                     </div>

@@ -6,8 +6,7 @@ import { FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff, FiUser } from "react-ico
 import { FiAlertCircle, FiCheckCircle } from "react-icons/fi";
 
 const CandidateLogin = () => {
-    const [formData, setFormData] = useState({ email: "", password: "" });
-    const [showPassword, setShowPassword] = useState(false);
+    const [formData, setFormData] = useState({ email: "" });
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ text: "", type: "" });
     const navigate = useNavigate();
@@ -126,37 +125,9 @@ const CandidateLogin = () => {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center px-1">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Password</label>
-                                <a href="#" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:text-indigo-700 transition-colors">Forgot?</a>
-                            </div>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-indigo-600 transition-colors">
-                                    <FiLock className="text-lg" />
-                                </div>
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full pl-11 pr-12 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-700 placeholder:text-slate-300 shadow-sm shadow-slate-100/50"
-                                    placeholder="••••••••"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-300 hover:text-indigo-600 transition-all"
-                                >
-                                    {showPassword ? <FiEyeOff className="text-lg" /> : <FiEye className="text-lg" />}
-                                </button>
-                            </div>
-                        </div>
-
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={loading || !formData.email}
                             className="w-full py-6 bg-indigo-600 text-white font-black rounded-xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:pointer-events-none group uppercase tracking-widest text-sm"
                         >
                             {loading ? (

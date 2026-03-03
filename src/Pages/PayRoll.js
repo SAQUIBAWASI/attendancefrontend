@@ -5659,26 +5659,26 @@
 //   });
 //   const [loading, setLoading] = useState(true);
 //   const [error, setError] = useState("");
-  
+
 //    //  Date filters
 //   const [fromDate, setFromDate] = useState("");
 //   const [toDate, setToDate] = useState("");
 //   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
-  
+
 //   // Department and Designation filter states - LIKE ABSENTTODAY.JS
 //   const [filterDepartment, setFilterDepartment] = useState("");
 //   const [filterDesignation, setFilterDesignation] = useState("");
 //   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
 //   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
-  
+
 //   // Unique departments and designations
 //   const [uniqueDepartments, setUniqueDepartments] = useState([]);
 //   const [uniqueDesignations, setUniqueDesignations] = useState([]);
-  
+
 //   // Refs for click outside
 //   const departmentFilterRef = useRef(null);
 //   const designationFilterRef = useRef(null);
-  
+
 //   const [isLoadingMonth, setIsLoadingMonth] = useState(false);
 //   const [monthDays, setMonthDays] = useState(30);
 //   const [weekOffConfig, setWeekOffConfig] = useState({
@@ -5873,12 +5873,12 @@
 //   const extractUniqueValues = (employees) => {
 //     const depts = new Set();
 //     const designations = new Set();
-    
+
 //     employees.forEach(emp => {
 //       if (emp.department) depts.add(emp.department);
 //       if (emp.role || emp.designation) designations.add(emp.role || emp.designation);
 //     });
-    
+
 //     setUniqueDepartments(Array.from(depts).sort());
 //     setUniqueDesignations(Array.from(designations).sort());
 //   };
@@ -5957,7 +5957,7 @@
 
 //       // ✅ Filter out inactive employees for display
 //       const activeEmployees = employeesData.filter(emp => !isEmployeeHidden(emp));
-      
+
 //       // Extract unique departments and designations
 //       extractUniqueValues(activeEmployees);
 
@@ -6111,17 +6111,17 @@
 //       record.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 //       record.employeeId?.toString().includes(searchTerm)
 //     );
-    
+
 //     // Filter by Department
 //     if (filterDepartment) {
 //       filtered = filtered.filter(record => record.department === filterDepartment);
 //     }
-    
+
 //     // Filter by Designation
 //     if (filterDesignation) {
 //       filtered = filtered.filter(record => record.designation === filterDesignation);
 //     }
-    
+
 //     setFilteredRecords(filtered);
 //     setCurrentPage(1);
 //   }, [searchTerm, filterDepartment, filterDesignation, records]);
@@ -6601,7 +6601,7 @@
 //         </html>
 //       `;
 //     }
-    
+
 //     const daysInMonth = employee.monthDays || monthDays || getDaysInMonth(employee.month || selectedMonth);
 //     const totalMonthDays = daysInMonth;
 //     const dailyRate = calculateDailyRate(employee);
@@ -6943,7 +6943,7 @@
 //         {/* Filters - LIKE ABSENTTODAY.JS */}
 //         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
 //           <div className="flex flex-wrap items-center gap-2">
-            
+
 //             {/* ID/Name Search */}
 //             <div className="relative flex-1 min-w-[180px]">
 //               <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
@@ -6968,7 +6968,7 @@
 //               >
 //                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
 //               </button>
-              
+
 //               {/* Department Filter Dropdown */}
 //               {showDepartmentFilter && (
 //                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
@@ -7011,7 +7011,7 @@
 //               >
 //                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
 //               </button>
-              
+
 //               {/* Designation Filter Dropdown */}
 //               {showDesignationFilter && (
 //                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
@@ -7123,7 +7123,7 @@
 //           </div>
 //         </div>
 
-     
+
 
 //         {/* Payroll Table */}
 //         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
@@ -7720,26 +7720,26 @@ const PayRoll = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
+
   // Date filters
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
-  
+
   // Department and Designation filter states
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterDesignation, setFilterDesignation] = useState("");
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
-  
+
   // Unique departments and designations
   const [uniqueDepartments, setUniqueDepartments] = useState([]);
   const [uniqueDesignations, setUniqueDesignations] = useState([]);
-  
+
   // Refs for click outside
   const departmentFilterRef = useRef(null);
   const designationFilterRef = useRef(null);
-  
+
   const [isLoadingMonth, setIsLoadingMonth] = useState(false);
   const [monthDays, setMonthDays] = useState(30);
   const [weekOffConfig, setWeekOffConfig] = useState({
@@ -7821,17 +7821,17 @@ const PayRoll = () => {
   // Check if employee was employed during selected month
   const wasEmployeeEmployedInMonth = (employee, monthStr) => {
     if (!monthStr || !employee.joiningDate) return true;
-    
+
     const [year, month] = monthStr.split('-').map(Number);
     const joiningDate = new Date(employee.joiningDate);
     const joiningYear = joiningDate.getFullYear();
     const joiningMonth = joiningDate.getMonth() + 1;
-    
+
     // Employee joined after this month
     if (joiningYear > year || (joiningYear === year && joiningMonth > month)) {
       return false;
     }
-    
+
     return true;
   };
 
@@ -7871,18 +7871,18 @@ const PayRoll = () => {
   // Function to check if payslip download is allowed (handles February correctly)
   const isPayslipDownloadAllowed = (month) => {
     if (!month) return false;
-    
+
     if (isHistoricalMonth(month)) return true;
-    
+
     if (isCurrentMonth(month)) {
       const today = new Date();
       const currentDay = today.getDate();
       const daysInMonth = getDaysInMonth(month);
-      
+
       // Allow download on or after the last day of month
       return currentDay >= daysInMonth;
     }
-    
+
     return true;
   };
 
@@ -7957,7 +7957,7 @@ const PayRoll = () => {
   // Filter employees who were employed during selected month
   const filterEmployeesByJoiningDate = useCallback((employees, monthStr) => {
     if (!monthStr || !employees.length) return employees;
-    
+
     return employees.filter(emp => {
       return wasEmployeeEmployedInMonth(emp, monthStr);
     });
@@ -7967,12 +7967,12 @@ const PayRoll = () => {
   const extractUniqueValues = (employees) => {
     const depts = new Set();
     const designations = new Set();
-    
+
     employees.forEach(emp => {
       if (emp.department) depts.add(emp.department);
       if (emp.role || emp.designation) designations.add(emp.role || emp.designation);
     });
-    
+
     setUniqueDepartments(Array.from(depts).sort());
     setUniqueDesignations(Array.from(designations).sort());
   };
@@ -8055,7 +8055,7 @@ const PayRoll = () => {
 
       // ✅ Filter out inactive employees for display
       const activeEmployees = employeesForMonth.filter(emp => !isEmployeeHidden(emp));
-      
+
       // Extract unique departments and designations
       extractUniqueValues(activeEmployees);
 
@@ -8208,17 +8208,17 @@ const PayRoll = () => {
       record.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.employeeId?.toString().includes(searchTerm)
     );
-    
+
     // Filter by Department
     if (filterDepartment) {
       filtered = filtered.filter(record => record.department === filterDepartment);
     }
-    
+
     // Filter by Designation
     if (filterDesignation) {
       filtered = filtered.filter(record => record.designation === filterDesignation);
     }
-    
+
     // Filter by Date Range (fromDate to toDate)
     if (fromDate && toDate) {
       // This is for the selected month, but we're showing monthly data
@@ -8226,7 +8226,7 @@ const PayRoll = () => {
       // For now, just show a message or filter based on month
       console.log("Date range selected:", fromDate, "to", toDate);
     }
-    
+
     setFilteredRecords(filtered);
     setCurrentPage(1);
   }, [searchTerm, filterDepartment, filterDesignation, records, fromDate, toDate]);
@@ -8250,20 +8250,20 @@ const PayRoll = () => {
       alert("Please select both From and To dates");
       return;
     }
-    
+
     // Extract month from dates
     const fromMonth = fromDate.slice(0, 7);
     const toMonth = toDate.slice(0, 7);
-    
+
     if (fromMonth !== toMonth) {
       alert("Date range must be within the same month");
       return;
     }
-    
+
     // Set the month and fetch data
     setSelectedMonth(fromMonth);
     fetchData(fromMonth);
-    
+
     // Apply date range filter logic here
     // This would require daily attendance data
     console.log("Filtering from", fromDate, "to", toDate);
@@ -8736,7 +8736,7 @@ const PayRoll = () => {
         </html>
       `;
     }
-    
+
     const daysInMonth = employee.monthDays || monthDays || getDaysInMonth(employee.month || selectedMonth);
     const totalMonthDays = daysInMonth;
     const dailyRate = calculateDailyRate(employee);
@@ -9025,7 +9025,7 @@ const PayRoll = () => {
     <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="mx-auto max-w-9xl">
 
-         {/* Stats Overview */}
+        {/* Stats Overview */}
         <div className="grid grid-cols-2 gap-2 mb-3 md:grid-cols-4">
           {/* Active Employees */}
           <div className="px-2 py-2 bg-white border-t-4 border-blue-500 rounded-md shadow-sm">
@@ -9042,7 +9042,7 @@ const PayRoll = () => {
           <div className="px-2 py-2 bg-white border-t-4 border-green-500 rounded-md shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-               <center> <p className="text-center text-xs font-medium text-gray-700">
+                <center> <p className="text-center text-xs font-medium text-gray-700">
                   Total Salary: ₹{filteredRecords.reduce((s, e) => s + (e.calculatedSalary || 0), 0).toLocaleString()}
                 </p></center>
               </div>
@@ -9078,7 +9078,7 @@ const PayRoll = () => {
         {/* Filters */}
         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
-            
+
             {/* ID/Name Search */}
             <div className="relative flex-1 min-w-[180px]">
               <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
@@ -9095,19 +9095,18 @@ const PayRoll = () => {
             <div className="relative" ref={departmentFilterRef}>
               <button
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
-                  filterDepartment 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                }`}
+                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                  }`}
               >
                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
               </button>
-              
+
               {/* Department Filter Dropdown */}
               {showDepartmentFilter && (
                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
-                  <div 
+                  <div
                     onClick={() => {
                       setFilterDepartment('');
                       setShowDepartmentFilter(false);
@@ -9117,15 +9116,14 @@ const PayRoll = () => {
                     All Departments
                   </div>
                   {uniqueDepartments.map(dept => (
-                    <div 
+                    <div
                       key={dept}
                       onClick={() => {
                         setFilterDepartment(dept);
                         setShowDepartmentFilter(false);
                       }}
-                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                        filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                      }`}
+                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                        }`}
                     >
                       {dept}
                     </div>
@@ -9138,19 +9136,18 @@ const PayRoll = () => {
             <div className="relative" ref={designationFilterRef}>
               <button
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
-                  filterDesignation 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                }`}
+                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                  }`}
               >
                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
               </button>
-              
+
               {/* Designation Filter Dropdown */}
               {showDesignationFilter && (
                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
-                  <div 
+                  <div
                     onClick={() => {
                       setFilterDesignation('');
                       setShowDesignationFilter(false);
@@ -9160,15 +9157,14 @@ const PayRoll = () => {
                     All Designations
                   </div>
                   {uniqueDesignations.map(des => (
-                    <div 
+                    <div
                       key={des}
                       onClick={() => {
                         setFilterDesignation(des);
                         setShowDesignationFilter(false);
                       }}
-                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                        filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                      }`}
+                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                        }`}
                     >
                       {des}
                     </div>
@@ -9196,7 +9192,7 @@ const PayRoll = () => {
               />
             </div>
 
-          {/* To Date */}
+            {/* To Date */}
             <div className="relative w-[130px]">
               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
                 To:
@@ -9215,7 +9211,7 @@ const PayRoll = () => {
               />
             </div>
 
-          {/* Month Selector */}
+            {/* Month Selector */}
             <div className="relative w-[130px]">
               <FaCalendarAlt className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
               <input
@@ -9370,11 +9366,10 @@ const PayRoll = () => {
                         </button>
                         <button
                           onClick={() => downloadInvoice(item)}
-                          className={`px-2 py-2 text-center rounded-md transition duration-150 ${
-                            isPayslipDownloadAllowed(item.month || selectedMonth)
-                              ? 'text-purple-600 hover:bg-purple-50'
-                              : 'text-gray-400 hover:bg-gray-100 cursor-not-allowed'
-                          }`}
+                          className={`px-2 py-2 text-center rounded-md transition duration-150 ${isPayslipDownloadAllowed(item.month || selectedMonth)
+                            ? 'text-purple-600 hover:bg-purple-50'
+                            : 'text-gray-400 hover:bg-gray-100 cursor-not-allowed'
+                            }`}
                           title={isPayslipDownloadAllowed(item.month || selectedMonth)
                             ? "Download Payslip"
                             : item.isHistoricalMonth
@@ -9422,11 +9417,10 @@ const PayRoll = () => {
                 <button
                   onClick={handlePrevious}
                   disabled={currentPage === 1}
-                  className={`px-4 py-1 text-sm border rounded-lg ${
-                    currentPage === 1
-                      ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                      : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
-                  }`}
+                  className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
+                    ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                    : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
+                    }`}
                 >
                   Previous
                 </button>
@@ -9436,13 +9430,12 @@ const PayRoll = () => {
                     key={index}
                     onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                     disabled={page === "..."}
-                    className={`px-4 py-1 text-sm border rounded-lg ${
-                      page === "..."
-                        ? "text-gray-500 bg-gray-50 cursor-default"
-                        : currentPage === page
+                    className={`px-4 py-1 text-sm border rounded-lg ${page === "..."
+                      ? "text-gray-500 bg-gray-50 cursor-default"
+                      : currentPage === page
                         ? "text-white bg-blue-600 border-blue-600"
                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
-                    }`}
+                      }`}
                   >
                     {page}
                   </button>
@@ -9451,11 +9444,10 @@ const PayRoll = () => {
                 <button
                   onClick={handleNext}
                   disabled={currentPage === totalPages}
-                  className={`px-4 py-1 text-sm border rounded-lg ${
-                    currentPage === totalPages
-                      ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                      : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
-                  }`}
+                  className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
+                    ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                    : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                    }`}
                 >
                   Next
                 </button>
@@ -9494,7 +9486,7 @@ const PayRoll = () => {
               </button>
             </div>
 
-            <div className="p-4 mb-4 rounded-lg bg-gray-50">
+            {/* <div className="p-4 mb-4 rounded-lg bg-gray-50">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
                   <span className="text-lg font-semibold text-blue-800">
@@ -9519,9 +9511,36 @@ const PayRoll = () => {
                   </p>
                 </div>
               </div>
+            </div> */}
+
+            <div className="flex items-start space-x-4">
+              {/* Avatar */}
+              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full shrink-0">
+                <span className="text-lg font-semibold text-blue-800">
+                  {selectedEmployee.name?.charAt(0) || 'E'}
+                </span>
+              </div>
+
+              {/* Employee Info */}
+              <div className="flex flex-col flex-1 space-y-1">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {selectedEmployee.name}
+                </h3>
+
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm text-gray-600">
+                  <p><span className="font-medium text-gray-700">ID:</span> {selectedEmployee.employeeId}</p>
+                  <p><span className="font-medium text-gray-700">Department:</span> {selectedEmployee.department}</p>
+                  <p><span className="font-medium text-gray-700">Designation:</span> {selectedEmployee.designation}</p>
+                  <p>
+                    <span className="font-medium text-gray-700">Month:</span>
+                    {selectedEmployee.month || selectedMonth || "Current"}
+                    ({selectedEmployee.monthDays || monthDays} days)
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            {/* <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="p-3 bg-white border rounded-lg">
                 <p className="text-sm text-gray-600">Present Days</p>
                 <p className="text-lg font-semibold text-green-600">{selectedEmployee.presentDays || 0}</p>
@@ -9558,17 +9577,100 @@ const PayRoll = () => {
                 <p className="text-sm text-gray-600">Approved Leaves</p>
                 <p className="font-semibold text-red-600 text">{getLeaveTypes(selectedEmployee)}</p>
               </div>
+            </div> */}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-3 mb-6 text-sm">
+
+              {/* Present Days */}
+              <div className="flex justify-between border-b pb-1">
+                <span className="text-gray-600">Present Days</span>
+                <span className="font-semibold text-green-600">
+                  {selectedEmployee.presentDays || 0}
+                </span>
+              </div>
+
+              {/* Working Days */}
+              <div className="flex justify-between border-b pb-1">
+                <span className="text-gray-600">Working Days</span>
+                <span className="font-semibold text-blue-600">
+                  {selectedEmployee.totalWorkingDays || 0}
+                </span>
+              </div>
+
+              {/* Half Days */}
+              <div className="flex justify-between border-b pb-1">
+                <span className="text-gray-600">Half Days</span>
+                <span className="font-semibold text-yellow-600">
+                  {selectedEmployee.halfDayWorking || 0}
+                </span>
+              </div>
+
+              {/* WeekOff Days */}
+              <div className="flex justify-between border-b pb-1">
+                <span className="text-gray-600">WeekOff Days</span>
+                <span className="font-semibold text-purple-600">
+                  {getWeekOffDaysForDisplay(selectedEmployee)}
+                </span>
+              </div>
+
+              {/* Month Days */}
+              <div className="flex justify-between border-b pb-1">
+                <span className="text-gray-600">Month Days</span>
+                <span className="font-semibold text-gray-800">
+                  {selectedEmployee.monthDays || monthDays}
+                </span>
+              </div>
+
+              {/* Monthly Salary */}
+              <div className="flex justify-between border-b pb-1">
+                <span className="text-gray-600">Monthly Salary</span>
+                <span className="font-semibold text-blue-600">
+                  ₹{getEmployeeData(selectedEmployee).salaryPerMonth || 0}
+                </span>
+              </div>
+
+              {/* Daily Rate */}
+              <div className="flex justify-between border-b pb-1">
+                <span className="text-gray-600">Daily Rate</span>
+                <span className="font-semibold text-gray-800">
+                  ₹{calculateDailyRate(selectedEmployee)}/day
+                </span>
+              </div>
+
+              {/* Calculated Salary */}
+              <div className="flex justify-between border-b pb-1">
+                <span className="text-gray-600">Calculated Salary</span>
+                <span className="font-semibold text-green-600">
+                  ₹{calculateSalary(selectedEmployee)}
+                </span>
+              </div>
+
+              {/* Approved Leaves */}
+              {/* <div className="sm:col-span-2 flex justify-between border-b pb-1">
+                <span className="text-gray-600">Approved Leaves</span>
+                <span className="font-semibold text-red-600">
+                  {getLeaveTypes(selectedEmployee)}
+                </span>
+              </div> */}
+              <div className="sm:col-span-2 flex justify-between border-b pb-1">
+                <span className="text-gray-600">Approved Leaves</span>
+                <span className="font-semibold text-red-600">
+                  {getLeaveTypes(selectedEmployee) || "No Approved Leaves"}
+                </span>
+              </div>
+
             </div>
+
+
 
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => downloadInvoice(selectedEmployee)}
                 disabled={!isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth)}
-                className={`px-6 py-2 rounded-lg transition duration-200 ${
-                  isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth)
-                    ? 'bg-purple-500 text-white hover:bg-purple-600'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
+                className={`px-6 py-2 rounded-lg transition duration-200 ${isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth)
+                  ? 'bg-purple-500 text-white hover:bg-purple-600'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
               >
                 Download Payslip
               </button>
