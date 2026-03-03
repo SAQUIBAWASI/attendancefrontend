@@ -3114,6 +3114,7 @@
 
 import axios from 'axios';
 import { useEffect, useState } from "react";
+import CountUp from "react-countup";
 import { FiClock, FiTrendingUp, FiUserCheck, FiUserX, FiUsers } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { isEmployeeHidden } from "../utils/employeeStatus";
@@ -3385,90 +3386,90 @@ const AttendanceDashboard = () => {
       .sort((a, b) => b.value - a.value);
   };
 
- const COLORS = [
-  '#DC2626',  // Rose 600
-  '#EF4444',  // Rose 600
-  '#E11D48',  // Rose 600
-  // '#F43F5E', // Rose 500
-  // '#FB7185', // Rose 400
-  
-  '#D97706', // Amber 600
-  '#F59E0B', // Amber 500
-  '#FBBF24', // Amber 400
- 
-  '#0891B2', // Cyan 600
-  '#06B6D4', // Cyan 500
-  '#22D3EE', // Cyan 400
-  
-  '#4F46E5', // Indigo 600
-  '#6366F1', // Indigo 500
-  '#818CF8', // Indigo 400
-  
-  '#059669',// Emerald 600
-  '#10B981', // Emerald 500
-  '#34D399' // Emerald 400
-  
- 
-  
-];
+  const COLORS = [
+    '#DC2626',  // Rose 600
+    '#EF4444',  // Rose 600
+    '#E11D48',  // Rose 600
+    // '#F43F5E', // Rose 500
+    // '#FB7185', // Rose 400
+
+    '#D97706', // Amber 600
+    '#F59E0B', // Amber 500
+    '#FBBF24', // Amber 400
+
+    '#0891B2', // Cyan 600
+    '#06B6D4', // Cyan 500
+    '#22D3EE', // Cyan 400
+
+    '#4F46E5', // Indigo 600
+    '#6366F1', // Indigo 500
+    '#818CF8', // Indigo 400
+
+    '#059669',// Emerald 600
+    '#10B981', // Emerald 500
+    '#34D399' // Emerald 400
 
 
-// Get Color based on late minutes
-const getLateMinutesColor = (minutes) => {
 
-  // 🟢 0–5
-  if (minutes <= 5) return '#34D399';   // Emerald 400
-
-  // 🟢 6–10
-  if (minutes <= 10) return '#10B981';  // Emerald 500
-
-  // 🟢 11–20
-  if (minutes <= 20) return '#059669';  // Emerald 600
-
-  // 🔵 21–30
-  if (minutes <= 30) return '#6366F1';  // Indigo 500
-
-  // 🔷 31–40
-  if (minutes <= 40) return '#06B6D4';  // Cyan 500
-
-  // 🟡 41–50
-  if (minutes <= 50) return '#FBBF24';  // Amber 400
-
-  // 🟠 51–60
-  if (minutes <= 60) return '#F59E0B';  // Amber 500
-
-  // 🔴 60+ (Critical)
-  return '#EF4444'; // Rose 600
-};
+  ];
 
 
-// Get Color based on days absent
-const getAbsentColor = (daysSince) => {
+  // Get Color based on late minutes
+  const getLateMinutesColor = (minutes) => {
 
-  // 🟢 0–1 Day
-  if (daysSince <= 1) return '#34D399';   // Emerald 400
+    // 🟢 0–5
+    if (minutes <= 5) return '#34D399';   // Emerald 400
 
-  // 🟢 2–3 Days
-  if (daysSince <= 3) return '#10B981';   // Emerald 500
+    // 🟢 6–10
+    if (minutes <= 10) return '#10B981';  // Emerald 500
 
-  // 🟢 4–5 Days
-  if (daysSince <= 5) return '#059669';   // Emerald 600
+    // 🟢 11–20
+    if (minutes <= 20) return '#059669';  // Emerald 600
 
-  // 🔵 6–7 Days
-  if (daysSince <= 7) return '#6366F1';   // Indigo 500
+    // 🔵 21–30
+    if (minutes <= 30) return '#6366F1';  // Indigo 500
 
-  // 🔷 8–10 Days
-  if (daysSince <= 10) return '#06B6D4';  // Cyan 500
+    // 🔷 31–40
+    if (minutes <= 40) return '#06B6D4';  // Cyan 500
 
-  // 🟡 11–14 Days
-  if (daysSince <= 14) return '#FBBF24';  // Amber 400
+    // 🟡 41–50
+    if (minutes <= 50) return '#FBBF24';  // Amber 400
 
-  // 🟠 15–21 Days
-  if (daysSince <= 21) return '#F59E0B';  // Amber 500
+    // 🟠 51–60
+    if (minutes <= 60) return '#F59E0B';  // Amber 500
 
-  // 🔴 21+ Days (Critical)
-  return '#EF4444'; // Rose 600
-};
+    // 🔴 60+ (Critical)
+    return '#EF4444'; // Rose 600
+  };
+
+
+  // Get Color based on days absent
+  const getAbsentColor = (daysSince) => {
+
+    // 🟢 0–1 Day
+    if (daysSince <= 1) return '#34D399';   // Emerald 400
+
+    // 🟢 2–3 Days
+    if (daysSince <= 3) return '#10B981';   // Emerald 500
+
+    // 🟢 4–5 Days
+    if (daysSince <= 5) return '#059669';   // Emerald 600
+
+    // 🔵 6–7 Days
+    if (daysSince <= 7) return '#6366F1';   // Indigo 500
+
+    // 🔷 8–10 Days
+    if (daysSince <= 10) return '#06B6D4';  // Cyan 500
+
+    // 🟡 11–14 Days
+    if (daysSince <= 14) return '#FBBF24';  // Amber 400
+
+    // 🟠 15–21 Days
+    if (daysSince <= 21) return '#F59E0B';  // Amber 500
+
+    // 🔴 21+ Days (Critical)
+    return '#EF4444'; // Rose 600
+  };
 
   // Process Absent Analysis Data (Bar Chart)
   const processAbsentAnalysisData = () => {
@@ -3755,31 +3756,37 @@ const getAbsentColor = (daysSince) => {
       <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard
           icon={FiUsers}
-          label={`Total Staff: ${totals.employees || 0}`}
+          label="Total Staff"
+          value={totals.employees || 0}
           color="indigo"
           onClick={() => navigate("/employeelist")}
         />
         <StatCard
           icon={FiUserCheck}
-          label={`Present Today: ${presentToday || 0}`}
+          label="Present Today"
+          value={presentToday || 0}
           color="emerald"
           onClick={() => navigate("/today-attendance")}
         />
         <StatCard
           icon={FiUserX}
-          label={`Absent Today: ${absentToday || 0}`}
+          label="Absent Today"
+          value={absentToday || 0}
           color="rose"
           onClick={() => navigate("/absent-today")}
         />
         <StatCard
           icon={FiClock}
-          label={`Late Arrival: ${lateToday || 0}`}
+          label="Late Arrival"
+          value={lateToday || 0}
           color="amber"
           onClick={() => navigate("/late-today")}
         />
         <StatCard
           icon={FiTrendingUp}
-          label={`Attendance Rate: ${totals.attendanceRate || 0}%`}
+          label="Attendance Rate"
+          value={totals.attendanceRate || 0}
+          isPercentage={true}
           color="cyan"
           onClick={() => navigate("/attedancesummary")}
         />
@@ -4067,53 +4074,52 @@ const getAbsentColor = (daysSince) => {
   );
 };
 
-// Updated StatCard component
-const StatCard = ({ icon: Icon, label, color, onClick }) => {
-
+// Updated StatCard component - Horizontal Layout [Icon] Label : Value
+const StatCard = ({ icon: Icon, label, value, color, onClick, isPercentage }) => {
   const themes = {
-  indigo: {
-    iconBg: "bg-indigo-100 text-indigo-600",
-    border: "border-indigo-500",
-  },
-  emerald: {
-    iconBg: "bg-emerald-100 text-emerald-600",
-    border: "border-emerald-500",
-  },
-  amber: {
-    iconBg: "bg-amber-100 text-amber-600",
-    border: "border-amber-500",
-  },
-  rose: {
-    iconBg: "bg-rose-100 text-rose-600",
-    border: "border-rose-500",
-  },
-  cyan: {
-    iconBg: "bg-cyan-100 text-cyan-600",
-    border: "border-cyan-500",
-  },
-};
+    indigo: {
+      iconBg: "bg-indigo-100 text-indigo-600",
+      border: "border-indigo-500",
+    },
+    emerald: {
+      iconBg: "bg-emerald-100 text-emerald-600",
+      border: "border-emerald-500",
+    },
+    amber: {
+      iconBg: "bg-amber-100 text-amber-600",
+      border: "border-amber-500",
+    },
+    rose: {
+      iconBg: "bg-rose-100 text-rose-600",
+      border: "border-rose-500",
+    },
+    cyan: {
+      iconBg: "bg-cyan-100 text-cyan-600",
+      border: "border-cyan-500",
+    },
+  };
 
-  // ✅ YEH LINE MISSING THI
   const currentTheme = themes[color] || themes.indigo;
 
-return (
-  <div
-  className={`flex flex-row items-center gap-2 p-2 transition-all duration-300 bg-white rounded-xl shadow-sm border-t-4 ${currentTheme.border} cursor-pointer hover:shadow-md hover:-translate-y-1`}
-  onClick={onClick}
->
+  return (
     <div
-      className={`w-6 h-6 flex-shrink-0 flex items-center justify-center rounded-lg ${currentTheme.iconBg}`}
+      className={`flex flex-row items-center gap-2 p-2 transition-all duration-300 bg-white rounded-xl shadow-sm border-t-4 ${currentTheme.border} cursor-pointer hover:shadow-md hover:-translate-y-1 group`}
+      onClick={onClick}
     >
-      <Icon className="text-base" />
-    </div>
+      <div className={`w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-lg transition-colors ${currentTheme.iconBg} group-hover:bg-white`}>
+        <Icon className="text-base" />
+      </div>
 
-    <div className="flex flex-col min-w-0">
-      <p className="text-xs font-semibold tracking-wide text-gray-700 uppercase truncate">
-        {label}
-      </p>
+      <div className="flex flex-row items-baseline gap-1 min-w-0 flex-1 overflow-hidden">
+        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-tight truncate">
+          {label} :
+        </p>
+        <p className="text-sm font-black text-gray-800 whitespace-nowrap">
+          <CountUp end={parseFloat(value)} duration={1.5} decimals={isPercentage ? 1 : 0} suffix={isPercentage ? "%" : ""} />
+        </p>
+      </div>
     </div>
-  </div>
-);
-}
+  );
+};
 
 export default AttendanceDashboard;
