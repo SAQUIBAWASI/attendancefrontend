@@ -614,10 +614,10 @@ const EmployeeShift = () => {
                       <td className="p-2 border">
                         <span
                           className={`px-2 py-1 rounded text-xs font-semibold ${statusUpdates[index] === "Ongoing"
-                              ? "bg-green-200 text-green-800"
-                              : statusUpdates[index] === "Upcoming"
-                                ? "bg-blue-200 text-blue-800"
-                                : "bg-gray-200 text-gray-800"
+                            ? "bg-green-200 text-green-800"
+                            : statusUpdates[index] === "Upcoming"
+                              ? "bg-blue-200 text-blue-800"
+                              : "bg-gray-200 text-gray-800"
                             }`}
                         >
                           {statusUpdates[index] || "Checking..."}

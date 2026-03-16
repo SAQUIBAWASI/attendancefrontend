@@ -232,32 +232,63 @@ const CandidateDashboard = () => {
                             </div>
                           </td>
                           <td className="py-2 px-8 text-center">
-                            {activity.jobId && (activity.jobId.assessmentId || (activity.jobId.assessmentIds && activity.jobId.assessmentIds.length > 0)) ? (
-                              activity.assessmentResults && activity.assessmentResults.length > 0 ? (
-                                <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold uppercase tracking-wider border border-emerald-100 whitespace-nowrap shadow-sm">
-                                  <FaCheckCircle className="text-emerald-500" /> Completed
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={() => {
-                                    const firstQuizId = activity.jobId.assessmentIds?.[0]?._id || activity.jobId.assessmentIds?.[0] || activity.jobId.assessmentId?._id || activity.jobId.assessmentId;
-                                    navigate(`/assessment/${activity.jobId._id}/${activity._id}${firstQuizId ? '/' + firstQuizId : ''}`);
-                                  }}
-                                  className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:bg-blue-700 transition-all active:scale-95 whitespace-nowrap"
-                                >
-                                  Take Assessment
-                                </button>
-                              )
-                            ) : (
-                              <button
-                                onClick={() => navigate("/applied-jobs")}
-                                className="p-1.5 bg-white text-blue-500 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-md border border-gray-100 flex items-center justify-center mx-auto"
-                                title="View Details"
-                              >
-                                <FaEye size={14} />
-                              </button>
+                            {activity.jobId && (
+                              (() => {
+                                const assessmentIds = activity.jobId.assessmentIds || [];
+                                const completedQuizIds = activity.assessmentResults?.map(res => (res.quizId?._id || res.quizId)?.toString()) || [];
+                                
+                                const pendingAssessments = assessmentIds.filter(id => {
+                                  const sid = (id._id || id).toString();
+                                  return !completedQuizIds.includes(sid);
+                                });
+
+                                if (assessmentIds.length === 0) {
+                                  return (
+                                    <button
+                                      onClick={() => navigate("/applied-jobs")}
+                                      className="p-1.5 bg-white text-blue-500 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-md border border-gray-100 flex items-center justify-center mx-auto"
+                                      title="View Details"
+                                    >
+                                      <FaEye size={14} />
+                                    </button>
+                                  );
+                                }
+
+                                if (pendingAssessments.length === 0) {
+                                  return (
+                                    <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold uppercase tracking-wider border border-emerald-100 whitespace-nowrap shadow-sm">
+                                      <FaCheckCircle className="text-emerald-500" /> All Completed
+                                    </div>
+                                  );
+                                }
+
+                                return (
+                                  <div className="flex flex-col gap-2 items-center">
+                                    {pendingAssessments.map((assessment, idx) => {
+                                      const quizId = (assessment._id || assessment).toString();
+                                      const quizTitle = assessment.title || (assessmentIds.length > 1 ? `Quiz ${idx + 1}` : "Quiz");
+
+                                      return (
+                                        <button
+                                          key={quizId}
+                                          onClick={() => navigate(`/assessment/${activity.jobId._id}/${activity._id}/${quizId}`)}
+                                          className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:bg-blue-700 transition-all active:scale-95 whitespace-nowrap min-w-[140px]"
+                                        >
+                                          Take {quizTitle}
+                                        </button>
+                                      );
+                                    })}
+                                    {completedQuizIds.length > 0 && (
+                                      <div className="text-[9px] font-bold text-emerald-600 uppercase tracking-tight">
+                                        {completedQuizIds.length}/{assessmentIds.length} Done
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()
                             )}
-                          </td>
+                          </td>   
+                          {/* </td> */}
                         </tr>
                       );
                     })}

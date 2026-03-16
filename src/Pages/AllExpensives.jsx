@@ -244,7 +244,7 @@ const AllExpensives = () => {
                   <th className="py-2 text-center">ACTIONS</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200 uppercase tracking-tighter">
+              <tbody className="bg-white divide-y divide-gray-200">
                 {loading && expenses.length === 0 ? (
                   <tr>
                     <td colSpan="6" className="px-2 py-2 text-center">
@@ -273,40 +273,40 @@ const AllExpensives = () => {
                     >
                       <td className="px-2 py-2 text-center whitespace-nowrap">
                         <div className="flex flex-col">
-                          <span className="font-medium text-gray-900 text-sm">
+                          <span className="font-medium text-gray-900">
                             {group.employeeDetails?.name || 'UNKNOWN'}
                           </span>
-                          <span className="text-[10px] text-gray-500 font-bold uppercase">
+                          <span className="text-[10px] text-gray-500 font-medium">
                             ID: {group.employeeId}
                           </span>
                         </div>
                       </td>
                       <td className="px-2 py-2 text-center whitespace-nowrap">
-                        <span className="px-2 py-1 text-[10px] font-semibold rounded-full bg-indigo-100 text-indigo-800">
-                          {group.employeeDetails?.role || 'EMPLOYEE'}
+                        <span className="px-2 py-1 text-[10px] font-semibold rounded-full bg-blue-100 text-blue-800">
+                          {group.employeeDetails?.role || 'Employee'}
                         </span>
                       </td>
                       <td className="px-2 py-2 text-center whitespace-nowrap">
-                        <span className="px-2 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-700 border border-gray-200">
-                          {group.visitCount} VISITS
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                          {group.visitCount} Visits
                         </span>
                       </td>
                       <td className="px-2 py-2 text-center whitespace-nowrap">
-                        <span className="px-2 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-700 border border-blue-100">
                           {group.totalKm} KM
                         </span>
                       </td>
                       <td className="px-2 py-2 text-center whitespace-nowrap">
-                        <span className="text-sm font-black text-gray-900 tabular-nums">
+                        <span className="text-sm font-semibold text-gray-900 tabular-nums">
                           ₹{group.totalAmount.toLocaleString()}
                         </span>
                       </td>
                       <td className="px-2 py-2 text-center whitespace-nowrap">
                         <button
                           onClick={() => handleOpenModal(group)}
-                          className="text-blue-600 hover:text-blue-800 transition flex items-center justify-center gap-1 font-bold text-[11px] group/btn mx-auto bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100"
+                          className="text-blue-600 hover:text-blue-800 transition flex items-center justify-center gap-1 font-semibold text-[11px] group/btn mx-auto bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100"
                         >
-                          <FaEye className="group-hover/btn:scale-110" /> VIEW
+                          <FaEye className="group-hover/btn:scale-110" /> View
                         </button>
                       </td>
                     </tr>
@@ -372,37 +372,71 @@ const AllExpensives = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-100 font-medium">
                   {selectedGroup.records.map((rec, i) => (
-                    <tr key={i} className="hover:bg-blue-50/50 transition-colors group">
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-500 font-bold border-r border-gray-50 uppercase tracking-tighter">
-                        {new Date(rec.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
-                      </td>
-                      <td className="px-6 py-4 text-gray-900 border-r border-gray-50">
-                        <div className="flex flex-col">
-                          <span className="font-bold">{rec.purpose}</span>
-                          {rec.remark && <span className="text-[10px] text-gray-400 mt-1 italic font-medium">{rec.remark}</span>}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center border-r border-gray-50 text-blue-600 font-black tabular-nums">
-                        {rec.km}
-                      </td>
-                      <td className="px-6 py-4 text-right border-r border-gray-50 text-gray-400 text-xs font-bold whitespace-nowrap">
-                        ₹{rec.rateApplied}/km
-                      </td>
-                      <td className="px-6 py-4 text-center border-r border-gray-50">
-                        <span className="text-[10px] font-bold italic text-gray-500 max-w-[150px] truncate block" title={rec.outcome}>
-                          "{rec.outcome || '-'}"
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right border-r border-gray-50 text-green-600 tabular-nums font-bold">
-                        {rec.orderValue > 0 ? `₹${rec.orderValue.toLocaleString()}` : '-'}
-                      </td>
-                      <td className="px-6 py-4 text-right border-r border-gray-50 text-purple-600 tabular-nums font-bold">
-                        {rec.upsellValue > 0 ? `₹${rec.upsellValue.toLocaleString()}` : '-'}
-                      </td>
-                      <td className="px-6 py-4 text-right bg-blue-50/30 text-blue-900 font-black tabular-nums">
-                        ₹{rec.totalAmount.toLocaleString()}
-                      </td>
-                    </tr>
+                    <React.Fragment key={i}>
+                      <tr className="hover:bg-blue-50/50 transition-colors group">
+                        <td className="px-6 py-4 whitespace-nowrap text-gray-500 font-medium border-r border-gray-50 tracking-tight">
+                          {new Date(rec.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td className="px-6 py-4 text-gray-900 border-r border-gray-50">
+                          <div className="flex flex-col">
+                            <span className="font-semibold">{rec.purpose}</span>
+                            {rec.remark && <span className="text-[10px] text-gray-400 mt-1 italic font-medium">{rec.remark}</span>}
+                            {rec.stops && rec.stops.length > 0 && (
+                              <span className="text-[10px] inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded w-fit font-bold uppercase">
+                                {rec.stops.length} Stops
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center border-r border-gray-50 text-blue-600 font-semibold tabular-nums">
+                          {rec.km}
+                        </td>
+                        <td className="px-6 py-4 text-right border-r border-gray-50 text-gray-400 text-xs font-bold whitespace-nowrap">
+                          ₹{rec.rateApplied}/km
+                        </td>
+                        <td className="px-6 py-4 text-center border-r border-gray-50">
+                          <span className="text-[10px] font-medium italic text-gray-500 max-w-[150px] truncate block mx-auto" title={rec.outcome}>
+                            {rec.stops && rec.stops.length > 0 ? "Multiple Stops" : (rec.outcome ? `"${rec.outcome}"` : '-')}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right border-r border-gray-50 text-green-600 tabular-nums font-bold">
+                          {rec.orderValue > 0 ? `₹${rec.orderValue.toLocaleString()}` : '-'}
+                        </td>
+                        <td className="px-6 py-4 text-right border-r border-gray-50 text-purple-600 tabular-nums font-bold">
+                          {rec.upsellValue > 0 ? `₹${rec.upsellValue.toLocaleString()}` : '-'}
+                        </td>
+                        <td className="px-6 py-4 text-right bg-blue-50/30 text-blue-900 font-semibold tabular-nums">
+                          ₹{rec.totalAmount.toLocaleString()}
+                        </td>
+                      </tr>
+                      
+                      {/* Render Stop Sub-rows if they exist */}
+                      {rec.stops && rec.stops.length > 0 && rec.stops.map((stop, sIndex) => (
+                        <tr key={`stop-${i}-${sIndex}`} className="bg-gray-50/50 text-xs border-b border-gray-100 last:border-b-0">
+                           <td className="px-6 py-2 border-r border-gray-100"></td>
+                           <td className="px-6 py-2 border-r border-gray-100">
+                             <div className="flex items-center gap-2">
+                               <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                               <span className="font-semibold text-gray-700">{stop.locationName}</span>
+                             </div>
+                           </td>
+                           <td className="px-6 py-2 text-center border-r border-gray-100 text-blue-500 font-medium tabular-nums">
+                             {stop.km > 0 ? stop.km : '-'}
+                           </td>
+                           <td className="px-6 py-2 border-r border-gray-100"></td>
+                           <td className="px-6 py-2 text-center border-r border-gray-100 text-gray-500 font-medium italic truncate max-w-[150px]" title={stop.outcome}>
+                             {stop.outcome || '-'}
+                           </td>
+                           <td className="px-6 py-2 text-right border-r border-gray-100 text-green-600 tabular-nums">
+                             {stop.orderValue > 0 ? `₹${stop.orderValue.toLocaleString()}` : '-'}
+                           </td>
+                           <td className="px-6 py-2 text-right border-r border-gray-100 text-purple-600 tabular-nums">
+                             {stop.upsellValue > 0 ? `₹${stop.upsellValue.toLocaleString()}` : '-'}
+                           </td>
+                           <td className="px-6 py-2 bg-blue-50/10"></td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

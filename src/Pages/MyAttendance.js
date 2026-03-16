@@ -130,13 +130,12 @@
 //   };
 
 //   return (
-//     <div className="flex flex-col min-h-screen bg-gray-100">
+//     <div className="min-h-screen bg-gray-100 transition-all duration-300">
 //       {/* Main Section */}
 //       <div className="flex flex-col flex-1">
 
 
 //         <div className="flex items-start justify-center flex-1 p-4 sm:p-6 lg:p-8">
-//           <div className="w-full p-4 bg-white shadow-xl max-w-7xl rounded-2xl sm:p-6 lg:p-8">
 //             {/* Header Section */}
 //             {/* <div className="flex flex-col items-start justify-between gap-4 mb-6 lg:flex-row lg:items-center">
 //               <div>
@@ -147,7 +146,7 @@
 //               </div>
 
 //               <div className="flex flex-col w-full gap-3 sm:flex-row lg:w-auto">
-             
+
 
 //                 <CSVLink
 //                   data={csvData}
@@ -461,14 +460,14 @@ export default function MyAttendance() {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [onsiteFilter, setOnsiteFilter] = useState("all");
-  
+
   // Department and Designation filters (from employee data)
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterDesignation, setFilterDesignation] = useState("");
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
   const [employeeData, setEmployeeData] = useState(null);
-  
+
   // Refs for click outside
   const departmentFilterRef = useRef(null);
   const designationFilterRef = useRef(null);
@@ -537,7 +536,7 @@ export default function MyAttendance() {
         return recordDate === searchDate;
       });
     }
-    
+
     // Date range filter (from - to)
     if (dateFrom && dateTo) {
       filtered = filtered.filter(rec => {
@@ -605,7 +604,7 @@ export default function MyAttendance() {
       minute: '2-digit',
       hour12: true
     }) : null;
-    
+
     const checkOut = checkOutTime ? new Date(checkOutTime).toLocaleTimeString('en-IN', {
       hour: '2-digit',
       minute: '2-digit',
@@ -807,7 +806,7 @@ export default function MyAttendance() {
   return (
     <div className="min-h-screen px-2 py-2 bg-gradient-to-br from-purple-50 to-blue-100 sm:px-3 sm:py-3">
       <div className="mx-auto max-w-9xl">
-        
+
         {/* Header Section */}
         {/* <div className="mb-2">
           <h1 className="text-lg font-bold text-gray-800 sm:text-xl md:text-2xl">📅 My Attendance Records</h1>
@@ -841,7 +840,7 @@ export default function MyAttendance() {
         {/* Filters Section */}
         <div className="p-2 mb-3 bg-white rounded-lg shadow-md sm:p-3">
           <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-            
+
             {/* Single Date Filter */}
             <div className="relative w-[110px] sm:w-[130px]">
               <FaCalendarAlt className="absolute text-xs text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />

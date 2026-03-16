@@ -288,6 +288,7 @@ import {
   FiCamera,
   FiClock as FiHistory,
   FiList,
+  FiLogOut,
   FiUserX
 } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -328,7 +329,9 @@ const EmployeeDashboard = () => {
     presentThisMonth: 0,
     absentThisMonth: 0,
     lateThisMonth: 0,
-    totalWorkingDays: 0
+    totalWorkingDays: 0,
+    resignationStatus: null,
+    resignationLetter: ""
   });
 
   // Chart data states
@@ -336,6 +339,9 @@ const EmployeeDashboard = () => {
   const [absentChartData, setAbsentChartData] = useState([]);
   const [allAttendance, setAllAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isResignationModalOpen, setIsResignationModalOpen] = useState(false);
+  const [resignationInput, setResignationInput] = useState("");
+  const [isSubmittingResignation, setIsSubmittingResignation] = useState(false);
 
   useEffect(() => {
     if (!email) return;
@@ -419,6 +425,25 @@ const EmployeeDashboard = () => {
             setShiftTiming(shiftTime || "No Shift Assigned");
           } catch (e) {
             setShiftTiming("Not Assigned");
+          }
+
+          // 9. Fetch Resignation Status
+          try {
+            const resigRes = await axios.get(`${BASE_URL}api/applications/all`);
+            const allApps = resigRes.data.applications || [];
+            const userResig = allApps.find(app => (app.email === email || app.candidateId?.email === email));
+            if (userResig) {
+              setEmployeeStats(prev => ({
+                ...prev,
+                resignationStatus: userResig.resignationStatus || "Pending",
+                resignationLetter: userResig.resignationLetter
+              }));
+              if (userResig.resignationLetter) {
+                setResignationInput(userResig.resignationLetter);
+              }
+            }
+          } catch (e) {
+            console.warn("Resignation status fetch failed", e);
           }
 
           setLoading(false);
@@ -525,6 +550,36 @@ const EmployeeDashboard = () => {
 
     setLateChartData(lateAnalysis.chartData);
     setAbsentChartData(absentAnalysis.chartData);
+  };
+
+  const handleSubmitResignation = async () => {
+    if (!resignationInput.trim()) {
+      alert("Please provide a resignation statement.");
+      return;
+    }
+
+    try {
+      setIsSubmittingResignation(true);
+      const res = await axios.post(`${API_BASE_URL}/employees/submit-resignation`, {
+        email,
+        resignationLetter: resignationInput
+      });
+
+      if (res.data.success) {
+        setEmployeeStats(prev => ({
+          ...prev,
+          resignationStatus: "Pending",
+          resignationLetter: resignationInput
+        }));
+        setIsResignationModalOpen(false);
+        alert("Resignation request submitted successfully.");
+      }
+    } catch (err) {
+      console.error("Resignation error:", err);
+      alert(err.response?.data?.message || "Failed to submit resignation.");
+    } finally {
+      setIsSubmittingResignation(false);
+    }
   };
 
   // Late Analysis with proper weekly grouping
@@ -739,7 +794,7 @@ const EmployeeDashboard = () => {
   };
 
   if (loading || !profile) return (
-    <div className="flex items-center justify-center min-h-screen bg-[#F8FAFC] uppercase tracking-widest text-xs font-bold text-blue-600">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 uppercase tracking-widest text-xs font-bold text-blue-600">
       <div className="flex flex-col items-center gap-3">
         <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
         Processing Dashboard...
@@ -814,6 +869,20 @@ const EmployeeDashboard = () => {
                   color="orange"
                   onClick={() => navigate("/myleaves")}
                 />
+                <SleekAction
+                  icon={<FiLogOut />}
+                  title="Resignation"
+                  desc={employeeStats.resignationStatus ? employeeStats.resignationStatus.toUpperCase() : "REQUEST EXIT"}
+                  color="rose"
+                  onClick={() => {
+                    if (!resignationInput.trim()) {
+                      const template = `To,\nThe Human Resources Department,\nTimely Health Projects\n\nSubject: Resignation Letter\n\nDear Sir/Madam,\n\nI, ${profile?.name || "[Name]"}, am writing to formally resign from my position as ${profile?.role || profile?.department || "[Role]"} at Timely Health Projects.\n\nMy last working day will be [Date]. I would like to thank you for the professional and personal development opportunities I have enjoyed during my tenure.\n\nPlease let me know the necessary steps to complete the exit process.\n\nSincerely,\n${profile?.name || "[Name]"}`;
+                      setResignationInput(template);
+                    }
+                    setIsResignationModalOpen(true);
+                  }}
+                  badge={employeeStats.resignationStatus === "Pending" ? 1 : 0}
+                />
               </div>
             </div>
           </div>
@@ -822,7 +891,7 @@ const EmployeeDashboard = () => {
           <div className="lg:col-span-8 space-y-6">
 
             {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="flex flex-col gap-6">
 
               {/* Late Analysis Card */}
               <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
@@ -945,6 +1014,88 @@ const EmployeeDashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Resignation Modal */}
+      {isResignationModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl relative overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Resignation Registry</h3>
+                <p className="text-xs text-gray-500 font-medium">Official statement of exit</p>
+              </div>
+              <button
+                onClick={() => setIsResignationModalOpen(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all"
+              >
+                <FiUserX size={20} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">
+                Resignation Statement
+              </label>
+              <textarea
+                value={resignationInput}
+                onChange={(e) => setResignationInput(e.target.value)}
+                placeholder="Please state your reason for resignation and expected last working day..."
+                className="w-full h-40 p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none transition-all placeholder:text-gray-400"
+                disabled={employeeStats.resignationStatus === "Approved"}
+              ></textarea>
+
+              <div className="mt-4 p-4 bg-rose-50 rounded-xl border border-rose-100">
+                <div className="flex gap-3">
+                  <FiAlertCircle className="text-rose-600 mt-1 flex-shrink-0" />
+                  <p className="text-[11px] text-rose-700 font-medium leading-relaxed">
+                    By submitting this request, you are officially initiating the resignation process. This request will be sent to the Human Resources department for review.
+                  </p>
+                </div>
+              </div>
+
+              {employeeStats.resignationStatus && (
+                <div className="mt-4 flex items-center justify-between px-2">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Current Status</span>
+                  <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${employeeStats.resignationStatus === "Approved" ? "bg-emerald-100 text-emerald-700" :
+                    employeeStats.resignationStatus === "Rejected" ? "bg-rose-100 text-rose-700" :
+                      "bg-amber-100 text-amber-700"
+                    }`}>
+                    {employeeStats.resignationStatus}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-50 flex gap-3">
+              <button
+                onClick={() => setIsResignationModalOpen(false)}
+                className="flex-1 py-3 text-[11px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 rounded-xl transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmitResignation}
+                disabled={isSubmittingResignation || employeeStats.resignationStatus === "Approved"}
+                className={`flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-100 flex items-center justify-center gap-2 ${(isSubmittingResignation || employeeStats.resignationStatus === "Approved") ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+              >
+                {isSubmittingResignation ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                  <FiLogOut />
+                )}
+                {employeeStats.resignationStatus ? "Update Request" : "Submit Resignation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .animate-in { animation: zoomIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+      `}} />
     </div>
   );
 };
@@ -981,28 +1132,33 @@ const StatRow = ({ icon, label, value, color }) => {
 };
 
 // SleekAction Component
-const SleekAction = ({ icon, title, desc, color, onClick }) => {
+const SleekAction = ({ icon, title, desc, color, onClick, badge }) => {
   const themes = {
-    rose: "bg-rose-50 text-emerald-600 border-emerald-50",
-    emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    blue: "bg-blue-50 text-blue-600 border-blue-100",
-    purple: "bg-purple-50 text-purple-600 border-purple-100",
-    orange: "bg-orange-50 text-orange-600 border-orange-100"
+    rose: "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-600 hover:text-white hover:border-rose-600",
+    emerald: "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-600 hover:text-white hover:border-emerald-600",
+    blue: "bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600",
+    purple: "bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-600 hover:text-white hover:border-purple-600",
+    orange: "bg-orange-50 text-orange-600 border-orange-100 hover:bg-orange-600 hover:text-white hover:border-orange-600"
   };
 
   const textColors = {
-    rose: "text-rose-600",
-    emerald: "text-emerald-700",
-    blue: "text-blue-600",
-    purple: "text-purple-600",
-    orange: "text-orange-600"
+    rose: "text-rose-600 group-hover:text-white",
+    emerald: "text-emerald-700 group-hover:text-white",
+    blue: "text-blue-600 group-hover:text-white",
+    purple: "text-purple-600 group-hover:text-white",
+    orange: "text-orange-600 group-hover:text-white"
   };
 
   return (
     <div
       onClick={onClick}
-      className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 flex items-center gap-4 ${themes[color]} hover:shadow-sm`}
+      className={`relative group p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 flex items-center gap-4 ${themes[color]} hover:shadow-lg hover:-translate-y-1`}
     >
+      {badge > 0 && (
+        <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white flex items-center justify-center text-[10px] font-black rounded-full border-2 border-white shadow-sm animate-bounce">
+          {badge}
+        </div>
+      )}
       <div className={`text-xl ${textColors[color]}`}>{icon}</div>
       <div>
         <h4 className={`text-sm font-bold tracking-tight leading-none mb-1 ${textColors[color]}`}>{title}</h4>

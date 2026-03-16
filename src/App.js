@@ -170,6 +170,8 @@ import EmployeeResignation from "./Pages/EmployeeResignation.jsx";
 import Interview from "./Pages/Interview.jsx";
 import Letters from "./Pages/Letters.jsx";
 import MyJobs from "./Pages/MyJobs.jsx";
+import EmployeePersonalDocuments from "./Pages/EmployeePersonalDocuments.jsx";
+import EmployeeLetters from "./Pages/EmployeeLetters.jsx"; // ✅ New import
 import RecruitmentDashboard from "./Pages/RecruitmentDashboard.jsx";
 // import ExpenseManagement from "./Pages/ExpenseManagement.jsx";
 import AllExpensives from "./Pages/AllExpensives.jsx";
@@ -208,7 +210,10 @@ function App() {
       <Route path="/mypermissions" element={<EmployeeLayout><MyPermission /></EmployeeLayout>} />
       {/* <Route path="/expense-management" element={<ExpenseManagement />} />   */}
       <Route path="/expense-management" element={<EmployeeLayout><ExpenseManagement /></EmployeeLayout>} />
-   
+      <Route path="/emp-my-jobs" element={<EmployeeLayout><MyJobs /></EmployeeLayout>} />
+      <Route path="/emp-personal-documents" element={<EmployeeLayout><EmployeePersonalDocuments /></EmployeeLayout>} />
+      <Route path="/emp-letters" element={<EmployeeLayout><EmployeeLetters /></EmployeeLayout>} />
+
       <Route path="/mylocation" element={<EmployeeLayout><EmployeeLocation /></EmployeeLayout>} />
       <Route path="/jobs/:id" element={<JobDetails />} />
       <Route path="/assessment/:jobId/:applicationId" element={<TakeAssessment />} />
@@ -406,8 +411,8 @@ function App() {
               <Route path="/candidate-personal-documents" element={<CandidatePersonalDocuments />} />
               <Route path="/employee-journey" element={<EmployeeJourney />} />
               <Route path="/all-expensives" element={<AllExpensives />} />
-              
-            
+
+
             </Routes>
           </AdminLayout>
         }

@@ -503,7 +503,7 @@ const EmployeeJourney = () => {
   const [roles, setRoles] = useState([]);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   // Pagination states
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -713,15 +713,14 @@ const EmployeeJourney = () => {
           <div className="relative" ref={roleDropdownRef}>
             <button
               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-              className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
-                roleFilter 
-                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-              }`}
+              className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${roleFilter
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                }`}
             >
               <FaUserTie className="text-xs" /> Role {roleFilter && `: ${roleFilter}`}
             </button>
-            
+
             {/* Role Filter Dropdown */}
             {isRoleDropdownOpen && (
               <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
@@ -736,31 +735,29 @@ const EmployeeJourney = () => {
                     autoFocus
                   />
                 </div>
-                <div 
+                <div
                   onClick={() => {
                     setRoleFilter('');
                     setIsRoleDropdownOpen(false);
                     setRoleSearchQuery('');
                   }}
-                  className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-gray-100 font-medium ${
-                    !roleFilter ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                  }`}
+                  className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-gray-100 font-medium ${!roleFilter ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                    }`}
                 >
                   All Roles
                 </div>
                 {roles
                   .filter(r => r.name.toLowerCase().includes(roleSearchQuery.toLowerCase()))
                   .map((r, i) => (
-                    <div 
+                    <div
                       key={i}
                       onClick={() => {
                         setRoleFilter(r.name);
                         setIsRoleDropdownOpen(false);
                         setRoleSearchQuery('');
                       }}
-                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                        roleFilter === r.name ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
-                      }`}
+                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${roleFilter === r.name ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                        }`}
                     >
                       {r.name}
                     </div>
@@ -870,7 +867,7 @@ const EmployeeJourney = () => {
                 ))}
               </tbody>
             </table>
-            
+
             {/* Pagination */}
             {filteredCandidates.length > 0 && (
               <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
@@ -908,11 +905,10 @@ const EmployeeJourney = () => {
                   <button
                     onClick={handlePrevPage}
                     disabled={pagination.currentPage === 1}
-                    className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
-                      pagination.currentPage === 1
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                    }`}
+                    className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === 1
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      }`}
                   >
                     Previous
                   </button>
@@ -923,13 +919,12 @@ const EmployeeJourney = () => {
                         key={index}
                         onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                         disabled={page === "..."}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          page === "..."
-                            ? "text-gray-500 cursor-default"
-                            : pagination.currentPage === page
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${page === "..."
+                          ? "text-gray-500 cursor-default"
+                          : pagination.currentPage === page
                             ? "bg-blue-600 text-white"
                             : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-                        }`}
+                          }`}
                       >
                         {page}
                       </button>
@@ -939,11 +934,10 @@ const EmployeeJourney = () => {
                   <button
                     onClick={handleNextPage}
                     disabled={pagination.currentPage === pagination.totalPages}
-                    className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
-                      pagination.currentPage === pagination.totalPages
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                    }`}
+                    className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === pagination.totalPages
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      }`}
                   >
                     Next
                   </button>
@@ -992,15 +986,21 @@ const EmployeeJourney = () => {
               <div className="relative pl-8 border-l-[3px] border-dashed border-gray-200/60 ml-4 space-y-12">
                 {selectedCandidate.experiences.map((exp, eIdx) => (
                   <div key={eIdx} className="relative">
-                    <div className="absolute -left-[45px] top-6 w-6 h-6 rounded-full border-[5px] border-white bg-blue-600 shadow-md" />
+                    {/* Timeline Dot */}
+                    <div className={`absolute -left-[45px] top-6 w-6 h-6 rounded-full border-[5px] border-white ${exp.isCurrentJob ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-blue-600'} shadow-md`} />
 
-                    <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:border-blue-200 transition-all duration-300">
+                    <div className={`bg-white rounded-3xl p-6 border ${exp.isCurrentJob ? 'border-emerald-200 bg-emerald-50/20' : 'border-gray-100'} shadow-sm hover:border-blue-200 transition-all duration-300`}>
                       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
                         <div className="space-y-6 flex-1">
                           <div>
                             <div className="flex items-center gap-4">
                               <h5 className="text-lg font-black text-gray-900 tracking-tight">{exp.role}</h5>
                               <span className="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-blue-100/50">Record {selectedCandidate.experiences.length - eIdx}</span>
+                              {exp.isCurrentJob && (
+                                <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest rounded-lg border border-emerald-200 animate-pulse">
+                                  Current working
+                                </span>
+                              )}
                             </div>
                             <p className="text-gray-600 font-bold text-sm mt-1.5 flex items-center gap-2">
                               <FaBuilding size={12} className="text-gray-400" />

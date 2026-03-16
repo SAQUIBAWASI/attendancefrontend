@@ -492,7 +492,7 @@
 // const UserAccessManagement = () => {
 //   const [employees, setEmployees] = useState([]);
 //   const [loading, setLoading] = useState(false);
-  
+
 //   // Selection State
 //   const [selectedRole, setSelectedRole] = useState("");
 //   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -570,7 +570,7 @@
 
 //   useEffect(() => {
 //     fetchEmployees();
-    
+
 //     // Click outside handler
 //     const handleClickOutside = (event) => {
 //       // Role Dropdown
@@ -619,7 +619,7 @@
 //     const matchesSearch = 
 //       e.name?.toLowerCase().includes(term) ||
 //       e.employeeId?.toLowerCase().includes(term);
-    
+
 //     return matchesRole && matchesSearch;
 //   });
 
@@ -743,10 +743,10 @@
 //         </div>
 
 //         <div className="p-6 space-y-6 md:p-8">
-          
+
 //           {/* --- TOP FILTERS (Role & Role-based Search) --- */}
 //           <div className="flex flex-col gap-6 md:flex-row">
-            
+
 //             {/* 1. Role Selector */}
 //             <div className="flex-1 space-y-1.5 relative" ref={roleDropdownRef}>
 //               <label className="block text-sm font-bold text-gray-700">Select Role</label>
@@ -934,7 +934,7 @@
 // const UserAccessManagement = () => {
 //   const [employees, setEmployees] = useState([]);
 //   const [loading, setLoading] = useState(false);
-  
+
 //   // Selection State
 //   const [selectedRole, setSelectedRole] = useState("");
 //   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -1025,7 +1025,7 @@
 
 //   useEffect(() => {
 //     fetchEmployees();
-    
+
 //     // Click outside handler
 //     const handleClickOutside = (event) => {
 //       // Role Dropdown
@@ -1074,7 +1074,7 @@
 //     const matchesSearch = 
 //       e.name?.toLowerCase().includes(term) ||
 //       e.employeeId?.toLowerCase().includes(term);
-    
+
 //     return matchesRole && matchesSearch;
 //   });
 
@@ -1123,7 +1123,7 @@
 //         "assessments_view",
 //         "documents_view"
 //       ];
-      
+
 //       // If "Manage Job Recruitment" is being checked
 //       if (!permissions.includes("job_recruitment_manage")) {
 //         // Add all recruitment permissions
@@ -1147,11 +1147,11 @@
 //         const newPermissions = prev.includes(permId) 
 //           ? prev.filter(p => p !== permId)
 //           : [...prev, permId];
-        
+
 //         // Check if all individual recruitment permissions are checked
 //         const individualPerms = ["job_posts_view", "job_applicants_view", "score_board_view", "assessments_view", "documents_view"];
 //         const allChecked = individualPerms.every(p => newPermissions.includes(p));
-        
+
 //         // If all are checked, add manage permission
 //         if (allChecked && !newPermissions.includes("job_recruitment_manage")) {
 //           return [...newPermissions, "job_recruitment_manage"];
@@ -1160,7 +1160,7 @@
 //         else if (!allChecked && newPermissions.includes("job_recruitment_manage")) {
 //           return newPermissions.filter(p => p !== "job_recruitment_manage");
 //         }
-        
+
 //         return newPermissions;
 //       });
 //     }
@@ -1252,10 +1252,10 @@
 //         </div>
 
 //         <div className="p-6 space-y-6 md:p-8">
-          
+
 //           {/* --- TOP FILTERS (Role & Role-based Search) --- */}
 //           <div className="flex flex-col gap-6 md:flex-row">
-            
+
 //             {/* 1. Role Selector */}
 //             <div className="flex-1 space-y-1.5 relative" ref={roleDropdownRef}>
 //               <label className="block text-sm font-bold text-gray-700">Select Role</label>
@@ -1440,7 +1440,7 @@
 // const UserAccessManagement = () => {
 //   const [employees, setEmployees] = useState([]);
 //   const [loading, setLoading] = useState(false);
-  
+
 //   // Selection State
 //   const [selectedRole, setSelectedRole] = useState("");
 //   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -1531,7 +1531,7 @@
 
 //   useEffect(() => {
 //     fetchEmployees();
-    
+
 //     // Click outside handler
 //     const handleClickOutside = (event) => {
 //       // Role Dropdown
@@ -1580,7 +1580,7 @@
 //     const matchesSearch = 
 //       e.name?.toLowerCase().includes(term) ||
 //       e.employeeId?.toLowerCase().includes(term);
-    
+
 //     return matchesRole && matchesSearch;
 //   });
 
@@ -1629,7 +1629,7 @@
 //         "assessments_view",
 //         "documents_view"
 //       ];
-      
+
 //       // If "Manage Job Recruitment" is being checked
 //       if (!permissions.includes("job_recruitment_manage")) {
 //         // Add all recruitment permissions
@@ -1653,11 +1653,11 @@
 //         const newPermissions = prev.includes(permId) 
 //           ? prev.filter(p => p !== permId)
 //           : [...prev, permId];
-        
+
 //         // Check if all individual recruitment permissions are checked
 //         const individualPerms = ["job_posts_view", "job_applicants_view", "score_board_view", "assessments_view", "documents_view"];
 //         const allChecked = individualPerms.every(p => newPermissions.includes(p));
-        
+
 //         // If all are checked, add manage permission
 //         if (allChecked && !newPermissions.includes("job_recruitment_manage")) {
 //           return [...newPermissions, "job_recruitment_manage"];
@@ -1666,7 +1666,7 @@
 //         else if (!allChecked && newPermissions.includes("job_recruitment_manage")) {
 //           return newPermissions.filter(p => p !== "job_recruitment_manage");
 //         }
-        
+
 //         return newPermissions;
 //       });
 //     }
@@ -1712,10 +1712,10 @@
 //         {/* </div> */}
 
 //         <div className="p-6 space-y-6 md:p-8">
-          
+
 //           {/* --- ALL FILTERS IN ONE ROW --- */}
 //           <div className="flex flex-col items-start gap-4 md:flex-row md:items-end">
-            
+
 //             {/* Global Search - First */}
 //             <div className="relative w-full md:w-80" ref={globalSearchRef}>
 //               <label className="block text-gray-700 font-bold text-sm mb-1.5">Quick Search</label>
@@ -1762,7 +1762,7 @@
 //                 </div>
 //               )}
 //             </div>
-            
+
 //             {/* 1. Role Selector - Second */}
 //             <div className="relative flex-1" ref={roleDropdownRef}>
 //               <label className="block text-gray-700 font-bold text-sm mb-1.5">Select Role</label>
@@ -1948,7 +1948,7 @@
 // const UserAccessManagement = () => {
 //   const [employees, setEmployees] = useState([]);
 //   const [loading, setLoading] = useState(false);
-  
+
 //   // Selection State
 //   const [selectedRole, setSelectedRole] = useState("");
 //   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -2039,7 +2039,7 @@
 
 //   useEffect(() => {
 //     fetchEmployees();
-    
+
 //     // Click outside handler
 //     const handleClickOutside = (event) => {
 //       // Role Dropdown
@@ -2064,7 +2064,7 @@
 //     try {
 //       const response = await axios.get(`${API_BASE_URL}/employees/get-employees`);
 //       setEmployees(response.data);
-      
+
 //       // ✅ Auto-select first employee as default
 //       if (response.data.length > 0) {
 //         const firstEmployee = response.data[0];
@@ -2097,7 +2097,7 @@
 //     const matchesSearch = 
 //       e.name?.toLowerCase().includes(term) ||
 //       e.employeeId?.toLowerCase().includes(term);
-    
+
 //     return matchesRole && matchesSearch;
 //   });
 
@@ -2146,7 +2146,7 @@
 //         "assessments_view",
 //         "documents_view"
 //       ];
-      
+
 //       // If "Manage Job Recruitment" is being checked
 //       if (!permissions.includes("job_recruitment_manage")) {
 //         // Add all recruitment permissions
@@ -2170,11 +2170,11 @@
 //         const newPermissions = prev.includes(permId) 
 //           ? prev.filter(p => p !== permId)
 //           : [...prev, permId];
-        
+
 //         // Check if all individual recruitment permissions are checked
 //         const individualPerms = ["job_posts_view", "job_applicants_view", "score_board_view", "assessments_view", "documents_view"];
 //         const allChecked = individualPerms.every(p => newPermissions.includes(p));
-        
+
 //         // If all are checked, add manage permission
 //         if (allChecked && !newPermissions.includes("job_recruitment_manage")) {
 //           return [...newPermissions, "job_recruitment_manage"];
@@ -2183,7 +2183,7 @@
 //         else if (!allChecked && newPermissions.includes("job_recruitment_manage")) {
 //           return newPermissions.filter(p => p !== "job_recruitment_manage");
 //         }
-        
+
 //         return newPermissions;
 //       });
 //     }
@@ -2283,10 +2283,10 @@
 
 //         {/* Main Content Card */}
 //         <div className="p-3 bg-white border border-gray-200 shadow-md rounded-xl">
-          
+
 //           {/* --- ALL FILTERS IN ONE ROW --- */}
 //           <div className="flex flex-col items-start gap-3 mb-4 md:flex-row md:items-end">
-            
+
 //             {/* Global Search - First */}
 //             <div className="relative w-full md:w-72" ref={globalSearchRef}>
 //               <label className="block mb-1 text-xs font-medium text-gray-700">Quick Search</label>
@@ -2333,7 +2333,7 @@
 //                 </div>
 //               )}
 //             </div>
-            
+
 //             {/* 1. Role Selector - Second */}
 //             <div className="relative flex-1" ref={roleDropdownRef}>
 //               <label className="block mb-1 text-xs font-medium text-gray-700">Select Role</label>
@@ -2530,18 +2530,23 @@ import {
   FiChevronDown,
   FiFilter,
   FiSearch,
-  FiUser
+  FiShield,
+  FiStar,
+  FiTag,
+  FiUser,
+  FiUsers
 } from "react-icons/fi";
+import CountUp from "react-countup";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // Use relative path for proxy to handle it, or environment variable
-const API_BASE_URL = "https://api.timelyhealth.in/api"; 
+const API_BASE_URL = "https://api.timelyhealth.in/api";
 
 const UserAccessManagement = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+
   // Selection State
   const [selectedRole, setSelectedRole] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -2640,7 +2645,7 @@ const UserAccessManagement = () => {
 
   useEffect(() => {
     fetchEmployees();
-    
+
     // Click outside handler
     const handleClickOutside = (event) => {
       // Role Dropdown
@@ -2665,7 +2670,7 @@ const UserAccessManagement = () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/employees/get-employees`);
       setEmployees(response.data);
-      
+
       // ✅ Auto-select first employee as default
       if (response.data.length > 0) {
         const firstEmployee = response.data[0];
@@ -2695,10 +2700,10 @@ const UserAccessManagement = () => {
   const filteredEmployees = employees.filter((e) => {
     const matchesRole = selectedRole ? (e.role || "No Role") === selectedRole : true;
     const term = searchTerm.toLowerCase();
-    const matchesSearch = 
+    const matchesSearch =
       e.name?.toLowerCase().includes(term) ||
       e.employeeId?.toLowerCase().includes(term);
-    
+
     return matchesRole && matchesSearch;
   });
 
@@ -2747,7 +2752,7 @@ const UserAccessManagement = () => {
         "assessments_view",
         "documents_view"
       ];
-      
+
       // If "Manage Job Recruitment" is being checked
       if (!permissions.includes("job_recruitment_manage")) {
         // Add all recruitment permissions
@@ -2764,18 +2769,18 @@ const UserAccessManagement = () => {
         // If "Manage Job Recruitment" is being unchecked, remove all recruitment permissions
         setPermissions(prev => prev.filter(p => !recruitmentPermissions.includes(p)));
       }
-    } 
+    }
     // Special handling for individual recruitment permissions
     else if (["job_posts_view", "job_applicants_view", "score_board_view", "assessments_view", "documents_view"].includes(permId)) {
       setPermissions(prev => {
-        const newPermissions = prev.includes(permId) 
+        const newPermissions = prev.includes(permId)
           ? prev.filter(p => p !== permId)
           : [...prev, permId];
-        
+
         // Check if all individual recruitment permissions are checked
         const individualPerms = ["job_posts_view", "job_applicants_view", "score_board_view", "assessments_view", "documents_view"];
         const allChecked = individualPerms.every(p => newPermissions.includes(p));
-        
+
         // If all are checked, add manage permission
         if (allChecked && !newPermissions.includes("job_recruitment_manage")) {
           return [...newPermissions, "job_recruitment_manage"];
@@ -2784,7 +2789,7 @@ const UserAccessManagement = () => {
         else if (!allChecked && newPermissions.includes("job_recruitment_manage")) {
           return newPermissions.filter(p => p !== "job_recruitment_manage");
         }
-        
+
         return newPermissions;
       });
     }
@@ -2835,52 +2840,32 @@ const UserAccessManagement = () => {
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="mx-auto max-w-9xl">
 
-        {/* Stats Overview - matching other components */}
+        {/* Stats Overview - matching Dashboard design */}
         <div className="grid grid-cols-2 gap-2 mb-3 sm:grid-cols-4">
-          <div className="px-2 py-2 bg-white border-t-4 border-blue-500 rounded-md shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold leading-tight text-gray-800">
-                  Total Employees: {employees.length}
-                </p>
+          {[
+            { icon: FiUsers, label: "Total Employees", value: employees.length, color: "border-blue-500" },
+            { icon: FiTag, label: "Roles", value: availableRoles.length, color: "border-green-500" },
+            { icon: FiShield, label: "Admins", value: employees.filter(e => e.role === 'admin' || e.role === 'Admin').length, color: "border-purple-500" },
+            { icon: FiStar, label: "Super Admins", value: employees.filter(e => e.role === 'super_admin' || e.role === 'Super Admin').length, color: "border-yellow-500" },
+          ].map(({ icon: Icon, label, value, color }) => (
+            <div key={label} className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
+              <div className="flex items-center gap-2">
+                <Icon className="text-gray-400 text-base flex-shrink-0" />
+                <div className="text-sm font-medium text-gray-700">{label}</div>
+              </div>
+              <div className="text-sm font-bold text-gray-800">
+                <CountUp end={value} duration={2} separator="," />
               </div>
             </div>
-          </div>
-          <div className="px-2 py-2 bg-white border-t-4 border-green-500 rounded-md shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold leading-tight text-gray-800">
-                  Roles: {availableRoles.length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="px-2 py-2 bg-white border-t-4 border-purple-500 rounded-md shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold leading-tight text-gray-800">
-                  Admins: {employees.filter(e => e.role === 'admin' || e.role === 'Admin').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="px-2 py-2 bg-white border-t-4 border-yellow-500 rounded-md shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold leading-tight text-gray-800">
-                  Super Admins: {employees.filter(e => e.role === 'super_admin' || e.role === 'Super Admin').length}
-                </p>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Main Content Card */}
         <div className="p-3 bg-white border border-gray-200 shadow-md rounded-xl">
-          
+
           {/* --- ALL FILTERS IN ONE ROW --- */}
           <div className="flex flex-col items-start gap-3 mb-4 md:flex-row md:items-end">
-            
+
             {/* Global Search - First */}
             <div className="relative w-full md:w-72" ref={globalSearchRef}>
               <label className="block mb-1 text-xs font-medium text-gray-700">Quick Search</label>
@@ -2927,21 +2912,21 @@ const UserAccessManagement = () => {
                 </div>
               )}
             </div>
-            
+
             {/* 1. Role Selector - Second */}
             <div className="relative flex-1" ref={roleDropdownRef}>
               <label className="block mb-1 text-xs font-medium text-gray-700">Select Role</label>
-              <div 
+              <div
                 onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
                 className="flex items-center justify-between w-full px-3 py-2 text-xs text-gray-700 transition-all bg-white border border-gray-300 rounded-md cursor-pointer hover:border-blue-400"
               >
                 <span>
-                   {selectedRole ? (
-                     <span className="flex items-center gap-2">
-                       <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[9px] font-medium uppercase">{selectedRole}</span>
-                       <span className="text-gray-400 text-[9px]">({roleStats[selectedRole]})</span>
-                     </span>
-                   ) : "All Roles"}
+                  {selectedRole ? (
+                    <span className="flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[9px] font-medium uppercase">{selectedRole}</span>
+                      <span className="text-gray-400 text-[9px]">({roleStats[selectedRole]})</span>
+                    </span>
+                  ) : "All Roles"}
                 </span>
                 <FiChevronDown className={`text-gray-400 text-xs transition-transform ${isRoleDropdownOpen ? "rotate-180" : ""}`} />
               </div>
@@ -2949,7 +2934,7 @@ const UserAccessManagement = () => {
               {/* Role Dropdown */}
               {isRoleDropdownOpen && (
                 <div className="absolute z-20 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
-                  <div 
+                  <div
                     onClick={() => handleSelectRole("")}
                     className="flex items-center justify-between px-3 py-2 text-xs cursor-pointer hover:bg-blue-50"
                   >
@@ -2957,7 +2942,7 @@ const UserAccessManagement = () => {
                     {!selectedRole && <FiCheck className="text-xs text-blue-600" />}
                   </div>
                   {availableRoles.map(role => (
-                    <div 
+                    <div
                       key={role}
                       onClick={() => handleSelectRole(role)}
                       className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-blue-50"
@@ -2983,14 +2968,14 @@ const UserAccessManagement = () => {
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
                     setIsEmployeeDropdownOpen(true);
-                    if(!e.target.value) setSelectedEmployee(null);
+                    if (!e.target.value) setSelectedEmployee(null);
                   }}
                   onClick={() => setIsEmployeeDropdownOpen(true)}
                   placeholder={selectedRole ? `Search in ${selectedRole}...` : `Search Name or ID...`}
                   className="w-full px-3 py-2 pr-8 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                 />
                 <div className="absolute text-gray-400 -translate-y-1/2 right-2 top-1/2">
-                   {loading ? <div className="w-3 h-3 border-2 border-blue-500 rounded-full border-t-transparent animate-spin"/> : <FiUser className="text-xs" />}
+                  {loading ? <div className="w-3 h-3 border-2 border-blue-500 rounded-full border-t-transparent animate-spin" /> : <FiUser className="text-xs" />}
                 </div>
               </div>
 
@@ -3007,7 +2992,7 @@ const UserAccessManagement = () => {
                         <p className="text-xs font-medium text-gray-800">{emp.name}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[8px] font-medium text-white bg-purple-600 px-1.5 py-0.5 rounded-full">
-                             {emp.employeeId}
+                            {emp.employeeId}
                           </span>
                           {!selectedRole && (
                             <>
@@ -3049,12 +3034,11 @@ const UserAccessManagement = () => {
           {selectedEmployee ? (
             <div className="pt-2">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-2">
-                {permissionGroups.flatMap(group => group.items.map(item => ({...item, type: group.type}))).map((item) => (
-                  <label 
-                    key={item.id} 
-                    className={`flex items-center gap-2 cursor-pointer select-none py-1 px-2 rounded hover:bg-gray-50 transition-colors ${
-                       item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
-                    }`}
+                {permissionGroups.flatMap(group => group.items.map(item => ({ ...item, type: group.type }))).map((item) => (
+                  <label
+                    key={item.id}
+                    className={`flex items-center gap-2 cursor-pointer select-none py-1 px-2 rounded hover:bg-gray-50 transition-colors ${item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
+                      }`}
                   >
                     <div className="relative flex items-center justify-center">
                       <input
@@ -3064,11 +3048,10 @@ const UserAccessManagement = () => {
                         disabled={item.type === "immutable"}
                         className="sr-only peer"
                       />
-                      <div className={`w-3.5 h-3.5 rounded border transition-all duration-200 flex items-center justify-center ${
-                         item.type === "immutable"
-                           ? "bg-blue-500 border-blue-500 text-white"
-                           : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white hover:border-blue-400"
-                      }`}>
+                      <div className={`w-3.5 h-3.5 rounded border transition-all duration-200 flex items-center justify-center ${item.type === "immutable"
+                          ? "bg-blue-500 border-blue-500 text-white"
+                          : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white hover:border-blue-400"
+                        }`}>
                         <FiCheck size={8} className={item.type === "toggleable" && !permissions.includes(item.id) ? "hidden" : "block"} />
                       </div>
                     </div>
@@ -3081,29 +3064,29 @@ const UserAccessManagement = () => {
 
               {/* Action Buttons */}
               <div className="flex justify-end gap-2 pt-3 mt-4 border-t border-gray-200">
-                 <button
-                    onClick={savePermissions}
-                    className="px-4 py-1.5 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition"
-                  >
-                    Update Access
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedEmployee(null);
-                      setSearchTerm("");
-                    }}
-                    className="px-4 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition"
-                  >
-                    Cancel
-                  </button>
+                <button
+                  onClick={savePermissions}
+                  className="px-4 py-1.5 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition"
+                >
+                  Update Access
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedEmployee(null);
+                    setSearchTerm("");
+                  }}
+                  className="px-4 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           ) : (
-             /* Empty State */
-             <div className="flex flex-col items-center justify-center py-8 text-gray-400 border border-gray-300 border-dashed rounded-md bg-gray-50">
-               <FiFilter size={24} className="mb-2 text-blue-400 opacity-50"/>
-               <p className="text-[10px] font-medium uppercase tracking-wider text-gray-500">Select Role & Employee to Configure</p>
-             </div>
+            /* Empty State */
+            <div className="flex flex-col items-center justify-center py-8 text-gray-400 border border-gray-300 border-dashed rounded-md bg-gray-50">
+              <FiFilter size={24} className="mb-2 text-blue-400 opacity-50" />
+              <p className="text-[10px] font-medium uppercase tracking-wider text-gray-500">Select Role & Employee to Configure</p>
+            </div>
           )}
 
         </div>

@@ -28,7 +28,7 @@ const Interview = () => {
   const filteredApps = interviewApps.filter(app => {
     const combinedQuery = (globalSearchQuery || localSearchQuery).toLowerCase();
     const matchesSearch =
-      (app.jobId?.role || "").toLowerCase().includes(combinedQuery) ||
+      (app.jobId?.role || app.role || "").toLowerCase().includes(combinedQuery) ||
       (app.candidateInterviewStatus || "").toLowerCase().includes(combinedQuery);
 
     const matchesStatus = statusFilter
@@ -198,7 +198,7 @@ const Interview = () => {
                       <tr key={app._id} className="group hover:bg-indigo-50/20 transition-all duration-300">
                         {/* Role */}
                         <td className="py-2 px-8">
-                          <div className="font-bold text-sm text-gray-800 uppercase tracking-tight">{app.jobId?.role || "N/A"}</div>
+                          <div className="font-bold text-sm text-gray-800 uppercase tracking-tight">{app.jobId?.role || app.role || "N/A"}</div>
                           <span className={`inline-block mt-1 px-3 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-widest border ${app.interviewStatus === "Rescheduled" ? "bg-orange-50 text-orange-600 border-orange-100" : "bg-indigo-50 text-indigo-600 border-indigo-100"}`}>
                             {app.interviewStatus || "Invited"}
                           </span>
@@ -298,7 +298,7 @@ const Interview = () => {
     </div>
   );
 };
- 
+
 
 export default Interview;
 

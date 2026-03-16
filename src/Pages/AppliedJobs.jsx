@@ -35,7 +35,7 @@ const AppliedJobs = () => {
   const filteredApps = appliedJobs.filter(app => {
     const combinedQuery = (globalSearchQuery || localSearchQuery).toLowerCase();
     const matchesSearch =
-      (app.jobId?.role || "").toLowerCase().includes(combinedQuery) ||
+      (app.jobId?.role || app.role || "").toLowerCase().includes(combinedQuery) ||
       (app.status || "").toLowerCase().includes(combinedQuery);
 
     const matchesStatus = statusFilter ? app.status === statusFilter : true;
@@ -189,7 +189,7 @@ const AppliedJobs = () => {
                   {filteredApps.map((app) => (
                     <tr key={app._id} className="group hover:bg-indigo-50/20 transition-all duration-300">
                       <td className="py-2 px-8">
-                        <div className="font-bold text-sm text-gray-800 uppercase tracking-tight">{app.jobId?.role || "N/A"}</div>
+                        <div className="font-bold text-sm text-gray-800 uppercase tracking-tight">{app.jobId?.role || app.role || "N/A"}</div>
                         <div className="text-[10px] text-blue-500 uppercase tracking-widest mt-1 font-semibold">
                           #{app._id.slice(-6).toUpperCase()}
                         </div>
@@ -218,38 +218,71 @@ const AppliedJobs = () => {
                         </div>
                       </td>
                       <td className="py-2 px-8">
-                        {app.jobId && (app.jobId.assessmentId || (app.jobId.assessmentIds && app.jobId.assessmentIds.length > 0)) ? (
-                          app.assessmentResults && app.assessmentResults.length > 0 ? (
-                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-emerald-100 shadow-sm">
-                              Assessment Done
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-center gap-2">
-                              <button
-                                onClick={() => {
-                                  const firstQuizId = app.jobId.assessmentIds?.[0]?._id || app.jobId.assessmentIds?.[0] || app.jobId.assessmentId?._id || app.jobId.assessmentId;
-                                  navigate(`/assessment/${app.jobId._id}/${app._id}${firstQuizId ? '/' + firstQuizId : ''}`);
-                                }}
-                                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-md hover:bg-indigo-700 transition-all active:scale-95"
-                              >
-                                Attempt Quiz
-                              </button>
-                              <button
-                                onClick={() => navigate(`/jobs/${app.jobId?._id}`)}
-                                className="p-2 bg-white text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-all"
-                                title="View Job"
-                              >
-                                <FaEye size={14} />
-                              </button>
-                            </div>
-                          )
-                        ) : (
-                          <button
-                            onClick={() => navigate(`/jobs/${app.jobId?._id}`)}
-                            className="inline-flex items-center gap-2 px-5 py-2 bg-gray-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-md hover:bg-blue-600 transition-all active:scale-95"
-                          >
-                            View Job <FaEye className="text-xs" />
-                          </button>
+                        {app.jobId && (
+                          (() => {
+                            const assessmentIds = app.jobId.assessmentIds || [];
+                            const assessmentData = app.jobId.assessmentIds || []; // Assuming populated if it's an object array
+                            
+                            const completedQuizIds = app.assessmentResults?.map(res => (res.quizId?._id || res.quizId)?.toString()) || [];
+                            
+                            const pendingAssessments = assessmentIds.filter(id => {
+                              const sid = (id._id || id).toString();
+                              return !completedQuizIds.includes(sid);
+                            });
+
+                            if (assessmentIds.length === 0) {
+                              return (
+                                <button
+                                  onClick={() => navigate(`/jobs/${app.jobId?._id}`)}
+                                  className="inline-flex items-center gap-2 px-5 py-2 bg-gray-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-md hover:bg-blue-600 transition-all active:scale-95"
+                                >
+                                  View Job <FaEye className="text-xs" />
+                                </button>
+                              );
+                            }
+
+                            if (pendingAssessments.length === 0) {
+                              return (
+                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-emerald-100 shadow-sm">
+                                  All Assessments Done ✅
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div className="flex flex-col gap-2">
+                                {pendingAssessments.map((assessment, idx) => {
+                                  const quizId = (assessment._id || assessment).toString();
+                                  const quizTitle = assessment.title || (assessmentIds.length > 1 ? `Quiz ${idx + 1}` : "Quiz");
+                                  
+                                  return (
+                                    <div key={quizId} className="flex items-center justify-center gap-2">
+                                      <button
+                                        onClick={() => navigate(`/assessment/${app.jobId._id}/${app._id}/${quizId}`)}
+                                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-md hover:bg-indigo-700 transition-all active:scale-95 whitespace-nowrap min-w-[140px]"
+                                      >
+                                        Attempt {quizTitle}
+                                      </button>
+                                      {idx === 0 && (
+                                        <button
+                                          onClick={() => navigate(`/jobs/${app.jobId?._id}`)}
+                                          className="p-2 bg-white text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-all"
+                                          title="View Job"
+                                        >
+                                          <FaEye size={14} />
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                                {completedQuizIds.length > 0 && (
+                                  <div className="text-[9px] font-bold text-emerald-600 uppercase tracking-tight">
+                                    {completedQuizIds.length} of {assessmentIds.length} Completed
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()
                         )}
                       </td>
                     </tr>
@@ -273,6 +306,6 @@ const AppliedJobs = () => {
     </div>
   );
 };
-  
+
 
 export default AppliedJobs;

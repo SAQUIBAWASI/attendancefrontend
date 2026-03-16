@@ -386,7 +386,7 @@
 //           ) : (
 //             <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //               <table className="min-w-full">
-//                 <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
+//                 <thead className="text-sm text-center text-white bg-gradient-to-r from-purple-500 to-blue-600">
 //                   <tr>
 //                     <th className="px-4 py-2">Leave Type</th>
 //                     <th className="px-4 py-2">Start Date</th>
@@ -502,7 +502,7 @@ const EmployeeLeaves = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
-  
+
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -552,7 +552,7 @@ const EmployeeLeaves = () => {
 
         if (resp.data && resp.data.success) {
           // Sort by startDate descending (newest first)
-          const sortedLeaves = (resp.data.records || []).sort((a, b) => 
+          const sortedLeaves = (resp.data.records || []).sort((a, b) =>
             new Date(b.startDate) - new Date(a.startDate)
           );
           setLeaves(sortedLeaves);
@@ -577,7 +577,7 @@ const EmployeeLeaves = () => {
     // Search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(leave => 
+      filtered = filtered.filter(leave =>
         leave.leaveType?.toLowerCase().includes(term) ||
         leave.reason?.toLowerCase().includes(term) ||
         leave.status?.toLowerCase().includes(term)
@@ -779,9 +779,9 @@ const EmployeeLeaves = () => {
   }
 
   return (
-    <div className="min-h-screen px-2 py-2 bg-gradient-to-br from-purple-50 to-blue-100 sm:px-3 sm:py-3">
+    <div className="min-h-screen px-2 py-2 bg-gradient-to-br from-purple-50 to-blue-100 font-poppins sm:px-3 sm:py-3 transition-all duration-300">
       <div className="mx-auto max-w-9xl">
-        
+
         {/* Header - Only Title, No Button */}
         {/* <div className="mb-3">
           <h1 className="text-lg font-bold text-gray-800 sm:text-xl md:text-2xl">📋 My Leave Requests</h1>
@@ -815,7 +815,7 @@ const EmployeeLeaves = () => {
         {/* Filters Section - With Apply Leave Button Inside */}
         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
-            
+
             {/* Search */}
             <div className="relative flex-1 min-w-[180px]">
               <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
@@ -944,13 +944,12 @@ const EmployeeLeaves = () => {
                         </td>
                         <td className="px-2 py-1.5 text-center">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                              leave.status === "approved"
-                                ? "bg-green-100 text-green-800 border border-green-300"
-                                : leave.status === "rejected"
+                            className={`px-2 py-1 rounded-full text-xs font-semibold ${leave.status === "approved"
+                              ? "bg-green-100 text-green-800 border border-green-300"
+                              : leave.status === "rejected"
                                 ? "bg-red-100 text-red-800 border border-red-300"
                                 : "bg-yellow-100 text-yellow-800 border border-yellow-300 animate-pulse"
-                            }`}
+                              }`}
                           >
                             {leave.status}
                           </span>
@@ -991,11 +990,10 @@ const EmployeeLeaves = () => {
                     <button
                       onClick={handlePrevPage}
                       disabled={currentPage === 1}
-                      className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
-                        currentPage === 1
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
-                      }`}
+                      className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentPage === 1
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                        }`}
                     >
                       ← Prev
                     </button>
@@ -1005,13 +1003,12 @@ const EmployeeLeaves = () => {
                         key={index}
                         onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                         disabled={page === "..."}
-                        className={`px-3 py-1 text-xs font-semibold rounded-lg transition min-w-[28px] ${
-                          page === "..."
-                            ? "bg-gray-200 text-gray-500 cursor-default"
-                            : currentPage === page
-                              ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                        }`}
+                        className={`px-3 py-1 text-xs font-semibold rounded-lg transition min-w-[28px] ${page === "..."
+                          ? "bg-gray-200 text-gray-500 cursor-default"
+                          : currentPage === page
+                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                          }`}
                       >
                         {page}
                       </button>
@@ -1020,11 +1017,10 @@ const EmployeeLeaves = () => {
                     <button
                       onClick={handleNextPage}
                       disabled={currentPage === totalPages}
-                      className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
-                        currentPage === totalPages
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
-                      }`}
+                      className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentPage === totalPages
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                        }`}
                     >
                       Next →
                     </button>
@@ -1052,11 +1048,11 @@ const EmployeeLeaves = () => {
             <form onSubmit={handleLeaveSubmit} className="space-y-3">
               <div>
                 <label className="block mb-1 text-xs font-medium text-gray-700">Leave Type</label>
-                <select 
-                  name="leaveType" 
-                  value={leaveFormData.leaveType} 
-                  onChange={handleLeaveChange} 
-                  className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" 
+                <select
+                  name="leaveType"
+                  value={leaveFormData.leaveType}
+                  onChange={handleLeaveChange}
+                  className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 >
                   <option value="casual">Casual Leave</option>
@@ -1068,64 +1064,64 @@ const EmployeeLeaves = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block mb-1 text-xs font-medium text-gray-700">Start Date</label>
-                  <input 
-                    name="startDate" 
-                    type="date" 
-                    value={leaveFormData.startDate} 
-                    onChange={handleLeaveChange} 
-                    className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" 
-                    required 
+                  <input
+                    name="startDate"
+                    type="date"
+                    value={leaveFormData.startDate}
+                    onChange={handleLeaveChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                    required
                   />
                 </div>
                 <div>
                   <label className="block mb-1 text-xs font-medium text-gray-700">End Date</label>
-                  <input 
-                    name="endDate" 
-                    type="date" 
-                    value={leaveFormData.endDate} 
-                    onChange={handleLeaveChange} 
-                    className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" 
-                    required 
+                  <input
+                    name="endDate"
+                    type="date"
+                    value={leaveFormData.endDate}
+                    onChange={handleLeaveChange}
+                    className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                    required
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block mb-1 text-xs font-medium text-gray-700">Total Days</label>
-                <input 
-                  name="days" 
-                  type="number" 
-                  value={leaveFormData.days} 
-                  readOnly 
-                  className="w-full p-2 text-sm bg-gray-100 border border-gray-300 rounded-lg outline-none" 
-                  placeholder="0" 
+                <input
+                  name="days"
+                  type="number"
+                  value={leaveFormData.days}
+                  readOnly
+                  className="w-full p-2 text-sm bg-gray-100 border border-gray-300 rounded-lg outline-none"
+                  placeholder="0"
                 />
               </div>
 
               <div>
                 <label className="block mb-1 text-xs font-medium text-gray-700">Reason</label>
-                <textarea 
-                  name="reason" 
-                  value={leaveFormData.reason} 
-                  onChange={handleLeaveChange} 
-                  className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" 
-                  rows="3" 
-                  placeholder="Reason for leave" 
+                <textarea
+                  name="reason"
+                  value={leaveFormData.reason}
+                  onChange={handleLeaveChange}
+                  className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                  rows="3"
+                  placeholder="Reason for leave"
                   required
                 ></textarea>
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button 
-                  type="button" 
-                  onClick={() => setIsLeaveModalOpen(false)} 
+                <button
+                  type="button"
+                  onClick={() => setIsLeaveModalOpen(false)}
                   className="flex-1 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
-                  disabled={submittingLeave} 
+                <button
+                  type="submit"
+                  disabled={submittingLeave}
                   className="flex-1 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
                   {submittingLeave ? "Applying..." : "Apply Leave"}

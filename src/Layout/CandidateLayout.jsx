@@ -142,9 +142,9 @@ const CandidateLayout = () => {
 
     const handleDownloadOffer = (appOrLetter) => {
         if (!appOrLetter) return;
-        const content = appOrLetter.content || appOrLetter.offerLetter;
-        const type = appOrLetter.documentType || "Offer";
-        const sentAt = appOrLetter.sentAt || appOrLetter.offerSentAt || appOrLetter.updatedAt;
+        const content = appOrLetter.content || appOrLetter.offerLetter || appOrLetter.resignationLetter;
+        const type = appOrLetter.documentType || (appOrLetter.resignationLetter ? "Resignation" : "Offer");
+        const sentAt = appOrLetter.sentAt || appOrLetter.offerSentAt || appOrLetter.resignationSentAt || appOrLetter.updatedAt;
 
         if (appOrLetter.adminAttachment && !content) {
             window.open(formatDocumentUrl(appOrLetter.adminAttachment), "_blank");
@@ -157,6 +157,7 @@ const CandidateLayout = () => {
             doc.rect(0, 0, 210, 40, 'F');
             doc.setFontSize(24);
             doc.setTextColor(255, 255, 255);
+            const isResignation = type.toLowerCase() === "resignation";
             const headerText = (type || "OFFER").toUpperCase() + " LETTER";
             doc.text(headerText, 105, 25, { align: "center" });
             doc.setFontSize(10);
@@ -169,7 +170,7 @@ const CandidateLayout = () => {
             doc.setFont("helvetica", "normal");
             doc.text(`Name: ${profile?.name || "Candidate"}`, 20, 62);
             doc.text(`Position: ${appOrLetter.jobId?.role || "Not Specified"}`, 20, 69);
-            doc.text(`Date of Issue: ${new Date(sentAt).toLocaleDateString()}`, 20, 76);
+            doc.text(`${isResignation ? 'Date Filed' : 'Date of Issue'}: ${new Date(sentAt).toLocaleDateString()}`, 20, 76);
             doc.setDrawColor(230, 230, 230);
             doc.line(20, 85, 190, 85);
             doc.setFontSize(11);
@@ -506,10 +507,10 @@ const CandidateLayout = () => {
                         </div>
                         <div className="flex-1 overflow-hidden bg-gray-50 p-4 md:p-8 flex flex-col items-center">
                             <div className="w-full max-w-4xl h-full bg-white rounded-lg shadow-inner border border-gray-200 p-8 md:p-14 overflow-y-auto font-sans text-sm leading-relaxed text-gray-800">
-                                {selectedOffer.offerLetter ? (
-                                    <div className="whitespace-pre-wrap">{selectedOffer.offerLetter}</div>
+                                {selectedOffer.offerLetter || selectedOffer.resignationLetter ? (
+                                    <div className="whitespace-pre-wrap">{selectedOffer.offerLetter || selectedOffer.resignationLetter}</div>
                                 ) : selectedOffer.adminAttachment ? (
-                                    <iframe src={formatDocumentUrl(selectedOffer.adminAttachment)} className="w-full h-full border-0" />
+                                    <iframe src={formatDocumentUrl(selectedOffer.adminAttachment)} title="Document Viewer" className="w-full h-full border-0" />
                                 ) : (
                                     <div className="text-center text-gray-500 mt-20">No content available for this document.</div>
                                 )}

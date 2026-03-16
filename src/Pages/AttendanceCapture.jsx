@@ -2812,14 +2812,14 @@ export default function AttendanceCapture() {
       setEmployeeEmail(stateEmail);
       if (stateName) setEmployeeName(stateName);
       if (stateDepartment) setEmployeeDepartment(stateDepartment);
-      
+
       localStorage.setItem(
         "employeeData",
-        JSON.stringify({ 
-          employeeId: stateId, 
+        JSON.stringify({
+          employeeId: stateId,
           email: stateEmail,
           employeeName: stateName,
-          department: stateDepartment 
+          department: stateDepartment
         })
       );
     } else {
@@ -2848,12 +2848,12 @@ export default function AttendanceCapture() {
       console.log("Fetching location for employeeId:", employeeId);
       setLoadingLocation(true);
       setError("");
-      
+
       try {
         // FIXED: Properly construct URL without duplicate 'api'
         const url = `${cleanBaseUrl}/api/employees/mylocation/${employeeId}`;
         console.log("Calling URL:", url);
-        
+
         const res = await axios.get(url);
         console.log("Full API Response:", res);
         console.log("Response data:", res.data);
@@ -2892,13 +2892,13 @@ export default function AttendanceCapture() {
 
           if (locationData) {
             setAssignedLocation(locationData);
-            
+
             // Set employee name and department if available
             if (employeeData) {
               if (employeeData.name) setEmployeeName(employeeData.name);
               if (employeeData.department) setEmployeeDepartment(employeeData.department);
             }
-            
+
             setError("");
             console.log("Location set successfully:", locationData);
           } else {
@@ -2918,7 +2918,7 @@ export default function AttendanceCapture() {
           status: err.response?.status,
           data: err.response?.data
         });
-        
+
         if (err.response?.status === 404) {
           setError(`Location API endpoint not found: ${cleanBaseUrl}/api/employees/mylocation/${employeeId}`);
         } else if (err.response?.status === 500) {
@@ -2926,7 +2926,7 @@ export default function AttendanceCapture() {
         } else {
           setError(`Failed to fetch location: ${err.message}`);
         }
-        
+
         setAssignedLocation(null);
       } finally {
         setLoadingLocation(false);
@@ -2945,10 +2945,10 @@ export default function AttendanceCapture() {
         // FIXED: Proper URL without duplicate 'api'
         const url = `${cleanBaseUrl}/api/location/alllocation`;
         console.log("Fetching all locations from:", url);
-        
+
         const res = await axios.get(url);
         console.log('All locations response:', res.data);
-        
+
         if (res.data.locations) {
           setAllLocations(res.data.locations);
         } else if (res.data.data) {
@@ -2992,10 +2992,10 @@ export default function AttendanceCapture() {
         // FIXED: Proper URL without duplicate 'api'
         const url = `${cleanBaseUrl}/api/attendance/myattendance/${employeeId}`;
         console.log("Fetching attendance from:", url);
-        
+
         const res = await axios.get(url);
         console.log('Attendance response:', res.data);
-        
+
         const data = res.data;
 
         // Get employee name from attendance API response too
@@ -3006,7 +3006,7 @@ export default function AttendanceCapture() {
         // Check if already checked in today
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         let records = [];
         if (data.success && data.data) {
           records = data.data.records || data.data;
@@ -3015,17 +3015,17 @@ export default function AttendanceCapture() {
         } else if (Array.isArray(data)) {
           records = data;
         }
-        
+
         console.log("Today's records:", records);
-        
+
         const todayCheckIn = Array.isArray(records) ? records.find(
           (rec) => {
             const checkInTime = rec.checkInTime || rec.checkIn || rec.createdAt;
-            return checkInTime && new Date(checkInTime) >= today && 
-                   (rec.status === "checked-in" || rec.status === "present");
+            return checkInTime && new Date(checkInTime) >= today &&
+              (rec.status === "checked-in" || rec.status === "present");
           }
         ) : null;
-        
+
         setCheckedIn(!!todayCheckIn);
         console.log("Already checked in today:", !!todayCheckIn);
       } catch (err) {
@@ -3100,10 +3100,10 @@ export default function AttendanceCapture() {
     if (!position) return alert("Please capture your current location first.");
     if (!employeeId || !employeeEmail)
       return alert("Employee data missing. Please login again.");
-    
+
     // Check if employee belongs to onsite-only departments
     const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
-    
+
     // For onsite-only departments, they must be within radius and no reason is required
     if (isOnsiteOnlyDepartment) {
       if (distance > ONSITE_RADIUS_M) {
@@ -3162,7 +3162,7 @@ export default function AttendanceCapture() {
 
     // Check if employee belongs to onsite-only departments
     const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
-    
+
     // For onsite-only departments, they must be within radius and no reason is required
     if (isOnsiteOnlyDepartment) {
       if (distance > ONSITE_RADIUS_M) {
@@ -3473,7 +3473,7 @@ export default function AttendanceCapture() {
               {error && (
                 <div className="mt-2">
                   <p className="text-xs text-red-500">{error}</p>
-                  <button 
+                  <button
                     onClick={() => window.location.reload()}
                     className="mt-2 text-xs bg-blue-500 text-white px-2 py-1 rounded"
                   >

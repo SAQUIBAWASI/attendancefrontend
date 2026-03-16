@@ -1274,8 +1274,10 @@ const JobApplicants = () => {
                                                 type="number"
                                                 min="0"
                                                 max="100"
-                                                className="w-20 p-1.5 border rounded-lg text-xs text-center focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
-                                                value={app.technicalScore || 0}
+                                                className="w-20 p-1.5 border rounded-lg text-xs text-center focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 font-bold"
+                                                value={app.assessmentResults && app.assessmentResults.length > 0 
+                                                    ? Math.round(app.assessmentResults.reduce((acc, curr) => acc + curr.score, 0) / app.assessmentResults.length)
+                                                    : (app.technicalScore || 0)}
                                                 onChange={(e) => handleUpdateScore(app._id, "technicalScore", e.target.value)}
                                             />
                                         </td>
@@ -1523,14 +1525,70 @@ const JobApplicants = () => {
                             {/* Scores */}
                             <div>
                                 <h3 className="text-xs font-semibold text-gray-500 uppercase mb-3">
-                                    Assessment Scores
+                                    Overall Scores
                                 </h3>
 
                                 <div className="grid grid-cols-4 gap-4 text-center">
-                                    <ScoreMini label="Tech" score={selectedApplicant.technicalScore} />
+                                    <ScoreMini 
+                                        label="Tech" 
+                                        score={selectedApplicant.assessmentResults && selectedApplicant.assessmentResults.length > 0 
+                                            ? Math.round(selectedApplicant.assessmentResults.reduce((acc, curr) => acc + curr.score, 0) / selectedApplicant.assessmentResults.length)
+                                            : (selectedApplicant.technicalScore || 0)} 
+                                    />
                                     <ScoreMini label="Appear" score={selectedApplicant.appearanceScore} />
                                     <ScoreMini label="Knowledge" score={selectedApplicant.workKnowledge} />
                                     <ScoreMini label="Overall" score={selectedApplicant.overallRating} />
+                                </div>
+                            </div>
+
+                            {/* Detailed Assessment History */}
+                            <div>
+                                <h3 className="text-xs font-semibold text-gray-500 uppercase mb-3 flex items-center justify-between">
+                                    <span>Detailed Assessment History</span>
+                                    <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-[10px]">
+                                        {selectedApplicant.assessmentResults?.length || 0} Attempts
+                                    </span>
+                                </h3>
+                                <div className="space-y-3">
+                                    {selectedApplicant.assessmentResults && selectedApplicant.assessmentResults.length > 0 ? (
+                                        selectedApplicant.assessmentResults.map((result, idx) => (
+                                            <div key={result._id || idx} className="bg-slate-50 border border-slate-100 rounded-xl p-3 hover:shadow-md transition-all">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs shadow-sm">
+                                                            {idx + 1}
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-xs font-black text-gray-800 uppercase tracking-tight">
+                                                                {result.quizId?.title || "Assessment"}
+                                                            </span>
+                                                            <span className="block text-[9px] text-gray-400 font-medium tracking-wider">
+                                                                {new Date(result.submittedAt).toLocaleDateString()}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-sm font-black text-indigo-600 leading-none">
+                                                            {result.score}/100
+                                                        </div>
+                                                        <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-1 block">
+                                                            {result.totalQuestions} Ques
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="h-1 w-full bg-slate-200 rounded-full overflow-hidden mt-2 shadow-inner">
+                                                    <div 
+                                                        className="h-full bg-indigo-500 rounded-full shadow-sm" 
+                                                        style={{ width: `${(result.score / 100) * 100}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="py-8 text-center border-2 border-dashed border-gray-100 rounded-2xl">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">No detailed records found</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

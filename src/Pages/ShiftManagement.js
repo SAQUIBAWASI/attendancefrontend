@@ -7645,7 +7645,7 @@ const getBadgeColor = (type) => {
                                 }}
                                 className="px-2 py-1 text-[8px] bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200"
                               >
-                                <FaEdit className="text-[6px]" /> Edit
+                                <FaEdit className="text-[6px]" />
                               </button>
                               <button
                                 onClick={() => {
@@ -7654,7 +7654,7 @@ const getBadgeColor = (type) => {
                                 }}
                                 className="px-2 py-1 text-[8px] bg-red-50 text-red-700 rounded hover:bg-red-100 border border-red-200"
                               >
-                                <FaTrash className="text-[6px]" /> Delete
+                                <FaTrash className="text-[6px]" />
                               </button>
                             </div>
                           </td>

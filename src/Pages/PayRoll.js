@@ -7691,6 +7691,8 @@
 import axios from "axios";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag } from "react-icons/fa";
+import { FiDollarSign, FiUserCheck, FiUserMinus, FiUsers } from "react-icons/fi";
+import CountUp from "react-countup";
 import { API_BASE_URL } from "../config";
 import logo from "../Images/Timely-Health-Logo.png";
 import { isEmployeeHidden } from "../utils/employeeStatus";
@@ -8849,7 +8851,7 @@ const PayRoll = () => {
                         <span style="font-size: 18px; font-weight: bold; text-decoration: underline; text-underline-offset: 3px; display: inline-block;">PAYSLIP ${formatMonthDisplay(employee.month || selectedMonth).toUpperCase()}</span>
                         <br>
                           <span style="font-size: 11px; color: #666;">
-                            ${isHistorical ? 'Historical Month - Full Salary' : isCurrent ? 'Current Month' : 'Future Month'}
+                            ${isHistorical ? '' : isCurrent ? 'Current Month' : 'Future Month'}
                           </span>
                       </div>
                     </td>
@@ -9021,58 +9023,70 @@ const PayRoll = () => {
     );
   }
 
+  // Stat Card component
+  const StatCard = ({ icon: Icon, label, value, color, onClick, isCurrency }) => {
+    const themes = {
+      indigo: "border-indigo-500",
+      emerald: "border-emerald-500",
+      amber: "border-amber-500",
+      rose: "border-rose-500",
+      cyan: "border-cyan-500",
+      purple: "border-purple-500"
+    };
+
+    const currentTheme = themes[color] || themes.indigo;
+
+    return (
+      <div
+        className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}
+        onClick={onClick}
+      >
+        <div className="flex items-center gap-2">
+          <Icon className="text-gray-400 text-base flex-shrink-0" />
+          <div className="text-sm font-medium text-gray-700">{label}</div>
+        </div>
+        <div className="text-sm font-bold text-gray-900">
+          {isCurrency && "₹"}
+          <CountUp end={value} duration={2} separator="," />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="mx-auto max-w-9xl">
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 gap-2 mb-3 md:grid-cols-4">
-          {/* Active Employees */}
-          <div className="px-2 py-2 bg-white border-t-4 border-blue-500 rounded-md shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-center  text-xs font-medium text-gray-700">
-                  Active Employees: {filteredRecords.length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Total Salary */}
-          <div className="px-2 py-2 bg-white border-t-4 border-green-500 rounded-md shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <center> <p className="text-center text-xs font-medium text-gray-700">
-                  Total Salary: ₹{filteredRecords.reduce((s, e) => s + (e.calculatedSalary || 0), 0).toLocaleString()}
-                </p></center>
-              </div>
-            </div>
-          </div>
-
-          {/* Active This Month */}
-          <div className="px-2 py-2 bg-white border-t-4 border-purple-500 rounded-md shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-center text-xs font-medium text-gray-700">
-                  Active This Month: {filteredRecords.filter(e => (e.totalWorkingDays || 0) > 0).length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* On Leave */}
-          <div className="px-2 py-2 bg-white border-t-4 border-red-500 rounded-md shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-center text-xs font-medium text-gray-700">
-                  On Leave: {filteredRecords.filter(emp => {
-                    const leaves = employeeLeaves[emp.employeeId];
-                    return leaves && (leaves.CL + leaves.EL + leaves.COFF + leaves.LOP) > 0;
-                  }).length}
-                </p>
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 gap-3 mb-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            icon={FiUsers}
+            label="Active Employees"
+            value={filteredRecords.length}
+            color="indigo"
+          />
+          <StatCard
+            icon={FiDollarSign}
+            label="Total Salary"
+            value={filteredRecords.reduce((s, e) => s + (e.calculatedSalary || 0), 0)}
+            color="emerald"
+            isCurrency={true}
+          />
+          <StatCard
+            icon={FiUserCheck}
+            label="Active This Month"
+            value={filteredRecords.filter(e => (e.totalWorkingDays || 0) > 0).length}
+            color="purple"
+          />
+          <StatCard
+            icon={FiUserMinus}
+            label="On Leave"
+            value={filteredRecords.filter(emp => {
+              const leaves = employeeLeaves[emp.employeeId];
+              return leaves && (leaves.CL + leaves.EL + leaves.COFF + leaves.LOP) > 0;
+            }).length}
+            color="rose"
+          />
         </div>
 
         {/* Filters */}
@@ -9486,32 +9500,7 @@ const PayRoll = () => {
               </button>
             </div>
 
-            {/* <div className="p-4 mb-4 rounded-lg bg-gray-50">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
-                  <span className="text-lg font-semibold text-blue-800">
-                    {selectedEmployee.name?.charAt(0) || 'E'}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">{selectedEmployee.name}</h3>
-                  <p className="text-sm text-gray-600">ID: {selectedEmployee.employeeId}</p>
-                  <p className="text-sm text-gray-600">Department: {selectedEmployee.department}</p>
-                  <p className="text-sm text-gray-600">Designation: {selectedEmployee.designation}</p>
-                  <p className="text-sm text-gray-600">Month: {selectedEmployee.month || selectedMonth || "Current"} ({selectedEmployee.monthDays || monthDays} days)</p>
-                  <p className={`text-sm ${selectedEmployee.isHistoricalMonth ? 'text-green-600' : selectedEmployee.isCurrentMonth ? 'text-blue-600' : 'text-gray-600'}`}>
-                    {selectedEmployee.isHistoricalMonth
-                      ? 'Historical Month - Full salary with week-off'
-                      : selectedEmployee.isCurrentMonth
-                        ? `Current Month - ${shouldIncludeWeekOffInSalary(selectedEmployee.month || selectedMonth) ? 'Week-off included (After 26th)' : 'Week-off will be added after 26th'}`
-                        : 'Future Month'}
-                  </p>
-                  <p className="text-sm text-green-600">
-                    Status: {selectedEmployee.status === 'inactive' ? 'Inactive' : 'Active'}
-                  </p>
-                </div>
-              </div>
-            </div> */}
+
 
             <div className="flex items-start space-x-4">
               {/* Avatar */}

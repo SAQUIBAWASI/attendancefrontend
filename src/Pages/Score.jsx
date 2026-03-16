@@ -24,7 +24,7 @@
 //         time: "",
 //         interviewMode: "Online", // Default to Online
 //     });
-    
+
 
 //     const [locations, setLocations] = useState([]); // State for office locations
 
@@ -432,7 +432,7 @@
 //                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 pointer-events-none"><path d="m6 9 6 6 6-6" /></svg>
 //                                                 )}
 //                                             </div>
-                    
+
 //                                             {isRoleDropdownOpen && (
 //                                                 <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
 //                                                     <div className="p-2 border-b border-gray-100 bg-gray-50">
@@ -1110,7 +1110,7 @@ const Score = () => {
         time: "",
         interviewMode: "Online",
     });
-    
+
     const [locations, setLocations] = useState([]);
     const [isDocsModalOpen, setIsDocsModalOpen] = useState(false);
     const [isAssessmentModalOpen, setIsAssessmentModalOpen] = useState(false);
@@ -1120,7 +1120,7 @@ const Score = () => {
     });
 
     const [quizzes, setQuizzes] = useState([]);
-    
+
     // Pagination states
     const [pagination, setPagination] = useState({
         currentPage: 1,
@@ -1254,64 +1254,66 @@ const Score = () => {
             return;
         }
 
-        const latest = candidate.assessmentResults[candidate.assessmentResults.length - 1];
+        const allResults = candidate.assessmentResults.map((result, rIdx) => {
+            let matchedQuiz = null;
 
-        let matchedQuiz = null;
+            if (result.quizId && typeof result.quizId === 'object' && result.quizId.questions) {
+                matchedQuiz = result.quizId;
+            } else {
+                const quizId = typeof result.quizId === 'object' ? result.quizId?._id : result.quizId;
+                matchedQuiz = quizzes.find(q => String(q._id) === String(quizId));
 
-        if (latest.quizId && typeof latest.quizId === 'object' && latest.quizId.questions) {
-            matchedQuiz = latest.quizId;
-        } else {
-            const quizId = typeof latest.quizId === 'object' ? latest.quizId?._id : latest.quizId;
-            matchedQuiz = quizzes.find(q => String(q._id) === String(quizId));
-
-            if (!matchedQuiz && candidate.comment) {
-                const titleMatch = candidate.comment.match(/"([^"]+)"/);
-                if (titleMatch?.[1]) {
-                    matchedQuiz = quizzes.find(q => q.title === titleMatch[1]);
+                if (!matchedQuiz && candidate.comment) {
+                    const titleMatch = candidate.comment.match(/"([^"]+)"/);
+                    if (titleMatch?.[1]) {
+                        matchedQuiz = quizzes.find(q => q.title === titleMatch[1]);
+                    }
                 }
             }
-        }
 
-        let enrichedAnswers = [];
+            let enrichedAnswers = [];
 
-        if (matchedQuiz && matchedQuiz.questions && matchedQuiz.questions.length > 0) {
-            enrichedAnswers = matchedQuiz.questions.map((q, idx) => {
-                const storedByText = latest.answers?.find(a => a.questionText === q.questionText);
-                const storedByIndex = latest.answers?.[idx];
-                const storedAns = storedByText || storedByIndex;
+            if (matchedQuiz && matchedQuiz.questions && matchedQuiz.questions.length > 0) {
+                enrichedAnswers = matchedQuiz.questions.map((q, idx) => {
+                    const storedByText = result.answers?.find(a => a.questionText === q.questionText);
+                    const storedByIndex = result.answers?.[idx];
+                    const storedAns = storedByText || storedByIndex;
 
-                const selected = storedAns?.selectedOption || "Not Answered";
-                const correct = q.correctAnswer || "";
+                    const selected = storedAns?.selectedOption || "Not Answered";
+                    const correct = q.correctAnswer || "";
 
-                return {
-                    questionText: q.questionText,
-                    options: q.options || [],
-                    correctAnswer: correct,
-                    selectedOption: selected,
-                    isCorrect: String(selected).trim() === String(correct).trim(),
-                    marks: q.marks || 1,
-                };
-            });
-        } else if (latest.answers && latest.answers.length > 0) {
-            enrichedAnswers = latest.answers.map(ans => ({
-                questionText: ans.questionText || "Question",
-                options: ans.options?.length > 0
-                    ? ans.options
-                    : [ans.selectedOption, ans.correctAnswer].filter(Boolean),
-                correctAnswer: ans.correctAnswer || "",
-                selectedOption: ans.selectedOption || "Not Answered",
-                isCorrect: ans.isCorrect !== undefined
-                    ? ans.isCorrect
-                    : String(ans.selectedOption).trim() === String(ans.correctAnswer).trim(),
-                marks: ans.marks || 1
-            }));
-        }
+                    return {
+                        questionText: q.questionText,
+                        options: q.options || [],
+                        correctAnswer: correct,
+                        selectedOption: selected,
+                        isCorrect: String(selected).trim() === String(correct).trim(),
+                        marks: q.marks || 1,
+                    };
+                });
+            } else if (result.answers && result.answers.length > 0) {
+                enrichedAnswers = result.answers.map(ans => ({
+                    questionText: ans.questionText || "Question",
+                    options: ans.options?.length > 0
+                        ? ans.options
+                        : [ans.selectedOption, ans.correctAnswer].filter(Boolean),
+                    correctAnswer: ans.correctAnswer || "",
+                    selectedOption: ans.selectedOption || "Not Answered",
+                    isCorrect: ans.isCorrect !== undefined
+                        ? ans.isCorrect
+                        : String(ans.selectedOption).trim() === String(ans.correctAnswer).trim(),
+                    marks: ans.marks || 1
+                }));
+            }
 
-        setSelectedAssessmentData({
-            ...latest,
-            answers: enrichedAnswers,
-            quizTitle: matchedQuiz?.title || "Assessment"
+            return {
+                ...result,
+                answers: enrichedAnswers,
+                quizTitle: matchedQuiz?.title || (result.quizId?.title) || `Assessment ${rIdx + 1}`
+            };
         });
+
+        setSelectedAssessmentData(allResults);
         setSelectedCandidate(candidate);
         setIsAssessmentModalOpen(true);
     };
@@ -1476,15 +1478,14 @@ const Score = () => {
                     <div className="relative" ref={roleDropdownRef}>
                         <button
                             onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-                            className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
-                                roleFilter 
-                                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                            className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${roleFilter
+                                    ? 'bg-blue-600 text-white hover:bg-blue-700'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                            }`}
+                                }`}
                         >
                             <FaBriefcase className="text-xs" /> Role {roleFilter && `: ${roleFilter}`}
                         </button>
-                        
+
                         {/* Role Filter Dropdown */}
                         {isRoleDropdownOpen && (
                             <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
@@ -1502,31 +1503,29 @@ const Score = () => {
                                         />
                                     </div>
                                 </div>
-                                <div 
+                                <div
                                     onClick={() => {
                                         setRoleFilter('');
                                         setIsRoleDropdownOpen(false);
                                         setRoleSearchQuery('');
                                     }}
-                                    className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-gray-100 font-medium ${
-                                        !roleFilter ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                                    }`}
+                                    className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-gray-100 font-medium ${!roleFilter ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                                        }`}
                                 >
                                     All Roles
                                 </div>
                                 {roles
                                     .filter(r => r.name.toLowerCase().includes(roleSearchQuery.toLowerCase()))
                                     .map((r) => (
-                                        <div 
+                                        <div
                                             key={r._id}
                                             onClick={() => {
                                                 setRoleFilter(r.name);
                                                 setIsRoleDropdownOpen(false);
                                                 setRoleSearchQuery('');
                                             }}
-                                            className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                                                roleFilter === r.name ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
-                                            }`}
+                                            className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${roleFilter === r.name ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                                                }`}
                                         >
                                             {r.name}
                                         </div>
@@ -1598,6 +1597,7 @@ const Score = () => {
                                     <th className="py-2 text-center">Knowledge (10)</th>
                                     <th className="py-2 text-center">Assessment Score (100)</th>
                                     <th className="py-2 text-center">Rating (10)</th>
+                                    <th className="py-2 text-center">TAT (Days)</th>
                                     <th className="py-2 text-center">Status</th>
                                     <th className="py-2 text-center">Actions</th>
                                 </tr>
@@ -1642,7 +1642,9 @@ const Score = () => {
                                                     min="0"
                                                     max="100"
                                                     className="w-16 p-1 border rounded text-xs text-center font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    value={c.technicalScore || 0}
+                                                    value={c.assessmentResults && c.assessmentResults.length > 0 
+                                                        ? Math.round(c.assessmentResults.reduce((acc, curr) => acc + curr.score, 0) / c.assessmentResults.length)
+                                                        : (c.technicalScore || 0)}
                                                     onChange={(e) => handleUpdateScore(c._id, "technicalScore", e.target.value)}
                                                 />
                                                 {c.assessmentResults && c.assessmentResults.length > 0 && (
@@ -1665,6 +1667,17 @@ const Score = () => {
                                             >
                                                 {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(v => <option key={v} value={v}>{v}</option>)}
                                             </select>
+                                        </td>
+                                        <td className="px-2 py-2 font-medium text-center">
+                                            {c.appliedAt && c.offerSentAt ? (
+                                                <span className="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-lg text-xs font-bold border border-indigo-100 shadow-sm">
+                                                    {Math.ceil(Math.abs(new Date(c.offerSentAt) - new Date(c.appliedAt)) / (1000 * 60 * 60 * 24))} Days
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-400 text-[10px] font-black italic uppercase tracking-widest">
+                                                    {c.status === "Selected" && !c.offerSentAt ? "Pending Offer" : "---"}
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="px-2 py-2 font-medium text-center">
                                             <select
@@ -1734,7 +1747,7 @@ const Score = () => {
                                 ))}
                             </tbody>
                         </table>
-                        
+
                         {/* Pagination */}
                         {filteredCandidates.length > 0 && (
                             <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
@@ -1772,11 +1785,10 @@ const Score = () => {
                                     <button
                                         onClick={handlePrevPage}
                                         disabled={pagination.currentPage === 1}
-                                        className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
-                                            pagination.currentPage === 1
+                                        className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === 1
                                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                                                 : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                                        }`}
+                                            }`}
                                     >
                                         Previous
                                     </button>
@@ -1787,13 +1799,12 @@ const Score = () => {
                                                 key={index}
                                                 onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                                                 disabled={page === "..."}
-                                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                                    page === "..."
+                                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${page === "..."
                                                         ? "text-gray-500 cursor-default"
                                                         : pagination.currentPage === page
-                                                        ? "bg-blue-600 text-white"
-                                                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-                                                }`}
+                                                            ? "bg-blue-600 text-white"
+                                                            : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                                                    }`}
                                             >
                                                 {page}
                                             </button>
@@ -1803,11 +1814,10 @@ const Score = () => {
                                     <button
                                         onClick={handleNextPage}
                                         disabled={pagination.currentPage === pagination.totalPages}
-                                        className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
-                                            pagination.currentPage === pagination.totalPages
+                                        className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === pagination.totalPages
                                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                                                 : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                                        }`}
+                                            }`}
                                     >
                                         Next
                                     </button>
@@ -1984,19 +1994,18 @@ const Score = () => {
                 </div>
             )}
 
-            {/* Assessment Detail Modal */}
-            {isAssessmentModalOpen && selectedAssessmentData && (
+            {isAssessmentModalOpen && Array.isArray(selectedAssessmentData) && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
-                    <div className="bg-white max-w-4xl w-full rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-100 max-h-[90vh] flex flex-col">
+                    <div className="bg-gray-50 max-w-5xl w-full rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-100 max-h-[95vh] flex flex-col">
 
-                        <div className="px-8 pt-8 pb-6 border-b border-gray-100 flex-shrink-0">
+                        <div className="px-8 pt-8 pb-6 border-b border-gray-100 flex-shrink-0 bg-white">
                             <div className="flex items-start justify-between">
                                 <div>
                                     <h2 className="text-xl text-gray-800 font-bold flex items-center gap-2">
-                                        Assessment Answer Sheet
+                                        Assessment History & Answers
                                     </h2>
                                     <p className="text-[10px] font-bold uppercase tracking-widest mt-1.5 text-gray-500">
-                                        {selectedAssessmentData.quizTitle && `Quiz: ${selectedAssessmentData.quizTitle} • `}Candidate: <span className="text-indigo-600">{selectedCandidate?.firstName} {selectedCandidate?.lastName}</span>
+                                        Candidate: <span className="text-indigo-600">{selectedCandidate?.firstName} {selectedCandidate?.lastName}</span> • {selectedAssessmentData.length} Assessment(s) Completed
                                     </p>
                                 </div>
                                 <button
@@ -2006,129 +2015,119 @@ const Score = () => {
                                     <FaTimes className="text-lg" />
                                 </button>
                             </div>
-
-                            <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-100/50">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold text-gray-500">Final Score:</span>
-                                    <span className="text-sm font-black text-indigo-600">
-                                        {selectedAssessmentData.score}<span className="text-xs text-gray-400 font-bold">/100</span>
-                                    </span>
-                                </div>
-
-                                <div className="h-4 w-[1px] bg-gray-200"></div>
-
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold text-gray-500">Questions:</span>
-                                    <span className="text-sm font-black text-gray-700">
-                                        {selectedAssessmentData.answers?.length || selectedAssessmentData.totalQuestions || 0}
-                                    </span>
-                                </div>
-
-                                <div className="h-4 w-[1px] bg-gray-200"></div>
-
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold text-gray-500">Status:</span>
-                                    <span className={`text-xs font-black uppercase tracking-wider ${selectedAssessmentData.score >= 70 ? 'text-emerald-600' :
-                                        selectedAssessmentData.score >= 50 ? 'text-amber-600' :
-                                            'text-rose-600'
-                                        }`}>
-                                        {selectedAssessmentData.score >= 70 ? "Excellent" : selectedAssessmentData.score >= 50 ? "Average" : "Poor"}
-                                    </span>
-                                </div>
-                            </div>
                         </div>
 
-                        <div className="p-8 overflow-y-auto space-y-6 flex-grow bg-white">
-                            {selectedAssessmentData.answers && selectedAssessmentData.answers.length > 0 ? (
-                                selectedAssessmentData.answers.map((ans, idx) => {
-                                    const optionLabels = ["A", "B", "C", "D", "E", "F", "G", "H"];
-                                    const options = ans.options && ans.options.length > 0
-                                        ? ans.options
-                                        : [ans.selectedOption, ans.correctAnswer].filter(Boolean);
-
-                                    return (
-                                        <div key={idx} className="bg-white rounded-xl border border-gray-200 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] overflow-hidden">
-                                            <div className="flex items-start gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50/50">
-                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-black text-xs ${ans.isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
-                                                    Q{idx + 1}
-                                                </div>
-                                                <div className="flex-grow pt-1">
-                                                    <p className="text-sm font-bold text-gray-800 leading-relaxed">{ans.questionText}</p>
-                                                </div>
-                                                <div className="shrink-0 pt-1.5 flex items-center gap-1.5">
-                                                    {ans.isCorrect ? (
-                                                        <span className="text-[10px] font-black uppercase text-emerald-600 flex items-center gap-1">✓ Correct</span>
-                                                    ) : (
-                                                        <span className="text-[10px] font-black uppercase text-rose-600 flex items-center gap-1">✗ Incorrect</span>
-                                                    )}
-                                                </div>
-                            </div>
-
-                                            <div className="p-5 space-y-2.5">
-                                                {options.map((opt, oIdx) => {
-                                                    const isCorrectOpt = String(opt).trim() === String(ans.correctAnswer).trim();
-                                                    const isCandidateOpt = String(opt).trim() === String(ans.selectedOption).trim();
-                                                    const label = optionLabels[oIdx] || String(oIdx + 1);
-
-                                                    let optStyle = "bg-white border-gray-200 text-gray-600";
-                                                    let radioStyle = "border-gray-200 border-2";
-                                                    let badge = null;
-
-                                                    if (isCorrectOpt && isCandidateOpt) {
-                                                        optStyle = "bg-emerald-50/50 border-emerald-300 text-emerald-800";
-                                                        radioStyle = "border-emerald-500 bg-emerald-500";
-                                                        badge = <span className="text-[9px] font-black text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded text-right uppercase tracking-wider">✓ Selected Correctly</span>;
-                                                    } else if (isCorrectOpt) {
-                                                        optStyle = "bg-emerald-50/30 border-emerald-200 text-emerald-700 border-dashed";
-                                                        radioStyle = "border-emerald-400 border-2";
-                                                        badge = <span className="text-[9px] font-black text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded text-right uppercase tracking-wider">✓ Correct Answer</span>;
-                                                    } else if (isCandidateOpt) {
-                                                        optStyle = "bg-rose-50/50 border-rose-300 text-rose-800";
-                                                        radioStyle = "border-rose-500 bg-rose-500";
-                                                        badge = <span className="text-[9px] font-black text-rose-600 bg-rose-100 px-2.5 py-1 rounded text-right uppercase tracking-wider">✗ Selected Incorrectly</span>;
-                                                    }
-
-                                                    return (
-                                                        <div key={oIdx} className={`flex items-center gap-4 px-4 py-3 rounded-xl border transition-all ${optStyle}`}>
-                                                            <div className="shrink-0">
-                                                                <span className="text-[10px] font-black text-gray-400 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded uppercase">{label}</span>
-                                                            </div>
-
-                                                            <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${radioStyle}`}>
-                                                                {(isCandidateOpt || isCorrectOpt) && (
-                                                                    <div className={`w-1.5 h-1.5 rounded-full ${isCorrectOpt && !isCandidateOpt ? 'bg-emerald-400' : 'bg-white'}`} />
-                                                                )}
-                                                            </div>
-
-                                                            <p className="text-xs font-semibold flex-grow">{opt}</p>
-
-                                                            {badge && (
-                                                                <div className="shrink-0 flex items-center justify-end min-w-[120px]">
-                                                                    {badge}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
+                        <div className="flex-grow overflow-y-auto p-4 md:p-8 space-y-12">
+                            {selectedAssessmentData.map((result, rIdx) => (
+                                <div key={rIdx} className="space-y-6">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="px-3 py-1 bg-indigo-600 text-white text-[10px] font-black uppercase rounded-lg">
+                                            Test #{rIdx + 1}
+                                        </div>
+                                        <h3 className="text-lg font-black text-gray-800 border-b-2 border-indigo-100 pb-1">
+                                            {result.quizTitle}
+                                        </h3>
+                                        <div className="flex items-center gap-4 ml-auto">
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Score</span>
+                                                <span className="text-sm font-black text-indigo-600">{result.score}/100</span>
+                                            </div>
+                                            <div className="h-8 w-[1px] bg-gray-200"></div>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Date</span>
+                                                <span className="text-sm font-black text-gray-600">{new Date(result.completedAt || Date.now()).toLocaleDateString()}</span>
                                             </div>
                                         </div>
-                                    );
-                                })
-                            ) : (
-                                <div className="text-center py-20 bg-gray-50 rounded-xl border border-gray-100 flex flex-col items-center justify-center">
-                                    <div className="w-16 h-16 bg-white text-gray-300 rounded-full flex items-center justify-center mb-4 border border-gray-100 shadow-sm">
-                                        <FaEye className="text-3xl" />
                                     </div>
-                                    <p className="text-gray-800 font-bold mb-1">No detailed analysis available</p>
-                                    <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest max-w-xs">Old assessment record without question tracking</p>
+
+                                    <div className="space-y-4">
+                                        {result.answers && result.answers.length > 0 ? (
+                                            result.answers.map((ans, idx) => {
+                                                const optionLabels = ["A", "B", "C", "D", "E", "F", "G", "H"];
+                                                const options = ans.options && ans.options.length > 0
+                                                    ? ans.options
+                                                    : [ans.selectedOption, ans.correctAnswer].filter(Boolean);
+
+                                                return (
+                                                    <div key={idx} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                                        <div className="flex items-start gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50/50">
+                                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-black text-xs ${ans.isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                                                Q{idx + 1}
+                                                            </div>
+                                                            <div className="flex-grow pt-1">
+                                                                <p className="text-sm font-bold text-gray-800 leading-relaxed">{ans.questionText}</p>
+                                                            </div>
+                                                            <div className="shrink-0 pt-1.5 flex items-center gap-1.5">
+                                                                {ans.isCorrect ? (
+                                                                    <span className="text-[10px] font-black uppercase text-emerald-600 flex items-center gap-1">✓ Correct</span>
+                                                                ) : (
+                                                                    <span className="text-[10px] font-black uppercase text-rose-600 flex items-center gap-1">✗ Incorrect</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="p-5 space-y-2.5">
+                                                            {options.map((opt, oIdx) => {
+                                                                const isCorrectOpt = String(opt).trim() === String(ans.correctAnswer).trim();
+                                                                const isCandidateOpt = String(opt).trim() === String(ans.selectedOption).trim();
+                                                                const label = optionLabels[oIdx] || String(oIdx + 1);
+
+                                                                let optStyle = "bg-white border-gray-200 text-gray-600";
+                                                                let radioStyle = "border-gray-200 border-2";
+                                                                let badge = null;
+
+                                                                if (isCorrectOpt && isCandidateOpt) {
+                                                                    optStyle = "bg-emerald-50/50 border-emerald-300 text-emerald-800";
+                                                                    radioStyle = "border-emerald-500 bg-emerald-500";
+                                                                    badge = <span className="text-[9px] font-black text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded text-right uppercase tracking-wider">✓ Selected Correctly</span>;
+                                                                } else if (isCorrectOpt) {
+                                                                    optStyle = "bg-emerald-50/30 border-emerald-200 text-emerald-700 border-dashed";
+                                                                    radioStyle = "border-emerald-400 border-2";
+                                                                    badge = <span className="text-[9px] font-black text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded text-right uppercase tracking-wider">✓ Correct Answer</span>;
+                                                                } else if (isCandidateOpt) {
+                                                                    optStyle = "bg-rose-50/50 border-rose-300 text-rose-800";
+                                                                    radioStyle = "border-rose-500 bg-rose-500";
+                                                                    badge = <span className="text-[9px] font-black text-rose-600 bg-rose-100 px-2.5 py-1 rounded text-right uppercase tracking-wider">✗ Selected Incorrectly</span>;
+                                                                }
+
+                                                                return (
+                                                                    <div key={oIdx} className={`flex items-center gap-4 px-4 py-3 rounded-xl border transition-all ${optStyle}`}>
+                                                                        <div className="shrink-0">
+                                                                            <span className="text-[10px] font-black text-gray-400 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded uppercase">{label}</span>
+                                                                        </div>
+                                                                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${radioStyle}`}>
+                                                                            {(isCandidateOpt || isCorrectOpt) && (
+                                                                                <div className={`w-1.5 h-1.5 rounded-full ${isCorrectOpt && !isCandidateOpt ? 'bg-emerald-400' : 'bg-white'}`} />
+                                                                            )}
+                                                                        </div>
+                                                                        <p className="text-xs font-semibold flex-grow">{opt}</p>
+                                                                        {badge && (
+                                                                            <div className="shrink-0 flex items-center justify-end min-w-[120px]">
+                                                                                {badge}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        ) : (
+                                            <div className="text-center py-10 bg-white rounded-xl border border-dashed border-gray-200 flex flex-col items-center justify-center">
+                                                <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">No detailed analysis for this test</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="h-px bg-gray-200 w-full mt-12 opacity-50"></div>
                                 </div>
-                            )}
+                            ))}
                         </div>
 
-                        <div className="px-8 py-4 border-t border-gray-100 bg-gray-50 flex justify-end flex-shrink-0">
+                        <div className="px-8 py-4 border-t border-gray-100 bg-white flex justify-end flex-shrink-0">
                             <button
                                 onClick={() => setIsAssessmentModalOpen(false)}
-                                className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-[0_2px_4px_rgba(0,0,0,0.02)]"
+                                className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-sm"
                             >
                                 Close View
                             </button>

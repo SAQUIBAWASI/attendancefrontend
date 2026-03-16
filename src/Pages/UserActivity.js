@@ -1421,7 +1421,8 @@ const UserActivity = () => {
         // Enrich activities with department/designation
         const enrichedActivities = activitiesData.map(activity => {
           console.log("Processing activity:", activity);
-          const empDetails = getEmployeeDetails(activity.userId, activity.userEmail);
+          // Try passing userEmail first, if absent pass userId, pass both to be safe
+          const empDetails = getEmployeeDetails(activity.userId || activity.userEmail, activity.userEmail);
           const enriched = {
             ...activity,
             department: empDetails.department,

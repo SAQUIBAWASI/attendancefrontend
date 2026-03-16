@@ -273,7 +273,7 @@
 //               <h3 className="mb-2 text-xl font-semibold text-gray-800">🔍 Filter Records</h3>
 //               <p className="text-gray-600">Filter by specific date or month</p>
 //             </div>
-            
+
 //             <div className="flex flex-col gap-3 sm:flex-row">
 //               <button
 //                 onClick={downloadCSV}
@@ -281,7 +281,7 @@
 //               >
 //                 📥 Download CSV
 //               </button>
-              
+
 //               <button
 //                 onClick={clearFilters}
 //                 className="flex items-center gap-2 px-6 py-3 font-semibold text-white transition bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl hover:from-gray-600 hover:to-gray-700"
@@ -670,7 +670,7 @@
 //         const empDetails = getEmployeeDetails(rec.employeeId);
 //         const name = empDetails.name.toLowerCase();
 //         const id = (rec.employeeId || "").toString().toLowerCase();
-        
+
 //         return name.includes(term) || id.includes(term);
 //       });
 //     }
@@ -1202,6 +1202,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag } from "react-icons/fa";
+import { FiFilter, FiMapPin, FiUserCheck, FiUsers } from "react-icons/fi";
+import CountUp from "react-countup";
 import { filterActiveRecords, isEmployeeHidden } from "../utils/employeeStatus";
 
 const BASE_URL = "https://api.timelyhealth.in/api";
@@ -1215,21 +1217,21 @@ export default function AttendanceList() {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [employees, setEmployees] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // Department and Designation filter states
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterDesignation, setFilterDesignation] = useState("");
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
-  
+
   // Unique departments and designations
   const [uniqueDepartments, setUniqueDepartments] = useState([]);
   const [uniqueDesignations, setUniqueDesignations] = useState([]);
-  
+
   // Refs for click outside
   const departmentFilterRef = useRef(null);
   const designationFilterRef = useRef(null);
-  
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -1256,7 +1258,7 @@ export default function AttendanceList() {
         const employeesData = empRes.ok ? await empRes.json() : [];
         const activeEmployees = employeesData.filter(emp => !isEmployeeHidden(emp));
         setEmployees(activeEmployees);
-        
+
         // Extract unique departments and designations
         const depts = new Set();
         const designations = new Set();
@@ -1318,7 +1320,7 @@ export default function AttendanceList() {
         const empDetails = getEmployeeDetails(rec.employeeId);
         const name = empDetails.name.toLowerCase();
         const id = (rec.employeeId || "").toString().toLowerCase();
-        
+
         return name.includes(term) || id.includes(term);
       });
     }
@@ -1342,7 +1344,7 @@ export default function AttendanceList() {
         );
       });
     }
-    
+
     // Filter by Department
     if (filterDepartment) {
       filtered = filtered.filter(rec => {
@@ -1350,7 +1352,7 @@ export default function AttendanceList() {
         return empDetails.department === filterDepartment;
       });
     }
-    
+
     // Filter by Designation
     if (filterDesignation) {
       filtered = filtered.filter(rec => {
@@ -1499,7 +1501,7 @@ export default function AttendanceList() {
       minute: '2-digit',
       hour12: true
     }) : null;
-    
+
     const checkOut = checkOutTime ? new Date(checkOutTime).toLocaleTimeString('en-IN', {
       hour: '2-digit',
       minute: '2-digit',
@@ -1534,13 +1536,29 @@ export default function AttendanceList() {
   };
 
   // Stat Card component
-  const StatCard = ({ label, value, color }) => {
+  const StatCard = ({ icon: Icon, label, value, color, onClick }) => {
+    const themes = {
+      indigo: "border-indigo-500",
+      emerald: "border-emerald-500",
+      amber: "border-amber-500",
+      rose: "border-rose-500",
+      cyan: "border-cyan-500",
+      purple: "border-purple-500"
+    };
+
+    const currentTheme = themes[color] || themes.indigo;
+
     return (
-      <div className="overflow-hidden bg-white shadow-sm rounded-xl">
-        <div className={`h-1 ${color}`}></div>
-        <div className="p-4 text-center">
-          <div className="text-lg font-bold">{value}</div>
-          <div className="text-xs font-medium text-gray-700">{label}</div>
+      <div
+        className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}
+        onClick={onClick}
+      >
+        <div className="flex items-center gap-2">
+          <Icon className="text-gray-400 text-base flex-shrink-0" />
+          <div className="text-sm font-medium text-gray-700">{label}</div>
+        </div>
+        <div className="text-sm font-bold text-gray-900">
+          <CountUp end={value} duration={2} separator="," />
         </div>
       </div>
     );
@@ -1578,30 +1596,38 @@ export default function AttendanceList() {
     <div className="min-h-screen px-2 py-0 bg-gradient-to-br from-purple-50 to-blue-100">
       <div className="mx-auto max-w-9xl">
 
-         {/* Stats */}
-        <div className="grid grid-cols-2 gap-2 mb-2 sm:grid-cols-4">
+        {/* Stats */}
+        <div className="grid grid-cols-1 gap-3 mb-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            label={`Total Records: ${records.length}`}
-            color="bg-blue-500"
+            icon={FiUsers}
+            label="Total Records"
+            value={records.length}
+            color="indigo"
           />
           <StatCard
-            label={`Onsite: ${records.filter((r) => r.onsite).length}`}
-            color="bg-green-500"
+            icon={FiMapPin}
+            label="Onsite Entries"
+            value={records.filter((r) => r.onsite).length}
+            color="emerald"
           />
           <StatCard
-            label={`Checked In: ${records.filter((r) => r.status === "checked-in").length}`}
-           color="bg-orange-500"
-/>
-         <StatCard
-            label={`Filtered: ${filteredRecords.length}`}
-            color="bg-purple-500"
-           />
-         </div>
+            icon={FiUserCheck}
+            label="Checked In"
+            value={records.filter((r) => r.status === "checked-in").length}
+            color="amber"
+          />
+          <StatCard
+            icon={FiFilter}
+            label="Filtered Records"
+            value={filteredRecords.length}
+            color="rose"
+          />
+        </div>
 
         {/* Filters Section */}
         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
-            
+
             {/* Search Name / ID */}
             <div className="relative flex-1 min-w-[180px]">
               <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
@@ -1618,19 +1644,18 @@ export default function AttendanceList() {
             <div className="relative" ref={departmentFilterRef}>
               <button
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
-                  filterDepartment 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                }`}
+                  }`}
               >
                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
               </button>
-              
+
               {/* Department Filter Dropdown */}
               {showDepartmentFilter && (
                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
-                  <div 
+                  <div
                     onClick={() => {
                       setFilterDepartment('');
                       setShowDepartmentFilter(false);
@@ -1640,15 +1665,14 @@ export default function AttendanceList() {
                     All Departments
                   </div>
                   {uniqueDepartments.map(dept => (
-                    <div 
+                    <div
                       key={dept}
                       onClick={() => {
                         setFilterDepartment(dept);
                         setShowDepartmentFilter(false);
                       }}
-                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                        filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                      }`}
+                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                        }`}
                     >
                       {dept}
                     </div>
@@ -1661,19 +1685,18 @@ export default function AttendanceList() {
             <div className="relative" ref={designationFilterRef}>
               <button
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
-                  filterDesignation 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                }`}
+                  }`}
               >
                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
               </button>
-              
+
               {/* Designation Filter Dropdown */}
               {showDesignationFilter && (
                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
-                  <div 
+                  <div
                     onClick={() => {
                       setFilterDesignation('');
                       setShowDesignationFilter(false);
@@ -1683,15 +1706,14 @@ export default function AttendanceList() {
                     All Designations
                   </div>
                   {uniqueDesignations.map(des => (
-                    <div 
+                    <div
                       key={des}
                       onClick={() => {
                         setFilterDesignation(des);
                         setShowDesignationFilter(false);
                       }}
-                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                        filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                      }`}
+                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                        }`}
                     >
                       {des}
                     </div>

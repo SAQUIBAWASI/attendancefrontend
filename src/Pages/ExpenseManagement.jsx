@@ -15,7 +15,8 @@ import {
   FaSync,
   FaTimes,
   FaEye,
-  FaInfoCircle
+  FaInfoCircle,
+  FaTrash
 } from 'react-icons/fa';
 
 const ExpenseManagement = () => {
@@ -24,18 +25,19 @@ const ExpenseManagement = () => {
   const [submitting, setSubmitting] = useState(false);
   const [kmRate, setKmRate] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
-//   const [isModalOpen, setIsModalOpen] = useState(false);
+  //   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState(null);
 
   const [formData, setFormData] = useState({
     purpose: '',
     date: new Date().toISOString().split('T')[0],
     km: '',
-    outcome: '',
-    orderValue: '',
-    upsellValue: '',
     remark: ''
   });
+
+  const [stops, setStops] = useState([
+    { locationName: '', outcome: '', orderValue: '', upsellValue: '', km: '' }
+  ]);
 
   const employeeId = localStorage.getItem('employeeId');
 
@@ -69,15 +71,31 @@ const ExpenseManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.purpose || !formData.km || !formData.date) {
+    
+    // We calculate totalKm before submit so we can use it
+    const parsedKm = formData.km ? parseFloat(formData.km) : 0;
+    const stopsKm = stops.reduce((sum, stop) => sum + (parseFloat(stop.km) || 0), 0);
+    const totalKm = stopsKm > 0 ? stopsKm : parsedKm;
+
+    if (!formData.purpose || totalKm <= 0 || !formData.date) {
       alert("Please fill in purpose, distance, and date.");
       return;
+    }
+
+    // Validation for stops
+    for (let i = 0; i < stops.length; i++) {
+        if (!stops[i].locationName.trim()) {
+            alert(`Please provide a Location/Sample Name for Stop ${i + 1}.`);
+            return;
+        }
     }
 
     setSubmitting(true);
     try {
       const res = await axios.post(`${API_BASE_URL}/expense/add`, {
         ...formData,
+        km: totalKm,
+        stops,
         employeeId
       });
 
@@ -87,11 +105,9 @@ const ExpenseManagement = () => {
           purpose: '',
           date: new Date().toISOString().split('T')[0],
           km: '',
-          outcome: '',
-          orderValue: '',
-          upsellValue: '',
           remark: ''
         });
+        setStops([{ locationName: '', outcome: '', orderValue: '', upsellValue: '', km: '' }]);
         setIsModalOpen(false);
         alert("Expense recorded successfully!");
       }
@@ -104,7 +120,27 @@ const ExpenseManagement = () => {
   };
 
 
-  const calculatedCost = formData.km ? (parseFloat(formData.km) * kmRate).toFixed(2) : 0;
+  const parsedKm = formData.km ? parseFloat(formData.km) : 0;
+  const stopsKm = stops.reduce((sum, stop) => sum + (parseFloat(stop.km) || 0), 0);
+  const totalKm = stopsKm > 0 ? stopsKm : parsedKm;
+  const calculatedCost = (totalKm * kmRate).toFixed(2);
+
+  const handleStopChange = (index, field, value) => {
+    const newStops = [...stops];
+    newStops[index][field] = value;
+    setStops(newStops);
+  };
+
+  const addStop = () => {
+    setStops([...stops, { locationName: '', outcome: '', orderValue: '', upsellValue: '', km: '' }]);
+  };
+
+  const removeStop = (index) => {
+    if (stops.length > 1) {
+      const newStops = stops.filter((_, i) => i !== index);
+      setStops(newStops);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 font-sans">
@@ -163,7 +199,12 @@ const ExpenseManagement = () => {
                       </td>
                       <td className="px-4 py-4 text-center">
                         <div className="flex flex-col items-center">
-                          <span className="text-xs font-semibold text-gray-700">{expense.outcome || '-'}</span>
+                          <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full mb-1">
+                            {expense.stops && expense.stops.length > 0 ? `${expense.stops.length} Stops` : 'Single Stop'}
+                          </span>
+                          <span className="text-xs font-semibold text-gray-700 max-w-[120px] truncate" title={expense.outcome || (expense.stops?.length ? expense.stops[0]?.outcome : '-')}>
+                            {expense.outcome || (expense.stops?.length ? expense.stops[0]?.outcome : '-')}
+                          </span>
                           <div className="flex flex-col gap-1 mt-1">
                             {expense.orderValue > 0 && (
                               <div className="flex items-center gap-1">
@@ -173,6 +214,11 @@ const ExpenseManagement = () => {
                             {expense.upsellValue > 0 && (
                               <div className="flex items-center gap-1">
                                 <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[8px] font-bold rounded uppercase tabular-nums">Upsell: ₹{expense.upsellValue}</span>
+                              </div>
+                            )}
+                            {expense.stops && expense.stops.some(s => s.km > 0) && (
+                              <div className="flex items-center gap-1">
+                                <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[8px] font-bold rounded uppercase tabular-nums">From Stops</span>
                               </div>
                             )}
                           </div>
@@ -244,16 +290,11 @@ const ExpenseManagement = () => {
                   />
                 </div>
                 <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-700">KM Traveled</label>
-                  <input
-                    type="number"
-                    name="km"
-                    value={formData.km}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 tabular-nums"
-                    placeholder="0"
-                    required
-                  />
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Total KM Traveled</label>
+                  <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-600 font-medium tabular-nums flex items-center justify-between">
+                    <span>{totalKm} KM</span>
+                    {stopsKm > 0 && <span className="text-xs text-blue-500 font-bold bg-blue-50 px-2 py-0.5 rounded">Calculated from stops</span>}
+                  </div>
                 </div>
               </div>
 
@@ -262,39 +303,99 @@ const ExpenseManagement = () => {
                 <span className="text-lg font-bold text-blue-600 tabular-nums">₹{calculatedCost}</span>
               </div>
 
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700 text-left">Meeting Outcome</label>
-                <input
-                  name="outcome"
-                  value={formData.outcome}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Outcome of the visit"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 text-left">
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-700">Order Value</label>
-                  <input
-                    type="number"
-                    name="orderValue"
-                    value={formData.orderValue}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 tabular-nums"
-                    placeholder="0"
-                  />
+              {/* Dynamic Stops Section */}
+              <div className="pt-2 border-t border-gray-100">
+                <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                        <FaRoute className="text-blue-500" /> Stops / Samples
+                    </h4>
+                    <button
+                        type="button"
+                        onClick={addStop}
+                        className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100 transition-colors uppercase"
+                    >
+                        <FaPlus /> Add Stop
+                    </button>
                 </div>
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-700">Upsell Value</label>
-                  <input
-                    type="number"
-                    name="upsellValue"
-                    value={formData.upsellValue}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 tabular-nums"
-                    placeholder="0"
-                  />
+
+                <div className="space-y-4 max-h-[35vh] overflow-y-auto pr-1 custom-scrollbar">
+                    {stops.map((stop, index) => (
+                        <div key={index} className="p-3 bg-gray-50 border border-gray-200 rounded-xl relative group">
+                            {stops.length > 1 && (
+                                <button
+                                    type="button"
+                                    onClick={() => removeStop(index)}
+                                    className="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center bg-red-100 text-red-600 rounded-full hover:bg-red-200 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                                    title="Remove Stop"
+                                >
+                                    <FaTrash size={10} />
+                                </button>
+                            )}
+
+                            <div className="mb-2">
+                                <label className="block mb-1 text-[11px] font-bold text-gray-600 uppercase tracking-wide text-left flex items-center gap-1">
+                                    <span className="w-4 h-4 rounded-full bg-blue-200 text-blue-700 flex items-center justify-center text-[9px] mr-1">{index + 1}</span>
+                                    Location / Sample Name <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={stop.locationName}
+                                    onChange={(e) => handleStopChange(index, 'locationName', e.target.value)}
+                                    className="w-full px-2 py-1.5 text-xs text-gray-800 border rounded-lg focus:ring-1 focus:ring-blue-500 placeholder:text-gray-400 font-medium"
+                                    placeholder="e.g., KPHB Branch"
+                                    required
+                                />
+                            </div>
+
+                            <div className="mb-2">
+                                <label className="block mb-1 text-[11px] font-semibold text-gray-500 text-left">Meeting Outcome</label>
+                                <input
+                                    type="text"
+                                    value={stop.outcome}
+                                    onChange={(e) => handleStopChange(index, 'outcome', e.target.value)}
+                                    className="w-full px-2 py-1.5 text-xs border rounded-lg focus:ring-1 focus:ring-blue-500 placeholder:text-gray-400"
+                                    placeholder="Discussed requirements"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-3 text-left">
+                                <div>
+                                    <label className="block mb-1 text-[11px] font-semibold text-gray-500">Distance (KM)</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.1"
+                                        value={stop.km}
+                                        onChange={(e) => handleStopChange(index, 'km', e.target.value)}
+                                        className="w-full px-2 py-1 text-xs border border-blue-200 bg-blue-50 text-blue-700 font-bold rounded-lg focus:ring-1 focus:ring-blue-500 tabular-nums"
+                                        placeholder="0"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block mb-1 text-[11px] font-semibold text-gray-500">Order Value (₹)</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={stop.orderValue}
+                                        onChange={(e) => handleStopChange(index, 'orderValue', e.target.value)}
+                                        className="w-full px-2 py-1 text-xs border border-green-200 bg-green-50 text-green-700 font-bold rounded-lg focus:ring-1 focus:ring-green-500 tabular-nums"
+                                        placeholder="0"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block mb-1 text-[11px] font-semibold text-gray-500">Upsell Value (₹)</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={stop.upsellValue}
+                                        onChange={(e) => handleStopChange(index, 'upsellValue', e.target.value)}
+                                        className="w-full px-2 py-1 text-xs border border-purple-200 bg-purple-50 text-purple-700 font-bold rounded-lg focus:ring-1 focus:ring-purple-500 tabular-nums"
+                                        placeholder="0"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
               </div>
 
@@ -371,25 +472,63 @@ const ExpenseManagement = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-500 text-left">Meeting Outcome</label>
-                <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-800 font-medium text-left">
-                  {selectedExpense.outcome || '-'}
-                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-left">
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-500">Order Value</label>
-                  <div className="w-full p-2 bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-700 font-bold tabular-nums">
-                    ₹{selectedExpense.orderValue || 0}
-                  </div>
-                </div>
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-500">Upsell Value</label>
-                  <div className="w-full p-2 bg-purple-50 border border-purple-100 rounded-lg text-purple-700 font-bold tabular-nums">
-                    ₹{selectedExpense.upsellValue || 0}
-                  </div>
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-500 text-left border-b pb-1">Stops / Samples Visited</label>
+                <div className="space-y-3 max-h-[25vh] overflow-y-auto pr-1">
+                    {selectedExpense.stops && selectedExpense.stops.length > 0 ? (
+                        selectedExpense.stops.map((stop, index) => (
+                            <div key={index} className="bg-white border hover:border-blue-300 rounded-xl p-3 shadow-sm transition-all relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                                <div className="flex items-start justify-between mb-2 pl-2">
+                                    <div className="flex-1">
+                                        <h5 className="text-[13px] font-bold text-gray-800 flex items-center gap-1.5">
+                                            <span className="w-4 h-4 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[9px] font-black">{index + 1}</span>
+                                            {stop.locationName}
+                                        </h5>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-gray-500 mb-2 pl-2 tabular-nums">Outcome: <span className="font-medium text-gray-700">{stop.outcome || '-'}</span></p>
+                                <div className="grid grid-cols-3 gap-2 pl-2">
+                                    <div className="bg-blue-50 rounded px-2 py-1 border border-blue-100 flex justify-between items-center">
+                                        <span className="text-[9px] font-bold text-blue-600 uppercase">Distance</span>
+                                        <span className="text-xs font-black text-blue-700">{stop.km || 0} KM</span>
+                                    </div>
+                                    <div className="bg-emerald-50 rounded px-2 py-1 border border-emerald-100 flex justify-between items-center">
+                                        <span className="text-[9px] font-bold text-emerald-600 uppercase">Order</span>
+                                        <span className="text-xs font-black text-emerald-700">₹{stop.orderValue || 0}</span>
+                                    </div>
+                                    <div className="bg-purple-50 rounded px-2 py-1 border border-purple-100 flex justify-between items-center">
+                                        <span className="text-[9px] font-bold text-purple-600 uppercase">Upsell</span>
+                                        <span className="text-xs font-black text-purple-700">₹{stop.upsellValue || 0}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="text-center p-4 border border-dashed rounded-lg bg-gray-50">
+                            <p className="text-xs text-gray-500">No detailed stops recorded for this expense.</p>
+                            
+                            {/* Fallback to old data format if no stops array exist */}
+                            {(selectedExpense.outcome || selectedExpense.orderValue > 0 || selectedExpense.upsellValue > 0) && (
+                                <div className="mt-4 text-left text-[11px] space-y-2 max-w-xs mx-auto">
+                                    <div className="flex justify-between border-b pb-1">
+                                        <span className="text-gray-500">Outcome:</span>
+                                        <span className="font-semibold text-gray-700">{selectedExpense.outcome || '-'}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b pb-1 text-emerald-700">
+                                        <span className="font-semibold opacity-80">Order:</span>
+                                        <span className="font-black tabular-nums">₹{selectedExpense.orderValue || 0}</span>
+                                    </div>
+                                    <div className="flex justify-between text-purple-700">
+                                        <span className="font-semibold opacity-80">Upsell:</span>
+                                        <span className="font-black tabular-nums">₹{selectedExpense.upsellValue || 0}</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
               </div>
 
@@ -410,7 +549,7 @@ const ExpenseManagement = () => {
               </div>
             </div>
           </div>
-        </div>
+        // </div>
       )}
     </div>
   );

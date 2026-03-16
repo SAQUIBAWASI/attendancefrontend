@@ -31,39 +31,43 @@ const TakeAssessment = () => {
                     myApp = appRes.data.application;
                 } catch (err) {
                     console.warn("Fetch application by ID failed, trying fallback...", err);
-                    // Fallback: If ID fetch fails, try to find it in all applications (last resort)
                     const allAppRes = await axios.get(`${API_BASE_URL}/applications/all`);
                     myApp = allAppRes.data.applications.find(a => a._id === applicationId);
                 }
 
-                let targetAssessmentId = quizId || myApp?.assignedAssessmentId?._id || myApp?.assignedAssessmentId;
+                setApplication(myApp);
 
-                // If not assigned explicitly and no quizId in URL, get from job details
-                if (!targetAssessmentId) {
+                // Determine which assessment to load
+                let targetAssessmentId = quizId;
+                
+                if (!targetAssessmentId && myApp) {
+                    // Fallback to assigned assessment or first pending one
                     const jobRes = await axios.get(`${API_BASE_URL}/jobs/view/${jobId}`);
                     if (jobRes.data.success) {
                         const job = jobRes.data.jobPost;
-                        // Use first assessment from array or the single assessmentId (if it exists)
-                        targetAssessmentId = job.assessmentIds?.[0]?._id || job.assessmentIds?.[0] || job.assessmentId?._id || job.assessmentId;
+                        const assessmentIds = job.assessmentIds?.map(a => (a._id || a).toString()) || 
+                                           (job.assessmentId ? [(job.assessmentId._id || job.assessmentId).toString()] : []);
+                        
+                        const completedQuizIds = myApp.assessmentResults?.map(res => (res.quizId?._id || res.quizId)?.toString()) || [];
+                        const pendingAssessmentIds = assessmentIds.filter(id => !completedQuizIds.includes(id));
+                        
+                        targetAssessmentId = pendingAssessmentIds[0] || myApp.assignedAssessmentId?._id || myApp.assignedAssessmentId;
                     }
                 }
 
                 if (targetAssessmentId) {
-                    // Now get the quiz details
                     const quizRes = await axios.get(`${API_BASE_URL}/admin/getallquizes`);
-                    const assessment = quizRes.data.quizzes.find(q => q._id === targetAssessmentId);
+                    const assessment = quizRes.data.quizzes.find(q => q._id === (targetAssessmentId._id || targetAssessmentId));
 
                     if (assessment) {
                         setQuiz(assessment);
-                        setApplication(myApp);
-                        // Fix Timer Initialization: Ensure duration exists and is set correctly
                         const durationInSeconds = (assessment.duration || 30) * 60;
                         setTimeLeft(durationInSeconds);
                     } else {
                         setError("Assessment not found.");
                     }
                 } else {
-                    setError("No assessment linked to this application.");
+                    setError("No pending assessments found for this application.");
                 }
             } catch (err) {
                 setError("Failed to load assessment.");
@@ -82,7 +86,7 @@ const TakeAssessment = () => {
         } else if (timeLeft === 0 && quiz && !isSubmitted && !showInstructions) {
             handleSubmit();
         }
-    }, [timeLeft, isSubmitted, quiz, showInstructions]); // Added showInstructions to fix timer start issue
+    }, [timeLeft, isSubmitted, quiz, showInstructions]);
 
     const handleOptionSelect = (option) => {
         setAnswers({
@@ -117,7 +121,6 @@ const TakeAssessment = () => {
             };
         });
 
-        // Scoring Logic: Always scaled to 100 marks as per user clarification
         const totalQuestions = quiz.questions.length;
         const targetTotal = 100;
 
@@ -130,26 +133,26 @@ const TakeAssessment = () => {
         setIsSubmitted(true);
 
         try {
+            // Update redundant individual scores for backward compatibility
             await axios.post(`${API_BASE_URL}/applications/update-score`, {
                 applicationId,
                 technicalScore: scaledScore.toString(),
                 overallRating: ((scaledScore / targetTotal) * 5).toFixed(1),
-                comment: `Candidate completed online assessment "${quiz.title}". Score: ${scaledScore}/${targetTotal} (Raw: ${rawScore}/${totalRawMarks})`
+                comment: `Candidate completed online assessment "${quiz.title}". Score: ${scaledScore}/${targetTotal}`
             });
 
-            // Also update assessmentResults in JobApplication
+            // CRITICAL: Save to assessmentResults array
             await axios.post(`${API_BASE_URL}/applications/submit-assessment`, {
                 applicationId,
                 quizId: quiz._id,
                 score: scaledScore,
                 totalQuestions: totalQuestions,
                 targetTotal: targetTotal,
-                answers: detailedAnswers // Send full answer details
+                answers: detailedAnswers
             });
 
         } catch (err) {
             console.error("Failed to save score:", err);
-            // Even if save fails, we show the success screen to candidate
         }
     };
 
@@ -180,35 +183,69 @@ const TakeAssessment = () => {
                 <h2 className="text-2xl font-black text-gray-900 mb-4 tracking-tight">Access Denied</h2>
                 <p className="text-gray-500 mb-10 font-medium leading-relaxed">{error}</p>
                 <button
-                    onClick={() => navigate(-1)}
+                    onClick={() => navigate('/applied-jobs')}
                     className="w-full py-4 bg-blue-600 text-white rounded-xl font-black text-sm hover:bg-blue-700 transition-all hover:shadow-xl shadow-blue-100 transform active:scale-95 uppercase tracking-widest"
                 >
-                    Return to Careers
+                    Return to My Applications
                 </button>
             </div>
         </div>
     );
 
-    if (isSubmitted) return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 p-4 font-sans text-slate-800">
-            <div className="max-w-xl w-full bg-white p-12 rounded-2xl shadow-2xl shadow-blue-900/10 border border-blue-50 text-center">
-                <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-emerald-900/5">
-                    <FaCheckCircle className="text-4xl" />
+    if (isSubmitted) {
+        // Logic to determine if there are more assessments
+        const assessmentIds = application?.jobId?.assessmentIds || [];
+        const completedQuizIds = application?.assessmentResults?.map(res => (res.quizId?._id || res.quizId)?.toString()) || [];
+        // Important: Add the one we just finished to completed list for immediate UI feedback
+        if (quiz?._id && !completedQuizIds.includes(quiz._id.toString())) {
+            completedQuizIds.push(quiz._id.toString());
+        }
+        
+        const pendingAssessmentIds = assessmentIds.filter(id => !completedQuizIds.includes((id._id || id).toString()));
+
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 p-4 font-sans text-slate-800">
+                <div className="max-w-xl w-full bg-white p-12 rounded-2xl shadow-2xl shadow-blue-900/10 border border-blue-50 text-center">
+                    <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-emerald-900/5">
+                        <FaCheckCircle className="text-4xl" />
+                    </div>
+                    <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">Assessment Completed!</h2>
+                    <p className="text-gray-500 mb-10 font-bold leading-relaxed">
+                        Thank you {application?.firstName || "Candidate"}. Your responses for "<strong>{quiz?.title}</strong>" have been recorded.
+                    </p>
+
+                    <div className="flex flex-col gap-4">
+                        {pendingAssessmentIds.length > 0 ? (
+                            <>
+                                <button
+                                    onClick={() => {
+                                        window.location.href = `/assessment/${jobId}/${applicationId}/${pendingAssessmentIds[0]._id || pendingAssessmentIds[0]}`;
+                                    }}
+                                    className="w-full py-5 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl font-black text-sm hover:shadow-2xl shadow-indigo-100 transition-all active:scale-95 uppercase tracking-widest flex items-center justify-center gap-2"
+                                >
+                                    Take Next Assessment <FaArrowRight />
+                                </button>
+                                <button
+                                    onClick={() => navigate('/applied-jobs')}
+                                    className="w-full py-4 text-indigo-600 font-bold uppercase tracking-widest text-xs hover:underline"
+                                >
+                                    I'll finish later
+                                </button>
+                            </>
+                        ) : (
+                            <button
+                                onClick={() => navigate('/applied-jobs')}
+                                className="w-full py-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-black text-sm hover:shadow-2xl shadow-blue-100 transition-all active:scale-95 uppercase tracking-widest"
+                            >
+                                Return to My Applications
+                            </button>
+                        )}
+                    </div>
                 </div>
-                <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">Assessment Completed!</h2>
-                <p className="text-gray-500 mb-10 font-bold leading-relaxed">
-                    Thank you {application?.firstName || "Candidate"}. Your responses have been securely recorded. Our recruitment team will review your performance and reach out shortly.
-                </p>
-
-                <button
-                    onClick={() => navigate('/candidate-dashboard')}
-                    className="w-full py-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-black text-sm hover:shadow-2xl shadow-blue-100 transition-all active:scale-95 uppercase tracking-widest"
-                >
-                    Return to Homepage
-                </button>
             </div>
-        </div>
-    );
+        );
+    }
+
 
     if (showInstructions) return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 p-4 font-sans text-slate-800">

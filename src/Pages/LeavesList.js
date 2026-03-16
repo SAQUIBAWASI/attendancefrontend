@@ -1292,7 +1292,7 @@
 //       </div>
 //     </div>
 //     </div>
-    
+
 //   );
 // };
 
@@ -1425,7 +1425,7 @@
 //     setStartDateFilter("");
 //     setEndDateFilter("");
 //   };
-  
+
 //   const navigate = useNavigate();
 
 //   // ✅ Pagination Handlers
@@ -1773,7 +1773,9 @@
 
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
+import CountUp from "react-countup";
 import { FaBuilding, FaSearch, FaUserTag } from "react-icons/fa";
+import { FiCalendar, FiCheckCircle, FiClock, FiList, FiXCircle } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
@@ -1782,7 +1784,7 @@ const LeavesList = () => {
   const [leaves, setLeaves] = useState([]);
   const [filteredLeaves, setFilteredLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Employees data for department/designation
   const [employees, setEmployees] = useState([]);
 
@@ -1796,17 +1798,17 @@ const LeavesList = () => {
   const [leaveTypeFilter, setLeaveTypeFilter] = useState("all");
   const [startDateFilter, setStartDateFilter] = useState("");
   const [endDateFilter, setEndDateFilter] = useState("");
-  
+
   // Department and Designation filter states
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterDesignation, setFilterDesignation] = useState("");
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
-  
+
   // Unique departments and designations
   const [uniqueDepartments, setUniqueDepartments] = useState([]);
   const [uniqueDesignations, setUniqueDesignations] = useState([]);
-  
+
   // Refs for click outside
   const departmentFilterRef = useRef(null);
   const designationFilterRef = useRef(null);
@@ -1837,7 +1839,7 @@ const LeavesList = () => {
       const employeesData = empRes.data || [];
       const activeEmployees = employeesData.filter(emp => !isEmployeeHidden(emp));
       setEmployees(activeEmployees);
-      
+
       // Extract unique departments and designations
       const depts = new Set();
       const designations = new Set();
@@ -1854,13 +1856,13 @@ const LeavesList = () => {
           new Date(b.createdAt || b.startDate) -
           new Date(a.createdAt || a.startDate)
       );
-      
+
       // Filter out leaves from hidden employees
       const activeEmployeeIds = new Set(activeEmployees.map(emp => emp.employeeId || emp._id));
-      const filteredLeavesData = sorted.filter(leave => 
+      const filteredLeavesData = sorted.filter(leave =>
         activeEmployeeIds.has(leave.employeeId)
       );
-      
+
       setLeaves(filteredLeavesData);
       setFilteredLeaves(filteredLeavesData);
       setCurrentPage(1);
@@ -1940,7 +1942,7 @@ const LeavesList = () => {
       const end = new Date(endDateFilter);
       filtered = filtered.filter((l) => new Date(l.endDate) <= end);
     }
-    
+
     // Filter by Department
     if (filterDepartment) {
       filtered = filtered.filter(l => {
@@ -1948,7 +1950,7 @@ const LeavesList = () => {
         return empDetails.department === filterDepartment;
       });
     }
-    
+
     // Filter by Designation
     if (filterDesignation) {
       filtered = filtered.filter(l => {
@@ -1980,7 +1982,7 @@ const LeavesList = () => {
     setFilterDepartment("");
     setFilterDesignation("");
   };
-  
+
   const navigate = useNavigate();
 
   // ✅ Pagination Handlers
@@ -2023,13 +2025,16 @@ const LeavesList = () => {
   const currentItems = filteredLeaves.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredLeaves.length / itemsPerPage);
 
-  // ✅ Stat Box
-  const StatCard = ({ label, value, color }) => (
-    <div
-      className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}
-    >
-      <div className="text-lg font-bold">{value}</div>
-      <div className="text-xs font-medium text-gray-700">{label}</div>
+  // ✅ Stat Box - Matching the Dashboard design
+  const StatCard = ({ icon: Icon, label, value, color }) => (
+    <div className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
+      <div className="flex items-center gap-2">
+        <Icon className="text-gray-400 text-base flex-shrink-0" />
+        <div className="text-sm font-medium text-gray-700">{label}</div>
+      </div>
+      <div className="text-sm font-bold text-gray-800">
+        <CountUp end={value} duration={2} separator="," />
+      </div>
     </div>
   );
 
@@ -2049,35 +2054,39 @@ const LeavesList = () => {
   return (
     <div className="min-h-screen px-2 py-2 bg-gradient-to-br from-purple-50 to-blue-100">
       <div className="mx-auto max-w-9xl">
-         {/* ✅ Stats */}
+        {/* ✅ Stats */}
         <div className="grid grid-cols-2 gap-2 mb-2 sm:grid-cols-4">
-         <StatCard
-            label={`Total Requests: ${leaves.length}`}
-            //  value={leaves.length}
+          <StatCard
+            icon={FiList}
+            label="Total Requests"
+            value={leaves.length}
             color="border-purple-500"
           />
           <StatCard
-            label={`Pending: ${leaves.filter((l) => l.status === "pending").length}`}
-            //  value={leaves.filter((l) => l.status === "pending").length}
-             color="border-yellow-500"
-           />
-           <StatCard
-             label={`Approved: ${leaves.filter((l) => l.status === "approved").length}`}
-              // value={leaves.filter((l) => l.status === "approved").length}
-             color="border-green-500"
-           />
+            icon={FiClock}
+            label="Pending"
+            value={leaves.filter((l) => l.status === "pending").length}
+            color="border-yellow-500"
+          />
           <StatCard
-             label={`Rejected: ${leaves.filter((l) => l.status === "rejected").length}`}
-              // value={leaves.filter((l) => l.status === "rejected").length}
-             color="border-red-500"
-           />
-          </div>
- 
-           
+            icon={FiCheckCircle}
+            label="Approved"
+            value={leaves.filter((l) => l.status === "approved").length}
+            color="border-green-500"
+          />
+          <StatCard
+            icon={FiXCircle}
+            label="Rejected"
+            value={leaves.filter((l) => l.status === "rejected").length}
+            color="border-red-500"
+          />
+        </div>
+
+
         {/* Filters Section */}
         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
-            
+
             {/* ID/Name Search */}
             <div className="relative flex-1 min-w-[180px]">
               <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
@@ -2089,7 +2098,7 @@ const LeavesList = () => {
                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-          
+
             {/* Status Filter */}
             <select
               value={statusFilter}
@@ -2119,19 +2128,18 @@ const LeavesList = () => {
             <div className="relative" ref={departmentFilterRef}>
               <button
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
-                  filterDepartment 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                }`}
+                  }`}
               >
                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
               </button>
-              
+
               {/* Department Filter Dropdown */}
               {showDepartmentFilter && (
                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
-                  <div 
+                  <div
                     onClick={() => {
                       setFilterDepartment('');
                       setShowDepartmentFilter(false);
@@ -2141,15 +2149,14 @@ const LeavesList = () => {
                     All Departments
                   </div>
                   {uniqueDepartments.map(dept => (
-                    <div 
+                    <div
                       key={dept}
                       onClick={() => {
                         setFilterDepartment(dept);
                         setShowDepartmentFilter(false);
                       }}
-                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                        filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                      }`}
+                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                        }`}
                     >
                       {dept}
                     </div>
@@ -2162,19 +2169,18 @@ const LeavesList = () => {
             <div className="relative" ref={designationFilterRef}>
               <button
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
-                  filterDesignation 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                }`}
+                  }`}
               >
                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
               </button>
-              
+
               {/* Designation Filter Dropdown */}
               {showDesignationFilter && (
                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
-                  <div 
+                  <div
                     onClick={() => {
                       setFilterDesignation('');
                       setShowDesignationFilter(false);
@@ -2184,15 +2190,14 @@ const LeavesList = () => {
                     All Designations
                   </div>
                   {uniqueDesignations.map(des => (
-                    <div 
+                    <div
                       key={des}
                       onClick={() => {
                         setFilterDesignation(des);
                         setShowDesignationFilter(false);
                       }}
-                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                        filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                      }`}
+                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                        }`}
                     >
                       {des}
                     </div>
@@ -2238,9 +2243,9 @@ const LeavesList = () => {
                 Clear
               </button>
             )}
-            
+
             {/* Report Button */}
-            <button 
+            <button
               onClick={() => navigate("/leaves-report")}
               className="h-8 px-3 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
             >
@@ -2380,11 +2385,10 @@ const LeavesList = () => {
               <button
                 onClick={handlePrevPage}
                 disabled={currentPage === 1}
-                className={`px-4 py-1 text-sm border rounded-lg ${
-                  currentPage === 1
+                className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
                     ? "text-gray-400 bg-gray-100 cursor-not-allowed"
                     : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
-                }`}
+                  }`}
               >
                 Previous
               </button>
@@ -2394,13 +2398,12 @@ const LeavesList = () => {
                   key={index}
                   onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                   disabled={page === "..."}
-                  className={`px-4 py-1 text-sm border rounded-lg ${
-                    page === "..."
+                  className={`px-4 py-1 text-sm border rounded-lg ${page === "..."
                       ? "text-gray-500 bg-gray-50 cursor-default"
                       : currentPage === page
-                      ? "text-white bg-blue-600 border-blue-600"
-                      : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
-                  }`}
+                        ? "text-white bg-blue-600 border-blue-600"
+                        : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                    }`}
                 >
                   {page}
                 </button>
@@ -2409,11 +2412,10 @@ const LeavesList = () => {
               <button
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
-                className={`px-4 py-1 text-sm border rounded-lg ${
-                  currentPage === totalPages
+                className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
                     ? "text-gray-400 bg-gray-100 cursor-not-allowed"
                     : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
-                }`}
+                  }`}
               >
                 Next
               </button>

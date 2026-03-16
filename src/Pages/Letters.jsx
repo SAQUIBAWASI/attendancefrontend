@@ -1,6 +1,10 @@
 import React, { useState, useRef } from "react";
 import { useOutletContext } from "react-router-dom";
-import { FaFilePdf, FaEye, FaDownload, FaInbox, FaSearch, FaTimes, FaSync, FaCalendarAlt } from "react-icons/fa";
+import { FaFilePdf, FaEye, FaDownload, FaInbox, FaSearch, FaTimes, FaSync, FaCalendarAlt, FaSignOutAlt } from "react-icons/fa";
+import axios from "axios";
+import { API_BASE_URL } from "../config";
+import { toast } from "react-toastify";
+import { jsPDF } from "jspdf";
 
 const Letters = () => {
   const {
@@ -14,14 +18,34 @@ const Letters = () => {
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const typeDropdownRef = useRef(null);
 
-  const docTypes = ["Offer", "Appointment", "Experience", "Internship", "Relieving"];
+  const [isResignModalOpen, setIsResignModalOpen] = useState(false);
+  const [resignationLetter, setResignationLetter] = useState("");
+  const [isSubmittingResign, setIsSubmittingResign] = useState(false);
 
-  const offerApps = appliedJobs.filter(app => app.offerLetter || app.adminAttachment);
+  const docTypes = ["Offer", "Appointment", "Experience", "Internship", "Relieving", "Resignation"];
+
+  // Logic to find eligible application for resignation
+  // A candidate can resign if they are "Selected" or "Hired" and haven't already filed a resignation (or it was rejected)
+  const canResignApp = appliedJobs.find(app =>
+    (app.status === "Selected" || app.status === "Hired") &&
+    (!app.status === "Resigned" || app.resignationStatus === "Rejected")
+  );
+
+  const offerApps = appliedJobs.filter(app =>
+    app.offerLetter ||
+    app.adminAttachment ||
+    (app.status === "Resigned" && app.resignationStatus === "Approved")
+  ).map(app => {
+    if (app.status === "Resigned" && app.resignationStatus === "Approved") {
+      return { ...app, documentType: "Resignation" };
+    }
+    return app;
+  });
 
   const filteredLetters = offerApps.filter(app => {
     const combinedQuery = (globalSearchQuery || localSearchQuery).toLowerCase();
     const matchesSearch =
-      (app.jobId?.role || "").toLowerCase().includes(combinedQuery) ||
+      (app.jobId?.role || app.role || "").toLowerCase().includes(combinedQuery) ||
       (app.documentType || "Offer").toLowerCase().includes(combinedQuery);
 
     const matchesType = typeFilter
@@ -45,8 +69,69 @@ const Letters = () => {
       case "experience": return "bg-purple-100 text-purple-800 border-purple-200";
       case "internship": return "bg-orange-100 text-orange-800 border-orange-200";
       case "relieving": return "bg-rose-100 text-rose-800 border-rose-200";
+      case "resignation": return "bg-amber-100 text-amber-800 border-amber-200";
       default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
+  };
+
+  const handleSubmitResignation = async (e) => {
+    e.preventDefault();
+    if (!resignationLetter.trim()) {
+      toast.error("Please provide a resignation statement.");
+      return;
+    }
+
+    setIsSubmittingResign(true);
+    try {
+      const token = localStorage.getItem("candidateToken");
+      const res = await axios.post(`${API_BASE_URL}/candidate/submit-resignation`, {
+        applicationId: canResignApp._id,
+        resignationLetter: resignationLetter
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.data.success) {
+        toast.success("Resignation submitted successfully!");
+        setIsResignModalOpen(false);
+        setResignationLetter("");
+        // Reload or update context would be ideal, but for now we rely on user refresh or global state update if handled by Layout
+      }
+    } catch (err) {
+      console.error("Resignation error:", err);
+      toast.error(err.response?.data?.message || "Failed to submit resignation");
+    } finally {
+      setIsSubmittingResign(false);
+    }
+  };
+
+  const handleDownloadResignation = (app) => {
+    const doc = new jsPDF();
+    doc.setFillColor(30, 41, 59);
+    doc.rect(0, 0, 210, 40, "F");
+    doc.setFontSize(22);
+    doc.setTextColor(255, 255, 255);
+    doc.text("RESIGNATION LETTER", 105, 25, { align: "center" });
+
+    doc.setTextColor(50, 50, 50);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Employee: ${app.firstName} ${app.lastName}`, 20, 55);
+    doc.text(`Role: ${app.jobId?.role || app.role || "N/A"}`, 20, 62);
+    doc.text(`Date Filed: ${new Date(app.resignationSentAt || app.updatedAt).toLocaleDateString()}`, 20, 69);
+
+    doc.setDrawColor(220, 220, 220);
+    doc.line(20, 75, 190, 75);
+
+    doc.setFont("helvetica", "normal");
+    const letterBody = app.resignationLetter || "No content provided.";
+    const splitText = doc.splitTextToSize(letterBody, 170);
+    doc.text(splitText, 20, 85);
+
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.text("Timely Health Projects - Human Resources Dept", 105, 285, { align: "center" });
+    doc.save(`Resignation_${app.firstName}_${app.lastName}.pdf`);
   };
 
   const resetFilters = () => {
@@ -64,9 +149,26 @@ const Letters = () => {
         {/* Header & Filters Section */}
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-6">
           <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Offer Letters & Documents</h2>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mt-2">Access your formal offer letters and employment agreements</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Offer Letters & Documents</h2>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mt-2">Access your formal offer letters and employment agreements</p>
+              </div>
+              {canResignApp && (
+                <button
+                  onClick={() => {
+                    if (!resignationLetter.trim()) {
+                      const app = canResignApp;
+                      const template = `To,\nThe Human Resources Department,\nTimely Health Projects\n\nSubject: Resignation Letter\n\nDear Sir/Madam,\n\nI, ${app?.firstName} ${app?.lastName}, am writing to formally resign from my position as ${app?.jobId?.role || app?.role || "[Role]"} at Timely Health Projects.\n\nMy last working day will be [Date]. I would like to thank you for the professional and personal development opportunities I have enjoyed during my tenure.\n\nPlease let me know the necessary steps to complete the exit process.\n\nSincerely,\n${app?.firstName} ${app?.lastName}`;
+                      setResignationLetter(template);
+                    }
+                    setIsResignModalOpen(true);
+                  }}
+                  className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-100 active:scale-95"
+                >
+                  <FaSignOutAlt /> File Resignation
+                </button>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -163,7 +265,7 @@ const Letters = () => {
                             <FaFilePdf size={12} />
                           </div>
                           <div className="text-left">
-                            <div className="font-bold text-sm text-gray-800 uppercase tracking-tight">{app.jobId?.role || "N/A"}</div>
+                            <div className="font-bold text-sm text-gray-800 uppercase tracking-tight">{app.jobId?.role || app.role || "N/A"}</div>
                             <div className="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5 font-medium">Formal Documentation</div>
                           </div>
                         </div>
@@ -189,7 +291,7 @@ const Letters = () => {
                           <button
                             onClick={() => {
                               setSelectedOffer(app);
-                              setActiveDocTab("offer");
+                              setActiveDocTab(app.documentType === "Resignation" ? "resignation" : "offer");
                               setIsModalOpen(true);
                             }}
                             className="p-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-lg transition-all shadow-sm"
@@ -198,7 +300,13 @@ const Letters = () => {
                             <FaEye size={14} />
                           </button>
                           <button
-                            onClick={() => handleDownloadOffer(app)}
+                            onClick={() => {
+                              if (app.documentType === "Resignation") {
+                                handleDownloadResignation(app);
+                              } else {
+                                handleDownloadOffer(app);
+                              }
+                            }}
                             className="p-2 bg-gray-900 text-white hover:bg-blue-600 rounded-lg transition-all shadow-sm"
                             title="Download PDF"
                           >
@@ -224,6 +332,62 @@ const Letters = () => {
           )}
         </div>
       </div>
+
+      {/* Resignation Modal */}
+      {isResignModalOpen && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <div className="flex items-center gap-3">
+                <div className="bg-rose-100 text-rose-600 p-2 rounded-xl">
+                  <FaSignOutAlt size={16} />
+                </div>
+                <h2 className="text-xl font-bold text-gray-800 tracking-tight">File Resignation</h2>
+              </div>
+              <button onClick={() => setIsResignModalOpen(false)} className="text-gray-400 hover:text-rose-500 transition-colors">
+                <FaTimes size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitResignation} className="p-8">
+              <div className="mb-6">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">
+                  Submitting resignation for: <span className="text-gray-800">{canResignApp?.jobId?.role || canResignApp?.role || "N/A"}</span>
+                </p>
+                <label className="block text-xs font-black text-gray-600 uppercase tracking-widest mb-2 px-1">Resignation statement / reason *</label>
+                <textarea
+                  required
+                  value={resignationLetter}
+                  onChange={(e) => setResignationLetter(e.target.value)}
+                  className="w-full h-40 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all text-sm font-medium text-gray-700 shadow-sm"
+                  placeholder="Please state your reason for resignation and your intended last working day..."
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsResignModalOpen(false)}
+                  className="flex-1 px-6 py-3 rounded-2xl font-bold text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all text-xs uppercase tracking-widest border border-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingResign}
+                  className="flex-2 bg-rose-500 hover:bg-rose-600 text-white px-8 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-rose-100 text-xs uppercase tracking-widest flex items-center justify-center min-w-[160px]"
+                >
+                  {isSubmittingResign ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>Submit Resignation</>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
