@@ -492,6 +492,9 @@ import { useEffect, useState } from "react";
 import { FaCalendarAlt, FaPlus, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
+import Mypermissions from "../Pages/MyPermission"
+import CountUp from "react-countup";
+import { FiFileText, FiCheckCircle, FiClock, FiXCircle } from "react-icons/fi";
 
 const EmployeeLeaves = () => {
   const navigate = useNavigate();
@@ -506,6 +509,8 @@ const EmployeeLeaves = () => {
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // const naviga= useNavigate();
 
   // Modal & Form State
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
@@ -728,14 +733,38 @@ const EmployeeLeaves = () => {
     return pageNumbers;
   };
 
-  // Stat Card component
-  const StatCard = ({ label, value, color }) => {
+  // Stat Card component with Dashboard Style
+  const StatCard = ({ icon: Icon, label, value, color, isPercentage }) => {
+    const themes = {
+      indigo: "border-indigo-500",
+      emerald: "border-emerald-500",
+      amber: "border-amber-500",
+      purple: "border-purple-500",
+      rose: "border-rose-500",
+      cyan: "border-cyan-500",
+    };
+
+    const currentTheme = themes[color] || themes.indigo;
+
     return (
-      <div className="overflow-hidden bg-white shadow-sm rounded-xl">
-        <div className={`h-1 ${color}`}></div>
-        <div className="p-3 text-center sm:p-4">
-          <div className="text-base font-bold sm:text-lg">{value}</div>
-          <div className="text-[10px] font-medium text-gray-700 sm:text-xs">{label}</div>
+      <div
+        className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}
+      >
+        <div className="flex items-center gap-2">
+          {typeof Icon === 'string' ? (
+            <span className="text-lg">{Icon}</span>
+          ) : (
+            <Icon className="text-gray-400 text-base flex-shrink-0" />
+          )}
+          <div className="text-sm font-medium text-gray-700">{label}</div>
+        </div>
+        <div className="text-sm font-bold flex items-center">
+          {typeof value === 'number' ? (
+            <CountUp end={value} duration={2} separator="," />
+          ) : (
+            <span className="text-gray-800">{value}</span>
+          )}
+          {isPercentage && "%"}
         </div>
       </div>
     );
@@ -788,27 +817,31 @@ const EmployeeLeaves = () => {
           <p className="text-xs text-gray-600 sm:text-sm">View and manage your leave applications</p>
         </div> */}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-2 mb-3 sm:grid-cols-4">
+        {/* Stats Cards - Dashboard Style */}
+        <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-4">
           <StatCard
-            label={`Total Leaves: ${leaves.length}`}
-            // value={leaves.length}
-            color="bg-blue-500"
+            label="Total Leaves"
+            value={leaves.length}
+            color="indigo"
+            icon={FiFileText}
           />
           <StatCard
-            label={`Approved: ${leaves.filter(l => l.status === "approved").length}`}
-            // value={leaves.filter(l => l.status === "approved").length}
-            color="bg-green-500"
+            label="Approved"
+            value={leaves.filter(l => l.status === "approved").length}
+            color="emerald"
+            icon={FiCheckCircle}
           />
           <StatCard
-            label={`Pending: ${leaves.filter(l => l.status === "pending").length}`}
-            // value={leaves.filter(l => l.status === "pending").length}
-            color="bg-yellow-500"
+            label="Pending"
+            value={leaves.filter(l => l.status === "pending").length}
+            color="amber"
+            icon={FiClock}
           />
           <StatCard
-            label={`Rejected: ${leaves.filter(l => l.status === "rejected").length}`}
-            // value={leaves.filter(l => l.status === "rejected").length}
-            color="bg-red-500"
+            label="Rejected"
+            value={leaves.filter(l => l.status === "rejected").length}
+            color="rose"
+            icon={FiXCircle}
           />
         </div>
 
@@ -858,6 +891,13 @@ const EmployeeLeaves = () => {
               className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
             >
               <FaPlus className="text-xs" /> Apply Leave
+            </button>
+
+               <button
+              onClick={() => navigate("/mypermissions")}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
+            >
+              <FaPlus className="text-xs" /> Permissions
             </button>
 
             {/* Clear Filters */}
@@ -1120,6 +1160,14 @@ const EmployeeLeaves = () => {
                   Cancel
                 </button>
                 <button
+                  type="submit"
+                  disabled={submittingLeave}
+                  className="flex-1 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {submittingLeave ? "Applying..." : "Apply Leave"}
+                </button>
+
+                 <button
                   type="submit"
                   disabled={submittingLeave}
                   className="flex-1 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"

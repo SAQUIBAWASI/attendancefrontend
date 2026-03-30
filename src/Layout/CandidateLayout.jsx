@@ -212,10 +212,11 @@ const CandidateLayout = () => {
 
     const navItems = [
         { path: "/candidate-dashboard", label: "Home" },
-        { path: "/all-jobs", label: "All Jobs" },
+        { path: "/all-jobs", label: "Jobs" },
         { path: "/applied-jobs", label: "Applied" },
         { path: "/interview", label: "Interviews" },
         { path: "/my-jobs", label: "Experience" },
+        {path:"/medical-certificate", label: "Certificate"}
     ];
 
     return (

@@ -176,8 +176,9 @@ const AttendanceDashboard = () => {
       if (!id) return;
 
       const name = getEmployeeName(id);
-      const isPresent = record.status === "present" || record.status === "checked-in" || record.checkInTime;
-      if (isPresent) {
+      // ✅ Count only Full Days (Total Hours >= 9)
+      const isFullDay = record.totalHours >= 9;
+      if (isFullDay) {
         counts[id] = (counts[id] || 0) + 1;
       }
     });
@@ -271,6 +272,48 @@ const AttendanceDashboard = () => {
     return Object.entries(lateCounts)
       .map(([name, count]) => ({ name, value: count, type: 'days' }))
       .sort((a, b) => b.value - a.value);
+  };
+
+  // ✅ Process Top Late Comers (for the new bar chart)
+  const processTopLateComersData = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const lateCounts = {};
+
+    allAttendance.forEach(record => {
+      if (!record.checkInTime) return;
+      const recordDate = new Date(record.checkInTime);
+      if (recordDate.getFullYear() !== year || recordDate.getMonth() + 1 !== month) return;
+
+      const id = (typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId);
+      if (!id) return;
+
+      const shift = getEmployeeShift(id);
+      if (!shift) return;
+
+      const checkInDateTime = new Date(record.checkInTime);
+      const [hours, minutes] = shift.start.split(':').map(Number);
+      const shiftStartTime = new Date(checkInDateTime);
+      shiftStartTime.setHours(hours, minutes, 0, 0);
+      shiftStartTime.setFullYear(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate());
+
+      const graceTime = new Date(shiftStartTime);
+      graceTime.setMinutes(graceTime.getMinutes() + shift.grace);
+
+      if (checkInDateTime > graceTime) {
+        lateCounts[id] = (lateCounts[id] || 0) + 1;
+      }
+    });
+
+    return Object.entries(lateCounts)
+      .map(([id, count]) => ({
+        id,
+        name: getEmployeeName(id),
+        count
+      }))
+      .sort((a, b) => a.count - b.count) // ✅ Ascending Order (1, 2, 3...)
+      .slice(-10); // ✅ Take the last 10 (highest ones) in ascending order
   };
 
   const COLORS = [
@@ -460,25 +503,6 @@ const AttendanceDashboard = () => {
     return results;
   };
 
-  // Process Leaves Data (With IDs)
-  const processLeavesData = () => {
-    if (!Array.isArray(leavesData)) return [];
-
-    const counts = {};
-    leavesData.forEach(leave => {
-      const id = (typeof leave.employeeId === 'object' ? leave.employeeId?.employeeId : leave.employeeId);
-      if (!id) return;
-      const name = getEmployeeName(id) || "Unknown Staff";
-      const leaveDays = parseFloat(leave.days) || 1;
-
-      counts[id] = counts[id] || { id, name, count: 0 };
-      counts[id].count += leaveDays;
-    });
-
-    return Object.values(counts)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
-  };
 
   // Calculate Present Count for Today
   const calculatePresentCount = (dateStr) => {
@@ -555,7 +579,7 @@ const AttendanceDashboard = () => {
 
   const totals = attendanceData?.totals || {};
   const attendanceChartData = processAttendanceData();
-  const leavesChartData = processLeavesData();
+  const lateComersData = processTopLateComersData();
 
   const lateChartData = processLateAnalysisData();
   const absentChartData = processAbsentAnalysisData();
@@ -571,26 +595,13 @@ const AttendanceDashboard = () => {
       return (
         <div className="p-2 text-xs bg-white border border-gray-200 rounded-lg shadow-lg">
           <p className="font-semibold">{data.name} ({data.id})</p>
-          <p className="text-gray-600">Attendance: {data.count} days</p>
+          <p className="text-gray-600">Full Days: {data.count}</p>
         </div>
       );
     }
     return null;
   };
 
-  // Custom tooltip formatter for leaves chart
-  const LeavesTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="p-2 text-xs bg-white border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-semibold">{data.name} ({data.id})</p>
-          <p className="text-gray-600">Leaves: {data.count} days</p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   // Custom tooltip formatter for late chart
   const LateTooltip = ({ active, payload }) => {
@@ -686,7 +697,7 @@ const AttendanceDashboard = () => {
         <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[380px]">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-base font-bold text-gray-800">Top Attendance Performance</h3>
+              <h3 className="text-base font-bold text-gray-800">Attendance Performance (Full Days)</h3>
               {/* <p className="text-xs text-gray-500">Most consistent present employees</p> */}
             </div>
             <button onClick={() => navigate("/attedancesummary")} className="font-bold text-indigo-600 transition-colors text-s hover:text-indigo-800">View Report →</button>
@@ -725,43 +736,29 @@ const AttendanceDashboard = () => {
           </div>
         </div>
 
-        {/* Leave Distribution */}
+        {/* Top Late Comers */}
         <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[380px]">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-base font-bold text-gray-800">Leave Utilization</h3>
-              {/* <p className="text-xs text-gray-500">Approved leave counts by employee</p> */}
+              <h3 className="text-base font-bold text-gray-800">Top Late Comers</h3>
             </div>
             <button
-              onClick={() => navigate("/leavelist")}
+              onClick={() => navigate("/late-today")}
               className="font-bold transition-colors text-s text-rose-600 hover:text-rose-800"
             >
-              Analyze Leaves →
+              View All Lates →
             </button>
           </div>
 
           <div className="flex-1 w-full">
-            {leavesChartData.length > 0 ? (
+            {lateComersData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={leavesChartData}
+                <BarChart
+                  data={lateComersData}
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                 >
-                  <defs>
-                    <linearGradient id="colorLeaves" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.8} />
-                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.1} />
-                    </linearGradient>
-                    <linearGradient id="colorLine" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#ef4444" />
-                      <stop offset="30%" stopColor="#f97316" />
-                      <stop offset="70%" stopColor="#eab308" />
-                      <stop offset="100%" stopColor="#10b981" />
-                    </linearGradient>
-                  </defs>
-
                   <CartesianGrid
-                    strokeDasharray="1 1"
+                    strokeDasharray="3 3"
                     stroke="#f1f5f9"
                     vertical={false}
                   />
@@ -770,43 +767,32 @@ const AttendanceDashboard = () => {
                     dataKey="id"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "#64748b", fontSize: 11, fontWeight: 500 }}
+                    tick={{ fill: "#64748b", fontSize: 11 }}
                     angle={-25}
                     textAnchor="end"
                     interval={0}
                     height={60}
-                    tickMargin={5}
                   />
 
                   <YAxis
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: "#64748b", fontSize: 11 }}
-                    tickCount={6}
-                    domain={[0, "auto"]}
+                    allowDecimals={false}
                   />
 
-                  <Tooltip content={<LeavesTooltip />} />
+                  <Tooltip content={<AttendanceTooltip />} cursor={{ fill: '#f8fafc' }} />
 
-                  <Area
-                    type="monotone"
-                    dataKey="count"
-                    stroke="url(#colorLine)"
-                    strokeWidth={3}
-                    fill="url(#colorLeaves)"
-                    fillOpacity={0.6}
-                    activeDot={{
-                      r: 6,
-                      stroke: "#ffffff",
-                      strokeWidth: 2,
-                      fill: "#8b5cf6",
-                    }}
-                  />
-                </AreaChart>
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={20}>
+                    {lateComersData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={index >= lateComersData.length - 3 ? "#EF4444" : "#F59E0B"} />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-full text-sm text-gray-400">
-                No leave data available
+                No monthly late data available
               </div>
             )}
           </div>

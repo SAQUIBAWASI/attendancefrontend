@@ -1017,6 +1017,8 @@ const API_BASE = API_BASE_URL;
 function JobPost() {
   const [formData, setFormData] = useState({
     role: "",
+    department: "",
+    vacancies: "",
     description: "",
     skills: "",
     experience: "",
@@ -1028,6 +1030,7 @@ function JobPost() {
   const [jobs, setJobs] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchingJobs, setFetchingJobs] = useState(false);
@@ -1055,11 +1058,12 @@ function JobPost() {
   
   const navigate = useNavigate()
 
-  // Fetch Jobs, Quizzes and Roles
+  // Fetch Jobs, Quizzes, Roles and Departments
   useEffect(() => {
     fetchJobs();
     fetchQuizzes();
     fetchRoles();
+    fetchDepartments();
 
     const handleClickOutside = (event) => {
       if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target)) {
@@ -1109,11 +1113,28 @@ function JobPost() {
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      const res = await axios.get("https://api.timelyhealth.in/api/employees/get-employees");
+      if (Array.isArray(res.data)) {
+        const uniqueDepartments = [...new Set(res.data.map(emp => emp.department).filter(Boolean))];
+        setDepartments(uniqueDepartments.sort());
+      } else if (res.data.employees) {
+        const uniqueDepartments = [...new Set(res.data.employees.map(emp => emp.department).filter(Boolean))];
+        setDepartments(uniqueDepartments.sort());
+      }
+    } catch (err) {
+      console.error("Failed to fetch departments:", err);
+    }
+  };
+
   const openCreateModal = () => {
     setIsEditing(false);
     setCurrentJobId(null);
     setFormData({
       role: "",
+      department: "",
+      vacancies: "",
       description: "",
       skills: "",
       salary: "",
@@ -1129,6 +1150,8 @@ function JobPost() {
     setCurrentJobId(job._id);
     setFormData({
       role: job.role,
+      department: job.department || "General",
+      vacancies: job.vacancies || 1,
       description: job.description,
       skills: job.skills,
       salary: job.salary,
@@ -1197,6 +1220,8 @@ function JobPost() {
         setMessage({ type: "success", text: isEditing ? "Job post updated successfully!" : "Job post created successfully!" });
         setFormData({
           role: "",
+          department: "",
+          vacancies: "",
           description: "",
           skills: "",
           salary: "",
@@ -1464,6 +1489,7 @@ Direct Apply Link: ${fullLink}`;
                 <th className="py-2 text-center">Job Role</th>
                 <th className="py-2 text-center">Skills</th>
                 <th className="py-2 text-center">Salary</th>
+                <th className="py-2 text-center">Dept & Vacancies</th>
                 <th className="py-2 text-center">Assessments</th>
                 <th className="py-2 text-center">Actions</th>
               </tr>
@@ -1485,6 +1511,12 @@ Direct Apply Link: ${fullLink}`;
                   </td>
                   <td className="px-2 py-2 text-center">
                     <span className="text-emerald-600 ">{job.salary || "Competitive"}</span>
+                  </td>
+                  <td className="px-2 py-2 text-center">
+                    <div className="flex flex-col items-center">
+                      <span className="text-xs font-semibold text-gray-700">{job.department || "General"}</span>
+                      <span className="text-[10px] text-gray-400">{job.vacancies || 1} Openings</span>
+                    </div>
                   </td>
                   <td className="px-2 py-2 text-center">
                     <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-[10px] ">
@@ -1713,6 +1745,54 @@ Direct Apply Link: ${fullLink}`;
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Department Dropdown */}
+                  <div className="space-y-1.5">
+                    <label className="block mb-1 text-sm font-medium text-gray-700">
+                      Department
+                    </label>
+                    <div className="relative group">
+                      <FiClipboard className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors z-10" />
+                      <select
+                        name="department"
+                        value={formData.department}
+                        onChange={handleChange}
+                        required
+                        className="w-full pl-11 pr-10 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800 bg-white appearance-none"
+                      >
+                        <option value="">Select Department</option>
+                        {departments.map((dept, idx) => (
+                          <option key={idx} value={dept}>
+                            {dept}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300 group-hover:text-gray-600 transition-colors">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Vacancies */}
+                  <div className="space-y-1.5">
+                    <label className="block mb-1 text-sm font-medium text-gray-700">
+                      Vacancies
+                    </label>
+                    <div className="relative group">
+                      <FiList className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" />
+                      <input
+                        type="number"
+                        name="vacancies"
+                        value={formData.vacancies}
+                        onChange={handleChange}
+                        required
+                        min="1"
+                        className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-800"
+                        placeholder="Number of openings"
+                      />
+                    </div>
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {/* Job Role Dropdown */}
@@ -1949,6 +2029,26 @@ Direct Apply Link: ${fullLink}`;
                 </label>
                 <div className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800">
                   {selectedJob.location || "Not Specified"}
+                </div>
+              </div>
+
+              {/* Department */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-gray-700">
+                  Department
+                </label>
+                <div className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800">
+                  {selectedJob.department || "General"}
+                </div>
+              </div>
+
+              {/* Vacancies */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-gray-700">
+                  Vacancies
+                </label>
+                <div className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800">
+                  {selectedJob.vacancies || 1}
                 </div>
               </div>
 

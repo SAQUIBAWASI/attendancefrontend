@@ -216,7 +216,7 @@ const RecruitmentDashboard = () => {
         <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
           <div className="flex items-center justify-between mb-3 px-2">
             <div>
-              <h3 className="text-base font-bold text-gray-800">Status Distribution</h3>
+              <h3 className="text-base font-bold text-gray-800"> Applicants Status</h3>
               <p className="text-xs text-gray-500">Breakdown of applicants by stage</p>
             </div>
             <div className="flex items-center gap-2">

@@ -225,12 +225,12 @@ const TakeAssessment = () => {
                                 >
                                     Take Next Assessment <FaArrowRight />
                                 </button>
-                                <button
+                                {/* <button
                                     onClick={() => navigate('/applied-jobs')}
                                     className="w-full py-4 text-indigo-600 font-bold uppercase tracking-widest text-xs hover:underline"
                                 >
                                     I'll finish later
-                                </button>
+                                </button> */}
                             </>
                         ) : (
                             <button

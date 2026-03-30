@@ -4,6 +4,8 @@ import { Download, Eye, RefreshCw, Search, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../Images/Timely-Health-Logo.png";
+import CountUp from "react-countup";
+import { FiFileText, FiDollarSign, FiDownloadCloud, FiPieChart } from "react-icons/fi";
 
 export default function EmployeeDashboard() {
   const [records, setRecords] = useState([]);
@@ -464,7 +466,29 @@ export default function EmployeeDashboard() {
     const dailyRate = calculateDailyRate(employee);
     const dailyRateNumber = parseFloat(dailyRate) || 0;
 
-    const leaves = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
+    const leavesData = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0, leaveDetails: [] };
+    
+    // ✅ Filter leaves for the specific month
+    const recordMonth = employee.month || ""; // e.g. "2024-03"
+    const monthLeaves = { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
+    
+    if (leavesData.leaveDetails && recordMonth && recordMonth !== "Not specified") {
+      leavesData.leaveDetails.forEach(leave => {
+        const leaveDate = new Date(leave.startDate);
+        const leaveMonth = `${leaveDate.getFullYear()}-${String(leaveDate.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (leaveMonth === recordMonth) {
+          if (monthLeaves[leave.type] !== undefined) {
+            monthLeaves[leave.type] += leave.days;
+          } else {
+            monthLeaves.Other += leave.days;
+          }
+        }
+      });
+    } else if (!recordMonth || recordMonth === "Not specified") {
+      // Fallback to aggregated data if month is not available
+      Object.assign(monthLeaves, leavesData);
+    }
 
     const actualWeekOffDays = employee.weekOffs || 0;
     const weekOffDaysForSalary = employee.weekOffsForSalary || 0;
@@ -472,7 +496,7 @@ export default function EmployeeDashboard() {
 
     const presentDays = employee.presentDays || 0;
     const halfDays = employee.halfDays || 0;
-    const paidLeaveDays = (leaves.CL || 0) + (leaves.EL || 0) + (leaves.COFF || 0);
+    const paidLeaveDays = (monthLeaves.CL || 0) + (monthLeaves.EL || 0) + (monthLeaves.COFF || 0);
 
     const totalPaidDays = presentDays + (halfDays * 0.5) + weekOffDaysForSalary + paidLeaveDays;
 
@@ -770,29 +794,73 @@ export default function EmployeeDashboard() {
 
   // ✅ Get leave types for display
   const getLeaveTypes = (employee) => {
-    const leaves = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
-    const leaveStrings = [];
+    const leavesData = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0, leaveDetails: [] };
+    
+    // ✅ Filter leaves for the specific month
+    const recordMonth = employee.month || ""; // e.g. "2024-03"
+    const monthLeaves = { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
+    
+    if (leavesData.leaveDetails && recordMonth && recordMonth !== "Not specified") {
+      leavesData.leaveDetails.forEach(leave => {
+        const leaveDate = new Date(leave.startDate);
+        const leaveMonth = `${leaveDate.getFullYear()}-${String(leaveDate.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (leaveMonth === recordMonth) {
+          if (monthLeaves[leave.type] !== undefined) {
+            monthLeaves[leave.type] += leave.days;
+          } else {
+            monthLeaves.Other += leave.days;
+          }
+        }
+      });
+    } else {
+      // Fallback
+      Object.assign(monthLeaves, leavesData);
+    }
 
-    if (leaves.CL > 0) leaveStrings.push(`CL: ${leaves.CL}`);
-    if (leaves.EL > 0) leaveStrings.push(`EL: ${leaves.EL}`);
-    if (leaves.COFF > 0) leaveStrings.push(`COFF: ${leaves.COFF}`);
-    if (leaves.LOP > 0) leaveStrings.push(`LOP: ${leaves.LOP}`);
-    if (leaves.Other > 0) leaveStrings.push(`Other: ${leaves.Other}`);
+    const leaveStrings = [];
+    if (monthLeaves.CL > 0) leaveStrings.push(`CL: ${monthLeaves.CL}`);
+    if (monthLeaves.EL > 0) leaveStrings.push(`EL: ${monthLeaves.EL}`);
+    if (monthLeaves.COFF > 0) leaveStrings.push(`COFF: ${monthLeaves.COFF}`);
+    if (monthLeaves.LOP > 0) leaveStrings.push(`LOP: ${monthLeaves.LOP}`);
+    if (monthLeaves.Other > 0) leaveStrings.push(`Other: ${monthLeaves.Other}`);
 
     return leaveStrings.length > 0 ? leaveStrings.join(', ') : 'No Leaves';
   };
 
   const currentEmployee = getCurrentEmployee();
 
-  // Stat Card component
-  const StatCard = ({ label, value, color }) => {
+  // Stat Card component with Dashboard Style
+  const StatCard = ({ icon: Icon, label, value, color, prefix = "" }) => {
+    const themes = {
+      indigo: "border-indigo-500",
+      emerald: "border-emerald-500",
+      amber: "border-amber-500",
+      purple: "border-purple-500",
+      rose: "border-rose-500",
+      cyan: "border-cyan-500",
+    };
+
+    const currentTheme = themes[color] || themes.indigo;
+
     return (
-      <div className={`px-2 py-2 bg-white border-t-4 ${color} rounded-md shadow-sm`}>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-center text-xs font-medium text-gray-700">{label}</p>
-            <p className="text-center text-sm font-bold text-gray-800">{value}</p>
-          </div>
+      <div
+        className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}
+      >
+        <div className="flex items-center gap-2">
+          {typeof Icon === 'string' ? (
+            <span className="text-lg">{Icon}</span>
+          ) : (
+            <Icon className="text-gray-400 text-base flex-shrink-0" />
+          )}
+          <div className="text-sm font-medium text-gray-700">{label}</div>
+        </div>
+        <div className="text-sm font-bold flex items-center">
+          {typeof value === 'number' ? (
+            <CountUp end={value} duration={2} separator="," prefix={prefix} />
+          ) : (
+            <span className="text-gray-800">{value}</span>
+          )}
         </div>
       </div>
     );
@@ -836,31 +904,33 @@ export default function EmployeeDashboard() {
           <p className="text-xs text-gray-600 sm:text-sm">View and download your salary slips</p>
         </div> */}
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 gap-2 mb-3 sm:grid-cols-4">
+        {/* Stats Overview - Dashboard Style */}
+        <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-4">
           <StatCard
-            label={`Total Records: ${filteredRecords.length}`}
-            // value={filteredRecords.length}
-            color="border-blue-500"
+            label="Total Records"
+            value={filteredRecords.length}
+            color="indigo"
+            icon={FiFileText}
           />
           <StatCard
-            label={`Total Salary: ₹${filteredRecords.reduce((sum, emp) => sum + (emp.calculatedSalary || 0), 0).toLocaleString()}`}
-            // value={`₹${filteredRecords.reduce((sum, emp) => sum + (emp.calculatedSalary || 0), 0).toLocaleString()}`}
-            color="border-green-500"
+            label="Total Salary"
+            value={filteredRecords.reduce((sum, emp) => sum + (emp.calculatedSalary || 0), 0)}
+            color="emerald"
+            icon={FiDollarSign}
+            prefix="₹"
           />
           <StatCard
-            label={`Available: ${filteredRecords.filter(emp => emp.canDownload).length}`}
-            // value={filteredRecords.filter(emp => emp.canDownload).length}
-            color="border-purple-500"
+            label="Available Docs"
+            value={filteredRecords.filter(emp => emp.canDownload).length}
+            color="purple"
+            icon={FiDownloadCloud}
           />
           <StatCard
-            label={`Average: ₹${filteredRecords.length > 0
-              ? Math.round(filteredRecords.reduce((sum, emp) => sum + (emp.calculatedSalary || 0), 0) / filteredRecords.length).toLocaleString()
-              : '0'}`}
-            // value={`₹${filteredRecords.length > 0 
-            //   ? Math.round(filteredRecords.reduce((sum, emp) => sum + (emp.calculatedSalary || 0), 0) / filteredRecords.length).toLocaleString()
-            //   : '0'}`}
-            color="border-orange-500"
+            label="Average Salary"
+            value={filteredRecords.length > 0 ? Math.round(filteredRecords.reduce((sum, emp) => sum + (emp.calculatedSalary || 0), 0) / filteredRecords.length) : 0}
+            color="amber"
+            icon={FiPieChart}
+            prefix="₹"
           />
         </div>
 

@@ -146,7 +146,7 @@ const ExpenseManagement = () => {
     <div className="flex flex-col min-h-screen bg-gray-100 font-sans">
       {/* Page content */}
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
-        <div className="max-w-6xl p-6 mx-auto bg-white rounded-lg shadow-md">
+        <div className="w-full p-6 bg-white rounded-lg shadow-md">
           <div className="flex flex-col gap-4 mb-6 md:flex-row md:justify-between md:items-center">
             <div className="flex items-center gap-4">
               <h2 className="text-2xl font-bold text-blue-900">
@@ -257,28 +257,28 @@ const ExpenseManagement = () => {
 
       {/* Record Expense Modal - EXACT Match with Leave Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl animate-in zoom-in-95 duration-200 text-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="w-full max-w-3xl p-6 bg-white rounded-xl shadow-2xl animate-in zoom-in-95 duration-200 text-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-800">Record Expense</h3>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700 text-left">Purpose of Travel</label>
-                <input
-                  name="purpose"
-                  value={formData.purpose}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  placeholder="e.g., Client meeting"
-                  required
-                />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2 text-left">
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Purpose of Travel</label>
+                  <input
+                    name="purpose"
+                    value={formData.purpose}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    placeholder="e.g., Client meeting"
+                    required
+                  />
+                </div>
 
-              <div className="grid grid-cols-2 gap-4 text-left">
-                <div>
+                <div className="text-left">
                   <label className="block mb-1 text-sm font-medium text-gray-700">Date</label>
                   <input
                     type="date"
@@ -289,11 +289,11 @@ const ExpenseManagement = () => {
                     required
                   />
                 </div>
-                <div>
+                <div className="text-left">
                   <label className="block mb-1 text-sm font-medium text-gray-700">Total KM Traveled</label>
                   <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-600 font-medium tabular-nums flex items-center justify-between">
                     <span>{totalKm} KM</span>
-                    {stopsKm > 0 && <span className="text-xs text-blue-500 font-bold bg-blue-50 px-2 py-0.5 rounded">Calculated from stops</span>}
+                    {stopsKm > 0 && <span className="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-0.5 rounded">Calculated from stops</span>}
                   </div>
                 </div>
               </div>
@@ -318,80 +318,82 @@ const ExpenseManagement = () => {
                     </button>
                 </div>
 
-                <div className="space-y-4 max-h-[35vh] overflow-y-auto pr-1 custom-scrollbar">
+                <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-1 custom-scrollbar">
                     {stops.map((stop, index) => (
-                        <div key={index} className="p-3 bg-gray-50 border border-gray-200 rounded-xl relative group">
+                        <div key={index} className="p-4 bg-gray-50 border border-gray-200 rounded-xl relative group">
                             {stops.length > 1 && (
                                 <button
                                     type="button"
                                     onClick={() => removeStop(index)}
-                                    className="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center bg-red-100 text-red-600 rounded-full hover:bg-red-200 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                                    className="absolute -top-2 -right-2 w-7 h-7 flex items-center justify-center bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-all shadow-md z-10 border-2 border-white"
                                     title="Remove Stop"
                                 >
-                                    <FaTrash size={10} />
+                                    <FaTimes size={14} />
                                 </button>
                             )}
 
-                            <div className="mb-2">
-                                <label className="block mb-1 text-[11px] font-bold text-gray-600 uppercase tracking-wide text-left flex items-center gap-1">
-                                    <span className="w-4 h-4 rounded-full bg-blue-200 text-blue-700 flex items-center justify-center text-[9px] mr-1">{index + 1}</span>
-                                    Location / Sample Name <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={stop.locationName}
-                                    onChange={(e) => handleStopChange(index, 'locationName', e.target.value)}
-                                    className="w-full px-2 py-1.5 text-xs text-gray-800 border rounded-lg focus:ring-1 focus:ring-blue-500 placeholder:text-gray-400 font-medium"
-                                    placeholder="e.g., KPHB Branch"
-                                    required
-                                />
-                            </div>
-
-                            <div className="mb-2">
-                                <label className="block mb-1 text-[11px] font-semibold text-gray-500 text-left">Meeting Outcome</label>
-                                <input
-                                    type="text"
-                                    value={stop.outcome}
-                                    onChange={(e) => handleStopChange(index, 'outcome', e.target.value)}
-                                    className="w-full px-2 py-1.5 text-xs border rounded-lg focus:ring-1 focus:ring-blue-500 placeholder:text-gray-400"
-                                    placeholder="Discussed requirements"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-3 text-left">
-                                <div>
-                                    <label className="block mb-1 text-[11px] font-semibold text-gray-500">Distance (KM)</label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="text-left">
+                                    <label className="block mb-1 text-[11px] font-bold text-gray-600 uppercase tracking-wide flex items-center gap-1">
+                                        <span className="w-4 h-4 rounded-full bg-blue-200 text-blue-700 flex items-center justify-center text-[9px] mr-1">{index + 1}</span>
+                                        Location / Sample Name <span className="text-red-500">*</span>
+                                    </label>
                                     <input
-                                        type="number"
-                                        min="0"
-                                        step="0.1"
-                                        value={stop.km}
-                                        onChange={(e) => handleStopChange(index, 'km', e.target.value)}
-                                        className="w-full px-2 py-1 text-xs border border-blue-200 bg-blue-50 text-blue-700 font-bold rounded-lg focus:ring-1 focus:ring-blue-500 tabular-nums"
-                                        placeholder="0"
+                                        type="text"
+                                        value={stop.locationName}
+                                        onChange={(e) => handleStopChange(index, 'locationName', e.target.value)}
+                                        className="w-full px-2 py-1.5 text-xs text-gray-800 border rounded-lg focus:ring-1 focus:ring-blue-500 placeholder:text-gray-400 font-medium"
+                                        placeholder="e.g., KPHB Branch"
+                                        required
                                     />
                                 </div>
-                                <div>
-                                    <label className="block mb-1 text-[11px] font-semibold text-gray-500">Order Value (₹)</label>
+
+                                <div className="text-left">
+                                    <label className="block mb-1 text-[11px] font-semibold text-gray-500">Meeting Outcome</label>
                                     <input
-                                        type="number"
-                                        min="0"
-                                        value={stop.orderValue}
-                                        onChange={(e) => handleStopChange(index, 'orderValue', e.target.value)}
-                                        className="w-full px-2 py-1 text-xs border border-green-200 bg-green-50 text-green-700 font-bold rounded-lg focus:ring-1 focus:ring-green-500 tabular-nums"
-                                        placeholder="0"
+                                        type="text"
+                                        value={stop.outcome}
+                                        onChange={(e) => handleStopChange(index, 'outcome', e.target.value)}
+                                        className="w-full px-2 py-1.5 text-xs border rounded-lg focus:ring-1 focus:ring-blue-500 placeholder:text-gray-400"
+                                        placeholder="Discussed requirements"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block mb-1 text-[11px] font-semibold text-gray-500">Upsell Value (₹)</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={stop.upsellValue}
-                                        onChange={(e) => handleStopChange(index, 'upsellValue', e.target.value)}
-                                        className="w-full px-2 py-1 text-xs border border-purple-200 bg-purple-50 text-purple-700 font-bold rounded-lg focus:ring-1 focus:ring-purple-500 tabular-nums"
-                                        placeholder="0"
-                                    />
+
+                                <div className="md:col-span-2 grid grid-cols-3 gap-4 text-left">
+                                    <div>
+                                        <label className="block mb-1 text-[11px] font-semibold text-gray-500 uppercase tracking-tight">Distance (KM)</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="0.1"
+                                            value={stop.km}
+                                            onChange={(e) => handleStopChange(index, 'km', e.target.value)}
+                                            className="w-full px-2 py-1.5 text-xs border border-blue-200 bg-blue-50 text-blue-700 font-bold rounded-lg focus:ring-1 focus:ring-blue-500 tabular-nums"
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block mb-1 text-[11px] font-semibold text-gray-500 uppercase tracking-tight">Order Value (₹)</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={stop.orderValue}
+                                            onChange={(e) => handleStopChange(index, 'orderValue', e.target.value)}
+                                            className="w-full px-2 py-1.5 text-xs border border-green-200 bg-green-50 text-green-700 font-bold rounded-lg focus:ring-1 focus:ring-green-500 tabular-nums"
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block mb-1 text-[11px] font-semibold text-gray-500 uppercase tracking-tight">Upsell Value (₹)</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={stop.upsellValue}
+                                            onChange={(e) => handleStopChange(index, 'upsellValue', e.target.value)}
+                                            className="w-full px-2 py-1.5 text-xs border border-purple-200 bg-purple-50 text-purple-700 font-bold rounded-lg focus:ring-1 focus:ring-purple-500 tabular-nums"
+                                            placeholder="0"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -435,33 +437,32 @@ const ExpenseManagement = () => {
       {/* Expense Details Modal - Match Sleek Record Modal UI */}
       {selectedExpense && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl animate-in zoom-in-95 duration-200 text-sm">
+          <div className="w-full max-w-3xl p-6 bg-white rounded-xl shadow-2xl animate-in zoom-in-95 duration-200 text-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-800">Expense Details</h3>
               <button onClick={() => setSelectedExpense(null)} className="text-gray-500 hover:text-gray-700">✕</button>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-500 text-left">Purpose of Travel</label>
-                <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-800 font-bold text-left">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2 text-left">
+                <label className="block mb-1 text-sm font-medium text-gray-500">Purpose of Travel</label>
+                <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-800 font-bold">
                   {selectedExpense.purpose}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-left">
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-500">Date</label>
-                  <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-800 font-medium">
-                    {new Date(selectedExpense.date).toLocaleDateString()}
-                  </div>
+              <div className="text-left">
+                <label className="block mb-1 text-sm font-medium text-gray-500">Date</label>
+                <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-800 font-medium">
+                  {new Date(selectedExpense.date).toLocaleDateString()}
                 </div>
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-500">KM Traveled</label>
-                  <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-800 font-medium tabular-nums">
-                    {selectedExpense.km} KM
-                  </div>
+              </div>
+              <div className="text-left">
+                <label className="block mb-1 text-sm font-medium text-gray-500">KM Traveled</label>
+                <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-800 font-medium tabular-nums">
+                  {selectedExpense.km} KM
                 </div>
+              </div>
               </div>
 
               <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between">
@@ -470,8 +471,6 @@ const ExpenseManagement = () => {
                   <span className="text-xl font-black text-blue-700 tabular-nums block">₹{selectedExpense.totalAmount}</span>
                   <span className="text-[10px] text-blue-300 uppercase font-bold tracking-wider">@{selectedExpense.rateApplied}/km</span>
                 </div>
-              </div>
-
               </div>
 
               <div>

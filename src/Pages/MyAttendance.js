@@ -33,7 +33,7 @@
 //           return;
 //         }
 
-//         const res = await fetch(`${BASE_URL}/api/attendance/myattendance/${employeeId}`);
+//         const res = await fetch(`${API_BASE_URL}/attendance/myattendance/${employeeId}`);
 //         const data = await res.json();
 //         if (!res.ok) throw new Error(data.message || "Failed to fetch attendance");
 
@@ -443,8 +443,9 @@
 import { useEffect, useRef, useState } from "react";
 import { FaCalendarAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-
-const BASE_URL = "https://api.timelyhealth.in";
+import { API_BASE_URL } from "../config";
+import CountUp from "react-countup";
+import { FiFileText, FiMapPin, FiCheckCircle, FiCheckSquare } from "react-icons/fi";
 
 export default function MyAttendance() {
   const navigate = useNavigate();
@@ -476,6 +477,13 @@ export default function MyAttendance() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  // Edit Request States
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [requestDate, setRequestDate] = useState("");
+  const [selectedRequestDates, setSelectedRequestDates] = useState([]);
+  const [requestComment, setRequestComment] = useState("");
+  const [submittingRequest, setSubmittingRequest] = useState(false);
+
   // Click outside handlers for filter dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -503,7 +511,7 @@ export default function MyAttendance() {
           return;
         }
 
-        const res = await fetch(`${BASE_URL}/api/attendance/myattendance/${employeeId}`);
+        const res = await fetch(`${API_BASE_URL}/attendance/myattendance/${employeeId}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to fetch attendance");
 
@@ -719,6 +727,53 @@ export default function MyAttendance() {
     return pageNumbers;
   };
 
+  // Handle Edit Request Submission
+  const handleAddRequestDate = () => {
+    if (!requestDate) return alert("Please select a date first");
+    if (selectedRequestDates.includes(requestDate)) return alert("Date already added");
+    setSelectedRequestDates([...selectedRequestDates, requestDate]);
+    setRequestDate("");
+  };
+
+  const handleRemoveRequestDate = (dateToRemove) => {
+    setSelectedRequestDates(selectedRequestDates.filter(d => d !== dateToRemove));
+  };
+
+  const handleSubmitEditRequest = async (e) => {
+    e.preventDefault();
+    if (selectedRequestDates.length === 0) return alert("Please select at least one date");
+    if (!requestComment.trim()) return alert("Please enter a comment");
+
+    try {
+      setSubmittingRequest(true);
+      const payload = {
+        employeeId: employeeData.employeeId,
+        employeeName: employeeData.name || "Employee",
+        selectedDates: selectedRequestDates,
+        comment: requestComment
+      };
+
+      const res = await fetch(`${API_BASE_URL}/attendance-edit-requests/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to submit request");
+
+      alert("✅ Attendance edit request submitted successfully!");
+      setShowEditModal(false);
+      setSelectedRequestDates([]);
+      setRequestComment("");
+    } catch (err) {
+      console.error("Submit request error:", err);
+      alert("❌ Error: " + err.message);
+    } finally {
+      setSubmittingRequest(false);
+    }
+  };
+
   // Download CSV function
   const downloadCSV = () => {
     if (filteredRecords.length === 0) {
@@ -762,14 +817,38 @@ export default function MyAttendance() {
     URL.revokeObjectURL(url);
   };
 
-  // Stat Card component with reduced height
-  const StatCard = ({ label, value, color }) => {
+  // Stat Card component with Dashboard Style
+  const StatCard = ({ icon: Icon, label, value, color, isPercentage }) => {
+    const themes = {
+      indigo: "border-indigo-500",
+      emerald: "border-emerald-500",
+      amber: "border-amber-500",
+      purple: "border-purple-500",
+      rose: "border-rose-500",
+      cyan: "border-cyan-500",
+    };
+
+    const currentTheme = themes[color] || themes.indigo;
+
     return (
-      <div className="overflow-hidden bg-white shadow-sm rounded-xl">
-        <div className={`h-0.5 ${color}`}></div>
-        <div className="p-2 text-center sm:p-3">
-          <div className="text-base font-bold sm:text-lg">{value}</div>
-          <div className="text-[10px] font-medium text-gray-700 sm:text-xs whitespace-nowrap">{label}</div>
+      <div
+        className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}
+      >
+        <div className="flex items-center gap-2">
+          {typeof Icon === 'string' ? (
+            <span className="text-lg">{Icon}</span>
+          ) : (
+            <Icon className="text-gray-400 text-base flex-shrink-0" />
+          )}
+          <div className="text-sm font-medium text-gray-700">{label}</div>
+        </div>
+        <div className="text-sm font-bold flex items-center">
+          {typeof value === 'number' ? (
+            <CountUp end={value} duration={2} separator="," />
+          ) : (
+            <span className="text-gray-800">{value}</span>
+          )}
+          {isPercentage && "%"}
         </div>
       </div>
     );
@@ -813,27 +892,31 @@ export default function MyAttendance() {
           <p className="text-xs text-gray-600 sm:text-sm">View and manage your attendance history</p>
         </div> */}
 
-        {/* Stats Cards - Reduced Height */}
-        <div className="grid grid-cols-2 gap-1 mb-3 sm:grid-cols-4 sm:gap-2">
+        {/* Stats Cards - Dashboard Style */}
+        <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-4">
           <StatCard
-            label={`Total Records: ${records.length}`}
-            // value={records.length}
-            color="bg-blue-500"
+            label="Total Records"
+            value={records.length}
+            color="indigo"
+            icon={FiFileText}
           />
           <StatCard
-            label={`Onsite Days: ${records.filter(r => r.onsite).length}`}
-            // value={records.filter(r => r.onsite).length}
-            color="bg-green-500"
+            label="Onsite Days"
+            value={records.filter(r => r.onsite).length}
+            color="emerald"
+            icon={FiMapPin}
           />
           <StatCard
-            label={`Checked In: ${records.filter(r => r.status === "checked-in").length}`}
-            // value={records.filter(r => r.status === "checked-in").length}
-            color="bg-orange-500"
+            label="Checked In"
+            value={records.filter(r => r.status === "checked-in").length}
+            color="amber"
+            icon={FiCheckCircle}
           />
           <StatCard
-            label={`Full Days: ${records.filter(r => r.totalHours >= 8).length}`}
-            // value={records.filter(r => r.totalHours >= 8).length}
-            color="bg-purple-500"
+            label="Full Days"
+            value={records.filter(r => r.totalHours >= 8).length}
+            color="purple"
+            icon={FiCheckSquare}
           />
         </div>
 
@@ -922,6 +1005,14 @@ export default function MyAttendance() {
             >
               📥 CSV
             </button>
+
+            {/* Request Edit Button */}
+            {/* <button
+              onClick={() => setShowEditModal(true)}
+              className="h-8 px-2 text-xs font-medium text-white transition bg-blue-600 rounded-md sm:px-3 hover:bg-blue-700"
+            >
+              📝 Req to Edit
+            </button> */}
 
             {/* Clear Button */}
             {(searchDate || dateFrom || dateTo || selectedMonth || statusFilter !== "all" || onsiteFilter !== "all") && (
@@ -1119,6 +1210,109 @@ export default function MyAttendance() {
           )}
         </div>
       </div>
+
+      {/* Attendance Edit Request Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in duration-200">
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-800">Request Record Edit</h2>
+                <button 
+                  onClick={() => setShowEditModal(false)}
+                  className="p-1 text-gray-400 transition hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Raise a request to admin to edit your attendance records</p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-wider">Employee ID & Name</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={employeeData?.employeeId || ""} 
+                    disabled 
+                    className="w-1/3 px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-lg cursor-not-allowed"
+                  />
+                  <input 
+                    type="text" 
+                    value={employeeData?.name || ""} 
+                    disabled 
+                    className="w-2/3 px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-lg cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-wider">Select Dates</label>
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    value={requestDate}
+                    onChange={(e) => setRequestDate(e.target.value)}
+                    className="flex-1 px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddRequestDate}
+                    className="px-3 py-1 text-xs font-bold text-white transition bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                  >
+                    + Add
+                  </button>
+                </div>
+
+                {selectedRequestDates.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {selectedRequestDates.map(date => (
+                      <span key={date} className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-blue-700 bg-blue-100 border border-blue-200 rounded-full">
+                        {date}
+                        <button 
+                          onClick={() => handleRemoveRequestDate(date)}
+                          className="text-blue-500 hover:text-blue-700"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-wider">Comment / Reason</label>
+                <textarea
+                  value={requestComment}
+                  onChange={(e) => setRequestComment(e.target.value)}
+                  placeholder="Explain why you need to edit these records..."
+                  className="w-full h-24 px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 px-4 py-2 text-xs font-bold text-gray-600 transition bg-gray-100 rounded-lg hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitEditRequest}
+                  disabled={submittingRequest}
+                  className={`flex-1 px-4 py-2 text-xs font-bold text-white transition rounded-lg shadow-lg ${
+                    submittingRequest ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  }`}
+                >
+                  {submittingRequest ? "Submitting..." : "Submit Request"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

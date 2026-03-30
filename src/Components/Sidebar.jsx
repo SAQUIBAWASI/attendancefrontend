@@ -799,6 +799,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/dashboard": "Dashboard",
       "/employeelist": "Employees",
       "/attedancesummary": "Attendance Summary",
+      "/all-medical-certificates": "Medical Certificates",
       "/attendancelist": "Attendance Records",
       "/today-attendance": "Today Attendance",
       "/absent-today": "Absent Today",
@@ -901,6 +902,8 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         { name: "Attendance Records", path: "/attendancelist" },
         { name: "Today Attendance", path: "/today-attendance" },
         { name: "Absent Today", path: "/absent-today" },
+        { name: "Regularization", path: "/regularization" },
+        { name: "Medical Certificates", path: "/all-medical-certificates" },
       ],
     },
     {

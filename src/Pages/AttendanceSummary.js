@@ -16376,8 +16376,9 @@ import JSZip from "jszip";
 import { useEffect, useRef, useState } from "react";
 import { FaBuilding, FaUserTag } from "react-icons/fa";
 import * as XLSX from "xlsx";
+import { API_BASE_URL } from "../config";
 import "../index.css";
-const BASE_URL = "https://api.timelyhealth.in/api";
+const BASE_URL = API_BASE_URL;
 
 export default function AttendanceSummary() {
   const [editedRows, setEditedRows] = useState({});
@@ -16445,6 +16446,7 @@ export default function AttendanceSummary() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saveStatus, setSaveStatus] = useState("");
+  const [regularizationRequests, setRegularizationRequests] = useState([]);
 
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -17178,6 +17180,16 @@ export default function AttendanceSummary() {
       if (!attRes.ok) throw new Error("Failed to fetch attendance records");
       const attData = await attRes.json();
 
+      try {
+        const regRes = await fetch(`${API_BASE_URL}/attendance-edit-requests/all`);
+        if (regRes.ok) {
+          const regData = await regRes.json();
+          setRegularizationRequests(regData.data || []);
+        }
+      } catch (regError) {
+        console.error("Error fetching regularization requests:", regError);
+      }
+
       const sortedRecords = (attData.records || []).sort(
         (a, b) => new Date(b.checkInTime) - new Date(a.checkInTime)
       );
@@ -17520,6 +17532,32 @@ export default function AttendanceSummary() {
         minute: "2-digit",
       })
       : "-";
+
+  const updateRegularizationStatus = async (id, status) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/attendance-edit-requests/update-status/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status,
+          adminComment: `Request ${status} by Admin from Summary Page`
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        showSaveStatus(`✅ Request ${status} successfully`);
+        fetchAllData();
+      } else {
+        showSaveStatus("❌ Failed to update status", "error");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      showSaveStatus("🚨 Error updating status", "error");
+    }
+  };
 
   const getDayTypeBadge = (hours) => {
     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
@@ -17965,6 +18003,65 @@ export default function AttendanceSummary() {
           </div>
         </div>
 
+        {/* Regularization Requests Section */}
+        {/* {regularizationRequests.filter(r => r.status === 'pending').length > 0 && (
+          <div className="p-4 mb-4 mt-6 bg-white border shadow-lg rounded-2xl">
+            <h2 className="mb-3 text-lg font-bold text-orange-600 flex items-center gap-2">
+              ⏳ Pending Regularization Requests
+              <span className="px-2 py-0.5 text-xs bg-orange-100 text-orange-600 rounded-full">
+                {regularizationRequests.filter(r => r.status === 'pending').length}
+              </span>
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-50 text-gray-700">
+                  <tr>
+                    <th className="py-2 px-3 text-left">Emp ID</th>
+                    <th className="py-2 px-3 text-left">Name</th>
+                    <th className="py-2 px-3 text-left">Requested Dates</th>
+                    <th className="py-2 px-3 text-left">Comment</th>
+                    <th className="py-2 px-3 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {regularizationRequests.filter(r => r.status === 'pending').map((req) => (
+                    <tr key={req._id} className="hover:bg-orange-50 transition-colors">
+                      <td className="py-2 px-3 font-medium">{req.employeeId}</td>
+                      <td className="py-2 px-3">{req.employeeName}</td>
+                      <td className="py-2 px-3">
+                        <div className="flex flex-wrap gap-1">
+                          {req.selectedDates.map((d, i) => (
+                            <span key={i} className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px]">
+                              {new Date(d).toLocaleDateString()}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-2 px-3 text-gray-600 max-w-xs truncate">{req.comment}</td>
+                      <td className="py-2 px-3 text-center">
+                        <div className="flex justify-center gap-2">
+                          <button
+                            onClick={() => updateRegularizationStatus(req._id, 'approved')}
+                            className="px-3 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition-colors"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => updateRegularizationStatus(req._id, 'rejected')}
+                            className="px-3 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )} */}
+
         {/* Details Modal */}
         {selectedEmployee && (() => {
           const activeMonth = selectedMonth;
@@ -18028,6 +18125,11 @@ export default function AttendanceSummary() {
                   new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey
                 );
 
+                const regReq = regularizationRequests.find(r => 
+                  r.employeeId === selectedEmployee && 
+                  r.selectedDates.some(d => new Date(d).toLocaleDateString('en-CA') === dateKey)
+                );
+
                 const edited = editedRows[dateKey] || {};
 
                 const currentReason =
@@ -18085,6 +18187,14 @@ export default function AttendanceSummary() {
                   <tr key={dateKey} className="border-t hover:bg-blue-50">
                     <td className="py-2 text-center">
                       {date.toLocaleDateString("en-IN")}
+                      {regReq && (
+                        <div className={`mt-1 text-[10px] font-bold uppercase ${
+                          regReq.status === 'pending' ? 'text-orange-500' : 
+                          regReq.status === 'approved' ? 'text-green-500' : 'text-red-500'
+                        }`}>
+                          {regReq.status === 'pending' ? '⏳ Request' : regReq.status === 'approved' ? '✅ Edited' : '❌ Denied'}
+                        </div>
+                      )}
                     </td>
 
                     <td className="py-2 text-center">

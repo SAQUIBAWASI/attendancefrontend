@@ -1,285 +1,3 @@
-// import axios from "axios";
-// import { useEffect, useState } from "react";
-// import {
-//   FiCalendar,
-//   FiCamera,
-//   FiCheckCircle,
-//   FiClock as FiHistory,
-//   FiList
-// } from "react-icons/fi";
-// import { useLocation, useNavigate } from "react-router-dom";
-// import { subscribeToPushNotifications } from "../utils/pushNotification";
-// import { API_BASE_URL } from "../config";
-
-
-// const EmployeeDashboard = () => {
-//   const navigate = useNavigate();
-//   const location = useLocation();
-
-//   const email = location.state?.email || localStorage.getItem("employeeEmail");
-//   const [profile, setProfile] = useState(null);
-//   const [assignedLocation, setAssignedLocation] = useState("Not Assigned");
-//   const [shiftTiming, setShiftTiming] = useState("Not Assigned");
-//   const [stats, setStats] = useState({
-//     presentDays: 0,
-//     pendingLeaves: 0,
-//     activePermissions: 0,
-//   });
-
-//   useEffect(() => {
-//     if (!email) return;
-
-//     const fetchData = async () => {
-//       try {
-//         const BASE_URL = API_BASE_URL.replace(/\/api$/, "/");
-//         const API_5000 = API_BASE_URL.replace(/\/api$/, "/");
-
-//         // 1. Fetch Profile
-//         const profileRes = await axios.get(`${BASE_URL}api/employees/get-employee?email=${email}`);
-//         const profileData = profileRes.data.data || profileRes.data;
-//         setProfile(profileData);
-
-//         if (profileData) {
-//           // Subscribe to Push Notifications using the unique _id
-//           if (profileData._id) {
-//             subscribeToPushNotifications(profileData._id);
-//           }
-
-//           // Also support using employeeId if _id is missing (fallback)
-//           const empId = profileData.employeeId;
-//           const localStorageId = JSON.parse(localStorage.getItem("employeeData"))?.employeeId;
-//           const targetId = empId || localStorageId;
-
-//           // 2. Attendance Stats
-//           const attRes = await axios.get(`${BASE_URL}api/attendance/myattendance/${targetId}`);
-//           const presentCount = attRes.data?.records?.filter(r => r.status === "checked-in" || r.status === "present").length || 0;
-
-//           // 3. Leaves Stats
-//           const leaveRes = await axios.get(`${BASE_URL}api/leaves/employeeleaves/${targetId}`);
-//           const pendingLeavesCount = leaveRes.data?.records?.filter(l => l.status === "pending").length || 0;
-
-//           // 4. Permissions Stats
-//           try {
-//             const permRes = await axios.get(`${API_5000}api/permissions/my-permissions/${targetId}`);
-//             const activePermsCount = permRes.data?.filter(p => p.status === "APPROVED").length || 0;
-//             setStats(prev => ({ ...prev, activePermissions: activePermsCount }));
-//           } catch (e) {
-//             console.warn("Permissions fetch failed", e);
-//           }
-
-//           // 5. Assigned Location
-//           const fetchLocation = async (url) => {
-//             const res = await axios.get(`${url}api/employees/mylocation/${targetId}`);
-//             const data = res.data?.data || res.data;
-//             if (data?.location?.name) return data.location.name;
-//             return null;
-//           };
-
-//           try {
-//             let locName = await fetchLocation(API_5000);
-//             if (!locName) locName = await fetchLocation(API_5000);
-//             if (!locName && profileData.location?.name) locName = profileData.location.name;
-//             setAssignedLocation(locName || "Not Assigned");
-//           } catch (e) {
-//             setAssignedLocation("Not Assigned");
-//           }
-
-//           // 6. Shift Timing
-//           const fetchShift = async (url) => {
-//             const res = await axios.get(`${url}api/shifts/employee/${targetId}`);
-//             const data = res.data?.data || res.data;
-//             if (data?.startTime) return `${data.startTime} - ${data.endTime}`;
-//             if (data?.employeeAssignment?.startTime) return `${data.employeeAssignment.startTime} - ${data.employeeAssignment.endTime}`;
-//             return null;
-//           };
-
-//           try {
-//             let shiftTime = await fetchShift(API_5000);
-//             if (!shiftTime) shiftTime = await fetchShift(API_5000);
-//             setShiftTiming(shiftTime || "No Shift Assigned");
-//           } catch (e) {
-//             setShiftTiming("Not Assigned");
-//           }
-
-
-
-//           setStats(prev => ({
-//             ...prev,
-//             presentDays: presentCount,
-//             pendingLeaves: pendingLeavesCount
-//           }));
-//         }
-//       } catch (err) {
-//         console.error("Dashboard data fetch error:", err);
-//       }
-//     };
-
-//     fetchData();
-//   }, [email]);
-
-
-
-//   if (!profile) return (
-//     <div className="flex items-center justify-center min-h-screen bg-gray-50 uppercase tracking-widest text-xs font-bold text-blue-600">
-//       <div className="flex flex-col items-center gap-3">
-//         <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-//         Processing Dashboard...
-//       </div>
-//     </div>
-//   );
-
-//   return (
-//     <div className="min-h-screen bg-[#F8FAFC] text-[#334155]">
-
-
-//       <main className="max-w-6xl mx-auto p-6 lg:p-10">
-//         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-//           {/* Left Column: Compact Profile & Info */}
-//           <div className="lg:col-span-4 space-y-6">
-//             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-//               <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-50">
-//                 <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 text-xl font-bold">
-//                   {profile.name.split(' ').map(n => n[0]).join('')}
-//                 </div>
-//                 <div>
-//                   <h2 className="text-base font-bold text-gray-900 leading-none mb-1">{profile.name}</h2>
-//                   <p className="text-xs text-blue-600 font-medium">{profile.department}</p>
-//                 </div>
-//               </div>
-
-//               <div className="space-y-4">
-//                 <MiniDetail label="Employee ID" value={profile.employeeId} />
-//                 <MiniDetail label="Status" value="Active" isStatus />
-//                 <MiniDetail label="Location" value={assignedLocation} />
-//                 <MiniDetail label="Shift" value={shiftTiming} />
-//                 <MiniDetail label="Joined" value={new Date(profile.joinDate).toLocaleDateString()} />
-//               </div>
-
-//               <button
-//                 onClick={() => navigate("/myattendance")}
-//                 className="w-full mt-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-100"
-//               >
-//                 View My Attendance
-//               </button>
-//             </div>
-//           </div>
-
-//           {/* Right Column: Stats & Sleek Actions */}
-//           <div className="lg:col-span-8 space-y-8">
-
-//             {/* Compact Stats Row */}
-//             <div className="grid grid-cols-3 gap-4">
-//               <CompactStat label="Attendance" value={stats.presentDays} icon={<FiCheckCircle />} color="emerald" />
-//               <CompactStat label="Leaves" value={stats.pendingLeaves} icon={<FiCalendar />} color="amber" />
-//               <CompactStat label="Permissions" value={stats.activePermissions} icon={<FiList />} color="blue" />
-//             </div>
-
-//             {/* Action Center - Now horizontal and sleek */}
-//             <div className="space-y-4">
-//               <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Quick Actions</h3>
-//               <div className="grid grid-cols-2 gap-4">
-
-//                 <SleekAction
-//                   icon={<FiCamera />}
-//                   title="Attendance"
-//                   desc="Check-In/Out"
-//                   color="emerald"
-//                   onClick={() => navigate("/attendance-capture")}
-//                 />
-//                 <SleekAction
-//                   icon={<FiHistory />}
-//                   title="History"
-//                   desc="View logs"
-//                   color="blue"
-//                   onClick={() => navigate("/myattendance")}
-//                 />
-//                 <SleekAction
-//                   icon={<FiList />}
-//                   title="Permissions"
-//                   desc="Short leaves"
-//                   color="purple"
-//                   onClick={() => navigate("/mypermissions")}
-//                 />
-//                 <SleekAction
-//                   icon={<FiCalendar />}
-//                   title="Leave Request"
-//                   desc="Apply now"
-//                   color="orange"
-//                   onClick={() => navigate("/myleaves")}
-//                 />
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </main>
-//     </div>
-//   );
-// };
-
-// // ✅ Minimalist Helper Components
-// const MiniDetail = ({ label, value, isStatus }) => (
-//   <div className="flex justify-between items-center">
-//     <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{label}</span>
-//     {isStatus ? (
-//       <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase">Active</span>
-//     ) : (
-//       <span className="text-xs font-bold text-gray-700">{value}</span>
-//     )}
-//   </div>
-// );
-
-// const CompactStat = ({ label, value, icon, color }) => {
-//   const colors = {
-//     emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
-//     amber: "bg-amber-50 text-amber-600 border-amber-100",
-//     blue: "bg-blue-50 text-blue-600 border-blue-100"
-//   };
-
-//   return (
-//     <div className={`p-3 rounded-xl border ${colors[color]} flex flex-col items-center justify-center text-center shadow-sm`}>
-//       <div className="mb-1 text-base opacity-70">{icon}</div>
-//       <div className="text-xl font-black">{value}</div>
-//       <p className="text-[8px] font-bold uppercase tracking-widest opacity-60 leading-none mt-0.5">{label}</p>
-//     </div>
-//   );
-// };
-
-// const SleekAction = ({ icon, title, desc, color, onClick, badge }) => { // ✅ Added badge prop
-//   const themes = {
-//     rose: "bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white border-rose-100",
-//     emerald: "bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white border-emerald-100",
-//     blue: "bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white border-blue-100",
-//     purple: "bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white border-purple-100",
-//     orange: "bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white border-orange-100"
-//   };
-
-//   return (
-//     <div
-//       onClick={onClick}
-//       className={`relative group p-3 rounded-xl border cursor-pointer transition-all duration-300 flex items-center gap-3 ${themes[color]} hover:shadow-lg hover:translate-y-[-2px]`}
-//     >
-//       {/* ✅ Badge Indicator */}
-//       {badge > 0 && (
-//         <div className="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-white shadow-sm z-10">
-//           {badge > 99 ? '99+' : badge}
-//         </div>
-//       )}
-
-//       <div className="text-xl">{icon}</div>
-//       <div>
-//         <h4 className="text-[13px] font-bold tracking-tight leading-none mb-0.5">{title}</h4>
-//         <p className="text-[9px] opacity-60 font-medium uppercase tracking-wider">{desc}</p>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default EmployeeDashboard;
-
-
-
-
 import axios from "axios";
 import { useEffect, useState } from "react";
 import {
@@ -288,7 +6,6 @@ import {
   FiCamera,
   FiClock as FiHistory,
   FiList,
-  FiLogOut,
   FiUserX
 } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -319,29 +36,30 @@ const EmployeeDashboard = () => {
   const [shiftTiming, setShiftTiming] = useState("Not Assigned");
 
   // Filter states
+  const getCurrentMonth = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  };
+
   const [lateDate, setLateDate] = useState("");
-  const [lateMonth, setLateMonth] = useState("2026-02"); // February 2026 as per your data
+  const [lateMonth, setLateMonth] = useState(getCurrentMonth());
   const [absentDate, setAbsentDate] = useState("");
-  const [absentMonth, setAbsentMonth] = useState("2026-02");
+  const [absentMonth, setAbsentMonth] = useState(getCurrentMonth());
 
   // Employee specific stats
   const [employeeStats, setEmployeeStats] = useState({
     presentThisMonth: 0,
     absentThisMonth: 0,
     lateThisMonth: 0,
-    totalWorkingDays: 0,
-    resignationStatus: null,
-    resignationLetter: ""
+    totalWorkingDays: 0
   });
 
   // Chart data states
   const [lateChartData, setLateChartData] = useState([]);
   const [absentChartData, setAbsentChartData] = useState([]);
   const [allAttendance, setAllAttendance] = useState([]);
+  const [userAttendance, setUserAttendance] = useState([]); // Added state for table
   const [loading, setLoading] = useState(true);
-  const [isResignationModalOpen, setIsResignationModalOpen] = useState(false);
-  const [resignationInput, setResignationInput] = useState("");
-  const [isSubmittingResignation, setIsSubmittingResignation] = useState(false);
 
   useEffect(() => {
     if (!email) return;
@@ -373,18 +91,42 @@ const EmployeeDashboard = () => {
           setAllAttendance(allAttendanceData);
 
           // 3. Filter current user's attendance
-          const userAttendance = allAttendanceData.filter(record => {
+          const filteredAttendance = allAttendanceData.filter(record => {
             const recordId = typeof record.employeeId === 'object' ?
               record.employeeId?.employeeId : record.employeeId;
             return recordId === targetId;
           });
+          setUserAttendance(filteredAttendance);
 
-          // 4. Calculate employee stats for February 2026
-          calculateEmployeeStats(userAttendance, profileData);
+          // 4. Smart initialization: find the latest month THIS user has data for
+          let resolvedMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`; // fallback: current month
+
+          if (filteredAttendance.length > 0) {
+            const validDates = filteredAttendance
+              .map(r => r.checkInTime ? new Date(r.checkInTime) : null)
+              .filter(d => d && !isNaN(d.getTime()));
+
+            if (validDates.length > 0) {
+              const latestDate = new Date(Math.max(...validDates));
+              resolvedMonth = `${latestDate.getFullYear()}-${String(latestDate.getMonth() + 1).padStart(2, '0')}`;
+            }
+          }
+
+          // Set state for the month pickers
+          setLateMonth(resolvedMonth);
+          setAbsentMonth(resolvedMonth);
+
+          // *** KEY FIX: call chart update directly with the resolved month ***
+          // (we can't rely on the state-change useEffect firing on first load)
+          updateChartDataWithMonth(filteredAttendance, profileData, resolvedMonth);
+
+          // 5. Calculate employee stats for selected month
+          calculateEmployeeStats(filteredAttendance, profileData);
 
           // 5. Leaves Stats
           const leaveRes = await axios.get(`${BASE_URL}api/leaves/employeeleaves/${targetId}`);
           const pendingLeavesCount = leaveRes.data?.records?.filter(l => l.status === "pending").length || 0;
+          setEmployeeStats(prev => ({ ...prev, pendingLeaves: pendingLeavesCount }));
 
           // 6. Permissions Stats
           try {
@@ -427,25 +169,6 @@ const EmployeeDashboard = () => {
             setShiftTiming("Not Assigned");
           }
 
-          // 9. Fetch Resignation Status
-          try {
-            const resigRes = await axios.get(`${BASE_URL}api/applications/all`);
-            const allApps = resigRes.data.applications || [];
-            const userResig = allApps.find(app => (app.email === email || app.candidateId?.email === email));
-            if (userResig) {
-              setEmployeeStats(prev => ({
-                ...prev,
-                resignationStatus: userResig.resignationStatus || "Pending",
-                resignationLetter: userResig.resignationLetter
-              }));
-              if (userResig.resignationLetter) {
-                setResignationInput(userResig.resignationLetter);
-              }
-            }
-          } catch (e) {
-            console.warn("Resignation status fetch failed", e);
-          }
-
           setLoading(false);
         }
       } catch (err) {
@@ -459,14 +182,29 @@ const EmployeeDashboard = () => {
 
   // Calculate employee specific stats for selected month
   const calculateEmployeeStats = (attendance, profileData) => {
-    const [year, month] = lateMonth.split('-').map(Number);
+    if (!lateMonth) return;
+    const parts = lateMonth.split('-');
+    if (parts.length < 2) return;
+    const [year, month] = parts.map(Number);
+    if (isNaN(year) || isNaN(month)) return;
 
-    // Get working days in month (Monday to Friday, 6-day week if applicable)
+    // Get working days in month (up to today if current/future month)
     const daysInMonth = new Date(year, month, 0).getDate();
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1;
+    
+    let maxDayToCheck = daysInMonth;
+    if (year > currentYear || (year === currentYear && month > currentMonth)) {
+      maxDayToCheck = 0;
+    } else if (year === currentYear && month === currentMonth) {
+      maxDayToCheck = today.getDate();
+    }
+
     const workingDays = [];
     const workingDayMap = {};
 
-    for (let day = 1; day <= daysInMonth; day++) {
+    for (let day = 1; day <= maxDayToCheck; day++) {
       const date = new Date(year, month - 1, day);
       const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
 
@@ -552,207 +290,131 @@ const EmployeeDashboard = () => {
     setAbsentChartData(absentAnalysis.chartData);
   };
 
-  const handleSubmitResignation = async () => {
-    if (!resignationInput.trim()) {
-      alert("Please provide a resignation statement.");
-      return;
-    }
-
-    try {
-      setIsSubmittingResignation(true);
-      const res = await axios.post(`${API_BASE_URL}/employees/submit-resignation`, {
-        email,
-        resignationLetter: resignationInput
-      });
-
-      if (res.data.success) {
-        setEmployeeStats(prev => ({
-          ...prev,
-          resignationStatus: "Pending",
-          resignationLetter: resignationInput
-        }));
-        setIsResignationModalOpen(false);
-        alert("Resignation request submitted successfully.");
-      }
-    } catch (err) {
-      console.error("Resignation error:", err);
-      alert(err.response?.data?.message || "Failed to submit resignation.");
-    } finally {
-      setIsSubmittingResignation(false);
-    }
+  // Version that takes month as a parameter — used on initial load to avoid state async race condition
+  const updateChartDataWithMonth = (attendance, profileData, month) => {
+    const lateAnalysis = analyzeLateDaysForMonth(attendance, profileData, month, "");
+    const absentAnalysis = analyzeAbsentDaysForMonth(attendance, profileData, month, "");
+    setLateChartData(lateAnalysis.chartData);
+    setAbsentChartData(absentAnalysis.chartData);
   };
 
   // Late Analysis with proper weekly grouping
-  const analyzeLateDays = (attendance, profileData) => {
-    const [year, month] = lateMonth.split('-').map(Number);
+  const analyzeLateDays = (attendance, profileData) =>
+    analyzeLateDaysForMonth(attendance, profileData, lateMonth, lateDate);
 
-    // Weekly late minutes (Week 1: Days 1-7, Week 2: Days 8-14, etc.)
-    const weeklyLate = {
-      'Week 1': 0,
-      'Week 2': 0,
-      'Week 3': 0,
-      'Week 4': 0,
-      'Week 5': 0
-    };
+  // Parameterized version (used on initial load to avoid async state race)
+  const analyzeLateDaysForMonth = (attendance, profileData, theMonth, theDate) => {
+    if (!theMonth) return { chartData: [] };
+    const parts = theMonth.split('-');
+    if (parts.length < 2) return { chartData: [] };
+    const [year, month] = parts.map(Number);
+    if (isNaN(year) || isNaN(month)) return { chartData: [] };
+
+    const weeklyLate = { 'Week 1': 0, 'Week 2': 0, 'Week 3': 0, 'Week 4': 0, 'Week 5': 0 };
 
     attendance.forEach(record => {
       if (!record.checkInTime) return;
-
       const recordDate = new Date(record.checkInTime);
 
-      // Filter by date if selected
-      if (lateDate) {
-        const recordDateStr = recordDate.toISOString().split('T')[0];
-        if (recordDateStr !== lateDate) return;
+      if (theDate) {
+        if (recordDate.toISOString().split('T')[0] !== theDate) return;
       } else {
-        // Filter by month
         if (recordDate.getFullYear() !== year || recordDate.getMonth() + 1 !== month) return;
       }
 
       const shiftStart = getShiftStartTime(profileData?.shift || "D");
-
       const checkInTime = new Date(record.checkInTime);
-      const [hours, minutes] = shiftStart.split(':').map(Number);
+      const [hours, mins] = shiftStart.split(':').map(Number);
       const shiftStartTime = new Date(checkInTime);
-      shiftStartTime.setHours(hours, minutes, 0, 0);
-
+      shiftStartTime.setHours(hours, mins, 0, 0);
       const graceTime = new Date(shiftStartTime);
       graceTime.setMinutes(graceTime.getMinutes() + 5);
 
       if (checkInTime > graceTime) {
         const lateMins = Math.floor((checkInTime - graceTime) / (1000 * 60));
-
-        // Group by week (Days 1-7 = Week 1, 8-14 = Week 2, etc.)
         const day = recordDate.getDate();
-        let weekNum = 1;
-        if (day >= 1 && day <= 7) weekNum = 1;
-        else if (day >= 8 && day <= 14) weekNum = 2;
-        else if (day >= 15 && day <= 21) weekNum = 3;
-        else if (day >= 22 && day <= 28) weekNum = 4;
-        else weekNum = 5;
-
+        let weekNum = day <= 7 ? 1 : day <= 14 ? 2 : day <= 21 ? 3 : day <= 28 ? 4 : 5;
         weeklyLate[`Week ${weekNum}`] += lateMins;
       }
     });
 
-    const isSingleDate = !!lateDate;
+    let chartData = Object.entries(weeklyLate).map(([week, minutes]) => ({ name: week, value: minutes, label: `${minutes} min` }));
 
-    // Convert to chart data 
-    // Always show all weeks for month view so the x-axis is steady
-    let chartData = Object.entries(weeklyLate)
-      .map(([week, minutes]) => ({
-        name: week,
-        value: minutes,
-        label: `${minutes} min`
-      }));
-
-    if (isSingleDate) {
-      // Find the specific week that got updated, or return the single date
+    if (theDate) {
       chartData = chartData.filter(d => d.value > 0);
-      if (chartData.length === 0) {
-        chartData = [{ name: lateDate, value: 0, label: '0 min' }];
-      } else {
-        chartData[0].name = lateDate; // replace "Week X" with the specific date
-      }
+      if (chartData.length === 0) chartData = [{ name: theDate, value: 0, label: '0 min' }];
+      else chartData[0].name = theDate;
     }
 
     return { chartData };
   };
 
   // Absent Analysis with proper weekly grouping
-  const analyzeAbsentDays = (attendance, profileData) => {
-    const [year, month] = absentMonth.split('-').map(Number);
+  const analyzeAbsentDays = (attendance, profileData) =>
+    analyzeAbsentDaysForMonth(attendance, profileData, absentMonth, absentDate);
 
-    // Get working days (Monday to Saturday for 6-day week)
+  // Parameterized version (used on initial load to avoid async state race)
+  const analyzeAbsentDaysForMonth = (attendance, profileData, theMonth, theDate) => {
+    if (!theMonth) return { chartData: [] };
+    const parts = theMonth.split('-');
+    if (parts.length < 2) return { chartData: [] };
+    const [year, month] = parts.map(Number);
+    if (isNaN(year) || isNaN(month)) return { chartData: [] };
+
     const daysInMonth = new Date(year, month, 0).getDate();
-    const workingDayMap = {};
-    const workingDays = [];
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month - 1, day);
-      const dayOfWeek = date.getDay();
-      // 6-day week: Monday to Saturday (1-6)
-      if (dayOfWeek >= 1 && dayOfWeek <= 6) {
-        workingDayMap[day] = true;
-        workingDays.push(day);
-      }
+    const today = new Date();
+    let maxDayToCheck = daysInMonth;
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1;
+    
+    if (year > currentYear || (year === currentYear && month > currentMonth)) {
+      maxDayToCheck = 0;
+    } else if (year === currentYear && month === currentMonth) {
+      maxDayToCheck = today.getDate();
     }
 
-    // Get present days
-    const presentDays = new Set();
+    const workingDayMap = {};
+    const workingDays = [];
+    for (let day = 1; day <= maxDayToCheck; day++) {
+      const d = new Date(year, month - 1, day).getDay();
+      if (d >= 1 && d <= 6) { workingDayMap[day] = true; workingDays.push(day); }
+    }
 
+    const presentDays = new Set();
     attendance.forEach(record => {
       if (!record.checkInTime) return;
       const recordDate = new Date(record.checkInTime);
-
-      if (absentDate) {
-        const recordDateStr = recordDate.toISOString().split('T')[0];
-        if (recordDateStr !== absentDate) return;
+      if (theDate) {
+        if (recordDate.toISOString().split('T')[0] !== theDate) return;
       } else {
         if (recordDate.getFullYear() !== year || recordDate.getMonth() + 1 !== month) return;
       }
-
       if (record.status === "present" || record.status === "checked-in") {
         const day = recordDate.getDate();
-        if (workingDayMap[day]) {
-          presentDays.add(day);
-        }
+        if (workingDayMap[day]) presentDays.add(day);
       }
     });
 
-    // For single date view
-    if (absentDate) {
-      const selectedDate = new Date(absentDate);
-      const dayOfWeek = selectedDate.getDay();
-      const isWorkingDay = dayOfWeek >= 1 && dayOfWeek <= 6;
-
-      if (isWorkingDay) {
+    if (theDate) {
+      const selectedDate = new Date(theDate);
+      const dow = selectedDate.getDay();
+      if (dow >= 1 && dow <= 6) {
         const day = selectedDate.getDate();
         const isPresent = presentDays.has(day);
-        return {
-          chartData: [{
-            name: absentDate,
-            value: isPresent ? 0 : 1,
-            label: isPresent ? 'Present' : 'Absent'
-          }]
-        };
-      } else {
-        return { chartData: [] };
+        return { chartData: [{ name: theDate, value: isPresent ? 0 : 1, label: isPresent ? 'Present' : 'Absent' }] };
       }
+      return { chartData: [] };
     }
 
-    // For month view - Group absent days by week
-    const weeklyAbsent = {
-      'Week 1': 0,
-      'Week 2': 0,
-      'Week 3': 0,
-      'Week 4': 0,
-      'Week 5': 0
-    };
-
+    const weeklyAbsent = { 'Week 1': 0, 'Week 2': 0, 'Week 3': 0, 'Week 4': 0, 'Week 5': 0 };
     workingDays.forEach(day => {
       if (!presentDays.has(day)) {
-        // Determine week (Days 1-7 = Week 1, 8-14 = Week 2, etc.)
-        let weekNum = 1;
-        if (day >= 1 && day <= 7) weekNum = 1;
-        else if (day >= 8 && day <= 14) weekNum = 2;
-        else if (day >= 15 && day <= 21) weekNum = 3;
-        else if (day >= 22 && day <= 28) weekNum = 4;
-        else weekNum = 5;
-
-        weeklyAbsent[`Week ${weekNum}`]++;
+        const wk = day <= 7 ? 1 : day <= 14 ? 2 : day <= 21 ? 3 : day <= 28 ? 4 : 5;
+        weeklyAbsent[`Week ${wk}`]++;
       }
     });
 
-    // Convert to chart data 
-    // Always show all weeks for month view so the x-axis is steady
-    const chartData = Object.entries(weeklyAbsent)
-      .map(([week, days]) => ({
-        name: week,
-        value: days,
-        label: `${days} day${days > 1 ? 's' : ''}`
-      }));
-
+    const chartData = Object.entries(weeklyAbsent).map(([week, days]) => ({ name: week, value: days, label: `${days} day${days > 1 ? 's' : ''}` }));
     return { chartData };
   };
 
@@ -772,9 +434,9 @@ const EmployeeDashboard = () => {
   const LateTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white px-3 py-2 border border-gray-200 rounded-lg shadow-lg text-xs">
+        <div className="px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg shadow-lg">
           <p className="font-bold text-gray-800">{payload[0].payload.name}</p>
-          <p className="text-rose-600 font-medium">{payload[0].payload.label}</p>
+          <p className="font-medium text-rose-600">{payload[0].payload.label}</p>
         </div>
       );
     }
@@ -784,9 +446,9 @@ const EmployeeDashboard = () => {
   const AbsentTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white px-3 py-2 border border-gray-200 rounded-lg shadow-lg text-xs">
+        <div className="px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg shadow-lg">
           <p className="font-bold text-gray-800">{payload[0].payload.name}</p>
-          <p className="text-red-500 font-medium">{payload[0].payload.label}</p>
+          <p className="font-medium text-red-500">{payload[0].payload.label}</p>
         </div>
       );
     }
@@ -794,113 +456,115 @@ const EmployeeDashboard = () => {
   };
 
   if (loading || !profile) return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 uppercase tracking-widest text-xs font-bold text-blue-600">
+    <div className="flex items-center justify-center min-h-screen bg-[#F8FAFC] uppercase tracking-widest text-xs font-bold text-blue-600">
       <div className="flex flex-col items-center gap-3">
-        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
         Processing Dashboard...
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#334155]">
-      <main className="max-w-7xl mx-auto p-6 lg:p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#334155] font-sans">
+      <main className="p-6 lg:p-10 max-w-full overflow-hidden">
+        
+        {/* Welcome Header Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 leading-tight">
+              Welcome back, <span className="text-blue-600">{profile.name.split(' ')[0]}</span>! 👋
+            </h1>
+            <p className="text-sm text-slate-500 mt-1 font-medium">
+              Here's what's happening with your attendance today.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 bg-white px-4 py-2 text-slate-600 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+            <FiCalendar className="text-blue-500" />
+            <span className="text-xs font-bold tracking-tight">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
 
           {/* Left Column: Profile Card + Employee Stats */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="space-y-6 lg:col-span-4">
             {/* Profile Card */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-              <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-50">
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 text-xl font-bold">
+            <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-2xl">
+              <div className="flex items-center gap-4 pb-6 mb-6 border-b border-gray-50">
+                <div className="flex items-center justify-center text-xl font-bold text-blue-600 w-14 h-14 rounded-2xl bg-blue-50">
                   {profile.name.split(' ').map(n => n[0]).join('')}
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-gray-900 leading-none mb-1">{profile.name}</h2>
-                  <p className="text-xs text-blue-600 font-medium">{profile.department || "Developer"}</p>
+                  <h2 className="mb-1 text-base font-bold leading-none text-gray-900">{profile.name}</h2>
+                  <p className="text-xs font-medium text-blue-600">{profile.department || "Developer"}</p>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <MiniDetail label="EMPLOYEE ID" value={profile.employeeId} />
-                <MiniDetail label="STATUS" value="Active" isStatus />
-                <MiniDetail label="LOCATION" value={assignedLocation} />
-                <MiniDetail label="SHIFT" value={shiftTiming} />
-                <MiniDetail label="JOINED" value={new Date(profile.joinDate).toLocaleDateString()} />
+              <div className="space-y-3">
+                <MiniDetail label="Employee ID" value={profile.employeeId} />
+                <MiniDetail label="Status" value="Active" isStatus />
+                <MiniDetail label="Location" value={assignedLocation} />
+                <MiniDetail label="Work Shift" value={shiftTiming} />
+                <MiniDetail label="Join Date" value={new Date(profile.joinDate).toLocaleDateString()} />
               </div>
 
               <button
                 onClick={() => navigate("/myattendance")}
-                className="w-full mt-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-100"
+                className="w-full mt-6 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition-all"
               >
-                View My Attendance
+                View Full Attendance Report
               </button>
             </div>
 
-            {/* Quick Actions (Moved from Right Column) */}
-            <div className="space-y-4">
-              <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">QUICK ACTIONS</h3>
-              <div className="grid grid-cols-2 gap-4">
+            {/* Quick Actions */}
+            <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-2xl">
+              <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">QUICK ACTIONS</h3>
+              <div className="grid grid-cols-1 gap-2">
                 <SleekAction
                   icon={<FiCamera />}
-                  title="Attendance"
-                  desc="CHECK-IN/OUT"
-                  color="emerald"
+                  title="Check Attendance"
+                  desc="MARK IN / OUT"
+                  color="blue"
                   onClick={() => navigate("/attendance-capture")}
                 />
                 <SleekAction
                   icon={<FiHistory />}
-                  title="History"
-                  desc="VIEW LOGS"
-                  color="blue"
+                  title="Attendance History"
+                  desc="VIEW PREVIOUS RECORDS"
+                  color="slate"
                   onClick={() => navigate("/myattendance")}
                 />
                 <SleekAction
                   icon={<FiList />}
-                  title="Permissions"
-                  desc="SHORT LEAVES"
-                  color="purple"
+                  title="Permission Request"
+                  desc="APPLY FOR SHORT LEAVE"
+                  color="slate"
                   onClick={() => navigate("/mypermissions")}
                 />
                 <SleekAction
                   icon={<FiCalendar />}
-                  title="Leave Request"
-                  desc="APPLY NOW"
-                  color="orange"
+                  title="Leave Management"
+                  desc="APPLY FOR LEAVE"
+                  color="slate"
                   onClick={() => navigate("/myleaves")}
-                />
-                <SleekAction
-                  icon={<FiLogOut />}
-                  title="Resignation"
-                  desc={employeeStats.resignationStatus ? employeeStats.resignationStatus.toUpperCase() : "REQUEST EXIT"}
-                  color="rose"
-                  onClick={() => {
-                    if (!resignationInput.trim()) {
-                      const template = `To,\nThe Human Resources Department,\nTimely Health Projects\n\nSubject: Resignation Letter\n\nDear Sir/Madam,\n\nI, ${profile?.name || "[Name]"}, am writing to formally resign from my position as ${profile?.role || profile?.department || "[Role]"} at Timely Health Projects.\n\nMy last working day will be [Date]. I would like to thank you for the professional and personal development opportunities I have enjoyed during my tenure.\n\nPlease let me know the necessary steps to complete the exit process.\n\nSincerely,\n${profile?.name || "[Name]"}`;
-                      setResignationInput(template);
-                    }
-                    setIsResignationModalOpen(true);
-                  }}
-                  badge={employeeStats.resignationStatus === "Pending" ? 1 : 0}
                 />
               </div>
             </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="lg:col-span-8 space-y-6">
-
+          </div>          {/* Right Column */}
+          <div className="space-y-6 lg:col-span-8">
+            
             {/* Charts Section */}
-            <div className="flex flex-col gap-6">
-
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Late Analysis Card */}
-              <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-sm font-bold text-gray-800">Late Minutes by Week</h3>
-                    <p className="text-xs text-gray-500">Weekly distribution for {lateMonth}</p>
+              <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
+                <div className="flex items-center justify-between gap-4 mb-6 text-slate-900">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold whitespace-nowrap">Late Minutes by Week</h3>
+                    <p className="text-sm font-medium text-slate-400 mt-1 whitespace-nowrap">Weekly distribution for {lateMonth}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <input
                       type="month"
                       value={lateMonth}
@@ -908,41 +572,34 @@ const EmployeeDashboard = () => {
                         setLateMonth(e.target.value);
                         setLateDate("");
                       }}
-                      className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-rose-500"
-                    />
-                    <input
-                      type="date"
-                      value={lateDate}
-                      onChange={(e) => setLateDate(e.target.value)}
-                      className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-rose-500"
+                      className="px-4 py-2 text-sm font-semibold text-slate-700 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none bg-white cursor-pointer transition-all"
                     />
                   </div>
                 </div>
-
+ 
                 <div className="h-64">
-                  {lateChartData.length > 0 ? (
+                  {lateChartData.some(d => d.value > 0) || lateDate ? (
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={lateChartData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={90}
-                          paddingAngle={2}
-                          dataKey="value"
-                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                          labelLine={false}
-                        >
-                          {lateChartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<LateTooltip />} />
-                      </PieChart>
+                      <BarChart data={lateChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis
+                          dataKey="name"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 11, fill: '#64748b', fontWeight: 600 }}
+                        />
+                        <YAxis
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 11, fill: '#64748b' }}
+                          domain={[0, 'dataMax + 10']}
+                        />
+                        <Tooltip content={<LateTooltip />} cursor={{ fill: '#f8fafc' }} />
+                        <Bar dataKey="value" fill="#F59E0B" radius={[4, 4, 0, 0]} barSize={40} />
+                      </BarChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="h-full flex items-center justify-center text-gray-400">
+                    <div className="flex items-center justify-center h-full text-gray-400">
                       <div className="text-center">
                         <FiAlertCircle className="w-8 h-8 mx-auto mb-2 opacity-20" />
                         <p className="text-sm">No late records for {lateMonth}</p>
@@ -953,13 +610,13 @@ const EmployeeDashboard = () => {
               </div>
 
               {/* Absent Analysis Card */}
-              <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-sm font-bold text-gray-800">Absent Days by Week</h3>
-                    <p className="text-xs text-gray-500">Weekly breakdown for {absentMonth}</p>
+              <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
+                <div className="flex items-center justify-between gap-4 mb-6 text-slate-900">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold whitespace-nowrap">Absent Days by Week</h3>
+                    <p className="text-sm font-medium text-slate-400 mt-1 whitespace-nowrap">Weekly breakdown for {absentMonth}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <input
                       type="month"
                       value={absentMonth}
@@ -967,13 +624,7 @@ const EmployeeDashboard = () => {
                         setAbsentMonth(e.target.value);
                         setAbsentDate("");
                       }}
-                      className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-purple-500"
-                    />
-                    <input
-                      type="date"
-                      value={absentDate}
-                      onChange={(e) => setAbsentDate(e.target.value)}
-                      className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-purple-500"
+                      className="px-4 py-2 text-sm font-semibold text-slate-700 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none bg-white cursor-pointer transition-all"
                     />
                   </div>
                 </div>
@@ -1001,7 +652,7 @@ const EmployeeDashboard = () => {
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="h-full flex items-center justify-center text-gray-400">
+                    <div className="flex items-center justify-center h-full text-gray-400">
                       <div className="text-center">
                         <FiUserX className="w-8 h-8 mx-auto mb-2 opacity-20" />
                         <p className="text-sm">No absent records for {absentMonth}</p>
@@ -1011,158 +662,106 @@ const EmployeeDashboard = () => {
                 </div>
               </div>
             </div>
+
+            {/* Recent Attendance Registry */}
+            <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-base font-bold text-slate-900">Recent Attendance Activity</h3>
+                <button
+                  onClick={() => navigate("/myattendance")}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  View All Activity
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-gray-50">
+                      <th className="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">DATE</th>
+                      <th className="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">CHECK IN</th>
+                      <th className="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">CHECK OUT</th>
+                      <th className="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {userAttendance.slice(0, 5).map((record, index) => (
+                      <tr key={index} className="group hover:bg-slate-50/50 transition-colors">
+                        <td className="py-4 text-xs font-bold text-slate-700">
+                          {new Date(record.checkInTime).toLocaleDateString()}
+                        </td>
+                        <td className="py-4 text-xs font-medium text-slate-600">
+                          {record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
+                        </td>
+                        <td className="py-4 text-xs font-medium text-slate-600">
+                          {record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
+                        </td>
+                        <td className="py-4 text-right">
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${record.status === 'present' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
+                            }`}>
+                            {record.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {userAttendance.length === 0 && (
+                      <tr>
+                        <td colSpan="4" className="py-8 text-center text-xs text-slate-400 italic">
+                          No recent activity found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </main>
-
-      {/* Resignation Modal */}
-      {isResignationModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl relative overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Resignation Registry</h3>
-                <p className="text-xs text-gray-500 font-medium">Official statement of exit</p>
-              </div>
-              <button
-                onClick={() => setIsResignationModalOpen(false)}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all"
-              >
-                <FiUserX size={20} />
-              </button>
-            </div>
-
-            <div className="p-6">
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">
-                Resignation Statement
-              </label>
-              <textarea
-                value={resignationInput}
-                onChange={(e) => setResignationInput(e.target.value)}
-                placeholder="Please state your reason for resignation and expected last working day..."
-                className="w-full h-40 p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none transition-all placeholder:text-gray-400"
-                disabled={employeeStats.resignationStatus === "Approved"}
-              ></textarea>
-
-              <div className="mt-4 p-4 bg-rose-50 rounded-xl border border-rose-100">
-                <div className="flex gap-3">
-                  <FiAlertCircle className="text-rose-600 mt-1 flex-shrink-0" />
-                  <p className="text-[11px] text-rose-700 font-medium leading-relaxed">
-                    By submitting this request, you are officially initiating the resignation process. This request will be sent to the Human Resources department for review.
-                  </p>
-                </div>
-              </div>
-
-              {employeeStats.resignationStatus && (
-                <div className="mt-4 flex items-center justify-between px-2">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Current Status</span>
-                  <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${employeeStats.resignationStatus === "Approved" ? "bg-emerald-100 text-emerald-700" :
-                    employeeStats.resignationStatus === "Rejected" ? "bg-rose-100 text-rose-700" :
-                      "bg-amber-100 text-amber-700"
-                    }`}>
-                    {employeeStats.resignationStatus}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="p-6 border-t border-gray-50 flex gap-3">
-              <button
-                onClick={() => setIsResignationModalOpen(false)}
-                className="flex-1 py-3 text-[11px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 rounded-xl transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmitResignation}
-                disabled={isSubmittingResignation || employeeStats.resignationStatus === "Approved"}
-                className={`flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-100 flex items-center justify-center gap-2 ${(isSubmittingResignation || employeeStats.resignationStatus === "Approved") ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-              >
-                {isSubmittingResignation ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                ) : (
-                  <FiLogOut />
-                )}
-                {employeeStats.resignationStatus ? "Update Request" : "Submit Resignation"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .animate-in { animation: zoomIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-      `}} />
     </div>
   );
 };
 
 // MiniDetail Component
 const MiniDetail = ({ label, value, isStatus }) => (
-  <div className="flex justify-between items-center">
-    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{label}</span>
+  <div className="flex items-center justify-between py-1 border-b border-gray-50 last:border-0">
+    <span className="text-[11px] font-semibold text-slate-400">{label}</span>
     {isStatus ? (
-      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase">ACTIVE</span>
+      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+        <span className="text-[10px] font-bold uppercase tracking-wider">Active</span>
+      </div>
     ) : (
-      <span className="text-xs font-bold text-gray-700">{value}</span>
+      <span className="text-xs font-semibold text-slate-700">{value}</span>
     )}
   </div>
 );
 
-// StatRow Component
-const StatRow = ({ icon, label, value, color }) => {
-  const colors = {
-    emerald: "text-emerald-600",
-    purple: "text-purple-600",
-    rose: "text-rose-600"
-  };
-
-  return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        {icon}
-        <span className="text-sm text-slate-600 font-medium">{label}</span>
-      </div>
-      <span className={`text-base font-bold ${colors[color]}`}>{value}</span>
-    </div>
-  );
-};
-
-// SleekAction Component
-const SleekAction = ({ icon, title, desc, color, onClick, badge }) => {
+// SleekAction Component - Compact and Professional
+const SleekAction = ({ icon, title, desc, color, onClick }) => {
   const themes = {
-    rose: "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-600 hover:text-white hover:border-rose-600",
-    emerald: "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-600 hover:text-white hover:border-emerald-600",
-    blue: "bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600",
-    purple: "bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-600 hover:text-white hover:border-purple-600",
-    orange: "bg-orange-50 text-orange-600 border-orange-100 hover:bg-orange-600 hover:text-white hover:border-orange-600"
+    blue: "bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:shadow-lg shadow-blue-100",
+    slate: "bg-slate-50 text-slate-700 border-slate-100 hover:bg-slate-100 hover:border-slate-200"
   };
 
-  const textColors = {
-    rose: "text-rose-600 group-hover:text-white",
-    emerald: "text-emerald-700 group-hover:text-white",
-    blue: "text-blue-600 group-hover:text-white",
-    purple: "text-purple-600 group-hover:text-white",
-    orange: "text-orange-600 group-hover:text-white"
+  const iconColors = {
+    blue: "text-white",
+    slate: "text-blue-600"
   };
 
   return (
     <div
       onClick={onClick}
-      className={`relative group p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 flex items-center gap-4 ${themes[color]} hover:shadow-lg hover:-translate-y-1`}
+      className={`p-3 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 ${themes[color]}`}
     >
-      {badge > 0 && (
-        <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white flex items-center justify-center text-[10px] font-black rounded-full border-2 border-white shadow-sm animate-bounce">
-          {badge}
-        </div>
-      )}
-      <div className={`text-xl ${textColors[color]}`}>{icon}</div>
+      <div className={`text-lg p-1.5 rounded-lg ${color === 'blue' ? 'bg-white/10' : 'bg-white shadow-sm'} ${iconColors[color]}`}>
+        {icon}
+      </div>
       <div>
-        <h4 className={`text-sm font-bold tracking-tight leading-none mb-1 ${textColors[color]}`}>{title}</h4>
-        <p className={`text-[10px] opacity-60 font-medium uppercase tracking-wider ${textColors[color]}`}>{desc}</p>
+        <h4 className="text-xs font-bold tracking-tight leading-none mb-0.5">{title}</h4>
+        <p className={`text-[9px] font-medium uppercase tracking-wider ${color === 'blue' ? 'opacity-80' : 'text-slate-400'}`}>
+          {desc}
+        </p>
       </div>
     </div>
   );

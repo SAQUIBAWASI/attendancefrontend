@@ -9272,7 +9272,7 @@ const PayRoll = () => {
               disabled={isLoadingMonth}
               className="h-8 px-3 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
             >
-              {isLoadingMonth ? "⟳" : "⟳ Refresh"}
+              {isLoadingMonth ? "⟳" : "⟳"}
             </button>
 
             {/* Clear Filters Button */}

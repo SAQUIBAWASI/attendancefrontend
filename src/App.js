@@ -186,6 +186,14 @@ import Documents from "./Pages/Documents.jsx";
 // import SendOffer from "./Pages/SendOffer.jsx";
 import TakeAssessment from "./Pages/TakeAssessment.jsx";
 import ApplyingJob from "./Pages/ApplyingJob.jsx";
+import Occasions from "./Pages/Occasions.jsx";
+import PendingLeaves from "./Pages/PendingLeaves.jsx";
+import ApprovedLeaves from "./Pages/ApprovedLeaves.jsx";
+import RejectedLeaves from "./Pages/RejectedLeaves.jsx";
+import Regularization from "./Pages/Regularization.jsx";
+import MedicalCertificate from "./Pages/MedicalCertificate.jsx";
+import AllMedicalCertificate from "./Pages/AllMedicalCertificate.jsx";
+import MyMedicalCertificate from "./Pages/MyMedicalCertificate.jsx";
 
 
 function App() {
@@ -206,8 +214,10 @@ function App() {
       <Route path="/myleaves" element={<EmployeeLayout><EmployeeLeaves /></EmployeeLayout>} />
       <Route path="/attendance-capture" element={<EmployeeLayout><AttendanceCapture /></EmployeeLayout>} />
       <Route path="/myattendance" element={<EmployeeLayout><MyAttendance /></EmployeeLayout>} />
+   
       <Route path="/my-shift" element={<EmployeeLayout><MyShift /></EmployeeLayout>} />
       <Route path="/mypermissions" element={<EmployeeLayout><MyPermission /></EmployeeLayout>} />
+      
       {/* <Route path="/expense-management" element={<ExpenseManagement />} />   */}
       <Route path="/expense-management" element={<EmployeeLayout><ExpenseManagement /></EmployeeLayout>} />
       <Route path="/emp-my-jobs" element={<EmployeeLayout><MyJobs /></EmployeeLayout>} />
@@ -222,6 +232,8 @@ function App() {
       {/* ✅ Candidate Portal Routes with Shared Layout */}
       <Route element={<CandidateLayout />}>
         <Route path="/candidate-dashboard" element={<CandidateDashboard />} />
+          
+        <Route path="/medical-certificate" element={<MedicalCertificate />} />
         <Route path="/all-jobs" element={<AllJobs />} />
         <Route path="/applied-jobs" element={<AppliedJobs />} />
         <Route path="/interview" element={<Interview />} />
@@ -263,6 +275,7 @@ function App() {
       <Route path="/emp-assessments" element={<EmployeeLayout><AssessmentManager /></EmployeeLayout>} />
       <Route path="/emp-documents" element={<EmployeeLayout><Documents /></EmployeeLayout>} />
       <Route path="/emp-all-expensives-management" element={<EmployeeLayout><AllExpensives /></EmployeeLayout>} />
+      <Route path="/my-medical-certificate" element={<EmployeeLayout><MyMedicalCertificate /></EmployeeLayout>} />
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"
@@ -411,6 +424,13 @@ function App() {
               <Route path="/candidate-personal-documents" element={<CandidatePersonalDocuments />} />
               <Route path="/employee-journey" element={<EmployeeJourney />} />
               <Route path="/all-expensives" element={<AllExpensives />} />
+              <Route path="/occasions" element={<Occasions />} />
+              <Route path="/pending-leaves" element={<PendingLeaves />} />
+              <Route path="/approved-leaves" element={<ApprovedLeaves />} />
+              <Route path="/rejected-leaves" element={<RejectedLeaves />} />
+              <Route path="/regularization" element={<Regularization />} />
+              <Route path="/all-medical-certificates" element={<AllMedicalCertificate />} />
+           
 
 
             </Routes>

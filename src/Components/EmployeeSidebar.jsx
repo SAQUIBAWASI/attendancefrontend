@@ -206,12 +206,12 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     });
 
     // 2. ALWAYS SHOW MY PERMISSIONS
-    enhancedElements.push({
-      icon: <i className="ri-shield-keyhole-fill"></i>,
-      name: "My Permissions",
-      path: "/mypermissions",
-      permission: "ALLOW_ALWAYS"
-    });
+    // enhancedElements.push({
+    //   icon: <i className="ri-shield-keyhole-fill"></i>,
+    //   name: "My Permissions",
+    //   path: "/mypermissions",
+    //   permission: "ALLOW_ALWAYS"
+    // });
 
     // 3. ATTENDANCE DROPDOWN
     const attendanceDropdown = {
@@ -219,7 +219,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       name: "Attendance",
       dropdown: [
         { name: "Check In", path: "/attendance-capture", permission: "ALLOW_ALWAYS" },
-        { name: "Attendance Report", path: "/myattendance", permission: "ALLOW_ALWAYS" },
+        { name: " My Attendance", path: "/myattendance", permission: "ALLOW_ALWAYS" },
         { name: "My Shift", path: "/my-shift", permission: "ALLOW_ALWAYS" },
         { name: "My Assigned Location", path: "/mylocation", permission: "ALLOW_ALWAYS" },
       ],
@@ -257,6 +257,17 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       permission: "ALLOW_ALWAYS"
     });
 
+       enhancedElements.push({
+      icon: <i className="ri-wallet-3-fill"></i>,
+      name: "My Expensives",
+      path: "/expense-management",
+      permission: "ALLOW_ALWAYS"
+    });
+
+
+
+    
+
     // 4.0 PROFILE DROPDOWN (Contains My Jobs, Personal Docs and My Letters)
     enhancedElements.push({
       icon: <i className="ri-profile-fill"></i>,
@@ -265,7 +276,9 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       dropdown: [
         { name: "My Jobs", path: "/emp-my-jobs", permission: "ALLOW_ALWAYS" },
         { name: "Personal Docs", path: "/emp-personal-documents", permission: "ALLOW_ALWAYS" },
-        { name: "My Letters", path: "/emp-letters", permission: "ALLOW_ALWAYS" }
+        { name: "My Letters", path: "/emp-letters", permission: "ALLOW_ALWAYS" },
+        {name: "My Certificate", path: "/my-medical-certificate", permission: "ALLOW_ALWAYS" }
+      
       ]
     });
 

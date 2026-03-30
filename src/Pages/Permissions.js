@@ -2415,7 +2415,7 @@ export const Permissions = () => {
     if (!window.confirm("Are you sure you want to APPROVE this permission?")) return;
 
     try {
-      const res = await axios.put(`${BASE_URL}/api/permissions/approve/${id}`);
+      const res = await axios.put(`${BASE_URL}/permissions/approve/${id}`);
       if (res.status === 200) {
         alert("✅ Permission Approved Successfully!");
         fetchAllData();

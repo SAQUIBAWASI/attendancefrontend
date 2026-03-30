@@ -140,7 +140,7 @@ const EmployeePermissions = () => {
     try {
       setSubmittingDuty(true);
       const res = await axios.put(
-        `${BASE_URL}api/permissions/back-to-duty/${permissionId}`,
+        `${API_BASE_URL}/permissions/back-to-duty/${permissionId}`,
         { lat: position.lat, lng: position.lng }
       );
       if (res.data) {
@@ -186,7 +186,7 @@ const EmployeePermissions = () => {
     }
 
     try {
-      const res = await axios.post(`${BASE_URL}api/permissions/request`, {
+      const res = await axios.post(`${API_BASE_URL}/permissions/request`, {
         employeeId: id,
         employeeName: name,
         reason: permissionForm.reason,
