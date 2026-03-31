@@ -793,6 +793,10 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/emp-score-board": "Score Board",
       "/emp-assessments": "Assessments",
       "/emp-documents": "Documents",
+      "/emp-my-jobs": "My Jobs",
+      "/emp-personal-documents": "Personal Documents",
+      "/emp-letters": "My Letters",
+      "/my-medical-certificate": "My Certificate",
     };
     return pathMap[path] || "Dashboard";
   };
@@ -942,6 +946,15 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       dropdown: [
         { name: "My Leaves", path: "/myleaves" },
         { name: "Leave Application", path: "/leave-application" },
+      ]
+    },
+    {
+      icon: <i className="ri-profile-fill"></i>, name: "Profile",
+      dropdown: [
+        { name: "My Jobs", path: "/emp-my-jobs" },
+        { name: "Personal Docs", path: "/emp-personal-documents" },
+        { name: "My Letters", path: "/emp-letters" },
+        { name: "My Certificate", path: "/my-medical-certificate" }
       ]
     },
     { icon: <i className="ri-money-dollar-box-fill"></i>, name: "My Salary", path: "/mysalary" },
