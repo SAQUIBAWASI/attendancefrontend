@@ -711,55 +711,43 @@ const TodayAttendance = () => {
                     {currentRows.map((rec) => (
                       <tr
                         key={rec._id}
-                        className="transition-colors border-t cursor-pointer hover:bg-gray-50"
-                        onClick={() =>
-                          navigate(`/employee-details/${rec.employeeId}`)
-                        }
+                        className="transition-colors border-t hover:bg-gray-50"
                       >
                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           {rec.employeeId || "-"}
                         </td>
-
                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           {rec.name}
                         </td>
-
                         <td className="px-2 py-2 text-center text-gray-600">
                           {rec.department}
                         </td>
-
                         <td className="px-2 py-2 text-center text-gray-600">
                           {rec.designation}
                         </td>
-
                         <td className="px-2 py-2 text-center text-gray-600">
                           {rec.checkInTime
                             ? new Date(rec.checkInTime).toLocaleTimeString()
                             : "-"}
                         </td>
-
                         <td className="px-2 py-2 text-center text-gray-600">
                           {rec.checkOutTime
                             ? new Date(rec.checkOutTime).toLocaleTimeString()
                             : "-"}
                         </td>
-
                         <td className="px-2 py-2 text-center whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${getHoursColor(rec.totalHours)}`}>
                             {rec.totalHours?.toFixed(2) || "0.00"}h
                           </span>
                         </td>
-
                         <td className="px-2 py-2 text-sm font-medium text-center text-gray-800 whitespace-nowrap">
                           {rec.distance?.toFixed(2) || "-"}
                         </td>
-
                         <td className="px-2 py-2 text-sm font-medium text-center text-gray-500 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-semibold rounded-full ${rec.onsite ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                             {rec.onsite ? "Yes" : "No"}
                           </span>
                         </td>
-
                         <td className="px-2 py-2 text-center whitespace-nowrap">
                           <span
                             className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
+import StatCard from "../Components/StatCard";
 
 const ApprovedLeaves = () => {
   const [leaves, setLeaves] = useState([]);
@@ -250,18 +251,6 @@ const ApprovedLeaves = () => {
   const currentItems = filteredLeaves.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredLeaves.length / itemsPerPage);
 
-  // ✅ Stat Box - Matching the Dashboard design
-  const StatCard = ({ icon: Icon, label, value, color }) => (
-    <div className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
-      <div className="flex items-center gap-2">
-        <Icon className="text-gray-400 text-base flex-shrink-0" />
-        <div className="text-sm font-medium text-gray-700">{label}</div>
-      </div>
-      <div className="text-sm font-bold text-gray-800">
-        <CountUp end={value} duration={2} separator="," />
-      </div>
-    </div>
-  );
 
   // ✅ Loading Screen
   if (loading)
@@ -280,7 +269,7 @@ const ApprovedLeaves = () => {
     <div className="min-h-screen px-2 py-2 bg-gradient-to-br from-purple-50 to-blue-100">
       <div className="mx-auto max-w-9xl">
         {/* ✅ Stats - Simplified to focus on Approved */}
-        {/* <div className="grid grid-cols-1 gap-2 mb-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-2 mb-2 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
              icon={FiCheckCircle}
              label="Approved Leaves"
@@ -293,7 +282,7 @@ const ApprovedLeaves = () => {
             value={filteredLeaves.length}
             color="border-purple-500"
           />
-        </div> */}
+        </div>
 
 
         {/* Filters Section */}

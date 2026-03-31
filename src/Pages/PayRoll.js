@@ -11440,28 +11440,28 @@ const halfDayDeductionAmount = halfDayDeductionDays * dailyRateNumber;
     title="Active Employees"
     value={16}
     icon={FaUserTag}
-    borderColor="border-blue-500"
+    color="border-blue-500"
   />
 
   <StatCard
     title="Total Salary"
     value="₹175,755"
     icon={FaBuilding}
-    borderColor="border-green-500"
+    color="border-green-500"
   />
 
   <StatCard
     title="Active This Month"
     value={12}
     icon={FaCalendarAlt}
-    borderColor="border-purple-500"
+    color="border-purple-500"
   />
 
   <StatCard
     title="On Leave"
     value={0}
     icon={FaSearch}
-    borderColor="border-red-500"
+    color="border-red-500"
   />
 
 </div>

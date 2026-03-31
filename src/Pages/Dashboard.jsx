@@ -984,6 +984,7 @@ import CountUp from "react-countup";
 import { FiClock, FiTrendingUp, FiUserCheck, FiUserX, FiUsers } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { isEmployeeHidden } from "../utils/employeeStatus";
+import StatCard from "../Components/StatCard";
 
 import {
   Area,
@@ -1946,54 +1947,6 @@ const AttendanceDashboard = () => {
             )}
           </div>
         </div>
-      </div>
-    </div>
-  );
-};
-
-// Updated StatCard component - Horizontal Layout [Icon] Label : Value
-const StatCard = ({ icon: Icon, label, value, color, onClick, isPercentage }) => {
-  const themes = {
-    indigo: {
-      iconBg: "bg-indigo-100 text-indigo-600",
-      border: "border-indigo-500",
-    },
-    emerald: {
-      iconBg: "bg-emerald-100 text-emerald-600",
-      border: "border-emerald-500",
-    },
-    amber: {
-      iconBg: "bg-amber-100 text-amber-600",
-      border: "border-amber-500",
-    },
-    rose: {
-      iconBg: "bg-rose-100 text-rose-600",
-      border: "border-rose-500",
-    },
-    cyan: {
-      iconBg: "bg-cyan-100 text-cyan-600",
-      border: "border-cyan-500",
-    },
-  };
-
-  const currentTheme = themes[color] || themes.indigo;
-
-  return (
-    <div
-      className={`flex flex-row items-center gap-2 p-2 transition-all duration-300 bg-white rounded-xl shadow-sm border-t-4 ${currentTheme.border} cursor-pointer hover:shadow-md hover:-translate-y-1 group`}
-      onClick={onClick}
-    >
-      <div className={`w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-lg transition-colors ${currentTheme.iconBg} group-hover:bg-white`}>
-        <Icon className="text-base" />
-      </div>
-
-      <div className="flex flex-row items-baseline flex-1 min-w-0 gap-1 overflow-hidden">
-        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-tight truncate">
-          {label} :
-        </p>
-        <p className="text-sm font-black text-gray-800 whitespace-nowrap">
-          <CountUp end={parseFloat(value)} duration={1.5} decimals={isPercentage ? 1 : 0} suffix={isPercentage ? "%" : ""} />
-        </p>
       </div>
     </div>
   );

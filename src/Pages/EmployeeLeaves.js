@@ -2129,6 +2129,7 @@ import { FaCalendarAlt, FaExchangeAlt, FaPlus, FaSearch, FaShieldAlt } from "rea
 import { FiCheckCircle, FiClock, FiFileText, FiXCircle } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
+import StatCard from "../Components/StatCard";
 
 const EmployeeLeaves = () => {
   const navigate = useNavigate();
@@ -2563,29 +2564,6 @@ const EmployeeLeaves = () => {
     return pageNumbers;
   };
 
-  // Stat Card component
-  const StatCard = ({ icon: Icon, label, value, color }) => {
-    const themes = {
-      indigo: "border-indigo-500",
-      emerald: "border-emerald-500",
-      amber: "border-amber-500",
-      purple: "border-purple-500",
-      rose: "border-rose-500",
-    };
-    const currentTheme = themes[color] || themes.indigo;
-
-    return (
-      <div className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
-        <div className="flex items-center gap-2">
-          <Icon className="text-gray-400 text-base flex-shrink-0" />
-          <div className="text-sm font-medium text-gray-700">{label}</div>
-        </div>
-        <div className="text-sm font-bold text-gray-800">
-          <CountUp end={value} duration={2} separator="," />
-        </div>
-      </div>
-    );
-  };
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-IN', {

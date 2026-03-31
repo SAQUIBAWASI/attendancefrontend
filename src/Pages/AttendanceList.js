@@ -1205,6 +1205,7 @@ import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag } from "react-icons/fa";
 import { FiFilter, FiMapPin, FiUserCheck, FiUsers } from "react-icons/fi";
 import CountUp from "react-countup";
 import { filterActiveRecords, isEmployeeHidden } from "../utils/employeeStatus";
+import StatCard from "../Components/StatCard";
 
 const BASE_URL = "https://api.timelyhealth.in/api";
 
@@ -1535,34 +1536,6 @@ export default function AttendanceList() {
     }
   };
 
-  // Stat Card component
-  const StatCard = ({ icon: Icon, label, value, color, onClick }) => {
-    const themes = {
-      indigo: "border-indigo-500",
-      emerald: "border-emerald-500",
-      amber: "border-amber-500",
-      rose: "border-rose-500",
-      cyan: "border-cyan-500",
-      purple: "border-purple-500"
-    };
-
-    const currentTheme = themes[color] || themes.indigo;
-
-    return (
-      <div
-        className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}
-        onClick={onClick}
-      >
-        <div className="flex items-center gap-2">
-          <Icon className="text-gray-400 text-base flex-shrink-0" />
-          <div className="text-sm font-medium text-gray-700">{label}</div>
-        </div>
-        <div className="text-sm font-bold text-gray-900">
-          <CountUp end={value} duration={2} separator="," />
-        </div>
-      </div>
-    );
-  };
 
   if (loading) {
     return (

@@ -2438,6 +2438,7 @@ import { FiCheckCircle, FiClock, FiList, FiXCircle } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
+import StatCard from "../Components/StatCard";
 
 const LeavesList = () => {
   const [leaves, setLeaves] = useState([]);

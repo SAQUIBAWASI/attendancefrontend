@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE_URL, API_DOMAIN } from '../config';
 import { FaPlus, FaSearch, FaCalendarAlt, FaFilePdf } from 'react-icons/fa';
-import CountUp from "react-countup";
 import { FiBriefcase, FiCheckCircle, FiHome, FiZap } from "react-icons/fi";
+import StatCard from "../Components/StatCard";
 
 function MyJobs() {
   const [experiences, setExperiences] = useState([]);
@@ -317,42 +317,6 @@ function MyJobs() {
 
   // currentJobData is populated by fetchCurrentEmployeeJob (via the external API)
 
-  // Stat Card component — premium style matching Dashboard stats cards
-  const StatCard = ({ icon: Icon, label, value, color, isPercentage }) => {
-    const themes = {
-      indigo: "border-indigo-500",
-      emerald: "border-emerald-500",
-      amber: "border-amber-500",
-      purple: "border-purple-500",
-      rose: "border-rose-500",
-      cyan: "border-cyan-500",
-    };
-
-    const currentTheme = themes[color] || themes.indigo;
-
-    return (
-      <div
-        className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}
-      >
-        <div className="flex items-center gap-2">
-          {typeof Icon === 'string' ? (
-            <span className="text-lg">{Icon}</span>
-          ) : (
-            <Icon className="text-gray-400 text-base flex-shrink-0" />
-          )}
-          <div className="text-sm font-medium text-gray-700">{label}</div>
-        </div>
-        <div className="text-sm font-bold flex items-center">
-          {typeof value === 'number' ? (
-            <CountUp end={value} duration={2} separator="," />
-          ) : (
-            <span className="text-gray-800">{value}</span>
-          )}
-          {isPercentage && "%"}
-        </div>
-      </div>
-    );
-  };
 
   // Format date for display
   const formatDate = (dateString) => {

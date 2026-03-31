@@ -6018,30 +6018,14 @@
 //                     })}
 //                   </tbody>
 //                 </table>
-//               </div>
-
-//               <div className="p-3 border-t border-gray-200 bg-gray-50">
-//                 <button
-//                   onClick={() => setShowViewModal(false)}
-//                   className="w-full py-2 text-[10px] bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
-//                 >
-//                   Close
-//                 </button>
-//               </div>
-//             </div>
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default ShiftManagement;
-
-
 import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
-import { FaBuilding, FaClock, FaEdit, FaEye, FaPlus, FaSearch, FaClock as FaShift, FaTimes, FaTrash, FaUserTag } from 'react-icons/fa';
+import {
+  FaBuilding, FaClock, FaEdit, FaEye, FaPlus, FaSearch,
+  FaClock as FaShift, FaTimes, FaTrash, FaUserTag
+} from 'react-icons/fa';
+import { FiList, FiCheckCircle, FiClock as FiClockIcon, FiAlertCircle } from 'react-icons/fi';
+import StatCard from '../Components/StatCard';
 import { API_BASE_URL } from '../config';
 import { isEmployeeHidden } from '../utils/employeeStatus';
 
@@ -6654,15 +6638,7 @@ const getBadgeColor = (type) => {
     return assignment.employeeAssignment?.employeeId || assignment.employeeId || "Unknown";
   };
 
-  // ✅ Stat Box component matching LeavesList
-  const StatCard = ({ label, value, color }) => (
-    <div
-      className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}
-    >
-      <div className="text-lg font-bold">{value}</div>
-      <div className="text-xs font-medium text-gray-700">{label}</div>
-    </div>
-  );
+
 
   // Pagination handlers
   const handleItemsPerPageChange = (e) => {
@@ -6723,23 +6699,27 @@ const getBadgeColor = (type) => {
         {/* ✅ Stats Section */}
         <div className="grid grid-cols-2 gap-2 mb-2 sm:grid-cols-4">
           <StatCard
-            label={`Total Shifts: ${masterShifts.length}`}
-            // value={masterShifts.length}
+            icon={FiList}
+            label="Total Shifts"
+            value={masterShifts.length}
             color="border-green-500"
           />
           <StatCard
-            label={`Assigned: ${employeeAssignments.length}`}
-            // value={employeeAssignments.length}
+            icon={FiCheckCircle}
+            label="Assigned"
+            value={employeeAssignments.length}
             color="border-blue-500"
           />
           <StatCard
-            label={`Regular: ${masterShifts.filter(s => !s.isBrakeShift).length}`}
-            // value={masterShifts.filter(s => !s.isBrakeShift).length}
+            icon={FiClockIcon}
+            label="Regular"
+            value={masterShifts.filter(s => !s.isBrakeShift).length}
             color="border-green-500"
           />
           <StatCard
-            label={`Brake: ${masterShifts.filter(s => s.isBrakeShift).length}`}
-            // value={masterShifts.filter(s => s.isBrakeShift).length}
+            icon={FiAlertCircle}
+            label="Brake"
+            value={masterShifts.filter(s => s.isBrakeShift).length}
             color="border-yellow-500"
           />
         </div>
