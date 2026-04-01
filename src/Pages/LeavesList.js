@@ -2026,8 +2026,11 @@ const LeavesList = () => {
   const totalPages = Math.ceil(filteredLeaves.length / itemsPerPage);
 
   // ✅ Stat Box - Matching the Dashboard design
-  const StatCard = ({ icon: Icon, label, value, color }) => (
-    <div className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
+  const StatCard = ({ icon: Icon, label, value, color, onClick }) => (
+    <div
+      onClick={onClick}
+      className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}
+    >
       <div className="flex items-center gap-2">
         <Icon className="text-gray-400 text-base flex-shrink-0" />
         <div className="text-sm font-medium text-gray-700">{label}</div>
@@ -2062,19 +2065,19 @@ const LeavesList = () => {
             value={leaves.length}
             color="border-purple-500"
           />
-          <StatCard
+          <StatCard onClick={(e) => navigate("/pending-leaves")}
             icon={FiClock}
             label="Pending"
             value={leaves.filter((l) => l.status === "pending").length}
             color="border-yellow-500"
           />
-          <StatCard
+          <StatCard onClick={(e) => navigate("/approved-leaves")}
             icon={FiCheckCircle}
             label="Approved"
             value={leaves.filter((l) => l.status === "approved").length}
             color="border-green-500"
           />
-          <StatCard
+          <StatCard onClick={(e) => navigate("/rejected-leaves")}
             icon={FiXCircle}
             label="Rejected"
             value={leaves.filter((l) => l.status === "rejected").length}

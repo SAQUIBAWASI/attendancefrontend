@@ -205,23 +205,11 @@ const ExpenseManagement = () => {
                           <span className="text-xs font-semibold text-gray-700 max-w-[120px] truncate" title={expense.outcome || (expense.stops?.length ? expense.stops[0]?.outcome : '-')}>
                             {expense.outcome || (expense.stops?.length ? expense.stops[0]?.outcome : '-')}
                           </span>
-                          <div className="flex flex-col gap-1 mt-1">
-                            {expense.orderValue > 0 && (
-                              <div className="flex items-center gap-1">
-                                <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[8px] font-bold rounded uppercase tabular-nums">Order: ₹{expense.orderValue}</span>
-                              </div>
-                            )}
-                            {expense.upsellValue > 0 && (
-                              <div className="flex items-center gap-1">
-                                <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[8px] font-bold rounded uppercase tabular-nums">Upsell: ₹{expense.upsellValue}</span>
-                              </div>
-                            )}
                             {expense.stops && expense.stops.some(s => s.km > 0) && (
                               <div className="flex items-center gap-1">
                                 <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[8px] font-bold rounded uppercase tabular-nums">From Stops</span>
                               </div>
                             )}
-                          </div>
                         </div>
                       </td>
                       <td className="px-4 py-4 text-right">
@@ -463,6 +451,23 @@ const ExpenseManagement = () => {
                   {selectedExpense.km} KM
                 </div>
               </div>
+
+              {selectedExpense.orderValue > 0 && (
+                <div className="text-left">
+                  <label className="block mb-1 text-sm font-medium text-gray-500">Order Value</label>
+                  <div className="w-full p-2 bg-green-50 border border-green-100 rounded-lg text-green-700 font-bold tabular-nums">
+                    ₹{selectedExpense.orderValue}
+                  </div>
+                </div>
+              )}
+              {selectedExpense.upsellValue > 0 && (
+                <div className="text-left">
+                  <label className="block mb-1 text-sm font-medium text-gray-500">Upsell Value</label>
+                  <div className="w-full p-2 bg-purple-50 border border-purple-100 rounded-lg text-purple-700 font-bold tabular-nums">
+                    ₹{selectedExpense.upsellValue}
+                  </div>
+                </div>
+              )}
               </div>
 
               <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between">
