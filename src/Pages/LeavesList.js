@@ -2792,10 +2792,10 @@ const LeavesList = () => {
   };
 
   // Calculate pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredLeaves.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredLeaves.length / itemsPerPage);
+  // const indexOfLastItem = currentPage * itemsPerPage;
+  // const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  // const currentItems = filteredLeaves.slice(indexOfFirstItem, indexOfLastItem);
+  // const totalPages = Math.ceil(filteredLeaves.length / itemsPerPage);
 
   // ✅ Stat Box - Matching the Dashboard design
   const StatCard = ({ icon: Icon, label, value, color }) => (
