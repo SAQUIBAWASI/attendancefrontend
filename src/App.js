@@ -166,12 +166,12 @@ import AppliedJobs from "./Pages/AppliedJobs.jsx";
 import CandidateDocuments from "./Pages/CandidateDocuments.jsx";
 import CandidatePersonalDocuments from "./Pages/CandidatePersonalDocuments.jsx";
 import EmployeeJourney from "./Pages/EmployeeJourney.jsx";
+import EmployeeLetters from "./Pages/EmployeeLetters.jsx"; // ✅ New import
+import EmployeePersonalDocuments from "./Pages/EmployeePersonalDocuments.jsx";
 import EmployeeResignation from "./Pages/EmployeeResignation.jsx";
 import Interview from "./Pages/Interview.jsx";
 import Letters from "./Pages/Letters.jsx";
 import MyJobs from "./Pages/MyJobs.jsx";
-import EmployeePersonalDocuments from "./Pages/EmployeePersonalDocuments.jsx";
-import EmployeeLetters from "./Pages/EmployeeLetters.jsx"; // ✅ New import
 import RecruitmentDashboard from "./Pages/RecruitmentDashboard.jsx";
 // import ExpenseManagement from "./Pages/ExpenseManagement.jsx";
 import AllExpensives from "./Pages/AllExpensives.jsx";
@@ -184,16 +184,18 @@ import Documents from "./Pages/Documents.jsx";
 // import Medical from "./Pages/Medical.jsx";
 // import Score from "./Pages/Score.jsx";
 // import SendOffer from "./Pages/SendOffer.jsx";
-import TakeAssessment from "./Pages/TakeAssessment.jsx";
+import AllMedicalCertificate from "./Pages/AllMedicalCertificate.jsx";
 import ApplyingJob from "./Pages/ApplyingJob.jsx";
+import ApprovedLeaves from "./Pages/ApprovedLeaves.jsx";
+import MedicalCertificate from "./Pages/MedicalCertificate.jsx";
+import MyMedicalCertificate from "./Pages/MyMedicalCertificate.jsx";
 import Occasions from "./Pages/Occasions.jsx";
 import PendingLeaves from "./Pages/PendingLeaves.jsx";
-import ApprovedLeaves from "./Pages/ApprovedLeaves.jsx";
-import RejectedLeaves from "./Pages/RejectedLeaves.jsx";
 import Regularization from "./Pages/Regularization.jsx";
-import MedicalCertificate from "./Pages/MedicalCertificate.jsx";
-import AllMedicalCertificate from "./Pages/AllMedicalCertificate.jsx";
-import MyMedicalCertificate from "./Pages/MyMedicalCertificate.jsx";
+import RejectedLeaves from "./Pages/RejectedLeaves.jsx";
+import TakeAssessment from "./Pages/TakeAssessment.jsx";
+// import ProductList from"./Pages/Productlist.js";
+import ProductSelectionPage from "./Pages/ProductSelectionPage.jsx";
 
 
 function App() {
@@ -204,6 +206,8 @@ function App() {
       {/* <Route path="/land" element={<LandingPage />} /> */}
       {/* <Route path="/" element={<LoginPage />} /> */}
       <Route path="/register" element={<Register />} />
+      <Route path="/productlist" element={<ProductList />} />
+      <Route path="/productselection" element={<ProductSelectionPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/admin-login" element={<Login />} />
       <Route path="/employee-login" element={<Login />} />

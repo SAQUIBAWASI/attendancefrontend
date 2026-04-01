@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { FaCalendarAlt, FaPlus, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL, API_DOMAIN } from "../config";
+import StatCard from "../Components/StatCard";
+import { FiCheckCircle, FiClock, FiFileText, FiList } from "react-icons/fi";
 
 const BASE_URL = API_DOMAIN;
 
@@ -231,15 +233,6 @@ const EmployeePermissions = () => {
     return pageNumbers;
   };
 
-  // Stat Card
-  const StatCard = ({ label, color }) => (
-    <div className="overflow-hidden bg-white shadow-sm rounded-xl">
-      <div className={`h-1 ${color}`}></div>
-      <div className="p-3 text-center sm:p-4">
-        <div className="text-[10px] font-medium text-gray-700 sm:text-xs">{label}</div>
-      </div>
-    </div>
-  );
 
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString("en-IN", {
@@ -282,18 +275,24 @@ const EmployeePermissions = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-2 mb-3 sm:grid-cols-4">
-          <StatCard label={`Total: ${permissions.length}`} color="bg-blue-500" />
+          <StatCard label="Total" value={permissions.length} color="border-blue-500" icon={FiList} />
           <StatCard
-            label={`Approved: ${permissions.filter((p) => p.status === "APPROVED").length}`}
-            color="bg-green-500"
+            label="Approved"
+            value={permissions.filter((p) => p.status === "APPROVED").length}
+            color="border-green-500"
+            icon={FiCheckCircle}
           />
           <StatCard
-            label={`Pending: ${permissions.filter((p) => p.status === "PENDING").length}`}
-            color="bg-yellow-500"
+            label="Pending"
+            value={permissions.filter((p) => p.status === "PENDING").length}
+            color="border-yellow-500"
+            icon={FiClock}
           />
           <StatCard
-            label={`Completed: ${permissions.filter((p) => p.status === "COMPLETED").length}`}
-            color="bg-purple-500"
+            label="Completed"
+            value={permissions.filter((p) => p.status === "COMPLETED").length}
+            color="border-purple-500"
+            icon={FiFileText}
           />
         </div>
 

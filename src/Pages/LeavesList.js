@@ -1771,14 +1771,674 @@
 // export default LeavesList;
 
 
+// import axios from "axios";
+// import { useEffect, useRef, useState } from "react";
+// import CountUp from "react-countup";
+// import { FaBuilding, FaSearch, FaUserTag } from "react-icons/fa";
+// import { FiCalendar, FiCheckCircle, FiClock, FiList, FiXCircle } from "react-icons/fi";
+// import { useNavigate } from "react-router-dom";
+// import { API_BASE_URL } from "../config";
+// import { isEmployeeHidden } from "../utils/employeeStatus";
+
+// const LeavesList = () => {
+//   const [leaves, setLeaves] = useState([]);
+//   const [filteredLeaves, setFilteredLeaves] = useState([]);
+//   const [loading, setLoading] = useState(true);
+
+//   // Employees data for department/designation
+//   const [employees, setEmployees] = useState([]);
+
+//   // Pagination states
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+//   // Filters
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [statusFilter, setStatusFilter] = useState("all");
+//   const [leaveTypeFilter, setLeaveTypeFilter] = useState("all");
+//   const [startDateFilter, setStartDateFilter] = useState("");
+//   const [endDateFilter, setEndDateFilter] = useState("");
+
+//   // Department and Designation filter states
+//   const [filterDepartment, setFilterDepartment] = useState("");
+//   const [filterDesignation, setFilterDesignation] = useState("");
+//   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
+//   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
+
+//   // Unique departments and designations
+//   const [uniqueDepartments, setUniqueDepartments] = useState([]);
+//   const [uniqueDesignations, setUniqueDesignations] = useState([]);
+
+//   // Refs for click outside
+//   const departmentFilterRef = useRef(null);
+//   const designationFilterRef = useRef(null);
+
+//   // Click outside handlers for filter dropdowns
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       if (departmentFilterRef.current && !departmentFilterRef.current.contains(event.target)) {
+//         setShowDepartmentFilter(false);
+//       }
+//       if (designationFilterRef.current && !designationFilterRef.current.contains(event.target)) {
+//         setShowDesignationFilter(false);
+//       }
+//     };
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () => document.removeEventListener("mousedown", handleClickOutside);
+//   }, []);
+
+//   // ✅ Fetch all leaves and employees
+//   const fetchLeaves = async () => {
+//     try {
+//       setLoading(true);
+//       const [leavesRes, empRes] = await Promise.all([
+//         axios.get(`${API_BASE_URL}/leaves/leaves`),
+//         axios.get(`${API_BASE_URL}/employees/get-employees`)
+//       ]);
+
+//       const employeesData = empRes.data || [];
+//       const activeEmployees = employeesData.filter(emp => !isEmployeeHidden(emp));
+//       setEmployees(activeEmployees);
+
+//       // Extract unique departments and designations
+//       const depts = new Set();
+//       const designations = new Set();
+//       activeEmployees.forEach(emp => {
+//         if (emp.department) depts.add(emp.department);
+//         if (emp.role || emp.designation) designations.add(emp.role || emp.designation);
+//       });
+//       setUniqueDepartments(Array.from(depts).sort());
+//       setUniqueDesignations(Array.from(designations).sort());
+
+//       const leavesData = leavesRes.data.records || leavesRes.data || [];
+//       const sorted = leavesData.sort(
+//         (a, b) =>
+//           new Date(b.createdAt || b.startDate) -
+//           new Date(a.createdAt || a.startDate)
+//       );
+
+//       // Filter out leaves from hidden employees
+//       const activeEmployeeIds = new Set(activeEmployees.map(emp => emp.employeeId || emp._id));
+//       const filteredLeavesData = sorted.filter(leave =>
+//         activeEmployeeIds.has(leave.employeeId)
+//       );
+
+//       setLeaves(filteredLeavesData);
+//       setFilteredLeaves(filteredLeavesData);
+//       setCurrentPage(1);
+//     } catch (err) {
+//       console.error("Failed to fetch leaves:", err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchLeaves();
+//   }, []);
+
+//   // Get employee department and designation
+//   const getEmployeeDetails = (employeeId) => {
+//     const emp = employees.find(e => e.employeeId === employeeId || e._id === employeeId);
+//     return {
+//       department: emp?.department || emp?.departmentName || "N/A",
+//       designation: emp?.designation || emp?.role || "N/A"
+//     };
+//   };
+
+//   // ✅ Update Leave Status (Approve / Reject)
+//   const updateLeaveStatus = async (id, status) => {
+//     try {
+//       const adminName = localStorage.getItem("adminName") || "Admin";
+//       const adminEmail = localStorage.getItem("adminEmail") || "";
+
+//       const res = await axios.put(
+//         `${API_BASE_URL}/leaves/updateleaves/${id}`,
+//         {
+//           status,
+//           adminName,
+//           adminEmail
+//         }
+//       );
+
+//       if (res.status === 200) {
+//         alert(`Leave ${status} successfully`);
+//         fetchLeaves();
+//       }
+//     } catch (error) {
+//       console.error("Error updating status:", error);
+//       alert("Failed to update leave status");
+//     }
+//   };
+
+//   // ✅ Apply Filters
+//   useEffect(() => {
+//     let filtered = [...leaves];
+
+//     if (searchTerm) {
+//       filtered = filtered.filter(
+//         (l) =>
+//           l.employeeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//           l.employeeId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//           l.leaveType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//           l.reason?.toLowerCase().includes(searchTerm.toLowerCase())
+//       );
+//     }
+
+//     if (statusFilter !== "all") {
+//       filtered = filtered.filter((l) => l.status === statusFilter);
+//     }
+
+//     if (leaveTypeFilter !== "all") {
+//       filtered = filtered.filter((l) => l.leaveType === leaveTypeFilter);
+//     }
+
+//     if (startDateFilter) {
+//       const start = new Date(startDateFilter);
+//       filtered = filtered.filter((l) => new Date(l.startDate) >= start);
+//     }
+
+//     if (endDateFilter) {
+//       const end = new Date(endDateFilter);
+//       filtered = filtered.filter((l) => new Date(l.endDate) <= end);
+//     }
+
+//     // Filter by Department
+//     if (filterDepartment) {
+//       filtered = filtered.filter(l => {
+//         const empDetails = getEmployeeDetails(l.employeeId);
+//         return empDetails.department === filterDepartment;
+//       });
+//     }
+
+//     // Filter by Designation
+//     if (filterDesignation) {
+//       filtered = filtered.filter(l => {
+//         const empDetails = getEmployeeDetails(l.employeeId);
+//         return empDetails.designation === filterDesignation;
+//       });
+//     }
+
+//     setFilteredLeaves(filtered);
+//     setCurrentPage(1);
+//   }, [
+//     searchTerm,
+//     statusFilter,
+//     leaveTypeFilter,
+//     startDateFilter,
+//     endDateFilter,
+//     filterDepartment,
+//     filterDesignation,
+//     leaves,
+//   ]);
+
+//   // ✅ Clear Filters
+//   const clearFilters = () => {
+//     setSearchTerm("");
+//     setStatusFilter("all");
+//     setLeaveTypeFilter("all");
+//     setStartDateFilter("");
+//     setEndDateFilter("");
+//     setFilterDepartment("");
+//     setFilterDesignation("");
+//   };
+
+//   const navigate = useNavigate();
+
+//   // ✅ Pagination Handlers
+//   const handleItemsPerPageChange = (e) => {
+//     setItemsPerPage(Number(e.target.value));
+//     setCurrentPage(1);
+//   };
+
+//   const handlePrevPage = () => {
+//     if (currentPage > 1) setCurrentPage(currentPage - 1);
+//   };
+
+//   const handleNextPage = () => {
+//     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+//   };
+
+//   const handlePageClick = (page) => {
+//     setCurrentPage(page);
+//   };
+
+//   const getPageNumbers = () => {
+//     const pageNumbers = [];
+//     for (let i = 1; i <= totalPages; i++) {
+//       if (
+//         i === 1 ||
+//         i === totalPages ||
+//         (i >= currentPage - 2 && i <= currentPage + 2)
+//       ) {
+//         pageNumbers.push(i);
+//       } else if (i === currentPage - 3 || i === currentPage + 3) {
+//         pageNumbers.push("...");
+//       }
+//     }
+//     return pageNumbers;
+//   };
+
+//   // Calculate pagination
+//   const indexOfLastItem = currentPage * itemsPerPage;
+//   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+//   const currentItems = filteredLeaves.slice(indexOfFirstItem, indexOfLastItem);
+//   const totalPages = Math.ceil(filteredLeaves.length / itemsPerPage);
+
+//   // ✅ Stat Box - Matching the Dashboard design
+//   const StatCard = ({ icon: Icon, label, value, color }) => (
+//     <div className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
+//       <div className="flex items-center gap-2">
+//         <Icon className="text-gray-400 text-base flex-shrink-0" />
+//         <div className="text-sm font-medium text-gray-700">{label}</div>
+//       </div>
+//       <div className="text-sm font-bold text-gray-800">
+//         <CountUp end={value} duration={2} separator="," />
+//       </div>
+//     </div>
+//   );
+
+//   // ✅ Loading Screen
+//   if (loading)
+//     return (
+//       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
+//         <div className="text-center">
+//           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div>
+//           <p className="font-semibold text-gray-600">
+//             Loading leave requests...
+//           </p>
+//         </div>
+//       </div>
+//     );
+
+//   return (
+//     <div className="min-h-screen px-2 py-2 bg-gradient-to-br from-purple-50 to-blue-100">
+//       <div className="mx-auto max-w-9xl">
+//         {/* ✅ Stats */}
+//         <div className="grid grid-cols-2 gap-2 mb-2 sm:grid-cols-4">
+//           <StatCard
+//             icon={FiList}
+//             label="Total Requests"
+//             value={leaves.length}
+//             color="border-purple-500"
+//           />
+//           <StatCard
+//             icon={FiClock}
+//             label="Pending"
+//             value={leaves.filter((l) => l.status === "pending").length}
+//             color="border-yellow-500"
+//           />
+//           <StatCard
+//             icon={FiCheckCircle}
+//             label="Approved"
+//             value={leaves.filter((l) => l.status === "approved").length}
+//             color="border-green-500"
+//           />
+//           <StatCard
+//             icon={FiXCircle}
+//             label="Rejected"
+//             value={leaves.filter((l) => l.status === "rejected").length}
+//             color="border-red-500"
+//           />
+//         </div>
+
+
+//         {/* Filters Section */}
+//         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+//           <div className="flex flex-wrap items-center gap-2">
+
+//             {/* ID/Name Search */}
+//             <div className="relative flex-1 min-w-[180px]">
+//               <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+//               <input
+//                 type="text"
+//                 placeholder="Search by ID or Name..."
+//                 value={searchTerm}
+//                 onChange={(e) => setSearchTerm(e.target.value)}
+//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* Status Filter */}
+//             <select
+//               value={statusFilter}
+//               onChange={(e) => setStatusFilter(e.target.value)}
+//               className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
+//             >
+//               <option value="all">All Status</option>
+//               <option value="pending">Pending</option>
+//               <option value="approved">Approved</option>
+//               <option value="rejected">Rejected</option>
+//             </select>
+
+//             {/* Leave Type Filter */}
+//             <select
+//               value={leaveTypeFilter}
+//               onChange={(e) => setLeaveTypeFilter(e.target.value)}
+//               className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
+//             >
+//               <option value="all">All Types</option>
+//               <option value="sick">Sick Leave</option>
+//               <option value="casual">Casual Leave</option>
+//               <option value="earned">Earned Leave</option>
+//               <option value="other">Other</option>
+//             </select>
+
+//             {/* Department Filter Button */}
+//             <div className="relative" ref={departmentFilterRef}>
+//               <button
+//                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+//                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment
+//                     ? 'bg-blue-600 text-white hover:bg-blue-700'
+//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+//                   }`}
+//               >
+//                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
+//               </button>
+
+//               {/* Department Filter Dropdown */}
+//               {showDepartmentFilter && (
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                   <div
+//                     onClick={() => {
+//                       setFilterDepartment('');
+//                       setShowDepartmentFilter(false);
+//                     }}
+//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+//                   >
+//                     All Departments
+//                   </div>
+//                   {uniqueDepartments.map(dept => (
+//                     <div
+//                       key={dept}
+//                       onClick={() => {
+//                         setFilterDepartment(dept);
+//                         setShowDepartmentFilter(false);
+//                       }}
+//                       className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''
+//                         }`}
+//                     >
+//                       {dept}
+//                     </div>
+//                   ))}
+//                 </div>
+//               )}
+//             </div>
+
+//             {/* Designation Filter Button */}
+//             <div className="relative" ref={designationFilterRef}>
+//               <button
+//                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
+//                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation
+//                     ? 'bg-blue-600 text-white hover:bg-blue-700'
+//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+//                   }`}
+//               >
+//                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
+//               </button>
+
+//               {/* Designation Filter Dropdown */}
+//               {showDesignationFilter && (
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                   <div
+//                     onClick={() => {
+//                       setFilterDesignation('');
+//                       setShowDesignationFilter(false);
+//                     }}
+//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+//                   >
+//                     All Designations
+//                   </div>
+//                   {uniqueDesignations.map(des => (
+//                     <div
+//                       key={des}
+//                       onClick={() => {
+//                         setFilterDesignation(des);
+//                         setShowDesignationFilter(false);
+//                       }}
+//                       className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''
+//                         }`}
+//                     >
+//                       {des}
+//                     </div>
+//                   ))}
+//                 </div>
+//               )}
+//             </div>
+
+//             {/* From Date */}
+//             <div className="relative w-[130px]">
+//               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
+//                 From:
+//               </span>
+//               <input
+//                 type="date"
+//                 value={startDateFilter}
+//                 onChange={(e) => setStartDateFilter(e.target.value)}
+//                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
+//                 className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* To Date */}
+//             <div className="relative w-[130px]">
+//               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
+//                 To:
+//               </span>
+//               <input
+//                 type="date"
+//                 value={endDateFilter}
+//                 onChange={(e) => setEndDateFilter(e.target.value)}
+//                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
+//                 className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* Clear Filters Button */}
+//             {(searchTerm || filterDepartment || filterDesignation || statusFilter !== "all" || leaveTypeFilter !== "all" || startDateFilter || endDateFilter) && (
+//               <button
+//                 onClick={clearFilters}
+//                 className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+//               >
+//                 Clear
+//               </button>
+//             )}
+
+//             {/* Report Button */}
+//             <button
+//               onClick={() => navigate("/leaves-report")}
+//               className="h-8 px-3 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
+//             >
+//               📊 Report
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* ✅ Table */}
+//         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//             <table className="min-w-full">
+//               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//                 <tr>
+//                   <th className="py-2 text-center ">Employee ID</th>
+//                   <th className="py-2 text-center ">Name</th>
+//                   <th className="py-2 text-center ">Department</th>
+//                   <th className="py-2 text-center ">Designation</th>
+//                   <th className="py-2 text-center ">Dates</th>
+//                   <th className="py-2 text-center ">Days</th>
+//                   <th className="py-2 text-center ">Reason</th>
+//                   <th className="py-2 text-center ">Status</th>
+//                   <th className="py-2 text-center rounded-tr-lg ">Actions</th>
+//                 </tr>
+//               </thead>
+//               <tbody>
+//                 {currentItems.length > 0 ? (
+//                   currentItems.map((l) => {
+//                     const empDetails = getEmployeeDetails(l.employeeId);
+//                     return (
+//                       <tr
+//                         key={l._id}
+//                         className="transition border-b hover:bg-gray-50"
+//                       >
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+//                           {l.employeeId || "N/A"}
+//                         </td>
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+//                           <div className="font-medium">{l.employeeName}</div>
+//                         </td>
+//                         <td className="px-2 py-2 text-center text-gray-600 ">
+//                           {empDetails.department}
+//                         </td>
+//                         <td className="px-2 py-2 text-center text-gray-600 ">
+//                           {empDetails.designation}
+//                         </td>
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+//                           {new Date(l.startDate).toLocaleDateString()} <br />
+//                           <span className="text-xs text-gray-400">to</span> <br />
+//                           {new Date(l.endDate).toLocaleDateString()}
+//                         </td>
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+//                           <span className="px-2 py-2 text-xs text-center text-blue-700 bg-blue-100 rounded-full">
+//                             {l.days} {l.days === 1 ? 'day' : 'days'}
+//                           </span>
+//                         </td>
+//                         <td className="max-w-xs px-2 py-2 font-medium text-center text-gray-500 truncate whitespace-nowrap">
+//                           {l.reason}
+//                         </td>
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+//                           {l.status === "approved" && (
+//                             <span className="px-2 py-2 text-xs text-center text-green-700 bg-green-100 rounded-full">
+//                               ✅ Approved
+//                             </span>
+//                           )}
+//                           {l.status === "pending" && (
+//                             <span className="px-2 py-2 text-xs text-center text-yellow-700 bg-yellow-100 rounded-full">
+//                               ⏳ Pending
+//                             </span>
+//                           )}
+//                           {l.status === "rejected" && (
+//                             <span className="px-2 py-2 text-xs text-center text-red-700 bg-red-100 rounded-full">
+//                               ❌ Rejected
+//                             </span>
+//                           )}
+//                         </td>
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+//                           {l.status === "pending" ? (
+//                             <div className="flex justify-center gap-2">
+//                               <button
+//                                 onClick={() => updateLeaveStatus(l._id, "approved")}
+//                                 className="px-2 py-2 text-xs text-center text-white transition bg-green-500 rounded-md hover:bg-green-600"
+//                               >
+//                                 Approve
+//                               </button>
+//                               <button
+//                                 onClick={() => updateLeaveStatus(l._id, "rejected")}
+//                                 className="px-2 py-2 text-xs text-center text-white transition bg-red-500 rounded-md hover:bg-red-600"
+//                               >
+//                                 Reject
+//                               </button>
+//                             </div>
+//                           ) : (
+//                             <span className="text-xs italic text-gray-400">
+//                               No actions
+//                             </span>
+//                           )}
+//                         </td>
+//                       </tr>
+//                     );
+//                   })
+//                 ) : (
+//                   <tr>
+//                     <td colSpan="9" className="py-6 text-center text-gray-500">
+//                       No leave records found.
+//                     </td>
+//                   </tr>
+//                 )}
+//               </tbody>
+//             </table>
+//           </div>
+//         </div>
+
+//         {/* ✅ Pagination Section */}
+//         {filteredLeaves.length > 0 && (
+//           <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
+//             <div className="flex flex-wrap items-center gap-4">
+//               <div className="flex items-center gap-2">
+//                 <label className="font-medium text-gray-700 ">
+//                   Show:
+//                 </label>
+//                 <select
+//                   value={itemsPerPage}
+//                   onChange={handleItemsPerPageChange}
+//                   className="p-2 border rounded-lg"
+//                 >
+//                   <option value={5}>5</option>
+//                   <option value={10}>10</option>
+//                   <option value={20}>20</option>
+//                   <option value={50}>50</option>
+//                 </select>
+//                 <span className="text-sm text-gray-600">entries</span>
+//               </div>
+//             </div>
+
+//             <div className="flex items-center gap-2">
+//               <button
+//                 onClick={handlePrevPage}
+//                 disabled={currentPage === 1}
+//                 className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
+//                     ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+//                     : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
+//                   }`}
+//               >
+//                 Previous
+//               </button>
+
+//               {getPageNumbers().map((page, index) => (
+//                 <button
+//                   key={index}
+//                   onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
+//                   disabled={page === "..."}
+//                   className={`px-4 py-1 text-sm border rounded-lg ${page === "..."
+//                       ? "text-gray-500 bg-gray-50 cursor-default"
+//                       : currentPage === page
+//                         ? "text-white bg-blue-600 border-blue-600"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                     }`}
+//                 >
+//                   {page}
+//                 </button>
+//               ))}
+
+//               <button
+//                 onClick={handleNextPage}
+//                 disabled={currentPage === totalPages}
+//                 className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
+//                     ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+//                     : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                   }`}
+//               >
+//                 Next
+//               </button>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default LeavesList;
+
+
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import CountUp from "react-countup";
-import { FaBuilding, FaSearch, FaUserTag } from "react-icons/fa";
-import { FiCalendar, FiCheckCircle, FiClock, FiList, FiXCircle } from "react-icons/fi";
+import { FaBuilding, FaExchangeAlt, FaSearch, FaUserTag } from "react-icons/fa";
+import { FiCheckCircle, FiClock, FiList, FiXCircle } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
+import StatCard from "../Components/StatCard";
 
 const LeavesList = () => {
   const [leaves, setLeaves] = useState([]);
@@ -1787,6 +2447,14 @@ const LeavesList = () => {
 
   // Employees data for department/designation
   const [employees, setEmployees] = useState([]);
+
+  // ✅ Comp-off requests state
+  const [compOffRequests, setCompOffRequests] = useState([]);
+  const [showCompOffRequests, setShowCompOffRequests] = useState(false);
+  const [loadingRequests, setLoadingRequests] = useState(false);
+
+  // ✅ Approved comp-offs state for editing
+  const [approvedCompOffs, setApprovedCompOffs] = useState([]);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -1805,6 +2473,15 @@ const LeavesList = () => {
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
 
+  // ✅ Comp-off states (for conversion)
+  const [showCompOffPopup, setShowCompOffPopup] = useState(false);
+  const [selectedCompOffRequest, setSelectedCompOffRequest] = useState(null);
+
+  // ✅ Edit Comp-off Popup
+  const [showEditCompOffPopup, setShowEditCompOffPopup] = useState(false);
+  const [selectedCompOffForEdit, setSelectedCompOffForEdit] = useState(null);
+  const [editCompOffData, setEditCompOffData] = useState({ count: 1, reason: "" });
+
   // Unique departments and designations
   const [uniqueDepartments, setUniqueDepartments] = useState([]);
   const [uniqueDesignations, setUniqueDesignations] = useState([]);
@@ -1812,16 +2489,16 @@ const LeavesList = () => {
   // Refs for click outside
   const departmentFilterRef = useRef(null);
   const designationFilterRef = useRef(null);
+  const compOffPopupRef = useRef(null);
+  const editCompOffPopupRef = useRef(null);
 
-  // Click outside handlers for filter dropdowns
+  // Click outside handlers
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (departmentFilterRef.current && !departmentFilterRef.current.contains(event.target)) {
-        setShowDepartmentFilter(false);
-      }
-      if (designationFilterRef.current && !designationFilterRef.current.contains(event.target)) {
-        setShowDesignationFilter(false);
-      }
+      if (departmentFilterRef.current && !departmentFilterRef.current.contains(event.target)) setShowDepartmentFilter(false);
+      if (designationFilterRef.current && !designationFilterRef.current.contains(event.target)) setShowDesignationFilter(false);
+      if (compOffPopupRef.current && !compOffPopupRef.current.contains(event.target)) setShowCompOffPopup(false);
+      if (editCompOffPopupRef.current && !editCompOffPopupRef.current.contains(event.target)) setShowEditCompOffPopup(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -1840,7 +2517,6 @@ const LeavesList = () => {
       const activeEmployees = employeesData.filter(emp => !isEmployeeHidden(emp));
       setEmployees(activeEmployees);
 
-      // Extract unique departments and designations
       const depts = new Set();
       const designations = new Set();
       activeEmployees.forEach(emp => {
@@ -1851,17 +2527,54 @@ const LeavesList = () => {
       setUniqueDesignations(Array.from(designations).sort());
 
       const leavesData = leavesRes.data.records || leavesRes.data || [];
-      const sorted = leavesData.sort(
-        (a, b) =>
-          new Date(b.createdAt || b.startDate) -
-          new Date(a.createdAt || a.startDate)
-      );
 
-      // Filter out leaves from hidden employees
+      // ✅ Fetch comp-offs
+      let compOffMap = new Map();
+      try {
+        const compOffsRes = await axios.get(`${API_BASE_URL}/leaves/comp-offs`);
+        const compOffs = compOffsRes.data || [];
+        setApprovedCompOffs(compOffs);
+        compOffs.forEach(co => {
+          if (co.originalLeaveId) {
+            compOffMap.set(co.originalLeaveId.toString(), {
+              id: co._id,
+              status: co.status,
+              count: co.count || 1,
+              reason: co.reason,
+              workDate: co.workDate
+            });
+          }
+        });
+      } catch (error) {
+        console.log("Comp-offs not available yet");
+      }
+
+      try {
+        const rejectedCompOffsRes = await axios.get(`${API_BASE_URL}/leaves/comp-offs?status=rejected`);
+        const rejectedCompOffs = rejectedCompOffsRes.data || [];
+        rejectedCompOffs.forEach(co => {
+          if (co.originalLeaveId && !compOffMap.has(co.originalLeaveId.toString())) {
+            compOffMap.set(co.originalLeaveId.toString(), {
+              id: co._id,
+              status: co.status,
+              count: co.count || 1,
+              reason: co.reason,
+              workDate: co.workDate
+            });
+          }
+        });
+      } catch (error) {
+        console.log("No rejected comp-offs");
+      }
+
+      const leavesWithStatus = leavesData.map(leave => ({
+        ...leave,
+        compOffStatus: compOffMap.get(leave._id?.toString()) || null
+      }));
+
+      const sorted = leavesWithStatus.sort((a, b) => new Date(b.createdAt || b.startDate) - new Date(a.createdAt || a.startDate));
       const activeEmployeeIds = new Set(activeEmployees.map(emp => emp.employeeId || emp._id));
-      const filteredLeavesData = sorted.filter(leave =>
-        activeEmployeeIds.has(leave.employeeId)
-      );
+      const filteredLeavesData = sorted.filter(leave => activeEmployeeIds.has(leave.employeeId));
 
       setLeaves(filteredLeavesData);
       setFilteredLeaves(filteredLeavesData);
@@ -1873,11 +2586,24 @@ const LeavesList = () => {
     }
   };
 
+  // ✅ Fetch comp-off requests
+  const fetchCompOffRequests = async () => {
+    setLoadingRequests(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/leaves/comp-off-requests?status=pending`);
+      setCompOffRequests(response.data || []);
+    } catch (error) {
+      console.error("Error fetching comp-off requests:", error);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
   useEffect(() => {
     fetchLeaves();
+    fetchCompOffRequests();
   }, []);
 
-  // Get employee department and designation
   const getEmployeeDetails = (employeeId) => {
     const emp = employees.find(e => e.employeeId === employeeId || e._id === employeeId);
     return {
@@ -1886,21 +2612,11 @@ const LeavesList = () => {
     };
   };
 
-  // ✅ Update Leave Status (Approve / Reject)
   const updateLeaveStatus = async (id, status) => {
     try {
       const adminName = localStorage.getItem("adminName") || "Admin";
       const adminEmail = localStorage.getItem("adminEmail") || "";
-
-      const res = await axios.put(
-        `${API_BASE_URL}/leaves/updateleaves/${id}`,
-        {
-          status,
-          adminName,
-          adminEmail
-        }
-      );
-
+      const res = await axios.put(`${API_BASE_URL}/leaves/updateleaves/${id}`, { status, adminName, adminEmail });
       if (res.status === 200) {
         alert(`Leave ${status} successfully`);
         fetchLeaves();
@@ -1911,68 +2627,138 @@ const LeavesList = () => {
     }
   };
 
-  // ✅ Apply Filters
+  const approveCompOffRequest = async () => {
+    if (!selectedCompOffRequest) return;
+    const existingCompOff = approvedCompOffs.find(co => co.employeeId === selectedCompOffRequest.employeeId && co.workDate === selectedCompOffRequest.workDate && co.status === "approved");
+
+    if (existingCompOff) {
+      const userConfirmed = window.confirm(`⚠️ This employee already has an approved comp-off for ${new Date(selectedCompOffRequest.workDate).toLocaleDateString()}. \nCurrent count: ${existingCompOff.count || 1} days\nNew request: ${selectedCompOffRequest.count || 1} days\n\nDo you want to add to existing comp-off?`);
+      if (userConfirmed) {
+        try {
+          const updatedCount = (existingCompOff.count || 1) + (selectedCompOffRequest.count || 1);
+          await axios.put(`${API_BASE_URL}/leaves/comp-offs/update/${existingCompOff._id}`, {
+            count: updatedCount,
+            reason: existingCompOff.reason + `\n+ Added ${selectedCompOffRequest.count} day(s) on ${new Date().toLocaleDateString()}`,
+            updatedBy: localStorage.getItem("adminName") || "Admin"
+          });
+          await axios.delete(`${API_BASE_URL}/leaves/comp-off-requests/${selectedCompOffRequest._id}`);
+          alert(`✅ Comp-off count updated to ${updatedCount} days!`);
+          setShowCompOffPopup(false);
+          setSelectedCompOffRequest(null);
+          fetchCompOffRequests();
+          fetchLeaves();
+        } catch (error) {
+          alert("Failed to update comp-off");
+        }
+        return;
+      } else {
+        setShowCompOffPopup(false);
+        setSelectedCompOffRequest(null);
+        return;
+      }
+    }
+
+    try {
+      await axios.put(`${API_BASE_URL}/leaves/comp-off-requests/${selectedCompOffRequest._id}/approve`, {
+        approvedBy: localStorage.getItem("adminName") || "Admin"
+      });
+      alert("✅ Comp-off request approved!");
+      setShowCompOffPopup(false);
+      setSelectedCompOffRequest(null);
+      fetchCompOffRequests();
+      fetchLeaves();
+    } catch (error) {
+      alert(error.response?.data?.error || "Failed to approve request");
+    }
+  };
+
+  const rejectCompOffRequest = async () => {
+    if (!selectedCompOffRequest) return;
+    const reason = prompt("Enter rejection reason (optional):");
+    try {
+      await axios.put(`${API_BASE_URL}/leaves/comp-off-requests/${selectedCompOffRequest._id}/reject`, {
+        approvedBy: localStorage.getItem("adminName") || "Admin",
+        rejectionReason: reason
+      });
+      alert("❌ Comp-off request rejected!");
+      setShowCompOffPopup(false);
+      setSelectedCompOffRequest(null);
+      fetchCompOffRequests();
+      fetchLeaves();
+    } catch (error) {
+      alert(error.response?.data?.error || "Failed to reject request");
+    }
+  };
+
+  const editApprovedCompOff = (compOff) => {
+    setSelectedCompOffForEdit(compOff);
+    setEditCompOffData({ count: compOff.count || 1, reason: compOff.reason || "" });
+    setShowEditCompOffPopup(true);
+  };
+
+  const saveEditedCompOff = async () => {
+    if (!selectedCompOffForEdit) return;
+    try {
+      await axios.put(`${API_BASE_URL}/leaves/comp-offs/update/${selectedCompOffForEdit._id}`, {
+        count: editCompOffData.count,
+        reason: editCompOffData.reason,
+        updatedBy: localStorage.getItem("adminName") || "Admin"
+      });
+      alert("✅ Comp-off updated successfully!");
+      setShowEditCompOffPopup(false);
+      setSelectedCompOffForEdit(null);
+      fetchLeaves();
+    } catch (error) {
+      alert("Failed to update comp-off");
+    }
+  };
+
+  const rejectApprovedCompOff = async () => {
+    if (!selectedCompOffForEdit) return;
+    const reason = prompt("Enter rejection reason (optional):");
+    try {
+      await axios.put(`${API_BASE_URL}/leaves/comp-offs/${selectedCompOffForEdit._id}`, {
+        status: "rejected",
+        approvedBy: localStorage.getItem("adminName") || "Admin"
+      });
+      alert("❌ Comp-off rejected successfully!");
+      setShowEditCompOffPopup(false);
+      setSelectedCompOffForEdit(null);
+      fetchLeaves();
+    } catch (error) {
+      alert("Failed to reject comp-off");
+    }
+  };
+
+  const deleteApprovedCompOff = async (compOffId) => {
+    if (!window.confirm("Are you sure you want to delete this comp-off? This action cannot be undone.")) return;
+    try {
+      await axios.delete(`${API_BASE_URL}/leaves/comp-offs/${compOffId}`);
+      alert("✅ Comp-off deleted successfully!");
+      fetchLeaves();
+    } catch (error) {
+      alert("Failed to delete comp-off");
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  // Filters
   useEffect(() => {
     let filtered = [...leaves];
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (l) =>
-          l.employeeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          l.employeeId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          l.leaveType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          l.reason?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((l) => l.status === statusFilter);
-    }
-
-    if (leaveTypeFilter !== "all") {
-      filtered = filtered.filter((l) => l.leaveType === leaveTypeFilter);
-    }
-
-    if (startDateFilter) {
-      const start = new Date(startDateFilter);
-      filtered = filtered.filter((l) => new Date(l.startDate) >= start);
-    }
-
-    if (endDateFilter) {
-      const end = new Date(endDateFilter);
-      filtered = filtered.filter((l) => new Date(l.endDate) <= end);
-    }
-
-    // Filter by Department
-    if (filterDepartment) {
-      filtered = filtered.filter(l => {
-        const empDetails = getEmployeeDetails(l.employeeId);
-        return empDetails.department === filterDepartment;
-      });
-    }
-
-    // Filter by Designation
-    if (filterDesignation) {
-      filtered = filtered.filter(l => {
-        const empDetails = getEmployeeDetails(l.employeeId);
-        return empDetails.designation === filterDesignation;
-      });
-    }
-
+    if (searchTerm) filtered = filtered.filter(l => l.employeeName?.toLowerCase().includes(searchTerm.toLowerCase()) || l.employeeId?.toLowerCase().includes(searchTerm.toLowerCase()) || l.leaveType?.toLowerCase().includes(searchTerm.toLowerCase()) || l.reason?.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (statusFilter !== "all") filtered = filtered.filter(l => l.status === statusFilter);
+    if (leaveTypeFilter !== "all") filtered = filtered.filter(l => l.leaveType === leaveTypeFilter);
+    if (startDateFilter) filtered = filtered.filter(l => new Date(l.startDate) >= new Date(startDateFilter));
+    if (endDateFilter) filtered = filtered.filter(l => new Date(l.endDate) <= new Date(endDateFilter));
+    if (filterDepartment) filtered = filtered.filter(l => getEmployeeDetails(l.employeeId).department === filterDepartment);
+    if (filterDesignation) filtered = filtered.filter(l => getEmployeeDetails(l.employeeId).designation === filterDesignation);
     setFilteredLeaves(filtered);
     setCurrentPage(1);
-  }, [
-    searchTerm,
-    statusFilter,
-    leaveTypeFilter,
-    startDateFilter,
-    endDateFilter,
-    filterDepartment,
-    filterDesignation,
-    leaves,
-  ]);
+  }, [searchTerm, statusFilter, leaveTypeFilter, startDateFilter, endDateFilter, filterDepartment, filterDesignation, leaves]);
 
-  // ✅ Clear Filters
   const clearFilters = () => {
     setSearchTerm("");
     setStatusFilter("all");
@@ -1985,36 +2771,22 @@ const LeavesList = () => {
 
   const navigate = useNavigate();
 
-  // ✅ Pagination Handlers
-  const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value));
-    setCurrentPage(1);
-  };
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredLeaves.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredLeaves.length / itemsPerPage);
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
-
-  const handlePageClick = (page) => {
-    setCurrentPage(page);
-  };
+  const handleItemsPerPageChange = (e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); };
+  const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
+  const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
+  const handlePageClick = (page) => setCurrentPage(page);
 
   const getPageNumbers = () => {
     const pageNumbers = [];
     for (let i = 1; i <= totalPages; i++) {
-      if (
-        i === 1 ||
-        i === totalPages ||
-        (i >= currentPage - 2 && i <= currentPage + 2)
-      ) {
-        pageNumbers.push(i);
-      } else if (i === currentPage - 3 || i === currentPage + 3) {
-        pageNumbers.push("...");
-      }
+      if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) pageNumbers.push(i);
+      else if (i === currentPage - 3 || i === currentPage + 3) pageNumbers.push("...");
     }
     return pageNumbers;
   };
@@ -2026,11 +2798,8 @@ const LeavesList = () => {
   const totalPages = Math.ceil(filteredLeaves.length / itemsPerPage);
 
   // ✅ Stat Box - Matching the Dashboard design
-  const StatCard = ({ icon: Icon, label, value, color, onClick }) => (
-    <div
-      onClick={onClick}
-      className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}
-    >
+  const StatCard = ({ icon: Icon, label, value, color }) => (
+    <div className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
       <div className="flex items-center gap-2">
         <Icon className="text-gray-400 text-base flex-shrink-0" />
         <div className="text-sm font-medium text-gray-700">{label}</div>
@@ -2041,18 +2810,11 @@ const LeavesList = () => {
     </div>
   );
 
-  // ✅ Loading Screen
-  if (loading)
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
-        <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div>
-          <p className="font-semibold text-gray-600">
-            Loading leave requests...
-          </p>
-        </div>
-      </div>
-    );
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
+      <div className="text-center"><div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div><p className="font-semibold text-gray-600">Loading leave requests...</p></div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen px-2 py-2 bg-gradient-to-br from-purple-50 to-blue-100">
@@ -2065,19 +2827,19 @@ const LeavesList = () => {
             value={leaves.length}
             color="border-purple-500"
           />
-          <StatCard onClick={(e) => navigate("/pending-leaves")}
+          <StatCard
             icon={FiClock}
             label="Pending"
             value={leaves.filter((l) => l.status === "pending").length}
             color="border-yellow-500"
           />
-          <StatCard onClick={(e) => navigate("/approved-leaves")}
+          <StatCard
             icon={FiCheckCircle}
             label="Approved"
             value={leaves.filter((l) => l.status === "approved").length}
             color="border-green-500"
           />
-          <StatCard onClick={(e) => navigate("/rejected-leaves")}
+          <StatCard
             icon={FiXCircle}
             label="Rejected"
             value={leaves.filter((l) => l.status === "rejected").length}
@@ -2085,345 +2847,50 @@ const LeavesList = () => {
           />
         </div>
 
-
-        {/* Filters Section */}
+        {/* Filters */}
         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[180px]"><FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" /><input type="text" placeholder="Search by ID or Name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500" /></div>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-8 px-2 text-xs border border-gray-300 rounded-lg min-w-[100px]"><option value="all">All Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+            <select value={leaveTypeFilter} onChange={(e) => setLeaveTypeFilter(e.target.value)} className="h-8 px-2 text-xs border border-gray-300 rounded-lg min-w-[100px]"><option value="all">All Types</option><option value="sick">Sick Leave</option><option value="casual">Casual Leave</option><option value="earned">Earned Leave</option></select>
+            <div className="relative" ref={departmentFilterRef}><button onClick={() => setShowDepartmentFilter(!showDepartmentFilter)} className={`h-8 px-3 text-xs font-medium rounded-md flex items-center gap-1 ${filterDepartment ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 border border-gray-300'}`}><FaBuilding /> Dept{filterDepartment && `: ${filterDepartment}`}</button>{showDepartmentFilter && (<div className="absolute z-50 w-48 mt-1 bg-white border rounded-md shadow-lg max-h-60"><div onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); }} className="px-3 py-2 text-xs cursor-pointer hover:bg-blue-50">All Departments</div>{uniqueDepartments.map(dept => (<div key={dept} onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDepartment === dept ? 'bg-blue-50 text-blue-700' : ''}`}>{dept}</div>))}</div>)}</div>
+            <div className="relative" ref={designationFilterRef}><button onClick={() => setShowDesignationFilter(!showDesignationFilter)} className={`h-8 px-3 text-xs font-medium rounded-md flex items-center gap-1 ${filterDesignation ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 border border-gray-300'}`}><FaUserTag /> Desig{filterDesignation && `: ${filterDesignation}`}</button>{showDesignationFilter && (<div className="absolute z-50 w-48 mt-1 bg-white border rounded-md shadow-lg max-h-60"><div onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); }} className="px-3 py-2 text-xs cursor-pointer hover:bg-blue-50">All Designations</div>{uniqueDesignations.map(des => (<div key={des} onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDesignation === des ? 'bg-blue-50 text-blue-700' : ''}`}>{des}</div>))}</div>)}</div>
+            <div className="relative w-[130px]"><span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500">From:</span><input type="date" value={startDateFilter} onChange={(e) => setStartDateFilter(e.target.value)} className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg" /></div>
+            <div className="relative w-[130px]"><span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500">To:</span><input type="date" value={endDateFilter} onChange={(e) => setEndDateFilter(e.target.value)} className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg" /></div>
+            <button onClick={() => setShowCompOffRequests(!showCompOffRequests)} className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md ${showCompOffRequests ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 border border-gray-300'}`}><FaExchangeAlt /> {showCompOffRequests ? 'Hide Comp-off' : `Comp-off (${compOffRequests.length})`}</button>
+            {(searchTerm || filterDepartment || filterDesignation || statusFilter !== "all" || leaveTypeFilter !== "all" || startDateFilter || endDateFilter) && <button onClick={clearFilters} className="h-8 px-3 text-xs font-medium text-gray-600 bg-gray-100 border rounded-md hover:bg-gray-200">Clear</button>}
+            <button onClick={() => navigate("/leaves-report")} className="h-8 px-3 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">📊 Report</button>
+          </div>
+        </div>
 
-            {/* ID/Name Search */}
-            <div className="relative flex-1 min-w-[180px]">
-              <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
-              <input
-                type="text"
-                placeholder="Search by ID or Name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-            </select>
-
-            {/* Leave Type Filter */}
-            <select
-              value={leaveTypeFilter}
-              onChange={(e) => setLeaveTypeFilter(e.target.value)}
-              className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
-            >
-              <option value="all">All Types</option>
-              <option value="sick">Sick Leave</option>
-              <option value="casual">Casual Leave</option>
-              <option value="earned">Earned Leave</option>
-              <option value="other">Other</option>
-            </select>
-
-            {/* Department Filter Button */}
-            <div className="relative" ref={departmentFilterRef}>
-              <button
-                onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                  }`}
-              >
-                <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
-              </button>
-
-              {/* Department Filter Dropdown */}
-              {showDepartmentFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
-                  <div
-                    onClick={() => {
-                      setFilterDepartment('');
-                      setShowDepartmentFilter(false);
-                    }}
-                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                  >
-                    All Departments
-                  </div>
-                  {uniqueDepartments.map(dept => (
-                    <div
-                      key={dept}
-                      onClick={() => {
-                        setFilterDepartment(dept);
-                        setShowDepartmentFilter(false);
-                      }}
-                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                        }`}
-                    >
-                      {dept}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Designation Filter Button */}
-            <div className="relative" ref={designationFilterRef}>
-              <button
-                onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                  }`}
-              >
-                <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
-              </button>
-
-              {/* Designation Filter Dropdown */}
-              {showDesignationFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
-                  <div
-                    onClick={() => {
-                      setFilterDesignation('');
-                      setShowDesignationFilter(false);
-                    }}
-                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                  >
-                    All Designations
-                  </div>
-                  {uniqueDesignations.map(des => (
-                    <div
-                      key={des}
-                      onClick={() => {
-                        setFilterDesignation(des);
-                        setShowDesignationFilter(false);
-                      }}
-                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                        }`}
-                    >
-                      {des}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* From Date */}
-            <div className="relative w-[130px]">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
-                From:
-              </span>
-              <input
-                type="date"
-                value={startDateFilter}
-                onChange={(e) => setStartDateFilter(e.target.value)}
-                onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* To Date */}
-            <div className="relative w-[130px]">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
-                To:
-              </span>
-              <input
-                type="date"
-                value={endDateFilter}
-                onChange={(e) => setEndDateFilter(e.target.value)}
-                onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Clear Filters Button */}
-            {(searchTerm || filterDepartment || filterDesignation || statusFilter !== "all" || leaveTypeFilter !== "all" || startDateFilter || endDateFilter) && (
-              <button
-                onClick={clearFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-              >
-                Clear
-              </button>
+        {/* Comp-off Requests Section */}
+        {showCompOffRequests && (
+          <div className="mb-6 overflow-hidden bg-white border-2 border-purple-200 rounded-lg shadow-lg">
+            <div className="flex items-center justify-between px-4 py-2 text-white bg-gradient-to-r from-purple-500 to-purple-700"><h3 className="flex items-center gap-2 font-semibold"><FaExchangeAlt /> Comp-off Requests ({compOffRequests.length})</h3><button onClick={fetchCompOffRequests} className="px-2 py-1 text-xs text-purple-700 bg-white rounded hover:bg-purple-100">🔄 Refresh</button></div>
+            {loadingRequests ? (<div className="p-8 text-center"><div className="w-8 h-8 mx-auto border-b-2 border-purple-600 rounded-full animate-spin"></div><p className="mt-2 text-sm text-gray-600">Loading requests...</p></div>) : compOffRequests.length === 0 ? (<div className="p-8 text-center text-gray-500"><p>No pending comp-off requests</p></div>) : (
+              <div className="overflow-x-auto"><table className="min-w-full"><thead className="text-xs text-purple-800 bg-purple-100"><tr><th className="px-3 py-2 text-center">Employee</th><th className="px-3 py-2 text-center">Work Date</th><th className="px-3 py-2 text-center">Days</th><th className="px-3 py-2 text-center">Reason</th><th className="px-3 py-2 text-center">Actions</th></tr></thead><tbody>{compOffRequests.map(req => (<tr key={req._id} className="border-b hover:bg-purple-50"><td className="px-3 py-2 text-center"><div className="font-medium">{req.employeeName}</div><div className="text-xs text-gray-500">{req.employeeId}</div></td><td className="px-3 py-2 text-center">{formatDate(req.workDate)}</td><td className="px-3 py-2 text-center"><span className="px-2 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded-full">{req.count || 1} day(s)</span></td><td className="max-w-xs px-3 py-2 text-center"><span className="block text-xs text-gray-700 truncate">{req.reason || 'No reason provided'}</span></td><td className="px-3 py-2 text-center"><button onClick={() => { setSelectedCompOffRequest(req); setShowCompOffPopup(true); }} className="px-2 py-1 text-xs text-white bg-purple-500 rounded-md hover:bg-purple-600">Review</button></td></tr>))}</tbody></table></div>
             )}
-
-            {/* Report Button */}
-            <button
-              onClick={() => navigate("/leaves-report")}
-              className="h-8 px-3 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
-            >
-              📊 Report
-            </button>
           </div>
-        </div>
+        )}
 
-        {/* ✅ Table */}
+        {/* Comp-off Review Popup */}
+        {showCompOffPopup && selectedCompOffRequest && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"><div ref={compOffPopupRef} className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl"><h2 className="mb-4 text-xl font-bold text-purple-800">Review Comp-off Request</h2><div className="space-y-4"><div className="p-3 rounded-lg bg-purple-50"><p className="text-sm text-gray-600">Employee</p><p className="font-medium">{selectedCompOffRequest.employeeName}</p><p className="text-xs text-gray-500">{selectedCompOffRequest.employeeId}</p></div><div><label className="block mb-1 text-sm font-medium text-gray-700">Work Date</label><div className="p-2 rounded-lg bg-gray-50">{formatDate(selectedCompOffRequest.workDate)}</div></div><div><label className="block mb-1 text-sm font-medium text-gray-700">Days Requested</label><div className="p-2 rounded-lg bg-gray-50">{selectedCompOffRequest.count || 1} day(s)</div></div><div><label className="block mb-1 text-sm font-medium text-gray-700">Reason</label><div className="p-2 rounded-lg bg-gray-50">{selectedCompOffRequest.reason || 'No reason provided'}</div></div><div className="flex gap-2 pt-4"><button onClick={() => { setShowCompOffPopup(false); setSelectedCompOffRequest(null); }} className="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">Cancel</button><button onClick={rejectCompOffRequest} className="flex-1 px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600">Reject</button><button onClick={approveCompOffRequest} className="flex-1 px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600">Approve</button></div></div></div></div>
+        )}
+
+        {/* Edit Comp-off Popup */}
+        {showEditCompOffPopup && selectedCompOffForEdit && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"><div ref={editCompOffPopupRef} className="w-full max-w-sm p-4 bg-white rounded-md shadow-lg"><h2 className="mb-3 text-lg font-semibold text-green-700">Edit Comp-off</h2><div className="space-y-3 text-sm"><div className="p-2 rounded bg-green-50"><p className="text-xs text-gray-500">Employee</p><p className="font-medium">{selectedCompOffForEdit.employeeName}</p><p className="text-[11px] text-gray-400">{selectedCompOffForEdit.employeeId}</p></div><div><label className="block mb-0.5 text-xs font-medium text-gray-600">Work Date</label><div className="p-1.5 rounded bg-gray-50 text-xs">{formatDate(selectedCompOffForEdit.workDate)}</div></div><div><label className="block mb-0.5 text-xs font-medium text-gray-600">Comp-off Days</label><input type="number" min="0.5" step="0.5" value={editCompOffData.count} onChange={(e) => setEditCompOffData({ ...editCompOffData, count: parseFloat(e.target.value) })} className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500" /></div><div><label className="block mb-0.5 text-xs font-medium text-gray-600">Reason</label><textarea rows="2" value={editCompOffData.reason} onChange={(e) => setEditCompOffData({ ...editCompOffData, reason: e.target.value })} className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500" /></div><div className="flex gap-2 pt-2"><button onClick={() => { setShowEditCompOffPopup(false); setSelectedCompOffForEdit(null); }} className="flex-1 px-2 py-1.5 text-xs text-gray-600 bg-gray-100 rounded hover:bg-gray-200">Cancel</button><button onClick={rejectApprovedCompOff} className="flex-1 px-2 py-1.5 text-xs text-white bg-red-500 rounded hover:bg-red-600">Reject</button><button onClick={saveEditedCompOff} className="flex-1 px-2 py-1.5 text-xs text-white bg-green-500 rounded hover:bg-green-600">Save</button></div></div></div></div>
+        )}
+
+        {/* Main Table */}
         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
-            <table className="min-w-full">
-              <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
-                <tr>
-                  <th className="py-2 text-center ">Employee ID</th>
-                  <th className="py-2 text-center ">Name</th>
-                  <th className="py-2 text-center ">Department</th>
-                  <th className="py-2 text-center ">Designation</th>
-                  <th className="py-2 text-center ">Dates</th>
-                  <th className="py-2 text-center ">Days</th>
-                  <th className="py-2 text-center ">Reason</th>
-                  <th className="py-2 text-center ">Status</th>
-                  <th className="py-2 text-center rounded-tr-lg ">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.length > 0 ? (
-                  currentItems.map((l) => {
-                    const empDetails = getEmployeeDetails(l.employeeId);
-                    return (
-                      <tr
-                        key={l._id}
-                        className="transition border-b hover:bg-gray-50"
-                      >
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                          {l.employeeId || "N/A"}
-                        </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                          <div className="font-medium">{l.employeeName}</div>
-                        </td>
-                        <td className="px-2 py-2 text-center text-gray-600 ">
-                          {empDetails.department}
-                        </td>
-                        <td className="px-2 py-2 text-center text-gray-600 ">
-                          {empDetails.designation}
-                        </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                          {new Date(l.startDate).toLocaleDateString()} <br />
-                          <span className="text-xs text-gray-400">to</span> <br />
-                          {new Date(l.endDate).toLocaleDateString()}
-                        </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                          <span className="px-2 py-2 text-xs text-center text-blue-700 bg-blue-100 rounded-full">
-                            {l.days} {l.days === 1 ? 'day' : 'days'}
-                          </span>
-                        </td>
-                        <td className="max-w-xs px-2 py-2 font-medium text-center text-gray-500 truncate whitespace-nowrap">
-                          {l.reason}
-                        </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                          {l.status === "approved" && (
-                            <span className="px-2 py-2 text-xs text-center text-green-700 bg-green-100 rounded-full">
-                              ✅ Approved
-                            </span>
-                          )}
-                          {l.status === "pending" && (
-                            <span className="px-2 py-2 text-xs text-center text-yellow-700 bg-yellow-100 rounded-full">
-                              ⏳ Pending
-                            </span>
-                          )}
-                          {l.status === "rejected" && (
-                            <span className="px-2 py-2 text-xs text-center text-red-700 bg-red-100 rounded-full">
-                              ❌ Rejected
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                          {l.status === "pending" ? (
-                            <div className="flex justify-center gap-2">
-                              <button
-                                onClick={() => updateLeaveStatus(l._id, "approved")}
-                                className="px-2 py-2 text-xs text-center text-white transition bg-green-500 rounded-md hover:bg-green-600"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                onClick={() => updateLeaveStatus(l._id, "rejected")}
-                                className="px-2 py-2 text-xs text-center text-white transition bg-red-500 rounded-md hover:bg-red-600"
-                              >
-                                Reject
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="text-xs italic text-gray-400">
-                              No actions
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan="9" className="py-6 text-center text-gray-500">
-                      No leave records found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <div className="overflow-x-auto"><table className="min-w-full"><thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600"><tr><th className="py-2 text-center">Employee ID</th><th className="py-2 text-center">Name</th><th className="py-2 text-center">Department</th><th className="py-2 text-center">Designation</th><th className="py-2 text-center">Dates</th><th className="py-2 text-center">Days</th><th className="py-2 text-center">Reason</th><th className="py-2 text-center">Status</th><th className="py-2 text-center">Actions</th></tr></thead><tbody>{currentItems.length > 0 ? currentItems.map((l) => { const empDetails = getEmployeeDetails(l.employeeId); const compOffInfo = l.compOffStatus; return (<tr key={l._id} className={`border-b hover:bg-gray-50 ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-50' : ''}`}><td className="px-2 py-2 text-center">{l.employeeId || "N/A"}</td><td className="px-2 py-2 text-center"><div className="font-medium">{l.employeeName}</div></td><td className="px-2 py-2 text-center">{empDetails.department}</td><td className="px-2 py-2 text-center">{empDetails.designation}</td><td className="px-2 py-2 text-center">{new Date(l.startDate).toLocaleDateString()} <br /><span className="text-xs text-gray-400">to</span> <br />{new Date(l.endDate).toLocaleDateString()}</td><td className="px-2 py-2 text-center"><span className={`px-2 py-1 text-xs rounded-full ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>{l.days} {l.days === 1 ? 'day' : 'days'}</span></td><td className="max-w-xs px-2 py-2 text-center truncate">{l.reason}</td><td className="px-2 py-2 text-center">{l.status === "approved" && !compOffInfo?.exists && <span className="px-2 py-1 text-xs text-green-700 bg-green-100 rounded-full">✅ Approved</span>}{l.status === "approved" && compOffInfo?.exists && compOffInfo.status === "approved" && <span className="px-2 py-1 text-xs text-purple-700 bg-purple-100 rounded-full">🔄 Converted</span>}{l.status === "approved" && compOffInfo?.exists && compOffInfo.status === "rejected" && <span className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded-full">❌ Comp-off Rejected</span>}{l.status === "pending" && <span className="px-2 py-1 text-xs text-yellow-700 bg-yellow-100 rounded-full">⏳ Pending</span>}{l.status === "rejected" && <span className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded-full">❌ Rejected</span>}</td><td className="px-2 py-2 text-center">{l.status === "pending" ? (<div className="flex justify-center gap-2"><button onClick={() => updateLeaveStatus(l._id, "approved")} className="px-2 py-1 text-xs text-white bg-green-500 rounded hover:bg-green-600">Approve</button><button onClick={() => updateLeaveStatus(l._id, "rejected")} className="px-2 py-1 text-xs text-white bg-red-500 rounded hover:bg-red-600">Reject</button></div>) : l.status === "approved" && compOffInfo?.exists && compOffInfo.status === "approved" ? (<div className="flex justify-center gap-2"><button onClick={() => editApprovedCompOff(approvedCompOffs.find(co => co._id === compOffInfo.compOffId))} className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded hover:bg-blue-200">✏️ Edit</button><button onClick={() => deleteApprovedCompOff(compOffInfo.compOffId)} className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded hover:bg-red-200">🗑️ Delete</button></div>) : l.status === "approved" && !compOffInfo?.exists ? (<span className="text-xs text-purple-600">Comp-off available</span>) : (<span className="text-xs italic text-gray-400">No actions</span>)}</td></tr>); }) : <tr><td colSpan="9" className="py-6 text-center text-gray-500">No leave records found.</td></tr>}</tbody></table></div>
         </div>
 
-        {/* ✅ Pagination Section */}
+        {/* Pagination */}
         {filteredLeaves.length > 0 && (
-          <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <label className="font-medium text-gray-700 ">
-                  Show:
-                </label>
-                <select
-                  value={itemsPerPage}
-                  onChange={handleItemsPerPageChange}
-                  className="p-2 border rounded-lg"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
-                <span className="text-sm text-gray-600">entries</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handlePrevPage}
-                disabled={currentPage === 1}
-                className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
-                    ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                    : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
-                  }`}
-              >
-                Previous
-              </button>
-
-              {getPageNumbers().map((page, index) => (
-                <button
-                  key={index}
-                  onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
-                  disabled={page === "..."}
-                  className={`px-4 py-1 text-sm border rounded-lg ${page === "..."
-                      ? "text-gray-500 bg-gray-50 cursor-default"
-                      : currentPage === page
-                        ? "text-white bg-blue-600 border-blue-600"
-                        : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
-                    }`}
-                >
-                  {page}
-                </button>
-              ))}
-
-              <button
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages}
-                className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
-                    ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                    : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
-                  }`}
-              >
-                Next
-              </button>
-            </div>
-          </div>
+          <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row"><div className="flex flex-wrap items-center gap-4"><div className="flex items-center gap-2"><label className="font-medium text-gray-700">Show:</label><select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-2 border rounded-lg"><option value={5}>5</option><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option></select><span className="text-sm text-gray-600">entries</span></div></div><div className="flex items-center gap-2"><button onClick={handlePrevPage} disabled={currentPage === 1} className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1 ? "text-gray-400 bg-gray-100 cursor-not-allowed" : "text-blue-600 bg-white hover:bg-blue-50"}`}>Previous</button>{getPageNumbers().map((page, index) => (<button key={index} onClick={() => typeof page === 'number' ? handlePageClick(page) : null} disabled={page === "..."} className={`px-4 py-1 text-sm border rounded-lg ${page === "..." ? "text-gray-500 bg-gray-50 cursor-default" : currentPage === page ? "text-white bg-blue-600" : "text-blue-600 bg-white hover:bg-blue-50"}`}>{page}</button>))}<button onClick={handleNextPage} disabled={currentPage === totalPages} className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages ? "text-gray-400 bg-gray-100 cursor-not-allowed" : "text-blue-600 bg-white hover:bg-blue-50"}`}>Next</button></div></div>
         )}
       </div>
     </div>
