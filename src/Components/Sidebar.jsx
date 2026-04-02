@@ -1346,6 +1346,11 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       path: "/leavelist",
     },
     {
+      icon: <i className="ri-calendar-event-fill"></i>,
+      name: "Holidays",
+      path: "/holidays-calendar",
+    },
+    {
       icon: <i className="ri-shield-keyhole-fill"></i>,
       name: "Permissions",
       path: "/permissions",

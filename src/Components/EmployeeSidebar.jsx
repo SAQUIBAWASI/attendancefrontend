@@ -958,6 +958,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       ]
     },
     { icon: <i className="ri-money-dollar-box-fill"></i>, name: "My Salary", path: "/mysalary" },
+    { icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/HolidayList" },
     { icon: <i className="ri-logout-box-fill"></i>, name: "Logout", action: handleLogout }
   ];
 

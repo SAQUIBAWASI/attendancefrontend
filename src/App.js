@@ -196,6 +196,9 @@ import RejectedLeaves from "./Pages/RejectedLeaves.jsx";
 import TakeAssessment from "./Pages/TakeAssessment.jsx";
 // import ProductList from"./Pages/Productlist.js";
 import ProductSelectionPage from "./Pages/ProductSelectionPage.jsx";
+import HolidaysCalendar from "./Pages/HolidaysCalendar.jsx";
+import HolidayList from "./Pages/Holiday.js";
+
 
 
 function App() {
@@ -221,7 +224,6 @@ function App() {
    
       <Route path="/my-shift" element={<EmployeeLayout><MyShift /></EmployeeLayout>} />
       <Route path="/mypermissions" element={<EmployeeLayout><MyPermission /></EmployeeLayout>} />
-      
       {/* <Route path="/expense-management" element={<ExpenseManagement />} />   */}
       <Route path="/expense-management" element={<EmployeeLayout><ExpenseManagement /></EmployeeLayout>} />
       <Route path="/emp-my-jobs" element={<EmployeeLayout><MyJobs /></EmployeeLayout>} />
@@ -255,6 +257,7 @@ function App() {
       <Route path="/whoweserve" element={<WhoWeServePage />}></Route>
       <Route path="/contact" element={<ContactPage />}></Route>
       <Route path="/mysalary" element={<EmployeeLayout><EmployeeSalary /></EmployeeLayout>} />
+      <Route path="/HolidayList" element={<EmployeeLayout><HolidayList /></EmployeeLayout>} />
 
       {/* ✅ Shared Admin Features for Employees (Wrapped in EmployeeLayout) */}
       <Route path="/emp-employees" element={<EmployeeLayout><EmployeeList /></EmployeeLayout>} />
@@ -434,6 +437,7 @@ function App() {
               <Route path="/rejected-leaves" element={<RejectedLeaves />} />
               <Route path="/regularization" element={<Regularization />} />
               <Route path="/all-medical-certificates" element={<AllMedicalCertificate />} />
+              <Route path="/holidays-calendar" element={<HolidaysCalendar/>}/>
            
 
 
