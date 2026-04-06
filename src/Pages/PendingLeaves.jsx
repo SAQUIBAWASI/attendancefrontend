@@ -25,7 +25,7 @@ const PendingLeaves = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const userRole = localStorage.getItem("userRole") || "admin";
   const isManager = userRole === "employee";
-  const [statusFilter, setStatusFilter] = useState(isManager ? "pending" : "manager_approved");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [leaveTypeFilter, setLeaveTypeFilter] = useState("all");
   const [startDateFilter, setStartDateFilter] = useState("");
   const [endDateFilter, setEndDateFilter] = useState("");
