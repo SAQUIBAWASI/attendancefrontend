@@ -283,6 +283,8 @@ function App() {
       <Route path="/emp-score-board" element={<EmployeeLayout><Score /></EmployeeLayout>} />
       <Route path="/emp-assessments" element={<EmployeeLayout><AssessmentManager /></EmployeeLayout>} />
       <Route path="/emp-documents" element={<EmployeeLayout><Documents /></EmployeeLayout>} />
+      <Route path="/emp-permissions" element={<EmployeeLayout><Permissions /></EmployeeLayout>} />
+      <Route path="/emp-holidays-calendar" element={<EmployeeLayout><HolidaysCalendar /></EmployeeLayout>} />
       <Route path="/emp-all-expensives-management" element={<EmployeeLayout><AllExpensives /></EmployeeLayout>} />
       <Route path="/my-medical-certificate" element={<EmployeeLayout><MyMedicalCertificate /></EmployeeLayout>} />
       {/* All other routes inside AdminLayout */}

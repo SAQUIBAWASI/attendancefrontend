@@ -750,7 +750,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
 
   const ADMIN_PERMISSIONS = [
     "dashboard_view", "attendance_view_all", "shifts_manage", "leave_approve",
-    "reports_view", "payroll_manage", "employee_view_all", "employee_add",
+    "leave_approve_manager", "reports_view", "payroll_manage", "employee_view_all", "employee_add",
     "user_activity_view", "user_access_manage", "expenses_manage", "expense_manage",
     "locations_manage", "job_posts_view", "job_applicants_view", "score_board_view",
     "assessments_view", "documents_view", "job_recruitment_manage"
@@ -773,21 +773,22 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/mysalary": "My Salary",
       "/mypermissions": "My Permissions",
       "/myleaves": "My Leaves",
-      "/emp-admin-dashboard": "Main Dashboard",
-      "/emp-employees": "Employee Management",
+      "/emp-admin-dashboard": "Dashboard",
+      "/emp-employees": "Employees",
       "/emp-add-employee": "Add Employee",
       "/emp-attendance-summary": "Attendance Summary",
       "/emp-attendance-records": "Attendance Records",
-      "/emp-today-attendance": "Today's Attendance",
+      "/emp-today-attendance": "Today Attendance",
       "/emp-absent-today": "Absent Today",
-      "/emp-leaves": "Leave Approval",
+      "/emp-leaves": "Leaves",
+      "/emp-pending-leaves": "Manager Approve",
       "/emp-payroll": "Payroll",
       "/emp-reports": "Reports",
       "/emp-locations": "Locations",
-      "/emp-shifts": "Shift Management",
+      "/emp-shifts": "Shifts",
       "/emp-user-activity": "User Activity",
       "/emp-user-access": "User Access",
-      "/emp-all-expensives-management": "Expense Management",
+      "/emp-all-expensives-management": "Expenses",
       "/emp-job-posts": "Job Posts",
       "/emp-job-applicants": "Job Applicants",
       "/emp-score-board": "Score Board",
@@ -797,18 +798,20 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/emp-personal-documents": "Personal Documents",
       "/emp-letters": "My Letters",
       "/my-medical-certificate": "My Certificate",
+      "/emp-holidays-calendar": "Holidays Calendar",
+      "/emp-permissions": "Permissions",
     };
     return pathMap[path] || "Dashboard";
   };
 
   // Desktop Hover Expand/Collapse
-  const handleMouseEnter = () => {
+  const handleMouseEnterSidebar = () => {
     if (!isMobile && setIsCollapsed && isCollapsed) {
       setIsCollapsed(false);
     }
   };
 
-  const handleMouseLeave = () => {
+  const handleMouseLeaveSidebar = () => {
     if (!isMobile && setIsCollapsed && !openDropdown) {
       setIsCollapsed(true);
     }
@@ -828,9 +831,31 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     }
   };
 
-  const handleAnyClick = () => {
-    if (onClose) onClose();
+  const handleItemClick = (path, action) => {
+    if (path) {
+      navigate(path);
+    }
+    if (action) {
+      action();
+    }
     setOpenDropdown(null);
+    if (isMobile && setIsCollapsed) {
+      setIsCollapsed(true);
+    }
+    if (onClose) {
+      onClose();
+    }
+  };
+
+  const handleDropdownItemClick = (path) => {
+    navigate(path);
+    setOpenDropdown(null);
+    if (isMobile && setIsCollapsed) {
+      setIsCollapsed(true);
+    }
+    if (onClose) {
+      onClose();
+    }
   };
 
   const handleLogout = async () => {
@@ -839,7 +864,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       localStorage.clear();
       localStorage.removeItem("isAdminView");
       navigate("/employee-login");
-      handleAnyClick();
+      handleItemClick(null, null);
     } catch (error) {
       localStorage.clear();
       navigate("/employee-login");
@@ -861,7 +886,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     window.dispatchEvent(new CustomEvent('viewChanged', { detail: { isAdminView: newView } }));
     
     if (newView) {
-      // Navigate to first accessible admin page based on permissions
       const adminMenu = buildAdminMenu();
       const firstNavigableItem = adminMenu.find(item => item.path && item.name !== "Logout");
       const firstDropdownItem = adminMenu.find(item => item.dropdown && item.dropdown.length > 0)?.dropdown[0];
@@ -871,10 +895,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       navigate("/employeedashboard");
     }
   }, [hasAnyAdminPermission, isAdminView, navigate]);
-
-  const goToPage = useCallback((path) => {
-    navigate(path);
-  }, [navigate]);
 
   const isActive = (path) => activeItem === path;
   const isDropdownActive = (dropdownItems) => dropdownItems?.some(item => isActive(item.path));
@@ -896,6 +916,13 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         return role === "manager" || role === "team lead" || role === "hr";
       };
 
+      const checkHRManagementStatus = (data) => {
+        if (!data) return false;
+        const role = (data.role || data.designation || "").toLowerCase();
+        const dept = (data.department || "").toLowerCase();
+        return dept.includes("management") || role.includes("hr") || role.includes("admin");
+      };
+
       try {
         const response = await axios.get(`${API_BASE_URL}/employees/get-employee?employeeId=${storedId}&t=${new Date().getTime()}`);
         let fetchedPermissions = [];
@@ -904,11 +931,21 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         else if (response.data.permissions) fetchedPermissions = response.data.permissions;
         
         const empLocal = JSON.parse(localStorage.getItem("employeeData") || "{}");
-        const isManager = checkManagerStatus(response.data.data || response.data || empLocal);
+        const dataToUse = response.data.data || response.data || empLocal;
         
-        if (isManager && !fetchedPermissions.includes("leave_approve")) {
-          fetchedPermissions.push("leave_approve");
-          fetchedPermissions.push("dashboard_view");
+        const isManager = checkManagerStatus(dataToUse);
+        const isHRManagement = checkHRManagementStatus(dataToUse);
+        
+        if (isHRManagement) {
+          // Grant all admin permissions if they are HR/Management
+          const allPerms = new Set([...fetchedPermissions, ...ADMIN_PERMISSIONS]);
+          fetchedPermissions = Array.from(allPerms);
+        } else if (isManager) {
+          // Grant manager basics if they are Manager
+          if (!fetchedPermissions.includes("leave_approve")) fetchedPermissions.push("leave_approve");
+          if (!fetchedPermissions.includes("leave_approve_manager")) fetchedPermissions.push("leave_approve_manager");
+          if (!fetchedPermissions.includes("dashboard_view")) fetchedPermissions.push("dashboard_view");
+          if (!fetchedPermissions.includes("shifts_manage")) fetchedPermissions.push("shifts_manage");
         }
 
         setPermissions(fetchedPermissions);
@@ -922,13 +959,19 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
           localStorage.setItem("isAdminView", "false");
         }
       } catch (error) {
-        const localPermissions = JSON.parse(localStorage.getItem("employeePermissions") || "[]");
+        let localPermissions = JSON.parse(localStorage.getItem("employeePermissions") || "[]");
         const empLocal = JSON.parse(localStorage.getItem("employeeData") || "{}");
         const isManager = checkManagerStatus(empLocal);
+        const isHRManagement = checkHRManagementStatus(empLocal);
 
-        if (isManager && !localPermissions.includes("leave_approve")) {
-          localPermissions.push("leave_approve");
-          localPermissions.push("dashboard_view");
+        if (isHRManagement) {
+          const allPerms = new Set([...localPermissions, ...ADMIN_PERMISSIONS]);
+          localPermissions = Array.from(allPerms);
+        } else if (isManager) {
+          if (!localPermissions.includes("leave_approve")) localPermissions.push("leave_approve");
+          if (!localPermissions.includes("leave_approve_manager")) localPermissions.push("leave_approve_manager");
+          if (!localPermissions.includes("dashboard_view")) localPermissions.push("dashboard_view");
+          if (!localPermissions.includes("shifts_manage")) localPermissions.push("shifts_manage");
         }
 
         setPermissions(localPermissions);
@@ -951,22 +994,14 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     return permissions.includes(permission);
   };
 
+  // Employee Menu - Same as before
   const buildEmployeeMenu = () => {
-    const leaveDropdown = [
-      { name: "My Leaves", path: "/myleaves" },
-      { name: "Leave Application", path: "/leave-application" },
-    ];
-
-    // if (hasPermission("leave_approve")) {
-    //   leaveDropdown.push({ name: "Pending Approvals", path: "/emp-pending-leaves" });
-    //   leaveDropdown.push({ name: "Team Leave Approval", path: "/emp-leaves" });
-    // }
-
     return [
       { icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/employeedashboard" },
-      { icon: <i className="ri-shield-keyhole-fill"></i>, name: "My Permissions", path: "/mypermissions" },
+      // { icon: <i className="ri-shield-keyhole-fill"></i>, name: "My Permissions", path: "/mypermissions" },
       {
-        icon: <i className="ri-file-chart-fill"></i>, name: "Attendance",
+        icon: <i className="ri-calendar-check-fill"></i>,
+        name: "Attendance",
         dropdown: [
           { name: "Check In", path: "/attendance-capture" },
           { name: "Attendance Report", path: "/myattendance" },
@@ -975,104 +1010,114 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         ]
       },
       {
-        icon: <i className="ri-calendar-close-fill"></i>, name: "Leave",
-        dropdown: leaveDropdown
+        icon: <i className="ri-calendar-close-fill"></i>,name: "Leave", path: "/myleaves" },
+      {
+        icon: <i className="ri-profile-fill"></i>,
+        name: "Profile",
+        dropdown: [
+          { name: "My Jobs", path: "/emp-my-jobs" },
+          { name: "Personal Docs", path: "/emp-personal-documents" },
+          { name: "My Letters", path: "/emp-letters" },
+          { name: "My Certificate", path: "/my-medical-certificate" }
+        ]
       },
-    {
-      icon: <i className="ri-profile-fill"></i>, name: "Profile",
-      dropdown: [
-        { name: "My Jobs", path: "/emp-my-jobs" },
-        { name: "Personal Docs", path: "/emp-personal-documents" },
-        { name: "My Letters", path: "/emp-letters" },
-        { name: "My Certificate", path: "/my-medical-certificate" }
-      ]
-    },
-    { icon: <i className="ri-money-dollar-box-fill"></i>, name: "My Salary", path: "/mysalary" },
-    { icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/HolidayList" },
-    { icon: <i className="ri-logout-box-fill"></i>, name: "Logout", action: handleLogout }
-  ];
-};
+      { icon: <i className="ri-money-dollar-box-fill"></i>, name: "My Salary", path: "/mysalary" },
+      { icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/HolidayList" },
+      { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
+    ];
+  };
 
+  // Admin Menu - Same as Sidebar component
   const buildAdminMenu = () => {
     const menu = [];
-    
-    // Dashboard (only if permission exists)
-    if (hasPermission("dashboard_view")) {
-      menu.push({ icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/emp-admin-dashboard" });
-    }
 
-    // Attendance Management
-    const attendanceItems = [];
+    // Dashboard
+    menu.push({ icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/emp-admin-dashboard" });
+
+    // Employees
+    menu.push({ icon: <i className="ri-user-fill"></i>, name: "Employees", path: "/emp-employees" });
+
+    // Attendance with dropdown
+    const attendanceDropdown = [];
     if (hasPermission("attendance_view_all")) {
-      attendanceItems.push(
-        { name: "Attendance Summary", path: "/emp-attendance-summary" },
-        { name: "Attendance Records", path: "/emp-attendance-records" },
-        { name: "Today Attendance", path: "/emp-today-attendance" },
-        { name: "Absent Today", path: "/emp-absent-today" }
-      );
+      attendanceDropdown.push({ name: "Attendance Summary", path: "/emp-attendance-summary" });
+      attendanceDropdown.push({ name: "Attendance Records", path: "/emp-attendance-records" });
+      attendanceDropdown.push({ name: "Today Attendance", path: "/emp-today-attendance" });
+      attendanceDropdown.push({ name: "Absent Today", path: "/emp-absent-today" });
     }
-    if (hasPermission("shifts_manage")) {
-      attendanceItems.push({ name: "Shift Management", path: "/emp-shifts" });
-    }
-    if (attendanceItems.length) {
-      menu.push({ icon: <i className="ri-file-chart-fill"></i>, name: "Attendance", dropdown: attendanceItems });
-    }
-
-    // Leave Management
-    const leaveItems = [];
-    if (hasPermission("leave_approve")) leaveItems.push({ name: "Leave Approval", path: "/emp-leaves" });
-    if (hasPermission("reports_view")) leaveItems.push({ name: "Reports", path: "/emp-reports" });
-    if (hasPermission("leave_approval_manager")) leaveItems.push({ name: "Manager Approval", path: "/emp-pending-leaves" });
-    if (leaveItems.length) {
-      menu.push({ icon: <i className="ri-calendar-close-fill"></i>, name: "Leave", dropdown: leaveItems });
+    if (attendanceDropdown.length > 0) {
+      menu.push({
+        icon: <i className="ri-calendar-check-fill"></i>,
+        name: "Attendance",
+        dropdown: attendanceDropdown
+      });
     }
 
-    // Payroll Management
-    const salaryItems = [];
-    if (hasPermission("payroll_manage")) salaryItems.push({ name: "Payroll Management", path: "/emp-payroll" });
-    if (salaryItems.length) {
-      menu.push({ icon: <i className="ri-money-dollar-box-fill"></i>, name: "Payroll", dropdown: salaryItems });
-    }
-
-    // Employee Management
-    const employeeItems = [];
-    if (hasPermission("employee_view_all")) employeeItems.push({ name: "All Employees", path: "/emp-employees" });
-    if (hasPermission("employee_add")) employeeItems.push({ name: "Add Employee", path: "/emp-add-employee" });
-    if (hasPermission("holidays_add")) employeeItems.push({ name: "Add Holiday", path: "/emp-add-holiday" });
-    if (employeeItems.length) {
-      menu.push({ icon: <i className="ri-user-fill"></i>, name: "Employee Management", dropdown: employeeItems });
-    }
-
-    // User Management
-    const userItems = [];
-    if (hasPermission("user_activity_view")) userItems.push({ name: "User Activity", path: "/emp-user-activity" });
-    if (hasPermission("user_access_manage")) userItems.push({ name: "User Access", path: "/emp-user-access" });
-    if (userItems.length) {
-      menu.push({ icon: <i className="ri-group-fill"></i>, name: "User Management", dropdown: userItems });
-    }
-
-    // Expense Management
-    if (hasPermission("expenses_manage") || hasPermission("expense_manage")) {
-      menu.push({ icon: <i className="ri-money-dollar-circle-fill"></i>, name: "Expense Management", path: "/emp-all-expensives-management" });
+    // Leave Approval (for HR/Admin)
+    if (hasPermission("leave_approve")) {
+      menu.push({ icon: <i className="ri-calendar-close-fill"></i>, name: "Leaves", path: "/emp-leaves" });
     }
     
+    // Manager Approve (for Manager/Team Lead) - Different icon
+    if (hasPermission("leave_approve_manager")) {
+      menu.push({ icon: <i className="ri-user-star-fill"></i>, name: "Manager Approve", path: "/emp-pending-leaves" });
+    }
+
+    // Holidays
+    menu.push({ icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/emp-holidays-calendar" });
+
+    // Permissions
+    menu.push({ icon: <i className="ri-shield-keyhole-fill"></i>, name: "Permissions", path: "/emp-permissions" });
+
+    // Payroll
+    if (hasPermission("payroll_manage")) {
+      menu.push({ icon: <i className="ri-money-dollar-box-fill"></i>, name: "Payroll", path: "/emp-payroll" });
+    }
+
+    // Expenses
+    if (hasPermission("expenses_manage") || hasPermission("expense_manage")) {
+      menu.push({ icon: <i className="ri-money-dollar-circle-fill"></i>, name: "Expenses", path: "/emp-all-expensives-management" });
+    }
+
+    // User Activity
+    if (hasPermission("user_activity_view")) {
+      menu.push({ icon: <i className="ri-history-fill"></i>, name: "User Activity", path: "/emp-user-activity" });
+    }
+
+    // User Access
+    if (hasPermission("user_access_manage")) {
+      menu.push({ icon: <i className="ri-shield-user-fill"></i>, name: "User Access", path: "/emp-user-access" });
+    }
+
+    // Recruitment with dropdown
+    const recruitmentDropdown = [];
+    if (hasPermission("job_posts_view")) recruitmentDropdown.push({ name: "Job Posts", path: "/emp-job-posts" });
+    if (hasPermission("job_applicants_view")) recruitmentDropdown.push({ name: "Job Applicants", path: "/emp-job-applicants" });
+    if (hasPermission("score_board_view")) recruitmentDropdown.push({ name: "Score Board", path: "/emp-score-board" });
+    if (hasPermission("assessments_view")) recruitmentDropdown.push({ name: "Assessments", path: "/emp-assessments" });
+    if (hasPermission("documents_view")) recruitmentDropdown.push({ name: "Documents", path: "/emp-documents" });
+    
+    if (recruitmentDropdown.length > 0) {
+      menu.push({
+        icon: <i className="ri-briefcase-fill"></i>,
+        name: "Recruitment",
+        dropdown: recruitmentDropdown
+      });
+    }
+
     // Locations
     if (hasPermission("locations_manage")) {
-      menu.push({ icon: <i className="ri-map-pin-user-fill"></i>, name: "Locations", path: "/emp-locations" });
+      menu.push({ icon: <i className="ri-map-pin-2-fill"></i>, name: "Locations", path: "/emp-locations" });
     }
 
-    // Recruitment Management
-    const recruitmentItems = [];
-    if (hasPermission("job_posts_view")) recruitmentItems.push({ name: "Job Posts", path: "/emp-job-posts" });
-    if (hasPermission("job_applicants_view")) recruitmentItems.push({ name: "Job Applicants", path: "/emp-job-applicants" });
-    if (hasPermission("score_board_view")) recruitmentItems.push({ name: "Score Board", path: "/emp-score-board" });
-    if (hasPermission("assessments_view")) recruitmentItems.push({ name: "Assessments", path: "/emp-assessments" });
-    if (hasPermission("documents_view")) recruitmentItems.push({ name: "Documents", path: "/emp-documents" });
-    if (recruitmentItems.length) {
-      menu.push({ icon: <i className="ri-briefcase-fill"></i>, name: "Recruitment", dropdown: recruitmentItems });
+    // Shifts
+    if (hasPermission("shifts_manage")) {
+      menu.push({ icon: <i className="ri-time-fill"></i>, name: "Shifts", path: "/emp-shifts" });
     }
 
-    menu.push({ icon: <i className="ri-logout-box-fill"></i>, name: "Logout", action: handleLogout });
+    // Logout
+    menu.push({ icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout });
+
     return menu;
   };
 
@@ -1094,150 +1139,161 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
   return (
     <>
       {isMobile && !isCollapsed && (
-        <div 
-          className="fixed inset-0 z-30 bg-black bg-opacity-40" 
-          onClick={() => { 
-            if (setIsCollapsed) setIsCollapsed(true); 
-            setOpenDropdown(null); 
-          }} 
+        <div
+          className="fixed inset-0 z-30 bg-black bg-opacity-40"
+          onClick={() => {
+            if (setIsCollapsed) setIsCollapsed(true);
+            setOpenDropdown(null);
+          }}
         />
       )}
 
       <div
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        onMouseEnter={handleMouseEnterSidebar}
+        onMouseLeave={handleMouseLeaveSidebar}
         className={`fixed top-0 left-0 h-full bg-[#1E40AF] text-white z-40 transition-all duration-300 border-r border-blue-800/50
-        ${isMobile 
-          ? (isCollapsed ? "-translate-x-full w-52" : "translate-x-0 w-52") 
-          : (isCollapsed ? "w-16" : "w-52")
+        ${
+          isMobile
+            ? isCollapsed
+              ? "-translate-x-full w-52"
+              : "translate-x-0 w-52"
+            : isCollapsed
+            ? "w-16"
+            : "w-52"
         }`}
       >
         {/* Header */}
         <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-blue-900/40 border-blue-700/50">
-          <div className="flex items-center w-full gap-2 overflow-hidden">
-            {isCollapsed && !isMobile ? (
-              <span className="text-xl text-emerald-300">TM</span>
-            ) : (
-              <div className="flex flex-col w-full">
-                <span className="text-xs uppercase tracking-[0.2em] font-medium text-blue-100 mb-0.5">
-                  {hasAnyAdminPermission && isAdminView ? 'Admin Portal' : 'Employee Portal'}
+          {isCollapsed && !isMobile ? (
+            <span className="text-xl text-emerald-300">TM</span>
+          ) : (
+            <div className="flex flex-col w-full">
+              <span className="text-xs uppercase tracking-[0.2em] font-medium text-blue-100 mb-0.5">
+                {hasAnyAdminPermission && isAdminView ? 'Admin Portal' : 'Employee Portal'}
+              </span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                <span className="text-xs font-medium truncate text-blue-100/80">
+                  {currentPage}
                 </span>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                  <span className="text-xs font-medium truncate text-blue-100/80">{currentPage}</span>
-                </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Menu */}
-        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto overflow-x-hidden no-scrollbar">
+        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto no-scrollbar">
           {menuItems.map((item, idx) => (
-            <div key={idx} className="relative">
+            <div key={idx}>
               {item.dropdown ? (
                 <>
                   <div
-                    className={`group flex items-center justify-between px-3 py-1.5 transition-all duration-200 rounded-md cursor-pointer ${
-                      isDropdownActive(item.dropdown) 
-                        ? 'bg-emerald-600/80 text-white shadow-lg' 
-                        : openDropdown === item.name 
-                          ? 'bg-blue-700/70' 
-                          : 'hover:bg-blue-700/60'
+                    className={`group flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
+                      isDropdownActive(item.dropdown)
+                        ? "bg-emerald-600/80 text-white shadow-lg"
+                        : openDropdown === item.name
+                        ? "bg-blue-700/70"
+                        : "hover:bg-blue-700/60"
                     }`}
-                    onClick={() => {
-                      const firstValidItem = item.dropdown?.[0];
-                      if (firstValidItem) goToPage(firstValidItem.path);
-                      handleAnyClick();
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (item.dropdown && item.dropdown.length > 0) {
+                        navigate(item.dropdown[0].path);
+                        setOpenDropdown(null);
+                        if (isMobile && setIsCollapsed) {
+                          setIsCollapsed(true);
+                        }
+                        if (onClose) onClose();
+                      }
                     }}
                   >
                     <div className="flex items-center gap-2.5">
                       <span className={`text-lg transition-colors duration-200 ${
-                        isDropdownActive(item.dropdown) 
-                          ? 'text-white' 
-                          : openDropdown === item.name 
-                            ? 'text-emerald-300' 
-                            : 'text-blue-100 group-hover:text-emerald-300'
+                        isDropdownActive(item.dropdown)
+                          ? "text-white"
+                          : openDropdown === item.name
+                          ? "text-emerald-300"
+                          : "text-blue-100 group-hover:text-emerald-300"
                       }`}>
                         {item.icon}
                       </span>
                       {!isCollapsed && (
-                        <span className={`text-[14px] font-medium leading-none ${
-                          isDropdownActive(item.dropdown) ? 'text-white' : ''
-                        }`}>
+                        <span className="text-[14px] font-medium leading-none">
                           {item.name}
                         </span>
                       )}
                     </div>
-                    {!isCollapsed && item.dropdown?.length > 0 && (
-                      <FaChevronDown
-                        onClick={(e) => toggleDropdown(e, item.name)}
-                        className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600/50 rounded cursor-pointer ${
-                          openDropdown === item.name ? "rotate-180" : ""
-                        }`}
-                        style={{ width: '20px', height: '20px', minWidth: '20px', minHeight: '20px' }}
-                      />
+
+                    {!isCollapsed && (
+                      <div className="flex items-center gap-1">
+                        {isDropdownActive(item.dropdown) && (
+                          <div className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></div>
+                        )}
+                        <FaChevronDown
+                          onClick={(e) => toggleDropdown(e, item.name)}
+                          className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600/50 rounded cursor-pointer ${
+                            isDropdownActive(item.dropdown)
+                              ? "text-white"
+                              : openDropdown === item.name
+                              ? "text-emerald-300"
+                              : "text-blue-300 hover:text-white"
+                          } ${openDropdown === item.name ? "rotate-180" : ""}`}
+                          style={{
+                            width: '20px',
+                            height: '20px',
+                            minWidth: '20px',
+                            minHeight: '20px'
+                          }}
+                        />
+                      </div>
                     )}
                   </div>
-                  {/* Dropdown Items */}
-                  {openDropdown === item.name && !isCollapsed && item.dropdown && (
-                    <div className="mt-0.5 bg-blue-900/30 rounded-lg p-1.5">
-                      <ul className="space-y-0.5">
-                        {item.dropdown.map((sub, i) => (
-                          <li key={i}>
-                            <Link
-                              to={sub.path}
-                              onClick={(e) => { 
-                                e.stopPropagation(); 
-                                goToPage(sub.path); 
-                                handleAnyClick(); 
-                              }}
-                              className={`flex items-center gap-2.5 py-1.5 px-0 text-[13px] transition-colors rounded ${
-                                isActive(sub.path) 
-                                  ? 'text-emerald-300 font-semibold bg-emerald-900/20' 
-                                  : 'text-blue-100 hover:text-emerald-300 hover:bg-blue-800/40'
-                              }`}
-                            >
-                              <div className="flex items-center w-full gap-2">
-                                {isActive(sub.path) 
-                                  ? <i className="text-xs ri-checkbox-circle-fill text-emerald-400"></i> 
-                                  : <i className="text-xs text-blue-300 ri-checkbox-blank-circle-line"></i>
-                                }
-                                <span className="truncate">{sub.name}</span>
-                              </div>
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+
+                  {/* DROPDOWN ITEMS */}
+                  {openDropdown === item.name && !isCollapsed && (
+                    <ul className="mt-0.5 space-y-0.5">
+                      {item.dropdown.map((sub, i) => (
+                        <li key={i}>
+                          <Link
+                            to={sub.path}
+                            onClick={() => handleDropdownItemClick(sub.path)}
+                            className={`block py-1 text-[13px] transition-colors pl-8 ${
+                              isActive(sub.path)
+                                ? "text-emerald-300 font-semibold"
+                                : "text-blue-100 hover:text-emerald-300"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              {isActive(sub.path) && (
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                              )}
+                              {sub.name}
+                            </div>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </>
               ) : (
                 <div
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    if (item.path) goToPage(item.path); 
-                    if (item.action) item.action(); 
-                    handleAnyClick(); 
-                  }}
+                  onClick={() => handleItemClick(item.path, item.action)}
                   className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
-                    isActive(item.path) 
-                      ? 'bg-emerald-600/80 text-white shadow-lg' 
-                      : 'hover:bg-blue-700/60'
+                    isActive(item.path)
+                      ? "bg-emerald-600/80 text-white shadow-lg"
+                      : "hover:bg-blue-700/60"
                   }`}
                 >
                   <span className={`text-lg transition-colors duration-200 ${
-                    isActive(item.path) 
-                      ? 'text-white' 
-                      : 'text-blue-100 group-hover:text-emerald-300'
+                    isActive(item.path)
+                      ? "text-white"
+                      : "text-blue-100 group-hover:text-emerald-300"
                   }`}>
                     {item.icon}
                   </span>
                   {!isCollapsed && (
                     <div className="flex items-center flex-1 min-w-0 gap-2">
-                      <span className={`text-[14px] font-medium leading-none truncate ${
-                        isActive(item.path) ? 'text-white' : ''
-                      }`}>
+                      <span className="text-[14px] font-medium leading-none truncate">
                         {item.name}
                       </span>
                       {isActive(item.path) && (
@@ -1269,7 +1325,9 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
               )}
               <div className="flex flex-col gap-0.5">
                 <div className="flex items-center justify-between">
-                  <p className="font-semibold tracking-wider uppercase text-blue-200/80">Portal v1.0</p>
+                  <p className="font-semibold tracking-wider uppercase text-blue-200/80">
+                    {hasAnyAdminPermission && isAdminView ? 'Admin Portal v1.0' : 'Employee Portal v1.0'}
+                  </p>
                   <div className={`flex items-center gap-1 px-2 py-0.5 rounded ${hasAnyAdminPermission && isAdminView ? 'bg-purple-600/20' : 'bg-emerald-600/20'}`}>
                     <div className={`w-1.5 h-1.5 rounded-full ${hasAnyAdminPermission && isAdminView ? 'bg-purple-400' : 'bg-emerald-400'}`}></div>
                     <span className={`text-[9px] font-medium ${hasAnyAdminPermission && isAdminView ? 'text-purple-300' : 'text-emerald-300'}`}>
