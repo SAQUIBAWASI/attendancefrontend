@@ -6,11 +6,14 @@ import {
   FiCamera,
   FiClock as FiHistory,
   FiList,
-  FiUserX
+  FiUserX,
+  FiX,
+  FiInfo
 } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
 import { subscribeToPushNotifications } from "../utils/pushNotification";
+import { FaBirthdayCake, FaGift, FaSmile, FaAward } from "react-icons/fa";
 
 // Recharts imports
 import {
@@ -59,7 +62,12 @@ const EmployeeDashboard = () => {
   const [absentChartData, setAbsentChartData] = useState([]);
   const [allAttendance, setAllAttendance] = useState([]);
   const [userAttendance, setUserAttendance] = useState([]); // Added state for table
+  const [birthdaysToday, setBirthdaysToday] = useState([]);
+  const [anniversariesToday, setAnniversariesToday] = useState([]);
+  const [leavesToday, setLeavesToday] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState(""); // "birthday" or "leave"
 
   useEffect(() => {
     if (!email) return;
@@ -167,6 +175,30 @@ const EmployeeDashboard = () => {
             setShiftTiming(shiftTime || "No Shift Assigned");
           } catch (e) {
             setShiftTiming("Not Assigned");
+          }
+
+          // 9. Fetch Birthdays
+          try {
+            const bdayRes = await axios.get(`${BASE_URL}api/employees/birthdays-today?department=${encodeURIComponent(profileData.department || "")}`);
+            setBirthdaysToday(bdayRes.data.data || []);
+          } catch (e) {
+            console.warn("Birthdays fetch failed", e);
+          }
+
+          // 10. Fetch Anniversaries
+          try {
+            const annivRes = await axios.get(`${BASE_URL}api/employees/anniversaries-today?department=${encodeURIComponent(profileData.department || "")}`);
+            setAnniversariesToday(annivRes.data.data || []);
+          } catch (e) {
+            console.warn("Anniversaries fetch failed", e);
+          }
+
+          // 10. Fetch Leaves Today
+          try {
+            const leaveTodayRes = await axios.get(`${BASE_URL}api/leaves/on-leave-today?department=${encodeURIComponent(profileData.department || "")}`);
+            setLeavesToday(leaveTodayRes.data.data || []);
+          } catch (e) {
+            console.warn("Leaves today fetch failed", e);
           }
 
           setLoading(false);
@@ -485,6 +517,237 @@ const EmployeeDashboard = () => {
             </span>
           </div>
         </div>
+
+        {/* Birthday Special Section */}
+        {(() => {
+          const isMyBirthday = birthdaysToday.some(b => b.email === email);
+          const myAnniversary = anniversariesToday.find(a => a.email === email);
+          const deptBirthdays = birthdaysToday.filter(b => b.email !== email);
+          const deptAnniversaries = anniversariesToday.filter(a => a.email !== email);
+          const deptLeaves = leavesToday.filter(l => l.email !== email);
+
+          if (!isMyBirthday && !myAnniversary && deptBirthdays.length === 0 && deptAnniversaries.length === 0 && deptLeaves.length === 0) return null;
+
+          return (
+            <div className="mb-8 space-y-4">
+              {/* Personal Celebration Banners */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {isMyBirthday && (
+                  <div className="relative overflow-hidden p-6 rounded-2xl bg-gradient-to-r from-rose-500 to-indigo-600 text-white shadow-lg animate-in fade-in slide-in-from-bottom duration-500">
+                    <div className="relative z-10 flex items-center gap-4">
+                      <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm border border-white/30">
+                        <FaBirthdayCake className="text-3xl text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold">Happy Birthday, {profile.name.split(' ')[0]}! 🎊</h2>
+                        <p className="text-white/80 text-xs font-medium">Wishing you a fantastic day and a wonderful year ahead!</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {myAnniversary && (
+                  <div className="relative overflow-hidden p-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-700 text-white shadow-lg animate-in fade-in slide-in-from-bottom duration-500">
+                    <div className="relative z-10 flex items-center gap-4">
+                      <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm border border-white/30">
+                        <FaAward className="text-3xl text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold">Happy {myAnniversary.yearsOfService}{myAnniversary.yearsOfService === 1 ? 'st' : myAnniversary.yearsOfService === 2 ? 'nd' : myAnniversary.yearsOfService === 3 ? 'rd' : 'th'} Work Anniversary! 🏆</h2>
+                        <p className="text-white/80 text-xs font-medium">Thank you for your dedication and brilliant work over the past {myAnniversary.yearsOfService} year{myAnniversary.yearsOfService > 1 ? 's' : ''}!</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Departmental Celebrations & Leaves */}
+              <div className="grid grid-cols-1 gap-3">
+                {deptBirthdays.length > 0 && (
+                  <div 
+                    className="flex items-center justify-between p-3 bg-white border border-rose-100 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                    onClick={() => { setModalType("birthday"); setShowModal(true); }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex -space-x-2 overflow-hidden">
+                        {deptBirthdays.slice(0, 3).map((b, i) => (
+                          <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-blue-50 flex items-center justify-center text-[10px] font-bold text-blue-600 border border-blue-100" title={b.name}>
+                            {b.name.split(' ').map(n => n[0]).join('')}
+                          </div>
+                        ))}
+                        {deptBirthdays.length > 3 && (
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 ring-2 ring-white">
+                            +{deptBirthdays.length - 3}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs font-medium text-slate-600">
+                        <span className="font-bold text-slate-900">
+                          {deptBirthdays.length === 1 
+                            ? deptBirthdays[0].name 
+                            : `${deptBirthdays[0].name} and ${deptBirthdays.length - 1} other${deptBirthdays.length > 2 ? 's' : ''}`
+                          }
+                        </span> from your department are celebrating their Birthday today! 🎂
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-[10px] font-bold text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">View All</div>
+                      <button 
+                        className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                        onClick={(e) => { e.stopPropagation(); alert(`Departmental wishes sent! 🎊`); }}
+                      >
+                        Send Wishes
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {deptAnniversaries.length > 0 && (
+                  <div 
+                    className="flex items-center justify-between p-3 bg-white border border-emerald-100 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                    onClick={() => { setModalType("anniversary"); setShowModal(true); }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex -space-x-2 overflow-hidden">
+                        {deptAnniversaries.slice(0, 3).map((a, i) => (
+                          <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-emerald-50 flex items-center justify-center text-[10px] font-bold text-emerald-600 border border-emerald-100" title={a.name}>
+                            {a.name.split(' ').map(n => n[0]).join('')}
+                          </div>
+                        ))}
+                        {deptAnniversaries.length > 3 && (
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 ring-2 ring-white">
+                            +{deptAnniversaries.length - 3}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs font-medium text-slate-600">
+                        <span className="font-bold text-slate-900">
+                          {deptAnniversaries.length === 1 
+                            ? deptAnniversaries[0].name 
+                            : `${deptAnniversaries[0].name} and ${deptAnniversaries.length - 1} other${deptAnniversaries.length > 2 ? 's' : ''}`
+                          }
+                        </span> from your department are celebrating their Work Anniversary! 🏆
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-[10px] font-bold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">View All</div>
+                      <button 
+                        className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                        onClick={(e) => { e.stopPropagation(); alert(`Anniversary congratulations sent! 🎊`); }}
+                      >
+                        Celebrate
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {deptLeaves.length > 0 && (
+                  <div 
+                    className="flex items-center justify-between p-3 bg-white border border-amber-100 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                    onClick={() => { setModalType("leave"); setShowModal(true); }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex -space-x-2 overflow-hidden">
+                        {deptLeaves.slice(0, 3).map((l, i) => (
+                          <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-amber-50 flex items-center justify-center text-[10px] font-bold text-amber-600 border border-amber-100" title={l.employeeName}>
+                            {l.employeeName.split(' ').map(n => n[0]).join('')}
+                          </div>
+                        ))}
+                        {deptLeaves.length > 3 && (
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 ring-2 ring-white">
+                            +{deptLeaves.length - 3}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs font-medium text-slate-600">
+                        <span className="font-bold text-slate-900">
+                          {deptLeaves.length === 1 
+                            ? deptLeaves[0].employeeName 
+                            : `${deptLeaves[0].employeeName} and ${deptLeaves.length - 1} other${deptLeaves.length > 2 ? 's' : ''}`
+                          }
+                        </span> from your department {deptLeaves.length === 1 ? 'is' : 'are'} on Leave today. 🏠
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-[10px] font-bold text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity">View Details</div>
+                      <div className="text-[10px] font-black uppercase text-amber-500 bg-amber-50 px-2 py-1 rounded-md tracking-widest">
+                        Out of Office
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Celebration Modal */}
+              {showModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+                  <div className="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl animate-in zoom-in-95 duration-200">
+                    <div className="flex items-center justify-between p-4 border-b border-gray-50">
+                        <h3 className="text-lg font-bold text-gray-800">
+                          {modalType === 'birthday' ? `Today's Birthdays` : 
+                           modalType === 'anniversary' ? `Work Anniversaries` :
+                           `Employees on Leave`}
+                        </h3>
+                      <button 
+                        onClick={() => setShowModal(false)}
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+                      >
+                        <FiX className="text-xl" />
+                      </button>
+                    </div>
+                    <div className="p-2 max-h-[60vh] overflow-y-auto">
+                      <div className="grid grid-cols-1 gap-2 p-2">
+                        {(modalType === 'birthday' ? deptBirthdays : modalType === 'anniversary' ? deptAnniversaries : deptLeaves).map((item, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl hover:bg-white border border-transparent hover:border-slate-100 hover:shadow-sm transition-all group">
+                             <div className="flex items-center gap-4">
+                               <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shadow-sm ${
+                                 modalType === 'birthday' ? 'bg-rose-100 text-rose-600' : 
+                                 modalType === 'anniversary' ? 'bg-emerald-100 text-emerald-600' :
+                                 'bg-amber-100 text-amber-600'
+                               }`}>
+                                 {(item.name || item.employeeName).split(' ').map(n => n[0]).join('')}
+                               </div>
+                               <div>
+                                 <h4 className="text-sm font-bold text-gray-900">{item.name || item.employeeName}</h4>
+                                 <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">
+                                   {modalType === 'anniversary' ? `${item.yearsOfService} Year Celebration` : item.role || 'Team Member'}
+                                 </p>
+                               </div>
+                             </div>
+                             {(modalType === 'birthday' || modalType === 'anniversary') && (
+                               <button 
+                                 className={`px-3 py-1.5 bg-white border rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm ${
+                                   modalType === 'birthday' ? 'text-rose-500 border-rose-100 hover:bg-rose-500 hover:text-white' : 
+                                   'text-emerald-600 border-emerald-100 hover:bg-emerald-600 hover:text-white'
+                                 }`}
+                                 onClick={() => alert(`Celebration wish sent to ${item.name}! 🎊`)}
+                               >
+                                 {modalType === 'birthday' ? 'Wish' : 'Celebrate'}
+                               </button>
+                             )}
+                             {modalType === 'leave' && (
+                               <div className="text-[9px] font-bold uppercase text-amber-600 bg-amber-100/50 px-2.5 py-1 rounded-lg">
+                                 {item.leaveType || 'On Leave'}
+                               </div>
+                             )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+                       <button 
+                         onClick={() => setShowModal(false)}
+                         className="px-5 py-2 bg-gray-900 text-white rounded-lg text-xs font-bold hover:bg-gray-800 transition-all shadow-md shadow-gray-200"
+                       >
+                         Close
+                       </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
 

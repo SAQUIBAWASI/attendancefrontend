@@ -5963,8 +5963,8 @@ import {
   FaUserTie
 } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
-const API_BASE_URL = "https://api.timelyhealth.in/api";
 
 // ✅ Pin Code Utility Functions
 const PINCODE_DATA = {
