@@ -195,9 +195,9 @@ import Regularization from "./Pages/Regularization.jsx";
 import RejectedLeaves from "./Pages/RejectedLeaves.jsx";
 import TakeAssessment from "./Pages/TakeAssessment.jsx";
 // import ProductList from"./Pages/Productlist.js";
-import ProductSelectionPage from "./Pages/ProductSelectionPage.jsx";
-import HolidaysCalendar from "./Pages/HolidaysCalendar.jsx";
 import HolidayList from "./Pages/Holiday.js";
+import HolidaysCalendar from "./Pages/HolidaysCalendar.jsx";
+import ProductSelectionPage from "./Pages/ProductSelectionPage.jsx";
 
 
 
@@ -266,6 +266,8 @@ function App() {
       <Route path="/emp-today-attendance" element={<EmployeeLayout><TodayAttendance /></EmployeeLayout>} />
       <Route path="/emp-absent-today" element={<EmployeeLayout><AbsentToday /></EmployeeLayout>} />
       <Route path="/emp-leaves" element={<EmployeeLayout><LeavesList /></EmployeeLayout>} />
+      <Route path="/emp-pending-leaves" element={<EmployeeLayout><PendingLeaves /></EmployeeLayout>} />
+      <Route path="/emp-add-holiday" element={<EmployeeLayout><HolidaysCalendar /></EmployeeLayout>} />
       <Route path="/emp-payroll" element={<EmployeeLayout><PayRoll /></EmployeeLayout>} />
       <Route path="/emp-reports" element={<EmployeeLayout><LeavesReport /></EmployeeLayout>} />
       <Route path="/emp-locations" element={<EmployeeLayout><LocationListPage /></EmployeeLayout>} />

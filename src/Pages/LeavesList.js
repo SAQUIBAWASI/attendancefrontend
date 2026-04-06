@@ -2574,7 +2574,24 @@ const LeavesList = () => {
 
       const sorted = leavesWithStatus.sort((a, b) => new Date(b.createdAt || b.startDate) - new Date(a.createdAt || a.startDate));
       const activeEmployeeIds = new Set(activeEmployees.map(emp => emp.employeeId || emp._id));
-      const filteredLeavesData = sorted.filter(leave => activeEmployeeIds.has(leave.employeeId));
+      let filteredLeavesData = sorted.filter(leave => activeEmployeeIds.has(leave.employeeId));
+
+      const userRoleStr = localStorage.getItem("userRole");
+      if (userRoleStr === "employee") {
+        const empData = JSON.parse(localStorage.getItem("employeeData") || "{}");
+        const empRole = (empData.role || empData.designation || "").toLowerCase();
+        const empDept = (empData.department || empData.departmentName || "").toLowerCase();
+        
+        // HR handles everything. Otherwise, the employee (who was granted leave_approve)
+        // should ONLY see their own department's leave requests!
+        if (empRole !== "hr" && empDept !== "hr" && empDept !== "human resources") {
+          filteredLeavesData = filteredLeavesData.filter(leave => {
+            const leaveEmp = activeEmployees.find(e => e.employeeId === leave.employeeId || e._id === leave.employeeId);
+            const leaveDept = (leaveEmp?.department || leaveEmp?.departmentName || leave.department || "").toLowerCase();
+            return leaveDept === empDept;
+          });
+        }
+      }
 
       setLeaves(filteredLeavesData);
       setFilteredLeaves(filteredLeavesData);
@@ -2614,9 +2631,28 @@ const LeavesList = () => {
 
   const updateLeaveStatus = async (id, status) => {
     try {
-      const adminName = localStorage.getItem("adminName") || "Admin";
-      const adminEmail = localStorage.getItem("adminEmail") || "";
-      const res = await axios.put(`${API_BASE_URL}/leaves/updateleaves/${id}`, { status, adminName, adminEmail });
+            const userRoleStr = localStorage.getItem("userRole");
+      let approverName = "Admin";
+      let approverRole = "Admin";
+      let approverEmail = "";
+
+      if (userRoleStr === "employee") {
+        const empData = JSON.parse(localStorage.getItem("employeeData") || "{}");
+        approverName = localStorage.getItem("employeeName") || empData.name;
+        approverRole = empData.designation || empData.role || "Manager";
+        approverEmail = localStorage.getItem("employeeEmail") || empData.email || "";
+      } else {
+        approverName = localStorage.getItem("adminName") || "Admin";
+        approverRole = "Admin";
+        approverEmail = localStorage.getItem("adminEmail") || "";
+      }
+
+      const res = await axios.put(`${API_BASE_URL}/leaves/updateleaves/${id}`, { 
+        status, 
+        adminName: approverName, 
+        adminEmail: approverEmail, 
+        adminRole: approverRole 
+      });
       if (res.status === 200) {
         alert(`Leave ${status} successfully`);
         fetchLeaves();
@@ -2748,6 +2784,26 @@ const LeavesList = () => {
   // Filters
   useEffect(() => {
     let filtered = [...leaves];
+        const userRoleStr = localStorage.getItem("userRole");
+    if (userRoleStr === "employee") {
+      const empData = JSON.parse(localStorage.getItem("employeeData") || "{}");
+      const empRole = (empData.role || empData.designation || "").toLowerCase();
+      const perms = JSON.parse(localStorage.getItem("employeePermissions") || "[]");
+      const hasLeaveApprove = perms.includes("leave_approve");
+      
+      const isHR = empRole.includes("hr");
+      const isDepartmentHead = (!isHR) && (empRole.includes("manager") || empRole.includes("lead") || empRole.includes("head") || hasLeaveApprove);
+
+      if (!isHR) {
+        if (isDepartmentHead) {
+          const empDept = (empData.department || empData.departmentName || "").toLowerCase();
+          filtered = filtered.filter(l => (getEmployeeDetails(l.employeeId).department || "").toLowerCase() === empDept);
+        } else {
+          filtered = filtered.filter(l => l.employeeId === (empData.employeeId || empData._id));
+        }
+      }
+    }
+
     if (searchTerm) filtered = filtered.filter(l => l.employeeName?.toLowerCase().includes(searchTerm.toLowerCase()) || l.employeeId?.toLowerCase().includes(searchTerm.toLowerCase()) || l.leaveType?.toLowerCase().includes(searchTerm.toLowerCase()) || l.reason?.toLowerCase().includes(searchTerm.toLowerCase()));
     if (statusFilter !== "all") filtered = filtered.filter(l => l.status === statusFilter);
     if (leaveTypeFilter !== "all") filtered = filtered.filter(l => l.leaveType === leaveTypeFilter);
@@ -2834,6 +2890,12 @@ const LeavesList = () => {
             color="border-yellow-500"
           />
           <StatCard
+            icon={FiClock}
+            label="Manager Approved"
+            value={leaves.filter((l) => l.status === "manager_approved").length}
+            color="border-blue-500"
+          />
+          <StatCard
             icon={FiCheckCircle}
             label="Approved"
             value={leaves.filter((l) => l.status === "approved").length}
@@ -2851,7 +2913,7 @@ const LeavesList = () => {
         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[180px]"><FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" /><input type="text" placeholder="Search by ID or Name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500" /></div>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-8 px-2 text-xs border border-gray-300 rounded-lg min-w-[100px]"><option value="all">All Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-8 px-2 text-xs border border-gray-300 rounded-lg min-w-[100px]"><option value="all">All Status</option><option value="pending">Pending</option><option value="manager_approved">Manager Approved</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
             <select value={leaveTypeFilter} onChange={(e) => setLeaveTypeFilter(e.target.value)} className="h-8 px-2 text-xs border border-gray-300 rounded-lg min-w-[100px]"><option value="all">All Types</option><option value="sick">Sick Leave</option><option value="casual">Casual Leave</option><option value="earned">Earned Leave</option></select>
             <div className="relative" ref={departmentFilterRef}><button onClick={() => setShowDepartmentFilter(!showDepartmentFilter)} className={`h-8 px-3 text-xs font-medium rounded-md flex items-center gap-1 ${filterDepartment ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 border border-gray-300'}`}><FaBuilding /> Dept{filterDepartment && `: ${filterDepartment}`}</button>{showDepartmentFilter && (<div className="absolute z-50 w-48 mt-1 bg-white border rounded-md shadow-lg max-h-60"><div onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); }} className="px-3 py-2 text-xs cursor-pointer hover:bg-blue-50">All Departments</div>{uniqueDepartments.map(dept => (<div key={dept} onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDepartment === dept ? 'bg-blue-50 text-blue-700' : ''}`}>{dept}</div>))}</div>)}</div>
             <div className="relative" ref={designationFilterRef}><button onClick={() => setShowDesignationFilter(!showDesignationFilter)} className={`h-8 px-3 text-xs font-medium rounded-md flex items-center gap-1 ${filterDesignation ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 border border-gray-300'}`}><FaUserTag /> Desig{filterDesignation && `: ${filterDesignation}`}</button>{showDesignationFilter && (<div className="absolute z-50 w-48 mt-1 bg-white border rounded-md shadow-lg max-h-60"><div onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); }} className="px-3 py-2 text-xs cursor-pointer hover:bg-blue-50">All Designations</div>{uniqueDesignations.map(des => (<div key={des} onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDesignation === des ? 'bg-blue-50 text-blue-700' : ''}`}>{des}</div>))}</div>)}</div>
@@ -2885,7 +2947,7 @@ const LeavesList = () => {
 
         {/* Main Table */}
         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-          <div className="overflow-x-auto"><table className="min-w-full"><thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600"><tr><th className="py-2 text-center">Employee ID</th><th className="py-2 text-center">Name</th><th className="py-2 text-center">Department</th><th className="py-2 text-center">Designation</th><th className="py-2 text-center">Dates</th><th className="py-2 text-center">Days</th><th className="py-2 text-center">Reason</th><th className="py-2 text-center">Status</th><th className="py-2 text-center">Actions</th></tr></thead><tbody>{currentItems.length > 0 ? currentItems.map((l) => { const empDetails = getEmployeeDetails(l.employeeId); const compOffInfo = l.compOffStatus; return (<tr key={l._id} className={`border-b hover:bg-gray-50 ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-50' : ''}`}><td className="px-2 py-2 text-center">{l.employeeId || "N/A"}</td><td className="px-2 py-2 text-center"><div className="font-medium">{l.employeeName}</div></td><td className="px-2 py-2 text-center">{empDetails.department}</td><td className="px-2 py-2 text-center">{empDetails.designation}</td><td className="px-2 py-2 text-center">{new Date(l.startDate).toLocaleDateString()} <br /><span className="text-xs text-gray-400">to</span> <br />{new Date(l.endDate).toLocaleDateString()}</td><td className="px-2 py-2 text-center"><span className={`px-2 py-1 text-xs rounded-full ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>{l.days} {l.days === 1 ? 'day' : 'days'}</span></td><td className="max-w-xs px-2 py-2 text-center truncate">{l.reason}</td><td className="px-2 py-2 text-center">{l.status === "approved" && !compOffInfo?.exists && <span className="px-2 py-1 text-xs text-green-700 bg-green-100 rounded-full">✅ Approved</span>}{l.status === "approved" && compOffInfo?.exists && compOffInfo.status === "approved" && <span className="px-2 py-1 text-xs text-purple-700 bg-purple-100 rounded-full">🔄 Converted</span>}{l.status === "approved" && compOffInfo?.exists && compOffInfo.status === "rejected" && <span className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded-full">❌ Comp-off Rejected</span>}{l.status === "pending" && <span className="px-2 py-1 text-xs text-yellow-700 bg-yellow-100 rounded-full">⏳ Pending</span>}{l.status === "rejected" && <span className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded-full">❌ Rejected</span>}</td><td className="px-2 py-2 text-center">{l.status === "pending" ? (<div className="flex justify-center gap-2"><button onClick={() => updateLeaveStatus(l._id, "approved")} className="px-2 py-1 text-xs text-white bg-green-500 rounded hover:bg-green-600">Approve</button><button onClick={() => updateLeaveStatus(l._id, "rejected")} className="px-2 py-1 text-xs text-white bg-red-500 rounded hover:bg-red-600">Reject</button></div>) : l.status === "approved" && compOffInfo?.exists && compOffInfo.status === "approved" ? (<div className="flex justify-center gap-2"><button onClick={() => editApprovedCompOff(approvedCompOffs.find(co => co._id === compOffInfo.compOffId))} className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded hover:bg-blue-200">✏️ Edit</button><button onClick={() => deleteApprovedCompOff(compOffInfo.compOffId)} className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded hover:bg-red-200">🗑️ Delete</button></div>) : l.status === "approved" && !compOffInfo?.exists ? (<span className="text-xs text-purple-600">Comp-off available</span>) : (<span className="text-xs italic text-gray-400">No actions</span>)}</td></tr>); }) : <tr><td colSpan="9" className="py-6 text-center text-gray-500">No leave records found.</td></tr>}</tbody></table></div>
+          <div className="overflow-x-auto"><table className="min-w-full"><thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600"><tr><th className="py-2 text-center">Employee ID</th><th className="py-2 text-center">Name</th><th className="py-2 text-center">Department</th><th className="py-2 text-center">Designation</th><th className="py-2 text-center">Dates</th><th className="py-2 text-center">Days</th><th className="py-2 text-center">Reason</th><th className="py-2 text-center">Status</th><th className="py-2 text-center">Approved By</th><th className="py-2 text-center">Actions</th></tr></thead><tbody>{currentItems.length > 0 ? currentItems.map((l) => { const empDetails = getEmployeeDetails(l.employeeId); const compOffInfo = l.compOffStatus; const userRole = localStorage.getItem("userRole"); const isManager = userRole === "employee" && JSON.parse(localStorage.getItem("employeePermissions") || "[]").includes("leave_approve"); const canApprove = (userRole === "admin" && (l.status === "pending" || l.status === "manager_approved")) || (isManager && l.status === "pending"); return (<tr key={l._id} className={`border-b hover:bg-gray-50 ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-50' : ''}`}><td className="px-2 py-2 text-center">{l.employeeId || "N/A"}</td><td className="px-2 py-2 text-center"><div className="font-medium">{l.employeeName}</div></td><td className="px-2 py-2 text-center">{empDetails.department}</td><td className="px-2 py-2 text-center">{empDetails.designation}</td><td className="px-2 py-2 text-center">{new Date(l.startDate).toLocaleDateString()} <br /><span className="text-xs text-gray-400">to</span> <br />{new Date(l.endDate).toLocaleDateString()}</td><td className="px-2 py-2 text-center"><span className={`px-2 py-1 text-xs rounded-full ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>{l.days} {l.days === 1 ? 'day' : 'days'}</span></td><td className="max-w-xs px-2 py-2 text-center truncate">{l.reason}</td><td className="px-2 py-2 text-center">{l.status === "approved" && !compOffInfo?.exists && <span className="px-2 py-1 text-xs text-green-700 bg-green-100 rounded-full">✅ Approved</span>}{l.status === "approved" && compOffInfo?.exists && compOffInfo.status === "approved" && <span className="px-2 py-1 text-xs text-purple-700 bg-purple-100 rounded-full">🔄 Converted</span>}{l.status === "approved" && compOffInfo?.exists && compOffInfo.status === "rejected" && <span className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded-full">❌ Comp-off Rejected</span>}{l.status === "manager_approved" && <span className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded-full">👍 Manager Approved</span>}{l.status === "pending" && <span className="px-2 py-1 text-xs text-yellow-700 bg-yellow-100 rounded-full">⏳ Pending</span>}{l.status === "rejected" && <span className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded-full">❌ Rejected</span>}</td><td className="px-2 py-2 text-center">{l.approvedBy ? (<div className="text-xs"><span className="font-semibold">{l.approvedBy}</span><span className="block text-gray-500 text-[10px]">({l.approvedByRole || 'Admin'})</span></div>) : (<span className="text-gray-400">-</span>)}</td><td className="px-2 py-2 text-center">{canApprove ? (<div className="flex justify-center gap-2"><button onClick={() => updateLeaveStatus(l._id, l.status === "pending" && userRole === "employee" ? "manager_approved" : "approved")} className="px-2 py-1 text-xs text-white bg-green-500 rounded hover:bg-green-600">Approve</button><button onClick={() => updateLeaveStatus(l._id, "rejected")} className="px-2 py-1 text-xs text-white bg-red-500 rounded hover:bg-red-600">Reject</button></div>) : l.status === "approved" && compOffInfo?.exists && compOffInfo.status === "approved" ? (<div className="flex justify-center gap-2"><button onClick={() => editApprovedCompOff(approvedCompOffs.find(co => co._id === compOffInfo.compOffId))} className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded hover:bg-blue-200">✏️ Edit</button><button onClick={() => deleteApprovedCompOff(compOffInfo.compOffId)} className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded hover:bg-red-200">🗑️ Delete</button></div>) : (l.status === "approved" || l.status === "manager_approved") && !compOffInfo?.exists ? (<span className="text-xs text-purple-600">Comp-off available</span>) : (<span className="text-xs italic text-gray-400">No actions</span>)}</td></tr>); }) : <tr><td colSpan="10" className="py-6 text-center text-gray-500">No leave records found.</td></tr>}</tbody></table></div>
         </div>
 
         {/* Pagination */}

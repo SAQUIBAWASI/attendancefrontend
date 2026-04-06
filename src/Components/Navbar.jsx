@@ -451,10 +451,13 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
       "/shift": "Shift Management",
       "/shiftlist": "Shift List",
       "/all-expensives": "Expenses",
+      "/regularization": "Regularization",
+      "/holidays-calendar": "Holidays",
+      "/all-medical-certificates": "Medical Certificates",
     };
-
+    
     return routes[location.pathname] || "Dashboard";
-  };
+  }; // ← This closing brace was missing
 
   // ===== JOB MODULE =====
   const jobTabs = [

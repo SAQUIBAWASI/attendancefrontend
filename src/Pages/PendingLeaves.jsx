@@ -23,8 +23,9 @@ const PendingLeaves = () => {
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
-  // HARDCODED FOR THIS PAGE
-  const statusFilter = "pending";
+  const userRole = localStorage.getItem("userRole") || "admin";
+  const isManager = userRole === "employee";
+  const [statusFilter, setStatusFilter] = useState(isManager ? "pending" : "manager_approved");
   const [leaveTypeFilter, setLeaveTypeFilter] = useState("all");
   const [startDateFilter, setStartDateFilter] = useState("");
   const [endDateFilter, setEndDateFilter] = useState("");
@@ -89,9 +90,20 @@ const PendingLeaves = () => {
 
       // Filter out leaves from hidden employees
       const activeEmployeeIds = new Set(activeEmployees.map(emp => emp.employeeId || emp._id));
-      const filteredLeavesData = sorted.filter(leave =>
+      let filteredLeavesData = sorted.filter(leave =>
         activeEmployeeIds.has(leave.employeeId)
       );
+
+      // If manager, only show their department records
+      if (isManager) {
+        const loggedInEmp = JSON.parse(localStorage.getItem("employeeData") || "{}");
+        const managerDept = (loggedInEmp.department || loggedInEmp.departmentName || "").toLowerCase();
+        filteredLeavesData = filteredLeavesData.filter(l => {
+          const emp = activeEmployees.find(e => e.employeeId === l.employeeId || e._id === l.employeeId);
+          const empDept = (emp?.department || emp?.departmentName || l.department || "").toLowerCase();
+          return empDept === managerDept;
+        });
+      }
 
       setLeaves(filteredLeavesData);
       setFilteredLeaves(filteredLeavesData);
@@ -119,15 +131,24 @@ const PendingLeaves = () => {
   // ✅ Update Leave Status (Approve / Reject)
   const updateLeaveStatus = async (id, status) => {
     try {
-      const adminName = localStorage.getItem("adminName") || "Admin";
-      const adminEmail = localStorage.getItem("adminEmail") || "";
+      let adminName = localStorage.getItem("adminName") || "Admin";
+      let adminEmail = localStorage.getItem("adminEmail") || "";
+      let currentAdminRole = userRole;
+
+      if (isManager) {
+        const empData = JSON.parse(localStorage.getItem("employeeData") || "{}");
+        adminName = localStorage.getItem("employeeName") || empData.name || "Manager";
+        adminEmail = localStorage.getItem("employeeEmail") || empData.email || "";
+        currentAdminRole = empData.designation || empData.role || "Manager";
+      }
 
       const res = await axios.put(
         `${API_BASE_URL}/leaves/updateleaves/${id}`,
         {
           status,
           adminName,
-          adminEmail
+          adminEmail,
+          adminRole: currentAdminRole
         }
       );
 
@@ -145,8 +166,10 @@ const PendingLeaves = () => {
   useEffect(() => {
     let filtered = [...leaves];
 
-    // HARDCODED FILTER FOR PENDING ONLY
-    filtered = filtered.filter((l) => l.status === statusFilter);
+    // Optional status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((l) => l.status === statusFilter);
+    }
 
     if (searchTerm) {
       filtered = filtered.filter(
@@ -298,7 +321,7 @@ const PendingLeaves = () => {
           <StatCard
              icon={FiClock}
              label="Pending Leaves"
-             value={leaves.filter((l) => l.status === "pending").length}
+             value={leaves.filter((l) => l.status === statusFilter).length}
              color="border-yellow-500"
           />
           <StatCard
@@ -317,7 +340,7 @@ const PendingLeaves = () => {
             {/* Title / Back Indicator */}
             <div className="flex items-center gap-2 pr-4 border-r border-gray-200 mr-2">
                 <FiClock className="text-xl text-yellow-600" />
-                <h1 className="text-sm font-bold tracking-widest text-gray-800 uppercase">Pending</h1>
+                <h1 className="text-sm font-bold tracking-widest text-gray-800 uppercase">{isManager ? "Pending" : "Manager Approved"}</h1>
             </div>
 
             {/* ID/Name Search */}
@@ -343,6 +366,19 @@ const PendingLeaves = () => {
               <option value="casual">Casual Leave</option>
               <option value="earned">Earned Leave</option>
               <option value="other">Other</option>
+            </select>
+
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[120px]"
+            >
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="manager_approved">Manager Approved</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
             </select>
 
             {/* Department Filter Button */}
@@ -529,14 +565,14 @@ const PendingLeaves = () => {
                           {l.reason}
                         </td>
                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                          <span className="px-2 py-2 text-xs text-center text-yellow-700 bg-yellow-100 rounded-full">
-                            ⏳ Pending
+                          <span className={`px-2 py-2 text-xs text-center rounded-full ${l.status === 'manager_approved' ? 'text-blue-700 bg-blue-100' : 'text-yellow-700 bg-yellow-100'}`}>
+                            ⏳ {l.status === 'manager_approved' ? 'Manager Approved' : 'Pending'}
                           </span>
                         </td>
                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           <div className="flex justify-center gap-2">
                             <button
-                              onClick={() => updateLeaveStatus(l._id, "approved")}
+                              onClick={() => updateLeaveStatus(l._id, isManager ? "manager_approved" : "approved")}
                               className="px-2 py-2 text-xs text-center text-white transition bg-green-500 rounded-md hover:bg-green-600"
                             >
                               Approve
@@ -555,7 +591,7 @@ const PendingLeaves = () => {
                 ) : (
                   <tr>
                     <td colSpan="9" className="py-6 text-center text-gray-500">
-                      No pending leave records found.
+                      No records found.
                     </td>
                   </tr>
                 )}

@@ -3165,6 +3165,7 @@ const UserAccessManagement = () => {
       items: [
         { id: "employee_view_all", name: "View All Employees" },
         { id: "employee_add", name: "Add New Employee" },
+        { id: "holidays_add", name: "Add New Holidays" },
       ]
     },
     {
@@ -3175,6 +3176,7 @@ const UserAccessManagement = () => {
         { id: "leave_approve", name: "Leave Approval" },
         { id: "shifts_manage", name: "Shift Management" },
         { id: "locations_manage", name: "Location Management" },
+        { id: "leave_approval_manager", name: "Leave Approval By Manager" },
       ]
     },
     {

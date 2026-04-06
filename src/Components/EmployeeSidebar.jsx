@@ -890,6 +890,12 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         return;
       }
 
+      const checkManagerStatus = (data) => {
+        if (!data) return false;
+        const role = (data.role || data.designation || "").toLowerCase();
+        return role === "manager" || role === "team lead" || role === "hr";
+      };
+
       try {
         const response = await axios.get(`${API_BASE_URL}/employees/get-employee?employeeId=${storedId}&t=${new Date().getTime()}`);
         let fetchedPermissions = [];
@@ -897,6 +903,14 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         if (response.data.data?.permissions) fetchedPermissions = response.data.data.permissions;
         else if (response.data.permissions) fetchedPermissions = response.data.permissions;
         
+        const empLocal = JSON.parse(localStorage.getItem("employeeData") || "{}");
+        const isManager = checkManagerStatus(response.data.data || response.data || empLocal);
+        
+        if (isManager && !fetchedPermissions.includes("leave_approve")) {
+          fetchedPermissions.push("leave_approve");
+          fetchedPermissions.push("dashboard_view");
+        }
+
         setPermissions(fetchedPermissions);
         localStorage.setItem("employeePermissions", JSON.stringify(fetchedPermissions));
         
@@ -909,6 +923,14 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         }
       } catch (error) {
         const localPermissions = JSON.parse(localStorage.getItem("employeePermissions") || "[]");
+        const empLocal = JSON.parse(localStorage.getItem("employeeData") || "{}");
+        const isManager = checkManagerStatus(empLocal);
+
+        if (isManager && !localPermissions.includes("leave_approve")) {
+          localPermissions.push("leave_approve");
+          localPermissions.push("dashboard_view");
+        }
+
         setPermissions(localPermissions);
         const hasAdminPerm = localPermissions.some(perm => ADMIN_PERMISSIONS.includes(perm));
         setHasAnyAdminPermission(hasAdminPerm);
@@ -929,25 +951,33 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     return permissions.includes(permission);
   };
 
-  const buildEmployeeMenu = () => [
-    { icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/employeedashboard" },
-    { icon: <i className="ri-shield-keyhole-fill"></i>, name: "My Permissions", path: "/mypermissions" },
-    {
-      icon: <i className="ri-file-chart-fill"></i>, name: "Attendance",
-      dropdown: [
-        { name: "Check In", path: "/attendance-capture" },
-        { name: "Attendance Report", path: "/myattendance" },
-        { name: "My Shift", path: "/my-shift" },
-        { name: "My Assigned Location", path: "/mylocation" },
-      ]
-    },
-    {
-      icon: <i className="ri-calendar-close-fill"></i>, name: "Leave",
-      dropdown: [
-        { name: "My Leaves", path: "/myleaves" },
-        { name: "Leave Application", path: "/leave-application" },
-      ]
-    },
+  const buildEmployeeMenu = () => {
+    const leaveDropdown = [
+      { name: "My Leaves", path: "/myleaves" },
+      { name: "Leave Application", path: "/leave-application" },
+    ];
+
+    // if (hasPermission("leave_approve")) {
+    //   leaveDropdown.push({ name: "Pending Approvals", path: "/emp-pending-leaves" });
+    //   leaveDropdown.push({ name: "Team Leave Approval", path: "/emp-leaves" });
+    // }
+
+    return [
+      { icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/employeedashboard" },
+      { icon: <i className="ri-shield-keyhole-fill"></i>, name: "My Permissions", path: "/mypermissions" },
+      {
+        icon: <i className="ri-file-chart-fill"></i>, name: "Attendance",
+        dropdown: [
+          { name: "Check In", path: "/attendance-capture" },
+          { name: "Attendance Report", path: "/myattendance" },
+          { name: "My Shift", path: "/my-shift" },
+          { name: "My Assigned Location", path: "/mylocation" },
+        ]
+      },
+      {
+        icon: <i className="ri-calendar-close-fill"></i>, name: "Leave",
+        dropdown: leaveDropdown
+      },
     {
       icon: <i className="ri-profile-fill"></i>, name: "Profile",
       dropdown: [
@@ -961,6 +991,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     { icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/HolidayList" },
     { icon: <i className="ri-logout-box-fill"></i>, name: "Logout", action: handleLogout }
   ];
+};
 
   const buildAdminMenu = () => {
     const menu = [];
@@ -991,6 +1022,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     const leaveItems = [];
     if (hasPermission("leave_approve")) leaveItems.push({ name: "Leave Approval", path: "/emp-leaves" });
     if (hasPermission("reports_view")) leaveItems.push({ name: "Reports", path: "/emp-reports" });
+    if (hasPermission("leave_approval_manager")) leaveItems.push({ name: "Manager Approval", path: "/emp-pending-leaves" });
     if (leaveItems.length) {
       menu.push({ icon: <i className="ri-calendar-close-fill"></i>, name: "Leave", dropdown: leaveItems });
     }
@@ -1006,6 +1038,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     const employeeItems = [];
     if (hasPermission("employee_view_all")) employeeItems.push({ name: "All Employees", path: "/emp-employees" });
     if (hasPermission("employee_add")) employeeItems.push({ name: "Add Employee", path: "/emp-add-employee" });
+    if (hasPermission("holidays_add")) employeeItems.push({ name: "Add Holiday", path: "/emp-add-holiday" });
     if (employeeItems.length) {
       menu.push({ icon: <i className="ri-user-fill"></i>, name: "Employee Management", dropdown: employeeItems });
     }

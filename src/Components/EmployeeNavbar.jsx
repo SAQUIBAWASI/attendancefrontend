@@ -484,6 +484,11 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
     "/emp-assessments": "Assessments",
     "/emp-documents": "Documents",
     "/emp-all-expensives-management": "Expenses",
+    "/emp-my-jobs": "Profile",
+    "/emp-personal-documents": "Personal Documents",
+    "/emp-letters": "Letters",
+    "/my-medical-certificate": "Medical Certificates",
+    "/HolidayList": "Holidays",
   };
 
   const handleMenuClick = () => {
