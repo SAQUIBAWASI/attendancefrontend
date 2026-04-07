@@ -2478,6 +2478,8 @@ const UserActivity = () => {
       leave_reject: "Leave Rejected",
       payslip_download: "Payslip Downloaded",
       page_visit: "Page Visit",
+      data_edit: "Data Modified",
+      file_download: "File Downloaded",
     };
     if (actionMap[action]) return actionMap[action];
 
@@ -2498,6 +2500,8 @@ const UserActivity = () => {
       leave_reject: "bg-red-100 text-red-800",
       payslip_download: "bg-purple-100 text-purple-800",
       page_visit: "bg-indigo-100 text-indigo-800",
+      data_edit: "bg-orange-100 text-orange-800",
+      file_download: "bg-teal-100 text-teal-800",
     };
     return colorMap[action] || "bg-yellow-100 text-yellow-800";
   };
@@ -2568,6 +2572,8 @@ const UserActivity = () => {
               <option value="leave_approve">Leave Approved</option>
               <option value="leave_reject">Leave Rejected</option>
               <option value="payslip_download">Payslip Downloaded</option>
+              <option value="data_edit">Data Modified</option>
+              <option value="file_download">File Downloaded</option>
             </select>
 
             {/* User Role */}

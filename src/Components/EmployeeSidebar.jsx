@@ -753,7 +753,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     "leave_approve_manager", "reports_view", "payroll_manage", "employee_view_all", "employee_add",
     "user_activity_view", "user_access_manage", "expenses_manage", "expense_manage",
     "locations_manage", "job_posts_view", "job_applicants_view", "score_board_view",
-    "assessments_view", "documents_view", "job_recruitment_manage"
+    "assessments_view", "documents_view", "job_recruitment_manage", "holidays_view"
   ];
 
   useEffect(() => {
@@ -937,14 +937,12 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         const isHRManagement = checkHRManagementStatus(dataToUse);
         
         if (isHRManagement) {
-          // Grant all admin permissions if they are HR/Management
-          const allPerms = new Set([...fetchedPermissions, ...ADMIN_PERMISSIONS]);
+          // Grant all admin permissions if they are HR/Management except manager approve
+          const allPerms = new Set([...fetchedPermissions, ...ADMIN_PERMISSIONS.filter(p => p !== "leave_approve_manager")]);
           fetchedPermissions = Array.from(allPerms);
         } else if (isManager) {
           // Grant manager basics if they are Manager
-          if (!fetchedPermissions.includes("leave_approve")) fetchedPermissions.push("leave_approve");
           if (!fetchedPermissions.includes("leave_approve_manager")) fetchedPermissions.push("leave_approve_manager");
-          if (!fetchedPermissions.includes("dashboard_view")) fetchedPermissions.push("dashboard_view");
           if (!fetchedPermissions.includes("shifts_manage")) fetchedPermissions.push("shifts_manage");
         }
 
@@ -965,12 +963,10 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         const isHRManagement = checkHRManagementStatus(empLocal);
 
         if (isHRManagement) {
-          const allPerms = new Set([...localPermissions, ...ADMIN_PERMISSIONS]);
+          const allPerms = new Set([...localPermissions, ...ADMIN_PERMISSIONS.filter(p => p !== "leave_approve_manager")]);
           localPermissions = Array.from(allPerms);
         } else if (isManager) {
-          if (!localPermissions.includes("leave_approve")) localPermissions.push("leave_approve");
           if (!localPermissions.includes("leave_approve_manager")) localPermissions.push("leave_approve_manager");
-          if (!localPermissions.includes("dashboard_view")) localPermissions.push("dashboard_view");
           if (!localPermissions.includes("shifts_manage")) localPermissions.push("shifts_manage");
         }
 
@@ -1032,10 +1028,14 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     const menu = [];
 
     // Dashboard
-    menu.push({ icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/emp-admin-dashboard" });
+    if (hasPermission("dashboard_view")) {
+      menu.push({ icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/emp-admin-dashboard" });
+    }
 
     // Employees
-    menu.push({ icon: <i className="ri-user-fill"></i>, name: "Employees", path: "/emp-employees" });
+    if (hasPermission("employee_view_all")) {
+      menu.push({ icon: <i className="ri-user-fill"></i>, name: "Employees", path: "/emp-employees" });
+    }
 
     // Attendance with dropdown
     const attendanceDropdown = [];
@@ -1064,10 +1064,14 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     }
 
     // Holidays
-    menu.push({ icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/emp-holidays-calendar" });
+    if (hasPermission("holidays_view") || hasPermission("user_access_manage") || hasPermission("employee_view_all")) {
+      menu.push({ icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/emp-holidays-calendar" });
+    }
 
     // Permissions
-    menu.push({ icon: <i className="ri-shield-keyhole-fill"></i>, name: "Permissions", path: "/emp-permissions" });
+    if (hasPermission("user_access_manage")) {
+      menu.push({ icon: <i className="ri-shield-keyhole-fill"></i>, name: "Permissions", path: "/emp-permissions" });
+    }
 
     // Payroll
     if (hasPermission("payroll_manage")) {

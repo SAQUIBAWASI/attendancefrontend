@@ -365,11 +365,11 @@ const LoginPage = () => {
             <h1 className="text-4xl font-extrabold text-transparent bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text">
               LOG IN
             </h1>
-            <p className="mt-1 text-sm text-gray-600">Admin • Employee • Client</p>
+            <p className="mt-1 text-sm text-gray-600">Unified Login Access</p>
           </div>
 
           {/* Login Type Toggle */}
-          <div className="flex justify-center mb-4">
+          {/* <div className="flex justify-center mb-4">
             <div className="inline-flex p-1 bg-gray-100 rounded-lg">
               <button
                 type="button"
@@ -394,7 +394,7 @@ const LoginPage = () => {
                 Client ID
               </button>
             </div>
-          </div>
+          </div> */}
 
           {error && (
             <div className="p-3 mb-4 text-sm text-red-600 bg-red-100 rounded-md shadow-sm">
