@@ -1,13 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { jsPDF } from "jspdf";
-import CountUp from "react-countup";
 import { API_BASE_URL } from "../config";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
-  PieChart, Pie, Legend
-} from "recharts";
 import {
   FaUserTie, FaCalendarAlt, FaStar, FaEye, FaDownload,
   FaCheckCircle, FaTimesCircle, FaTasks, FaSearch,
@@ -16,7 +10,6 @@ import {
   FaTimes, FaUserGraduate, FaPhone, FaBuilding, FaMoneyBillWave,
   FaCalendarCheck, FaMapMarkerAlt
 } from "react-icons/fa";
-import { FiUsers, FiCheckCircle, FiXCircle, FiClock } from "react-icons/fi";
 
 
 
@@ -43,16 +36,7 @@ const ScoreMini = ({ label, score }) => (
   </div>
 );
 
-const COLORS = [
-  '#10b981', '#059669', '#34D399',
-  '#6366F1', '#4F46E5', '#818CF8',
-  '#06B6D4', '#0891B2', '#22D3EE',
-  '#F59E0B', '#D97706', '#FBBF24',
-  '#EF4444', '#DC2626', '#E11D48'
-];
-
 const EmployeeResignation = () => {
-  const navigate = useNavigate();
   const [resignations, setResignations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -66,10 +50,6 @@ const EmployeeResignation = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
   const [filterStatus, setFilterStatus] = useState("All");
-
-  // Chart month filters (Dashboard style)
-  const [approvedMonth, setApprovedMonth] = useState(new Date().toISOString().slice(0, 7));
-  const [rejectedMonth, setRejectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
   useEffect(() => {
     fetchResignations();
@@ -86,9 +66,13 @@ const EmployeeResignation = () => {
 
   const fetchRoles = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/roles/all`);
+      const res = await axios.get(`${API_BASE_URL}/jobs/all`);
       if (res.data.success) {
-        setRoles(res.data.data);
+        // Extract unique roles from jobs
+        const jobData = res.data.data || res.data.jobPosts || [];
+        const roleNames = Array.from(new Set(jobData.map(job => job.role))).filter(Boolean);
+        const uniqueRoles = roleNames.map((name, index) => ({ _id: index, name }));
+        setRoles(uniqueRoles);
       }
     } catch (err) {
       console.error("Failed to fetch roles:", err);
@@ -162,143 +146,11 @@ const EmployeeResignation = () => {
   const formatDocumentUrl = (filePath) => {
     if (!filePath) return "";
     const relativePath = filePath.includes("uploads")
-      ? "uploads/" + filePath.split(/uploads[\/\\]/).pop().replace(/\\/g, "/")
+      ? "uploads/" + filePath.split(/uploads[\\/]/).pop().replace(/\\/g, "/")
       : filePath.replace(/\\/g, "/");
     return `${API_BASE_URL.replace("/api", "")}/${relativePath}`;
   };
 
-  // ==================== STATS ====================
-  const stats = useMemo(() => {
-    const total = resignations.length;
-    const approved = resignations.filter(a => a.resignationStatus === "Approved").length;
-    const rejected = resignations.filter(a => a.resignationStatus === "Rejected").length;
-    const pending = total - approved - rejected;
-    return { total, approved, rejected, pending };
-  }, [resignations]);
-
-  // ==================== APPROVED CHART DATA (month-wise) ====================
-  const approvedChartData = useMemo(() => {
-    const [year, month] = approvedMonth.split("-").map(Number);
-    const dayMap = {};
-
-    resignations.forEach(app => {
-      if (app.resignationStatus !== "Approved") return;
-      const date = new Date(app.resignationSentAt || app.createdAt);
-      if (isNaN(date)) return;
-      if (date.getFullYear() !== year || date.getMonth() + 1 !== month) return;
-
-      const day = date.getDate();
-      const label = `${day}`;
-      if (!dayMap[day]) dayMap[day] = { day, name: label, count: 0 };
-      dayMap[day].count += 1;
-    });
-
-    // Fill all days of the month
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const result = [];
-    for (let d = 1; d <= daysInMonth; d++) {
-      result.push(dayMap[d] || { day: d, name: `${d}`, count: 0 });
-    }
-    return result;
-  }, [resignations, approvedMonth]);
-
-  // ==================== REJECTED CHART DATA (month-wise) ====================
-  const rejectedChartData = useMemo(() => {
-    const [year, month] = rejectedMonth.split("-").map(Number);
-    const dayMap = {};
-
-    resignations.forEach(app => {
-      if (app.resignationStatus !== "Rejected") return;
-      const date = new Date(app.resignationSentAt || app.createdAt);
-      if (isNaN(date)) return;
-      if (date.getFullYear() !== year || date.getMonth() + 1 !== month) return;
-
-      const day = date.getDate();
-      const label = `${day}`;
-      if (!dayMap[day]) dayMap[day] = { day, name: label, count: 0 };
-      dayMap[day].count += 1;
-    });
-
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const result = [];
-    for (let d = 1; d <= daysInMonth; d++) {
-      result.push(dayMap[d] || { day: d, name: `${d}`, count: 0 });
-    }
-    return result;
-  }, [resignations, rejectedMonth]);
-
-  // ==================== CSV EXPORT for Chart ====================
-  const downloadChartCSV = (type) => {
-    const isApproved = type === "approved";
-    const monthVal = isApproved ? approvedMonth : rejectedMonth;
-    const [year, month] = monthVal.split("-").map(Number);
-    const monthName = new Date(year, month - 1).toLocaleString('default', { month: 'long' });
-
-    const items = resignations.filter(app => {
-      const st = app.resignationStatus || "Pending";
-      if (isApproved && st !== "Approved") return false;
-      if (!isApproved && st !== "Rejected") return false;
-      const date = new Date(app.resignationSentAt || app.createdAt);
-      return date.getFullYear() === year && date.getMonth() + 1 === month;
-    });
-
-    if (items.length === 0) {
-      alert("No data to export!");
-      return;
-    }
-
-    const headers = ["Name", "Email", "Role", "Filing Date", "Last Working Day", "Status"];
-    const rows = items.map(app => [
-      `"${app.firstName} ${app.lastName}"`,
-      `"${app.email || ''}"`,
-      `"${app.jobId?.role || 'N/A'}"`,
-      `"${app.resignationSentAt ? new Date(app.resignationSentAt).toLocaleDateString() : ''}"`,
-      `"${app.lastWorkingDay ? new Date(app.lastWorkingDay).toLocaleDateString() : ''}"`,
-      `"${app.resignationStatus || 'Pending'}"`
-    ]);
-
-    const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `resignations_${type}_${monthName}_${year}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // ==================== TOOLTIPS (Dashboard style) ====================
-  const ApprovedTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const d = payload[0].payload;
-      const [y, m] = approvedMonth.split("-").map(Number);
-      const monthName = new Date(y, m - 1).toLocaleString('default', { month: 'short' });
-      return (
-        <div className="px-3 py-2 text-xs bg-white border border-gray-100 rounded-lg shadow-xl">
-          <p className="font-bold text-gray-800 mb-0.5 leading-none">{monthName} {d.name}, {y}</p>
-          <p className="leading-none text-green-600">Approved: {d.count}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const RejectedTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const d = payload[0].payload;
-      const [y, m] = rejectedMonth.split("-").map(Number);
-      const monthName = new Date(y, m - 1).toLocaleString('default', { month: 'short' });
-      return (
-        <div className="px-3 py-2 text-xs bg-white border border-gray-100 rounded-lg shadow-xl">
-          <p className="font-bold text-gray-800 mb-0.5 leading-none">{monthName} {d.name}, {y}</p>
-          <p className="leading-none text-red-600">Rejected: {d.count}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // ==================== FILTERED TABLE DATA ====================
   const filteredData = resignations.filter(app => {
     const query = searchQuery.toLowerCase();
     const matchesSearch =
@@ -321,170 +173,9 @@ const EmployeeResignation = () => {
   });
 
   return (
-    <div className="p-3 mx-auto bg-white rounded-lg shadow-md max-w-9xl min-h-screen">
-
-      {/* ==================== STATUS CARDS ==================== */}
-      <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-4">
-        <div onClick={() => navigate("/employee-resignation")} className="bg-white rounded-lg p-3 shadow-sm border-t-4 border-indigo-500 cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FiUsers className="text-gray-400 text-base flex-shrink-0" />
-            <div className="text-sm font-medium text-gray-700">Total</div>
-          </div>
-          <div className="text-sm font-bold text-gray-800">
-            <CountUp end={stats.total} duration={2} separator="," />
-          </div>
-        </div>
-        <div onClick={() => navigate("/approved-resignations")} className="bg-white rounded-lg p-3 shadow-sm border-t-4 border-green-500 cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FiCheckCircle className="text-gray-400 text-base flex-shrink-0" />
-            <div className="text-sm font-medium text-gray-700">Approved</div>
-          </div>
-          <div className="text-sm font-bold">
-            <CountUp end={stats.approved} duration={2} separator="," />
-          </div>
-        </div>
-        <div onClick={() => navigate("/rejected-resignations")} className="bg-white rounded-lg p-3 shadow-sm border-t-4 border-rose-500 cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FiXCircle className="text-gray-400 text-base flex-shrink-0" />
-            <div className="text-sm font-medium text-gray-700">Rejected</div>
-          </div>
-          <div className="text-sm font-bold">
-            <CountUp end={stats.rejected} duration={2} separator="," />
-          </div>
-        </div>
-        <div onClick={() => navigate("/pending-resignations")} className="bg-white rounded-lg p-3 shadow-sm border-t-4 border-amber-500 cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FiClock className="text-gray-400 text-base flex-shrink-0" />
-            <div className="text-sm font-medium text-gray-700">Pending</div>
-          </div>
-          <div className="text-sm font-bold">
-            <CountUp end={stats.pending} duration={2} separator="," />
-          </div>
-        </div>
-      </div>
-
-      {/* ==================== TWO CHARTS (Dashboard Style) ==================== */}
-      <div className="grid grid-cols-1 gap-4 mb-4 lg:grid-cols-2">
-
-        {/* Approved Resignations Chart */}
-        <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[380px]">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h3 className="text-base font-bold text-gray-800">Approved Resignations</h3>
-              <p className="text-xs text-gray-500">Day-wise approved resignations</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="month"
-                value={approvedMonth}
-                onChange={(e) => setApprovedMonth(e.target.value)}
-                className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-600"
-              />
-              <button
-                onClick={() => downloadChartCSV("approved")}
-                className="font-bold text-green-600 transition-colors text-xs hover:text-green-800 whitespace-nowrap flex items-center gap-1"
-                title="Download CSV"
-              >
-                <FaDownload className="text-[10px]" /> CSV
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 w-full">
-            {approvedChartData.some(d => d.count > 0) ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={approvedChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748b', fontSize: 10 }}
-                    interval={1}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748b', fontSize: 11 }}
-                    allowDecimals={false}
-                  />
-                  <Tooltip content={<ApprovedTooltip />} cursor={{ fill: '#f8fafc' }} />
-                  <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={14}>
-                    {approvedChartData.map((entry, index) => (
-                      <Cell key={`cell-a-${index}`} fill={entry.count > 0 ? '#10b981' : '#e5e7eb'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-sm text-gray-400">
-                <FiCheckCircle className="w-8 h-8 mb-2 opacity-20" />
-                <p>No approved resignations this month</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Rejected Resignations Chart */}
-        <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[380px]">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h3 className="text-base font-bold text-gray-800">Rejected Resignations</h3>
-              <p className="text-xs text-gray-500">Day-wise rejected resignations</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="month"
-                value={rejectedMonth}
-                onChange={(e) => setRejectedMonth(e.target.value)}
-                className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-red-600"
-              />
-              <button
-                onClick={() => downloadChartCSV("rejected")}
-                className="font-bold text-rose-600 transition-colors text-xs hover:text-rose-800 whitespace-nowrap flex items-center gap-1"
-                title="Download CSV"
-              >
-                <FaDownload className="text-[10px]" /> CSV
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 w-full">
-            {rejectedChartData.some(d => d.count > 0) ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={rejectedChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748b', fontSize: 10 }}
-                    interval={1}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748b', fontSize: 11 }}
-                    allowDecimals={false}
-                  />
-                  <Tooltip content={<RejectedTooltip />} cursor={{ fill: '#f8fafc' }} />
-                  <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={14}>
-                    {rejectedChartData.map((entry, index) => (
-                      <Cell key={`cell-r-${index}`} fill={entry.count > 0 ? '#EF4444' : '#e5e7eb'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-sm text-gray-400">
-                <FiXCircle className="w-8 h-8 mb-2 opacity-20" />
-                <p>No rejected resignations this month</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ==================== FILTER BAR ==================== */}
-      <div className="flex flex-col gap-4 mb-4 xl:flex-row xl:items-center xl:justify-between">
+    <div className="w-full h-full">
+      {/* Header Section */}
+      <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-center xl:justify-between">
         <div></div>
 
         <div className="flex flex-wrap items-center justify-start xl:justify-end gap-3 w-full xl:w-auto">
@@ -619,7 +310,6 @@ const EmployeeResignation = () => {
         </div>
       </div>
 
-      {/* ==================== TABLE (Unchanged) ==================== */}
       <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
         {loading ? (
           <div className="p-8 text-center text-gray-500">Loading Resignations...</div>
@@ -631,7 +321,6 @@ const EmployeeResignation = () => {
                 <th className="py-3 px-4 text-center">Designation</th>
                 <th className="py-3 px-4 text-center">Contact</th>
                 <th className="py-3 px-4 text-center">Filing Date</th>
-                <th className="py-3 px-4 text-center">Last Working Day</th>
                 <th className="py-3 px-4 text-center">Status</th>
                 <th className="py-3 px-4 text-center">Actions</th>
               </tr>
@@ -641,7 +330,7 @@ const EmployeeResignation = () => {
                 <tr key={app._id} className="border-b hover:bg-gray-50 transition-colors">
                   <td className="p-4 text-sm font-medium text-center">
                     <div className="font-bold text-gray-800">{app.firstName} {app.lastName}</div>
-                    <div className="text-[10px] text-gray-400">{app.email}</div>
+                    {/* <div className="text-[10px] text-gray-400">{app.email}</div> */}
                   </td>
                   <td className="p-4 text-sm font-medium text-center">
                     <span className="inline-block px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full">
@@ -655,12 +344,6 @@ const EmployeeResignation = () => {
                     <div className="inline-flex items-center gap-2 px-2 py-1 bg-gray-100 rounded text-[10px] font-bold text-gray-500">
                       <FaCalendarAlt className="text-[8px]" />
                       {app.resignationSentAt ? new Date(app.resignationSentAt).toLocaleDateString() : "—"}
-                    </div>
-                  </td>
-                  <td className="p-4 text-sm font-medium text-center">
-                    <div className="inline-flex items-center gap-2 px-2 py-1 bg-red-50 rounded text-[10px] font-bold text-red-600">
-                      <FaCalendarAlt className="text-[8px]" />
-                      {app.lastWorkingDay ? new Date(app.lastWorkingDay).toLocaleDateString() : "—"}
                     </div>
                   </td>
                   <td className="p-4 text-sm font-medium text-center">
@@ -721,7 +404,7 @@ const EmployeeResignation = () => {
         )}
       </div>
 
-      {/* ==================== DETAIL MODAL ==================== */}
+      {/* Detail Modal */}
       {isModalOpen && selectedResignation && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl relative overflow-hidden animate-in slide-in-from-bottom-4 duration-300 border border-gray-100">
@@ -777,10 +460,6 @@ const EmployeeResignation = () => {
                 <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-2xl text-[10px] font-black text-slate-500 uppercase tracking-widest border border-slate-200/50">
                   <FaCalendarAlt className="text-red-400" />
                   Filed on {selectedResignation.resignationSentAt ? new Date(selectedResignation.resignationSentAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : "Unknown Date"}
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-red-50 rounded-2xl text-[10px] font-black text-red-600 uppercase tracking-widest border border-red-100">
-                  <FaCalendarAlt className="text-red-400" />
-                  Last Day: {selectedResignation.lastWorkingDay ? new Date(selectedResignation.lastWorkingDay).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : "Not Specified"}
                 </div>
                 {selectedResignation.resignationStatus !== 'Pending' && (
                   <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${selectedResignation.resignationStatus === 'Approved' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'

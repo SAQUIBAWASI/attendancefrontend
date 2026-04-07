@@ -779,6 +779,13 @@ const EmployeeDashboard = () => {
               >
                 View Full Attendance Report
               </button>
+
+              <button
+                onClick={() => navigate("/candidate-login")}
+                className="w-full mt-2 py-2 bg-blue-600 hover:bg-blue-700 text-white border border-blue-700 rounded-lg text-xs font-bold transition-all shadow-sm shadow-blue-100"
+              >
+                Complete Profile
+              </button>
             </div>
 
             {/* Quick Actions */}

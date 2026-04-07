@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE_URL, API_DOMAIN } from '../config';
-import { FaPlus, FaSearch, FaCalendarAlt, FaFilePdf } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaCalendarAlt, FaFilePdf, FaTimes, FaSignOutAlt } from 'react-icons/fa';
 import { FiBriefcase, FiCheckCircle, FiHome, FiZap } from "react-icons/fi";
 import StatCard from "../Components/StatCard";
 
@@ -34,6 +34,14 @@ function MyJobs() {
 
   // Current Job State (from external API)
   const [currentJobData, setCurrentJobData] = useState(null);
+
+  // Resignation State
+  const [isResignationModalOpen, setIsResignationModalOpen] = useState(false);
+  const [isResigning, setIsResigning] = useState(false);
+  const [resignationData, setResignationData] = useState({
+    lastWorkingDay: '',
+    letter: ''
+  });
 
   const getAuthInfo = () => {
     const isEmployeeView = window.location.pathname.includes('/emp-');
@@ -146,6 +154,64 @@ function MyJobs() {
     fetchExperiences();
     fetchCurrentEmployeeJob();
   }, []);
+
+  const openResignationModal = () => {
+    const employeeDataRaw = localStorage.getItem("employeeData");
+    let name = "Employee";
+    let role = "Employee";
+    if (employeeDataRaw) {
+      try {
+        const data = JSON.parse(employeeDataRaw);
+        name = data.name || "Employee";
+        role = data.role || "Employee";
+      } catch (e) {}
+    }
+
+    const template = `Dear Manager,
+
+I am writing to formally resign from my position as ${role} at Timely Health Tech Pvt Ltd. 
+
+I appreciate the opportunities for professional and personal development that I have had during my time here. Thank you for your support and guidance.
+
+I will do my best to ensure a smooth transition of my responsibilities before my departure.
+
+Best regards,
+${name}`;
+
+    setResignationData({
+      lastWorkingDay: '',
+      letter: template
+    });
+    setIsResignationModalOpen(true);
+  };
+
+  const handleResignationSubmit = async (e) => {
+    e.preventDefault();
+    if (!resignationData.lastWorkingDay || !resignationData.letter) {
+      alert("Please provide both the last working day and the resignation letter.");
+      return;
+    }
+
+    setIsResigning(true);
+    try {
+      const email = localStorage.getItem("employeeEmail");
+      const res = await axios.post(`${API_BASE_URL}/employees/submit-resignation`, {
+        email,
+        resignationLetter: resignationData.letter,
+        lastWorkingDay: resignationData.lastWorkingDay
+      });
+
+      if (res.data.success) {
+        alert("✅ Resignation submitted successfully!");
+        setIsResignationModalOpen(false);
+      }
+    } catch (err) {
+      console.error("Resignation submit error:", err);
+      alert(err.response?.data?.message || "Failed to submit resignation.");
+    } finally {
+      setIsResigning(false);
+    }
+  };
 
   // Apply filters and search
   useEffect(() => {
@@ -330,6 +396,17 @@ function MyJobs() {
 
   const baseURL = API_DOMAIN;
 
+  // Helper to construct document URL safely (handles both absolute and relative paths)
+  const getDocumentUrl = (path) => {
+    if (!path) return "";
+    let cleanPath = path.replace(/\\/g, '/');
+    // If the path contains 'uploads/', strip everything before it to make it relative
+    if (cleanPath.includes("uploads/")) {
+      cleanPath = cleanPath.substring(cleanPath.indexOf("uploads/"));
+    }
+    return `${baseURL}/${cleanPath}`;
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
@@ -384,11 +461,11 @@ function MyJobs() {
           <div className="flex flex-wrap items-center gap-2">
 
             {/* Search */}
-            <div className="relative flex-1 min-w-[180px]">
+            <div className="relative w-[200px]">
               <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="text"
-                placeholder="Search by role, company, location..."
+                placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
@@ -422,10 +499,20 @@ function MyJobs() {
             {/* Add Experience Button - Inside Filters */}
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white transition bg-green-600 rounded-md hover:bg-green-700"
             >
               <FaPlus className="text-xs" /> Add Experience
             </button>
+
+            {/* Resign Button */}
+            {window.location.pathname.includes('/emp-') && (
+              <button
+                onClick={openResignationModal}
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white transition bg-red-600 rounded-md hover:bg-red-700"
+              >
+                <FaSignOutAlt className="text-xs" /> Resign
+              </button>
+            )}
 
             {/* Clear Filters */}
             {(searchTerm || selectedDate || selectedMonth) && (
@@ -558,7 +645,7 @@ function MyJobs() {
                           <div className="flex items-center justify-center gap-2">
                             {exp.offerLetter && (
                               <a
-                                href={`${baseURL}/${exp.offerLetter.replace(/\\/g, '/')}`}
+                                href={getDocumentUrl(exp.offerLetter)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="text-blue-500 hover:text-blue-700 transition"
@@ -569,7 +656,7 @@ function MyJobs() {
                             )}
                             {exp.payslip && (
                               <a
-                                href={`${baseURL}/${exp.payslip.replace(/\\/g, '/')}`}
+                                href={getDocumentUrl(exp.payslip)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="text-blue-500 hover:text-blue-700 transition"
@@ -797,6 +884,69 @@ function MyJobs() {
                   className="flex-1 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
                   {isSubmitting ? "Saving..." : "Save Experience"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Resignation Modal */}
+      {isResignationModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-lg p-6 bg-white rounded-2xl shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-800">Submit Resignation</h3>
+              <button 
+                onClick={() => setIsResignationModalOpen(false)} 
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+              >
+                <FaTimes size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleResignationSubmit} className="space-y-5">
+              <div>
+                <label className="block mb-2 text-sm font-semibold text-gray-700">Last Working Day *</label>
+                <div className="relative">
+                  <FaCalendarAlt className="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+                  <input
+                    type="date"
+                    required
+                    value={resignationData.lastWorkingDay}
+                    onChange={(e) => setResignationData({ ...resignationData, lastWorkingDay: e.target.value })}
+                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block mb-2 text-sm font-semibold text-gray-700">Resignation Letter *</label>
+                <textarea
+                  required
+                  rows={10}
+                  value={resignationData.letter}
+                  onChange={(e) => setResignationData({ ...resignationData, letter: e.target.value })}
+                  className="w-full p-4 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all resize-none font-sans leading-relaxed"
+                  placeholder="Draft your resignation letter here..."
+                ></textarea>
+              </div>
+
+              <div className="flex gap-4 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsResignationModalOpen(false)}
+                  className="flex-1 py-3 text-sm font-bold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all"
+                  disabled={isResigning}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isResigning}
+                  className="flex-1 py-3 text-sm font-bold text-white bg-gradient-to-r from-red-600 to-rose-600 rounded-xl hover:from-red-700 hover:to-rose-700 shadow-lg shadow-red-100 disabled:opacity-50 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+                >
+                  {isResigning ? "Submitting..." : "Submit Resignation"}
                 </button>
               </div>
             </form>
