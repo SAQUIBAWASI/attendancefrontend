@@ -377,7 +377,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { FaEdit, FaEye, FaPlus, FaSearch, FaTrash, FaUsers } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom';
-
+import { API_BASE_URL } from "../config";
 const DepartmentDashboard = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -412,7 +412,7 @@ const DepartmentDashboard = () => {
   const fetchDepartments = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('https://api.timelyhealth.in/department/all');
+      const response = await axios.get(`${API_BASE_URL}/department/all`);
       
       if (response.data.success) {
         setDepartments(response.data.data);
@@ -431,7 +431,7 @@ const DepartmentDashboard = () => {
   const fetchEmployeesForDepartment = async (departmentId) => {
     try {
       setEmployeeLoading(true);
-      const response = await axios.get(`https://api.timelyhealth.in/department/${departmentId}/employees`);
+      const response = await axios.get(`${API_BASE_URL}/department/${departmentId}/employees`);
       
       console.log('API Response:', response.data); // Debug ke liye
       
@@ -486,7 +486,7 @@ const DepartmentDashboard = () => {
     try {
       if (editingDept) {
         const response = await axios.put(
-          `https://api.timelyhealth.in/departments/update/${editingDept._id}`,
+          `${API_BASE_URL}/departments/update/${editingDept._id}`,
           formData
         );
         
@@ -499,7 +499,7 @@ const DepartmentDashboard = () => {
         }
       } else {
         const response = await axios.post(
-          'https://api.timelyhealth.in/department/create',
+          `${API_BASE_URL}/department/create`,
           formData
         );
         
@@ -522,7 +522,7 @@ const DepartmentDashboard = () => {
     if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
 
     try {
-      const response = await axios.delete(`https://api.timelyhealth.in/department/delete/${id}`);
+      const response = await axios.delete(`${API_BASE_URL}/department/delete/${id}`);
       
       if (response.data.success) {
         setSuccess('Department deleted successfully');
@@ -654,7 +654,7 @@ const DepartmentDashboard = () => {
       {/* Departments Table */}
       <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
         <table className="min-w-full">
-          <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
+          <thead className="text-left text-sm text-white bg-gradient-to-r from-green-500 to-blue-600">
             <tr>
               <th className="p-2 font-bold text-left text-gray-800">Department Name</th>
               <th className="p-2 font-bold text-left text-gray-800">Description</th>

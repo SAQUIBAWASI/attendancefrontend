@@ -2582,9 +2582,11 @@ const LeavesList = () => {
         const empRole = (empData.role || empData.designation || "").toLowerCase();
         const empDept = (empData.department || empData.departmentName || "").toLowerCase();
         
-        // HR handles everything. Otherwise, the employee (who was granted leave_approve)
+        const isHRManagement = empRole.includes("hr") || empDept.includes("hr") || empRole.includes("management") || empDept.includes("management") || empDept.includes("human resources");
+        
+        // HR/Management handles everything. Otherwise, the employee (who was granted leave_approve)
         // should ONLY see their own department's leave requests!
-        if (empRole !== "hr" && empDept !== "hr" && empDept !== "human resources") {
+        if (!isHRManagement) {
           filteredLeavesData = filteredLeavesData.filter(leave => {
             const leaveEmp = activeEmployees.find(e => e.employeeId === leave.employeeId || e._id === leave.employeeId);
             const leaveDept = (leaveEmp?.department || leaveEmp?.departmentName || leave.department || "").toLowerCase();
@@ -2876,7 +2878,7 @@ const LeavesList = () => {
     <div className="min-h-screen px-2 py-2 bg-gradient-to-br from-purple-50 to-blue-100">
       <div className="mx-auto max-w-9xl">
         {/* ✅ Stats */}
-        <div className="grid grid-cols-2 gap-2 mb-2 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 mb-2 sm:grid-cols-3 md:grid-cols-5">
           <StatCard
             icon={FiList}
             label="Total Requests"
