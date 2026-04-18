@@ -198,6 +198,10 @@ import TakeAssessment from "./Pages/TakeAssessment.jsx";
 import HolidayList from "./Pages/Holiday.js";
 import HolidaysCalendar from "./Pages/HolidaysCalendar.jsx";
 import ProductSelectionPage from "./Pages/ProductSelectionPage.jsx";
+import BankReports from "./Pages/BankReports.js";
+import ApprovedResignations from "./Pages/ApprovedResignations.jsx";
+import RejectedResignations from "./Pages/RejectedResignations.jsx";
+import PendingResignations from "./Pages/PendingResignations.jsx";
 
 
 
@@ -442,6 +446,12 @@ function App() {
               <Route path="/regularization" element={<Regularization />} />
               <Route path="/all-medical-certificates" element={<AllMedicalCertificate />} />
               <Route path="/holidays-calendar" element={<HolidaysCalendar/>}/>
+              <Route path="/bank-reports" element={<BankReports />} />
+              <Route path="/employee-resignation" element={<EmployeeResignation />} />
+              <Route path="/approved-resignations" element={<ApprovedResignations />} />
+              <Route path="/rejected-resignations" element={<RejectedResignations />} />
+              <Route path="/pending-resignations" element={<PendingResignations />} />
+           
            
 
 

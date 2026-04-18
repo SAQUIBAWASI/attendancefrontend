@@ -12380,6 +12380,7 @@ import StatCard from "../Components/StatCard";
 import { API_BASE_URL } from "../config";
 import logo from "../Images/Timely-Health-Logo.png";
 import { isEmployeeHidden } from "../utils/employeeStatus";
+import { useNavigate } from "react-router-dom";
 
 const PayRoll = () => {
   const [records, setRecords] = useState([]);
@@ -12395,11 +12396,12 @@ const PayRoll = () => {
   const [employeeAttendanceDetails, setEmployeeAttendanceDetails] = useState([]);
   const [employeeLeaves, setEmployeeLeaves] = useState({});
   const [employeesMasterData, setEmployeesMasterData] = useState({});
-  
+  const navigate = useNavigate();
+
   // ✅ Comp-off state
   const [employeeCompOffs, setEmployeeCompOffs] = useState({});
   const [compOffDetails, setCompOffDetails] = useState({}); // For storing comp-off details per employee per month
-  
+
   const [editFormData, setEditFormData] = useState({});
   const [extraWorkData, setExtraWorkData] = useState({
     extraDays: 0,
@@ -12654,70 +12656,70 @@ const PayRoll = () => {
     console.log("🍃 Processed leaves for month:", selectedMonth, Object.keys(leavesMap).length, "employees");
   }, []);
 
-  
-// ✅ Process comp-off data with detailed information - SAFE VERSION
-const processCompOffData = useCallback(async (selectedMonth, leavesData) => {
-  try {
-    const [year, monthNum] = (selectedMonth || new Date().toISOString().slice(0, 7)).split('-').map(Number);
-    const startOfMonth = new Date(year, monthNum - 1, 1);
-    const endOfMonth = new Date(year, monthNum, 0, 23, 59, 59);
 
-    console.log("🔍 Processing comp-offs for month:", selectedMonth);
-    
-    const response = await axios.get(COMPOFF_API_URL);
-    const compOffs = response.data || [];
+  // ✅ Process comp-off data with detailed information - SAFE VERSION
+  const processCompOffData = useCallback(async (selectedMonth, leavesData) => {
+    try {
+      const [year, monthNum] = (selectedMonth || new Date().toISOString().slice(0, 7)).split('-').map(Number);
+      const startOfMonth = new Date(year, monthNum - 1, 1);
+      const endOfMonth = new Date(year, monthNum, 0, 23, 59, 59);
 
-    console.log("📦 Total comp-offs:", compOffs.length);
-    
-    const compOffMap = {};
-    const compOffDetailsMap = {};
+      console.log("🔍 Processing comp-offs for month:", selectedMonth);
 
-    for (const co of compOffs) {
-      if (co.status === "approved") {
-        const employeeId = co.employeeId;
-        const workDate = new Date(co.workDate);
+      const response = await axios.get(COMPOFF_API_URL);
+      const compOffs = response.data || [];
 
-        // ✅ Earned comp-offs
-        if (workDate >= startOfMonth && workDate <= endOfMonth) {
-          if (!compOffMap[employeeId]) {
-            compOffMap[employeeId] = { earned: 0, used: 0, balance: 0 };
-            compOffDetailsMap[employeeId] = [];
+      console.log("📦 Total comp-offs:", compOffs.length);
+
+      const compOffMap = {};
+      const compOffDetailsMap = {};
+
+      for (const co of compOffs) {
+        if (co.status === "approved") {
+          const employeeId = co.employeeId;
+          const workDate = new Date(co.workDate);
+
+          // ✅ Earned comp-offs
+          if (workDate >= startOfMonth && workDate <= endOfMonth) {
+            if (!compOffMap[employeeId]) {
+              compOffMap[employeeId] = { earned: 0, used: 0, balance: 0 };
+              compOffDetailsMap[employeeId] = [];
+            }
+            compOffMap[employeeId].earned += 1;
+            compOffDetailsMap[employeeId].push({
+              type: 'earned',
+              date: co.workDate,
+              reason: co.reason || 'Comp-off earned'
+            });
+            console.log(`✅ ${employeeId}: Earned +1 (total: ${compOffMap[employeeId].earned})`);
           }
-          compOffMap[employeeId].earned += 1;
-          compOffDetailsMap[employeeId].push({
-            type: 'earned',
-            date: co.workDate,
-            reason: co.reason || 'Comp-off earned'
-          });
-          console.log(`✅ ${employeeId}: Earned +1 (total: ${compOffMap[employeeId].earned})`);
         }
       }
+
+      // ✅ Calculate used based on earned and leavesData (safe check)
+      const safeLeavesData = leavesData || {};
+
+      Object.keys(compOffMap).forEach(empId => {
+        const leaves = safeLeavesData[empId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
+        const totalLeaves = (leaves.CL || 0) + (leaves.EL || 0) + (leaves.COFF || 0) + (leaves.Other || 0);
+        const earned = compOffMap[empId].earned;
+
+        // ✅ Used = कितने leaves comp-off से adjust हुए
+        const used = Math.min(earned, totalLeaves);
+
+        compOffMap[empId].used = used;
+        compOffMap[empId].balance = earned - used;
+
+        console.log(`📊 ${empId}: Earned=${earned}, Leaves=${totalLeaves}, Used=${used}, Balance=${earned - used}`);
+      });
+
+      setEmployeeCompOffs(compOffMap);
+      setCompOffDetails(compOffDetailsMap);
+
+    } catch (error) {
+      console.error("❌ Error fetching comp-offs:", error);
     }
-
-    // ✅ Calculate used based on earned and leavesData (safe check)
-    const safeLeavesData = leavesData || {};
-    
-    Object.keys(compOffMap).forEach(empId => {
-      const leaves = safeLeavesData[empId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
-      const totalLeaves = (leaves.CL || 0) + (leaves.EL || 0) + (leaves.COFF || 0) + (leaves.Other || 0);
-      const earned = compOffMap[empId].earned;
-      
-      // ✅ Used = कितने leaves comp-off से adjust हुए
-      const used = Math.min(earned, totalLeaves);
-      
-      compOffMap[empId].used = used;
-      compOffMap[empId].balance = earned - used;
-      
-      console.log(`📊 ${empId}: Earned=${earned}, Leaves=${totalLeaves}, Used=${used}, Balance=${earned - used}`);
-    });
-
-    setEmployeeCompOffs(compOffMap);
-    setCompOffDetails(compOffDetailsMap);
-    
-  } catch (error) {
-    console.error("❌ Error fetching comp-offs:", error);
-  }
-}, []); // ✅ Empty dependency array - no infinite loop // ✅ Empty dependency array - no dependency on employeeLeaves
+  }, []); // ✅ Empty dependency array - no infinite loop // ✅ Empty dependency array - no dependency on employeeLeaves
 
   // ✅ Filter inactive employees from payroll data
   const filterInactiveEmployees = useCallback((payrollData, employeesMap) => {
@@ -12751,6 +12753,8 @@ const processCompOffData = useCallback(async (selectedMonth, leavesData) => {
     setUniqueDepartments(Array.from(depts).sort());
     setUniqueDesignations(Array.from(designations).sort());
   };
+
+  // const navigate = useNavigate();
 
   // ✅ Fetch data with cleanup
   const fetchData = useCallback(async (month = "") => {
@@ -13617,16 +13621,16 @@ const presentDays = employee.workingDays ?? employee.presentDays ?? 0;
 const halfDays = employee.halfDayWorking || 0;
 const paidLeaveDays = (leaves.CL || 0) + (leaves.SL || 0) + (leaves.EL || 0) + (leaves.COFF || 0);
 
-let totalPaidDays = presentDays + (halfDays * 0.5) + weekOffDaysForSalary + paidLeaveDays;
+    let totalPaidDays = presentDays + (halfDays * 0.5) + weekOffDaysForSalary + paidLeaveDays;
 
-// ✅ Add comp-off balance to salary
-if (compOffData.balance > 0) {
-  totalPaidDays += compOffData.balance;
-  console.log(`💰 Adding comp-off balance: ${compOffData.balance} days`);
-}
+    // ✅ Add comp-off balance to salary
+    if (compOffData.balance > 0) {
+      totalPaidDays += compOffData.balance;
+      console.log(`💰 Adding comp-off balance: ${compOffData.balance} days`);
+    }
 
-const halfDayDeductionDays = halfDays * 0.5;
-const halfDayDeductionAmount = halfDayDeductionDays * dailyRateNumber;
+    const halfDayDeductionDays = halfDays * 0.5;
+    const halfDayDeductionAmount = halfDayDeductionDays * dailyRateNumber;
 
     const totalUnpaidDays = Math.max(0, totalMonthDays - totalPaidDays);
     const lopDays = Math.max(0, totalUnpaidDays - halfDayDeductionDays);
@@ -13932,36 +13936,36 @@ const halfDayDeductionAmount = halfDayDeductionDays * dailyRateNumber;
        {/* Stats Overview */}
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-  <StatCard
-    title="Active Employees"
-    value={16}
-    icon={FaUserTag}
-    color="border-blue-500"
-  />
+          <StatCard
+            title="Active Employees"
+            value={16}
+            icon={FaUserTag}
+            color="border-blue-500"
+          />
 
-  <StatCard
-    title="Total Salary"
-    value="₹175,755"
-    icon={FaBuilding}
-    color="border-green-500"
-  />
+          <StatCard
+            title="Total Salary"
+            value="₹175,755"
+            icon={FaBuilding}
+            color="border-green-500"
+          />
 
-  <StatCard
-    title="Active This Month"
-    value={12}
-    icon={FaCalendarAlt}
-    color="border-purple-500"
-  />
+          <StatCard
+            title="Active This Month"
+            value={12}
+            icon={FaCalendarAlt}
+            color="border-purple-500"
+          />
 
-  <StatCard
-    title="On Leave"
-    value={0}
-    icon={FaSearch}
-    color="border-red-500"
-  />
+          <StatCard
+            title="On Leave"
+            value={0}
+            icon={FaSearch}
+            color="border-red-500"
+          />
 
-</div>
-      
+        </div>
+
         {/* Filters */}
         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
@@ -14148,6 +14152,21 @@ const halfDayDeductionAmount = halfDayDeductionDays * dailyRateNumber;
               {isLoadingMonth ? "⟳" : "⟳ Refresh"}
             </button>
 
+            {/* <button
+              onClick={() => navigation("/bank-reports")}
+              disabled={isLoadingMonth}
+              className="h-8 px-3 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isLoadingMonth ? "⟳" : "Bank Reports"}
+            </button> */}
+
+            <button
+              onClick={() => navigate("/bank-reports")}
+              className="h-8 px-3 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
+            >
+              Bank Reports
+            </button>
+
             {/* Clear Filters Button */}
             {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
               <button
@@ -14179,7 +14198,7 @@ const halfDayDeductionAmount = halfDayDeductionDays * dailyRateNumber;
                   {/* <th className="py-2 text-center">Comp-off</th> */}
                   <th className="py-2 text-center">Calculated Salary</th>
                   <th className="py-2 text-center">Actions</th>
-                 </tr>
+                </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {currentRecords.map((item, index) => (
@@ -14379,50 +14398,50 @@ const halfDayDeductionAmount = halfDayDeductionDays * dailyRateNumber;
       </div>
 
       {/* View Modal */}
-    {showViewModal && selectedEmployee && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
-      <div className="sticky top-0 z-10 flex items-center justify-between mb-4 bg-white">
-        <h2 className="text-xl font-bold text-gray-800">Employee Details</h2>
-        <button
-          onClick={() => setShowViewModal(false)}
-          className="text-gray-500 hover:text-gray-700"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
+      {showViewModal && selectedEmployee && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
+            <div className="sticky top-0 z-10 flex items-center justify-between mb-4 bg-white">
+              <h2 className="text-xl font-bold text-gray-800">Employee Details</h2>
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-      <div className="flex items-start space-x-4">
-        {/* Avatar */}
-        <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full shrink-0">
-          <span className="text-lg font-semibold text-blue-800">
-            {selectedEmployee.name?.charAt(0) || 'E'}
-          </span>
-        </div>
+            <div className="flex items-start space-x-4">
+              {/* Avatar */}
+              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full shrink-0">
+                <span className="text-lg font-semibold text-blue-800">
+                  {selectedEmployee.name?.charAt(0) || 'E'}
+                </span>
+              </div>
 
-        {/* Employee Info */}
-        <div className="flex flex-col flex-1 space-y-1">
-          <h3 className="text-lg font-semibold text-gray-800">
-            {selectedEmployee.name}
-          </h3>
+              {/* Employee Info */}
+              <div className="flex flex-col flex-1 space-y-1">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {selectedEmployee.name}
+                </h3>
 
-          <div className="grid grid-cols-2 text-sm text-gray-600 gap-x-6 gap-y-1">
-            <p><span className="font-medium text-gray-700">ID:</span> {selectedEmployee.employeeId}</p>
-            <p><span className="font-medium text-gray-700">Department:</span> {selectedEmployee.department}</p>
-            <p><span className="font-medium text-gray-700">Designation:</span> {selectedEmployee.designation}</p>
-            <p>
-              <span className="font-medium text-gray-700">Month:</span>
-              {selectedEmployee.month || selectedMonth || "Current"}
-              ({selectedEmployee.monthDays || monthDays} days)
-            </p>
-          </div>
-        </div>
-      </div>
+                <div className="grid grid-cols-2 text-sm text-gray-600 gap-x-6 gap-y-1">
+                  <p><span className="font-medium text-gray-700">ID:</span> {selectedEmployee.employeeId}</p>
+                  <p><span className="font-medium text-gray-700">Department:</span> {selectedEmployee.department}</p>
+                  <p><span className="font-medium text-gray-700">Designation:</span> {selectedEmployee.designation}</p>
+                  <p>
+                    <span className="font-medium text-gray-700">Month:</span>
+                    {selectedEmployee.month || selectedMonth || "Current"}
+                    ({selectedEmployee.monthDays || monthDays} days)
+                  </p>
+                </div>
+              </div>
+            </div>
 
-      {/* LEAVE SUMMARY */}
-      {/* <div className="p-3 mt-4 rounded-lg bg-blue-50">
+            {/* LEAVE SUMMARY */}
+            {/* <div className="p-3 mt-4 rounded-lg bg-blue-50">
         <p className="text-sm font-medium text-blue-800">Leave Summary - {formatMonthDisplay(selectedEmployee.month || selectedMonth)}</p>
         <div className="grid grid-cols-5 gap-2 mt-2">
           <div className="text-center">
@@ -14448,76 +14467,76 @@ const halfDayDeductionAmount = halfDayDeductionDays * dailyRateNumber;
         </div>
       </div> */}
 
-      {/* ✅ COMP-OFF SUMMARY - FIXED with correct used calculation */}
-      {employeeCompOffs[selectedEmployee.employeeId] && (
-        <div className="p-0 mt-2 rounded-lg bg-purple-50">
-          <p className="text-sm font-medium text-blue-800">Comp-off Summary - {formatMonthDisplay(selectedEmployee.month || selectedMonth)}</p>
-          
-          {/* Main Formula Display */}
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <div className="text-center">
-              <span className="text-xs text-gray-600">Leave Taken</span>
-              <p className="text-2xl font-bold text-blue-600">
-                {(() => {
-                  const leaves = employeeLeaves[selectedEmployee.employeeId];
-                  return (leaves?.CL || 0) + (leaves?.EL || 0) + (leaves?.COFF || 0) + (leaves?.Other || 0);
-                })()}
-              </p>
-            </div>
-            <span className="text-2xl font-bold text-gray-400">-</span>
-            <div className="text-center">
-              <span className="text-xs text-gray-600">Comp-off Used</span>
-              <p className="text-2xl font-bold text-purple-600">
-                {(() => {
-                  const leaves = employeeLeaves[selectedEmployee.employeeId];
-                  const totalLeaves = (leaves?.CL || 0) + (leaves?.EL || 0) + (leaves?.COFF || 0) + (leaves?.Other || 0);
-                  const earned = employeeCompOffs[selectedEmployee.employeeId]?.earned || 0;
-                  return Math.min(earned, totalLeaves);
-                })()}
-              </p>
-            </div>
-            <span className="text-2xl font-bold text-gray-400">=</span>
-            <div className="text-center">
-              <span className="text-xs text-gray-600">Balance</span>
-              <p className="text-2xl font-bold text-green-600">
-                {(() => {
-                  const leaves = employeeLeaves[selectedEmployee.employeeId];
-                  const totalLeaves = (leaves?.CL || 0) + (leaves?.EL || 0) + (leaves?.COFF || 0) + (leaves?.Other || 0);
-                  const earned = employeeCompOffs[selectedEmployee.employeeId]?.earned || 0;
-                  const used = Math.min(earned, totalLeaves);
-                  return totalLeaves - used;
-                })()}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+            {/* ✅ COMP-OFF SUMMARY - FIXED with correct used calculation */}
+            {employeeCompOffs[selectedEmployee.employeeId] && (
+              <div className="p-0 mt-2 rounded-lg bg-purple-50">
+                <p className="text-sm font-medium text-blue-800">Comp-off Summary - {formatMonthDisplay(selectedEmployee.month || selectedMonth)}</p>
 
-      <div className="grid grid-cols-1 mt-2 mb-4 text-sm sm:grid-cols-2 gap-x-10 gap-y-2">
+                {/* Main Formula Display */}
+                <div className="flex items-center justify-center gap-2 mt-2">
+                  <div className="text-center">
+                    <span className="text-xs text-gray-600">Leave Taken</span>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {(() => {
+                        const leaves = employeeLeaves[selectedEmployee.employeeId];
+                        return (leaves?.CL || 0) + (leaves?.EL || 0) + (leaves?.COFF || 0) + (leaves?.Other || 0);
+                      })()}
+                    </p>
+                  </div>
+                  <span className="text-2xl font-bold text-gray-400">-</span>
+                  <div className="text-center">
+                    <span className="text-xs text-gray-600">Comp-off Used</span>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {(() => {
+                        const leaves = employeeLeaves[selectedEmployee.employeeId];
+                        const totalLeaves = (leaves?.CL || 0) + (leaves?.EL || 0) + (leaves?.COFF || 0) + (leaves?.Other || 0);
+                        const earned = employeeCompOffs[selectedEmployee.employeeId]?.earned || 0;
+                        return Math.min(earned, totalLeaves);
+                      })()}
+                    </p>
+                  </div>
+                  <span className="text-2xl font-bold text-gray-400">=</span>
+                  <div className="text-center">
+                    <span className="text-xs text-gray-600">Balance</span>
+                    <p className="text-2xl font-bold text-green-600">
+                      {(() => {
+                        const leaves = employeeLeaves[selectedEmployee.employeeId];
+                        const totalLeaves = (leaves?.CL || 0) + (leaves?.EL || 0) + (leaves?.COFF || 0) + (leaves?.Other || 0);
+                        const earned = employeeCompOffs[selectedEmployee.employeeId]?.earned || 0;
+                        const used = Math.min(earned, totalLeaves);
+                        return totalLeaves - used;
+                      })()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
-        {/* Present Days */}
-        <div className="flex justify-between pb-1 border-b">
-          <span className="text-gray-600">Present Days</span>
-          <span className="font-semibold text-green-600">
-            {selectedEmployee.presentDays || 0}
-          </span>
-        </div>
+            <div className="grid grid-cols-1 mt-2 mb-4 text-sm sm:grid-cols-2 gap-x-10 gap-y-2">
 
-        {/* Working Days */}
-        <div className="flex justify-between pb-1 border-b">
-          <span className="text-gray-600">Working Days</span>
-          <span className="font-semibold text-blue-600">
-            {selectedEmployee.totalWorkingDays || 0}
-          </span>
-        </div>
+              {/* Present Days */}
+              <div className="flex justify-between pb-1 border-b">
+                <span className="text-gray-600">Present Days</span>
+                <span className="font-semibold text-green-600">
+                  {selectedEmployee.presentDays || 0}
+                </span>
+              </div>
 
-        {/* Half Days */}
-        <div className="flex justify-between pb-1 border-b">
-          <span className="text-gray-600">Half Days</span>
-          <span className="font-semibold text-yellow-600">
-            {selectedEmployee.halfDayWorking || 0}
-          </span>
-        </div>
+              {/* Working Days */}
+              <div className="flex justify-between pb-1 border-b">
+                <span className="text-gray-600">Working Days</span>
+                <span className="font-semibold text-blue-600">
+                  {selectedEmployee.totalWorkingDays || 0}
+                </span>
+              </div>
+
+              {/* Half Days */}
+              <div className="flex justify-between pb-1 border-b">
+                <span className="text-gray-600">Half Days</span>
+                <span className="font-semibold text-yellow-600">
+                  {selectedEmployee.halfDayWorking || 0}
+                </span>
+              </div>
 
         {/* WeekOff Days */}
         <div className="flex justify-between pb-1 border-b">
@@ -14535,84 +14554,84 @@ const halfDayDeductionAmount = halfDayDeductionDays * dailyRateNumber;
           </span>
         </div>
 
-        {/* Month Days */}
-        <div className="flex justify-between pb-1 border-b">
-          <span className="text-gray-600">Month Days</span>
-          <span className="font-semibold text-gray-800">
-            {selectedEmployee.monthDays || monthDays}
-          </span>
-        </div>
+              {/* Month Days */}
+              <div className="flex justify-between pb-1 border-b">
+                <span className="text-gray-600">Month Days</span>
+                <span className="font-semibold text-gray-800">
+                  {selectedEmployee.monthDays || monthDays}
+                </span>
+              </div>
 
-        {/* Monthly Salary */}
-        <div className="flex justify-between pb-1 border-b">
-          <span className="text-gray-600">Monthly Salary</span>
-          <span className="font-semibold text-blue-600">
-            ₹{getEmployeeData(selectedEmployee).salaryPerMonth || 0}
-          </span>
-        </div>
+              {/* Monthly Salary */}
+              <div className="flex justify-between pb-1 border-b">
+                <span className="text-gray-600">Monthly Salary</span>
+                <span className="font-semibold text-blue-600">
+                  ₹{getEmployeeData(selectedEmployee).salaryPerMonth || 0}
+                </span>
+              </div>
 
-        {/* Daily Rate */}
-        <div className="flex justify-between pb-1 border-b">
-          <span className="text-gray-600">Daily Rate</span>
-          <span className="font-semibold text-gray-800">
-            ₹{calculateDailyRate(selectedEmployee)}/day
-          </span>
-        </div>
+              {/* Daily Rate */}
+              <div className="flex justify-between pb-1 border-b">
+                <span className="text-gray-600">Daily Rate</span>
+                <span className="font-semibold text-gray-800">
+                  ₹{calculateDailyRate(selectedEmployee)}/day
+                </span>
+              </div>
 
-        {/* Calculated Salary */}
-        <div className="flex justify-between pb-1 border-b">
-          <span className="text-gray-600">Calculated Salary</span>
-          <span className="font-semibold text-green-600">
-            ₹{calculateSalary(selectedEmployee)}
-          </span>
-        </div>
+              {/* Calculated Salary */}
+              <div className="flex justify-between pb-1 border-b">
+                <span className="text-gray-600">Calculated Salary</span>
+                <span className="font-semibold text-green-600">
+                  ₹{calculateSalary(selectedEmployee)}
+                </span>
+              </div>
 
-        {/* ✅ Approved Leaves & Comp-off Collection - FIXED */}
-        <div className="flex flex-col pb-2 border-b sm:col-span-2">
-          <div className="flex justify-between mb-2">
-            <span className="font-medium text-gray-600">Approved Leaves</span>
-            <span className="font-semibold text-red-600">{getLeaveTypes(selectedEmployee) || "0"}</span>
+              {/* ✅ Approved Leaves & Comp-off Collection - FIXED */}
+              <div className="flex flex-col pb-2 border-b sm:col-span-2">
+                <div className="flex justify-between mb-2">
+                  <span className="font-medium text-gray-600">Approved Leaves</span>
+                  <span className="font-semibold text-red-600">{getLeaveTypes(selectedEmployee) || "0"}</span>
+                </div>
+
+                {/* ✅ Comp-off Collection - Formula with correct calculation */}
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-gray-600">Comp-off Collection</span>
+                  <span className="px-3 py-1 text-sm font-semibold text-purple-700 bg-purple-100 rounded-full">
+                    {(() => {
+                      const leaves = employeeLeaves[selectedEmployee.employeeId];
+                      const totalLeaves = (leaves?.CL || 0) + (leaves?.EL || 0) + (leaves?.COFF || 0) + (leaves?.Other || 0);
+                      const earned = employeeCompOffs[selectedEmployee.employeeId]?.earned || 0;
+                      const used = Math.min(earned, totalLeaves);
+                      const balance = totalLeaves - used;
+                      return `${totalLeaves} - ${used} = ${balance}`;
+                    })()}
+                  </span>
+                </div>
+              </div>
+
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => downloadInvoice(selectedEmployee)}
+                disabled={!isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth)}
+                className={`px-6 py-2 rounded-lg transition duration-200 ${isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth)
+                  ? 'bg-purple-500 text-white hover:bg-purple-600'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+              >
+                Download Payslip
+              </button>
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="px-6 py-2 text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600"
+              >
+                Close
+              </button>
+            </div>
           </div>
-          
-          {/* ✅ Comp-off Collection - Formula with correct calculation */}
-          <div className="flex items-center justify-between">
-            <span className="font-medium text-gray-600">Comp-off Collection</span>
-            <span className="px-3 py-1 text-sm font-semibold text-purple-700 bg-purple-100 rounded-full">
-              {(() => {
-                const leaves = employeeLeaves[selectedEmployee.employeeId];
-                const totalLeaves = (leaves?.CL || 0) + (leaves?.EL || 0) + (leaves?.COFF || 0) + (leaves?.Other || 0);
-                const earned = employeeCompOffs[selectedEmployee.employeeId]?.earned || 0;
-                const used = Math.min(earned, totalLeaves);
-                const balance = totalLeaves - used;
-                return `${totalLeaves} - ${used} = ${balance}`;
-              })()}
-            </span>
-          </div>
         </div>
-
-      </div>
-
-      <div className="flex justify-end space-x-3">
-        <button
-          onClick={() => downloadInvoice(selectedEmployee)}
-          disabled={!isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth)}
-          className={`px-6 py-2 rounded-lg transition duration-200 ${isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth)
-            ? 'bg-purple-500 text-white hover:bg-purple-600'
-            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-        >
-          Download Payslip
-        </button>
-        <button
-          onClick={() => setShowViewModal(false)}
-          className="px-6 py-2 text-white transition duration-200 bg-blue-500 rounded-lg hover:bg-blue-600"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
       {/* Edit Modal */}
       {showEditModal && selectedEmployee && (
