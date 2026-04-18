@@ -15,6 +15,7 @@ const EmployeeLeaves = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
+  const [leaveBalances, setLeaveBalances] = useState(null);
 
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
@@ -86,8 +87,21 @@ const EmployeeLeaves = () => {
     }));
 
     fetchLeaves(employeeId);
+    fetchLeaveBalances(employeeId);
     fetchCompOffRequests(employeeId);
   }, []);
+
+  // ✅ Fetch leave balances
+  const fetchLeaveBalances = async (employeeId) => {
+    try {
+      const resp = await axios.get(`${API_BASE_URL}/leaves/balances/${employeeId}`);
+      if (resp.data && resp.data.success) {
+        setLeaveBalances(resp.data.balances);
+      }
+    } catch (err) {
+      console.error("Error fetching leave balances:", err);
+    }
+  };
 
   // ✅ Fetch leaves
   const fetchLeaves = async (employeeId) => {
@@ -502,6 +516,15 @@ const EmployeeLeaves = () => {
           <StatCard icon={FiXCircle} label="Rejected" value={leaves.filter(l => l.status === "rejected").length} color="rose" />
           <StatCard icon={FaExchangeAlt} label={`Comp-off (${compOffRequests.filter(r => r.status === "pending").length})`} value={requestStatus.remaining} color="purple" />
         </div>
+
+        {/* Leave Balances Cards */}
+        {leaveBalances && (
+          <div className="grid grid-cols-3 gap-2 mb-3 sm:grid-cols-3">
+            <StatCard icon={FiFileText} label={`Casual Leave (Total: ${leaveBalances.CL.total} | Used: ${leaveBalances.CL.used})`} value={`${leaveBalances.CL.available} Left`} color="blue" />
+            <StatCard icon={FiFileText} label={`Sick Leave (Total: ${leaveBalances.SL.total} | Used: ${leaveBalances.SL.used})`} value={`${leaveBalances.SL.available} Left`} color="red" />
+            <StatCard icon={FiFileText} label={`Earned Leave (Total: ${leaveBalances.EL.total} | Used: ${leaveBalances.EL.used})`} value={`${leaveBalances.EL.available} Left`} color="green" />
+          </div>
+        )}
 
         {/* Filters Section */}
         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">

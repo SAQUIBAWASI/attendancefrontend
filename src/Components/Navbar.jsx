@@ -412,6 +412,147 @@
 // export default Navbar;
 
 
+// import { RiMenu2Line, RiMenu3Line } from "react-icons/ri";
+// import { useLocation, useNavigate } from "react-router-dom";
+
+// const Navbar = ({ setIsCollapsed, isCollapsed }) => {
+//   const navigate = useNavigate();
+//   const location = useLocation();
+
+//   const handleMenuClick = () => {
+//     setIsCollapsed(!isCollapsed);
+//   };
+
+//   const getPageTitle = () => {
+//     const routes = {
+//       "/dashboard": "Dashboard",
+//       "/addemployee": "Add Employee",
+//       "/employeelist": "Employee List",
+//       "/attendancelist": "Attendance Records",
+//       "/attedancesummary": "Attendance Summary",
+//       "/today-attendance": "Today's Attendance",
+//       "/late-today": "Late Today",
+//       "/absent-today": "Absent Today",
+//       "/leavelist": "Leave Requests",
+//       "/leaves-report": "Leave Reports",
+//       "/payroll": "Payroll Management",
+//       "/role-management": "Role Management",
+//       "/permission-settings": "Permission Settings",
+//       "/addlocation": "Add Location",
+//       "/locationlist": "Location List",
+//       "/useractivity": "User Activity",
+//       "/useraccess": "User Access",
+//       "/jobpost": "Job Post",
+//       "/job-applicants": "Job Applicants",
+//       "/score": "Score",
+//       "/assessment-manager": "Assessment Manager",
+//       "/personaldocuments": "Documents",
+//       "/permissions": "Permissions",
+//       "/shift": "Shift Management",
+//       "/shiftlist": "Shift List",
+//       "/all-expensives": "Expenses",
+//       "/regularization": "Regularization",
+//       "/holidays-calendar": "Holidays",
+//       "/all-medical-certificates": "Medical Certificates",
+//     };
+    
+//     return routes[location.pathname] || "Dashboard";
+//   }; // ← This closing brace was missing
+
+//   // ===== JOB MODULE =====
+//   const jobTabs = [
+//     { path: "/jobpost", label: "Job Post" },
+//     { path: "/job-applicants", label: "Applicants" },
+//     { path: "/score", label: "Score" },
+//     { path: "/assessment-manager", label: "Assessment" },
+//     { path: "/personaldocuments", label: "Documents" },
+//   ];
+
+//   const isJobModule = jobTabs.some(
+//     (tab) => tab.path === location.pathname
+//   );
+
+//   // ===== ATTENDANCE MODULE =====
+//   const attendanceTabs = [
+//     { path: "/attedancesummary", label: "Summary" },
+//     { path: "/attendancelist", label: "Records" },
+//     { path: "/today-attendance", label: "Today" },
+//     { path: "/absent-today", label: "Absent Today" },
+//   ];
+
+//   const isAttendanceModule = attendanceTabs.some(
+//     (tab) => tab.path === location.pathname
+//   );
+
+//   return (
+//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-blue-800 shadow-md">
+
+//       {/* LEFT */}
+//       <div className="flex items-center gap-4">
+//         <button
+//           onClick={handleMenuClick}
+//           className="p-2 text-2xl rounded-md hover:bg-blue-700 transition"
+//         >
+//           {isCollapsed ? <RiMenu2Line /> : <RiMenu3Line />}
+//         </button>
+
+//         <div className="px-3 py-1 bg-blue-700 rounded-md">
+//           <span className="text-sm font-semibold">
+//             {getPageTitle()}
+//           </span>
+//         </div>
+//       </div>
+
+//       {/* CENTER - NO EXTRA SPACE */}
+//       <div className="hidden md:flex items-center gap-2">
+
+//         {/* JOB TABS */}
+//         {isJobModule &&
+//           jobTabs
+//             .filter((tab) => tab.path !== location.pathname)
+//             .map((tab) => (
+//               <button
+//                 key={tab.path}
+//                 onClick={() => navigate(tab.path)}
+//                 className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-blue-700 transition"
+//               >
+//                 {tab.label}
+//               </button>
+//             ))}
+
+//         {/* ATTENDANCE TABS */}
+//         {isAttendanceModule &&
+//           attendanceTabs
+//             .filter((tab) => tab.path !== location.pathname)
+//             .map((tab) => (
+//               <button
+//                 key={tab.path}
+//                 onClick={() => navigate(tab.path)}
+//                 className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-blue-700 transition"
+//               >
+//                 {tab.label}
+//               </button>
+//             ))}
+//       </div>
+
+//       {/* RIGHT */}
+//       <div className="flex items-center gap-2">
+//         <img
+//           src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
+//           alt="Vendor Logo"
+//           className="w-10 h-10 rounded-lg object-cover"
+//         />
+//         <span className="hidden sm:block text-lg font-semibold">
+//           Attendance
+//         </span>
+//       </div>
+//     </nav>
+//   );
+// };
+
+// export default Navbar;
+
+
 import { RiMenu2Line, RiMenu3Line } from "react-icons/ri";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -457,7 +598,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
     };
     
     return routes[location.pathname] || "Dashboard";
-  }; // ← This closing brace was missing
+  };
 
   // ===== JOB MODULE =====
   const jobTabs = [
@@ -484,6 +625,9 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
     (tab) => tab.path === location.pathname
   );
 
+  // ===== DASHBOARD MODULE CHECK =====
+  const isDashboardModule = location.pathname === "/dashboard";
+
   return (
     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-blue-800 shadow-md">
 
@@ -503,7 +647,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
         </div>
       </div>
 
-      {/* CENTER - NO EXTRA SPACE */}
+      {/* CENTER */}
       <div className="hidden md:flex items-center gap-2">
 
         {/* JOB TABS */}
@@ -536,13 +680,33 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
       </div>
 
       {/* RIGHT */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        {/* Dashboard Circles - Only show on Dashboard */}
+        {isDashboardModule && (
+          <div className="flex items-center mr-2">
+            <button
+              onClick={() => navigate("/leavelist")}
+              className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 flex items-center justify-center text-[11px] font-medium text-white transition shadow-md border border-blue-400"
+              title="Leave Requests"
+            >
+              Leave
+            </button>
+            <button
+              onClick={() => navigate("/permissions")}
+              className="w-8 h-8 rounded-full bg-indigo-500 hover:bg-indigo-400 flex items-center justify-center text-[10px] font-medium text-white transition shadow-md border border-indigo-300 -ml-1"
+              title="Permissions"
+            >
+              Perm
+            </button>
+          </div>
+        )}
+        
         <img
           src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
           alt="Vendor Logo"
-          className="w-10 h-10 rounded-lg object-cover"
+          className="w-8 h-8 rounded-lg object-cover"
         />
-        <span className="hidden sm:block text-lg font-semibold">
+        <span className="hidden sm:block text-base font-semibold">
           Attendance
         </span>
       </div>
