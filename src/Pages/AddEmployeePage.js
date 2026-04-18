@@ -6055,6 +6055,11 @@ const AddEmployeePage = () => {
   // ✅ WEEK OFF (SIMPLIFIED - SINGLE FIELD)
   const [weekOffsPerMonth, setWeekOffsPerMonth] = useState("0");
 
+  // ✅ LEAVE LIMITS
+  const [maxCL, setMaxCL] = useState("0");
+  const [maxSL, setMaxSL] = useState("0");
+  const [maxEL, setMaxEL] = useState("0");
+
   // ✅ SHIFT
   const [shiftType, setShiftType] = useState("");
   const [shiftStartTime, setShiftStartTime] = useState("09:00");
@@ -6162,6 +6167,11 @@ const AddEmployeePage = () => {
     // Week Off (Simplified)
     setWeekOffsPerMonth(employee.weekOffPerMonth?.toString() || "0");
     
+    // Leave Limits
+    setMaxCL(employee.maxCL !== undefined ? employee.maxCL.toString() : "0");
+    setMaxSL(employee.maxSL !== undefined ? employee.maxSL.toString() : "0");
+    setMaxEL(employee.maxEL !== undefined ? employee.maxEL.toString() : "0");
+    
     // New fields
     setParentsName(employee.parentsName || "");
     setAlternateNumber(employee.alternateNumber || "");
@@ -6254,6 +6264,9 @@ const AddEmployeePage = () => {
       setCountry("India");
       setLocationId("");
       setWeekOffsPerMonth("0");
+      setMaxCL("0");
+      setMaxSL("0");
+      setMaxEL("0");
       setParentsName("");
       setAlternateNumber("");
       setShiftType("");
@@ -6438,6 +6451,9 @@ const AddEmployeePage = () => {
         shiftHours,
         salaryPerMonth: Number(salaryPerMonth) || 0,
         weekOffPerMonth: Number(weekOffsPerMonth) || 0,
+        maxCL: !isNaN(parseInt(maxCL)) ? parseInt(maxCL) : 0,
+        maxSL: !isNaN(parseInt(maxSL)) ? parseInt(maxSL) : 0,
+        maxEL: !isNaN(parseInt(maxEL)) ? parseInt(maxEL) : 0,
         parentsName,
         alternateNumber,
         address: fullAddress
@@ -7151,8 +7167,8 @@ const AddEmployeePage = () => {
             )}
           </div>
 
-          {/* SALARY SECTION */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {/* SALARY & LEAVES SECTION */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
             <div>
               <label className="block mb-1 text-sm font-medium text-gray-700">
                 <FaDollarSign className="inline mr-1 text-blue-500" /> Salary/Month *
@@ -7174,7 +7190,7 @@ const AddEmployeePage = () => {
 
             <div>
               <label className="block mb-1 text-sm font-medium text-gray-700">
-                Week Offs/Month *
+                Week Offs/Month
               </label>
               <input 
                 type="number" 
@@ -7184,7 +7200,21 @@ const AddEmployeePage = () => {
                 placeholder="0"
                 required 
               />
-              <p className="mt-1 text-xs text-gray-500">From week off selection</p>
+            </div>
+
+            <div>
+              <label className="block mb-1 text-sm font-medium text-gray-700">CL Limit/Month *</label>
+              <input type="number" min="0" value={maxCL} onChange={(e) => setMaxCL(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required />
+            </div>
+            
+            <div>
+              <label className="block mb-1 text-sm font-medium text-gray-700">SL Limit/Month *</label>
+              <input type="number" min="0" value={maxSL} onChange={(e) => setMaxSL(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required />
+            </div>
+
+            <div>
+              <label className="block mb-1 text-sm font-medium text-gray-700">EL Limit/Year *</label>
+              <input type="number" min="0" value={maxEL} onChange={(e) => setMaxEL(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required />
             </div>
           </div>
 

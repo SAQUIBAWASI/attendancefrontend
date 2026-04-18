@@ -9,5 +9,5 @@ export const API_BASE_URL = isLocalhost
   : "https://api.timelyhealth.in/api";
 
 export const API_DOMAIN = isLocalhost 
-  ? "http://localhost:5001" 
-  : "https://api.timelyhealth.in";
+  ? "http://localhost:5001/api" 
+  : "https://api.timelyhealth.in/api";
