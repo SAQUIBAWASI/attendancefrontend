@@ -1883,18 +1883,6 @@ export default function EmployeeDashboard() {
     setSelectedEmployee(null);
   };
 
-  // ✅ Get leave types for display
-  const getLeaveTypes = (employee) => {
-    const leaves = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
-    const leaveStrings = [];
-    if (leaves.CL > 0) leaveStrings.push(`CL: ${leaves.CL}`);
-    if (leaves.SL > 0) leaveStrings.push(`SL: ${leaves.SL}`);
-    if (leaves.EL > 0) leaveStrings.push(`EL: ${leaves.EL}`);
-    if (leaves.COFF > 0) leaveStrings.push(`COFF: ${leaves.COFF}`);
-    if (leaves.LOP > 0) leaveStrings.push(`LOP: ${leaves.LOP}`);
-    return leaveStrings.length > 0 ? leaveStrings.join(', ') : 'No Leaves';
-  };
-
   // ✅ Generate Invoice HTML
   const generateInvoiceHTML = (employee) => {
     const employeeData = getEmployeeData(employee);
@@ -1907,6 +1895,9 @@ export default function EmployeeDashboard() {
     const targetMonth = employee.month && employee.month !== "Not specified" ? employee.month : getCurrentMonth();
     const monthLeaves = { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
     
+    // ✅ Get leave data from state
+    const leavesData = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0, leaveDetails: [] };
+
     if (leavesData.leaveDetails && targetMonth) {
       leavesData.leaveDetails.forEach(leave => {
         const leaveDate = new Date(leave.startDate);
@@ -1923,7 +1914,7 @@ export default function EmployeeDashboard() {
     }
 
 
-    const leaves = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
+    const leaves = leavesData;
 
     const actualWeekOffDays = employee.weekOffs || 0;
     const presentDays = employee.presentDays || 0;
