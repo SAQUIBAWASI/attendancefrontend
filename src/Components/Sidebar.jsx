@@ -1337,7 +1337,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         { name: "Today Attendance", path: "/today-attendance" },
         { name: "Absent Today", path: "/absent-today" },
         { name: "Regularization", path: "/regularization" },
-        { name: "Medical Certificates", path: "/all-medical-certificates" },
+        // { name: "Medical Certificates", path: "/all-medical-certificates" },
       ],
     },
     {
@@ -1379,11 +1379,20 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       name: "User Activity",
       path: "/useractivity",
     },
+    
     {
       icon: <i className="ri-shield-user-fill"></i>,
       name: "User Access",
       path: "/useraccess",
     },
+
+    {
+  icon: <i className="ri-stethoscope-fill"></i>,
+  name: "Medical Certificates",
+  path: "/all-medical-certificates",
+},
+
+  
     {
       icon: <i className="ri-briefcase-fill"></i>,
       name: "Recruitment",
@@ -1570,7 +1579,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                           <Link
                             to={sub.path}
                             onClick={() => handleDropdownItemClick(sub.path)}
-                            className={`block py-1 text-[13px] transition-colors pl-8 ${
+                            className={`block py-1 text-[13px] transition-colors  ${
                               isActive(sub.path)
                                 ? "text-emerald-300 font-semibold"
                                 : "text-blue-100 hover:text-emerald-300"

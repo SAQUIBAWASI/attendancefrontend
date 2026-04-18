@@ -478,6 +478,8 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
     { path: "/attendancelist", label: "Records" },
     { path: "/today-attendance", label: "Today" },
     { path: "/absent-today", label: "Absent Today" },
+    { path: "/late-today", label: "Late Today" },
+    { path: "/regularization", label: "Regularization" },
   ];
 
   const isAttendanceModule = attendanceTabs.some(

@@ -251,12 +251,12 @@ const EmployeeLocation = () => {
               <table className="min-w-full">
                 <thead className="text-left text-sm text-white bg-gradient-to-r from-green-500 to-blue-600">
                   <tr>
-                    <th className=" py-2 text-center">Employee ID</th>
-                    <th className=" py-2 text-center"> Name</th>
+                    <th className="hidden sm:table-cell py-2 text-center">Employee ID</th>
+                    <th className="hidden sm:table-cell py-2 text-center"> Name</th>
                     <th className=" py-2 text-center">Location </th>
                     <th className=" py-2 text-center">Full Address</th>
-                    <th className=" py-2 text-center">Latitude</th>
-                    <th className=" py-2 text-center">Longitude</th>
+                    <th className="hidden sm:table-cell py-2 text-center">Latitude</th>
+                    <th className="hidden sm:table-cell py-2 text-center">Longitude</th>
                     {/* <th className="px-2 py-2 text-center">Assigned Date</th> */}
                   </tr>
                 </thead>
@@ -266,22 +266,22 @@ const EmployeeLocation = () => {
                       key={location._id || index}
                       className="border-b hover:bg-gray-50"
                     >
-                      <td className="p-2 border">
+                      <td className="hidden sm:table-cell p-2 border text-center">
                         {location?.employee?.employeeId || "N/A"}
                       </td>
-                      <td className="p-2 border">
+                      <td className="hidden sm:table-cell p-2 border text-center">
                         {location?.employee?.name || "N/A"}
                       </td>
-                      <td className="p-2 border">
+                      <td className="p-2 border text-center">
                         {location?.location?.name || "N/A"}
                       </td>
                       <td className="p-2 text-sm border">
                         {location?.location?.fullAddress || "N/A"}
                       </td>
-                      <td className="p-2 border">
+                      <td className="hidden sm:table-cell p-2 border text-center">
                         {location?.location?.latitude ?? "N/A"}
                       </td>
-                      <td className="p-2 border">
+                      <td className="hidden sm:table-cell p-2 border text-center">
                         {location?.location?.longitude ?? "N/A"}
                       </td>
                       {/* <td className="p-2 border">

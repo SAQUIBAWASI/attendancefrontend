@@ -2288,136 +2288,24 @@ const UserActivity = () => {
     fetchActivities();
   }, []);
 
-  // ✅ Fetch activities whenever pagination parameters change
+  // ✅ Fetch activities whenever pagination or filters change
   useEffect(() => {
     fetchActivities();
-  }, [pagination.currentPage, pagination.limit]);
+  }, [pagination.currentPage, pagination.limit, searchTerm, actionFilter, userRoleFilter, fromDate, toDate, selectedMonth, filterDepartment, filterDesignation]);
   
-  // FILTER ACTIVITIES
+  // ✅ Reset to page 1 when any filter changes
   useEffect(() => {
-    filterActivities();
-  }, [activities, searchTerm, actionFilter, userRoleFilter, filterDepartment, filterDesignation, fromDate, toDate, selectedMonth]);
-
-  useEffect(() => {
-    // Reset to first page when filters change
     setPagination(prev => ({ ...prev, currentPage: 1 }));
   }, [searchTerm, actionFilter, userRoleFilter, filterDepartment, filterDesignation, fromDate, toDate, selectedMonth]);
 
   const filterActivities = () => {
-    console.log("Filtering activities with:", {
-      searchTerm,
-      actionFilter,
-      userRoleFilter,
-      filterDepartment,
-      filterDesignation,
-      fromDate,
-      toDate,
-      selectedMonth,
-      activitiesCount: activities.length
-    });
-    
-    let filtered = [...activities];
-    console.log("Initial filtered count:", filtered.length);
-    
-    // Apply search filter
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase().trim();
-      filtered = filtered.filter(activity => {
-        const match = (
-          activity.userName?.toLowerCase().includes(term) ||
-          (activity.userEmail && activity.userEmail.toLowerCase().includes(term))
-        );
-        if (match) console.log("Search match:", activity.userName);
-        return match;
-      });
-      console.log("After search filter:", filtered.length);
-    }
-    
-    // Apply action filter
-    if (actionFilter) {
-      filtered = filtered.filter(activity => {
-        const match = activity.action === actionFilter;
-        if (match) console.log("Action match:", activity.action);
-        return match;
-      });
-      console.log("After action filter:", filtered.length);
-    }
-    
-    // Apply role filter
-    if (userRoleFilter) {
-      filtered = filtered.filter(activity => {
-        const match = activity.userRole === userRoleFilter;
-        if (match) console.log("Role match:", activity.userRole);
-        return match;
-      });
-      console.log("After role filter:", filtered.length);
-    }
-    
-    // Filter by Department
-    if (filterDepartment) {
-      console.log("Filtering by department:", filterDepartment);
-      console.log("Activities with departments:", filtered.map(a => ({ name: a.userName, dept: a.department })));
-      
-      filtered = filtered.filter(activity => {
-        const match = activity.department && activity.department === filterDepartment;
-        if (match) console.log("Department match:", activity.userName, activity.department);
-        return match;
-      });
-      console.log("After department filter:", filtered.length);
-    }
-    
-    // Filter by Designation
-    if (filterDesignation) {
-      console.log("Filtering by designation:", filterDesignation);
-      console.log("Activities with designations:", filtered.map(a => ({ name: a.userName, desig: a.designation })));
-      
-      filtered = filtered.filter(activity => {
-        const match = activity.designation && activity.designation === filterDesignation;
-        if (match) console.log("Designation match:", activity.userName, activity.designation);
-        return match;
-      });
-      console.log("After designation filter:", filtered.length);
-    }
-    
-    // Filter by Date Range
-    if (fromDate && toDate) {
-      const from = new Date(fromDate);
-      from.setHours(0, 0, 0, 0);
-      const to = new Date(toDate);
-      to.setHours(23, 59, 59, 999);
-      
-      filtered = filtered.filter(activity => {
-        const activityDate = new Date(activity.createdAt);
-        return activityDate >= from && activityDate <= to;
-      });
-      console.log("After date range filter:", filtered.length);
-    } else if (fromDate && !toDate) {
-      // Single date
-      const from = new Date(fromDate);
-      from.setHours(0, 0, 0, 0);
-      const to = new Date(fromDate);
-      to.setHours(23, 59, 59, 999);
-      
-      filtered = filtered.filter(activity => {
-        const activityDate = new Date(activity.createdAt);
-        return activityDate >= from && activityDate <= to;
-      });
-      console.log("After single date filter:", filtered.length);
-    } else if (selectedMonth) {
-      // Month filter
-      const [year, month] = selectedMonth.split('-').map(Number);
-      filtered = filtered.filter(activity => {
-        const activityDate = new Date(activity.createdAt);
-        return activityDate.getFullYear() === year && activityDate.getMonth() + 1 === month;
-      });
-      console.log("After month filter:", filtered.length);
-    }
-    
-    setFilteredActivities(filtered);
-    
-    // We DO NOT update totalCount/totalPages here! 
-    // They are controlled by the backend payload. 
+    // We already fetch filtered data from server for most filters.
+    // Local filtering is only needed for fields not supported by backend yet (Dept/Desig)
+    // but even then, it's better to just show what the server returns to avoid pagination confusion.
+    setFilteredActivities(activities);
   };
+
+
 
   // Reset filters
   const resetFilters = () => {

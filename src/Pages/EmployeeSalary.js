@@ -469,15 +469,15 @@ export default function EmployeeDashboard() {
     const leavesData = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0, leaveDetails: [] };
     
     // ✅ Filter leaves for the specific month
-    const recordMonth = employee.month || ""; // e.g. "2024-03"
+    const targetMonth = employee.month && employee.month !== "Not specified" ? employee.month : getCurrentMonth();
     const monthLeaves = { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
     
-    if (leavesData.leaveDetails && recordMonth && recordMonth !== "Not specified") {
+    if (leavesData.leaveDetails && targetMonth) {
       leavesData.leaveDetails.forEach(leave => {
         const leaveDate = new Date(leave.startDate);
         const leaveMonth = `${leaveDate.getFullYear()}-${String(leaveDate.getMonth() + 1).padStart(2, '0')}`;
         
-        if (leaveMonth === recordMonth) {
+        if (leaveMonth === targetMonth) {
           if (monthLeaves[leave.type] !== undefined) {
             monthLeaves[leave.type] += leave.days;
           } else {
@@ -485,9 +485,6 @@ export default function EmployeeDashboard() {
           }
         }
       });
-    } else if (!recordMonth || recordMonth === "Not specified") {
-      // Fallback to aggregated data if month is not available
-      Object.assign(monthLeaves, leavesData);
     }
 
     const actualWeekOffDays = employee.weekOffs || 0;
@@ -797,15 +794,15 @@ export default function EmployeeDashboard() {
     const leavesData = employeeLeaves[employee.employeeId] || { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0, leaveDetails: [] };
     
     // ✅ Filter leaves for the specific month
-    const recordMonth = employee.month || ""; // e.g. "2024-03"
+    const targetMonth = employee.month && employee.month !== "Not specified" ? employee.month : getCurrentMonth();
     const monthLeaves = { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
     
-    if (leavesData.leaveDetails && recordMonth && recordMonth !== "Not specified") {
+    if (leavesData.leaveDetails && targetMonth) {
       leavesData.leaveDetails.forEach(leave => {
         const leaveDate = new Date(leave.startDate);
         const leaveMonth = `${leaveDate.getFullYear()}-${String(leaveDate.getMonth() + 1).padStart(2, '0')}`;
         
-        if (leaveMonth === recordMonth) {
+        if (leaveMonth === targetMonth) {
           if (monthLeaves[leave.type] !== undefined) {
             monthLeaves[leave.type] += leave.days;
           } else {
@@ -813,9 +810,6 @@ export default function EmployeeDashboard() {
           }
         }
       });
-    } else {
-      // Fallback
-      Object.assign(monthLeaves, leavesData);
     }
 
     const leaveStrings = [];

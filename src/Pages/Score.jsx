@@ -1178,7 +1178,7 @@ const Score = () => {
     const fetchCandidates = async () => {
         try {
             setLoading(true);
-            const res = await axios.get(`${API_BASE_URL}/applications/all`);
+            const res = await axios.get(`${API_BASE_URL}/applications/all?excludeResigned=true`);
             if (res.data.success) {
                 setCandidates(res.data.applications);
             }
@@ -1367,12 +1367,13 @@ const Score = () => {
 
         const matchesScore = (c.technicalScore || 0) >= scoreFilter;
         const matchesRole = roleFilter ? (c.jobId?.role === roleFilter) : true;
+        const isNotResigned = c.status !== "Resigned";
 
         const matchesDate = dateFilter
             ? new Date(c.appliedAt).toISOString().slice(0, 10) === dateFilter
             : true;
 
-        return matchesSearch && matchesScore && matchesRole && matchesDate;
+        return matchesSearch && matchesScore && matchesRole && matchesDate && isNotResigned;
     });
 
     // Pagination Handlers

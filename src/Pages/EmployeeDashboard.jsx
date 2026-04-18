@@ -497,22 +497,29 @@ const EmployeeDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#334155] font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 text-slate-700 font-sans">
       <main className="p-6 lg:p-10 max-w-full overflow-hidden">
         
         {/* Welcome Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 leading-tight">
-              Welcome back, <span className="text-blue-600">{profile.name.split(' ')[0]}</span>! 👋
+            <h1 className="text-2xl font-extrabold text-slate-900 leading-tight flex items-center gap-2">
+              {(() => {
+                const hour = new Date().getHours();
+                if (hour >= 5 && hour < 12) return <>Good morning, 🌅</>;
+                if (hour >= 12 && hour < 17) return <>Good afternoon, ☀️</>;
+                if (hour >= 17 && hour < 21) return <>Good evening, 🌆</>;
+                return <>Good night, 🌙</>;
+              })()}
+              <span className="text-blue-600">{profile.name.split(' ')[0]}!</span>
             </h1>
             <p className="text-sm text-slate-500 mt-1 font-medium">
               Here's what's happening with your attendance today.
             </p>
           </div>
-          <div className="flex items-center gap-3 bg-white px-4 py-2 text-slate-600 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+          <div className="flex items-center gap-3 bg-white px-4 py-2 text-slate-600 rounded-xl shadow-md border border-gray-100 transition-all hover:shadow-lg">
             <FiCalendar className="text-blue-500" />
-            <span className="text-xs font-bold tracking-tight">
+            <span className="text-xs font-semibold tracking-tight">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </span>
           </div>
@@ -571,12 +578,12 @@ const EmployeeDashboard = () => {
                     <div className="flex items-center gap-3">
                       <div className="flex -space-x-2 overflow-hidden">
                         {deptBirthdays.slice(0, 3).map((b, i) => (
-                          <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-blue-50 flex items-center justify-center text-[10px] font-bold text-blue-600 border border-blue-100" title={b.name}>
+                          <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-blue-50 flex items-center justify-center text-xs font-bold text-blue-600 border border-blue-100" title={b.name}>
                             {b.name.split(' ').map(n => n[0]).join('')}
                           </div>
                         ))}
                         {deptBirthdays.length > 3 && (
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 ring-2 ring-white">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 ring-2 ring-white">
                             +{deptBirthdays.length - 3}
                           </div>
                         )}
@@ -591,9 +598,9 @@ const EmployeeDashboard = () => {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="text-[10px] font-bold text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">View All</div>
+                      <div className="text-xs font-bold text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">View All</div>
                       <button 
-                        className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                        className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
                         onClick={(e) => { e.stopPropagation(); alert(`Departmental wishes sent! 🎊`); }}
                       >
                         Send Wishes
@@ -610,7 +617,7 @@ const EmployeeDashboard = () => {
                     <div className="flex items-center gap-3">
                       <div className="flex -space-x-2 overflow-hidden">
                         {deptAnniversaries.slice(0, 3).map((a, i) => (
-                          <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-emerald-50 flex items-center justify-center text-[10px] font-bold text-emerald-600 border border-emerald-100" title={a.name}>
+                          <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-emerald-50 flex items-center justify-center text-xs font-bold text-emerald-600 border border-emerald-100" title={a.name}>
                             {a.name.split(' ').map(n => n[0]).join('')}
                           </div>
                         ))}
@@ -649,7 +656,7 @@ const EmployeeDashboard = () => {
                     <div className="flex items-center gap-3">
                       <div className="flex -space-x-2 overflow-hidden">
                         {deptLeaves.slice(0, 3).map((l, i) => (
-                          <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-amber-50 flex items-center justify-center text-[10px] font-bold text-amber-600 border border-amber-100" title={l.employeeName}>
+                          <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-amber-50 flex items-center justify-center text-xs font-bold text-amber-600 border border-amber-100" title={l.employeeName}>
                             {l.employeeName.split(' ').map(n => n[0]).join('')}
                           </div>
                         ))}
@@ -670,7 +677,7 @@ const EmployeeDashboard = () => {
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-[10px] font-bold text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity">View Details</div>
-                      <div className="text-[10px] font-black uppercase text-amber-500 bg-amber-50 px-2 py-1 rounded-md tracking-widest">
+                      <div className="text-xs font-bold uppercase text-amber-500 bg-amber-50 px-2 py-1 rounded-md tracking-widest">
                         Out of Office
                       </div>
                     </div>
@@ -698,7 +705,7 @@ const EmployeeDashboard = () => {
                     <div className="p-2 max-h-[60vh] overflow-y-auto">
                       <div className="grid grid-cols-1 gap-2 p-2">
                         {(modalType === 'birthday' ? deptBirthdays : modalType === 'anniversary' ? deptAnniversaries : deptLeaves).map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl hover:bg-white border border-transparent hover:border-slate-100 hover:shadow-sm transition-all group">
+                          <div key={idx} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl hover:bg-white border border-transparent hover:border-slate-100 hover:shadow-sm transition-all group">
                              <div className="flex items-center gap-4">
                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shadow-sm ${
                                  modalType === 'birthday' ? 'bg-rose-100 text-rose-600' : 
@@ -709,14 +716,14 @@ const EmployeeDashboard = () => {
                                </div>
                                <div>
                                  <h4 className="text-sm font-bold text-gray-900">{item.name || item.employeeName}</h4>
-                                 <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">
+                                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                                    {modalType === 'anniversary' ? `${item.yearsOfService} Year Celebration` : item.role || 'Team Member'}
                                  </p>
                                </div>
                              </div>
                              {(modalType === 'birthday' || modalType === 'anniversary') && (
                                <button 
-                                 className={`px-3 py-1.5 bg-white border rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm ${
+                                 className={`px-3 py-1.5 bg-white border rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm ${
                                    modalType === 'birthday' ? 'text-rose-500 border-rose-100 hover:bg-rose-500 hover:text-white' : 
                                    'text-emerald-600 border-emerald-100 hover:bg-emerald-600 hover:text-white'
                                  }`}
@@ -754,7 +761,7 @@ const EmployeeDashboard = () => {
           {/* Left Column: Profile Card + Employee Stats */}
           <div className="space-y-6 lg:col-span-4">
             {/* Profile Card */}
-            <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-2xl">
+            <div className="p-6 bg-white border border-gray-100 shadow-lg rounded-2xl">
               <div className="flex items-center gap-4 pb-6 mb-6 border-b border-gray-50">
                 <div className="flex items-center justify-center text-xl font-bold text-blue-600 w-14 h-14 rounded-2xl bg-blue-50">
                   {profile.name.split(' ').map(n => n[0]).join('')}
@@ -789,8 +796,8 @@ const EmployeeDashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-2xl">
-              <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">QUICK ACTIONS</h3>
+            <div className="p-6 bg-white border border-gray-100 shadow-lg rounded-2xl">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">QUICK ACTIONS</h3>
               <div className="grid grid-cols-1 gap-2">
                 <SleekAction
                   icon={<FiCamera />}
@@ -828,7 +835,7 @@ const EmployeeDashboard = () => {
             {/* Charts Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Late Analysis Card */}
-              <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
+              <div className="p-6 bg-white border border-gray-100 shadow-lg rounded-2xl">
                 <div className="flex items-center justify-between gap-4 mb-6 text-slate-900">
                   <div className="flex-1">
                     <h3 className="text-lg font-bold whitespace-nowrap">Late Minutes by Week</h3>
@@ -880,7 +887,7 @@ const EmployeeDashboard = () => {
               </div>
 
               {/* Absent Analysis Card */}
-              <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
+              <div className="p-6 bg-white border border-gray-100 shadow-lg rounded-2xl">
                 <div className="flex items-center justify-between gap-4 mb-6 text-slate-900">
                   <div className="flex-1">
                     <h3 className="text-lg font-bold whitespace-nowrap">Absent Days by Week</h3>
@@ -934,7 +941,7 @@ const EmployeeDashboard = () => {
             </div>
 
             {/* Recent Attendance Registry */}
-            <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-2xl">
+            <div className="p-6 bg-white border border-gray-100 shadow-lg rounded-2xl">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-base font-bold text-slate-900">Recent Attendance Activity</h3>
                 <button
@@ -946,28 +953,28 @@ const EmployeeDashboard = () => {
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-gray-50">
-                      <th className="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">DATE</th>
-                      <th className="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">CHECK IN</th>
-                      <th className="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">CHECK OUT</th>
-                      <th className="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">STATUS</th>
+                  <thead className="bg-gradient-to-r from-green-500 to-blue-600">
+                    <tr>
+                      <th className="px-4 py-3 text-xs font-bold text-white uppercase tracking-wider">DATE</th>
+                      <th className="px-4 py-3 text-xs font-bold text-white uppercase tracking-wider">CHECK IN</th>
+                      <th className="px-4 py-3 text-xs font-bold text-white uppercase tracking-wider">CHECK OUT</th>
+                      <th className="px-4 py-3 text-xs font-bold text-white uppercase tracking-wider text-right">STATUS</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {userAttendance.slice(0, 5).map((record, index) => (
-                      <tr key={index} className="group hover:bg-slate-50/50 transition-colors">
-                        <td className="py-4 text-xs font-bold text-slate-700">
+                      <tr key={index} className="group hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-4 text-sm font-semibold text-slate-700">
                           {new Date(record.checkInTime).toLocaleDateString()}
                         </td>
-                        <td className="py-4 text-xs font-medium text-slate-600">
+                        <td className="px-4 py-4 text-sm font-medium text-slate-600">
                           {record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
                         </td>
-                        <td className="py-4 text-xs font-medium text-slate-600">
+                        <td className="px-4 py-4 text-sm font-medium text-slate-600">
                           {record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
                         </td>
-                        <td className="py-4 text-right">
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${record.status === 'present' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
+                        <td className="px-4 py-4 text-right">
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${record.status === 'present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                             }`}>
                             {record.status}
                           </span>
@@ -995,10 +1002,10 @@ const EmployeeDashboard = () => {
 // MiniDetail Component
 const MiniDetail = ({ label, value, isStatus }) => (
   <div className="flex items-center justify-between py-1 border-b border-gray-50 last:border-0">
-    <span className="text-[11px] font-semibold text-slate-400">{label}</span>
+    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{label}</span>
     {isStatus ? (
-      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">
-        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-100 text-green-800">
+        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
         <span className="text-[10px] font-bold uppercase tracking-wider">Active</span>
       </div>
     ) : (
@@ -1029,7 +1036,7 @@ const SleekAction = ({ icon, title, desc, color, onClick }) => {
       </div>
       <div>
         <h4 className="text-xs font-bold tracking-tight leading-none mb-0.5">{title}</h4>
-        <p className={`text-[9px] font-medium uppercase tracking-wider ${color === 'blue' ? 'opacity-80' : 'text-slate-400'}`}>
+        <p className={`text-[10px] font-semibold uppercase tracking-wider ${color === 'blue' ? 'opacity-80' : 'text-slate-400'}`}>
           {desc}
         </p>
       </div>

@@ -917,7 +917,7 @@ const JobApplicants = () => {
     const fetchApplications = async () => {
         try {
             setLoading(true);
-            const res = await axios.get(`${API_BASE_URL}/applications/all`);
+            const res = await axios.get(`${API_BASE_URL}/applications/all?excludeResigned=true`);
             if (res.data.success) {
                 setApplications(res.data.applications);
             }
@@ -951,6 +951,7 @@ const JobApplicants = () => {
 
         const matchesScore = (app.technicalScore || 0) >= scoreFilter;
         const matchesRole = roleFilter ? (app.jobId?.role === roleFilter) : true;
+        const isNotResigned = app.status !== "Resigned";
 
         let matchesDate = true;
         if (dateFilter) {
@@ -958,7 +959,7 @@ const JobApplicants = () => {
             matchesDate = appDate === dateFilter;
         }
 
-        return matchesSearch && matchesScore && matchesRole && matchesDate;
+        return matchesSearch && matchesScore && matchesRole && matchesDate && isNotResigned;
     });
 
     // Pagination Handlers
@@ -1054,29 +1055,7 @@ const JobApplicants = () => {
         }
     };
 
-    const handleResignationStatusUpdate = async (id, status) => {
-        try {
-            setLoading(true);
-            const res = await axios.post(`${API_BASE_URL}/applications/resignation-approval`, {
-                applicationId: id,
-                status
-            });
-            if (res.data.success) {
-                alert(`Resignation ${status} successfully!`);
-                setApplications((prev) =>
-                    prev.map((app) => (app._id === id ? { ...app, resignationStatus: status } : app))
-                );
-                if (selectedApplicant && selectedApplicant._id === id) {
-                    setSelectedApplicant({ ...selectedApplicant, resignationStatus: status });
-                }
-            }
-        } catch (err) {
-            console.error("Resignation approval error:", err);
-            alert("Failed to update resignation status.");
-        } finally {
-            setLoading(false);
-        }
-    };
+
 
     const Info = ({ label, value }) => (
         <div className="flex justify-between">
@@ -1285,16 +1264,10 @@ const JobApplicants = () => {
                                             <div className="flex flex-col items-center gap-1">
                                                 <span className={`px-2 py-1 rounded-full text-[10px] ${app.status === 'Selected' ? 'bg-green-100 text-green-700' :
                                                     app.status === 'Rejected' ? 'bg-red-100 text-red-700' :
-                                                        app.status === 'Resigned' ? 'bg-orange-100 text-orange-700' :
-                                                            'bg-yellow-100 text-yellow-700'
+                                                        'bg-yellow-100 text-yellow-700'
                                                     }`}>
                                                     {(app.status || "Applied").toUpperCase()}
                                                 </span>
-                                                {app.status === 'Resigned' && app.resignationStatus === 'Pending' && (
-                                                    <span className="text-[8px] font-black text-red-500 animate-pulse uppercase tracking-tighter">
-                                                        Resignation Requested
-                                                    </span>
-                                                )}
                                                 {(app.interviewStatus === 'Invited' || app.interviewStatus === 'Rescheduled') && app.candidateInterviewStatus && app.candidateInterviewStatus !== 'Pending' && (
                                                     <span className={`text-[8px] font-black uppercase tracking-tighter ${app.candidateInterviewStatus === 'Confirmed' ? 'text-indigo-600' : 'text-rose-600'}`}>
                                                         Interview {app.candidateInterviewStatus}
@@ -1622,45 +1595,7 @@ const JobApplicants = () => {
                                 </div>
                             )}
 
-                            {/* Resignation Details */}
-                            {selectedApplicant.status === "Resigned" && (
-                                <div className="mt-6 p-6 bg-red-50 rounded-2xl border border-red-100 space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-bold text-red-800 flex items-center gap-2">
-                                            <FaUserTie className="text-red-500" /> Resignation Request
-                                        </h3>
-                                        <span className={`px-3 py-1 text-[10px] font-bold rounded-full uppercase tracking-widest ${selectedApplicant.resignationStatus === 'Approved' ? 'bg-green-100 text-green-700' :
-                                            selectedApplicant.resignationStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
-                                                'bg-yellow-100 text-yellow-700'
-                                            }`}>
-                                            {selectedApplicant.resignationStatus || 'Pending'}
-                                        </span>
-                                    </div>
 
-                                    {selectedApplicant.resignationLetter && (
-                                        <div className="bg-white p-4 rounded-xl border border-red-100 text-xs text-gray-700 italic leading-relaxed max-h-40 overflow-y-auto">
-                                            "{selectedApplicant.resignationLetter}"
-                                        </div>
-                                    )}
-
-                                    {selectedApplicant.resignationStatus === 'Pending' && (
-                                        <div className="flex gap-3">
-                                            <button
-                                                onClick={() => handleResignationStatusUpdate(selectedApplicant._id, "Approved")}
-                                                className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold uppercase rounded-lg transition-all"
-                                            >
-                                                Approve Resignation
-                                            </button>
-                                            <button
-                                                onClick={() => handleResignationStatusUpdate(selectedApplicant._id, "Rejected")}
-                                                className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold uppercase rounded-lg transition-all"
-                                            >
-                                                Reject Resignation
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
                         </div>
 
                         {/* Footer */}
