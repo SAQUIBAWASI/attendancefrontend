@@ -832,6 +832,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
   const [monthFilter, setMonthFilter] = useState("");
   const [tableFilter, setTableFilter] = useState("All");
   const [stateFilter, setStateFilter] = useState("All States");
+  const [activeLabelYear, setActiveLabelYear] = useState(new Date().getFullYear());
 
   const INDIAN_STATES = [
     "All States", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", 
@@ -857,7 +858,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
       const { data } = await axios.get(`${API_BASE_URL}/holidays/all`);
       const fetchedHolidays = Array.isArray(data) ? data : [];
       
-      const merged = [...fetchedHolidays];
+      let merged = [...fetchedHolidays];
       PRESET_HOLIDAYS_2026.forEach(preset => {
         const exists = fetchedHolidays.find(h => 
           h.fromDate === preset.date && 
@@ -885,7 +886,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isEmployeeView]);
 
   useEffect(() => { fetchHolidays(); }, [fetchHolidays]);
 
@@ -927,7 +928,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                 style={{ color: c.color }}
                 title={match.name}
               >
-                <div className="min-w-[2px] h-[8px] rounded-sm" style={{ backgroundColor: c.color }} />
+                <div className="min-w-[2px] h-[8px] rounded-sm flex-shrink-0" style={{ backgroundColor: c.color }} />
                 <span className="truncate">{match.name.split(" ")[0]}</span>
               </div>
             );
@@ -1062,16 +1063,28 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
   /* ─── Filtered list ─── */
   const stateFilteredHolidays = holidays.filter(h => stateFilter === "All States" || h.state === "All States" || h.state === stateFilter);
 
-  const listed = stateFilteredHolidays
+  // Filter primarily by the globally active year from the calendar view
+  const yearFilteredHolidays = stateFilteredHolidays.filter(h => {
+    try { return new Date(h.fromDate).getFullYear() === activeLabelYear; } catch { return false; }
+  });
+
+  // Define stats collection based exclusively on the active year (and approved status for employee view)
+  let statsHolidays = yearFilteredHolidays;
+  if (isEmployeeView) {
+    statsHolidays = statsHolidays.filter(h => h.isActive === true || (!h.isPreset && h.isActive !== false));
+  }
+
+  const listed = yearFilteredHolidays
     .filter((h) => filter === "All" || h.type === filter)
     .filter((h) =>
       !search || h.name?.toLowerCase().includes(search.toLowerCase()) || h.type?.toLowerCase().includes(search.toLowerCase())
     );
 
-  const tableListed = stateFilteredHolidays
+  const tableListed = yearFilteredHolidays
     .filter((h) => tableFilter === "All" || h.type === tableFilter)
     .filter((h) => !tableSearch || h.name?.toLowerCase().includes(tableSearch.toLowerCase()))
-    .filter((h) => monthFilter === "" || new Date(h.fromDate).getMonth().toString() === monthFilter);
+    .filter((h) => monthFilter === "" || new Date(h.fromDate).getMonth().toString() === monthFilter)
+    .filter((h) => !isEmployeeView || h.isActive === true || (!h.isPreset && h.isActive !== false));
 
   const totalDays = form.fromDate && form.toDate
     ? differenceInDays(parseISO(form.toDate), parseISO(form.fromDate)) + 1
@@ -1116,88 +1129,43 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
 
       <div className="mx-auto max-w-9xl">
 
-        {/* ─── TOP FILTER/CONTROL BAR ─── */}
-        <div className="p-3 mb-4 bg-white rounded-xl shadow-lg border border-gray-100">
-          <div className="flex flex-wrap items-center gap-2">
-
-            {/* Title */}
-            <div className="flex items-center gap-2 pr-3 border-r border-gray-200">
-              <FaCalendarAlt className="text-sm text-blue-600" />
-              <h1 className="text-sm font-bold tracking-widest text-gray-800 uppercase">Holiday Calendar</h1>
+        {/* ─── TOP HEADER BAR ─── */}
+        <div className="p-4 mb-4 rounded-2xl shadow-md flex items-center justify-between overflow-hidden relative bg-gradient-to-r from-[#2cb89d] via-teal-500 to-[#1f68e0] border border-transparent">
+          {/* UI Decals */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl transform translate-x-10 -translate-y-10 pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#1f68e0] opacity-30 rounded-full blur-xl transform -translate-x-5 translate-y-5 pointer-events-none"></div>
+          
+          <div className="relative z-10 flex items-center gap-3 shadow-sm">
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-md border border-white/40 shadow-inner">
+              <FaCalendarAlt className="text-2xl text-white" />
             </div>
-
-            {/* Search */}
-            <div className="relative flex-1 min-w-[180px]">
-              <FaSearch className="absolute text-xs text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
-              <input
-                type="text"
-                placeholder="Search holiday name or type..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-7 pr-8 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
-              />
-              {search && (
-                <FaTimes
-                  className="absolute text-xs text-gray-400 transform -translate-y-1/2 cursor-pointer right-2 top-1/2 hover:text-red-500"
-                  onClick={() => setSearch("")}
-                />
-              )}
+            <div className="flex flex-col">
+              <h1 className="text-2xl font-black tracking-widest text-white uppercase drop-shadow-md leading-tight">Holiday Calendar</h1>
+              <p className="text-[10px] font-bold text-teal-50 tracking-[0.2em] uppercase opacity-90 drop-shadow-sm">Company Approved Festivals & Occasions</p>
             </div>
-
-            {/* State Filter Dropdown */}
-            <select
-              value={stateFilter}
-              onChange={(e) => setStateFilter(e.target.value)}
-              className="h-7 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none bg-white text-gray-700 font-medium min-w-[120px]"
-            >
-              {INDIAN_STATES.map((state) => (
-                <option key={state} value={state}>{state}</option>
-              ))}
-            </select>
-
-            {/* Category Filter */}
-            <div className="flex flex-wrap items-center gap-1">
-              {["All", ...CATEGORIES.map((c) => c.key)].map((key) => {
-                const c = CATEGORIES.find((x) => x.key === key);
-                const active = filter === key;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setFilter(key)}
-                    className={`h-7 px-2 text-[10px] font-bold rounded-md transition border ${
-                      active
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                    }`}
-                  >
-                    {c?.label || "All"}
-                  </button>
-                );
-              })}
+          </div>
+          
+          <div className="relative z-10 hidden sm:flex items-center gap-3">
+            <div className="px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-[11px] font-black text-white shadow-inner flex items-center gap-2 uppercase tracking-widest">
+              Year <span className="px-2 py-0.5 rounded-md bg-white text-[#1f68e0] font-black shadow-sm">{activeLabelYear}</span>
             </div>
-
-            {/* Count badge */}
-            <div className="flex items-center gap-1 border border-blue-200 bg-blue-50 rounded-lg px-2 h-7">
-              <span className="text-[10px] font-bold text-blue-600 uppercase">Total:</span>
-              <span className="text-xs font-black text-blue-700">{listed.length}</span>
-            </div>
-
-            {/* Sync */}
-            <button
-              onClick={() => { setSearch(""); setFilter("All"); fetchHolidays(); }}
-              className="flex items-center gap-1 h-7 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-            >
-              <FaSync className={`text-[10px] ${loading ? "animate-spin" : ""}`} /> Sync
-            </button>
-
-            {/* Add Holiday */}
             {isAdmin && (
-              <button
-                onClick={openNewForm}
-                className="flex items-center gap-1 h-7 px-3 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
-              >
-                + Add Holiday
-              </button>
+              <div className="flex items-center gap-3 pl-3 border-l border-white/20">
+                <button
+                  onClick={() => { fetchHolidays(); }}
+                  className="flex items-center justify-center w-8 h-8 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 rounded-lg text-white transition disabled:opacity-50"
+                  title="Sync Data"
+                  disabled={loading}
+                >
+                  <FaSync className={`text-[12px] ${loading ? "animate-spin" : ""}`} />
+                </button>
+                <button
+                  onClick={openNewForm}
+                  className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-[11px] font-black text-white uppercase tracking-widest rounded-xl transition shadow-lg flex items-center gap-2 hover:scale-105 transform active:scale-95"
+                >
+                  <span className="text-[14px] leading-none">+</span> Add Holiday
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -1221,6 +1189,10 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
               <Calendar
                 onClickDay={onDayClick}
                 value={calDate}
+                onActiveStartDateChange={({ activeStartDate }) => {
+                  setCalDate(activeStartDate);
+                  setActiveLabelYear(activeStartDate.getFullYear());
+                }}
                 tileClassName={getTileClass}
                 tileContent={getTileContent}
                 next2Label={null}
@@ -1402,12 +1374,12 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
             <div className="grid grid-cols-2 gap-2">
               <div className="px-3 py-2 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg text-white shadow-md flex items-center justify-between">
                 <p className="text-[9px] font-black uppercase tracking-widest text-white/70">Total Holidays</p>
-                <h3 className="text-xl font-black">{holidays.length}</h3>
+                <h3 className="text-xl font-black">{statsHolidays.length}</h3>
               </div>
               <div className="px-3 py-2 bg-white rounded-lg border border-gray-100 shadow-md flex items-center justify-between">
                 <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Upcoming</p>
                 <h3 className="text-xl font-black text-green-600">
-                  {holidays.filter((h) => { try { return parseISO(h.fromDate) >= startOfDay(new Date()); } catch { return false; } }).length}
+                  {statsHolidays.filter((h) => { try { return parseISO(h.fromDate) >= startOfDay(new Date()); } catch { return false; } }).length}
                 </h3>
               </div>
             </div>
@@ -1417,7 +1389,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
               <h3 className="text-xs font-black text-gray-700 uppercase tracking-widest mb-3">By Category</h3>
               <div className="space-y-2">
                 {CATEGORIES.map((c) => {
-                  const count = holidays.filter((h) => h.type === c.key).length;
+                  const count = statsHolidays.filter((h) => h.type === c.key).length;
                   return (
                     <div key={c.key} className="flex items-center gap-2.5">
                       <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: c.light, color: c.color }}>
@@ -1431,7 +1403,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                         <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full"
-                            style={{ width: holidays.length ? `${(count / holidays.length) * 100}%` : "0%", backgroundColor: c.color }}
+                            style={{ width: statsHolidays.length ? `${(count / statsHolidays.length) * 100}%` : "0%", backgroundColor: c.color }}
                           />
                         </div>
                       </div>
@@ -1531,7 +1503,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                   <th className="px-3 py-3 text-center">From Date</th>
                   <th className="px-3 py-3 text-center">To Date</th>
                   <th className="px-3 py-3 text-center">Days</th>
-                  <th className="px-3 py-3 text-center">Given</th>
+                  {isAdmin && <th className="px-3 py-3 text-center">Given</th>}
                   {isAdmin && <th className="px-3 py-3 text-center">Actions</th>}
                 </tr>
               </thead>
@@ -1539,7 +1511,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={isAdmin ? 7 : 6} className="px-2 py-6 text-center">
+                    <td colSpan={isAdmin ? 9 : 7} className="px-2 py-6 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                         <span className="text-xs font-bold text-gray-400 tracking-widest">LOADING…</span>
@@ -1584,14 +1556,16 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                             {hol.totalDays} day{hol.totalDays > 1 ? "s" : ""}
                           </span>
                         </td>
-                        <td className="px-3 py-3 text-center border-b border-gray-100">
-                          <button
-                            onClick={() => handleToggleActive(hol)}
-                            className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${hol.isActive === false ? 'bg-red-100 text-red-700 hover:bg-red-200' : (hol.isActive === null ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-green-100 text-green-700 hover:bg-green-200')}`}
-                          >
-                            {hol.isActive === false ? "SKIPPED" : (hol.isActive === null ? "DECIDE" : "YES")}
-                          </button>
-                        </td>
+                        {isAdmin && (
+                          <td className="px-3 py-3 text-center border-b border-gray-100">
+                            <button
+                              onClick={() => handleToggleActive(hol)}
+                              className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${hol.isActive === false ? 'bg-red-100 text-red-700 hover:bg-red-200' : (hol.isActive === null ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-green-100 text-green-700 hover:bg-green-200')}`}
+                            >
+                              {hol.isActive === false ? "SKIPPED" : (hol.isActive === null ? "DECIDE" : "YES")}
+                            </button>
+                          </td>
+                        )}
                         {isAdmin && (
                           <td className="px-3 py-3 text-center whitespace-nowrap border-b border-gray-100">
                             <div className="flex items-center justify-center gap-2">
@@ -1619,15 +1593,25 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                       </tr>
                     );
                   })
-                ) : (
-                  <tr>
-                    <td colSpan={isAdmin ? 9 : 8} className="px-2 py-8 text-center text-xs text-gray-500 font-bold">
-                      No holidays found.{isAdmin && " Click any date on the calendar to add one!"}
-                    </td>
-                  </tr>
-                )}
+                ) : null}
               </tbody>
             </table>
+
+            {!loading && tableListed.length === 0 && (
+              <div className="flex flex-col items-center justify-center p-12 bg-white">
+                <div className="w-20 h-20 mb-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full flex items-center justify-center border border-blue-100 shadow-sm">
+                  <span className="text-4xl text-blue-500">🏖️</span>
+                </div>
+                <h3 className="text-lg font-black text-gray-800 mb-1 tracking-wide uppercase">
+                  No Holidays Found
+                </h3>
+                <p className="text-xs font-bold text-gray-500 text-center max-w-sm leading-relaxed">
+                  {isAdmin 
+                    ? "Click any date on the calendar above to declare a new holiday for your team!"
+                    : "No company holidays have been declared at the moment. Please check back later!"}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
