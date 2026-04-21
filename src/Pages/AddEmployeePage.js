@@ -6355,6 +6355,28 @@ const AddEmployeePage = () => {
     }
   };
 
+  const parseTime = (timeStr) => {
+    const match = timeStr.trim().match(/(\d{1,2})[:.](\d{2})\s*(AM|PM|am|pm)?/i);
+    if (!match) return null;
+    let hours = parseInt(match[1]);
+    const minutes = match[2];
+    const ampm = match[3] ? match[3].toUpperCase() : null;
+    
+    if (ampm === "PM" && hours < 12) hours += 12;
+    if (ampm === "AM" && hours === 12) hours = 0;
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes}`;
+  };
+
+  const calculateHours = (start, end) => {
+    if (!start || !end) return 8; 
+    const [startH, startM] = start.split(':').map(Number);
+    const [endH, endM] = end.split(':').map(Number);
+    let diff = (endH + endM / 60) - (startH + startM / 60);
+    if (diff < 0) diff += 24; 
+    return Math.round(diff * 100) / 100;
+  };
+
   const handleShiftChange = (selectedShift) => {
     if (selectedShift === "ADD_NEW") {
       setShowShiftModal(true);
@@ -6367,10 +6389,19 @@ const AddEmployeePage = () => {
         if (selectedShiftData && selectedShiftData.timeSlots && selectedShiftData.timeSlots.length > 0) {
           const firstSlot = selectedShiftData.timeSlots[0];
           const timeRange = firstSlot.timeRange;
-          const times = timeRange.split('-').map(t => t.trim());
-          if (times.length === 2) {
-            setShiftStartTime(times[0]);
-            setShiftEndTime(times[1]);
+          
+          let parts = timeRange.split(/[-]| to /i).map(t => t.trim());
+          if (parts.length >= 2) {
+            const parsedStart = parseTime(parts[0]);
+            const parsedEnd = parseTime(parts[1]);
+            
+            if (parsedStart && parsedEnd) {
+              setShiftStartTime(parsedStart);
+              setShiftEndTime(parsedEnd);
+              
+              const hours = calculateHours(parsedStart, parsedEnd);
+              setShiftHours(hours.toString());
+            }
           }
         }
       }
@@ -7103,7 +7134,6 @@ const AddEmployeePage = () => {
                 value={shiftType}
                 onChange={(e) => handleShiftChange(e.target.value)}
                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                required
               >
                 <option value="">Select Shift</option>
                 {shiftList && shiftList.length > 0 ? (
@@ -7123,35 +7153,33 @@ const AddEmployeePage = () => {
               <>
                 <div>
                   <label className="block mb-1 text-sm font-medium text-gray-700">
-                    Start Time *
+                    Start Time
                   </label>
                   <input
                     type="time"
                     value={shiftStartTime}
                     onChange={(e) => setShiftStartTime(e.target.value)}
                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
-                    required
                     readOnly
                   />
                 </div>
 
                 <div>
                   <label className="block mb-1 text-sm font-medium text-gray-700">
-                    End Time *
+                    End Time
                   </label>
                   <input
                     type="time"
                     value={shiftEndTime}
                     onChange={(e) => setShiftEndTime(e.target.value)}
                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
-                    required
                     readOnly
                   />
                 </div>
 
                 <div>
                   <label className="block mb-1 text-sm font-medium text-gray-700">
-                    Shift Hours/Day *
+                    Shift Hours/Day
                   </label>
                   <input 
                     type="number" 
@@ -7160,7 +7188,6 @@ const AddEmployeePage = () => {
                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                     min="1"
                     max="24"
-                    required 
                   />
                 </div>
               </>
