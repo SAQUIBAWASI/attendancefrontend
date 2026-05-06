@@ -55,7 +55,7 @@ const ProductList = () => {
   ];
 
   return (
-    <div className="p-6 bg-white rounded shadow">
+    <div className="p-6 bg-[#0a0a0a] rounded shadow">
       <h3 className="text-lg font-bold mb-4">Product List - Vegetarian Food Items</h3>
       <table className="min-w-full border-collapse">
         <thead className="bg-green-100">

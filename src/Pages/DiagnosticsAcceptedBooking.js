@@ -87,7 +87,7 @@ const DiagnosticsAcceptedBooking = () => {
 
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-gray-500 bg-opacity-50">
-        <div className="bg-white p-6 rounded shadow-md w-96">
+        <div className="bg-[#0a0a0a] p-6 rounded shadow-md w-96">
           <h3 className="text-lg font-semibold mb-4">Upload Prescription for {selectedBooking.patient_name}</h3>
           <div className="mb-4">
             <input
@@ -106,7 +106,7 @@ const DiagnosticsAcceptedBooking = () => {
             </button>
             <button
               onClick={() => setShowModal(false)}
-              className="ml-2 px-4 py-2 bg-gray-300 text-black rounded-md hover:bg-gray-400"
+              className="ml-2 px-4 py-2 bg-gray-300 text-white rounded-md hover:bg-gray-400"
             >
               Close
             </button>
@@ -117,7 +117,7 @@ const DiagnosticsAcceptedBooking = () => {
   };
 
   return (
-    <div className="p-4 bg-white rounded shadow">
+    <div className="p-4 bg-[#0a0a0a] rounded shadow">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Diagnostics Accepted Bookings</h2>
       </div>
@@ -140,7 +140,7 @@ const DiagnosticsAcceptedBooking = () => {
 
       <div className="overflow-x-auto">
         <table className="w-full border rounded text-sm">
-          <thead className="bg-gray-200">
+          <thead className="bg-[#1f2937]">
             <tr>
               <th className="p-2 border">Patient</th>
               <th className="p-2 border">Age</th>
@@ -160,7 +160,7 @@ const DiagnosticsAcceptedBooking = () => {
           </thead>
           <tbody>
             {filteredBookings.map((booking) => (
-              <tr key={booking.bookingId} className="hover:bg-gray-50 border-b">
+              <tr key={booking.bookingId} className="hover:bg-[#000000] border-b">
                 <td className="p-2 border">{booking.patient_name}</td>
                 <td className="p-2 border">{booking.patient_age || booking.age || "N/A"}</td>
                 <td className="p-2 border">{booking.patient_gender || booking.gender || "N/A"}</td>

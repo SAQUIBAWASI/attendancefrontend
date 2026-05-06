@@ -124,7 +124,7 @@ const CompanyStaffHistory = () => {
   };
 
   return (
-    <div className="p-4 bg-white rounded shadow">
+    <div className="p-4 bg-[#0a0a0a] rounded shadow">
     <div className="flex justify-between items-center mb-4">
   {/* Content on the left */}
   
@@ -163,7 +163,7 @@ const CompanyStaffHistory = () => {
                 </thead>
                 <tbody>
                   {currentWalletTransactions.map((txn, index) => (
-                    <tr key={index} className="hover:bg-gray-100">
+                    <tr key={index} className="hover:bg-[#111111]">
                       <td className="p-2 border capitalize">{txn.type}</td>
                       <td className="p-2 border">₹{txn.amount}</td>
                       <td className="p-2 border">{txn.description}</td>
@@ -217,7 +217,7 @@ const CompanyStaffHistory = () => {
             </thead>
             <tbody>
               {appointments.map((appointment) => (
-                <tr key={appointment.appointmentId} className="hover:bg-gray-100">
+                <tr key={appointment.appointmentId} className="hover:bg-[#111111]">
                   <td className="p-2 border">{appointment.doctor_name}</td>
                   <td className="p-2 border">{appointment.doctor_specialization}</td>
                   <td className="p-2 border">
@@ -256,7 +256,7 @@ const CompanyStaffHistory = () => {
             </thead>
             <tbody>
               {currentDiagnosticBookings.map((booking) => (
-                <tr key={booking.bookingId} className="hover:bg-gray-100">
+                <tr key={booking.bookingId} className="hover:bg-[#111111]">
                   <td className="p-2 border">{booking.bookingId}</td>
                   <td className="p-2 border">{booking.patient_name}</td>
                   <td className="p-2 border">{booking.diagnostic_name || "N/A"}</td>

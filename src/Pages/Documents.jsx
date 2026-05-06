@@ -72,7 +72,7 @@
 //   };
 
 //   if (loading) return (
-//     <div className="min-h-screen flex items-center justify-center bg-slate-50">
+//     <div className="min-h-screen flex items-center justify-center bg-[#000000]">
 //       <div className="flex flex-col items-center gap-4">
 //         <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
 //         <p className="text-slate-500 font-medium text-sm">Loading Secure Vault...</p>
@@ -81,11 +81,11 @@
 //   );
 
 //   return (
-//     <div className="min-h-screen bg-slate-50 p-6 md:p-8">
+//     <div className="min-h-screen bg-[#000000] p-6 md:p-8">
 //       {/* Header */}
 //       <div className="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
 //         <div>
-//           <h1 className="text-2xl font-black text-slate-800 tracking-tight">Document Verification</h1>
+//           <h1 className="text-2xl font-black text-slate-300 tracking-tight">Document Verification</h1>
 //           <p className="text-slate-500 text-sm mt-1">Review and approve signed candidate agreements</p>
 //         </div>
 
@@ -96,7 +96,7 @@
 //           </div>
 //           <input
 //             type="text"
-//             className="block w-full pl-10 pr-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition-all placeholder:text-slate-400"
+//             className="block w-full pl-10 pr-3 py-2.5 bg-[#0a0a0a] border border-[#1f2937] rounded-lg text-sm text-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition-all placeholder:text-slate-400"
 //             placeholder="Search candidates, roles..."
 //             value={searchQuery}
 //             onChange={(e) => setSearchQuery(e.target.value)}
@@ -106,7 +106,7 @@
 
 //       {/* Stats Cards */}
 //       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
-//         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+//         <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-sm border border-[#1f2937] flex items-center justify-between">
 //           <div>
 //             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Pending Review</p>
 //             <h3 className="text-3xl font-black text-orange-500 mt-1">{documents.filter(d => d.docReviewStatus === 'Pending').length}</h3>
@@ -115,7 +115,7 @@
 //             <FaFilter size={20} />
 //           </div>
 //         </div>
-//         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+//         <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-sm border border-[#1f2937] flex items-center justify-between">
 //           <div>
 //             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Verified</p>
 //             <h3 className="text-3xl font-black text-green-500 mt-1">{documents.filter(d => d.docReviewStatus === 'Accepted').length}</h3>
@@ -124,7 +124,7 @@
 //             <FaCheckCircle size={20} />
 //           </div>
 //         </div>
-//         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+//         <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-sm border border-[#1f2937] flex items-center justify-between">
 //           <div>
 //             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Uploads</p>
 //             <h3 className="text-3xl font-black text-indigo-500 mt-1">{documents.length}</h3>
@@ -136,10 +136,10 @@
 //       </div>
 
 //       {/* Documents Table */}
-//       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+//       <div className="bg-[#0a0a0a] rounded-xl shadow-sm border border-[#1f2937] overflow-hidden">
 //         <div className="overflow-x-auto">
 //           <table className="w-full text-left border-collapse">
-//             <thead className="bg-slate-50/50 border-b border-slate-200">
+//             <thead className="bg-[#000000]/50 border-b border-[#1f2937]">
 //               <tr>
 //                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Candidate</th>
 //                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Role</th>
@@ -150,26 +150,26 @@
 //             </thead>
 //             <tbody className="divide-y divide-slate-100">
 //               {filteredDocs.length > 0 ? filteredDocs.map((doc) => (
-//                 <tr key={doc._id} className="hover:bg-slate-50 transition-colors group">
+//                 <tr key={doc._id} className="hover:bg-[#000000] transition-colors group">
 //                   <td className="px-6 py-4">
 //                     <div className="flex items-center gap-3">
 //                       <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-sm">
 //                         {doc.firstName?.charAt(0)}{doc.lastName?.charAt(0)}
 //                       </div>
 //                       <div>
-//                         <p className="text-sm font-bold text-slate-800">{doc.firstName} {doc.lastName}</p>
+//                         <p className="text-sm font-bold text-slate-300">{doc.firstName} {doc.lastName}</p>
 //                         <p className="text-xs text-slate-500">{doc.email}</p>
 //                       </div>
 //                     </div>
 //                   </td>
 //                   <td className="px-6 py-4">
-//                     <div className="flex items-center gap-2 text-slate-600">
+//                     <div className="flex items-center gap-2 text-slate-400">
 //                       <FaBriefcase className="text-slate-400" size={12} />
 //                       <span className="text-sm font-medium">{doc.jobId?.role}</span>
 //                     </div>
 //                   </td>
 //                   <td className="px-6 py-4">
-//                     <div className="flex items-center gap-2 text-slate-600">
+//                     <div className="flex items-center gap-2 text-slate-400">
 //                       <FaCalendarAlt className="text-slate-400" size={12} />
 //                       <span className="text-sm">{new Date(doc.updatedAt).toLocaleDateString()}</span>
 //                     </div>
@@ -200,7 +200,7 @@
 //                       {/* Quick Actions (only if pending) */}
 //                       {doc.docReviewStatus === 'Pending' && (
 //                         <>
-//                           <div className="w-px h-4 bg-slate-200 mx-1"></div>
+//                           <div className="w-px h-4 bg-[#1f2937] mx-1"></div>
 //                           <button
 //                             onClick={() => handleReview(doc._id, 'Accepted')}
 //                             className="p-2 text-green-500 hover:bg-green-50 rounded-lg transition-all"
@@ -240,11 +240,11 @@
 //       {/* Document Viewer Modal */}
 //       {isModalOpen && selectedDoc && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-//           <div className="bg-white w-full max-w-5xl h-[85vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+//           <div className="bg-[#0a0a0a] w-full max-w-5xl h-[85vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
 //             {/* Modal Header */}
 //             <div className="px-6 py-4 bg-slate-900 text-white flex justify-between items-center shrink-0">
 //               <div className="flex items-center gap-4">
-//                 <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+//                 <div className="w-10 h-10 bg-[#0a0a0a]/10 rounded-lg flex items-center justify-center">
 //                   <FaFilePdf />
 //                 </div>
 //                 <div>
@@ -254,14 +254,14 @@
 //               </div>
 //               <button
 //                 onClick={() => setIsModalOpen(false)}
-//                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+//                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#0a0a0a]/10 transition-colors"
 //               >
 //                 <FaTimesCircle size={20} />
 //               </button>
 //             </div>
 
 //             {/* Modal Body - PDF Viewer */}
-//             <div className="flex-1 bg-slate-100 overflow-hidden relative">
+//             <div className="flex-1 bg-[#111111] overflow-hidden relative">
 //               <iframe
 //                 src={`${API_BASE_URL.replace('/api', '')}/${selectedDoc.candidateAgreementsUpload}`}
 //                 className="w-full h-full"
@@ -270,7 +270,7 @@
 //             </div>
 
 //             {/* Modal Footer - Actions */}
-//             <div className="px-6 py-4 bg-white border-t border-slate-200 flex justify-between items-center shrink-0">
+//             <div className="px-6 py-4 bg-[#0a0a0a] border-t border-[#1f2937] flex justify-between items-center shrink-0">
 //               <div className="flex items-center gap-2">
 //                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Current Status:</span>
 //                 {getStatusBadge(selectedDoc.docReviewStatus)}
@@ -279,7 +279,7 @@
 //               <div className="flex gap-3">
 //                 <button
 //                   onClick={() => window.open(`${API_BASE_URL.replace('/api', '')}/${selectedDoc.candidateAgreementsUpload}`, '_blank')}
-//                   className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors"
+//                   className="px-4 py-2 border border-slate-300 text-slate-300 rounded-lg text-sm font-bold hover:bg-[#000000] transition-colors"
 //                 >
 //                   Download PDF
 //                 </button>
@@ -493,7 +493,7 @@ const Documents = () => {
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
       <div className="flex flex-col items-center gap-4">
         <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
         <p className="text-slate-500 font-medium text-sm">Loading Secure Vault...</p>
@@ -502,17 +502,17 @@ const Documents = () => {
   );
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-6 lg:p-8">
+    <div className="w-full min-h-screen bg-gradient-to-br from-[#000000] to-[#0a0a0a] p-4 md:p-6 lg:p-8">
       {/* Header */}
       <div className="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">Document Verification</h1>
+          <h1 className="text-xl font-bold text-gray-300">Document Verification</h1>
           <p className="text-slate-500 text-xs mt-1">Review and approve signed candidate agreements</p>
         </div>
       </div>
 
       {/* Filters Section */}
-      <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+      <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
         <div className="flex flex-wrap items-center gap-2">
 
           {/* Search Bar */}
@@ -523,14 +523,14 @@ const Documents = () => {
               placeholder="Search candidates, roles..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           {/* Status Filter */}
           <div className="relative w-[130px]">
             <select
-              className="w-full pl-2 pr-6 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent appearance-none"
+              className="w-full pl-2 pr-6 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent appearance-none"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -554,7 +554,7 @@ const Documents = () => {
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
               onClick={(e) => e.target.showPicker && e.target.showPicker()}
-              className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-12 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
@@ -562,7 +562,7 @@ const Documents = () => {
           {(searchQuery || statusFilter || dateFilter) && (
             <button
               onClick={resetFilters}
-              className="h-8 px-3 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition"
+              className="h-8 px-3 text-xs font-medium text-gray-400 bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937] transition"
             >
               Clear
             </button>
@@ -572,7 +572,7 @@ const Documents = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+        <div className="bg-[#0a0a0a] p-4 rounded-xl shadow-sm border border-[#1f2937] flex items-center justify-between">
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pending Review</p>
             <h3 className="text-2xl font-black text-orange-500 mt-1">{documents.filter(d => d.docReviewStatus === 'Pending').length}</h3>
@@ -581,7 +581,7 @@ const Documents = () => {
             <FaFilter size={16} />
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+        <div className="bg-[#0a0a0a] p-4 rounded-xl shadow-sm border border-[#1f2937] flex items-center justify-between">
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Verified</p>
             <h3 className="text-2xl font-black text-green-500 mt-1">{documents.filter(d => d.docReviewStatus === 'Accepted').length}</h3>
@@ -590,7 +590,7 @@ const Documents = () => {
             <FaCheckCircle size={16} />
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+        <div className="bg-[#0a0a0a] p-4 rounded-xl shadow-sm border border-[#1f2937] flex items-center justify-between">
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Uploads</p>
             <h3 className="text-2xl font-black text-indigo-500 mt-1">{documents.length}</h3>
@@ -602,10 +602,10 @@ const Documents = () => {
       </div>
 
       {/* Documents Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-[#0a0a0a] rounded-xl shadow-sm border border-[#1f2937] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-50/50 border-b border-slate-200">
+            <thead className="bg-[#000000]/50 border-b border-[#1f2937]">
               <tr>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center">Candidate</th>
                 <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center">Role</th>
@@ -616,26 +616,26 @@ const Documents = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {currentItems.length > 0 ? currentItems.map((doc) => (
-                <tr key={doc._id} className="hover:bg-slate-50 transition-colors group">
+                <tr key={doc._id} className="hover:bg-[#000000] transition-colors group">
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-3">
                       <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs">
                         {doc.firstName?.charAt(0)}{doc.lastName?.charAt(0)}
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-slate-800">{doc.firstName} {doc.lastName}</p>
+                        <p className="text-xs font-bold text-slate-300">{doc.firstName} {doc.lastName}</p>
                         <p className="text-[10px] text-slate-500">{doc.email}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-2 text-slate-600">
+                    <div className="flex items-center justify-center gap-2 text-slate-400">
                       <FaBriefcase className="text-slate-400" size={10} />
                       <span className="text-xs font-medium">{doc.jobId?.role}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-2 text-slate-600">
+                    <div className="flex items-center justify-center gap-2 text-slate-400">
                       <FaCalendarAlt className="text-slate-400" size={10} />
                       <span className="text-xs">{new Date(doc.updatedAt).toLocaleDateString()}</span>
                     </div>
@@ -666,7 +666,7 @@ const Documents = () => {
                       {/* Quick Actions (only if pending) */}
                       {doc.docReviewStatus === 'Pending' && (
                         <>
-                          <div className="w-px h-4 bg-slate-200 mx-1"></div>
+                          <div className="w-px h-4 bg-[#1f2937] mx-1"></div>
                           <button
                             onClick={() => handleReview(doc._id, 'Accepted')}
                             className="p-1.5 text-green-500 hover:bg-green-50 rounded-lg transition-all"
@@ -704,8 +704,8 @@ const Documents = () => {
         
         {/* Pagination */}
         {filteredDocs.length > 0 && (
-          <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
-            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
+          <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-[#1f2937] bg-[#000000] sm:flex-row">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-300">
               <span>Showing</span>
               <span className="font-medium">
                 {indexOfFirstItem + 1}
@@ -741,8 +741,8 @@ const Documents = () => {
                 disabled={pagination.currentPage === 1}
                 className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                   pagination.currentPage === 1
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    ? "bg-[#111111] text-gray-400 cursor-not-allowed"
+                    : "bg-[#0a0a0a] text-gray-300 border-[#374151] hover:bg-[#000000]"
                 }`}
               >
                 Previous
@@ -759,7 +759,7 @@ const Documents = () => {
                         ? "text-gray-500 cursor-default"
                         : pagination.currentPage === page
                         ? "bg-blue-600 text-white"
-                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                        : "bg-[#0a0a0a] text-gray-300 border border-[#374151] hover:bg-[#000000]"
                     }`}
                   >
                     {page}
@@ -772,8 +772,8 @@ const Documents = () => {
                 disabled={pagination.currentPage === pagination.totalPages}
                 className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                   pagination.currentPage === pagination.totalPages
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    ? "bg-[#111111] text-gray-400 cursor-not-allowed"
+                    : "bg-[#0a0a0a] text-gray-300 border-[#374151] hover:bg-[#000000]"
                 }`}
               >
                 Next
@@ -786,10 +786,10 @@ const Documents = () => {
       {/* Document Viewer Modal */}
       {isModalOpen && selectedDoc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-5xl h-[85vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="bg-[#0a0a0a] w-full max-w-5xl h-[85vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="px-6 py-4 bg-slate-900 text-white flex justify-between items-center shrink-0">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-[#0a0a0a]/10 rounded-lg flex items-center justify-center">
                   <FaFilePdf />
                 </div>
                 <div>
@@ -799,13 +799,13 @@ const Documents = () => {
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#0a0a0a]/10 transition-colors"
               >
                 <FaTimes size={20} />
               </button>
             </div>
 
-            <div className="flex-1 bg-slate-100 overflow-hidden relative">
+            <div className="flex-1 bg-[#111111] overflow-hidden relative">
               <iframe
                 src={`${API_BASE_URL.replace('/api', '')}/${selectedDoc.candidateAgreementsUpload}`}
                 className="w-full h-full"
@@ -813,7 +813,7 @@ const Documents = () => {
               />
             </div>
 
-            <div className="px-6 py-4 bg-white border-t border-slate-200 flex justify-between items-center shrink-0">
+            <div className="px-6 py-4 bg-[#0a0a0a] border-t border-[#1f2937] flex justify-between items-center shrink-0">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Status:</span>
                 {getStatusBadge(selectedDoc.docReviewStatus)}
@@ -822,7 +822,7 @@ const Documents = () => {
               <div className="flex gap-3">
                 <button
                   onClick={() => window.open(`${API_BASE_URL.replace('/api', '')}/${selectedDoc.candidateAgreementsUpload}`, '_blank')}
-                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors"
+                  className="px-4 py-2 border border-slate-300 text-slate-300 rounded-lg text-sm font-bold hover:bg-[#000000] transition-colors"
                 >
                   Download PDF
                 </button>

@@ -90,7 +90,7 @@ const DiagnosticsPendingBooking = () => {
   };
 
   return (
-    <div className="p-4 bg-white rounded shadow">
+    <div className="p-4 bg-[#0a0a0a] rounded shadow">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Diagnostics Booking List (Pending)</h2>
       </div>
@@ -121,7 +121,7 @@ const DiagnosticsPendingBooking = () => {
 
       <div className="overflow-x-auto">
         <table className="w-full border rounded text-sm">
-          <thead className="bg-gray-200">
+          <thead className="bg-[#1f2937]">
             <tr>
               <th className="p-2 border">Patient</th>
               <th className="p-2 border">Age</th>
@@ -141,7 +141,7 @@ const DiagnosticsPendingBooking = () => {
           </thead>
           <tbody>
             {filteredBookings.map((booking) => (
-              <tr key={booking.bookingId} className="hover:bg-gray-50 border-b">
+              <tr key={booking.bookingId} className="hover:bg-[#000000] border-b">
                 <td className="p-2 border">{booking.patient_name}</td>
                 <td className="p-2 border">{booking.patient_age}</td>
                 <td className="p-2 border">{booking.patient_gender}</td>
@@ -182,7 +182,7 @@ const DiagnosticsPendingBooking = () => {
       {/* Status Update Modal */}
       {editBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded shadow-md w-96">
+          <div className="bg-[#0a0a0a] p-6 rounded shadow-md w-96">
             <h3 className="text-lg font-semibold mb-4">Update Status</h3>
             <select
               className="w-full p-2 border rounded mb-4"

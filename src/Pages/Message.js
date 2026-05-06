@@ -121,9 +121,9 @@ export default function MessagesTable() {
             </div>
 
             <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border border-gray-200 shadow-md rounded-lg">
+                <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-lg">
                     <thead>
-                        <tr className="bg-gray-100 text-center">
+                        <tr className="bg-[#111111] text-center">
                             <th className="p-3 border">Sl</th>
                             <th className="p-3 border">Sender</th>
                             <th className="p-3 border">Subject</th>
@@ -134,7 +134,7 @@ export default function MessagesTable() {
                     </thead>
                     <tbody>
                         {displayedMessages.map((msg) => (
-                            <tr key={msg.id} className="cursor-pointer hover:bg-gray-50 text-center">
+                            <tr key={msg.id} className="cursor-pointer hover:bg-[#000000] text-center">
                                 <td className="p-3 border">{msg.id}</td>
                                 <td className="p-3 border">{msg.sender}</td>
                                 <td className="p-3 border">{msg.subject}</td>
@@ -168,7 +168,7 @@ export default function MessagesTable() {
 
             {deleteMessageId !== null && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+                    <div className="bg-[#0a0a0a] p-6 rounded-lg shadow-lg w-96 text-center">
                         <h2 className="text-lg font-bold mb-4 text-red-900">Are you sure?</h2>
                         <p>You want to delete this message.</p>
                         <div className="mt-4">
@@ -192,7 +192,7 @@ export default function MessagesTable() {
             {/* Edit Message Modal */}
             {isModalOpen && currentMessage && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                    <div className="bg-[#0a0a0a] p-6 rounded-lg shadow-lg w-96">
                         <h2 className="text-sm font-bold mb-4 text-purple-600">Edit Message</h2>
 
                         <label className="block mb-2 text-sm">
@@ -248,7 +248,7 @@ export default function MessagesTable() {
             {/* New Message Modal */}
             {showNewMessageModal && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                    <div className="bg-[#0a0a0a] p-6 rounded-lg shadow-lg w-96">
                         <h2 className="text-sm font-bold mb-4 text-purple-600">New Message</h2>
                         <input
                             type="text"

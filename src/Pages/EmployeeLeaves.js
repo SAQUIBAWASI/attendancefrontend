@@ -481,7 +481,7 @@ const EmployeeLeaves = () => {
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-          <p className="text-lg font-semibold text-gray-700">Loading your leave records...</p>
+          <p className="text-lg font-semibold text-gray-300">Loading your leave records...</p>
         </div>
       </div>
     );
@@ -490,7 +490,7 @@ const EmployeeLeaves = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
-        <div className="max-w-md p-8 text-center bg-white border border-red-200 shadow-lg rounded-2xl">
+        <div className="max-w-md p-8 text-center bg-[#0a0a0a] border border-red-200 shadow-lg rounded-2xl">
           <div className="mb-4 text-4xl text-red-500">❌</div>
           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
           <button
@@ -527,7 +527,7 @@ const EmployeeLeaves = () => {
         )}
 
         {/* Filters Section */}
-        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+        <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
             
             <div className="relative flex-1 min-w-[180px]">
@@ -537,29 +537,29 @@ const EmployeeLeaves = () => {
                 placeholder="Search by type, reason, status..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="date"
                 value={selectedDate}
                 onChange={handleDateChange}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="month"
                 value={selectedMonth}
                 onChange={handleMonthChange}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -582,14 +582,14 @@ const EmployeeLeaves = () => {
             {(searchTerm || selectedDate || selectedMonth) && (
               <button
                 onClick={clearFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
               >
                 Clear Filters
               </button>
             )}
           </div>
 
-          <div className="flex items-center justify-between mt-2 text-xs text-gray-600">
+          <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
             <span>
               Showing <strong>{filteredLeaves.length}</strong> of <strong>{leaves.length}</strong> records
             </span>
@@ -600,11 +600,11 @@ const EmployeeLeaves = () => {
         </div>
 
         {/* Table Section */}
-        <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
+        <div className="overflow-hidden bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
           {filteredLeaves.length === 0 ? (
             <div className="py-16 text-center">
               <div className="mb-4 text-6xl">📭</div>
-              <p className="mb-4 text-lg font-semibold text-gray-600">
+              <p className="mb-4 text-lg font-semibold text-gray-400">
                 {leaves.length === 0 ? "No leave records found." : "No records match your filters."}
               </p>
               {leaves.length > 0 && (
@@ -632,7 +632,7 @@ const EmployeeLeaves = () => {
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Comp-off</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-[#1f2937]">
                     {currentRecords.map((leave, index) => {
                       const hasPending = hasPendingCompOffRequest(leave._id);
                       const hasApproved = hasApprovedCompOff(leave._id);
@@ -640,10 +640,10 @@ const EmployeeLeaves = () => {
                       return (
                         <tr
                           key={leave._id || index}
-                          className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50 transition duration-150 ${hasApproved ? 'bg-purple-50' : ''}`}
+                          className={`${index % 2 === 0 ? "bg-[#0a0a0a]" : "bg-[#000000]"} hover:bg-blue-50 transition duration-150 ${hasApproved ? 'bg-purple-50' : ''}`}
                         >
                           <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                            <span className="px-2 py-1 text-xs font-medium text-gray-700 capitalize bg-gray-100 rounded-full">
+                            <span className="px-2 py-1 text-xs font-medium text-gray-300 capitalize bg-[#111111] rounded-full">
                               {leave.leaveType}
                             </span>
                           </td>
@@ -659,7 +659,7 @@ const EmployeeLeaves = () => {
                             </span>
                           </td>
                           <td className="px-2 py-1.5 text-center max-w-[150px]">
-                            <span className="block text-xs text-gray-700 truncate">
+                            <span className="block text-xs text-gray-300 truncate">
                               {leave.reason}
                             </span>
                           </td>
@@ -723,19 +723,19 @@ const EmployeeLeaves = () => {
 
               {/* Pagination */}
               {filteredLeaves.length > 0 && (
-                <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-gray-200 sm:flex-row">
+                <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-[#1f2937] sm:flex-row">
                   <div className="flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-2">
-                      <label className="text-xs font-medium text-gray-700">Show:</label>
+                      <label className="text-xs font-medium text-gray-300">Show:</label>
                       <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-1 text-xs border rounded-lg">
                         <option value={5}>5</option>
                         <option value={10}>10</option>
                         <option value={20}>20</option>
                         <option value={50}>50</option>
                       </select>
-                      <span className="text-xs text-gray-600">entries</span>
+                      <span className="text-xs text-gray-400">entries</span>
                     </div>
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-gray-400">
                       Showing <strong>{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredLeaves.length)}</strong> of{" "}
                       <strong>{filteredLeaves.length}</strong> records
                     </div>
@@ -744,7 +744,7 @@ const EmployeeLeaves = () => {
                   <div className="flex items-center gap-1">
                     <button onClick={handlePrevPage} disabled={currentPage === 1} className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentPage === 1 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"}`}>← Prev</button>
                     {getPageNumbers().map((page, index) => (
-                      <button key={index} onClick={() => typeof page === 'number' ? handlePageClick(page) : null} disabled={page === "..."} className={`px-3 py-1 text-xs font-semibold rounded-lg transition min-w-[28px] ${page === "..." ? "bg-gray-200 text-gray-500 cursor-default" : currentPage === page ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>{page}</button>
+                      <button key={index} onClick={() => typeof page === 'number' ? handlePageClick(page) : null} disabled={page === "..."} className={`px-3 py-1 text-xs font-semibold rounded-lg transition min-w-[28px] ${page === "..." ? "bg-[#1f2937] text-gray-500 cursor-default" : currentPage === page ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg" : "bg-[#1f2937] text-gray-300 hover:bg-gray-300"}`}>{page}</button>
                     ))}
                     <button onClick={handleNextPage} disabled={currentPage === totalPages} className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentPage === totalPages ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"}`}>Next →</button>
                   </div>
@@ -758,10 +758,10 @@ const EmployeeLeaves = () => {
       {/* Apply Leave Modal */}
       {isLeaveModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="w-full max-w-md p-4 bg-white rounded-lg shadow-xl sm:p-6">
+          <div className="w-full max-w-md p-4 bg-[#0a0a0a] rounded-lg shadow-xl sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-800 sm:text-xl">Apply for Leave</h3>
-              <button onClick={() => setIsLeaveModalOpen(false)} className="text-gray-500 hover:text-gray-700">
+              <h3 className="text-lg font-bold text-gray-300 sm:text-xl">Apply for Leave</h3>
+              <button onClick={() => setIsLeaveModalOpen(false)} className="text-gray-500 hover:text-gray-300">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -770,8 +770,8 @@ const EmployeeLeaves = () => {
 
             <form onSubmit={handleLeaveSubmit} className="space-y-3">
               <div>
-                <label className="block mb-1 text-xs font-medium text-gray-700">Leave Type</label>
-                <select name="leaveType" value={leaveFormData.leaveType} onChange={handleLeaveChange} className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" required>
+                <label className="block mb-1 text-xs font-medium text-gray-300">Leave Type</label>
+                <select name="leaveType" value={leaveFormData.leaveType} onChange={handleLeaveChange} className="w-full p-2 text-sm border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-blue-500" required>
                   <option value="casual">Casual Leave</option>
                   <option value="sick">Sick Leave</option>
                   <option value="earned">Earned Leave</option>
@@ -780,27 +780,27 @@ const EmployeeLeaves = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block mb-1 text-xs font-medium text-gray-700">Start Date</label>
-                  <input name="startDate" type="date" value={leaveFormData.startDate} onChange={handleLeaveChange} className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" required />
+                  <label className="block mb-1 text-xs font-medium text-gray-300">Start Date</label>
+                  <input name="startDate" type="date" value={leaveFormData.startDate} onChange={handleLeaveChange} className="w-full p-2 text-sm border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-blue-500" required />
                 </div>
                 <div>
-                  <label className="block mb-1 text-xs font-medium text-gray-700">End Date</label>
-                  <input name="endDate" type="date" value={leaveFormData.endDate} onChange={handleLeaveChange} className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" required />
+                  <label className="block mb-1 text-xs font-medium text-gray-300">End Date</label>
+                  <input name="endDate" type="date" value={leaveFormData.endDate} onChange={handleLeaveChange} className="w-full p-2 text-sm border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-blue-500" required />
                 </div>
               </div>
 
               <div>
-                <label className="block mb-1 text-xs font-medium text-gray-700">Total Days</label>
-                <input name="days" type="number" value={leaveFormData.days} readOnly className="w-full p-2 text-sm bg-gray-100 border border-gray-300 rounded-lg outline-none" placeholder="0" />
+                <label className="block mb-1 text-xs font-medium text-gray-300">Total Days</label>
+                <input name="days" type="number" value={leaveFormData.days} readOnly className="w-full p-2 text-sm bg-[#111111] border border-[#374151] rounded-lg outline-none" placeholder="0" />
               </div>
 
               <div>
-                <label className="block mb-1 text-xs font-medium text-gray-700">Reason</label>
-                <textarea name="reason" value={leaveFormData.reason} onChange={handleLeaveChange} className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Reason for leave" required></textarea>
+                <label className="block mb-1 text-xs font-medium text-gray-300">Reason</label>
+                <textarea name="reason" value={leaveFormData.reason} onChange={handleLeaveChange} className="w-full p-2 text-sm border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Reason for leave" required></textarea>
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setIsLeaveModalOpen(false)} className="flex-1 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                <button type="button" onClick={() => setIsLeaveModalOpen(false)} className="flex-1 py-2 text-sm text-gray-300 bg-[#111111] rounded-lg hover:bg-[#1f2937]">Cancel</button>
                 <button type="submit" disabled={submittingLeave} className="flex-1 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">{submittingLeave ? "Applying..." : "Apply Leave"}</button>
               </div>
             </form>
@@ -811,12 +811,12 @@ const EmployeeLeaves = () => {
       {/* ✅ Apply Permission Modal - Same as EmployeePermissions */}
       {isPermissionModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="w-full max-w-md p-4 bg-white rounded-lg shadow-xl sm:p-6">
+          <div className="w-full max-w-md p-4 bg-[#0a0a0a] rounded-lg shadow-xl sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-800 sm:text-xl">Request Permission</h3>
+              <h3 className="text-lg font-bold text-gray-300 sm:text-xl">Request Permission</h3>
               <button
                 onClick={() => setIsPermissionModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-300"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -826,10 +826,10 @@ const EmployeeLeaves = () => {
 
             <form onSubmit={handlePermissionSubmit} className="space-y-3">
               <div>
-                <label className="block mb-1 text-xs font-medium text-gray-700">Reason</label>
+                <label className="block mb-1 text-xs font-medium text-gray-300">Reason</label>
                 <textarea
                   required
-                  className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full p-2 text-sm border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-green-500"
                   rows="3"
                   value={permissionForm.reason}
                   onChange={(e) => setPermissionForm({ ...permissionForm, reason: e.target.value })}
@@ -838,12 +838,12 @@ const EmployeeLeaves = () => {
               </div>
 
               <div>
-                <label className="block mb-1 text-xs font-medium text-gray-700">Duration (minutes)</label>
+                <label className="block mb-1 text-xs font-medium text-gray-300">Duration (minutes)</label>
                 <input
                   type="number"
                   required
                   min="1"
-                  className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full p-2 text-sm border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-green-500"
                   value={permissionForm.duration}
                   onChange={(e) => setPermissionForm({ ...permissionForm, duration: e.target.value })}
                   placeholder="e.g. 30"
@@ -854,7 +854,7 @@ const EmployeeLeaves = () => {
                 <button
                   type="button"
                   onClick={() => setIsPermissionModalOpen(false)}
-                  className="flex-1 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                  className="flex-1 py-2 text-sm text-gray-300 bg-[#111111] rounded-lg hover:bg-[#1f2937]"
                 >
                   Cancel
                 </button>
@@ -874,10 +874,10 @@ const EmployeeLeaves = () => {
       {/* ✅ Comp-off Request Modal */}
       {isCompOffModalOpen && selectedLeaveForCompOff && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-sm p-4 bg-white rounded-xl shadow-lg">
+          <div className="w-full max-w-sm p-4 bg-[#0a0a0a] rounded-xl shadow-lg">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-semibold text-purple-700">Request Comp-off</h3>
-              <button onClick={() => setIsCompOffModalOpen(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+              <button onClick={() => setIsCompOffModalOpen(false)} className="text-gray-400 hover:text-gray-400">✕</button>
             </div>
 
             <div className="p-2 mb-3 rounded-md bg-blue-50">
@@ -895,12 +895,12 @@ const EmployeeLeaves = () => {
 
             <form onSubmit={handleCompOffRequestSubmit} className="space-y-2">
               <div>
-                <label className="block mb-1 text-xs font-medium text-gray-600">Work Date *</label>
+                <label className="block mb-1 text-xs font-medium text-gray-400">Work Date *</label>
                 <input name="workDate" type="date" value={compOffRequestData.workDate} onChange={(e) => setCompOffRequestData({ ...compOffRequestData, workDate: e.target.value })} className="w-full p-2 text-xs border rounded-md focus:ring-1 focus:ring-purple-500" required />
               </div>
 
               <div>
-                <label className="block mb-1 text-xs font-medium text-gray-600">Reason</label>
+                <label className="block mb-1 text-xs font-medium text-gray-400">Reason</label>
                 <textarea name="reason" value={compOffRequestData.reason} onChange={(e) => setCompOffRequestData({ ...compOffRequestData, reason: e.target.value })} rows="2" className="w-full p-2 text-xs border rounded-md focus:ring-1 focus:ring-purple-500" placeholder="Optional..."></textarea>
               </div>
 
@@ -909,7 +909,7 @@ const EmployeeLeaves = () => {
               </div>
 
               <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setIsCompOffModalOpen(false)} className="flex-1 py-1.5 text-xs text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">Cancel</button>
+                <button type="button" onClick={() => setIsCompOffModalOpen(false)} className="flex-1 py-1.5 text-xs text-gray-300 bg-[#111111] rounded-md hover:bg-[#1f2937]">Cancel</button>
                 <button type="submit" disabled={submittingCompOff} className="flex-1 py-1.5 text-xs text-white bg-purple-600 rounded-md hover:bg-purple-700 disabled:opacity-50">{submittingCompOff ? "Submitting..." : "Submit"}</button>
               </div>
             </form>

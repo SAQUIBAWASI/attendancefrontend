@@ -12,19 +12,19 @@ import { toast } from "react-toastify";
 const InfoItem = ({ label, value }) => (
     <div className="flex flex-col">
         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-relaxed">{label}</p>
-        <p className="text-sm font-bold text-gray-800 tracking-tight">{value || "N/A"}</p>
+        <p className="text-sm font-bold text-gray-300 tracking-tight">{value || "N/A"}</p>
     </div>
 );
 
 const renderMarkdown = (text) => {
     if (!text) return "";
     let html = text
-        .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-black mb-6 text-gray-900 border-b-2 border-gray-100 pb-4">$1</h1>')
-        .replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold mb-4 text-gray-800 mt-8">$1</h2>')
+        .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-black mb-6 text-gray-200 border-b-2 border-[#1f2937] pb-4">$1</h1>')
+        .replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold mb-4 text-gray-300 mt-8">$1</h2>')
         .replace(/^### (.*$)/gm, '<h3 class="text-sm font-black mb-4 text-blue-600 uppercase tracking-[0.2em] mt-8">$1</h3>')
         .replace(/\*\*(.*?)\*\*/gm, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/gm, '<em>$1</em>')
-        .replace(/^- (.*$)/gm, '<li class="ml-2 mb-2 text-gray-700">$1</li>');
+        .replace(/^- (.*$)/gm, '<li class="ml-2 mb-2 text-gray-300">$1</li>');
 
     // Simple paragraph handling
     return html.split('\n').map(line => line.trim() ? `<p class="mb-2">${line}</p>` : '<div class="h-4"></div>').join('');
@@ -262,30 +262,30 @@ Timely Health Group
     };
 
     if (fetching) return (
-        <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
             <div className="flex flex-col items-center gap-6">
                 <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
                 <div className="text-center">
-                    <p className="text-base font-bold text-gray-800">Drafting Offer...</p>
+                    <p className="text-base font-bold text-gray-300">Drafting Offer...</p>
                 </div>
             </div>
         </div>
     );
 
     return (
-        <div className="p-3 mx-auto bg-white rounded-lg shadow-md max-w-full min-h-screen">
+        <div className="p-3 mx-auto bg-[#0a0a0a] rounded-lg shadow-md max-w-full min-h-screen">
             <div className="flex flex-col gap-6">
                 {/* Header Section */}
                 <div className="flex flex-col gap-4 mb-2 xl:flex-row xl:items-center xl:justify-between px-2">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => navigate(-1)}
-                            className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors shadow-sm"
+                            className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-gray-400 bg-[#111111] hover:bg-[#1f2937] rounded-lg transition-colors shadow-sm"
                         >
                             <FaChevronLeft className="text-xs" /> Back
                         </button>
                         <div>
-                            <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <h1 className="text-xl font-bold text-gray-300 flex items-center gap-2">
                                 Dispatch Offer Letter
                             </h1>
                             <p className="text-gray-400 text-[10px] font-black mt-1 uppercase tracking-widest">
@@ -295,12 +295,12 @@ Timely Health Group
                     </div>
 
                     {candidate && (
-                        <div className="flex items-center gap-4 bg-gray-50 px-5 py-3 rounded-2xl border border-gray-100 shadow-sm">
+                        <div className="flex items-center gap-4 bg-[#000000] px-5 py-3 rounded-2xl border border-[#1f2937] shadow-sm">
                             <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center text-white text-lg font-black shadow-lg shadow-blue-100">
                                 {candidate.firstName.charAt(0)}
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-sm font-bold text-gray-800 leading-tight">{candidate.firstName} {candidate.lastName}</span>
+                                <span className="text-sm font-bold text-gray-300 leading-tight">{candidate.firstName} {candidate.lastName}</span>
                                 <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{candidate.jobId?.role}</span>
                             </div>
                         </div>
@@ -311,15 +311,15 @@ Timely Health Group
                     {/* Left: Configuration Sidebar */}
                     <div className="lg:col-span-4 space-y-6">
                         {/* Checklist */}
-                        {/* <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative">
+                        {/* <div className="bg-[#0a0a0a] p-6 rounded-2xl border border-[#1f2937] shadow-sm relative">
                             <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-5 flex items-center gap-2">
                                 <FaShieldAlt className="text-emerald-500" /> Documents Verification
                             </h3>
                             <div className="space-y-2">
                                 {Object.keys(docsVerified).map((key) => (
-                                    <label key={key} className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${docsVerified[key] ? 'bg-emerald-50 border-emerald-100' : 'bg-gray-50 border-gray-100 hover:bg-white'}`}>
+                                    <label key={key} className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${docsVerified[key] ? 'bg-emerald-50 border-emerald-100' : 'bg-[#000000] border-[#1f2937] hover:bg-[#0a0a0a]'}`}>
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${docsVerified[key] ? 'bg-emerald-500 text-white' : 'bg-white text-gray-300 border border-gray-200'}`}>
+                                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${docsVerified[key] ? 'bg-emerald-500 text-white' : 'bg-[#0a0a0a] text-gray-300 border border-[#1f2937]'}`}>
                                                 {docsVerified[key] ? <FaCheckCircle size={12} /> : <FaInfoCircle size={12} />}
                                             </div>
                                             <span className={`text-[10px] font-black uppercase tracking-widest ${docsVerified[key] ? 'text-emerald-700' : 'text-gray-500'}`}>
@@ -332,8 +332,8 @@ Timely Health Group
                                             checked={docsVerified[key]}
                                             onChange={() => handleVerifyChange(key)}
                                         />
-                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${docsVerified[key] ? 'border-emerald-500 bg-emerald-500' : 'border-gray-200'}`}>
-                                            {docsVerified[key] && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${docsVerified[key] ? 'border-emerald-500 bg-emerald-500' : 'border-[#1f2937]'}`}>
+                                            {docsVerified[key] && <div className="w-1.5 h-1.5 bg-[#0a0a0a] rounded-full"></div>}
                                         </div>
                                     </label>
                                 ))}
@@ -341,7 +341,7 @@ Timely Health Group
                         </div> */}
 
                         {/* Branding */}
-                        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                        <div className="bg-[#0a0a0a] p-6 rounded-2xl border border-[#1f2937] shadow-sm">
                             <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-5 flex items-center gap-2">
                                 <FaFileAlt className="text-purple-500" /> Document Type
                             </h3>
@@ -364,7 +364,7 @@ Timely Health Group
                                                 setOfferContent(getTemplate(type, data));
                                             }
                                         }}
-                                        className={`w-full text-left p-3 rounded-xl border transition-all text-[10px] font-black uppercase tracking-widest ${documentType === type ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-gray-50 border-gray-100 text-gray-400 hover:bg-white hover:text-gray-600'}`}
+                                        className={`w-full text-left p-3 rounded-xl border transition-all text-[10px] font-black uppercase tracking-widest ${documentType === type ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-[#000000] border-[#1f2937] text-gray-400 hover:bg-[#0a0a0a] hover:text-gray-400'}`}
                                     >
                                         {type} Letter
                                     </button>
@@ -373,7 +373,7 @@ Timely Health Group
                         </div>
 
                         {/* Branding */}
-                        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                        <div className="bg-[#0a0a0a] p-6 rounded-2xl border border-[#1f2937] shadow-sm">
                             <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-5 flex items-center gap-2">
                                 <FaImage className="text-blue-500" /> Branding Reference
                             </h3>
@@ -384,10 +384,10 @@ Timely Health Group
                                         type="text"
                                         value={logoUrl}
                                         onChange={(e) => setLogoUrl(e.target.value)}
-                                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                                        className="w-full px-4 py-2.5 bg-[#000000] border border-[#1f2937] rounded-xl text-xs font-bold text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-[#0a0a0a] transition-all font-mono"
                                     />
                                 </div>
-                                <div className="h-28 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center p-4">
+                                <div className="h-28 bg-[#000000] rounded-xl border border-[#1f2937] flex items-center justify-center p-4">
                                     <img src={logoUrl} alt="Preview" className="max-h-full max-w-full object-contain" onError={(e) => e.target.src = 'https://via.placeholder.com/150?text=Invalid+Logo'} />
                                 </div>
                             </div>
@@ -396,18 +396,18 @@ Timely Health Group
 
                     {/* Right: Main Content Area */}
                     <div className="lg:col-span-8">
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden flex flex-col min-h-[750px]">
+                        <div className="bg-[#0a0a0a] rounded-2xl border border-[#1f2937] shadow-lg overflow-hidden flex flex-col min-h-[750px]">
                             {/* Tabs synchronized with JobApplicants detail style */}
-                            <div className="flex bg-gray-50/50 p-1.5 gap-1.5 border-b border-gray-100">
+                            <div className="flex bg-[#000000]/50 p-1.5 gap-1.5 border-b border-[#1f2937]">
                                 <button
                                     onClick={() => setIsPreview(false)}
-                                    className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${!isPreview ? 'bg-white text-purple-600 shadow-sm border border-gray-100' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                                    className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${!isPreview ? 'bg-[#0a0a0a] text-purple-600 shadow-sm border border-[#1f2937]' : 'text-gray-400 hover:text-gray-400 hover:bg-[#111111]'}`}
                                 >
                                     Template Editor
                                 </button>
                                 <button
                                     onClick={() => setIsPreview(true)}
-                                    className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${isPreview ? 'bg-white text-blue-600 shadow-sm border border-gray-100' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                                    className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${isPreview ? 'bg-[#0a0a0a] text-blue-600 shadow-sm border border-[#1f2937]' : 'text-gray-400 hover:text-gray-400 hover:bg-[#111111]'}`}
                                 >
                                     Preview
                                 </button>
@@ -415,21 +415,21 @@ Timely Health Group
 
                             <div className="flex-1 p-8 flex flex-col">
                                 {isPreview ? (
-                                    <div className="flex-1 bg-white border border-gray-100 rounded-xl p-12 overflow-y-auto max-h-[600px] shadow-inner relative animate-in fade-in duration-500">
+                                    <div className="flex-1 bg-[#0a0a0a] border border-[#1f2937] rounded-xl p-12 overflow-y-auto max-h-[600px] shadow-inner relative animate-in fade-in duration-500">
                                         <div className="flex justify-between items-start mb-16 px-4">
                                             <img src={logoUrl} alt="Logo" className="h-10 object-contain" />
                                             <div className="text-right">
-                                                <p className="text-base font-black text-gray-900 tracking-tight uppercase leading-none">Employment Offer</p>
+                                                <p className="text-base font-black text-gray-200 tracking-tight uppercase leading-none">Employment Offer</p>
                                                 <p className="text-[9px] font-bold text-gray-400 mt-2 uppercase tracking-[0.2em]">Authentic Documentation</p>
                                             </div>
                                         </div>
 
                                         <div
-                                            className="markdown-content text-sm leading-relaxed text-gray-700 font-serif px-4"
+                                            className="markdown-content text-sm leading-relaxed text-gray-300 font-serif px-4"
                                             dangerouslySetInnerHTML={{ __html: renderMarkdown(offerContent) }}
                                         />
 
-                                        <div className="mt-20 flex justify-between items-end border-t border-gray-100 pt-10 px-4">
+                                        <div className="mt-20 flex justify-between items-end border-t border-[#1f2937] pt-10 px-4">
                                             <div className="flex flex-col gap-6">
                                                 <div className="w-24 h-[1px] bg-gray-300"></div>
                                                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Director - Human Resources</p>
@@ -440,7 +440,7 @@ Timely Health Group
 
                                 ) : (
                                     <textarea
-                                        className="flex-1 w-full p-8 border border-gray-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-300 transition-all font-mono text-[11px] leading-relaxed resize-none bg-gray-50/50 text-gray-600 shadow-inner"
+                                        className="flex-1 w-full p-8 border border-[#1f2937] rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-300 transition-all font-mono text-[11px] leading-relaxed resize-none bg-[#000000]/50 text-gray-400 shadow-inner"
                                         value={offerContent}
                                         onChange={(e) => setOfferContent(e.target.value)}
                                         placeholder="Draft the official offer content here..."
@@ -453,7 +453,7 @@ Timely Health Group
                                             <FaRocket size={16} className="text-white animate-pulse" />
                                         </div>
                                         <div>
-                                            <p className="text-[10px] font-black text-gray-800 uppercase tracking-widest">Validated Template</p>
+                                            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Validated Template</p>
                                             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Ready for secure dispatch</p>
                                         </div>
                                     </div>

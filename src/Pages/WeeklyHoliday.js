@@ -29,8 +29,8 @@ const WeeklyHoliday = () => {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen p-4 bg-gray-100">
-      <div className="w-full max-w-5xl p-4 bg-white rounded-lg shadow-md">
+    <div className="flex flex-col items-center min-h-screen p-4 bg-[#111111]">
+      <div className="w-full max-w-5xl p-4 bg-[#0a0a0a] rounded-lg shadow-md">
         {/* Title */}
         <h2 className="mb-3 text-lg font-semibold">Weekly Holiday</h2>
 
@@ -56,9 +56,9 @@ const WeeklyHoliday = () => {
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border border-gray-300 rounded-md">
+          <table className="w-full text-sm border border-[#374151] rounded-md">
             <thead>
-              <tr className="h-10 bg-gray-200">
+              <tr className="h-10 bg-[#1f2937]">
                 <th className="w-20 p-2 text-left border">Sl</th>
                 <th className="p-2 text-left border w-96">Day Name</th>
                 <th className="w-24 p-2 text-left border">Action</th>
@@ -66,7 +66,7 @@ const WeeklyHoliday = () => {
             </thead>
             <tbody>
               {holidays.map((holiday, index) => (
-                <tr key={holiday.id} className="h-8 hover:bg-gray-100">
+                <tr key={holiday.id} className="h-8 hover:bg-[#111111]">
                   <td className="p-2 border">{index + 1}</td>
                   {/* Days in horizontal format */}
                   <td className="p-2 border">{holiday.days.join(", ")}</td>
@@ -88,16 +88,16 @@ const WeeklyHoliday = () => {
         <div className="flex items-center justify-between mt-2 text-sm">
           <p>Showing 1 to {holidays.length} of {holidays.length} entries</p>
           <div className="flex space-x-1">
-            <button className="px-3 py-1 bg-gray-200 border rounded">Previous</button>
+            <button className="px-3 py-1 bg-[#1f2937] border rounded">Previous</button>
             <button className="px-3 py-1 text-white bg-green-600 border rounded">1</button>
-            <button className="px-3 py-1 bg-gray-200 border rounded">Next</button>
+            <button className="px-3 py-1 bg-[#1f2937] border rounded">Next</button>
           </div>
         </div>
       </div>
 
       {/* Edit Holiday Section */}
       {editHoliday && (
-        <div className="w-full max-w-5xl p-4 mt-4 bg-white rounded-lg shadow-md">
+        <div className="w-full max-w-5xl p-4 mt-4 bg-[#0a0a0a] rounded-lg shadow-md">
           <h2 className="mb-3 text-lg font-semibold">Weekly Holiday Update</h2>
           <label className="block mb-2 text-sm">Weekly leave day</label>
           <select

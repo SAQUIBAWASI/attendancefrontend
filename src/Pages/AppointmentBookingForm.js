@@ -67,7 +67,7 @@ const AppointmentBookingForm = () => {
   };
 
   return (
-    <div className="p-6 bg-white rounded shadow">
+    <div className="p-6 bg-[#0a0a0a] rounded shadow">
       <h3 className="text-lg font-bold mb-4">Book Appointment</h3>
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

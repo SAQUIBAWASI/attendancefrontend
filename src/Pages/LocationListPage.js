@@ -169,7 +169,7 @@
 //   };
 
 //   return (
-//    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+//    <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-8xl">
 //       {/* Title + Search */}
 //       <div className="flex flex-col items-center justify-between gap-4 mb-6 md:flex-row">
@@ -186,7 +186,7 @@
 //               placeholder="Search location..."
 //               value={searchTerm}
 //               onChange={(e) => setSearchTerm(e.target.value)}
-//               className="w-full py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+//               className="w-full py-2 pl-10 pr-4 text-sm border border-[#374151] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 //             /> */}
 //           </div>
 //           </div>
@@ -216,14 +216,14 @@
 
 //       {/* Empty State */}
 //       {!loading && filteredLocations.length === 0 && (
-//         <div className="p-6 text-center text-gray-500 rounded-md bg-gray-50">
+//         <div className="p-6 text-center text-gray-500 rounded-md bg-[#000000]">
 //           No matching locations found.
 //         </div>
 //       )}
 
 //       {/* Table */}
 //       {!loading && filteredLocations.length > 0 && (
-//         <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//         <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
 //           <table className="min-w-full">
 //             <thead className="text-left text-sm text-white bg-gradient-to-r from-green-500 to-blue-600">
 //               <tr>
@@ -235,14 +235,14 @@
 //                 <th className="px-2 py-2 text-center">Actions</th>
 //               </tr>
 //             </thead>
-//             <tbody className="divide-y divide-gray-200">
+//             <tbody className="divide-y divide-[#1f2937]">
 //               {filteredLocations.map((loc, index) => (
 //                 <tr key={loc._id} className="transition hover:bg-blue-50">
-//                   <td className="px-2 py-2 text-center whitespace-nowrap text-sm font-medium text-gray-900">{index + 1}</td>
-//                   <td className="px-2 py-2 text-center whitespace-nowrap text-sm font-medium text-gray-900">{loc.name}</td>
-//                   <td className="px-2 py-2 text-center text-sm text-gray-600">{loc.fullAddress}</td>
-//                   <td className="px-2 py-2 text-center text-sm text-gray-600">{loc.latitude}</td>
-//                   <td className="px-2 py-2 text-center text-sm text-gray-600">{loc.longitude}</td>
+//                   <td className="px-2 py-2 text-center whitespace-nowrap text-sm font-medium text-gray-200">{index + 1}</td>
+//                   <td className="px-2 py-2 text-center whitespace-nowrap text-sm font-medium text-gray-200">{loc.name}</td>
+//                   <td className="px-2 py-2 text-center text-sm text-gray-400">{loc.fullAddress}</td>
+//                   <td className="px-2 py-2 text-center text-sm text-gray-400">{loc.latitude}</td>
+//                   <td className="px-2 py-2 text-center text-sm text-gray-400">{loc.longitude}</td>
 //                   <td className="px-2 py-2 text-center text-center">
 //                     <div className="flex items-center justify-center gap-3">
 //                       <button
@@ -254,8 +254,8 @@
 //                       <button
 //                         onClick={() => handleToggleStatus(loc)}
 //                         className={`px-2 py-2 text-center text-[10px] font-bold rounded uppercase transition ${loc.status === "inactive"
-//                           ? "bg-gray-100 text-gray-500 hover:bg-green-100 hover:text-green-700"
-//                           : "bg-green-100 text-green-700 hover:bg-gray-200 hover:text-gray-700"
+//                           ? "bg-[#111111] text-gray-500 hover:bg-green-100 hover:text-green-700"
+//                           : "bg-green-100 text-green-700 hover:bg-[#1f2937] hover:text-gray-300"
 //                           }`}
 //                         title={loc.status === "inactive" ? "Make Active" : "Make Inactive"}
 //                       >
@@ -279,28 +279,28 @@
 //       {/* Edit Modal */}
 //       {isEditModalOpen && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60">
-//           <div className="w-full max-w-md p-6 bg-white border border-gray-200 shadow-2xl rounded-xl">
+//           <div className="w-full max-w-md p-6 bg-[#0a0a0a] border border-[#1f2937] shadow-2xl rounded-xl">
 //             <h3 className="mb-4 text-lg font-semibold text-blue-800">Edit Location</h3>
 //             <form onSubmit={handleUpdate}>
 //               {/* Location Name */}
 //               <div className="mb-4">
-//                 <label className="block text-sm font-medium text-gray-700">Location Name</label>
+//                 <label className="block text-sm font-medium text-gray-300">Location Name</label>
 //                 <input
 //                   type="text"
 //                   value={updatedName}
 //                   onChange={(e) => setUpdatedName(e.target.value)}
-//                   className="w-full p-2 mt-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+//                   className="w-full p-2 mt-1 border border-[#374151] rounded focus:ring-2 focus:ring-blue-500"
 //                   required
 //                 />
 //               </div>
 
 //               {/* Full Address */}
 //               <div className="mb-4">
-//                 <label className="block text-sm font-medium text-gray-700">Full Address</label>
+//                 <label className="block text-sm font-medium text-gray-300">Full Address</label>
 //                 <textarea
 //                   value={updatedFullAddress}
 //                   onChange={(e) => setUpdatedFullAddress(e.target.value)}
-//                   className="w-full p-2 mt-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+//                   className="w-full p-2 mt-1 border border-[#374151] rounded focus:ring-2 focus:ring-blue-500"
 //                   rows="3"
 //                   required
 //                 ></textarea>
@@ -308,24 +308,24 @@
 
 //               {/* Latitude */}
 //               <div className="mb-4">
-//                 <label className="block text-sm font-medium text-gray-700">Latitude</label>
+//                 <label className="block text-sm font-medium text-gray-300">Latitude</label>
 //                 <input
 //                   type="text"
 //                   value={updatedLatitude}
 //                   onChange={(e) => setUpdatedLatitude(e.target.value)}
-//                   className="w-full p-2 mt-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+//                   className="w-full p-2 mt-1 border border-[#374151] rounded focus:ring-2 focus:ring-blue-500"
 //                   required
 //                 />
 //               </div>
 
 //               {/* Longitude */}
 //               <div className="mb-6">
-//                 <label className="block text-sm font-medium text-gray-700">Longitude</label>
+//                 <label className="block text-sm font-medium text-gray-300">Longitude</label>
 //                 <input
 //                   type="text"
 //                   value={updatedLongitude}
 //                   onChange={(e) => setUpdatedLongitude(e.target.value)}
-//                   className="w-full p-2 mt-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+//                   className="w-full p-2 mt-1 border border-[#374151] rounded focus:ring-2 focus:ring-blue-500"
 //                   required
 //                 />
 //               </div>
@@ -335,7 +335,7 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setIsEditModalOpen(false)}
-//                   className="px-2 py-2 text-center text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
+//                   className="px-2 py-2 text-center text-gray-300 bg-[#1f2937] rounded hover:bg-gray-300"
 //                 >
 //                   Cancel
 //                 </button>
@@ -720,11 +720,11 @@ const LocationListPage = () => {
   };
 
   return (
-    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
       <div className="mx-auto max-w-9xl">
         
         {/* Filters - LIKE ABSENTTODAY.JS */}
-        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+        <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
             
             {/* Location Name/Address Search */}
@@ -735,7 +735,7 @@ const LocationListPage = () => {
                 placeholder="Search by name or address..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -746,7 +746,7 @@ const LocationListPage = () => {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterCity 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
                 }`}
               >
                 <FaBuilding className="text-xs" /> City {filterCity && `: ${filterCity}`}
@@ -754,13 +754,13 @@ const LocationListPage = () => {
               
               {/* City Filter Dropdown */}
               {showCityFilter && (
-                <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-50 mt-1 w-48 bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60 overflow-y-auto">
                   <div 
                     onClick={() => {
                       setFilterCity('');
                       setShowCityFilter(false);
                     }}
-                    className="px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-gray-100 font-medium text-gray-700"
+                    className="px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-[#1f2937] font-medium text-gray-300"
                   >
                     All Cities
                   </div>
@@ -789,7 +789,7 @@ const LocationListPage = () => {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterState 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
                 }`}
               >
                 <FaMapMarkerAlt className="text-xs" /> State {filterState && `: ${filterState}`}
@@ -797,13 +797,13 @@ const LocationListPage = () => {
               
               {/* State Filter Dropdown */}
               {showStateFilter && (
-                <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-50 mt-1 w-48 bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60 overflow-y-auto">
                   <div 
                     onClick={() => {
                       setFilterState('');
                       setShowStateFilter(false);
                     }}
-                    className="px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-gray-100 font-medium text-gray-700"
+                    className="px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-[#1f2937] font-medium text-gray-300"
                   >
                     All States
                   </div>
@@ -832,7 +832,7 @@ const LocationListPage = () => {
                 placeholder="Pin Code"
                 value={filterPinCode}
                 onChange={(e) => setFilterPinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                 maxLength="6"
               />
             </div>
@@ -852,7 +852,7 @@ const LocationListPage = () => {
             {(searchTerm || filterCity || filterState || filterPinCode) && (
               <button
                 onClick={clearFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition"
+                className="h-8 px-3 text-xs font-medium text-gray-400 bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937] transition"
               >
                 Clear
               </button>
@@ -870,7 +870,7 @@ const LocationListPage = () => {
 
         {/* Empty State */}
         {!loading && filteredLocations.length === 0 && (
-          <div className="p-8 text-center bg-white rounded-lg shadow-md">
+          <div className="p-8 text-center bg-[#0a0a0a] rounded-lg shadow-md">
             <p className="text-lg text-gray-500">No locations found</p>
             <p className="mt-2 text-sm text-gray-400">
               {(searchTerm || filterCity || filterState || filterPinCode) && "Try clearing filters"}
@@ -880,8 +880,8 @@ const LocationListPage = () => {
 
         {/* Table */}
         {!loading && filteredLocations.length > 0 && (
-          <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-            <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+          <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
+            <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
               <table className="min-w-full">
                 <thead className="text-left text-sm text-white bg-gradient-to-r from-green-500 to-blue-600">
                   <tr>
@@ -896,7 +896,7 @@ const LocationListPage = () => {
                     <th className="px-2 py-2 text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-[#1f2937]">
                   {currentItems.map((loc, index) => {
                     // Extract city, state, pin code from address
                     const addressParts = loc.fullAddress.split(',');
@@ -907,28 +907,28 @@ const LocationListPage = () => {
 
                     return (
                       <tr key={loc._id} className="transition hover:bg-blue-50">
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+                        <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
                           {indexOfFirstItem + index + 1}
                         </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+                        <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
                           {loc.name}
                         </td>
-                        <td className="px-2 py-2 text-center  text-gray-600 max-w-xs truncate">
+                        <td className="px-2 py-2 text-center  text-gray-400 max-w-xs truncate">
                           {loc.fullAddress}
                         </td>
-                        <td className="px-2 py-2 text-center  text-gray-600 whitespace-nowrap">
+                        <td className="px-2 py-2 text-center  text-gray-400 whitespace-nowrap">
                           {city}
                         </td>
-                        <td className="px-2 py-2 text-center  text-gray-600 whitespace-nowrap">
+                        <td className="px-2 py-2 text-center  text-gray-400 whitespace-nowrap">
                           {state}
                         </td>
-                        <td className="px-2 py-2 text-center  text-gray-600 whitespace-nowrap">
+                        <td className="px-2 py-2 text-center  text-gray-400 whitespace-nowrap">
                           {pinCode}
                         </td>
-                        <td className="px-2 py-2 text-center  text-gray-600 whitespace-nowrap">
+                        <td className="px-2 py-2 text-center  text-gray-400 whitespace-nowrap">
                           {loc.latitude}
                         </td>
-                        <td className="px-2 py-2 text-center  text-gray-600 whitespace-nowrap">
+                        <td className="px-2 py-2 text-center  text-gray-400 whitespace-nowrap">
                           {loc.longitude}
                         </td>
                         <td className="px-2 py-2 text-center">
@@ -944,8 +944,8 @@ const LocationListPage = () => {
                               onClick={() => handleToggleStatus(loc)}
                               className={`px-2 py-2 text-center text-[10px] font-bold rounded uppercase transition ${
                                 loc.status === "inactive"
-                                  ? "bg-gray-100 text-gray-500 hover:bg-green-100 hover:text-green-700"
-                                  : "bg-green-100 text-green-700 hover:bg-gray-200 hover:text-gray-700"
+                                  ? "bg-[#111111] text-gray-500 hover:bg-green-100 hover:text-green-700"
+                                  : "bg-green-100 text-green-700 hover:bg-[#1f2937] hover:text-gray-300"
                               }`}
                               title={loc.status === "inactive" ? "Make Active" : "Make Inactive"}
                             >
@@ -969,11 +969,11 @@ const LocationListPage = () => {
 
             {/* Pagination */}
             {filteredLocations.length > 0 && (
-              <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
+              <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-[#1f2937] bg-[#000000] sm:flex-row">
                 {/* Show entries dropdown */}
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-700">
+                    <label className="text-sm font-medium text-gray-300">
                       Show:
                     </label>
                     <select
@@ -989,9 +989,9 @@ const LocationListPage = () => {
                       <option value={20}>20</option>
                       <option value={50}>50</option>
                     </select>
-                    <span className="text-sm text-gray-600">entries</span>
+                    <span className="text-sm text-gray-400">entries</span>
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-400">
                     Showing <strong>{indexOfFirstItem + 1}</strong> to <strong>{Math.min(indexOfLastItem, filteredLocations.length)}</strong> of{" "}
                     <strong>{filteredLocations.length}</strong> records
                   </div>
@@ -1004,8 +1004,8 @@ const LocationListPage = () => {
                     disabled={pagination.currentPage === 1}
                     className={`px-4 py-1 text-sm border rounded-lg ${
                       pagination.currentPage === 1
-                        ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                        : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
+                        ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+                        : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
                     }`}
                   >
                     Previous
@@ -1018,10 +1018,10 @@ const LocationListPage = () => {
                       disabled={page === "..."}
                       className={`px-4 py-1 text-sm border rounded-lg ${
                         page === "..."
-                          ? "text-gray-500 bg-gray-50 cursor-default"
+                          ? "text-gray-500 bg-[#000000] cursor-default"
                           : pagination.currentPage === page
                           ? "text-white bg-blue-600 border-blue-600"
-                          : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                          : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
                       }`}
                     >
                       {page}
@@ -1033,8 +1033,8 @@ const LocationListPage = () => {
                     disabled={pagination.currentPage === pagination.totalPages}
                     className={`px-4 py-1 text-sm border rounded-lg ${
                       pagination.currentPage === pagination.totalPages
-                        ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                        : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                        ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+                        : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
                     }`}
                   >
                     Next
@@ -1048,28 +1048,28 @@ const LocationListPage = () => {
         {/* Edit Modal */}
         {isEditModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60">
-            <div className="w-full max-w-md p-6 bg-white border border-gray-200 shadow-2xl rounded-xl">
+            <div className="w-full max-w-md p-6 bg-[#0a0a0a] border border-[#1f2937] shadow-2xl rounded-xl">
               <h3 className="mb-4 text-lg font-semibold text-blue-800">Edit Location</h3>
               <form onSubmit={handleUpdate}>
                 {/* Location Name */}
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Location Name</label>
+                  <label className="block text-sm font-medium text-gray-300">Location Name</label>
                   <input
                     type="text"
                     value={updatedName}
                     onChange={(e) => setUpdatedName(e.target.value)}
-                    className="w-full p-2 mt-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 mt-1 border border-[#374151] rounded focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
 
                 {/* Full Address */}
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Full Address</label>
+                  <label className="block text-sm font-medium text-gray-300">Full Address</label>
                   <textarea
                     value={updatedFullAddress}
                     onChange={(e) => setUpdatedFullAddress(e.target.value)}
-                    className="w-full p-2 mt-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 mt-1 border border-[#374151] rounded focus:ring-2 focus:ring-blue-500"
                     rows="3"
                     required
                   ></textarea>
@@ -1077,24 +1077,24 @@ const LocationListPage = () => {
 
                 {/* Latitude */}
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Latitude</label>
+                  <label className="block text-sm font-medium text-gray-300">Latitude</label>
                   <input
                     type="text"
                     value={updatedLatitude}
                     onChange={(e) => setUpdatedLatitude(e.target.value)}
-                    className="w-full p-2 mt-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 mt-1 border border-[#374151] rounded focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
 
                 {/* Longitude */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700">Longitude</label>
+                  <label className="block text-sm font-medium text-gray-300">Longitude</label>
                   <input
                     type="text"
                     value={updatedLongitude}
                     onChange={(e) => setUpdatedLongitude(e.target.value)}
-                    className="w-full p-2 mt-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 mt-1 border border-[#374151] rounded focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
@@ -1104,7 +1104,7 @@ const LocationListPage = () => {
                   <button
                     type="button"
                     onClick={() => setIsEditModalOpen(false)}
-                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
+                    className="px-4 py-2 text-gray-300 bg-[#1f2937] rounded hover:bg-gray-300"
                   >
                     Cancel
                   </button>

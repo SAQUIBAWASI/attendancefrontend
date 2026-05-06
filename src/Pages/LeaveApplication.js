@@ -166,7 +166,7 @@ const LeaveRequestForm = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-[#111111]">
       <div className="flex-1 flex flex-col">
         <div className="p-6">
           {/* Top Buttons */}
@@ -190,7 +190,7 @@ const LeaveRequestForm = () => {
           {activePermission && (
             <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg shadow-sm max-w-md mx-auto">
               <h3 className="text-lg font-bold text-yellow-800 mb-2">🔴 Active Permission</h3>
-              <div className="text-sm text-yellow-800 mb-4 bg-white p-3 rounded border border-yellow-100">
+              <div className="text-sm text-yellow-800 mb-4 bg-[#0a0a0a] p-3 rounded border border-yellow-100">
                 <p className="mb-1"><span className="font-semibold">Reason:</span> {activePermission.reason}</p>
                 <p><span className="font-semibold">Duration:</span> {activePermission.duration} mins</p>
               </div>
@@ -228,14 +228,14 @@ const LeaveRequestForm = () => {
             </div>
           )}
 
-          <div className="max-w-md mx-auto bg-white rounded shadow p-6">
+          <div className="max-w-md mx-auto bg-[#0a0a0a] rounded shadow p-6">
             <h2 className="mb-4 text-xl font-bold text-blue-900">Leave Request Form</h2>
             {successMessage && <div className="p-3 mb-4 text-green-700 bg-green-100 rounded">{successMessage}</div>}
             {errorMessage && <div className="p-3 mb-4 text-red-700 bg-red-100 rounded">{errorMessage}</div>}
 
             <form onSubmit={handleSubmit}>
-              <input value={formData.employeeId} readOnly className="mb-2 p-2 border rounded w-full bg-gray-100" placeholder="Employee ID" required />
-              <input value={formData.employeeName} readOnly className="mb-2 p-2 border rounded w-full bg-gray-100" placeholder="Employee Name" required />
+              <input value={formData.employeeId} readOnly className="mb-2 p-2 border rounded w-full bg-[#111111]" placeholder="Employee ID" required />
+              <input value={formData.employeeName} readOnly className="mb-2 p-2 border rounded w-full bg-[#111111]" placeholder="Employee Name" required />
               <select name="leaveType" value={formData.leaveType} onChange={handleChange} className="mb-2 p-2 border rounded w-full" required>
                 <option value="casual">Casual</option>
                 <option value="sick">Sick</option>
@@ -254,25 +254,25 @@ const LeaveRequestForm = () => {
       {/* Permission Modal */}
       {isPermissionModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+          <div className="bg-[#0a0a0a] rounded-lg shadow-xl w-full max-w-md p-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Request Permission</h3>
-              <button onClick={() => setIsPermissionModalOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+              <h3 className="text-xl font-bold text-gray-300">Request Permission</h3>
+              <button onClick={() => setIsPermissionModalOpen(false)} className="text-gray-500 hover:text-gray-300">✕</button>
             </div>
 
             <form onSubmit={handlePermissionSubmit}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Reason</label>
                 <textarea required className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" rows="3" value={permissionForm.reason} onChange={(e) => setPermissionForm({ ...permissionForm, reason: e.target.value })} placeholder="Why do you need permission?"></textarea>
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Duration (minutes)</label>
                 <input type="number" required min="1" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={permissionForm.duration} onChange={(e) => setPermissionForm({ ...permissionForm, duration: e.target.value })} placeholder="e.g. 30" />
               </div>
 
               <div className="flex gap-3">
-                <button type="button" onClick={() => setIsPermissionModalOpen(false)} className="flex-1 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                <button type="button" onClick={() => setIsPermissionModalOpen(false)} className="flex-1 py-2 text-gray-300 bg-[#111111] rounded-lg hover:bg-[#1f2937]">Cancel</button>
                 <button onClick={() => navigate('/mypermissions')} type="submit" disabled={permissionLoading} className="flex-1 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">{permissionLoading ? "Submitting..." : "Request"}</button>
               </div>
             </form>

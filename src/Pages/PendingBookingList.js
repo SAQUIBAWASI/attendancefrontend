@@ -121,7 +121,7 @@ const PendingBookingList = () => {
   };
 
   return (
-    <div className="p-6 bg-white rounded shadow">
+    <div className="p-6 bg-[#0a0a0a] rounded shadow">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold">Pending Order List</h3>
         <div className="space-x-4">

@@ -185,7 +185,7 @@ const StaffList = () => {
   };
 
   return (
-    <div className="p-4 bg-white rounded shadow">
+    <div className="p-4 bg-[#0a0a0a] rounded shadow">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Staff List</h2>
       </div>
@@ -225,7 +225,7 @@ const StaffList = () => {
 
       <div className="overflow-y-auto max-h-[400px]">
         <table className="w-full border rounded text-sm">
-          <thead className="bg-gray-200">
+          <thead className="bg-[#1f2937]">
             <tr>
               <th className="p-2 border">Name</th>
               <th className="p-2 border">Role</th>
@@ -243,7 +243,7 @@ const StaffList = () => {
           </thead>
           <tbody>
             {filteredStaffs.map((staff) => (
-              <tr key={staff._id} className="hover:bg-gray-100">
+              <tr key={staff._id} className="hover:bg-[#111111]">
                 <td className="p-2 border">{staff.name}</td>
                 <td className="p-2 border">{staff.role}</td>
                 <td className="p-2 border">{staff.department}</td>
@@ -313,7 +313,7 @@ const StaffList = () => {
       {/* Modals for Add Amount & Edit Staff (Same as before) */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg w-[300px]">
+          <div className="bg-[#0a0a0a] p-6 rounded shadow-lg w-[300px]">
             <h3 className="text-lg font-semibold mb-4">
               Add Amount to {selectedStaff?.name}'s Wallet
             </h3>
@@ -347,7 +347,7 @@ const StaffList = () => {
 
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg w-[300px]">
+          <div className="bg-[#0a0a0a] p-6 rounded shadow-lg w-[300px]">
             <h3 className="text-lg font-semibold mb-4">
               Edit {selectedStaff?.name}'s Details
             </h3>

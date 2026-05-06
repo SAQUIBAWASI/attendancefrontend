@@ -28,14 +28,14 @@ const UsersPlansList = () => {
   if (error) return <p>{error}</p>;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto bg-white shadow-lg rounded-lg">
+    <div className="p-6 max-w-6xl mx-auto bg-[#0a0a0a] shadow-lg rounded-lg">
       <h2 className="text-2xl font-semibold text-blue-900 mb-6">Users with Subscribed Plans</h2>
 
       {usersData.length === 0 ? (
         <p>No users with subscribed plans found.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-gray-300">
+          <table className="w-full border-collapse border border-[#374151]">
             <thead className="bg-purple-600 text-white">
               <tr>
                 <th className="p-2 border">Sl</th>
@@ -47,7 +47,7 @@ const UsersPlansList = () => {
             </thead>
             <tbody>
               {usersData.map((user, index) => (
-                <tr key={user.email} className="border-b hover:bg-gray-50">
+                <tr key={user.email} className="border-b hover:bg-[#000000]">
                   <td className="p-2 border">{index + 1}</td>
                   <td className="p-2 border">{user.name}</td>
                   <td className="p-2 border">{user.email}</td>

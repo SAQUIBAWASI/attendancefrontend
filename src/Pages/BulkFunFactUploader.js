@@ -54,7 +54,7 @@ const BulkFunFactUploader = () => {
           onClick={triggerFileInput}
         >
           <FaCloudUploadAlt className="text-4xl text-purple-600 mb-2" />
-          <span className="text-sm text-gray-700">Click to upload your .json file</span>
+          <span className="text-sm text-gray-300">Click to upload your .json file</span>
           <input
             ref={fileInputRef}
             type="file"
@@ -73,9 +73,9 @@ const BulkFunFactUploader = () => {
       )}
 
       {/* Format Example */}
-      <div className="mb-10 bg-gray-50 p-4 border rounded">
+      <div className="mb-10 bg-[#000000] p-4 border rounded">
         <h2 className="font-semibold mb-2">📄 JSON Format Example:</h2>
-        <pre className="bg-white p-3 text-xs rounded border overflow-auto">
+        <pre className="bg-[#0a0a0a] p-3 text-xs rounded border overflow-auto">
           {`{
   "funFacts": [
     {
@@ -95,7 +95,7 @@ const BulkFunFactUploader = () => {
         <div>
           <h3 className="text-lg font-semibold mb-2">Uploaded Fun Facts:</h3>
           <table className="w-full border text-sm">
-            <thead className="bg-gray-200">
+            <thead className="bg-[#1f2937]">
               <tr>
                 <th className="p-2 border">#</th>
                 <th className="p-2 border">Fact</th>
@@ -104,7 +104,7 @@ const BulkFunFactUploader = () => {
             </thead>
             <tbody>
               {funFacts.map((fact, idx) => (
-                <tr key={idx} className="odd:bg-white even:bg-gray-100">
+                <tr key={idx} className="odd:bg-[#0a0a0a] even:bg-[#111111]">
                   <td className="p-2 border">{idx + 1}</td>
                   <td className="p-2 border">{fact.fact}</td>
                   <td className="p-2 border">{fact.source}</td>

@@ -104,7 +104,7 @@ const DiagnosticList = () => {
   ];
 
   return (
-    <div className="p-4 bg-white rounded shadow">
+    <div className="p-4 bg-[#0a0a0a] rounded shadow">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Diagnostic Centers</h2>
       </div>
@@ -144,7 +144,7 @@ const DiagnosticList = () => {
 
       <div className="overflow-y-auto max-h-[400px]">
         <table className="w-full border rounded text-sm">
-          <thead className="bg-gray-200">
+          <thead className="bg-[#1f2937]">
             <tr>
               {headers.map((header, idx) => (
                 <th key={idx} className="p-2 border text-left">{header.label}</th>
@@ -154,7 +154,7 @@ const DiagnosticList = () => {
           </thead>
           <tbody>
             {currentCenters.map((center, idx) => (
-              <tr key={idx} className="hover:bg-gray-100 border-b">
+              <tr key={idx} className="hover:bg-[#111111] border-b">
                 <td className="p-2 border">{center.name}</td>
                 <td className="p-2 border">{center.email}</td>
                 <td className="p-2 border">{center.phone}</td>
@@ -185,7 +185,7 @@ const DiagnosticList = () => {
         <button
           onClick={goToPrevPage}
           disabled={currentPage === 1}
-          className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+          className="px-4 py-2 bg-gray-300 text-gray-300 rounded hover:bg-gray-400"
         >
           Previous
         </button>
@@ -197,7 +197,7 @@ const DiagnosticList = () => {
         <button
           onClick={goToNextPage}
           disabled={currentPage === totalPages}
-          className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+          className="px-4 py-2 bg-gray-300 text-gray-300 rounded hover:bg-gray-400"
         >
           Next
         </button>

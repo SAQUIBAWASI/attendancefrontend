@@ -4,7 +4,7 @@ export default function DatabaseBackup() {
   const [showModal, setShowModal] = useState(false);
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md">
+    <div className="p-6 bg-[#0a0a0a] rounded-lg shadow-md">
       <h2 className="mb-4 text-xl font-semibold">Database Backup</h2>
 
       <button
@@ -15,7 +15,7 @@ export default function DatabaseBackup() {
       </button>
 
       <div className="mt-4 overflow-hidden border rounded-lg">
-        <div className="flex justify-between p-4 bg-gray-100">
+        <div className="flex justify-between p-4 bg-[#111111]">
           <div>
             <label className="mr-2">Show</label>
             <select className="p-1 border rounded">
@@ -29,7 +29,7 @@ export default function DatabaseBackup() {
         </div>
 
         <table className="w-full border-collapse">
-          <thead className="bg-gray-200">
+          <thead className="bg-[#1f2937]">
             <tr>
               <th className="p-2 border">SI</th>
               <th className="p-2 border">Name</th>
@@ -48,7 +48,7 @@ export default function DatabaseBackup() {
           </tbody>
         </table>
 
-        <div className="flex justify-between p-4 bg-gray-100">
+        <div className="flex justify-between p-4 bg-[#111111]">
           <span>Showing 0 to 0 of 0 entries</span>
           <div>
             <button className="px-4 py-1 mr-2 border rounded">Previous</button>
@@ -60,10 +60,10 @@ export default function DatabaseBackup() {
       {/* Confirmation Modal */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-          <div className="p-6 text-center bg-white rounded-lg shadow-lg w-96">
+          <div className="p-6 text-center bg-[#0a0a0a] rounded-lg shadow-lg w-96">
             <div className="text-5xl text-orange-400">⚠</div>
             <h3 className="mt-2 text-xl font-semibold">Are you sure?</h3>
-            <p className="mt-1 text-gray-600">You want to Backup Your Database</p>
+            <p className="mt-1 text-gray-400">You want to Backup Your Database</p>
             <div className="flex justify-center gap-4 mt-4">
               <button
                 className="px-4 py-2 text-blue-700 bg-blue-100 border border-blue-600 rounded"

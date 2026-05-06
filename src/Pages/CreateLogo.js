@@ -36,7 +36,7 @@ const CreateLogo = () => {
   };
 
   return (
-    <div className="container p-6 max-w-4xl mx-auto bg-white shadow-lg rounded-lg">
+    <div className="container p-6 max-w-4xl mx-auto bg-[#0a0a0a] shadow-lg rounded-lg">
       <h2 className="text-xl font-semibold mb-6 text-center text-blue-900">Create Logo</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>

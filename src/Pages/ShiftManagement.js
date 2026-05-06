@@ -75,16 +75,16 @@
 //   };
 
 //   return (
-//     <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
-//       <div className="w-full max-w-md p-6 bg-white shadow-lg rounded-2xl">
-//         <h1 className="mb-4 text-xl font-bold text-center text-gray-800">
+//     <div className="flex items-center justify-center min-h-screen p-4 bg-[#000000]">
+//       <div className="w-full max-w-md p-6 bg-[#0a0a0a] shadow-lg rounded-2xl">
+//         <h1 className="mb-4 text-xl font-bold text-center text-gray-300">
 //           Assign Shift to Employee
 //         </h1>
 
 //         <form onSubmit={handleSubmit} className="space-y-4">
 //           {/* Employee ID */}
 //           <div>
-//             <label className="block mb-1 text-sm text-gray-700">
+//             <label className="block mb-1 text-sm text-gray-300">
 //               Employee ID *
 //             </label>
 //             <input
@@ -101,7 +101,7 @@
 
 //           {/* Employee Name */}
 //           <div>
-//             <label className="block mb-1 text-sm font-medium text-gray-700">
+//             <label className="block mb-1 text-sm font-medium text-gray-300">
 //               Employee Name *
 //             </label>
 //             <input
@@ -118,7 +118,7 @@
 
 //           {/* Shift Type */}
 //           <div>
-//             <label className="block mb-2 text-sm font-medium text-gray-700">
+//             <label className="block mb-2 text-sm font-medium text-gray-300">
 //               Select Shift *
 //             </label>
 //             <div className="flex gap-3">
@@ -130,7 +130,7 @@
 //                   className={`flex-1 py-2 rounded-lg border text-center font-semibold ${
 //                     formData.shiftType === shift
 //                       ? "bg-blue-600 text-white"
-//                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+//                       : "bg-[#111111] text-gray-300 hover:bg-[#1f2937]"
 //                   }`}
 //                 >
 //                   Shift {shift}
@@ -142,7 +142,7 @@
 //           {/* Start & End Time */}
 //           <div className="grid grid-cols-2 gap-4">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-700">
+//               <label className="block mb-1 text-sm font-medium text-gray-300">
 //                 Start Time
 //               </label>
 //               <input
@@ -156,7 +156,7 @@
 //               />
 //             </div>
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-700">
+//               <label className="block mb-1 text-sm font-medium text-gray-300">
 //                 End Time
 //               </label>
 //               <input
@@ -184,7 +184,7 @@
 //           <button
 //             type="button"
 //             onClick={() => navigate("/shifts")}
-//             className="w-full py-2 mt-2 border rounded-lg hover:bg-gray-100"
+//             className="w-full py-2 mt-2 border rounded-lg hover:bg-[#111111]"
 //           >
 //             Cancel
 //           </button>
@@ -292,16 +292,16 @@
 //   };
 
 //   return (
-//     <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
-//       <div className="w-full max-w-md p-6 bg-white shadow-lg rounded-2xl">
-//         <h1 className="mb-4 text-xl font-bold text-center text-gray-800">
+//     <div className="flex items-center justify-center min-h-screen p-4 bg-[#000000]">
+//       <div className="w-full max-w-md p-6 bg-[#0a0a0a] shadow-lg rounded-2xl">
+//         <h1 className="mb-4 text-xl font-bold text-center text-gray-300">
 //           Create Shift for Employee
 //         </h1>
 
 //         <form onSubmit={handleSubmit} className="space-y-4">
 //           {/* Employee ID */}
 //           <div>
-//             <label className="block mb-1 text-sm font-medium text-gray-700">
+//             <label className="block mb-1 text-sm font-medium text-gray-300">
 //               Employee ID *
 //             </label>
 //             <input
@@ -318,7 +318,7 @@
 
 //           {/* Employee Name */}
 //           <div>
-//             <label className="block mb-1 text-sm font-medium text-gray-700">
+//             <label className="block mb-1 text-sm font-medium text-gray-300">
 //               Employee Name *
 //             </label>
 //             <input
@@ -335,7 +335,7 @@
 
 //           {/* Shift Type */}
 //           <div>
-//             <label className="block mb-2 text-sm font-medium text-gray-700">
+//             <label className="block mb-2 text-sm font-medium text-gray-300">
 //               Select Shift *
 //             </label>
 //             <div className="grid grid-cols-3 gap-3">
@@ -347,7 +347,7 @@
 //                   className={`py-2 rounded-lg border text-center font-semibold ${
 //                     formData.shiftType === shift
 //                       ? "bg-blue-600 text-white"
-//                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+//                       : "bg-[#111111] text-gray-300 hover:bg-[#1f2937]"
 //                   }`}
 //                 >
 //                   Shift {shift}
@@ -359,25 +359,25 @@
 //           {/* Start & End Time */}
 //           <div className="grid grid-cols-2 gap-4">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-700">
+//               <label className="block mb-1 text-sm font-medium text-gray-300">
 //                 Start Time
 //               </label>
 //               <input
 //                 type="text"
 //                 value={formData.startTime}
 //                 readOnly
-//                 className="w-full px-3 py-2 border rounded-lg bg-gray-50"
+//                 className="w-full px-3 py-2 border rounded-lg bg-[#000000]"
 //               />
 //             </div>
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-700">
+//               <label className="block mb-1 text-sm font-medium text-gray-300">
 //                 End Time
 //               </label>
 //               <input
 //                 type="text"
 //                 value={formData.endTime}
 //                 readOnly
-//                 className="w-full px-3 py-2 border rounded-lg bg-gray-50"
+//                 className="w-full px-3 py-2 border rounded-lg bg-[#000000]"
 //               />
 //             </div>
 //           </div>
@@ -395,7 +395,7 @@
 //           <button
 //             type="button"
 //             onClick={() => navigate("/shiftlist")}
-//             className="w-full py-2 mt-2 border rounded-lg hover:bg-gray-100"
+//             className="w-full py-2 mt-2 border rounded-lg hover:bg-[#111111]"
 //           >
 //             Cancel
 //           </button>
@@ -597,7 +597,7 @@
 //       "I": "bg-red-50 border-red-200",
 //       "J": "bg-cyan-50 border-cyan-200"
 //     };
-//     return colors[type] || "bg-gray-50";
+//     return colors[type] || "bg-[#000000]";
 //   };
 
 //   const getShiftTextColor = (type) => {
@@ -613,7 +613,7 @@
 //       "I": "text-red-800",
 //       "J": "text-cyan-800"
 //     };
-//     return colors[type] || "text-gray-800";
+//     return colors[type] || "text-gray-300";
 //   };
 
 //   // ✅ Get time range from assignment (legacy or new)
@@ -824,8 +824,8 @@
 //       {/* Header */}
 //       <div className="flex flex-col items-start justify-between gap-4 mb-6 md:flex-row md:items-center">
 //         <div>
-//           <h1 className="text-3xl font-bold text-gray-800">Shifts</h1>
-//           {/* <p className="text-gray-600">Supporting A-Z shift types with legacy data</p> */}
+//           <h1 className="text-3xl font-bold text-gray-300">Shifts</h1>
+//           {/* <p className="text-gray-400">Supporting A-Z shift types with legacy data</p> */}
 //         </div>
 //         <div className="flex gap-3">
 //           {/* <button
@@ -863,11 +863,11 @@
 
 //       {/* ✅ 1. AVAILABLE SHIFTS SECTION - FIRST */}
 //       <div className="mb-8">
-//         <h2 className="mb-4 text-xl font-bold text-gray-800">Available Shifts ({masterShifts.length})</h2>
+//         <h2 className="mb-4 text-xl font-bold text-gray-300">Available Shifts ({masterShifts.length})</h2>
 //         {masterShifts.length === 0 ? (
-//           <div className="py-12 text-center rounded-lg bg-gray-50">
+//           <div className="py-12 text-center rounded-lg bg-[#000000]">
 //             <div className="mb-4 text-6xl text-gray-400">⏰</div>
-//             <h3 className="mb-2 text-xl font-semibold text-gray-600">No shifts created yet</h3>
+//             <h3 className="mb-2 text-xl font-semibold text-gray-400">No shifts created yet</h3>
 //             <p className="mb-4 text-gray-500">Create your first shift to get started</p>
 //             <button
 //               onClick={() => setShowCreateModal(true)}
@@ -881,7 +881,7 @@
 //             {masterShifts.map((shift) => (
 //               <div
 //                 key={shift._id}
-//                 className={`bg-white rounded-lg border p-4 shadow-sm ${getShiftColor(shift.shiftType)}`}
+//                 className={`bg-[#0a0a0a] rounded-lg border p-4 shadow-sm ${getShiftColor(shift.shiftType)}`}
 //               >
 //                 <div className="flex items-start justify-between mb-2">
 //                   <div className="flex-1">
@@ -901,7 +901,7 @@
 //                     <div className="mt-2">
 //                       <div className="space-y-1 overflow-y-auto max-h-16">
 //                         {shift.timeSlots?.slice(0, 2).map((slot) => (
-//                           <div key={slot.slotId} className="flex items-center gap-1 text-xs text-gray-600">
+//                           <div key={slot.slotId} className="flex items-center gap-1 text-xs text-gray-400">
 //                             <span>• {slot.timeRange}</span>
 //                           </div>
 //                         ))}
@@ -937,7 +937,7 @@
 //                       className={`px-2 py-1 text-xs rounded flex items-center gap-1 ${
 //                         getEmployeesCount(shift.shiftType) > 0
 //                           ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-//                           : 'bg-gray-100 text-gray-500 cursor-not-allowed'
+//                           : 'bg-[#111111] text-gray-500 cursor-not-allowed'
 //                       }`}
 //                     >
 //                       <FaEye className="text-xs" /> View
@@ -968,10 +968,10 @@
 //       {/* ✅ 2. ALL ASSIGNED EMPLOYEES SECTION - SECOND */}
 //       {employeeAssignments.length > 0 && (
 //         <div className="mt-8">
-//           <h2 className="mb-4 text-xl font-bold text-gray-800">All Assigned Employees ({employeeAssignments.length})</h2>
+//           <h2 className="mb-4 text-xl font-bold text-gray-300">All Assigned Employees ({employeeAssignments.length})</h2>
 //           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 //             {employeeAssignments.map((assignment) => (
-//               <div key={assignment._id} className={`bg-white p-3 rounded-lg border shadow-sm ${getShiftColor(assignment.shiftType)}`}>
+//               <div key={assignment._id} className={`bg-[#0a0a0a] p-3 rounded-lg border shadow-sm ${getShiftColor(assignment.shiftType)}`}>
 //                 <div className="flex items-start justify-between">
 //                   <div className="flex-1">
 //                     <div className="flex items-center gap-2 mb-1">
@@ -979,16 +979,16 @@
 //                         Shift {assignment.shiftType}
 //                       </span>
 //                     </div>
-//                     <h3 className="text-sm font-bold text-gray-800">
+//                     <h3 className="text-sm font-bold text-gray-300">
 //                       {assignment.employeeAssignment?.employeeName || assignment.employeeName}
 //                     </h3>
-//                     <p className="text-xs text-gray-600">
+//                     <p className="text-xs text-gray-400">
 //                       ID: {assignment.employeeAssignment?.employeeId || assignment.employeeId}
 //                     </p>
 
 //                     {/* Time Slot Display */}
-//                     <div className="p-2 mt-2 text-xs rounded bg-gray-50">
-//                       <p className="font-medium text-gray-700">
+//                     <div className="p-2 mt-2 text-xs rounded bg-[#000000]">
+//                       <p className="font-medium text-gray-300">
 //                         ⏰ <span className="font-bold">{getEmployeeTimeRange(assignment)}</span>
 //                       </p>
 //                       <p className="mt-1 text-gray-500">
@@ -1031,10 +1031,10 @@
 //       {/* QUICK CREATE MODAL (A-D) */}
 //       {/* {showCreateModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-800">Quick Create Shift (A-D)</h3>
-//               <button onClick={() => setShowCreateModal(false)} className="text-2xl text-gray-400 hover:text-gray-600">
+//               <h3 className="text-xl font-semibold text-gray-300">Quick Create Shift (A-D)</h3>
+//               <button onClick={() => setShowCreateModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">
 //                 &times;
 //               </button>
 //             </div>
@@ -1083,7 +1083,7 @@
 //             }} className="p-6">
 //               <div className="space-y-6">
 //                 <div>
-//                   <label className="block mb-3 text-sm font-medium text-gray-700">
+//                   <label className="block mb-3 text-sm font-medium text-gray-300">
 //                     Select Shift Type (A-D)
 //                   </label>
 //                   <div className="grid grid-cols-2 gap-3">
@@ -1102,7 +1102,7 @@
 //                         className={`p-4 rounded-lg border text-center ${
 //                           createForm.shiftType === type
 //                             ? `${getShiftColor(type)} border-2 border-blue-500`
-//                             : 'bg-gray-100 hover:bg-gray-200'
+//                             : 'bg-[#111111] hover:bg-[#1f2937]'
 //                         }`}
 //                       >
 //                         <div className="text-lg font-bold">Shift {type}</div>
@@ -1117,14 +1117,14 @@
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-700">
+//                   <label className="block mb-2 text-sm font-medium text-gray-300">
 //                     Shift Name
 //                   </label>
 //                   <input
 //                     type="text"
 //                     value={createForm.shiftName}
 //                     readOnly
-//                     className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+//                     className="w-full px-4 py-2 border border-[#374151] rounded-lg bg-[#000000]"
 //                   />
 //                 </div>
 //               </div>
@@ -1133,7 +1133,7 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowCreateModal(false)}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-300 border border-[#374151] rounded-lg hover:bg-[#000000]"
 //                 >
 //                   Cancel
 //                 </button>
@@ -1152,10 +1152,10 @@
 //       {/* CUSTOM CREATE MODAL (E-Z) */}
 //       {showCustomCreateModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+//           <div className="bg-[#0a0a0a] rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-800">Create Custom Shift (E-Z or any letter)</h3>
-//               <button onClick={() => setShowCustomCreateModal(false)} className="text-2xl text-gray-400 hover:text-gray-600">
+//               <h3 className="text-xl font-semibold text-gray-300">Create Custom Shift (E-Z or any letter)</h3>
+//               <button onClick={() => setShowCustomCreateModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">
 //                 &times;
 //               </button>
 //             </div>
@@ -1164,7 +1164,7 @@
 //               <div className="space-y-6">
 //                 <div className="grid grid-cols-2 gap-4">
 //                   <div>
-//                     <label className="block mb-2 text-sm font-medium text-gray-700">
+//                     <label className="block mb-2 text-sm font-medium text-gray-300">
 //                       Shift Type (Single letter E-Z) *
 //                     </label>
 //                     <input
@@ -1175,7 +1175,7 @@
 //                         ...prev, 
 //                         shiftType: e.target.value.toUpperCase().replace(/[^A-Z]/g, '')
 //                       }))}
-//                       className="w-full px-4 py-2 text-sm uppercase border border-gray-300 rounded-lg"
+//                       className="w-full px-4 py-2 text-sm uppercase border border-[#374151] rounded-lg"
 //                       placeholder="E"
 //                       required
 //                     />
@@ -1183,14 +1183,14 @@
 //                   </div>
 
 //                   <div>
-//                     <label className="block mb-2 text-sm font-medium text-gray-700">
+//                     <label className="block mb-2 text-sm font-medium text-gray-300">
 //                       Shift Name *
 //                     </label>
 //                     <input
 //                       type="text"
 //                       value={createForm.shiftName}
 //                       onChange={(e) => setCreateForm(prev => ({ ...prev, shiftName: e.target.value }))}
-//                       className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+//                       className="w-full px-4 py-2 text-sm border border-[#374151] rounded-lg"
 //                       placeholder="e.g., Extended Shift E"
 //                       required
 //                     />
@@ -1200,7 +1200,7 @@
 //                 {/* Time Slots Configuration */}
 //                 <div>
 //                   <div className="flex items-center justify-between mb-3">
-//                     <label className="block text-sm font-medium text-gray-700">
+//                     <label className="block text-sm font-medium text-gray-300">
 //                       Configure Time Slots (Minimum 1 required) *
 //                     </label>
 //                     <button
@@ -1214,7 +1214,7 @@
 
 //                   <div className="space-y-3">
 //                     {createForm.timeSlots.map((slot, index) => (
-//                       <div key={slot.slotId} className="p-3 border rounded-lg bg-gray-50">
+//                       <div key={slot.slotId} className="p-3 border rounded-lg bg-[#000000]">
 //                         <div className="flex items-center justify-between mb-2">
 //                           <span className="text-sm font-medium">Slot {index + 1}</span>
 //                           {createForm.timeSlots.length > 1 && (
@@ -1230,24 +1230,24 @@
 
 //                         <div className="grid grid-cols-2 gap-3">
 //                           <div>
-//                             <label className="block mb-1 text-xs text-gray-600">Time Range *</label>
+//                             <label className="block mb-1 text-xs text-gray-400">Time Range *</label>
 //                             <input
 //                               type="text"
 //                               value={slot.timeRange}
 //                               onChange={(e) => updateTimeSlot(index, 'timeRange', e.target.value)}
-//                               className="w-full px-3 py-2 text-xs border border-gray-300 rounded"
+//                               className="w-full px-3 py-2 text-xs border border-[#374151] rounded"
 //                               placeholder="e.g., 10:00 - 19:00"
 //                               required
 //                             />
 //                           </div>
 
 //                           <div>
-//                             <label className="block mb-1 text-xs text-gray-600">Description *</label>
+//                             <label className="block mb-1 text-xs text-gray-400">Description *</label>
 //                             <input
 //                               type="text"
 //                               value={slot.description}
 //                               onChange={(e) => updateTimeSlot(index, 'description', e.target.value)}
-//                               className="w-full px-3 py-2 text-xs border border-gray-300 rounded"
+//                               className="w-full px-3 py-2 text-xs border border-[#374151] rounded"
 //                               placeholder="e.g., Morning 10 to 7"
 //                               required
 //                             />
@@ -1276,7 +1276,7 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowCustomCreateModal(false)}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-300 border border-[#374151] rounded-lg hover:bg-[#000000]"
 //                 >
 //                   Cancel
 //                 </button>
@@ -1295,12 +1295,12 @@
 //       {/* ASSIGN SHIFT MODAL */}
 //       {showAssignModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-800">
+//               <h3 className="text-xl font-semibold text-gray-300">
 //                 {editingAssignment ? 'Edit Assignment' : 'Assign Shift'}
 //               </h3>
-//               <button onClick={() => setShowAssignModal(false)} className="text-2xl text-gray-400 hover:text-gray-600">
+//               <button onClick={() => setShowAssignModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">
 //                 &times;
 //               </button>
 //             </div>
@@ -1308,14 +1308,14 @@
 //             <form onSubmit={editingAssignment ? handleUpdateAssignment : handleAssignShift} className="p-6">
 //               <div className="space-y-4">
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-700">
+//                   <label className="block mb-2 text-sm font-medium text-gray-300">
 //                     Employee ID {editingAssignment && '(Cannot change)'}
 //                   </label>
 //                   <input
 //                     type="text"
 //                     value={assignForm.employeeId}
 //                     onChange={(e) => setAssignForm(prev => ({ ...prev, employeeId: e.target.value }))}
-//                     className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+//                     className="w-full px-4 py-2 text-sm border border-[#374151] rounded-lg"
 //                     placeholder="EMP001"
 //                     required
 //                     readOnly={!!editingAssignment}
@@ -1323,21 +1323,21 @@
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-700">
+//                   <label className="block mb-2 text-sm font-medium text-gray-300">
 //                     Employee Name *
 //                   </label>
 //                   <input
 //                     type="text"
 //                     value={assignForm.employeeName}
 //                     onChange={(e) => setAssignForm(prev => ({ ...prev, employeeName: e.target.value }))}
-//                     className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+//                     className="w-full px-4 py-2 text-sm border border-[#374151] rounded-lg"
 //                     placeholder="John Doe"
 //                     required
 //                   />
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-700">
+//                   <label className="block mb-2 text-sm font-medium text-gray-300">
 //                     Select Shift Type *
 //                   </label>
 //                   <select
@@ -1347,7 +1347,7 @@
 //                       shiftType: e.target.value,
 //                       selectedSlotId: ''
 //                     }))}
-//                     className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+//                     className="w-full px-4 py-2 text-sm border border-[#374151] rounded-lg"
 //                     required
 //                   >
 //                     <option value="">Select Shift Type</option>
@@ -1375,7 +1375,7 @@
 //                 {/* Time Slot Selection (only if master shift exists) */}
 //                 {assignForm.shiftType && masterShifts.find(s => s.shiftType === assignForm.shiftType) && (
 //                   <div>
-//                     <label className="block mb-2 text-sm font-medium text-gray-700">
+//                     <label className="block mb-2 text-sm font-medium text-gray-300">
 //                       Select Time Slot *
 //                     </label>
 //                     <div className="space-y-2 overflow-y-auto max-h-48">
@@ -1387,7 +1387,7 @@
 //                           className={`w-full p-3 text-left rounded-lg border flex justify-between items-center text-sm ${
 //                             assignForm.selectedSlotId === slot.slotId
 //                               ? 'bg-blue-50 border-blue-300'
-//                               : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+//                               : 'bg-[#000000] border-[#1f2937] hover:bg-[#111111]'
 //                           }`}
 //                         >
 //                           <div>
@@ -1417,7 +1417,7 @@
 //                       selectedSlotId: ''
 //                     });
 //                   }}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-300 border border-[#374151] rounded-lg hover:bg-[#000000]"
 //                 >
 //                   Cancel
 //                 </button>
@@ -1436,20 +1436,20 @@
 //       {/* VIEW EMPLOYEES MODAL - WITH CLOSE BUTTON */}
 //       {showViewModal && viewEmployees.length > 0 && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+//           <div className="bg-[#0a0a0a] rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
 //             {/* Modal Header */}
 //             <div className="flex items-center justify-between p-4 border-b">
 //               <div>
-//                 <h3 className="text-lg font-semibold text-gray-800">
+//                 <h3 className="text-lg font-semibold text-gray-300">
 //                   {viewShiftInfo.shiftName} Employees
 //                 </h3>
-//                 <p className="text-sm text-gray-600">
+//                 <p className="text-sm text-gray-400">
 //                   Shift {viewShiftInfo.shiftType} • {viewEmployees.length} employees
 //                 </p>
 //               </div>
 //               <button 
 //                 onClick={() => setShowViewModal(false)} 
-//                 className="text-2xl text-gray-400 hover:text-gray-600"
+//                 className="text-2xl text-gray-400 hover:text-gray-400"
 //               >
 //                 &times;
 //               </button>
@@ -1458,16 +1458,16 @@
 //             {/* Modal Body - Scrollable */}
 //             <div className="flex-1 overflow-y-auto">
 //               <table className="w-full">
-//                 <thead className="sticky top-0 bg-gray-50">
+//                 <thead className="sticky top-0 bg-[#000000]">
 //                   <tr>
 //                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee</th>
 //                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Time Slot</th>
 //                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Actions</th>
 //                   </tr>
 //                 </thead>
-//                 <tbody className="divide-y divide-gray-200">
+//                 <tbody className="divide-y divide-[#1f2937]">
 //                   {viewEmployees.map((emp) => (
-//                     <tr key={emp._id} className="hover:bg-gray-50">
+//                     <tr key={emp._id} className="hover:bg-[#000000]">
 //                       <td className="px-4 py-3">
 //                         <div>
 //                           <div className="text-sm font-medium">{emp.employeeAssignment?.employeeName || emp.employeeName}</div>
@@ -1520,7 +1520,7 @@
 //             <div className="p-4 border-t">
 //               <button
 //                 onClick={() => setShowViewModal(false)}
-//                 className="w-full py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 text-sm font-medium"
+//                 className="w-full py-2.5 bg-[#1f2937] text-gray-300 rounded-lg hover:bg-gray-300 text-sm font-medium"
 //               >
 //                 Close
 //               </button>
@@ -1690,7 +1690,7 @@
 //       "I": "bg-red-50 border-red-200",
 //       "J": "bg-cyan-50 border-cyan-200"
 //     };
-//     return colors[type] || "bg-gray-50 border-gray-200";
+//     return colors[type] || "bg-[#000000] border-[#1f2937]";
 //   };
 
 //   const getShiftTextColor = (type) => {
@@ -1706,7 +1706,7 @@
 //       "I": "text-red-800",
 //       "J": "text-cyan-800"
 //     };
-//     return colors[type] || "text-gray-800";
+//     return colors[type] || "text-gray-300";
 //   };
 
 //   // ✅ Get row background color
@@ -1723,7 +1723,7 @@
 //       "I": "bg-red-50 hover:bg-red-100",
 //       "J": "bg-cyan-50 hover:bg-cyan-100"
 //     };
-//     return colors[type] || "bg-gray-50 hover:bg-gray-100";
+//     return colors[type] || "bg-[#000000] hover:bg-[#111111]";
 //   };
 
 //   // ✅ Get border color for shift card
@@ -1740,7 +1740,7 @@
 //       "I": "border-red-200",
 //       "J": "border-cyan-200"
 //     };
-//     return colors[type] || "border-gray-200";
+//     return colors[type] || "border-[#1f2937]";
 //   };
 
 //   // ✅ Get badge color
@@ -1757,7 +1757,7 @@
 //       "I": "bg-red-100 text-red-800 border-red-200",
 //       "J": "bg-cyan-100 text-cyan-800 border-cyan-200"
 //     };
-//     return colors[type] || "bg-gray-100 text-gray-800 border-gray-200";
+//     return colors[type] || "bg-[#111111] text-gray-300 border-[#1f2937]";
 //   };
 
 //   // ✅ Get time range from assignment
@@ -1934,8 +1934,8 @@
 //       {/* Header */}
 //       <div className="flex flex-col items-start justify-between gap-4 mb-6 md:flex-row md:items-center">
 //         <div>
-//           <h1 className="text-3xl font-bold text-gray-800">Shift Management</h1>
-//           <p className="text-gray-600">One time slot per shift</p>
+//           <h1 className="text-3xl font-bold text-gray-300">Shift Management</h1>
+//           <p className="text-gray-400">One time slot per shift</p>
 //         </div>
 //         <div className="flex flex-wrap gap-3">
 //           {masterShifts.length === 0 && (
@@ -1976,14 +1976,14 @@
 //       {/* ✅ 1. AVAILABLE SHIFTS SECTION - CARD GRID FORMAT */}
 //       <div className="mb-8">
 //         <div className="flex items-center justify-between mb-4">
-//           <h2 className="text-xl font-bold text-gray-800">Available Shifts ({masterShifts.length})</h2>
+//           <h2 className="text-xl font-bold text-gray-300">Available Shifts ({masterShifts.length})</h2>
 //           <p className="text-sm text-gray-500">Manage all created shifts</p>
 //         </div>
 
 //         {masterShifts.length === 0 ? (
-//           <div className="py-12 text-center rounded-lg bg-gray-50">
+//           <div className="py-12 text-center rounded-lg bg-[#000000]">
 //             <div className="mb-4 text-6xl text-gray-400">⏰</div>
-//             <h3 className="mb-2 text-xl font-semibold text-gray-600">No shifts created yet</h3>
+//             <h3 className="mb-2 text-xl font-semibold text-gray-400">No shifts created yet</h3>
 //             <p className="mb-4 text-gray-500">Create your first shift to get started</p>
 //             <button
 //               onClick={() => setShowCustomCreateModal(true)}
@@ -2033,7 +2033,7 @@
 //                         {timeSlot?.timeRange || "Not set"}
 //                       </span>
 //                     </div>
-//                     <p className="text-xs text-gray-600">
+//                     <p className="text-xs text-gray-400">
 //                       {timeSlot?.description || "No description"}
 //                     </p>
 //                   </div>
@@ -2041,7 +2041,7 @@
 //                   {/* Shift ID */}
 //                   {/* <div className="mb-5">
 //                     <div className="mb-1 text-xs text-gray-500">Shift ID</div>
-//                     <div className="font-mono text-xs text-gray-700 truncate">
+//                     <div className="font-mono text-xs text-gray-300 truncate">
 //                       {shift._id.substring(0, 12)}...
 //                     </div>
 //                   </div> */}
@@ -2054,7 +2054,7 @@
 //                       className={`flex-1 px-3 py-2 text-xs rounded-lg flex items-center justify-center gap-1 ${
 //                         employeeCount > 0
 //                           ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-//                           : 'bg-gray-100 text-gray-500 cursor-not-allowed'
+//                           : 'bg-[#111111] text-gray-500 cursor-not-allowed'
 //                       }`}
 //                     >
 //                       <FaEye /> View
@@ -2093,12 +2093,12 @@
 //       {employeeAssignments.length > 0 && (
 //         <div className="mb-8">
 //           <div className="flex items-center justify-between mb-4">
-//             <h2 className="text-xl font-bold text-gray-800">All Assigned Employees ({employeeAssignments.length})</h2>
+//             <h2 className="text-xl font-bold text-gray-300">All Assigned Employees ({employeeAssignments.length})</h2>
 //             <p className="text-sm text-gray-500">Complete list of all shift assignments</p>
 //           </div>
-//           <div className="overflow-hidden bg-white border rounded-lg shadow-sm">
+//           <div className="overflow-hidden bg-[#0a0a0a] border rounded-lg shadow-sm">
 //             <table className="w-full">
-//               <thead className="bg-gray-50">
+//               <thead className="bg-[#000000]">
 //                 <tr>
 //                   <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee ID</th>
 //                   <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee Name</th>
@@ -2133,7 +2133,7 @@
 //                         <div className={`font-medium ${textColor}`}>{getEmployeeTimeRange(assignment)}</div>
 //                       </td>
 //                       <td className="px-4 py-3">
-//                         <div className="text-sm text-gray-600">
+//                         <div className="text-sm text-gray-400">
 //                           {assignment.employeeAssignment?.selectedDescription || timeSlot?.description || "Shift timing"}
 //                         </div>
 //                       </td>
@@ -2175,10 +2175,10 @@
 //       {/* CUSTOM CREATE MODAL */}
 //       {showCustomCreateModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-800">Create New Shift</h3>
-//               <button onClick={() => setShowCustomCreateModal(false)} className="text-2xl text-gray-400 hover:text-gray-600">
+//               <h3 className="text-xl font-semibold text-gray-300">Create New Shift</h3>
+//               <button onClick={() => setShowCustomCreateModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">
 //                 &times;
 //               </button>
 //             </div>
@@ -2187,7 +2187,7 @@
 //               <div className="space-y-6">
 //                 <div className="grid grid-cols-2 gap-4">
 //                   <div>
-//                     <label className="block mb-2 text-sm font-medium text-gray-700">
+//                     <label className="block mb-2 text-sm font-medium text-gray-300">
 //                       Shift Type (Letter A-Z) *
 //                     </label>
 //                     <input
@@ -2198,7 +2198,7 @@
 //                         ...prev, 
 //                         shiftType: e.target.value.toUpperCase().replace(/[^A-Z]/g, '')
 //                       }))}
-//                       className="w-full px-4 py-2 text-sm uppercase border border-gray-300 rounded-lg"
+//                       className="w-full px-4 py-2 text-sm uppercase border border-[#374151] rounded-lg"
 //                       placeholder="E"
 //                       required
 //                     />
@@ -2206,14 +2206,14 @@
 //                   </div>
 
 //                   <div>
-//                     <label className="block mb-2 text-sm font-medium text-gray-700">
+//                     <label className="block mb-2 text-sm font-medium text-gray-300">
 //                       Shift Name *
 //                     </label>
 //                     <input
 //                       type="text"
 //                       value={createForm.shiftName}
 //                       onChange={(e) => setCreateForm(prev => ({ ...prev, shiftName: e.target.value }))}
-//                       className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+//                       className="w-full px-4 py-2 text-sm border border-[#374151] rounded-lg"
 //                       placeholder="e.g., Extended Shift E"
 //                       required
 //                     />
@@ -2222,30 +2222,30 @@
 
 //                 {/* Single Time Slot Configuration */}
 //                 <div>
-//                   <label className="block mb-3 text-sm font-medium text-gray-700">
+//                   <label className="block mb-3 text-sm font-medium text-gray-300">
 //                     Time Slot Configuration *
 //                   </label>
 
-//                   <div className="p-3 space-y-3 border rounded-lg bg-gray-50">
+//                   <div className="p-3 space-y-3 border rounded-lg bg-[#000000]">
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-600">Time Range *</label>
+//                       <label className="block mb-1 text-xs text-gray-400">Time Range *</label>
 //                       <input
 //                         type="text"
 //                         value={createForm.timeSlots[0].timeRange}
 //                         onChange={(e) => updateTimeSlot('timeRange', e.target.value)}
-//                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded"
+//                         className="w-full px-3 py-2 text-sm border border-[#374151] rounded"
 //                         placeholder="e.g., 10:00 - 19:00"
 //                         required
 //                       />
 //                     </div>
 
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-600">Description *</label>
+//                       <label className="block mb-1 text-xs text-gray-400">Description *</label>
 //                       <input
 //                         type="text"
 //                         value={createForm.timeSlots[0].description}
 //                         onChange={(e) => updateTimeSlot('description', e.target.value)}
-//                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded"
+//                         className="w-full px-3 py-2 text-sm border border-[#374151] rounded"
 //                         placeholder="e.g., Morning 10 to 7"
 //                         required
 //                       />
@@ -2271,7 +2271,7 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowCustomCreateModal(false)}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-300 border border-[#374151] rounded-lg hover:bg-[#000000]"
 //                 >
 //                   Cancel
 //                 </button>
@@ -2290,12 +2290,12 @@
 //       {/* ASSIGN SHIFT MODAL */}
 //       {showAssignModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-800">
+//               <h3 className="text-xl font-semibold text-gray-300">
 //                 {editingAssignment ? 'Edit Assignment' : 'Assign Shift'}
 //               </h3>
-//               <button onClick={() => setShowAssignModal(false)} className="text-2xl text-gray-400 hover:text-gray-600">
+//               <button onClick={() => setShowAssignModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">
 //                 &times;
 //               </button>
 //             </div>
@@ -2303,14 +2303,14 @@
 //             <form onSubmit={editingAssignment ? handleUpdateAssignment : handleAssignShift} className="p-6">
 //               <div className="space-y-4">
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-700">
+//                   <label className="block mb-2 text-sm font-medium text-gray-300">
 //                     Employee ID {editingAssignment && '(Cannot change)'}
 //                   </label>
 //                   <input
 //                     type="text"
 //                     value={assignForm.employeeId}
 //                     onChange={(e) => setAssignForm(prev => ({ ...prev, employeeId: e.target.value }))}
-//                     className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+//                     className="w-full px-4 py-2 text-sm border border-[#374151] rounded-lg"
 //                     placeholder="EMP001"
 //                     required
 //                     readOnly={!!editingAssignment}
@@ -2318,27 +2318,27 @@
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-700">
+//                   <label className="block mb-2 text-sm font-medium text-gray-300">
 //                     Employee Name *
 //                   </label>
 //                   <input
 //                     type="text"
 //                     value={assignForm.employeeName}
 //                     onChange={(e) => setAssignForm(prev => ({ ...prev, employeeName: e.target.value }))}
-//                     className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+//                     className="w-full px-4 py-2 text-sm border border-[#374151] rounded-lg"
 //                     placeholder="John Doe"
 //                     required
 //                   />
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-700">
+//                   <label className="block mb-2 text-sm font-medium text-gray-300">
 //                     Select Shift Type *
 //                   </label>
 //                   <select
 //                     value={assignForm.shiftType}
 //                     onChange={(e) => setAssignForm(prev => ({ ...prev, shiftType: e.target.value }))}
-//                     className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+//                     className="w-full px-4 py-2 text-sm border border-[#374151] rounded-lg"
 //                     required
 //                   >
 //                     <option value="">Select Shift Type</option>
@@ -2385,7 +2385,7 @@
 //                       shiftType: ''
 //                     });
 //                   }}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-300 border border-[#374151] rounded-lg hover:bg-[#000000]"
 //                 >
 //                   Cancel
 //                 </button>
@@ -2404,19 +2404,19 @@
 //       {/* VIEW EMPLOYEES MODAL */}
 //       {showViewModal && viewEmployees.length > 0 && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+//           <div className="bg-[#0a0a0a] rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
 //             <div className="flex items-center justify-between p-4 border-b">
 //               <div>
-//                 <h3 className="text-lg font-semibold text-gray-800">
+//                 <h3 className="text-lg font-semibold text-gray-300">
 //                   {viewShiftInfo.shiftName} Employees
 //                 </h3>
-//                 <p className="text-sm text-gray-600">
+//                 <p className="text-sm text-gray-400">
 //                   Shift {viewShiftInfo.shiftType} • {viewEmployees.length} employees
 //                 </p>
 //               </div>
 //               <button 
 //                 onClick={() => setShowViewModal(false)} 
-//                 className="text-2xl text-gray-400 hover:text-gray-600"
+//                 className="text-2xl text-gray-400 hover:text-gray-400"
 //               >
 //                 &times;
 //               </button>
@@ -2424,7 +2424,7 @@
 
 //             <div className="flex-1 overflow-y-auto">
 //               <table className="w-full">
-//                 <thead className="sticky top-0 bg-gray-50">
+//                 <thead className="sticky top-0 bg-[#000000]">
 //                   <tr>
 //                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee ID</th>
 //                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee Name</th>
@@ -2450,7 +2450,7 @@
 //                           <div className={`font-medium ${textColor}`}>{getEmployeeTimeRange(emp)}</div>
 //                         </td>
 //                         <td className="px-4 py-3">
-//                           <div className="text-sm text-gray-600">{emp.employeeAssignment?.selectedDescription || "Legacy shift"}</div>
+//                           <div className="text-sm text-gray-400">{emp.employeeAssignment?.selectedDescription || "Legacy shift"}</div>
 //                         </td>
 //                         <td className="px-4 py-3">
 //                           <div className="flex gap-2">
@@ -2490,7 +2490,7 @@
 //             <div className="p-4 border-t">
 //               <button
 //                 onClick={() => setShowViewModal(false)}
-//                 className="w-full py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 text-sm font-medium"
+//                 className="w-full py-2.5 bg-[#1f2937] text-gray-300 rounded-lg hover:bg-gray-300 text-sm font-medium"
 //               >
 //                 Close
 //               </button>
@@ -2696,7 +2696,7 @@
 //       "I": "bg-red-50 border-red-200",
 //       "J": "bg-cyan-50 border-cyan-200"
 //     };
-//     return colors[type] || "bg-gray-50 border-gray-200";
+//     return colors[type] || "bg-[#000000] border-[#1f2937]";
 //   };
 
 //   const getShiftTextColor = (type) => {
@@ -2712,7 +2712,7 @@
 //       "I": "text-red-800",
 //       "J": "text-cyan-800"
 //     };
-//     return colors[type] || "text-gray-800";
+//     return colors[type] || "text-gray-300";
 //   };
 
 //   // ✅ Get row background color
@@ -2729,7 +2729,7 @@
 //       "I": "bg-red-50 hover:bg-red-100",
 //       "J": "bg-cyan-50 hover:bg-cyan-100"
 //     };
-//     return colors[type] || "bg-gray-50 hover:bg-gray-100";
+//     return colors[type] || "bg-[#000000] hover:bg-[#111111]";
 //   };
 
 //   // ✅ Get border color for shift card
@@ -2746,7 +2746,7 @@
 //       "I": "border-red-200",
 //       "J": "border-cyan-200"
 //     };
-//     return colors[type] || "border-gray-200";
+//     return colors[type] || "border-[#1f2937]";
 //   };
 
 //   // ✅ Get badge color
@@ -2763,7 +2763,7 @@
 //       "I": "bg-red-100 text-red-800 border-red-200",
 //       "J": "bg-cyan-100 text-cyan-800 border-cyan-200"
 //     };
-//     return colors[type] || "bg-gray-100 text-gray-800 border-gray-200";
+//     return colors[type] || "bg-[#111111] text-gray-300 border-[#1f2937]";
 //   };
 
 //   // ✅ Get time range from assignment
@@ -2954,8 +2954,8 @@
 //       {/* Header */}
 //       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
 //         <div>
-//           <h1 className="text-3xl font-bold text-gray-800">Shift Management</h1>
-//           <p className="text-gray-600">Active employees only</p>
+//           <h1 className="text-3xl font-bold text-gray-300">Shift Management</h1>
+//           <p className="text-gray-400">Active employees only</p>
 //         </div>
 //         <div className="flex flex-wrap gap-3">
 //           {masterShifts.length === 0 && (
@@ -2996,14 +2996,14 @@
 //       {/* ✅ 1. AVAILABLE SHIFTS SECTION - CARD GRID FORMAT */}
 //       <div className="mb-8">
 //         <div className="flex items-center justify-between mb-4">
-//           <h2 className="text-xl font-bold text-gray-800">Available Shifts ({masterShifts.length})</h2>
+//           <h2 className="text-xl font-bold text-gray-300">Available Shifts ({masterShifts.length})</h2>
 //           <p className="text-sm text-gray-500">Active employees only</p>
 //         </div>
 
 //         {masterShifts.length === 0 ? (
-//           <div className="py-12 text-center rounded-lg bg-gray-50">
+//           <div className="py-12 text-center rounded-lg bg-[#000000]">
 //             <div className="mb-4 text-6xl text-gray-400">⏰</div>
-//             <h3 className="mb-2 text-xl font-semibold text-gray-600">No shifts created yet</h3>
+//             <h3 className="mb-2 text-xl font-semibold text-gray-400">No shifts created yet</h3>
 //             <p className="mb-4 text-gray-500">Create your first shift to get started</p>
 //             <button
 //               onClick={() => setShowCustomCreateModal(true)}
@@ -3053,7 +3053,7 @@
 //                         {timeSlot?.timeRange || "Not set"}
 //                       </span>
 //                     </div>
-//                     <p className="text-xs text-gray-600">
+//                     <p className="text-xs text-gray-400">
 //                       {timeSlot?.description || "No description"}
 //                     </p>
 //                   </div>
@@ -3066,7 +3066,7 @@
 //                       className={`flex-1 px-3 py-2 text-xs rounded-lg flex items-center justify-center gap-1 ${
 //                         employeeCount > 0
 //                           ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-//                           : 'bg-gray-100 text-gray-500 cursor-not-allowed'
+//                           : 'bg-[#111111] text-gray-500 cursor-not-allowed'
 //                       }`}
 //                     >
 //                       <FaEye /> View
@@ -3105,12 +3105,12 @@
 //       {employeeAssignments.length > 0 && (
 //         <div className="mb-8">
 //           <div className="flex items-center justify-between mb-4">
-//             <h2 className="text-xl font-bold text-gray-800">Active Assigned Employees ({employeeAssignments.length})</h2>
+//             <h2 className="text-xl font-bold text-gray-300">Active Assigned Employees ({employeeAssignments.length})</h2>
 //             <p className="text-sm text-gray-500">List of all shift assignments (inactive employees hidden)</p>
 //           </div>
-//           <div className="overflow-hidden bg-white border rounded-lg shadow-sm">
+//           <div className="overflow-hidden bg-[#0a0a0a] border rounded-lg shadow-sm">
 //             <table className="w-full">
-//               <thead className="bg-gray-50">
+//               <thead className="bg-[#000000]">
 //                 <tr>
 //                   <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee ID</th>
 //                   <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee Name</th>
@@ -3145,7 +3145,7 @@
 //                         <div className={`font-medium ${textColor}`}>{getEmployeeTimeRange(assignment)}</div>
 //                       </td>
 //                       <td className="px-4 py-3">
-//                         <div className="text-sm text-gray-600">
+//                         <div className="text-sm text-gray-400">
 //                           {assignment.employeeAssignment?.selectedDescription || timeSlot?.description || "Shift timing"}
 //                         </div>
 //                       </td>
@@ -3187,10 +3187,10 @@
 //       {/* CUSTOM CREATE MODAL */}
 //       {showCustomCreateModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-800">Create New Shift</h3>
-//               <button onClick={() => setShowCustomCreateModal(false)} className="text-2xl text-gray-400 hover:text-gray-600">
+//               <h3 className="text-xl font-semibold text-gray-300">Create New Shift</h3>
+//               <button onClick={() => setShowCustomCreateModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">
 //                 &times;
 //               </button>
 //             </div>
@@ -3199,7 +3199,7 @@
 //               <div className="space-y-6">
 //                 <div className="grid grid-cols-2 gap-4">
 //                   <div>
-//                     <label className="block mb-2 text-sm font-medium text-gray-700">
+//                     <label className="block mb-2 text-sm font-medium text-gray-300">
 //                       Shift Type (Letter A-Z) *
 //                     </label>
 //                     <input
@@ -3210,7 +3210,7 @@
 //                         ...prev, 
 //                         shiftType: e.target.value.toUpperCase().replace(/[^A-Z]/g, '')
 //                       }))}
-//                       className="w-full px-4 py-2 text-sm uppercase border border-gray-300 rounded-lg"
+//                       className="w-full px-4 py-2 text-sm uppercase border border-[#374151] rounded-lg"
 //                       placeholder="E"
 //                       required
 //                     />
@@ -3218,14 +3218,14 @@
 //                   </div>
 
 //                   <div>
-//                     <label className="block mb-2 text-sm font-medium text-gray-700">
+//                     <label className="block mb-2 text-sm font-medium text-gray-300">
 //                       Shift Name *
 //                     </label>
 //                     <input
 //                       type="text"
 //                       value={createForm.shiftName}
 //                       onChange={(e) => setCreateForm(prev => ({ ...prev, shiftName: e.target.value }))}
-//                       className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+//                       className="w-full px-4 py-2 text-sm border border-[#374151] rounded-lg"
 //                       placeholder="e.g., Extended Shift E"
 //                       required
 //                     />
@@ -3234,30 +3234,30 @@
 
 //                 {/* Single Time Slot Configuration */}
 //                 <div>
-//                   <label className="block mb-3 text-sm font-medium text-gray-700">
+//                   <label className="block mb-3 text-sm font-medium text-gray-300">
 //                     Time Slot Configuration *
 //                   </label>
 
-//                   <div className="p-3 space-y-3 border rounded-lg bg-gray-50">
+//                   <div className="p-3 space-y-3 border rounded-lg bg-[#000000]">
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-600">Time Range *</label>
+//                       <label className="block mb-1 text-xs text-gray-400">Time Range *</label>
 //                       <input
 //                         type="text"
 //                         value={createForm.timeSlots[0].timeRange}
 //                         onChange={(e) => updateTimeSlot('timeRange', e.target.value)}
-//                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded"
+//                         className="w-full px-3 py-2 text-sm border border-[#374151] rounded"
 //                         placeholder="e.g., 10:00 - 19:00"
 //                         required
 //                       />
 //                     </div>
 
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-600">Description *</label>
+//                       <label className="block mb-1 text-xs text-gray-400">Description *</label>
 //                       <input
 //                         type="text"
 //                         value={createForm.timeSlots[0].description}
 //                         onChange={(e) => updateTimeSlot('description', e.target.value)}
-//                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded"
+//                         className="w-full px-3 py-2 text-sm border border-[#374151] rounded"
 //                         placeholder="e.g., Morning 10 to 7"
 //                         required
 //                       />
@@ -3283,7 +3283,7 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowCustomCreateModal(false)}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-300 border border-[#374151] rounded-lg hover:bg-[#000000]"
 //                 >
 //                   Cancel
 //                 </button>
@@ -3302,12 +3302,12 @@
 //       {/* ASSIGN SHIFT MODAL */}
 //       {showAssignModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-800">
+//               <h3 className="text-xl font-semibold text-gray-300">
 //                 {editingAssignment ? 'Edit Assignment' : 'Assign Shift'}
 //               </h3>
-//               <button onClick={() => setShowAssignModal(false)} className="text-2xl text-gray-400 hover:text-gray-600">
+//               <button onClick={() => setShowAssignModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">
 //                 &times;
 //               </button>
 //             </div>
@@ -3315,14 +3315,14 @@
 //             <form onSubmit={editingAssignment ? handleUpdateAssignment : handleAssignShift} className="p-6">
 //               <div className="space-y-4">
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-700">
+//                   <label className="block mb-2 text-sm font-medium text-gray-300">
 //                     Employee ID {editingAssignment && '(Cannot change)'}
 //                   </label>
 //                   <input
 //                     type="text"
 //                     value={assignForm.employeeId}
 //                     onChange={(e) => setAssignForm(prev => ({ ...prev, employeeId: e.target.value }))}
-//                     className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+//                     className="w-full px-4 py-2 text-sm border border-[#374151] rounded-lg"
 //                     placeholder="EMP001"
 //                     required
 //                     readOnly={!!editingAssignment}
@@ -3330,27 +3330,27 @@
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-700">
+//                   <label className="block mb-2 text-sm font-medium text-gray-300">
 //                     Employee Name *
 //                   </label>
 //                   <input
 //                     type="text"
 //                     value={assignForm.employeeName}
 //                     onChange={(e) => setAssignForm(prev => ({ ...prev, employeeName: e.target.value }))}
-//                     className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+//                     className="w-full px-4 py-2 text-sm border border-[#374151] rounded-lg"
 //                     placeholder="John Doe"
 //                     required
 //                   />
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-700">
+//                   <label className="block mb-2 text-sm font-medium text-gray-300">
 //                     Select Shift Type *
 //                   </label>
 //                   <select
 //                     value={assignForm.shiftType}
 //                     onChange={(e) => setAssignForm(prev => ({ ...prev, shiftType: e.target.value }))}
-//                     className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
+//                     className="w-full px-4 py-2 text-sm border border-[#374151] rounded-lg"
 //                     required
 //                   >
 //                     <option value="">Select Shift Type</option>
@@ -3397,7 +3397,7 @@
 //                       shiftType: ''
 //                     });
 //                   }}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-300 border border-[#374151] rounded-lg hover:bg-[#000000]"
 //                 >
 //                   Cancel
 //                 </button>
@@ -3416,19 +3416,19 @@
 //       {/* VIEW EMPLOYEES MODAL */}
 //       {showViewModal && viewEmployees.length > 0 && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+//           <div className="bg-[#0a0a0a] rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
 //             <div className="flex items-center justify-between p-4 border-b">
 //               <div>
-//                 <h3 className="text-lg font-semibold text-gray-800">
+//                 <h3 className="text-lg font-semibold text-gray-300">
 //                   {viewShiftInfo.shiftName} Employees
 //                 </h3>
-//                 <p className="text-sm text-gray-600">
+//                 <p className="text-sm text-gray-400">
 //                   Shift {viewShiftInfo.shiftType} • {viewEmployees.length} active employees
 //                 </p>
 //               </div>
 //               <button 
 //                 onClick={() => setShowViewModal(false)} 
-//                 className="text-2xl text-gray-400 hover:text-gray-600"
+//                 className="text-2xl text-gray-400 hover:text-gray-400"
 //               >
 //                 &times;
 //               </button>
@@ -3436,7 +3436,7 @@
 
 //             <div className="flex-1 overflow-y-auto">
 //               <table className="w-full">
-//                 <thead className="sticky top-0 bg-gray-50">
+//                 <thead className="sticky top-0 bg-[#000000]">
 //                   <tr>
 //                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee ID</th>
 //                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee Name</th>
@@ -3462,7 +3462,7 @@
 //                           <div className={`font-medium ${textColor}`}>{getEmployeeTimeRange(emp)}</div>
 //                         </td>
 //                         <td className="px-4 py-3">
-//                           <div className="text-sm text-gray-600">{emp.employeeAssignment?.selectedDescription || "Legacy shift"}</div>
+//                           <div className="text-sm text-gray-400">{emp.employeeAssignment?.selectedDescription || "Legacy shift"}</div>
 //                         </td>
 //                         <td className="px-4 py-3">
 //                           <div className="flex gap-2">
@@ -3502,7 +3502,7 @@
 //             <div className="p-4 border-t">
 //               <button
 //                 onClick={() => setShowViewModal(false)}
-//                 className="w-full py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 text-sm font-medium"
+//                 className="w-full py-2.5 bg-[#1f2937] text-gray-300 rounded-lg hover:bg-gray-300 text-sm font-medium"
 //               >
 //                 Close
 //               </button>
@@ -3784,7 +3784,7 @@
 //       "BR": "bg-gradient-to-r from-green-50 to-pink-50 hover:from-green-100 hover:to-pink-100"
 //     };
 
-//     return colorMap[type] || "bg-gray-50 hover:bg-gray-100";
+//     return colorMap[type] || "bg-[#000000] hover:bg-[#111111]";
 //   };
 
 //   const getShiftTextColor = () => {
@@ -3806,7 +3806,7 @@
 //       "BR": "border-green-200"
 //     };
 
-//     return colorMap[type] || "border-gray-200";
+//     return colorMap[type] || "border-[#1f2937]";
 //   };
 
 //   // ✅ FIXED: Professional badge colors
@@ -3825,7 +3825,7 @@
 //       "BR": "bg-gradient-to-r from-green-100 to-pink-100 text-green-800 border border-green-200"
 //     };
 
-//     return colorMap[type] || "bg-gray-100 text-gray-800 border border-gray-200";
+//     return colorMap[type] || "bg-[#111111] text-gray-300 border border-[#1f2937]";
 //   };
 
 //   const getEmployeeTimeRange = (assignment) => {
@@ -4006,8 +4006,8 @@
 //       {/* Header */}
 //       <div className="flex flex-col items-start justify-between gap-4 mb-6 md:flex-row md:items-center">
 //         <div>
-//           <h1 className="text-3xl font-bold text-gray-800">Shifts</h1>
-//           {/* <p className="text-gray-600">Manage employee shifts and assignments</p> */}
+//           <h1 className="text-3xl font-bold text-gray-300">Shifts</h1>
+//           {/* <p className="text-gray-400">Manage employee shifts and assignments</p> */}
 //         </div>
 //         <div className="flex flex-wrap gap-2">
 //           {masterShifts.length === 0 && (
@@ -4054,14 +4054,14 @@
 //       {/* ✅ 1. AVAILABLE SHIFTS SECTION - CARD GRID FORMAT */}
 //       <div className="mb-8">
 //         <div className="flex items-center justify-between mb-4">
-//           <h2 className="text-xl font-bold text-gray-800">Available Shifts ({masterShifts.length})</h2>
+//           <h2 className="text-xl font-bold text-gray-300">Available Shifts ({masterShifts.length})</h2>
 //           {/* <p className="text-sm text-gray-500">Click to view or assign employees</p> */}
 //         </div>
 
 //         {masterShifts.length === 0 ? (
-//           <div className="py-12 text-center border border-gray-200 rounded-lg bg-gray-50">
+//           <div className="py-12 text-center border border-[#1f2937] rounded-lg bg-[#000000]">
 //             <div className="mb-4 text-6xl text-gray-400">⏰</div>
-//             <h3 className="mb-2 text-xl font-semibold text-gray-600">No shifts created yet</h3>
+//             <h3 className="mb-2 text-xl font-semibold text-gray-400">No shifts created yet</h3>
 //             <p className="mb-4 text-gray-500">Create your first shift to get started</p>
 //             <div className="flex justify-center gap-2">
 //               <button
@@ -4096,7 +4096,7 @@
 //                   {/* Shift Header */}
 //                   <div className="flex items-start justify-between mb-3">
 //                     <div className="flex items-start gap-2">
-//                       <div className="p-1.5 rounded-md bg-white/20 backdrop-blur-sm">
+//                       <div className="p-1.5 rounded-md bg-[#0a0a0a]/20 backdrop-blur-sm">
 //                         <FaClock className="text-sm" />
 //                       </div>
 //                       <div>
@@ -4122,7 +4122,7 @@
 //                         {isBrakeShift ? getBrakeShiftTimeDisplay(shift) : (timeSlot?.timeRange || "Not set")}
 //                       </span>
 //                       {isBrakeShift && (
-//                         <span className="px-1.5 py-0.5 text-xs bg-white/20 rounded-full">
+//                         <span className="px-1.5 py-0.5 text-xs bg-[#0a0a0a]/20 rounded-full">
 //                           Brake
 //                         </span>
 //                       )}
@@ -4140,8 +4140,8 @@
 //                       onClick={() => handleViewEmployees(shift.shiftType, shift.shiftName)}
 //                       disabled={employeeCount === 0}
 //                       className={`flex-1 px-2 py-1.5 text-xs rounded flex items-center justify-center gap-1 ${employeeCount > 0
-//                         ? 'bg-white/20 text-white hover:bg-white/30 transition-colors'
-//                         : 'bg-white/10 text-white/50 cursor-not-allowed'
+//                         ? 'bg-[#0a0a0a]/20 text-white hover:bg-[#0a0a0a]/30 transition-colors'
+//                         : 'bg-[#0a0a0a]/10 text-white/50 cursor-not-allowed'
 //                         }`}
 //                     >
 //                       <FaEye className="text-xs" /> View
@@ -4156,14 +4156,14 @@
 //                         setEditingAssignment(null);
 //                         setShowAssignModal(true);
 //                       }}
-//                       className="flex-1 px-2 py-1.5 text-xs text-white bg-white/30 rounded hover:bg-white/40 transition-colors flex items-center justify-center gap-1"
+//                       className="flex-1 px-2 py-1.5 text-xs text-white bg-[#0a0a0a]/30 rounded hover:bg-[#0a0a0a]/40 transition-colors flex items-center justify-center gap-1"
 //                       title="Assign employee to this shift"
 //                     >
 //                       <FaPlus className="text-xs" /> Assign
 //                     </button>
 //                     <button
 //                       onClick={() => handleDeleteMasterShift(shift._id, shift.shiftName)}
-//                       className="px-2 py-1.5 text-xs text-white bg-white/20 rounded hover:bg-white/30 transition-colors flex items-center justify-center"
+//                       className="px-2 py-1.5 text-xs text-white bg-[#0a0a0a]/20 rounded hover:bg-[#0a0a0a]/30 transition-colors flex items-center justify-center"
 //                       title="Delete this shift"
 //                     >
 //                       <FaTimes className="text-xs" />
@@ -4180,10 +4180,10 @@
 //       {employeeAssignments.length > 0 && (
 //         <div className="mb-8">
 //           <div className="flex items-center justify-between mb-4">
-//             <h2 className="text-xl font-bold text-gray-800">Assigned Employees ({employeeAssignments.length})</h2>
+//             <h2 className="text-xl font-bold text-gray-300">Assigned Employees ({employeeAssignments.length})</h2>
 //             {/* <p className="text-sm text-gray-500">List of all active shift assignments</p> */}
 //           </div>
-//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
@@ -4195,7 +4195,7 @@
 //                   <th className="py-3 text-center">Actions</th>
 //                 </tr>
 //               </thead>
-//               <tbody className="divide-y divide-gray-100">
+//               <tbody className="divide-y divide-[#1f2937]">
 //                 {employeeAssignments.map((assignment) => {
 //                   const timeSlot = getShiftTimeSlot(assignment.shiftType);
 //                   const employeeName = getEmployeeName(assignment);
@@ -4207,10 +4207,10 @@
 //                   return (
 //                     <tr key={assignment._id} className={`${rowColor} transition-colors duration-150`}>
 //                       <td className="px-4 py-3">
-//                         <div className="p-4 text-sm font-medium text-gray-900">{employeeId}</div>
+//                         <div className="p-4 text-sm font-medium text-gray-200">{employeeId}</div>
 //                       </td>
 //                       <td className="px-4 py-3">
-//                         <div className="p-4 text-sm font-medium text-gray-900">{employeeName}</div>
+//                         <div className="p-4 text-sm font-medium text-gray-200">{employeeName}</div>
 //                       </td>
 //                       <td className="px-4 py-3">
 //                         <span className={`p-4 text-sm font-medium rounded-full ${getBadgeColor(assignment.shiftType)}`}>
@@ -4218,14 +4218,14 @@
 //                         </span>
 //                       </td>
 //                       <td className="px-4 py-3">
-//                         <div className="p-4 text-sm font-medium text-gray-900">
+//                         <div className="p-4 text-sm font-medium text-gray-200">
 //                           {isBrakeShift ?
 //                             "07:00-13:00 & 17:00-21:30" :
 //                             getEmployeeTimeRange(assignment)}
 //                         </div>
 //                       </td>
 //                       <td className="px-4 py-3">
-//                         <div className="p-4 text-sm font-medium text-gray-900">
+//                         <div className="p-4 text-sm font-medium text-gray-200">
 //                           {isBrakeShift ?
 //                             "Brake shift with afternoon break" :
 //                             (assignment.employeeAssignment?.selectedDescription || timeSlot?.description || "Shift timing")}
@@ -4269,10 +4269,10 @@
 //       {/* REGULAR SHIFT CREATE MODAL */}
 //       {showCustomCreateModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-4 border-b">
-//               <h3 className="text-lg font-semibold text-gray-800">Create Regular Shift</h3>
-//               <button onClick={() => setShowCustomCreateModal(false)} className="text-xl text-gray-400 transition-colors hover:text-gray-600">
+//               <h3 className="text-lg font-semibold text-gray-300">Create Regular Shift</h3>
+//               <button onClick={() => setShowCustomCreateModal(false)} className="text-xl text-gray-400 transition-colors hover:text-gray-400">
 //                 &times;
 //               </button>
 //             </div>
@@ -4281,7 +4281,7 @@
 //               <div className="space-y-4">
 //                 <div className="grid grid-cols-2 gap-3">
 //                   <div>
-//                     <label className="block mb-1.5 text-sm text-sm text-gray-700">
+//                     <label className="block mb-1.5 text-sm text-sm text-gray-300">
 //                       Shift Type (Letter A-Z) *
 //                     </label>
 //                     <input
@@ -4292,7 +4292,7 @@
 //                         ...prev,
 //                         shiftType: e.target.value.toUpperCase().replace(/[^A-Z]/g, '')
 //                       }))}
-//                       className="w-full px-3 py-2 text-sm uppercase transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+//                       className="w-full px-3 py-2 text-sm uppercase transition-all border border-[#374151] rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
 //                       placeholder="E"
 //                       required
 //                     />
@@ -4300,14 +4300,14 @@
 //                   </div>
 
 //                   <div>
-//                     <label className="block mb-1.5 text-sm text-sm text-gray-700">
+//                     <label className="block mb-1.5 text-sm text-sm text-gray-300">
 //                       Shift Name *
 //                     </label>
 //                     <input
 //                       type="text"
 //                       value={createForm.shiftName}
 //                       onChange={(e) => setCreateForm(prev => ({ ...prev, shiftName: e.target.value }))}
-//                       className="w-full px-3 py-2 text-sm transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+//                       className="w-full px-3 py-2 text-sm transition-all border border-[#374151] rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
 //                       placeholder="e.g., Extended Shift E"
 //                       required
 //                     />
@@ -4316,30 +4316,30 @@
 
 //                 {/* Single Time Slot Configuration */}
 //                 <div>
-//                   <label className="block mb-2 text-sm text-gray-700">
+//                   <label className="block mb-2 text-sm text-gray-300">
 //                     Time Slot Configuration *
 //                   </label>
 
-//                   <div className="p-3 space-y-3 border border-gray-200 rounded-lg bg-gray-50">
+//                   <div className="p-3 space-y-3 border border-[#1f2937] rounded-lg bg-[#000000]">
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-600">Time Range *</label>
+//                       <label className="block mb-1 text-xs text-gray-400">Time Range *</label>
 //                       <input
 //                         type="text"
 //                         value={createForm.timeSlots[0].timeRange}
 //                         onChange={(e) => updateTimeSlot('timeRange', e.target.value)}
-//                         className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-transparent transition-all"
+//                         className="w-full px-3 py-1.5 text-sm border border-[#374151] rounded focus:ring-1 focus:ring-green-500 focus:border-transparent transition-all"
 //                         placeholder="e.g., 10:00 - 19:00"
 //                         required
 //                       />
 //                     </div>
 
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-600">Description *</label>
+//                       <label className="block mb-1 text-xs text-gray-400">Description *</label>
 //                       <input
 //                         type="text"
 //                         value={createForm.timeSlots[0].description}
 //                         onChange={(e) => updateTimeSlot('description', e.target.value)}
-//                         className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-transparent transition-all"
+//                         className="w-full px-3 py-1.5 text-sm border border-[#374151] rounded focus:ring-1 focus:ring-green-500 focus:border-transparent transition-all"
 //                         placeholder="e.g., Morning 10 to 7"
 //                         required
 //                       />
@@ -4349,12 +4349,12 @@
 
 //                 {/* Preview */}
 //                 {createForm.shiftType && createForm.timeSlots[0].timeRange && (
-//                   <div className="p-3 border border-gray-200 rounded-lg bg-gray-50">
-//                     <h4 className="mb-1.5 text-sm text-sm text-gray-800">Preview:</h4>
-//                     <p className="text-sm text-gray-700">
+//                   <div className="p-3 border border-[#1f2937] rounded-lg bg-[#000000]">
+//                     <h4 className="mb-1.5 text-sm text-sm text-gray-300">Preview:</h4>
+//                     <p className="text-sm text-gray-300">
 //                       Shift {createForm.shiftType}: {createForm.shiftName}
 //                     </p>
-//                     <p className="mt-0.5 text-sm text-gray-600">
+//                     <p className="mt-0.5 text-sm text-gray-400">
 //                       Time: {createForm.timeSlots[0].timeRange}
 //                     </p>
 //                   </div>
@@ -4365,7 +4365,7 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowCustomCreateModal(false)}
-//                   className="px-4 py-2 text-sm text-gray-700 transition-colors bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200"
+//                   className="px-4 py-2 text-sm text-gray-300 transition-colors bg-[#111111] border border-[#374151] rounded-lg hover:bg-[#1f2937]"
 //                 >
 //                   Cancel
 //                 </button>
@@ -4384,10 +4384,10 @@
 //       {/* ✅ BRAKE SHIFT CREATE MODAL */}
 //       {showBrakeShiftModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-4 border-b">
-//               <h3 className="text-lg font-semibold text-gray-800">Create Brake Shift</h3>
-//               <button onClick={() => setShowBrakeShiftModal(false)} className="text-xl text-gray-400 transition-colors hover:text-gray-600">
+//               <h3 className="text-lg font-semibold text-gray-300">Create Brake Shift</h3>
+//               <button onClick={() => setShowBrakeShiftModal(false)} className="text-xl text-gray-400 transition-colors hover:text-gray-400">
 //                 &times;
 //               </button>
 //             </div>
@@ -4396,7 +4396,7 @@
 //               <div className="space-y-4">
 //                 <div className="grid grid-cols-2 gap-3">
 //                   <div>
-//                     <label className="block mb-1.5 text-sm text-sm text-gray-700">
+//                     <label className="block mb-1.5 text-sm text-sm text-gray-300">
 //                       Shift Type (Letter A-Z) *
 //                     </label>
 //                     <input
@@ -4407,7 +4407,7 @@
 //                         ...prev,
 //                         shiftType: e.target.value.toUpperCase().replace(/[^A-Z]/g, '')
 //                       }))}
-//                       className="w-full px-3 py-2 text-sm uppercase transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+//                       className="w-full px-3 py-2 text-sm uppercase transition-all border border-[#374151] rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
 //                       placeholder="BR"
 //                       required
 //                     />
@@ -4415,14 +4415,14 @@
 //                   </div>
 
 //                   <div>
-//                     <label className="block mb-1.5 text-sm text-sm text-gray-700">
+//                     <label className="block mb-1.5 text-sm text-sm text-gray-300">
 //                       Shift Name *
 //                     </label>
 //                     <input
 //                       type="text"
 //                       value={createForm.shiftName}
 //                       onChange={(e) => setCreateForm(prev => ({ ...prev, shiftName: e.target.value }))}
-//                       className="w-full px-3 py-2 text-sm transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+//                       className="w-full px-3 py-2 text-sm transition-all border border-[#374151] rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
 //                       placeholder="e.g., Brake Shift"
 //                       required
 //                     />
@@ -4438,8 +4438,8 @@
 //                         <FaClock className="text-xs text-green-600" />
 //                       </div>
 //                       <div>
-//                         <p className="text-sm text-gray-800">07:00 - 13:00</p>
-//                         <p className="text-xs text-gray-600">First shift before break</p>
+//                         <p className="text-sm text-gray-300">07:00 - 13:00</p>
+//                         <p className="text-xs text-gray-400">First shift before break</p>
 //                       </div>
 //                     </div>
 
@@ -4448,12 +4448,12 @@
 //                         <FaClock className="text-xs text-pink-600" />
 //                       </div>
 //                       <div>
-//                         <p className="text-sm text-gray-800">17:00 - 21:30</p>
-//                         <p className="text-xs text-gray-600">Second shift after break</p>
+//                         <p className="text-sm text-gray-300">17:00 - 21:30</p>
+//                         <p className="text-xs text-gray-400">Second shift after break</p>
 //                       </div>
 //                     </div>
 
-//                     <div className="p-1.5 text-xs text-gray-600 bg-white/50 rounded">
+//                     <div className="p-1.5 text-xs text-gray-400 bg-[#0a0a0a]/50 rounded">
 //                       Total working hours: 10.5 hours with afternoon break
 //                     </div>
 //                   </div>
@@ -4477,7 +4477,7 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowBrakeShiftModal(false)}
-//                   className="px-4 py-2 text-sm text-gray-700 transition-colors bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200"
+//                   className="px-4 py-2 text-sm text-gray-300 transition-colors bg-[#111111] border border-[#374151] rounded-lg hover:bg-[#1f2937]"
 //                 >
 //                   Cancel
 //                 </button>
@@ -4496,12 +4496,12 @@
 //       {/* ASSIGN SHIFT MODAL */}
 //       {showAssignModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-4 border-b">
-//               <h3 className="text-lg font-semibold text-gray-800">
+//               <h3 className="text-lg font-semibold text-gray-300">
 //                 {editingAssignment ? 'Edit Assignment' : 'Assign Shift'}
 //               </h3>
-//               <button onClick={() => setShowAssignModal(false)} className="text-xl text-gray-400 transition-colors hover:text-gray-600">
+//               <button onClick={() => setShowAssignModal(false)} className="text-xl text-gray-400 transition-colors hover:text-gray-400">
 //                 &times;
 //               </button>
 //             </div>
@@ -4509,14 +4509,14 @@
 //             <form onSubmit={editingAssignment ? handleUpdateAssignment : handleAssignShift} className="p-4">
 //               <div className="space-y-3">
 //                 <div>
-//                   <label className="block mb-1.5 text-sm text-sm text-gray-700">
+//                   <label className="block mb-1.5 text-sm text-sm text-gray-300">
 //                     Employee ID {editingAssignment && '(Cannot change)'}
 //                   </label>
 //                   <input
 //                     type="text"
 //                     value={assignForm.employeeId}
 //                     onChange={(e) => setAssignForm(prev => ({ ...prev, employeeId: e.target.value }))}
-//                     className="w-full px-3 py-2 text-sm transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//                     className="w-full px-3 py-2 text-sm transition-all border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 //                     placeholder="EMP001"
 //                     required
 //                     readOnly={!!editingAssignment}
@@ -4524,27 +4524,27 @@
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-1.5 text-sm text-sm text-gray-700">
+//                   <label className="block mb-1.5 text-sm text-sm text-gray-300">
 //                     Employee Name *
 //                   </label>
 //                   <input
 //                     type="text"
 //                     value={assignForm.employeeName}
 //                     onChange={(e) => setAssignForm(prev => ({ ...prev, employeeName: e.target.value }))}
-//                     className="w-full px-3 py-2 text-sm transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//                     className="w-full px-3 py-2 text-sm transition-all border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 //                     placeholder="John Doe"
 //                     required
 //                   />
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-1.5 text-sm text-sm text-gray-700">
+//                   <label className="block mb-1.5 text-sm text-sm text-gray-300">
 //                     Select Shift Type *
 //                   </label>
 //                   <select
 //                     value={assignForm.shiftType}
 //                     onChange={(e) => setAssignForm(prev => ({ ...prev, shiftType: e.target.value }))}
-//                     className="w-full px-3 py-2 text-sm transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//                     className="w-full px-3 py-2 text-sm transition-all border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 //                     required
 //                   >
 //                     <option value="">Select Shift Type</option>
@@ -4594,7 +4594,7 @@
 //                       shiftType: ''
 //                     });
 //                   }}
-//                   className="px-4 py-2 text-sm text-gray-700 transition-colors bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200"
+//                   className="px-4 py-2 text-sm text-gray-300 transition-colors bg-[#111111] border border-[#374151] rounded-lg hover:bg-[#1f2937]"
 //                 >
 //                   Cancel
 //                 </button>
@@ -4613,19 +4613,19 @@
 //       {/* ✅ VIEW EMPLOYEES MODAL - PROFESSIONAL DESIGN */}
 //       {showViewModal && viewEmployees.length > 0 && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-//             <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
+//           <div className="bg-[#0a0a0a] rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+//             <div className="flex items-center justify-between p-4 bg-[#0a0a0a] border-b border-[#1f2937]">
 //               <div>
-//                 <h3 className="text-lg font-semibold text-gray-800">
+//                 <h3 className="text-lg font-semibold text-gray-300">
 //                   {viewShiftInfo.shiftName} Employees
 //                 </h3>
-//                 <p className="text-sm text-gray-600">
+//                 <p className="text-sm text-gray-400">
 //                   Shift {viewShiftInfo.shiftType} • {viewEmployees.length} active employees
 //                 </p>
 //               </div>
 //               <button
 //                 onClick={() => setShowViewModal(false)}
-//                 className="text-xl text-gray-400 transition-colors hover:text-gray-600"
+//                 className="text-xl text-gray-400 transition-colors hover:text-gray-400"
 //               >
 //                 &times;
 //               </button>
@@ -4633,16 +4633,16 @@
 
 //             <div className="flex-1 overflow-y-auto">
 //               <table className="w-full">
-//                 <thead className="sticky top-0 border-b border-gray-200 bg-gray-50">
+//                 <thead className="sticky top-0 border-b border-[#1f2937] bg-[#000000]">
 //                   <tr>
-//                     <th className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase">Employee ID</th>
-//                     <th className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase">Employee Name</th>
-//                     <th className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase">Time Slot</th>
-//                     <th className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase">Description</th>
-//                     <th className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase">Actions</th>
+//                     <th className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-400 uppercase">Employee ID</th>
+//                     <th className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-400 uppercase">Employee Name</th>
+//                     <th className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-400 uppercase">Time Slot</th>
+//                     <th className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-400 uppercase">Description</th>
+//                     <th className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-400 uppercase">Actions</th>
 //                   </tr>
 //                 </thead>
-//                 <tbody className="divide-y divide-gray-100">
+//                 <tbody className="divide-y divide-[#1f2937]">
 //                   {viewEmployees.map((emp) => {
 //                     const rowColor = getShiftRowColor(emp.shiftType);
 //                     const shift = masterShifts.find(s => s.shiftType === emp.shiftType);
@@ -4651,18 +4651,18 @@
 //                     return (
 //                       <tr key={emp._id} className={`${rowColor} transition-colors duration-150`}>
 //                         <td className="px-4 py-3">
-//                           <div className="text-sm text-gray-900">{emp.employeeAssignment?.employeeId || emp.employeeId}</div>
+//                           <div className="text-sm text-gray-200">{emp.employeeAssignment?.employeeId || emp.employeeId}</div>
 //                         </td>
 //                         <td className="px-4 py-3">
-//                           <div className="text-sm text-gray-900">{emp.employeeAssignment?.employeeName || emp.employeeName}</div>
+//                           <div className="text-sm text-gray-200">{emp.employeeAssignment?.employeeName || emp.employeeName}</div>
 //                         </td>
 //                         <td className="px-4 py-3">
-//                           <div className="text-sm text-gray-900">
+//                           <div className="text-sm text-gray-200">
 //                             {isBrakeShift ? "07:00-13:00 & 17:00-21:30" : getEmployeeTimeRange(emp)}
 //                           </div>
 //                         </td>
 //                         <td className="px-4 py-3">
-//                           <div className="text-sm text-gray-600">
+//                           <div className="text-sm text-gray-400">
 //                             {isBrakeShift ? "Brake shift with afternoon break" : (emp.employeeAssignment?.selectedDescription || "Legacy shift")}
 //                           </div>
 //                         </td>
@@ -4701,7 +4701,7 @@
 //               </table>
 //             </div>
 
-//             <div className="p-4 border-t border-gray-200 bg-gray-50">
+//             <div className="p-4 border-t border-[#1f2937] bg-[#000000]">
 //               <button
 //                 onClick={() => setShowViewModal(false)}
 //                 className="w-full py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 text-sm text-sm transition-colors"
@@ -4983,7 +4983,7 @@
 //       "BR": "bg-gradient-to-r from-green-50 to-pink-50 hover:from-green-100 hover:to-pink-100"
 //     };
 
-//     return colorMap[type] || "bg-gray-50 hover:bg-gray-100";
+//     return colorMap[type] || "bg-[#000000] hover:bg-[#111111]";
 //   };
 
 //   const getShiftTextColor = () => {
@@ -5005,7 +5005,7 @@
 //       "BR": "border-green-200"
 //     };
 
-//     return colorMap[type] || "border-gray-200";
+//     return colorMap[type] || "border-[#1f2937]";
 //   };
 
 //   const getBadgeColor = (type) => {
@@ -5023,7 +5023,7 @@
 //       "BR": "bg-gradient-to-r from-green-100 to-pink-100 text-green-800 border border-green-200"
 //     };
 
-//     return colorMap[type] || "bg-gray-100 text-gray-800 border border-gray-200";
+//     return colorMap[type] || "bg-[#111111] text-gray-300 border border-[#1f2937]";
 //   };
 
 //   const getEmployeeTimeRange = (assignment) => {
@@ -5193,10 +5193,10 @@
 //   // ✅ Stat Box component matching LeavesList
 //   const StatCard = ({ label, value, color }) => (
 //     <div
-//       className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}
+//       className={`bg-[#0a0a0a] rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}
 //     >
 //       <div className="text-lg font-bold">{value}</div>
-//       <div className="text-xs font-medium text-gray-700">{label}</div>
+//       <div className="text-xs font-medium text-gray-300">{label}</div>
 //     </div>
 //   );
 
@@ -5246,7 +5246,7 @@
 //       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 to-blue-100">
 //         <div className="text-center">
 //           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-green-600 rounded-full animate-spin"></div>
-//           <p className="font-semibold text-gray-600">
+//           <p className="font-semibold text-gray-400">
 //             Loading shift management...
 //           </p>
 //         </div>
@@ -5281,9 +5281,9 @@
 //         </div>
 
 //         {/* ✅ Header with Actions - Matching LeavesList style */}
-//         <div className="p-2 mb-2 bg-white border border-gray-200 shadow-md rounded-xl">
+//         <div className="p-2 mb-2 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
 //           <div className="flex items-end justify-between gap-4">
-//             <h1 className="text-xl font-bold text-gray-800">Shifts</h1>
+//             <h1 className="text-xl font-bold text-gray-300">Shifts</h1>
 //             <div className="flex items-end gap-2">
 //               {masterShifts.length === 0 && (
 //                 <button
@@ -5329,12 +5329,12 @@
 
 //         {/* ✅ 1. AVAILABLE SHIFTS SECTION */}
 //         <div className="mb-6">
-//           {/* <h2 className="mb-3 text-lg font-semibold text-gray-800">Available Shifts ({masterShifts.length})</h2> */}
+//           {/* <h2 className="mb-3 text-lg font-semibold text-gray-300">Available Shifts ({masterShifts.length})</h2> */}
 
 //           {masterShifts.length === 0 ? (
-//             <div className="py-8 text-center bg-white border border-gray-200 rounded-lg">
+//             <div className="py-8 text-center bg-[#0a0a0a] border border-[#1f2937] rounded-lg">
 //               <div className="mb-3 text-4xl text-gray-400">⏰</div>
-//               <h3 className="mb-1 text-base font-semibold text-gray-600">No shifts created yet</h3>
+//               <h3 className="mb-1 text-base font-semibold text-gray-400">No shifts created yet</h3>
 //               <p className="mb-3 text-sm text-gray-500">Create your first shift to get started</p>
 //               <div className="flex justify-center gap-2">
 //                 <button
@@ -5369,7 +5369,7 @@
 //                     {/* Shift Header */}
 //                     <div className="flex items-start justify-between mb-2">
 //                       <div className="flex items-start gap-1.5">
-//                         <div className="p-1 rounded-md bg-white/20 backdrop-blur-sm">
+//                         <div className="p-1 rounded-md bg-[#0a0a0a]/20 backdrop-blur-sm">
 //                           <FaClock className="text-xs" />
 //                         </div>
 //                         <div>
@@ -5395,7 +5395,7 @@
 //                           {isBrakeShift ? getBrakeShiftTimeDisplay(shift) : (timeSlot?.timeRange || "Not set")}
 //                         </span>
 //                         {isBrakeShift && (
-//                           <span className="px-1 py-0.5 text-[10px] bg-white/20 rounded-full">
+//                           <span className="px-1 py-0.5 text-[10px] bg-[#0a0a0a]/20 rounded-full">
 //                             Brake
 //                           </span>
 //                         )}
@@ -5414,8 +5414,8 @@
 //                         disabled={employeeCount === 0}
 //                         className={`flex-1 px-1.5 py-1 text-[10px] rounded flex items-center justify-center gap-0.5 ${
 //                           employeeCount > 0
-//                             ? 'bg-white/20 text-white hover:bg-white/30 transition-colors'
-//                             : 'bg-white/10 text-white/50 cursor-not-allowed'
+//                             ? 'bg-[#0a0a0a]/20 text-white hover:bg-[#0a0a0a]/30 transition-colors'
+//                             : 'bg-[#0a0a0a]/10 text-white/50 cursor-not-allowed'
 //                         }`}
 //                       >
 //                         <FaEye className="text-[8px]" /> View
@@ -5430,13 +5430,13 @@
 //                           setEditingAssignment(null);
 //                           setShowAssignModal(true);
 //                         }}
-//                         className="flex-1 px-1.5 py-1 text-[10px] text-white bg-white/30 rounded hover:bg-white/40 transition-colors flex items-center justify-center gap-0.5"
+//                         className="flex-1 px-1.5 py-1 text-[10px] text-white bg-[#0a0a0a]/30 rounded hover:bg-[#0a0a0a]/40 transition-colors flex items-center justify-center gap-0.5"
 //                       >
 //                         <FaPlus className="text-[8px]" /> Assign
 //                       </button>
 //                       <button
 //                         onClick={() => handleDeleteMasterShift(shift._id, shift.shiftName)}
-//                         className="px-1.5 py-1 text-[10px] text-white bg-white/20 rounded hover:bg-white/30 transition-colors"
+//                         className="px-1.5 py-1 text-[10px] text-white bg-[#0a0a0a]/20 rounded hover:bg-[#0a0a0a]/30 transition-colors"
 //                       >
 //                         <FaTimes className="text-[8px]" />
 //                       </button>
@@ -5451,10 +5451,10 @@
 //         {/* ✅ 2. ALL ASSIGNED EMPLOYEES TABLE - Matching LeavesList design */}
 //         {employeeAssignments.length > 0 && (
 //           <div className="mb-6">
-//             {/* <h2 className="mb-3 text-lg font-semibold text-gray-800">Assigned Employees ({employeeAssignments.length})</h2> */}
+//             {/* <h2 className="mb-3 text-lg font-semibold text-gray-300">Assigned Employees ({employeeAssignments.length})</h2> */}
             
-//             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-//               <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//             <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
+//               <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
 //                 <table className="min-w-full">
 //                   <thead className="text-xs text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                     <tr>
@@ -5477,25 +5477,25 @@
 //                         const rowColor = getShiftRowColor(assignment.shiftType);
 
 //                         return (
-//                           <tr key={assignment._id} className={`${rowColor} transition border-b hover:bg-gray-50`}>
-//                             <td className="px-2 py-2 text-xs font-medium text-center text-gray-900 whitespace-nowrap">
+//                           <tr key={assignment._id} className={`${rowColor} transition border-b hover:bg-[#000000]`}>
+//                             <td className="px-2 py-2 text-xs font-medium text-center text-gray-200 whitespace-nowrap">
 //                               {employeeId}
 //                             </td>
-//                             <td className="px-2 py-2 text-xs font-medium text-center text-gray-900 whitespace-nowrap">
+//                             <td className="px-2 py-2 text-xs font-medium text-center text-gray-200 whitespace-nowrap">
 //                               <div className="font-semibold">{employeeName}</div>
 //                             </td>
-//                             <td className="px-2 py-2 text-xs font-medium text-center text-gray-900 whitespace-nowrap">
+//                             <td className="px-2 py-2 text-xs font-medium text-center text-gray-200 whitespace-nowrap">
 //                               <span className={`px-2 py-1 text-[10px] font-medium rounded-full ${getBadgeColor(assignment.shiftType)}`}>
 //                                 Shift {assignment.shiftType} {isBrakeShift && '(Brake)'}
 //                               </span>
 //                             </td>
-//                             <td className="px-2 py-2 text-xs font-medium text-center text-gray-900 whitespace-nowrap">
+//                             <td className="px-2 py-2 text-xs font-medium text-center text-gray-200 whitespace-nowrap">
 //                               {isBrakeShift ? "07:00-13:00 & 17:00-21:30" : getEmployeeTimeRange(assignment)}
 //                             </td>
 //                             <td className="max-w-xs px-2 py-2 text-xs font-medium text-center text-gray-500 truncate whitespace-nowrap">
 //                               {isBrakeShift ? "Brake shift with afternoon break" : (assignment.employeeAssignment?.selectedDescription || timeSlot?.description || "Shift timing")}
 //                             </td>
-//                             <td className="px-2 py-2 text-xs font-medium text-center text-gray-900 whitespace-nowrap">
+//                             <td className="px-2 py-2 text-xs font-medium text-center text-gray-200 whitespace-nowrap">
 //                               <div className="flex justify-center gap-1">
 //                                 <button
 //                                   onClick={() => {
@@ -5540,7 +5540,7 @@
 //                 {/* Show entries dropdown */}
 //                 <div className="flex flex-wrap items-center gap-4">
 //                   <div className="flex items-center gap-2">
-//                     <label className="text-xs font-medium text-gray-700">
+//                     <label className="text-xs font-medium text-gray-300">
 //                       Show:
 //                     </label>
 //                     <select
@@ -5553,7 +5553,7 @@
 //                       <option value={20}>20</option>
 //                       <option value={50}>50</option>
 //                     </select>
-//                     <span className="text-xs text-gray-600">entries</span>
+//                     <span className="text-xs text-gray-400">entries</span>
 //                   </div>
 //                 </div>
 
@@ -5564,8 +5564,8 @@
 //                     disabled={currentPageAssignments === 1}
 //                     className={`px-3 py-1 text-xs border rounded-lg ${
 //                       currentPageAssignments === 1
-//                         ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
+//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
 //                     }`}
 //                   >
 //                     Previous
@@ -5578,10 +5578,10 @@
 //                       disabled={page === "..."}
 //                       className={`px-3 py-1 text-xs border rounded-lg ${
 //                         page === "..."
-//                           ? "text-gray-500 bg-gray-50 cursor-default"
+//                           ? "text-gray-500 bg-[#000000] cursor-default"
 //                           : currentPageAssignments === page
 //                           ? "text-white bg-blue-600 border-blue-600"
-//                           : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                           : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                     >
 //                       {page}
@@ -5593,8 +5593,8 @@
 //                     disabled={currentPageAssignments === totalPages}
 //                     className={`px-3 py-1 text-xs border rounded-lg ${
 //                       currentPageAssignments === totalPages
-//                         ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                     }`}
 //                   >
 //                     Next
@@ -5607,7 +5607,7 @@
 
 //         {/* No assignments message */}
 //         {employeeAssignments.length === 0 && (
-//           <div className="py-6 text-center text-gray-500 bg-white border border-gray-200 rounded-lg">
+//           <div className="py-6 text-center text-gray-500 bg-[#0a0a0a] border border-[#1f2937] rounded-lg">
 //             <p className="text-xs">No shift assignments yet</p>
 //           </div>
 //         )}
@@ -5615,10 +5615,10 @@
 //         {/* REGULAR SHIFT CREATE MODAL - Styled like LeavesList */}
 //         {showCustomCreateModal && (
 //           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//             <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+//             <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
 //               <div className="flex items-center justify-between p-3 border-b">
-//                 <h3 className="text-sm font-semibold text-gray-800">Create Regular Shift</h3>
-//                 <button onClick={() => setShowCustomCreateModal(false)} className="text-lg text-gray-400 hover:text-gray-600">
+//                 <h3 className="text-sm font-semibold text-gray-300">Create Regular Shift</h3>
+//                 <button onClick={() => setShowCustomCreateModal(false)} className="text-lg text-gray-400 hover:text-gray-400">
 //                   &times;
 //                 </button>
 //               </div>
@@ -5627,7 +5627,7 @@
 //                 <div className="space-y-3">
 //                   <div className="grid grid-cols-2 gap-2">
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-700">
+//                       <label className="block mb-1 text-xs text-gray-300">
 //                         Shift Type *
 //                       </label>
 //                       <input
@@ -5638,7 +5638,7 @@
 //                           ...prev,
 //                           shiftType: e.target.value.toUpperCase().replace(/[^A-Z]/g, '')
 //                         }))}
-//                         className="w-full px-2 py-1.5 text-xs uppercase border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
+//                         className="w-full px-2 py-1.5 text-xs uppercase border border-[#374151] rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
 //                         placeholder="E"
 //                         required
 //                       />
@@ -5646,14 +5646,14 @@
 //                     </div>
 
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-700">
+//                       <label className="block mb-1 text-xs text-gray-300">
 //                         Shift Name *
 //                       </label>
 //                       <input
 //                         type="text"
 //                         value={createForm.shiftName}
 //                         onChange={(e) => setCreateForm(prev => ({ ...prev, shiftName: e.target.value }))}
-//                         className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
+//                         className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
 //                         placeholder="Extended Shift E"
 //                         required
 //                       />
@@ -5662,28 +5662,28 @@
 
 //                   {/* Time Slot Configuration */}
 //                   <div>
-//                     <label className="block mb-1 text-xs text-gray-700">
+//                     <label className="block mb-1 text-xs text-gray-300">
 //                       Time Slot *
 //                     </label>
-//                     <div className="p-2 space-y-2 border border-gray-200 rounded-md bg-gray-50">
+//                     <div className="p-2 space-y-2 border border-[#1f2937] rounded-md bg-[#000000]">
 //                       <div>
-//                         <label className="block mb-0.5 text-[10px] text-gray-600">Time Range</label>
+//                         <label className="block mb-0.5 text-[10px] text-gray-400">Time Range</label>
 //                         <input
 //                           type="text"
 //                           value={createForm.timeSlots[0].timeRange}
 //                           onChange={(e) => updateTimeSlot('timeRange', e.target.value)}
-//                           className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500"
+//                           className="w-full px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-green-500"
 //                           placeholder="10:00 - 19:00"
 //                           required
 //                         />
 //                       </div>
 //                       <div>
-//                         <label className="block mb-0.5 text-[10px] text-gray-600">Description</label>
+//                         <label className="block mb-0.5 text-[10px] text-gray-400">Description</label>
 //                         <input
 //                           type="text"
 //                           value={createForm.timeSlots[0].description}
 //                           onChange={(e) => updateTimeSlot('description', e.target.value)}
-//                           className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500"
+//                           className="w-full px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-green-500"
 //                           placeholder="Morning 10 to 7"
 //                           required
 //                         />
@@ -5693,12 +5693,12 @@
 
 //                   {/* Preview */}
 //                   {createForm.shiftType && createForm.timeSlots[0].timeRange && (
-//                     <div className="p-2 border border-gray-200 rounded-md bg-gray-50">
-//                       <h4 className="mb-0.5 text-xs text-gray-800">Preview:</h4>
-//                       <p className="text-[10px] text-gray-700">
+//                     <div className="p-2 border border-[#1f2937] rounded-md bg-[#000000]">
+//                       <h4 className="mb-0.5 text-xs text-gray-300">Preview:</h4>
+//                       <p className="text-[10px] text-gray-300">
 //                         Shift {createForm.shiftType}: {createForm.shiftName}
 //                       </p>
-//                       <p className="text-[10px] text-gray-600">
+//                       <p className="text-[10px] text-gray-400">
 //                         Time: {createForm.timeSlots[0].timeRange}
 //                       </p>
 //                     </div>
@@ -5709,7 +5709,7 @@
 //                   <button
 //                     type="button"
 //                     onClick={() => setShowCustomCreateModal(false)}
-//                     className="px-3 py-1.5 text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+//                     className="px-3 py-1.5 text-xs text-gray-300 bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
 //                   >
 //                     Cancel
 //                   </button>
@@ -5728,10 +5728,10 @@
 //         {/* BRAKE SHIFT CREATE MODAL */}
 //         {showBrakeShiftModal && (
 //           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//             <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+//             <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
 //               <div className="flex items-center justify-between p-3 border-b">
-//                 <h3 className="text-sm font-semibold text-gray-800">Create Brake Shift</h3>
-//                 <button onClick={() => setShowBrakeShiftModal(false)} className="text-lg text-gray-400 hover:text-gray-600">
+//                 <h3 className="text-sm font-semibold text-gray-300">Create Brake Shift</h3>
+//                 <button onClick={() => setShowBrakeShiftModal(false)} className="text-lg text-gray-400 hover:text-gray-400">
 //                   &times;
 //                 </button>
 //               </div>
@@ -5740,7 +5740,7 @@
 //                 <div className="space-y-3">
 //                   <div className="grid grid-cols-2 gap-2">
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-700">
+//                       <label className="block mb-1 text-xs text-gray-300">
 //                         Shift Type *
 //                       </label>
 //                       <input
@@ -5751,21 +5751,21 @@
 //                           ...prev,
 //                           shiftType: e.target.value.toUpperCase().replace(/[^A-Z]/g, '')
 //                         }))}
-//                         className="w-full px-2 py-1.5 text-xs uppercase border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500"
+//                         className="w-full px-2 py-1.5 text-xs uppercase border border-[#374151] rounded-md focus:ring-1 focus:ring-green-500"
 //                         placeholder="BR"
 //                         required
 //                       />
 //                     </div>
 
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-700">
+//                       <label className="block mb-1 text-xs text-gray-300">
 //                         Shift Name *
 //                       </label>
 //                       <input
 //                         type="text"
 //                         value={createForm.shiftName}
 //                         onChange={(e) => setCreateForm(prev => ({ ...prev, shiftName: e.target.value }))}
-//                         className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500"
+//                         className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-green-500"
 //                         placeholder="Brake Shift"
 //                         required
 //                       />
@@ -5780,15 +5780,15 @@
 //                         <div className="flex items-center justify-center w-5 h-5 bg-green-100 rounded-full">
 //                           <FaClock className="text-[8px] text-green-600" />
 //                         </div>
-//                         <span className="text-[10px] text-gray-800">07:00 - 13:00</span>
+//                         <span className="text-[10px] text-gray-300">07:00 - 13:00</span>
 //                       </div>
 //                       <div className="flex items-center gap-1">
 //                         <div className="flex items-center justify-center w-5 h-5 bg-pink-100 rounded-full">
 //                           <FaClock className="text-[8px] text-pink-600" />
 //                         </div>
-//                         <span className="text-[10px] text-gray-800">17:00 - 21:30</span>
+//                         <span className="text-[10px] text-gray-300">17:00 - 21:30</span>
 //                       </div>
-//                       <p className="text-[9px] text-gray-600">Total: 10.5 hours with break</p>
+//                       <p className="text-[9px] text-gray-400">Total: 10.5 hours with break</p>
 //                     </div>
 //                   </div>
 
@@ -5809,7 +5809,7 @@
 //                   <button
 //                     type="button"
 //                     onClick={() => setShowBrakeShiftModal(false)}
-//                     className="px-3 py-1.5 text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+//                     className="px-3 py-1.5 text-xs text-gray-300 bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
 //                   >
 //                     Cancel
 //                   </button>
@@ -5828,9 +5828,9 @@
 //         {/* ASSIGN SHIFT MODAL */}
 //         {showAssignModal && (
 //           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//             <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+//             <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
 //               <div className="flex items-center justify-between p-3 border-b">
-//                 <h3 className="text-sm font-semibold text-gray-800">
+//                 <h3 className="text-sm font-semibold text-gray-300">
 //                   {editingAssignment ? 'Edit Assignment' : 'Assign Shift'}
 //                 </h3>
 //                 <button onClick={() => {
@@ -5841,7 +5841,7 @@
 //                     employeeName: '',
 //                     shiftType: ''
 //                   });
-//                 }} className="text-lg text-gray-400 hover:text-gray-600">
+//                 }} className="text-lg text-gray-400 hover:text-gray-400">
 //                   &times;
 //                 </button>
 //               </div>
@@ -5849,14 +5849,14 @@
 //               <form onSubmit={editingAssignment ? handleUpdateAssignment : handleAssignShift} className="p-3">
 //                 <div className="space-y-2">
 //                   <div>
-//                     <label className="block mb-1 text-xs text-gray-700">
+//                     <label className="block mb-1 text-xs text-gray-300">
 //                       Employee ID {editingAssignment && '(Cannot change)'}
 //                     </label>
 //                     <input
 //                       type="text"
 //                       value={assignForm.employeeId}
 //                       onChange={(e) => setAssignForm(prev => ({ ...prev, employeeId: e.target.value }))}
-//                       className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
+//                       className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-blue-500"
 //                       placeholder="EMP001"
 //                       required
 //                       readOnly={!!editingAssignment}
@@ -5864,27 +5864,27 @@
 //                   </div>
 
 //                   <div>
-//                     <label className="block mb-1 text-xs text-gray-700">
+//                     <label className="block mb-1 text-xs text-gray-300">
 //                       Employee Name *
 //                     </label>
 //                     <input
 //                       type="text"
 //                       value={assignForm.employeeName}
 //                       onChange={(e) => setAssignForm(prev => ({ ...prev, employeeName: e.target.value }))}
-//                       className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
+//                       className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-blue-500"
 //                       placeholder="John Doe"
 //                       required
 //                     />
 //                   </div>
 
 //                   <div>
-//                     <label className="block mb-1 text-xs text-gray-700">
+//                     <label className="block mb-1 text-xs text-gray-300">
 //                       Select Shift Type *
 //                     </label>
 //                     <select
 //                       value={assignForm.shiftType}
 //                       onChange={(e) => setAssignForm(prev => ({ ...prev, shiftType: e.target.value }))}
-//                       className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
+//                       className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-blue-500"
 //                       required
 //                     >
 //                       <option value="">Select Shift Type</option>
@@ -5921,7 +5921,7 @@
 //                         shiftType: ''
 //                       });
 //                     }}
-//                     className="px-3 py-1.5 text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+//                     className="px-3 py-1.5 text-xs text-gray-300 bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
 //                   >
 //                     Cancel
 //                   </button>
@@ -5940,19 +5940,19 @@
 //         {/* VIEW EMPLOYEES MODAL */}
 //         {showViewModal && viewEmployees.length > 0 && (
 //           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//             <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
-//               <div className="flex items-center justify-between p-3 bg-white border-b border-gray-200">
+//             <div className="bg-[#0a0a0a] rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+//               <div className="flex items-center justify-between p-3 bg-[#0a0a0a] border-b border-[#1f2937]">
 //                 <div>
-//                   <h3 className="text-sm font-semibold text-gray-800">
+//                   <h3 className="text-sm font-semibold text-gray-300">
 //                     {viewShiftInfo.shiftName} Employees
 //                   </h3>
-//                   <p className="text-[10px] text-gray-600">
+//                   <p className="text-[10px] text-gray-400">
 //                     Shift {viewShiftInfo.shiftType} • {viewEmployees.length} active employees
 //                   </p>
 //                 </div>
 //                 <button
 //                   onClick={() => setShowViewModal(false)}
-//                   className="text-lg text-gray-400 hover:text-gray-600"
+//                   className="text-lg text-gray-400 hover:text-gray-400"
 //                 >
 //                   &times;
 //                 </button>
@@ -5960,16 +5960,16 @@
 
 //               <div className="flex-1 overflow-y-auto">
 //                 <table className="w-full">
-//                   <thead className="sticky top-0 border-b border-gray-200 bg-gray-50">
+//                   <thead className="sticky top-0 border-b border-[#1f2937] bg-[#000000]">
 //                     <tr>
-//                       <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-600 uppercase">Employee ID</th>
-//                       <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-600 uppercase">Employee Name</th>
-//                       <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-600 uppercase">Time Slot</th>
-//                       <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-600 uppercase">Description</th>
-//                       <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-600 uppercase">Actions</th>
+//                       <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-400 uppercase">Employee ID</th>
+//                       <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-400 uppercase">Employee Name</th>
+//                       <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-400 uppercase">Time Slot</th>
+//                       <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-400 uppercase">Description</th>
+//                       <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-400 uppercase">Actions</th>
 //                     </tr>
 //                   </thead>
-//                   <tbody className="divide-y divide-gray-100">
+//                   <tbody className="divide-y divide-[#1f2937]">
 //                     {viewEmployees.map((emp) => {
 //                       const rowColor = getShiftRowColor(emp.shiftType);
 //                       const shift = masterShifts.find(s => s.shiftType === emp.shiftType);
@@ -5977,12 +5977,12 @@
 
 //                       return (
 //                         <tr key={emp._id} className={`${rowColor} transition-colors`}>
-//                           <td className="px-2 py-2 text-[10px] text-gray-900">{emp.employeeAssignment?.employeeId || emp.employeeId}</td>
-//                           <td className="px-2 py-2 text-[10px] text-gray-900">{emp.employeeAssignment?.employeeName || emp.employeeName}</td>
-//                           <td className="px-2 py-2 text-[10px] text-gray-900">
+//                           <td className="px-2 py-2 text-[10px] text-gray-200">{emp.employeeAssignment?.employeeId || emp.employeeId}</td>
+//                           <td className="px-2 py-2 text-[10px] text-gray-200">{emp.employeeAssignment?.employeeName || emp.employeeName}</td>
+//                           <td className="px-2 py-2 text-[10px] text-gray-200">
 //                             {isBrakeShift ? "07:00-13:00 & 17:00-21:30" : getEmployeeTimeRange(emp)}
 //                           </td>
-//                           <td className="px-2 py-2 text-[10px] text-gray-600">
+//                           <td className="px-2 py-2 text-[10px] text-gray-400">
 //                             {isBrakeShift ? "Brake shift" : (emp.employeeAssignment?.selectedDescription || "Legacy shift")}
 //                           </td>
 //                           <td className="px-2 py-2">
@@ -6057,7 +6057,7 @@ const ShiftManagement = () => {
   const [createForm, setCreateForm] = useState({
     shiftType: '',
     shiftName: '',
-    timeSlots: [{ slotId: `${Date.now()}_1`, timeRange: '', description: '' }],
+    timeSlots: [{ slotId: `${Date.now()}_1`, startTime: '', endTime: '', timeRange: '', description: '' }],
     isBrakeShift: false
   });
 
@@ -6258,11 +6258,20 @@ const ShiftManagement = () => {
         return;
       }
 
-      const slot = createForm.timeSlots[0];
-      if (!slot.timeRange.trim() || !slot.description.trim()) {
+      const formatAmPm = (time24) => {
+        if (!time24) return '';
+        let [hours, minutes] = time24.split(':').map(Number);
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+      };
+
+      const slot = { ...createForm.timeSlots[0] };
+      if (!slot.startTime || !slot.endTime || !slot.description.trim()) {
         setError('Please fill time slot details');
         return;
       }
+      slot.timeRange = `${formatAmPm(slot.startTime)} - ${formatAmPm(slot.endTime)}`;
 
       const response = await axios.post(`${API_BASE_URL}/shifts/create`, {
         shiftType: createForm.shiftType,
@@ -6278,7 +6287,7 @@ const ShiftManagement = () => {
         setCreateForm({
           shiftType: '',
           shiftName: '',
-          timeSlots: [{ slotId: `${Date.now()}_1`, timeRange: '', description: '' }],
+          timeSlots: [{ slotId: `${Date.now()}_1`, startTime: '', endTime: '', timeRange: '', description: '' }],
           isBrakeShift: false
         });
       } else {
@@ -6300,10 +6309,32 @@ const ShiftManagement = () => {
         setError('Please enter shift type and name');
         return;
       }
+      
+      const formatAmPm = (time24) => {
+        if (!time24) return '';
+        let [hours, minutes] = time24.split(':').map(Number);
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+      };
+
+      const slot1 = { ...createForm.timeSlots[0] };
+      const slot2 = { ...createForm.timeSlots[1] };
+      
+      if (!slot1.startTime || !slot1.endTime || !slot2.startTime || !slot2.endTime) {
+        setError('Please fill all time slots for Brake Shift');
+        return;
+      }
+
+      slot1.timeRange = `${formatAmPm(slot1.startTime)} - ${formatAmPm(slot1.endTime)}`;
+      slot1.description = "Morning Slot";
+      slot2.timeRange = `${formatAmPm(slot2.startTime)} - ${formatAmPm(slot2.endTime)}`;
+      slot2.description = "Evening Slot";
 
       const response = await axios.post(`${API_BASE_URL}/shifts/create`, {
         shiftType: createForm.shiftType,
         shiftName: createForm.shiftName,
+        timeSlots: [slot1, slot2],
         isBrakeShift: true
       });
 
@@ -6314,7 +6345,7 @@ const ShiftManagement = () => {
         setCreateForm({
           shiftType: '',
           shiftName: '',
-          timeSlots: [{ slotId: `${Date.now()}_1`, timeRange: '', description: '' }],
+          timeSlots: [{ slotId: `${Date.now()}_1`, startTime: '', endTime: '', timeRange: '', description: '' }],
           isBrakeShift: false
         });
       } else {
@@ -6331,6 +6362,17 @@ const ShiftManagement = () => {
       ...prev,
       timeSlots: [{ ...prev.timeSlots[0], [field]: value }]
     }));
+  };
+  
+  const updateBrakeTimeSlot = (index, field, value) => {
+    setCreateForm(prev => {
+      const newSlots = [...prev.timeSlots];
+      if (!newSlots[index]) {
+        newSlots[index] = { slotId: `${Date.now()}_${index}`, startTime: '', endTime: '', description: '' };
+      }
+      newSlots[index] = { ...newSlots[index], [field]: value };
+      return { ...prev, timeSlots: newSlots };
+    });
   };
 
   const getShiftTimeSlot = (shiftType) => {
@@ -6391,7 +6433,7 @@ const getShiftRowColor = (type) => {
     "H": "bg-[#EA580C]/10 hover:bg-[#EA580C]/20",
     "I": "bg-[#DB2777]/10 hover:bg-[#DB2777]/20",
     "J": "bg-[#9333EA]/10 hover:bg-[#9333EA]/20",
-    "K": "bg-gray-100 hover:bg-gray-200"
+    "K": "bg-[#111111] hover:bg-[#1f2937]"
 
   };
 
@@ -6408,7 +6450,7 @@ const getShiftTextColor = (type) => {
   // Dark background → white text
   const whiteText = ["A","B","C","E","F","H","I","J"];
 
-  return whiteText.includes(type) ? "text-white" : "text-gray-900";
+  return whiteText.includes(type) ? "text-white" : "text-gray-200";
 };
 
 
@@ -6429,7 +6471,7 @@ const getShiftBorderColor = (type) => {
     "H": "border-[#EA580C]",
     "I": "border-[#DB2777]",
     "J": "border-[#9333EA]",
-    "K": "border-gray-300"
+    "K": "border-[#374151]"
 
   };
 
@@ -6448,13 +6490,13 @@ const getBadgeColor = (type) => {
     "B": "bg-[#2563EB]/20 text-[#1D4ED8] border border-[#2563EB]",
     "C": "bg-[#16A34A]/20 text-[#15803D] border border-[#16A34A]",
     "D": "bg-[#CA8A04]/20 text-[#A16207] border border-[#CA8A04]",
-    "E": "bg-black/20 text-black border border-black",
+    "E": "bg-black/20 text-white border border-black",
     "F": "bg-[#4B5563]/20 text-[#374151] border border-[#4B5563]",
     "G": "bg-[#A16207]/20 text-[#78350F] border border-[#A16207]",
     "H": "bg-[#EA580C]/20 text-[#C2410C] border border-[#EA580C]",
     "I": "bg-[#DB2777]/20 text-[#BE185D] border border-[#DB2777]",
     "J": "bg-[#9333EA]/20 text-[#7E22CE] border border-[#9333EA]",
-    "K": "bg-gray-200 text-gray-800 border border-gray-300"
+    "K": "bg-[#1f2937] text-gray-300 border border-[#374151]"
 
   };
 
@@ -6686,7 +6728,7 @@ const getBadgeColor = (type) => {
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 to-blue-100">
         <div className="text-center">
           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-green-600 rounded-full animate-spin"></div>
-          <p className="font-semibold text-gray-600">
+          <p className="font-semibold text-gray-400">
             Loading shift management...
           </p>
         </div>
@@ -6725,7 +6767,7 @@ const getBadgeColor = (type) => {
         </div>
 
         {/* ✅ All Buttons in One Row */}
-        <div className="p-2 mb-3 bg-white border border-gray-200 shadow-md rounded-xl">
+        <div className="p-2 mb-3 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
           <div className="flex flex-wrap items-center gap-2">
            
            {/* Search Input */}
@@ -6735,7 +6777,7 @@ const getBadgeColor = (type) => {
                 placeholder="Search by ID or Name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
             </div>
@@ -6749,7 +6791,7 @@ const getBadgeColor = (type) => {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDepartment 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
                 }`}
               >
                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
@@ -6757,13 +6799,13 @@ const getBadgeColor = (type) => {
               
               {/* Department Filter Dropdown */}
               {showDepartmentFilter && (
-                <div ref={departmentFilterRef} className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                <div ref={departmentFilterRef} className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
                   <div 
                     onClick={() => {
                       setFilterDepartment('');
                       setShowDepartmentFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
                   >
                     All Departments
                   </div>
@@ -6791,7 +6833,7 @@ const getBadgeColor = (type) => {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDesignation 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
                 }`}
               >
                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
@@ -6799,13 +6841,13 @@ const getBadgeColor = (type) => {
               
               {/* Designation Filter Dropdown */}
               {showDesignationFilter && (
-                <div ref={designationFilterRef} className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                <div ref={designationFilterRef} className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
                   <div 
                     onClick={() => {
                       setFilterDesignation('');
                       setShowDesignationFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
                   >
                     All Designations
                   </div>
@@ -6833,7 +6875,7 @@ const getBadgeColor = (type) => {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterShiftType 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
                 }`}
               >
                 <FaShift className="text-xs" /> Shift {filterShiftType && `: ${filterShiftType}`}
@@ -6841,13 +6883,13 @@ const getBadgeColor = (type) => {
               
               {/* Shift Type Filter Dropdown */}
               {showShiftTypeFilter && (
-                <div ref={shiftTypeFilterRef} className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                <div ref={shiftTypeFilterRef} className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
                   <div 
                     onClick={() => {
                       setFilterShiftType('');
                       setShowShiftTypeFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
                   >
                     All Shifts
                   </div>
@@ -6903,7 +6945,7 @@ const getBadgeColor = (type) => {
             {(filterDepartment || filterDesignation || filterShiftType || searchTerm) && (
               <button
                 onClick={clearFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
               >
                 Clear
               </button>
@@ -6926,9 +6968,9 @@ const getBadgeColor = (type) => {
         {/* ✅ 1. AVAILABLE SHIFTS SECTION */}
         <div className="mb-6">
           {masterShifts.length === 0 ? (
-            <div className="py-8 text-center bg-white border border-gray-200 rounded-lg">
+            <div className="py-8 text-center bg-[#0a0a0a] border border-[#1f2937] rounded-lg">
               <div className="mb-3 text-4xl text-gray-400">⏰</div>
-              <h3 className="mb-1 text-base font-semibold text-gray-600">No shifts created yet</h3>
+              <h3 className="mb-1 text-base font-semibold text-gray-400">No shifts created yet</h3>
               <p className="mb-3 text-sm text-gray-500">Create your first shift to get started</p>
               <div className="flex justify-center gap-2">
                 <button
@@ -6963,7 +7005,7 @@ const getBadgeColor = (type) => {
                     {/* Shift Header */}
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-start gap-1.5">
-                        <div className="p-1 rounded-md bg-white/20 backdrop-blur-sm">
+                        <div className="p-1 rounded-md bg-[#0a0a0a]/20 backdrop-blur-sm">
                           <FaClock className="text-xs" />
                         </div>
                         <div>
@@ -6989,14 +7031,14 @@ const getBadgeColor = (type) => {
                           {isBrakeShift ? getBrakeShiftTimeDisplay(shift) : (timeSlot?.timeRange || "Not set")}
                         </span>
                         {isBrakeShift && (
-                          <span className="px-1 py-0.5 text-[10px] bg-white/20 rounded-full">
+                          <span className="px-1 py-0.5 text-[10px] bg-[#0a0a0a]/20 rounded-full">
                             Brake
                           </span>
                         )}
                       </div>
                       <p className="text-[10px] text-white/80 line-clamp-1">
                         {isBrakeShift ?
-                          "07:00-13:00 & 17:00-21:30" :
+                          (shift.timeSlots?.[0]?.description ? `${shift.timeSlots[0].description} & ${shift.timeSlots[1]?.description || ''}` : "Brake shift") :
                           (timeSlot?.description || "No description")}
                       </p>
                     </div>
@@ -7008,8 +7050,8 @@ const getBadgeColor = (type) => {
                         disabled={employeeCount === 0}
                         className={`flex-1 px-1.5 py-1 text-[10px] rounded flex items-center justify-center gap-0.5 ${
                           employeeCount > 0
-                            ? 'bg-white/20 text-white hover:bg-white/30 transition-colors'
-                            : 'bg-white/10 text-white/50 cursor-not-allowed'
+                            ? 'bg-[#0a0a0a]/20 text-white hover:bg-[#0a0a0a]/30 transition-colors'
+                            : 'bg-[#0a0a0a]/10 text-white/50 cursor-not-allowed'
                         }`}
                       >
                         <FaEye className="text-[8px]" /> View
@@ -7024,13 +7066,13 @@ const getBadgeColor = (type) => {
                           setEditingAssignment(null);
                           setShowAssignModal(true);
                         }}
-                        className="flex-1 px-1.5 py-1 text-[10px] text-white bg-white/30 rounded hover:bg-white/40 transition-colors flex items-center justify-center gap-0.5"
+                        className="flex-1 px-1.5 py-1 text-[10px] text-white bg-[#0a0a0a]/30 rounded hover:bg-[#0a0a0a]/40 transition-colors flex items-center justify-center gap-0.5"
                       >
                         <FaPlus className="text-[8px]" /> Assign
                       </button>
                       <button
                         onClick={() => handleDeleteMasterShift(shift._id, shift.shiftName)}
-                        className="px-1.5 py-1 text-[10px] text-white bg-white/20 rounded hover:bg-white/30 transition-colors"
+                        className="px-1.5 py-1 text-[10px] text-white bg-[#0a0a0a]/20 rounded hover:bg-[#0a0a0a]/30 transition-colors"
                       >
                         <FaTimes className="text-[8px]" />
                       </button>
@@ -7047,7 +7089,7 @@ const getBadgeColor = (type) => {
           <div className="mb-6">
             {/* Results count */}
             <div className="flex items-center justify-between mb-2">
-              <div className="text-xs text-gray-600">
+              <div className="text-xs text-gray-400">
                 Showing {filteredAssignments.length} of {employeeAssignments.length} assignments
               </div>
               {(filterDepartment || filterDesignation || filterShiftType || searchTerm) && (
@@ -7061,8 +7103,8 @@ const getBadgeColor = (type) => {
               )}
             </div>
             
-            <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-              <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+            <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
+              <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
                 <table className="min-w-full">
                   <thead className="text-xs text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
                     <tr>
@@ -7089,31 +7131,31 @@ const getBadgeColor = (type) => {
                         const rowColor = getShiftRowColor(assignment.shiftType);
 
                         return (
-                          <tr key={assignment._id} className={`${rowColor} transition border-b hover:bg-gray-50`}>
-                            <td className="px-2 py-2 text-xs font-medium text-center text-gray-900 whitespace-nowrap">
+                          <tr key={assignment._id} className={`${rowColor} transition border-b hover:bg-[#000000]`}>
+                            <td className="px-2 py-2 text-xs font-medium text-center text-gray-200 whitespace-nowrap">
                               {employeeId}
                             </td>
-                            <td className="px-2 py-2 text-xs font-medium text-center text-gray-900 whitespace-nowrap">
+                            <td className="px-2 py-2 text-xs font-medium text-center text-gray-200 whitespace-nowrap">
                               <div className="font-semibold">{employeeName}</div>
                             </td>
-                            <td className="px-2 py-2 text-xs font-medium text-center text-gray-900 whitespace-nowrap">
+                            <td className="px-2 py-2 text-xs font-medium text-center text-gray-200 whitespace-nowrap">
                               {department}
                             </td>
-                            <td className="px-2 py-2 text-xs font-medium text-center text-gray-900 whitespace-nowrap">
+                            <td className="px-2 py-2 text-xs font-medium text-center text-gray-200 whitespace-nowrap">
                               {designation}
                             </td>
-                            <td className="px-2 py-2 text-xs font-medium text-center text-gray-900 whitespace-nowrap">
+                            <td className="px-2 py-2 text-xs font-medium text-center text-gray-200 whitespace-nowrap">
                               <span className={`px-2 py-1 text-[10px] font-medium rounded-full ${getBadgeColor(assignment.shiftType)}`}>
                                 Shift {assignment.shiftType} {isBrakeShift && '(Brake)'}
                               </span>
                             </td>
-                            <td className="px-2 py-2 text-xs font-medium text-center text-gray-900 whitespace-nowrap">
-                              {isBrakeShift ? "07:00-13:00 & 17:00-21:30" : getEmployeeTimeRange(assignment)}
+                            <td className="px-2 py-2 text-xs font-medium text-center text-gray-200 whitespace-nowrap">
+                              {isBrakeShift ? getBrakeShiftTimeDisplay(shift) : getEmployeeTimeRange(assignment)}
                             </td>
                             <td className="max-w-xs px-2 py-2 text-xs font-medium text-center text-gray-500 truncate whitespace-nowrap">
-                              {isBrakeShift ? "Brake shift with afternoon break" : (assignment.employeeAssignment?.selectedDescription || timeSlot?.description || "Shift timing")}
+                              {isBrakeShift ? (shift.timeSlots?.[0]?.description ? `${shift.timeSlots[0].description} & ${shift.timeSlots[1]?.description || ''}` : "Brake shift") : (assignment.employeeAssignment?.selectedDescription || timeSlot?.description || "Shift timing")}
                             </td>
-                            <td className="px-2 py-2 text-xs font-medium text-center text-gray-900 whitespace-nowrap">
+                            <td className="px-2 py-2 text-xs font-medium text-center text-gray-200 whitespace-nowrap">
                               <div className="flex justify-center gap-1">
                                 <button
                                   onClick={() => {
@@ -7158,7 +7200,7 @@ const getBadgeColor = (type) => {
                 {/* Show entries dropdown */}
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-2">
-                    <label className="text-xs font-medium text-gray-700">
+                    <label className="text-xs font-medium text-gray-300">
                       Show:
                     </label>
                     <select
@@ -7171,7 +7213,7 @@ const getBadgeColor = (type) => {
                       <option value={20}>20</option>
                       <option value={50}>50</option>
                     </select>
-                    <span className="text-xs text-gray-600">entries</span>
+                    <span className="text-xs text-gray-400">entries</span>
                   </div>
                 </div>
 
@@ -7182,8 +7224,8 @@ const getBadgeColor = (type) => {
                     disabled={currentPageAssignments === 1}
                     className={`px-3 py-1 text-xs border rounded-lg ${
                       currentPageAssignments === 1
-                        ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                        : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
+                        ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+                        : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
                     }`}
                   >
                     Previous
@@ -7196,10 +7238,10 @@ const getBadgeColor = (type) => {
                       disabled={page === "..."}
                       className={`px-3 py-1 text-xs border rounded-lg ${
                         page === "..."
-                          ? "text-gray-500 bg-gray-50 cursor-default"
+                          ? "text-gray-500 bg-[#000000] cursor-default"
                           : currentPageAssignments === page
                           ? "text-white bg-blue-600 border-blue-600"
-                          : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                          : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
                       }`}
                     >
                       {page}
@@ -7211,8 +7253,8 @@ const getBadgeColor = (type) => {
                     disabled={currentPageAssignments === totalPages}
                     className={`px-3 py-1 text-xs border rounded-lg ${
                       currentPageAssignments === totalPages
-                        ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                        : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                        ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+                        : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
                     }`}
                   >
                     Next
@@ -7225,7 +7267,7 @@ const getBadgeColor = (type) => {
 
         {/* No assignments message */}
         {employeeAssignments.length === 0 && (
-          <div className="py-6 text-center text-gray-500 bg-white border border-gray-200 rounded-lg">
+          <div className="py-6 text-center text-gray-500 bg-[#0a0a0a] border border-[#1f2937] rounded-lg">
             <p className="text-xs">No shift assignments yet</p>
           </div>
         )}
@@ -7233,10 +7275,10 @@ const getBadgeColor = (type) => {
         {/* REGULAR SHIFT CREATE MODAL */}
         {showCustomCreateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+            <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
               <div className="flex items-center justify-between p-3 border-b">
-                <h3 className="text-sm font-semibold text-gray-800">Create Regular Shift</h3>
-                <button onClick={() => setShowCustomCreateModal(false)} className="text-lg text-gray-400 hover:text-gray-600">
+                <h3 className="text-sm font-semibold text-gray-300">Create Regular Shift</h3>
+                <button onClick={() => setShowCustomCreateModal(false)} className="text-lg text-gray-400 hover:text-gray-400">
                   &times;
                 </button>
               </div>
@@ -7245,7 +7287,7 @@ const getBadgeColor = (type) => {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block mb-1 text-xs text-gray-700">
+                      <label className="block mb-1 text-xs text-gray-300">
                         Shift Type *
                       </label>
                       <input
@@ -7256,7 +7298,7 @@ const getBadgeColor = (type) => {
                           ...prev,
                           shiftType: e.target.value.toUpperCase().replace(/[^A-Z]/g, '')
                         }))}
-                        className="w-full px-2 py-1.5 text-xs uppercase border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-2 py-1.5 text-xs uppercase border border-[#374151] rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
                         placeholder="E"
                         required
                       />
@@ -7264,14 +7306,14 @@ const getBadgeColor = (type) => {
                     </div>
 
                     <div>
-                      <label className="block mb-1 text-xs text-gray-700">
+                      <label className="block mb-1 text-xs text-gray-300">
                         Shift Name *
                       </label>
                       <input
                         type="text"
                         value={createForm.shiftName}
                         onChange={(e) => setCreateForm(prev => ({ ...prev, shiftName: e.target.value }))}
-                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
                         placeholder="Extended Shift E"
                         required
                       />
@@ -7280,28 +7322,39 @@ const getBadgeColor = (type) => {
 
                   {/* Time Slot Configuration */}
                   <div>
-                    <label className="block mb-1 text-xs text-gray-700">
+                    <label className="block mb-1 text-xs text-gray-300">
                       Time Slot *
                     </label>
-                    <div className="p-2 space-y-2 border border-gray-200 rounded-md bg-gray-50">
-                      <div>
-                        <label className="block mb-0.5 text-[10px] text-gray-600">Time Range</label>
-                        <input
-                          type="text"
-                          value={createForm.timeSlots[0].timeRange}
-                          onChange={(e) => updateTimeSlot('timeRange', e.target.value)}
-                          className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500"
-                          placeholder="10:00 - 19:00"
-                          required
-                        />
+                    <div className="p-2 space-y-2 border border-[#1f2937] rounded-md bg-[#000000]">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block mb-0.5 text-[10px] text-gray-400">Start Time</label>
+                          <input
+                            type="time"
+                            value={createForm.timeSlots[0].startTime || ''}
+                            onChange={(e) => updateTimeSlot('startTime', e.target.value)}
+                            className="w-full px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-green-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block mb-0.5 text-[10px] text-gray-400">End Time</label>
+                          <input
+                            type="time"
+                            value={createForm.timeSlots[0].endTime || ''}
+                            onChange={(e) => updateTimeSlot('endTime', e.target.value)}
+                            className="w-full px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-green-500"
+                            required
+                          />
+                        </div>
                       </div>
                       <div>
-                        <label className="block mb-0.5 text-[10px] text-gray-600">Description</label>
+                        <label className="block mb-0.5 text-[10px] text-gray-400">Description</label>
                         <input
                           type="text"
                           value={createForm.timeSlots[0].description}
                           onChange={(e) => updateTimeSlot('description', e.target.value)}
-                          className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500"
+                          className="w-full px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-green-500"
                           placeholder="Morning 10 to 7"
                           required
                         />
@@ -7310,14 +7363,24 @@ const getBadgeColor = (type) => {
                   </div>
 
                   {/* Preview */}
-                  {createForm.shiftType && createForm.timeSlots[0].timeRange && (
-                    <div className="p-2 border border-gray-200 rounded-md bg-gray-50">
-                      <h4 className="mb-0.5 text-xs text-gray-800">Preview:</h4>
-                      <p className="text-[10px] text-gray-700">
+                  {createForm.shiftType && createForm.timeSlots[0].startTime && createForm.timeSlots[0].endTime && (
+                    <div className="p-2 border border-[#1f2937] rounded-md bg-[#000000]">
+                      <h4 className="mb-0.5 text-xs text-gray-300">Preview:</h4>
+                      <p className="text-[10px] text-gray-300">
                         Shift {createForm.shiftType}: {createForm.shiftName}
                       </p>
-                      <p className="text-[10px] text-gray-600">
-                        Time: {createForm.timeSlots[0].timeRange}
+                      <p className="text-[10px] text-gray-400">
+                        Time: {createForm.timeSlots[0].startTime && createForm.timeSlots[0].endTime ? 
+                          (() => {
+                            const formatAmPm = (time24) => {
+                              if (!time24) return '';
+                              let [hours, minutes] = time24.split(':').map(Number);
+                              const ampm = hours >= 12 ? 'PM' : 'AM';
+                              hours = hours % 12 || 12;
+                              return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+                            };
+                            return `${formatAmPm(createForm.timeSlots[0].startTime)} - ${formatAmPm(createForm.timeSlots[0].endTime)}`;
+                          })() : ''}
                       </p>
                     </div>
                   )}
@@ -7327,7 +7390,7 @@ const getBadgeColor = (type) => {
                   <button
                     type="button"
                     onClick={() => setShowCustomCreateModal(false)}
-                    className="px-3 py-1.5 text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                    className="px-3 py-1.5 text-xs text-gray-300 bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
                   >
                     Cancel
                   </button>
@@ -7346,10 +7409,10 @@ const getBadgeColor = (type) => {
         {/* BRAKE SHIFT CREATE MODAL */}
         {showBrakeShiftModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+            <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
               <div className="flex items-center justify-between p-3 border-b">
-                <h3 className="text-sm font-semibold text-gray-800">Create Brake Shift</h3>
-                <button onClick={() => setShowBrakeShiftModal(false)} className="text-lg text-gray-400 hover:text-gray-600">
+                <h3 className="text-sm font-semibold text-gray-300">Create Brake Shift</h3>
+                <button onClick={() => setShowBrakeShiftModal(false)} className="text-lg text-gray-400 hover:text-gray-400">
                   &times;
                 </button>
               </div>
@@ -7358,7 +7421,7 @@ const getBadgeColor = (type) => {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block mb-1 text-xs text-gray-700">
+                      <label className="block mb-1 text-xs text-gray-300">
                         Shift Type *
                       </label>
                       <input
@@ -7369,21 +7432,21 @@ const getBadgeColor = (type) => {
                           ...prev,
                           shiftType: e.target.value.toUpperCase().replace(/[^A-Z]/g, '')
                         }))}
-                        className="w-full px-2 py-1.5 text-xs uppercase border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500"
+                        className="w-full px-2 py-1.5 text-xs uppercase border border-[#374151] rounded-md focus:ring-1 focus:ring-green-500"
                         placeholder="BR"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block mb-1 text-xs text-gray-700">
+                      <label className="block mb-1 text-xs text-gray-300">
                         Shift Name *
                       </label>
                       <input
                         type="text"
                         value={createForm.shiftName}
                         onChange={(e) => setCreateForm(prev => ({ ...prev, shiftName: e.target.value }))}
-                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500"
+                        className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-green-500"
                         placeholder="Brake Shift"
                         required
                       />
@@ -7391,33 +7454,82 @@ const getBadgeColor = (type) => {
                   </div>
 
                   {/* Brake Shift Info */}
-                  <div className="p-2 border border-green-200 rounded-md bg-gradient-to-r from-green-50 to-pink-50">
-                    <h4 className="mb-1 text-xs text-green-800">Brake Shift Details</h4>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1">
-                        <div className="flex items-center justify-center w-5 h-5 bg-green-100 rounded-full">
-                          <FaClock className="text-[8px] text-green-600" />
+                  <div>
+                    <label className="block mb-1 text-xs text-gray-300">
+                      Brake Shift Slots *
+                    </label>
+                    <div className="p-2 space-y-3 border border-[#1f2937] rounded-md bg-[#000000]">
+                      {/* Slot 1 */}
+                      <div>
+                        <h4 className="mb-1 text-[10px] font-semibold text-green-700 border-b pb-1 border-green-200">Morning Slot</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block mb-0.5 text-[10px] text-gray-400">Start Time</label>
+                            <input
+                              type="time"
+                              value={createForm.timeSlots[0]?.startTime || ''}
+                              onChange={(e) => updateBrakeTimeSlot(0, 'startTime', e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-green-500"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block mb-0.5 text-[10px] text-gray-400">End Time</label>
+                            <input
+                              type="time"
+                              value={createForm.timeSlots[0]?.endTime || ''}
+                              onChange={(e) => updateBrakeTimeSlot(0, 'endTime', e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-green-500"
+                              required
+                            />
+                          </div>
                         </div>
-                        <span className="text-[10px] text-gray-800">07:00 - 13:00</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <div className="flex items-center justify-center w-5 h-5 bg-pink-100 rounded-full">
-                          <FaClock className="text-[8px] text-pink-600" />
+                      
+                      {/* Slot 2 */}
+                      <div>
+                        <h4 className="mb-1 text-[10px] font-semibold text-pink-700 border-b pb-1 border-pink-200">Evening Slot</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block mb-0.5 text-[10px] text-gray-400">Start Time</label>
+                            <input
+                              type="time"
+                              value={createForm.timeSlots[1]?.startTime || ''}
+                              onChange={(e) => updateBrakeTimeSlot(1, 'startTime', e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-pink-500"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block mb-0.5 text-[10px] text-gray-400">End Time</label>
+                            <input
+                              type="time"
+                              value={createForm.timeSlots[1]?.endTime || ''}
+                              onChange={(e) => updateBrakeTimeSlot(1, 'endTime', e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-pink-500"
+                              required
+                            />
+                          </div>
                         </div>
-                        <span className="text-[10px] text-gray-800">17:00 - 21:30</span>
                       </div>
-                      <p className="text-[9px] text-gray-600">Total: 10.5 hours with break</p>
                     </div>
                   </div>
 
                   {/* Preview */}
-                  {createForm.shiftType && (
+                  {createForm.shiftType && createForm.timeSlots[0]?.startTime && createForm.timeSlots[0]?.endTime && createForm.timeSlots[1]?.startTime && createForm.timeSlots[1]?.endTime && (
                     <div className="p-2 border border-green-200 rounded-md bg-green-50">
                       <p className="text-xs text-green-700">
                         Shift {createForm.shiftType} (Brake): {createForm.shiftName}
                       </p>
-                      <p className="text-[10px] text-green-600">
-                        07:00-13:00 & 17:00-21:30
+                      <p className="text-[10px] text-green-600 mt-1">
+                        {(() => {
+                           const formatAmPm = (time24) => {
+                             if (!time24) return ''; let [h, m] = time24.split(':').map(Number);
+                             const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+                             return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+                           };
+                           return `${formatAmPm(createForm.timeSlots[0].startTime)} - ${formatAmPm(createForm.timeSlots[0].endTime)} & ${formatAmPm(createForm.timeSlots[1].startTime)} - ${formatAmPm(createForm.timeSlots[1].endTime)}`;
+                        })()}
                       </p>
                     </div>
                   )}
@@ -7427,7 +7539,7 @@ const getBadgeColor = (type) => {
                   <button
                     type="button"
                     onClick={() => setShowBrakeShiftModal(false)}
-                    className="px-3 py-1.5 text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                    className="px-3 py-1.5 text-xs text-gray-300 bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
                   >
                     Cancel
                   </button>
@@ -7446,9 +7558,9 @@ const getBadgeColor = (type) => {
         {/* ASSIGN SHIFT MODAL */}
         {showAssignModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+            <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
               <div className="flex items-center justify-between p-3 border-b">
-                <h3 className="text-sm font-semibold text-gray-800">
+                <h3 className="text-sm font-semibold text-gray-300">
                   {editingAssignment ? 'Edit Assignment' : 'Assign Shift'}
                 </h3>
                 <button onClick={() => {
@@ -7459,7 +7571,7 @@ const getBadgeColor = (type) => {
                     employeeName: '',
                     shiftType: ''
                   });
-                }} className="text-lg text-gray-400 hover:text-gray-600">
+                }} className="text-lg text-gray-400 hover:text-gray-400">
                   &times;
                 </button>
               </div>
@@ -7467,14 +7579,14 @@ const getBadgeColor = (type) => {
               <form onSubmit={editingAssignment ? handleUpdateAssignment : handleAssignShift} className="p-3">
                 <div className="space-y-2">
                   <div>
-                    <label className="block mb-1 text-xs text-gray-700">
+                    <label className="block mb-1 text-xs text-gray-300">
                       Employee ID {editingAssignment && '(Cannot change)'}
                     </label>
                     <input
                       type="text"
                       value={assignForm.employeeId}
                       onChange={(e) => setAssignForm(prev => ({ ...prev, employeeId: e.target.value }))}
-                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-blue-500"
                       placeholder="EMP001"
                       required
                       readOnly={!!editingAssignment}
@@ -7482,27 +7594,27 @@ const getBadgeColor = (type) => {
                   </div>
 
                   <div>
-                    <label className="block mb-1 text-xs text-gray-700">
+                    <label className="block mb-1 text-xs text-gray-300">
                       Employee Name *
                     </label>
                     <input
                       type="text"
                       value={assignForm.employeeName}
                       onChange={(e) => setAssignForm(prev => ({ ...prev, employeeName: e.target.value }))}
-                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-blue-500"
                       placeholder="John Doe"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block mb-1 text-xs text-gray-700">
+                    <label className="block mb-1 text-xs text-gray-300">
                       Select Shift Type *
                     </label>
                     <select
                       value={assignForm.shiftType}
                       onChange={(e) => setAssignForm(prev => ({ ...prev, shiftType: e.target.value }))}
-                      className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-blue-500"
                       required
                     >
                       <option value="">Select Shift Type</option>
@@ -7518,7 +7630,7 @@ const getBadgeColor = (type) => {
                         <p className="text-blue-700">
                           Time: {
                             masterShifts.find(s => s.shiftType === assignForm.shiftType)?.isBrakeShift ?
-                              "07:00-13:00 & 17:00-21:30" :
+                              getBrakeShiftTimeDisplay(masterShifts.find(s => s.shiftType === assignForm.shiftType)) :
                               getShiftTimeSlot(assignForm.shiftType)?.timeRange || "Not specified"
                           }
                         </p>
@@ -7539,7 +7651,7 @@ const getBadgeColor = (type) => {
                         shiftType: ''
                       });
                     }}
-                    className="px-3 py-1.5 text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                    className="px-3 py-1.5 text-xs text-gray-300 bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
                   >
                     Cancel
                   </button>
@@ -7558,19 +7670,19 @@ const getBadgeColor = (type) => {
         {/* VIEW EMPLOYEES MODAL */}
         {showViewModal && viewEmployees.length > 0 && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
-              <div className="flex items-center justify-between p-3 bg-white border-b border-gray-200">
+            <div className="bg-[#0a0a0a] rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between p-3 bg-[#0a0a0a] border-b border-[#1f2937]">
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-800">
+                  <h3 className="text-sm font-semibold text-gray-300">
                     {viewShiftInfo.shiftName} Employees
                   </h3>
-                  <p className="text-[10px] text-gray-600">
+                  <p className="text-[10px] text-gray-400">
                     Shift {viewShiftInfo.shiftType} • {viewEmployees.length} active employees
                   </p>
                 </div>
                 <button
                   onClick={() => setShowViewModal(false)}
-                  className="text-lg text-gray-400 hover:text-gray-600"
+                  className="text-lg text-gray-400 hover:text-gray-400"
                 >
                   &times;
                 </button>
@@ -7578,18 +7690,18 @@ const getBadgeColor = (type) => {
 
               <div className="flex-1 overflow-y-auto">
                 <table className="w-full">
-                  <thead className="sticky top-0 border-b border-gray-200 bg-gray-50">
+                  <thead className="sticky top-0 border-b border-[#1f2937] bg-[#000000]">
                     <tr>
-                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-600 uppercase">Employee ID</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-600 uppercase">Employee Name</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-600 uppercase">Department</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-600 uppercase">Designation</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-600 uppercase">Time Slot</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-600 uppercase">Description</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-600 uppercase">Actions</th>
+                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-400 uppercase">Employee ID</th>
+                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-400 uppercase">Employee Name</th>
+                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-400 uppercase">Department</th>
+                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-400 uppercase">Designation</th>
+                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-400 uppercase">Time Slot</th>
+                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-400 uppercase">Description</th>
+                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-400 uppercase">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-[#1f2937]">
                     {viewEmployees.map((emp) => {
                       const rowColor = getShiftRowColor(emp.shiftType);
                       const shift = masterShifts.find(s => s.shiftType === emp.shiftType);
@@ -7600,15 +7712,15 @@ const getBadgeColor = (type) => {
 
                       return (
                         <tr key={emp._id} className={`${rowColor} transition-colors`}>
-                          <td className="px-2 py-2 text-[10px] text-gray-900">{employeeId}</td>
-                          <td className="px-2 py-2 text-[10px] text-gray-900">{emp.employeeAssignment?.employeeName || emp.employeeName}</td>
-                          <td className="px-2 py-2 text-[10px] text-gray-900">{department}</td>
-                          <td className="px-2 py-2 text-[10px] text-gray-900">{designation}</td>
-                          <td className="px-2 py-2 text-[10px] text-gray-900">
-                            {isBrakeShift ? "07:00-13:00 & 17:00-21:30" : getEmployeeTimeRange(emp)}
+                          <td className="px-2 py-2 text-[10px] text-gray-200">{employeeId}</td>
+                          <td className="px-2 py-2 text-[10px] text-gray-200">{emp.employeeAssignment?.employeeName || emp.employeeName}</td>
+                          <td className="px-2 py-2 text-[10px] text-gray-200">{department}</td>
+                          <td className="px-2 py-2 text-[10px] text-gray-200">{designation}</td>
+                          <td className="px-2 py-2 text-[10px] text-gray-200">
+                            {isBrakeShift ? getBrakeShiftTimeDisplay(shift) : getEmployeeTimeRange(emp)}
                           </td>
-                          <td className="px-2 py-2 text-[10px] text-gray-600">
-                            {isBrakeShift ? "Brake shift" : (emp.employeeAssignment?.selectedDescription || "Legacy shift")}
+                          <td className="px-2 py-2 text-[10px] text-gray-400">
+                            {isBrakeShift ? (shift.timeSlots?.[0]?.description ? `${shift.timeSlots[0].description} & ${shift.timeSlots[1]?.description || ''}` : "Brake shift") : (emp.employeeAssignment?.selectedDescription || "Legacy shift")}
                           </td>
                           <td className="px-2 py-2">
                             <div className="flex gap-1">
@@ -7645,7 +7757,7 @@ const getBadgeColor = (type) => {
                 </table>
               </div>
 
-              <div className="p-3 border-t border-gray-200 bg-gray-50">
+              <div className="p-3 border-t border-[#1f2937] bg-[#000000]">
                 <button
                   onClick={() => setShowViewModal(false)}
                   className="w-full py-2 text-[10px] bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"

@@ -119,7 +119,7 @@ const EmployeePersonalDocuments = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen gap-3 p-8 text-center">
                 <div className="text-5xl mb-2">🔗</div>
-                <h2 className="text-xl font-bold text-gray-700">No Candidate Profile Linked</h2>
+                <h2 className="text-xl font-bold text-gray-300">No Candidate Profile Linked</h2>
                 <p className="text-sm text-gray-500 max-w-md">
                     Your employee account email does not match any candidate profile in the system.
                     To display your personal documents here, please ensure you have a candidate account registered with the same email address.
@@ -129,11 +129,11 @@ const EmployeePersonalDocuments = () => {
     }
 
     return (
-        <div className="min-h-screen p-2 bg-gray-100 font-sans">
+        <div className="min-h-screen p-2 bg-[#111111] font-sans">
             <div className="mx-auto max-w-9xl">
 
                 {/* Filters Box - Synced with UserActivity/EmployeeLetters style */}
-                <div className="p-2 mb-3 bg-white rounded-lg shadow-md border border-gray-100">
+                <div className="p-2 mb-3 bg-[#0a0a0a] rounded-lg shadow-md border border-[#1f2937]">
                     <div className="flex flex-wrap items-center gap-2">
 
                         {/* Search */}
@@ -144,7 +144,7 @@ const EmployeePersonalDocuments = () => {
                                 placeholder="Search by name or description..."
                                 value={localSearch}
                                 onChange={(e) => setLocalSearch(e.target.value)}
-                                className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 shadow-sm transition-all"
+                                className="w-full pl-9 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 shadow-sm transition-all"
                             />
                         </div>
 
@@ -153,7 +153,7 @@ const EmployeePersonalDocuments = () => {
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="w-full h-8 px-3 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 cursor-pointer transition-all appearance-none font-bold text-gray-700"
+                                className="w-full h-8 px-3 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 cursor-pointer transition-all appearance-none font-bold text-gray-300"
                             >
                                 <option value="">All Statuses</option>
                                 <option value="Filed">Asset Filed</option>
@@ -168,7 +168,7 @@ const EmployeePersonalDocuments = () => {
                         {(localSearch || statusFilter) && (
                             <button
                                 onClick={resetFilters}
-                                className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 flex items-center gap-1"
+                                className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-lg hover:bg-[#1f2937] flex items-center gap-1"
                             >
                                 <FaSearch className="rotate-90 text-[10px]" /> Clear
                             </button>
@@ -177,7 +177,7 @@ const EmployeePersonalDocuments = () => {
                 </div>
 
                 {/* Documents Table */}
-                <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg border border-gray-100">
+                <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg border border-[#1f2937]">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
                             <thead className="text-sm text-center text-white bg-blue-600">
@@ -188,18 +188,18 @@ const EmployeePersonalDocuments = () => {
                                     <th className="py-2.5 px-6">ACCESS</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
+                            <tbody className="divide-y divide-[#1f2937]">
                                 {filteredDocs.length > 0 ? filteredDocs.map((doc) => {
                                     const filed = !!docs[doc.id]?.filePath;
                                     return (
-                                        <tr key={doc.id} className="transition-colors hover:bg-gray-50">
+                                        <tr key={doc.id} className="transition-colors hover:bg-[#000000]">
                                             <td className="px-6 py-2">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`p-1.5 rounded ${filed ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"} border border-gray-100`}>
+                                                    <div className={`p-1.5 rounded ${filed ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"} border border-[#1f2937]`}>
                                                         <doc.icon size={14} />
                                                     </div>
                                                     <div>
-                                                        <div className="font-bold text-[11px] text-gray-800 uppercase tracking-tight">{doc.label}</div>
+                                                        <div className="font-bold text-[11px] text-gray-300 uppercase tracking-tight">{doc.label}</div>
                                                         <div className="text-[9px] text-gray-400 font-bold uppercase tracking-widest leading-none">ID: {doc.id.toUpperCase()}</div>
                                                     </div>
                                                 </div>
@@ -225,7 +225,7 @@ const EmployeePersonalDocuments = () => {
                                                             VIEW
                                                         </button>
                                                     ) : (
-                                                        <span className="text-[9px] font-bold text-gray-300 uppercase tracking-wider bg-gray-50 px-2 py-1 rounded border border-gray-100">N/A</span>
+                                                        <span className="text-[9px] font-bold text-gray-300 uppercase tracking-wider bg-[#000000] px-2 py-1 rounded border border-[#1f2937]">N/A</span>
                                                     )}
                                                 </div>
                                             </td>
@@ -235,7 +235,7 @@ const EmployeePersonalDocuments = () => {
                                     <tr>
                                         <td colSpan="4" className="py-10 text-center">
                                             <div className="flex flex-col items-center gap-2">
-                                                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-200 border-2 border-dashed border-gray-100">
+                                                <div className="w-12 h-12 bg-[#000000] rounded-xl flex items-center justify-center text-gray-200 border-2 border-dashed border-[#1f2937]">
                                                     <FaSearch size={18} />
                                                 </div>
                                                 <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">No matching records</h3>
@@ -252,9 +252,9 @@ const EmployeePersonalDocuments = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-12">
 
                     {/* Banking Details Card - Aligned with Apply for Leave Modal */}
-                    <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-                        <div className="p-4 sm:p-6 border-b border-gray-100 flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <div className="bg-[#0a0a0a] rounded-xl shadow-lg border border-[#1f2937] overflow-hidden">
+                        <div className="p-4 sm:p-6 border-b border-[#1f2937] flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-gray-300 flex items-center gap-2">
                                 <span className="p-2 bg-blue-50 text-blue-600 rounded-lg"><FaUniversity size={18} /></span>
                                 Banking Vault
                             </h3>
@@ -263,22 +263,22 @@ const EmployeePersonalDocuments = () => {
 
                         <div className="p-4 sm:p-6 space-y-4">
                             <div>
-                                <label className="block mb-1 text-xs font-medium text-gray-700">Institution Name</label>
-                                <div className="w-full p-2.5 text-sm font-semibold text-gray-800 border border-gray-200 rounded-lg bg-gray-50/50">
+                                <label className="block mb-1 text-xs font-medium text-gray-300">Institution Name</label>
+                                <div className="w-full p-2.5 text-sm font-semibold text-gray-300 border border-[#1f2937] rounded-lg bg-[#000000]/50">
                                     {docs.bankDetails?.bankName || "Pending Verification"}
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block mb-1 text-xs font-medium text-gray-700">Account Number</label>
-                                    <div className="w-full p-2.5 text-sm font-mono font-bold text-gray-800 border border-gray-200 rounded-lg bg-gray-50/50 tracking-wider">
+                                    <label className="block mb-1 text-xs font-medium text-gray-300">Account Number</label>
+                                    <div className="w-full p-2.5 text-sm font-mono font-bold text-gray-300 border border-[#1f2937] rounded-lg bg-[#000000]/50 tracking-wider">
                                         {docs.bankDetails?.accountNumber || "•••• •••• ••••"}
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block mb-1 text-xs font-medium text-gray-700">IFSC Code</label>
-                                    <div className="w-full p-2.5 text-sm font-mono font-bold text-gray-800 border border-gray-200 rounded-lg bg-gray-50/50">
+                                    <label className="block mb-1 text-xs font-medium text-gray-300">IFSC Code</label>
+                                    <div className="w-full p-2.5 text-sm font-mono font-bold text-gray-300 border border-[#1f2937] rounded-lg bg-[#000000]/50">
                                         {docs.bankDetails?.ifscCode || "N/A"}
                                     </div>
                                 </div>
@@ -293,9 +293,9 @@ const EmployeePersonalDocuments = () => {
                     </div>
 
                     {/* Emergency Contact Card - Aligned with Apply for Leave Modal */}
-                    <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-                        <div className="p-4 sm:p-6 border-b border-gray-100 flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <div className="bg-[#0a0a0a] rounded-xl shadow-lg border border-[#1f2937] overflow-hidden">
+                        <div className="p-4 sm:p-6 border-b border-[#1f2937] flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-gray-300 flex items-center gap-2">
                                 <span className="p-2 bg-rose-50 text-rose-600 rounded-lg"><FaPhoneAlt size={16} /></span>
                                 Emergency Hub
                             </h3>
@@ -304,21 +304,21 @@ const EmployeePersonalDocuments = () => {
 
                         <div className="p-4 sm:p-6 space-y-4">
                             <div>
-                                <label className="block mb-1 text-xs font-medium text-gray-700">Contact Identity (Name)</label>
-                                <div className="w-full p-2.5 text-sm font-bold text-gray-800 border border-gray-200 rounded-lg bg-gray-50/50 uppercase">
+                                <label className="block mb-1 text-xs font-medium text-gray-300">Contact Identity (Name)</label>
+                                <div className="w-full p-2.5 text-sm font-bold text-gray-300 border border-[#1f2937] rounded-lg bg-[#000000]/50 uppercase">
                                     {docs.emergencyContact1?.name || "Not Established"}
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block mb-1 text-xs font-medium text-gray-700">Direct Vector (Phone)</label>
+                                    <label className="block mb-1 text-xs font-medium text-gray-300">Direct Vector (Phone)</label>
                                     <div className="w-full p-2.5 text-sm font-mono font-bold text-rose-900 border border-rose-200 rounded-lg bg-rose-50/30">
                                         {docs.emergencyContact1?.phone || "000.000.0000"}
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block mb-1 text-xs font-medium text-gray-700">Relationship Bound</label>
+                                    <label className="block mb-1 text-xs font-medium text-gray-300">Relationship Bound</label>
                                     <div className="w-full p-2.5 text-sm font-bold text-blue-900 border border-blue-200 rounded-lg bg-blue-50/30 uppercase">
                                         {docs.emergencyContact1?.relationship || "N/A"}
                                     </div>
@@ -326,7 +326,7 @@ const EmployeePersonalDocuments = () => {
                             </div>
 
                             {/* <div className="pt-2 text-center">
-                                <p className="text-[10px] text-gray-400 font-semibold italic p-3 bg-gray-50 rounded-md border border-gray-100">
+                                <p className="text-[10px] text-gray-400 font-semibold italic p-3 bg-[#000000] rounded-md border border-[#1f2937]">
                                     * Protocol active for immediate medical and site contingency reporting.
                                 </p>
                             </div> */}

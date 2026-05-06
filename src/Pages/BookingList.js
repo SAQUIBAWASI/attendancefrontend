@@ -89,7 +89,7 @@ const BookingList = () => {
   };
 
   return (
-    <div className="p-6 bg-white rounded shadow ml-2">
+    <div className="p-6 bg-[#0a0a0a] rounded shadow ml-2">
       <h3 className="text-lg font-bold mb-4">Order List</h3>
       <div className="mb-4">
         <button

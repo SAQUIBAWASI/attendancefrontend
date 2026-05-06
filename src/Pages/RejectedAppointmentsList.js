@@ -20,7 +20,7 @@ const RejectedAppointmentsList = () => {
   };
 
   return (
-    <div className="p-4 bg-white rounded shadow">
+    <div className="p-4 bg-[#0a0a0a] rounded shadow">
       <h2 className="text-xl font-semibold mb-4">Rejected Appointments</h2>
       <div className="overflow-x-auto">
         <table className="w-full border rounded text-sm">
@@ -38,7 +38,7 @@ const RejectedAppointmentsList = () => {
           </thead>
           <tbody>
             {appointments.map((appt) => (
-              <tr key={appt.appointmentId} className="hover:bg-gray-50 border-b">
+              <tr key={appt.appointmentId} className="hover:bg-[#000000] border-b">
                 <td className="p-2 border flex items-center gap-2">
                   <img
                     src={appt.doctor_image}

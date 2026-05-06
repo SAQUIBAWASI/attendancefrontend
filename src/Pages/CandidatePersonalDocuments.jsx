@@ -123,25 +123,25 @@ const CandidatePersonalDocuments = () => {
   const resetFilters = () => { setStatusFilter(""); setLocalSearch(""); };
 
   return (
-    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100 font-sans">
+    <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a] font-sans">
       <div className="mx-auto max-w-9xl">
 
         {/* Header Section (Not in UserActivity but required for context) */}
         <div className="mb-4 flex items-center justify-between px-2">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Personal Documents</h1>
-            <p className="text-sm text-gray-600">Track and manage your identification assets</p>
+            <h1 className="text-2xl font-bold text-gray-300">Personal Documents</h1>
+            <p className="text-sm text-gray-400">Track and manage your identification assets</p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-[#0a0a0a] rounded-lg shadow-sm border border-[#1f2937]">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-            <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+            <span className="text-xs font-semibold text-gray-300 uppercase tracking-wider">
               Vault Secured
             </span>
           </div>
         </div>
 
         {/* Filters Box - Exact Match to UserActivity */}
-        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+        <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
 
             {/* Search */}
@@ -152,7 +152,7 @@ const CandidatePersonalDocuments = () => {
                 placeholder="Search documents..."
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -160,7 +160,7 @@ const CandidatePersonalDocuments = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[120px]"
+              className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[120px]"
             >
               <option value="">All Status</option>
               <option value="Filed">Filed</option>
@@ -171,7 +171,7 @@ const CandidatePersonalDocuments = () => {
             {(localSearch || statusFilter) && (
               <button
                 onClick={resetFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
               >
                 Clear
               </button>
@@ -180,8 +180,8 @@ const CandidatePersonalDocuments = () => {
         </div>
 
         {/* Activities (Documents) Table - Exact Match to UserActivity */}
-        <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+        <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
+          <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
             <table className="min-w-full">
               <thead className="text-sm text-center text-white bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
@@ -191,19 +191,19 @@ const CandidatePersonalDocuments = () => {
                   <th className="py-2 px-4">ACTIONS</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-[#0a0a0a] divide-y divide-[#1f2937]">
                 {filteredDocs.length > 0 ? filteredDocs.map((doc) => {
                   const filed = !!docs[doc.id]?.filePath;
                   const isUploading = !!uploading[doc.id];
                   return (
-                    <tr key={doc.id} className="transition-colors hover:bg-gray-50">
-                      <td className="px-4 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
+                    <tr key={doc.id} className="transition-colors hover:bg-[#000000]">
+                      <td className="px-4 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
                         <div className="flex items-center justify-center gap-2">
                           <doc.icon className="text-blue-500" />
                           {doc.label}
                         </div>
                       </td>
-                      <td className="px-4 py-2 text-xs text-center text-gray-600 whitespace-nowrap">
+                      <td className="px-4 py-2 text-xs text-center text-gray-400 whitespace-nowrap">
                         {doc.desc}
                       </td>
                       <td className="px-4 py-2 text-center whitespace-nowrap">
@@ -215,7 +215,7 @@ const CandidatePersonalDocuments = () => {
                       <td className="px-4 py-2 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-2">
                           <label className="cursor-pointer">
-                            <span className={`px-3 py-1 text-xs font-semibold rounded-md border transition-all ${isUploading ? "bg-gray-50 text-gray-400 border-gray-200" : "bg-white border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white"
+                            <span className={`px-3 py-1 text-xs font-semibold rounded-md border transition-all ${isUploading ? "bg-[#000000] text-gray-400 border-[#1f2937]" : "bg-[#0a0a0a] border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white"
                               }`}>
                               {isUploading ? "..." : filed ? "UPDATE" : "UPLOAD"}
                             </span>
@@ -249,13 +249,13 @@ const CandidatePersonalDocuments = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-10">
 
           {/* Banking Details Card */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100">
+          <div className="bg-[#0a0a0a] rounded-lg shadow-md overflow-hidden border border-[#1f2937]">
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-2.5 flex items-center justify-between text-white">
               <div className="flex items-center gap-2">
                 <FaUniversity />
                 <span className="text-sm font-bold uppercase tracking-wider">Banking Details</span>
               </div>
-              <button onClick={() => setIsBankModalOpen(true)} className="p-1 hover:bg-white/20 rounded transition-colors text-white">
+              <button onClick={() => setIsBankModalOpen(true)} className="p-1 hover:bg-[#0a0a0a]/20 rounded transition-colors text-white">
                 <FaEdit size={14} />
               </button>
             </div>
@@ -267,20 +267,20 @@ const CandidatePersonalDocuments = () => {
               ].map((item, i) => (
                 <div key={i} className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
                   <span className="text-gray-500 font-medium">{item.label}</span>
-                  <span className="text-gray-900 font-semibold">{item.value || "-"}</span>
+                  <span className="text-gray-200 font-semibold">{item.value || "-"}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Emergency Contact Card */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100">
+          <div className="bg-[#0a0a0a] rounded-lg shadow-md overflow-hidden border border-[#1f2937]">
             <div className="bg-gradient-to-r from-green-500 to-blue-600 px-4 py-2.5 flex items-center justify-between text-white">
               <div className="flex items-center gap-2">
                 <FaPhoneAlt />
                 <span className="text-sm font-bold uppercase tracking-wider">Emergency Contact</span>
               </div>
-              <button onClick={() => setIsEmergencyModalOpen(true)} className="p-1 hover:bg-white/20 rounded transition-colors text-white">
+              <button onClick={() => setIsEmergencyModalOpen(true)} className="p-1 hover:bg-[#0a0a0a]/20 rounded transition-colors text-white">
                 <FaEdit size={14} />
               </button>
             </div>
@@ -292,7 +292,7 @@ const CandidatePersonalDocuments = () => {
               ].map((item, i) => (
                 <div key={i} className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
                   <span className="text-gray-500 font-medium">{item.label}</span>
-                  <span className="text-gray-900 font-semibold">{item.value || "-"}</span>
+                  <span className="text-gray-200 font-semibold">{item.value || "-"}</span>
                 </div>
               ))}
             </div>
@@ -303,7 +303,7 @@ const CandidatePersonalDocuments = () => {
         {/* Update Modals - Simple & Clean to match the utilitarian theme */}
         {isBankModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-gray-200">
+            <div className="bg-[#0a0a0a] w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-[#1f2937]">
               <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-4 flex justify-between items-center text-white">
                 <h3 className="font-bold uppercase tracking-wider text-sm">Update Bank Details</h3>
                 <button onClick={() => setIsBankModalOpen(false)}><FaTimes /></button>
@@ -314,7 +314,7 @@ const CandidatePersonalDocuments = () => {
                     <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Bank Name</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none"
+                      className="w-full px-3 py-2 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-blue-500 outline-none"
                       value={bankForm.bankName}
                       onChange={e => setBankForm({ ...bankForm, bankName: e.target.value })}
                     />
@@ -323,7 +323,7 @@ const CandidatePersonalDocuments = () => {
                     <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Account Number</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none"
+                      className="w-full px-3 py-2 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-blue-500 outline-none"
                       value={bankForm.accountNumber}
                       onChange={e => setBankForm({ ...bankForm, accountNumber: e.target.value })}
                     />
@@ -332,14 +332,14 @@ const CandidatePersonalDocuments = () => {
                     <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">IFSC Code</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none"
+                      className="w-full px-3 py-2 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-blue-500 outline-none"
                       value={bankForm.ifscCode}
                       onChange={e => setBankForm({ ...bankForm, ifscCode: e.target.value })}
                     />
                   </div>
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <button type="button" onClick={() => setIsBankModalOpen(false)} className="flex-1 py-2 text-xs font-bold text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">CANCEL</button>
+                  <button type="button" onClick={() => setIsBankModalOpen(false)} className="flex-1 py-2 text-xs font-bold text-gray-400 bg-[#111111] rounded-md hover:bg-[#1f2937] transition-colors">CANCEL</button>
                   <button type="submit" disabled={isSaving} className="flex-1 py-2 text-xs font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
                     {isSaving ? "SAVING..." : "SAVE CHANGES"}
                   </button>
@@ -351,7 +351,7 @@ const CandidatePersonalDocuments = () => {
 
         {isEmergencyModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-gray-200">
+            <div className="bg-[#0a0a0a] w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-[#1f2937]">
               <div className="bg-gradient-to-r from-green-500 to-green-700 p-4 flex justify-between items-center text-white">
                 <h3 className="font-bold uppercase tracking-wider text-sm">Update Emergency Contact</h3>
                 <button onClick={() => setIsEmergencyModalOpen(false)}><FaTimes /></button>
@@ -362,7 +362,7 @@ const CandidatePersonalDocuments = () => {
                     <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Contact Name</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 outline-none"
+                      className="w-full px-3 py-2 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-green-500 outline-none"
                       value={emergencyForm.name}
                       onChange={e => setEmergencyForm({ ...emergencyForm, name: e.target.value })}
                     />
@@ -371,7 +371,7 @@ const CandidatePersonalDocuments = () => {
                     <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Phone Number</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 outline-none"
+                      className="w-full px-3 py-2 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-green-500 outline-none"
                       value={emergencyForm.phone}
                       onChange={e => setEmergencyForm({ ...emergencyForm, phone: e.target.value })}
                     />
@@ -380,14 +380,14 @@ const CandidatePersonalDocuments = () => {
                     <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Relationship</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 outline-none"
+                      className="w-full px-3 py-2 text-xs border border-[#374151] rounded-md focus:ring-1 focus:ring-green-500 outline-none"
                       value={emergencyForm.relationship}
                       onChange={e => setEmergencyForm({ ...emergencyForm, relationship: e.target.value })}
                     />
                   </div>
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <button type="button" onClick={() => setIsEmergencyModalOpen(false)} className="flex-1 py-2 text-xs font-bold text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">CANCEL</button>
+                  <button type="button" onClick={() => setIsEmergencyModalOpen(false)} className="flex-1 py-2 text-xs font-bold text-gray-400 bg-[#111111] rounded-md hover:bg-[#1f2937] transition-colors">CANCEL</button>
                   <button type="submit" disabled={isSaving} className="flex-1 py-2 text-xs font-bold text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors">
                     {isSaving ? "SAVING..." : "SAVE CONTACT"}
                   </button>

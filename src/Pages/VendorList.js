@@ -158,7 +158,7 @@ export default function VendorList() {
     );
 
   return (
-    <div className="p-4 border rounded-lg shadow-lg bg-white">
+    <div className="p-4 border rounded-lg shadow-lg bg-[#0a0a0a]">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-blue-900">All Vendors</h2>
       </div>
@@ -182,13 +182,13 @@ export default function VendorList() {
             <option value={200}>200</option>
           </select>
           <button
-            className="bg-gray-200 px-4 py-2 rounded"
+            className="bg-[#1f2937] px-4 py-2 rounded"
             onClick={() => exportData("csv")}
           >
             Export CSV
           </button>
           <button
-            className="bg-gray-200 px-4 py-2 rounded"
+            className="bg-[#1f2937] px-4 py-2 rounded"
             onClick={() => exportData("xlsx")}
           >
             Export Excel
@@ -197,7 +197,7 @@ export default function VendorList() {
       </div>
 
       <div className="overflow-x-auto mb-4">
-        <table className="w-full border-collapse border border-gray-300">
+        <table className="w-full border-collapse border border-[#374151]">
           <thead>
             <tr className="bg-blue-600 text-white">
               <th className="p-2 border">Sl</th>
@@ -293,7 +293,7 @@ export default function VendorList() {
             className={`px-4 py-2 rounded ${
               currentPage === index + 1
                 ? "bg-blue-500 text-white"
-                : "bg-gray-200"
+                : "bg-[#1f2937]"
             }`}
           >
             {index + 1}
@@ -313,7 +313,7 @@ export default function VendorList() {
       {/* Edit Modal */}
       {editModal && editedVendor && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg relative max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#0a0a0a] p-6 rounded-lg shadow-lg w-full max-w-lg relative max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-semibold mb-4">
               Edit Vendor - {editedVendor.name}
             </h3>

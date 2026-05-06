@@ -466,8 +466,8 @@ const EmployeeDashboard = () => {
   const LateTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-bold text-gray-800">{payload[0].payload.name}</p>
+        <div className="px-3 py-2 text-xs bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-lg">
+          <p className="font-bold text-gray-300">{payload[0].payload.name}</p>
           <p className="font-medium text-rose-600">{payload[0].payload.label}</p>
         </div>
       );
@@ -478,8 +478,8 @@ const EmployeeDashboard = () => {
   const AbsentTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-bold text-gray-800">{payload[0].payload.name}</p>
+        <div className="px-3 py-2 text-xs bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-lg">
+          <p className="font-bold text-gray-300">{payload[0].payload.name}</p>
           <p className="font-medium text-red-500">{payload[0].payload.label}</p>
         </div>
       );
@@ -497,13 +497,13 @@ const EmployeeDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 text-slate-700 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-[#000000] to-[#0a0a0a] text-slate-300 font-sans">
       <main className="p-6 lg:p-10 max-w-full overflow-hidden">
         
         {/* Welcome Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-extrabold text-slate-900 leading-tight flex items-center gap-2">
+            <h1 className="text-2xl font-extrabold text-slate-200 leading-tight flex items-center gap-2">
               {(() => {
                 const hour = new Date().getHours();
                 if (hour >= 5 && hour < 12) return <>Good morning, 🌅</>;
@@ -517,7 +517,7 @@ const EmployeeDashboard = () => {
               Here's what's happening with your attendance today.
             </p>
           </div>
-          <div className="flex items-center gap-3 bg-white px-4 py-2 text-slate-600 rounded-xl shadow-md border border-gray-100 transition-all hover:shadow-lg">
+          <div className="flex items-center gap-3 bg-[#0a0a0a] px-4 py-2 text-slate-400 rounded-xl shadow-md border border-[#1f2937] transition-all hover:shadow-lg">
             <FiCalendar className="text-blue-500" />
             <span className="text-xs font-semibold tracking-tight">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -542,7 +542,7 @@ const EmployeeDashboard = () => {
                 {isMyBirthday && (
                   <div className="relative overflow-hidden p-6 rounded-2xl bg-gradient-to-r from-rose-500 to-indigo-600 text-white shadow-lg animate-in fade-in slide-in-from-bottom duration-500">
                     <div className="relative z-10 flex items-center gap-4">
-                      <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm border border-white/30">
+                      <div className="p-3 bg-[#0a0a0a]/20 rounded-xl backdrop-blur-sm border border-white/30">
                         <FaBirthdayCake className="text-3xl text-white" />
                       </div>
                       <div>
@@ -556,7 +556,7 @@ const EmployeeDashboard = () => {
                 {myAnniversary && (
                   <div className="relative overflow-hidden p-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-700 text-white shadow-lg animate-in fade-in slide-in-from-bottom duration-500">
                     <div className="relative z-10 flex items-center gap-4">
-                      <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm border border-white/30">
+                      <div className="p-3 bg-[#0a0a0a]/20 rounded-xl backdrop-blur-sm border border-white/30">
                         <FaAward className="text-3xl text-white" />
                       </div>
                       <div>
@@ -572,7 +572,7 @@ const EmployeeDashboard = () => {
               <div className="grid grid-cols-1 gap-3">
                 {deptBirthdays.length > 0 && (
                   <div 
-                    className="flex items-center justify-between p-3 bg-white border border-rose-100 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                    className="flex items-center justify-between p-3 bg-[#0a0a0a] border border-rose-100 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
                     onClick={() => { setModalType("birthday"); setShowModal(true); }}
                   >
                     <div className="flex items-center gap-3">
@@ -583,13 +583,13 @@ const EmployeeDashboard = () => {
                           </div>
                         ))}
                         {deptBirthdays.length > 3 && (
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 ring-2 ring-white">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111111] text-xs font-bold text-slate-500 ring-2 ring-white">
                             +{deptBirthdays.length - 3}
                           </div>
                         )}
                       </div>
-                      <p className="text-xs font-medium text-slate-600">
-                        <span className="font-bold text-slate-900">
+                      <p className="text-xs font-medium text-slate-400">
+                        <span className="font-bold text-slate-200">
                           {deptBirthdays.length === 1 
                             ? deptBirthdays[0].name 
                             : `${deptBirthdays[0].name} and ${deptBirthdays.length - 1} other${deptBirthdays.length > 2 ? 's' : ''}`
@@ -611,7 +611,7 @@ const EmployeeDashboard = () => {
 
                 {deptAnniversaries.length > 0 && (
                   <div 
-                    className="flex items-center justify-between p-3 bg-white border border-emerald-100 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                    className="flex items-center justify-between p-3 bg-[#0a0a0a] border border-emerald-100 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
                     onClick={() => { setModalType("anniversary"); setShowModal(true); }}
                   >
                     <div className="flex items-center gap-3">
@@ -622,13 +622,13 @@ const EmployeeDashboard = () => {
                           </div>
                         ))}
                         {deptAnniversaries.length > 3 && (
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 ring-2 ring-white">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111111] text-[10px] font-bold text-slate-500 ring-2 ring-white">
                             +{deptAnniversaries.length - 3}
                           </div>
                         )}
                       </div>
-                      <p className="text-xs font-medium text-slate-600">
-                        <span className="font-bold text-slate-900">
+                      <p className="text-xs font-medium text-slate-400">
+                        <span className="font-bold text-slate-200">
                           {deptAnniversaries.length === 1 
                             ? deptAnniversaries[0].name 
                             : `${deptAnniversaries[0].name} and ${deptAnniversaries.length - 1} other${deptAnniversaries.length > 2 ? 's' : ''}`
@@ -650,7 +650,7 @@ const EmployeeDashboard = () => {
 
                 {deptLeaves.length > 0 && (
                   <div 
-                    className="flex items-center justify-between p-3 bg-white border border-amber-100 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                    className="flex items-center justify-between p-3 bg-[#0a0a0a] border border-amber-100 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
                     onClick={() => { setModalType("leave"); setShowModal(true); }}
                   >
                     <div className="flex items-center gap-3">
@@ -661,13 +661,13 @@ const EmployeeDashboard = () => {
                           </div>
                         ))}
                         {deptLeaves.length > 3 && (
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 ring-2 ring-white">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111111] text-[10px] font-bold text-slate-500 ring-2 ring-white">
                             +{deptLeaves.length - 3}
                           </div>
                         )}
                       </div>
-                      <p className="text-xs font-medium text-slate-600">
-                        <span className="font-bold text-slate-900">
+                      <p className="text-xs font-medium text-slate-400">
+                        <span className="font-bold text-slate-200">
                           {deptLeaves.length === 1 
                             ? deptLeaves[0].employeeName 
                             : `${deptLeaves[0].employeeName} and ${deptLeaves.length - 1} other${deptLeaves.length > 2 ? 's' : ''}`
@@ -688,16 +688,16 @@ const EmployeeDashboard = () => {
               {/* Celebration Modal */}
               {showModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-                  <div className="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl animate-in zoom-in-95 duration-200">
+                  <div className="w-full max-w-md overflow-hidden bg-[#0a0a0a] shadow-2xl rounded-2xl animate-in zoom-in-95 duration-200">
                     <div className="flex items-center justify-between p-4 border-b border-gray-50">
-                        <h3 className="text-lg font-bold text-gray-800">
+                        <h3 className="text-lg font-bold text-gray-300">
                           {modalType === 'birthday' ? `Today's Birthdays` : 
                            modalType === 'anniversary' ? `Work Anniversaries` :
                            `Employees on Leave`}
                         </h3>
                       <button 
                         onClick={() => setShowModal(false)}
-                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+                        className="p-2 text-slate-400 hover:text-slate-400 hover:bg-[#000000] rounded-xl transition-all"
                       >
                         <FiX className="text-xl" />
                       </button>
@@ -705,7 +705,7 @@ const EmployeeDashboard = () => {
                     <div className="p-2 max-h-[60vh] overflow-y-auto">
                       <div className="grid grid-cols-1 gap-2 p-2">
                         {(modalType === 'birthday' ? deptBirthdays : modalType === 'anniversary' ? deptAnniversaries : deptLeaves).map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl hover:bg-white border border-transparent hover:border-slate-100 hover:shadow-sm transition-all group">
+                          <div key={idx} className="flex items-center justify-between p-4 bg-[#000000]/50 rounded-xl hover:bg-[#0a0a0a] border border-transparent hover:border-[#1f2937] hover:shadow-sm transition-all group">
                              <div className="flex items-center gap-4">
                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shadow-sm ${
                                  modalType === 'birthday' ? 'bg-rose-100 text-rose-600' : 
@@ -715,7 +715,7 @@ const EmployeeDashboard = () => {
                                  {(item.name || item.employeeName).split(' ').map(n => n[0]).join('')}
                                </div>
                                <div>
-                                 <h4 className="text-sm font-bold text-gray-900">{item.name || item.employeeName}</h4>
+                                 <h4 className="text-sm font-bold text-gray-200">{item.name || item.employeeName}</h4>
                                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                                    {modalType === 'anniversary' ? `${item.yearsOfService} Year Celebration` : item.role || 'Team Member'}
                                  </p>
@@ -723,7 +723,7 @@ const EmployeeDashboard = () => {
                              </div>
                              {(modalType === 'birthday' || modalType === 'anniversary') && (
                                <button 
-                                 className={`px-3 py-1.5 bg-white border rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm ${
+                                 className={`px-3 py-1.5 bg-[#0a0a0a] border rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm ${
                                    modalType === 'birthday' ? 'text-rose-500 border-rose-100 hover:bg-rose-500 hover:text-white' : 
                                    'text-emerald-600 border-emerald-100 hover:bg-emerald-600 hover:text-white'
                                  }`}
@@ -741,7 +741,7 @@ const EmployeeDashboard = () => {
                         ))}
                       </div>
                     </div>
-                    <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+                    <div className="p-4 bg-[#000000] border-t border-[#1f2937] flex justify-end">
                        <button 
                          onClick={() => setShowModal(false)}
                          className="px-5 py-2 bg-gray-900 text-white rounded-lg text-xs font-bold hover:bg-gray-800 transition-all shadow-md shadow-gray-200"
@@ -761,13 +761,13 @@ const EmployeeDashboard = () => {
           {/* Left Column: Profile Card + Employee Stats */}
           <div className="space-y-6 lg:col-span-4">
             {/* Profile Card */}
-            <div className="p-6 bg-white border border-gray-100 shadow-lg rounded-2xl">
+            <div className="p-6 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
               <div className="flex items-center gap-4 pb-6 mb-6 border-b border-gray-50">
                 <div className="flex items-center justify-center text-xl font-bold text-blue-600 w-14 h-14 rounded-2xl bg-blue-50">
                   {profile.name.split(' ').map(n => n[0]).join('')}
                 </div>
                 <div>
-                  <h2 className="mb-1 text-base font-bold leading-none text-gray-900">{profile.name}</h2>
+                  <h2 className="mb-1 text-base font-bold leading-none text-gray-200">{profile.name}</h2>
                   <p className="text-xs font-medium text-blue-600">{profile.department || "Developer"}</p>
                 </div>
               </div>
@@ -782,7 +782,7 @@ const EmployeeDashboard = () => {
 
               <button
                 onClick={() => navigate("/myattendance")}
-                className="w-full mt-6 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition-all"
+                className="w-full mt-6 py-2 bg-[#000000] hover:bg-[#111111] text-slate-300 border border-[#1f2937] rounded-lg text-xs font-bold transition-all"
               >
                 View Full Attendance Report
               </button>
@@ -796,7 +796,7 @@ const EmployeeDashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="p-6 bg-white border border-gray-100 shadow-lg rounded-2xl">
+            <div className="p-6 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">QUICK ACTIONS</h3>
               <div className="grid grid-cols-1 gap-2">
                 <SleekAction
@@ -835,8 +835,8 @@ const EmployeeDashboard = () => {
             {/* Charts Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Late Analysis Card */}
-              <div className="p-6 bg-white border border-gray-100 shadow-lg rounded-2xl">
-                <div className="flex items-center justify-between gap-4 mb-6 text-slate-900">
+              <div className="p-6 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
+                <div className="flex items-center justify-between gap-4 mb-6 text-slate-200">
                   <div className="flex-1">
                     <h3 className="text-lg font-bold whitespace-nowrap">Late Minutes by Week</h3>
                     <p className="text-sm font-medium text-slate-400 mt-1 whitespace-nowrap">Weekly distribution for {lateMonth}</p>
@@ -849,7 +849,7 @@ const EmployeeDashboard = () => {
                         setLateMonth(e.target.value);
                         setLateDate("");
                       }}
-                      className="px-4 py-2 text-sm font-semibold text-slate-700 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none bg-white cursor-pointer transition-all"
+                      className="px-4 py-2 text-sm font-semibold text-slate-300 border border-[#1f2937] rounded-xl focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none bg-[#0a0a0a] cursor-pointer transition-all"
                     />
                   </div>
                 </div>
@@ -887,8 +887,8 @@ const EmployeeDashboard = () => {
               </div>
 
               {/* Absent Analysis Card */}
-              <div className="p-6 bg-white border border-gray-100 shadow-lg rounded-2xl">
-                <div className="flex items-center justify-between gap-4 mb-6 text-slate-900">
+              <div className="p-6 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
+                <div className="flex items-center justify-between gap-4 mb-6 text-slate-200">
                   <div className="flex-1">
                     <h3 className="text-lg font-bold whitespace-nowrap">Absent Days by Week</h3>
                     <p className="text-sm font-medium text-slate-400 mt-1 whitespace-nowrap">Weekly breakdown for {absentMonth}</p>
@@ -901,7 +901,7 @@ const EmployeeDashboard = () => {
                         setAbsentMonth(e.target.value);
                         setAbsentDate("");
                       }}
-                      className="px-4 py-2 text-sm font-semibold text-slate-700 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none bg-white cursor-pointer transition-all"
+                      className="px-4 py-2 text-sm font-semibold text-slate-300 border border-[#1f2937] rounded-xl focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none bg-[#0a0a0a] cursor-pointer transition-all"
                     />
                   </div>
                 </div>
@@ -941,9 +941,9 @@ const EmployeeDashboard = () => {
             </div>
 
             {/* Recent Attendance Registry */}
-            <div className="p-6 bg-white border border-gray-100 shadow-lg rounded-2xl">
+            <div className="p-6 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-base font-bold text-slate-900">Recent Attendance Activity</h3>
+                <h3 className="text-base font-bold text-slate-200">Recent Attendance Activity</h3>
                 <button
                   onClick={() => navigate("/myattendance")}
                   className="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors"
@@ -963,14 +963,14 @@ const EmployeeDashboard = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {userAttendance.slice(0, 5).map((record, index) => (
-                      <tr key={index} className="group hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-4 text-sm font-semibold text-slate-700">
+                      <tr key={index} className="group hover:bg-[#000000] transition-colors">
+                        <td className="px-4 py-4 text-sm font-semibold text-slate-300">
                           {new Date(record.checkInTime).toLocaleDateString()}
                         </td>
-                        <td className="px-4 py-4 text-sm font-medium text-slate-600">
+                        <td className="px-4 py-4 text-sm font-medium text-slate-400">
                           {record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
                         </td>
-                        <td className="px-4 py-4 text-sm font-medium text-slate-600">
+                        <td className="px-4 py-4 text-sm font-medium text-slate-400">
                           {record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
                         </td>
                         <td className="px-4 py-4 text-right">
@@ -1009,7 +1009,7 @@ const MiniDetail = ({ label, value, isStatus }) => (
         <span className="text-[10px] font-bold uppercase tracking-wider">Active</span>
       </div>
     ) : (
-      <span className="text-xs font-semibold text-slate-700">{value}</span>
+      <span className="text-xs font-semibold text-slate-300">{value}</span>
     )}
   </div>
 );
@@ -1018,7 +1018,7 @@ const MiniDetail = ({ label, value, isStatus }) => (
 const SleekAction = ({ icon, title, desc, color, onClick }) => {
   const themes = {
     blue: "bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:shadow-lg shadow-blue-100",
-    slate: "bg-slate-50 text-slate-700 border-slate-100 hover:bg-slate-100 hover:border-slate-200"
+    slate: "bg-[#000000] text-slate-300 border-[#1f2937] hover:bg-[#111111] hover:border-[#1f2937]"
   };
 
   const iconColors = {
@@ -1031,7 +1031,7 @@ const SleekAction = ({ icon, title, desc, color, onClick }) => {
       onClick={onClick}
       className={`p-3 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 ${themes[color]}`}
     >
-      <div className={`text-lg p-1.5 rounded-lg ${color === 'blue' ? 'bg-white/10' : 'bg-white shadow-sm'} ${iconColors[color]}`}>
+      <div className={`text-lg p-1.5 rounded-lg ${color === 'blue' ? 'bg-[#0a0a0a]/10' : 'bg-[#0a0a0a] shadow-sm'} ${iconColors[color]}`}>
         {icon}
       </div>
       <div>

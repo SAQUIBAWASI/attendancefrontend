@@ -224,12 +224,12 @@ const Regularization = () => {
 
   // ✅ Stat Box - Matching the Dashboard design
   const StatCard = ({ icon: Icon, label, value, color }) => (
-    <div className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
+    <div className={`bg-[#0a0a0a] rounded-lg p-3 shadow-sm border-t-4 ${color} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
       <div className="flex items-center gap-2">
         <Icon className="text-gray-400 text-base flex-shrink-0" />
-        <div className="text-sm font-medium text-gray-700">{label}</div>
+        <div className="text-sm font-medium text-gray-300">{label}</div>
       </div>
-      <div className="text-sm font-bold text-gray-800">
+      <div className="text-sm font-bold text-gray-300">
         <CountUp end={value} duration={2} separator="," />
       </div>
     </div>
@@ -258,7 +258,7 @@ const Regularization = () => {
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
         <div className="text-center">
           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div>
-          <p className="font-semibold text-gray-600">
+          <p className="font-semibold text-gray-400">
             Loading edited records...
           </p>
         </div>
@@ -298,7 +298,7 @@ const Regularization = () => {
 
 
         {/* Filters Section */}
-        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+        <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
 
             {/* Month Filter */}
@@ -310,7 +310,7 @@ const Regularization = () => {
                     setSelectedMonth(e.target.value);
                     setSelectedDate(""); // Clear date if month is selected
                   }}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
@@ -323,7 +323,7 @@ const Regularization = () => {
                     setSelectedDate(e.target.value);
                     // month remains for context but priority is date
                   }}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
@@ -335,7 +335,7 @@ const Regularization = () => {
                 placeholder="Search by ID or Name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -345,7 +345,7 @@ const Regularization = () => {
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
                   }`}
               >
                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
@@ -353,13 +353,13 @@ const Regularization = () => {
 
               {/* Department Filter Dropdown */}
               {showDepartmentFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
                   <div
                     onClick={() => {
                       setFilterDepartment('');
                       setShowDepartmentFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
                   >
                     All Departments
                   </div>
@@ -386,7 +386,7 @@ const Regularization = () => {
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
                   }`}
               >
                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
@@ -394,13 +394,13 @@ const Regularization = () => {
 
               {/* Designation Filter Dropdown */}
               {showDesignationFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
                   <div
                     onClick={() => {
                       setFilterDesignation('');
                       setShowDesignationFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
                   >
                     All Designations
                   </div>
@@ -425,7 +425,7 @@ const Regularization = () => {
             {(searchTerm || filterDepartment || filterDesignation || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
               <button
                 onClick={clearFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
               >
                 Clear
               </button>
@@ -434,8 +434,8 @@ const Regularization = () => {
         </div>
 
         {/* ✅ Main Employee Table */}
-        <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+        <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
+          <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
             <table className="min-w-full">
               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
@@ -454,12 +454,12 @@ const Regularization = () => {
                     return (
                       <tr
                         key={group.employeeId}
-                        className="transition border-b hover:bg-gray-50"
+                        className="transition border-b hover:bg-[#000000]"
                       >
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+                        <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
                           {group.employeeId || "N/A"}
                         </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+                        <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
                           <div className="flex items-center justify-center gap-2">
                              {empDetails.profilePicture ? (
                                <img src={empDetails.profilePicture} className="w-6 h-6 rounded-full" />
@@ -471,10 +471,10 @@ const Regularization = () => {
                              <div className="font-medium text-xs">{empDetails.name}</div>
                           </div>
                         </td>
-                        <td className="px-2 py-2 text-center text-xs text-gray-600 ">
+                        <td className="px-2 py-2 text-center text-xs text-gray-400 ">
                           {empDetails.department}
                         </td>
-                        <td className="px-2 py-2 text-center text-xs text-gray-600 ">
+                        <td className="px-2 py-2 text-center text-xs text-gray-400 ">
                           {empDetails.designation}
                         </td>
                         <td className="px-2 py-2 text-center">
@@ -482,7 +482,7 @@ const Regularization = () => {
                                 {group.records.length} edits
                            </span>
                         </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+                        <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
                            <button 
                              onClick={() => handleViewDetails(group)}
                              className="px-3 py-1 text-[10px] bg-blue-600 text-white rounded hover:bg-blue-700 transition"
@@ -508,11 +508,11 @@ const Regularization = () => {
         {/* ✅ Modal for Date-wise Details */}
         {showDetailsModal && selectedEmployeeData && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-            <div className="w-full max-w-4xl max-h-[90vh] bg-white rounded-xl shadow-2xl overflow-hidden animate-fade-in flex flex-col">
+            <div className="w-full max-w-4xl max-h-[90vh] bg-[#0a0a0a] rounded-xl shadow-2xl overflow-hidden animate-fade-in flex flex-col">
               {/* Modal Header */}
               <div className="flex items-center justify-between px-6 py-4 text-white bg-gradient-to-r from-blue-600 to-indigo-700">
                 <div className="flex items-center gap-3">
-                   <div className="flex items-center justify-center w-10 h-10 bg-white bg-opacity-20 rounded-full">
+                   <div className="flex items-center justify-center w-10 h-10 bg-[#0a0a0a] bg-opacity-20 rounded-full">
                        <FaUserTag className="text-xl" />
                    </div>
                    <div>
@@ -522,33 +522,33 @@ const Regularization = () => {
                 </div>
                 <button 
                   onClick={() => setShowDetailsModal(false)}
-                  className="p-1 transition-colors rounded-full hover:bg-white hover:bg-opacity-10"
+                  className="p-1 transition-colors rounded-full hover:bg-[#0a0a0a] hover:bg-opacity-10"
                 >
                   <FiXCircle className="text-2xl" />
                 </button>
               </div>
 
               {/* Modal Body */}
-              <div className="flex-1 p-6 overflow-y-auto bg-gray-50">
-                <div className="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
+              <div className="flex-1 p-6 overflow-y-auto bg-[#000000]">
+                <div className="overflow-hidden bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-sm">
                   <table className="min-w-full">
-                    <thead className="bg-gray-100 border-b border-gray-200">
+                    <thead className="bg-[#111111] border-b border-[#1f2937]">
                       <tr>
-                        <th className="px-4 py-3 text-xs font-semibold text-center text-gray-700 uppercase tracking-wider">Date</th>
-                        <th className="px-4 py-3 text-xs font-semibold text-center text-gray-700 uppercase tracking-wider">Times (In / Out)</th>
-                        <th className="px-4 py-3 text-xs font-semibold text-center text-gray-700 uppercase tracking-wider">Hours</th>
-                        <th className="px-4 py-3 text-xs font-semibold text-center text-gray-700 uppercase tracking-wider">Admin Comment</th>
-                        <th className="px-4 py-3 text-xs font-semibold text-center text-gray-700 uppercase tracking-wider">Reason</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-center text-gray-300 uppercase tracking-wider">Date</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-center text-gray-300 uppercase tracking-wider">Times (In / Out)</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-center text-gray-300 uppercase tracking-wider">Hours</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-center text-gray-300 uppercase tracking-wider">Admin Comment</th>
+                        <th className="px-4 py-3 text-xs font-semibold text-center text-gray-300 uppercase tracking-wider">Reason</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-[#1f2937]">
                       {selectedEmployeeData.records.map((rec) => (
                         <tr key={rec._id} className="hover:bg-blue-50 transition-colors">
-                          <td className="px-4 py-4 text-xs font-medium text-center text-gray-900">
+                          <td className="px-4 py-4 text-xs font-medium text-center text-gray-200">
                             {new Date(rec.checkInTime).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' })}
                           </td>
                           <td className="px-4 py-4 text-center">
-                            <div className="inline-flex flex-col gap-1 px-3 py-1 bg-gray-50 rounded-lg border border-gray-100 shadow-inner">
+                            <div className="inline-flex flex-col gap-1 px-3 py-1 bg-[#000000] rounded-lg border border-[#1f2937] shadow-inner">
                               <span className="text-[11px] font-bold text-green-600 flex items-center justify-center gap-1">
                                 <FiClock className="inline" /> {formatTime(rec.checkInTime)}
                               </span>
@@ -562,7 +562,7 @@ const Regularization = () => {
                               {rec.totalHours?.toFixed(2) || "0.00"}h
                             </span>
                           </td>
-                          <td className="px-4 py-4 text-xs text-center text-gray-600 italic">
+                          <td className="px-4 py-4 text-xs text-center text-gray-400 italic">
                             {rec.comment || <span className="text-gray-300">No comment</span>}
                           </td>
                           <td className="px-4 py-4 text-center">
@@ -578,10 +578,10 @@ const Regularization = () => {
               </div>
 
               {/* Modal Footer */}
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+              <div className="px-6 py-4 bg-[#000000] border-t border-[#1f2937] flex justify-end">
                 <button 
                   onClick={() => setShowDetailsModal(false)}
-                  className="px-6 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-all focus:ring-2 focus:ring-blue-500"
+                  className="px-6 py-2 text-sm font-semibold text-gray-300 bg-[#0a0a0a] border border-[#374151] rounded-lg shadow-sm hover:bg-[#000000] transition-all focus:ring-2 focus:ring-blue-500"
                 >
                   Close
                 </button>
@@ -595,7 +595,7 @@ const Regularization = () => {
           <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
-                <label className="font-medium text-gray-700 ">
+                <label className="font-medium text-gray-300 ">
                   Show:
                 </label>
                 <select
@@ -608,7 +608,7 @@ const Regularization = () => {
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                 </select>
-                <span className="text-sm text-gray-600">entries</span>
+                <span className="text-sm text-gray-400">entries</span>
               </div>
             </div>
 
@@ -617,8 +617,8 @@ const Regularization = () => {
                 onClick={handlePrevPage}
                 disabled={currentPage === 1}
                 className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
-                    ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                    : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
+                    ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+                    : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
                   }`}
               >
                 Previous
@@ -630,10 +630,10 @@ const Regularization = () => {
                   onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                   disabled={page === "..."}
                   className={`px-4 py-1 text-sm border rounded-lg ${page === "..."
-                      ? "text-gray-500 bg-gray-50 cursor-default"
+                      ? "text-gray-500 bg-[#000000] cursor-default"
                       : currentPage === page
                         ? "text-white bg-blue-600 border-blue-600"
-                        : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                        : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
                     }`}
                 >
                   {page}
@@ -644,8 +644,8 @@ const Regularization = () => {
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
                 className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
-                    ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                    : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                    ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+                    : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
                   }`}
               >
                 Next

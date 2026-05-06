@@ -66,7 +66,7 @@ const DiagnosticsRejectedBooking = () => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
-    <div className="p-4 bg-white rounded shadow">
+    <div className="p-4 bg-[#0a0a0a] rounded shadow">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Diagnostics Rejected Bookings</h2>
       </div>
@@ -89,7 +89,7 @@ const DiagnosticsRejectedBooking = () => {
 
       <div className="overflow-x-auto">
         <table className="w-full border rounded text-sm">
-          <thead className="bg-gray-200">
+          <thead className="bg-[#1f2937]">
             <tr>
               <th className="p-2 border">Patient</th>
               <th className="p-2 border">Age</th>
@@ -108,7 +108,7 @@ const DiagnosticsRejectedBooking = () => {
           </thead>
           <tbody>
             {currentBookings.map((booking) => (
-              <tr key={booking.bookingId} className="hover:bg-gray-50 border-b">
+              <tr key={booking.bookingId} className="hover:bg-[#000000] border-b">
                 <td className="p-2 border">{booking.patient_name}</td>
                 <td className="p-2 border">{booking.patient_age || booking.age || "N/A"}</td>
                 <td className="p-2 border">{booking.patient_gender || booking.gender || "N/A"}</td>

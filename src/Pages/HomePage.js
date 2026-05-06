@@ -267,7 +267,7 @@ I am a ${selectedAudience} looking for ${selectedNeed}. Please help me get start
                     <option value="Clinic Owner">Clinic Owner</option>
                     <option value="Corporate HR">Corporate HR</option>
                   </select>
-                  <ChevronDown className="absolute w-5 h-5 text-gray-400 pointer-events-none right-3 top-3" />
+                  <ChevronDown className="absolute w-5 h-5 text-gray-500 pointer-events-none right-3 top-3" />
                 </div>
               </div>
 
@@ -286,7 +286,7 @@ I am a ${selectedAudience} looking for ${selectedNeed}. Please help me get start
                     <option value="Workshop">Workshop</option>
                     <option value="Branding">Branding</option>
                   </select>
-                  <ChevronDown className="absolute w-5 h-5 text-gray-400 pointer-events-none right-3 top-3" />
+                  <ChevronDown className="absolute w-5 h-5 text-gray-500 pointer-events-none right-3 top-3" />
                 </div>
               </div>
             </div>

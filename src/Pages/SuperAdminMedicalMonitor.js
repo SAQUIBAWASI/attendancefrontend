@@ -87,7 +87,7 @@ const SuperAdminDashboard = () => {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
+    <div className="flex h-screen overflow-hidden bg-[#111111]">
 
       {/* Sidebar */}
       <SuperAdminSidebar
@@ -117,7 +117,7 @@ const SuperAdminDashboard = () => {
 
         {/* Dashboard */}
         <main className="flex-1 p-4 overflow-y-auto md:p-6">
-          <h1 className="text-2xl font-bold text-gray-800">
+          <h1 className="text-2xl font-bold text-gray-300">
             Super Admin Dashboard
           </h1>
           <p className="text-gray-500">Manage Employees & System Controls</p>
@@ -165,9 +165,9 @@ const SuperAdminDashboard = () => {
           {/* Leave Approval Section */}
           <div
             onClick={() => navigate("/leave-approvals")}
-            className="p-6 mt-10 transition bg-white shadow-md cursor-pointer rounded-xl hover:shadow-lg"
+            className="p-6 mt-10 transition bg-[#0a0a0a] shadow-md cursor-pointer rounded-xl hover:shadow-lg"
           >
-            <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-300">
               <FiCheckCircle /> Pending Leave Approvals
             </h3>
             <p className="text-sm text-gray-500">
@@ -181,9 +181,9 @@ const SuperAdminDashboard = () => {
           {/* Attendance Monitor Section */}
           <div
             onClick={() => navigate("/attendance-records")}
-            className="p-6 mt-6 transition bg-white shadow-md cursor-pointer rounded-xl hover:shadow-lg"
+            className="p-6 mt-6 transition bg-[#0a0a0a] shadow-md cursor-pointer rounded-xl hover:shadow-lg"
           >
-            <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-300">
               <FiClock /> Attendance Monitor
             </h3>
             <p className="text-sm text-gray-500">
@@ -204,10 +204,10 @@ const SuperAdminDashboard = () => {
 const DashboardCard = ({ icon, title, subtitle, onClick }) => (
   <div
     onClick={onClick}
-    className="flex flex-col items-center justify-center p-6 transition transform bg-white shadow-md cursor-pointer rounded-xl hover:scale-105 hover:shadow-lg"
+    className="flex flex-col items-center justify-center p-6 transition transform bg-[#0a0a0a] shadow-md cursor-pointer rounded-xl hover:scale-105 hover:shadow-lg"
   >
-    <div className="p-4 mb-3 bg-gray-100 rounded-full">{icon}</div>
-    <h4 className="font-semibold text-gray-800">{title}</h4>
+    <div className="p-4 mb-3 bg-[#111111] rounded-full">{icon}</div>
+    <h4 className="font-semibold text-gray-300">{title}</h4>
     <p className="text-sm text-gray-500">{subtitle}</p>
   </div>
 );

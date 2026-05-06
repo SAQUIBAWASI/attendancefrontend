@@ -9,11 +9,11 @@
 // navigate("/notifications");
 // };
 
-// return ( <nav className="sticky top-0 z-50 flex items-center justify-between w-full h-16 px-4 text-white bg-blue-800 shadow-md">
+// return ( <nav className="sticky top-0 z-50 flex items-center justify-between w-full h-16 px-4 text-gray-200 bg-[#000000] border-b border-[#1f2937] ">
 // {/* Sidebar toggle button (left) */}
 // <button
 // onClick={() => setIsCollapsed(!isCollapsed)}
-// className="p-2 text-2xl transition rounded-md hover:bg-blue-700"
+// className="p-2 text-2xl transition rounded-md hover:bg-[#111111] border border-[#1f2937] text-emerald-400"
 // >
 // {isCollapsed ? ( <RiMenu2Line className="text-[#AAAAAA]" />
 // ) : ( <RiMenu3Line className="text-[#AAAAAA]" />
@@ -26,11 +26,11 @@
 //   {/* <div className="relative flex items-center md:order-2">
 //     <button
 //       onClick={handleNotificationsClick}
-//       className="relative p-2 transition rounded-full hover:bg-blue-700"
+//       className="relative p-2 transition rounded-full hover:bg-[#111111] border border-[#1f2937] text-emerald-400"
 //     >
-//       <MdNotificationsNone className="text-2xl text-white" />
+//       <MdNotificationsNone className="text-2xl text-gray-200" />
 //       {totalNotifications > 0 && (
-//         <span className="absolute flex items-center justify-center w-4 h-4 text-xs text-white bg-red-500 rounded-full -top-1 -right-1">
+//         <span className="absolute flex items-center justify-center w-4 h-4 text-xs text-gray-200 bg-red-500 rounded-full -top-1 -right-1">
 //           {totalNotifications}
 //         </span>
 //       )}
@@ -102,24 +102,24 @@
 
 
 //   return (
-//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-blue-800 shadow-md">
+//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-gray-200 bg-[#000000] border-b border-[#1f2937] ">
 
 //       {/* Left Section - Menu Button & Page Title */}
 //       <div className="flex items-center gap-4">
 //         {/* Sidebar toggle button */}
 //         <button
 //           onClick={handleMenuClick}
-//           className="p-2 text-2xl transition rounded-md hover:bg-blue-700"
+//           className="p-2 text-2xl transition rounded-md hover:bg-[#111111] border border-[#1f2937] text-emerald-400"
 //         >
 //           {isCollapsed ? (
-//             <RiMenu2Line className="text-white" />
+//             <RiMenu2Line className="text-gray-200" />
 //           ) : (
-//             <RiMenu3Line className="text-white" />
+//             <RiMenu3Line className="text-gray-200" />
 //           )}
 //         </button>
 
 //         {/* Page Title - Show on all screens */}
-//         <div className="px-3 py-1 bg-blue-700 rounded-md">
+//         <div className="px-3 py-1 bg-[#111111] border border-[#1f2937] text-emerald-400 rounded-md">
 //           <span className="text-sm font-semibold md:text-base">
 //             {getPageTitle()}
 //           </span>
@@ -202,13 +202,13 @@
 //   );
 
 //  return (
-//   <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-blue-800 shadow-md">
+//   <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-gray-200 bg-[#000000] border-b border-[#1f2937] ">
 
 //     {/* LEFT SECTION */}
 //     <div className="flex items-center gap-4">
 //       <button
 //         onClick={handleMenuClick}
-//         className="p-2 text-2xl transition rounded-md hover:bg-blue-700"
+//         className="p-2 text-2xl transition rounded-md hover:bg-[#111111] border border-[#1f2937] text-emerald-400"
 //       >
 //         {isCollapsed ? (
 //           <RiMenu2Line />
@@ -217,7 +217,7 @@
 //         )}
 //       </button>
 
-//       <div className="px-3 py-1 bg-blue-700 rounded-md">
+//       <div className="px-3 py-1 bg-[#111111] border border-[#1f2937] text-emerald-400 rounded-md">
 //         <span className="text-sm font-semibold md:text-base">
 //           {getPageTitle()}
 //         </span>
@@ -344,18 +344,18 @@
 //   const isAttendanceModule = attendanceRoutes.includes(location.pathname);
 
 //   return (
-//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-blue-800 shadow-md">
+//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-gray-200 bg-[#000000] border-b border-[#1f2937] ">
 
 //       {/* LEFT SECTION */}
 //       <div className="flex items-center gap-4">
 //         <button
 //           onClick={handleMenuClick}
-//           className="p-2 text-2xl transition rounded-md hover:bg-blue-700"
+//           className="p-2 text-2xl transition rounded-md hover:bg-[#111111] border border-[#1f2937] text-emerald-400"
 //         >
 //           {isCollapsed ? <RiMenu2Line /> : <RiMenu3Line />}
 //         </button>
 
-//         <div className="px-3 py-1 bg-blue-700 rounded-md">
+//         <div className="px-3 py-1 bg-[#111111] border border-[#1f2937] text-emerald-400 rounded-md">
 //           <span className="text-sm font-semibold md:text-base">
 //             {getPageTitle()}
 //           </span>
@@ -363,7 +363,7 @@
 //       </div>
 
 //       {/* CENTER SECTION */}
-//       <div className="hidden md:flex items-center gap-2 bg-blue-700 px-3 py-1 rounded-lg">
+//       <div className="hidden md:flex items-center gap-2 bg-[#111111] border border-[#1f2937] text-emerald-400 px-3 py-1 rounded-lg">
 
 //         {/* JOB TABS */}
 //         {isJobModule &&
@@ -373,7 +373,7 @@
 //               <button
 //                 key={tab.path}
 //                 onClick={() => navigate(tab.path)}
-//                 className=" text-sm font-medium text-white rounded-md hover:bg-blue-600 transition-all duration-200"
+//                 className=" text-sm font-medium text-gray-200 rounded-md hover:bg-blue-600 transition-all duration-200"
 //               >
 //                 {tab.label}
 //               </button>
@@ -387,7 +387,7 @@
 //               <button
 //                 key={tab.path}
 //                 onClick={() => navigate(tab.path)}
-//                 className="px-4 py-1.5 text-sm font-medium text-white rounded-md hover:bg-blue-600 transition-all duration-200"
+//                 className="px-4 py-1.5 text-sm font-medium text-gray-200 rounded-md hover:bg-blue-600 transition-all duration-200"
 //               >
 //                 {tab.label}
 //               </button>
@@ -485,18 +485,18 @@
 //   );
 
 //   return (
-//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-blue-800 shadow-md">
+//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-gray-200 bg-[#000000] border-b border-[#1f2937] ">
 
 //       {/* LEFT */}
 //       <div className="flex items-center gap-4">
 //         <button
 //           onClick={handleMenuClick}
-//           className="p-2 text-2xl rounded-md hover:bg-blue-700 transition"
+//           className="p-2 text-2xl rounded-md hover:bg-[#111111] border border-[#1f2937] text-emerald-400 transition"
 //         >
 //           {isCollapsed ? <RiMenu2Line /> : <RiMenu3Line />}
 //         </button>
 
-//         <div className="px-3 py-1 bg-blue-700 rounded-md">
+//         <div className="px-3 py-1 bg-[#111111] border border-[#1f2937] text-emerald-400 rounded-md">
 //           <span className="text-sm font-semibold">
 //             {getPageTitle()}
 //           </span>
@@ -514,7 +514,7 @@
 //               <button
 //                 key={tab.path}
 //                 onClick={() => navigate(tab.path)}
-//                 className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-blue-700 transition"
+//                 className="px-3 py-1.5 text-sm font-medium text-gray-200 rounded-md hover:bg-[#111111] border border-[#1f2937] text-emerald-400 transition"
 //               >
 //                 {tab.label}
 //               </button>
@@ -528,7 +528,7 @@
 //               <button
 //                 key={tab.path}
 //                 onClick={() => navigate(tab.path)}
-//                 className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-blue-700 transition"
+//                 className="px-3 py-1.5 text-sm font-medium text-gray-200 rounded-md hover:bg-[#111111] border border-[#1f2937] text-emerald-400 transition"
 //               >
 //                 {tab.label}
 //               </button>
@@ -543,6 +543,172 @@
 //           className="w-10 h-10 rounded-lg object-cover"
 //         />
 //         <span className="hidden sm:block text-lg font-semibold">
+//           Attendance
+//         </span>
+//       </div>
+//     </nav>
+//   );
+// };
+
+// export default Navbar;
+
+
+// import { RiMenu2Line, RiMenu3Line } from "react-icons/ri";
+// import { useLocation, useNavigate } from "react-router-dom";
+
+// const Navbar = ({ setIsCollapsed, isCollapsed }) => {
+//   const navigate = useNavigate();
+//   const location = useLocation();
+
+//   const handleMenuClick = () => {
+//     setIsCollapsed(!isCollapsed);
+//   };
+
+//   const getPageTitle = () => {
+//     const routes = {
+//       "/dashboard": "Dashboard",
+//       "/addemployee": "Add Employee",
+//       "/employeelist": "Employee List",
+//       "/attendancelist": "Attendance Records",
+//       "/attedancesummary": "Attendance Summary",
+//       "/today-attendance": "Today's Attendance",
+//       "/late-today": "Late Today",
+//       "/absent-today": "Absent Today",
+//       "/leavelist": "Leave Requests",
+//       "/leaves-report": "Leave Reports",
+//       "/payroll": "Payroll Management",
+//       "/role-management": "Role Management",
+//       "/permission-settings": "Permission Settings",
+//       "/addlocation": "Add Location",
+//       "/locationlist": "Location List",
+//       "/useractivity": "User Activity",
+//       "/useraccess": "User Access",
+//       "/jobpost": "Job Post",
+//       "/job-applicants": "Job Applicants",
+//       "/score": "Score",
+//       "/assessment-manager": "Assessment Manager",
+//       "/personaldocuments": "Documents",
+//       "/permissions": "Permissions",
+//       "/shift": "Shift Management",
+//       "/shiftlist": "Shift List",
+//       "/all-expensives": "Expenses",
+//       "/regularization": "Regularization",
+//       "/holidays-calendar": "Holidays",
+//       "/all-medical-certificates": "Medical Certificates",
+//     };
+    
+//     return routes[location.pathname] || "Dashboard";
+//   };
+
+//   // ===== JOB MODULE =====
+//   const jobTabs = [
+//     { path: "/jobpost", label: "Job Post" },
+//     { path: "/job-applicants", label: "Applicants" },
+//     { path: "/score", label: "Score" },
+//     { path: "/assessment-manager", label: "Assessment" },
+//     { path: "/personaldocuments", label: "Documents" },
+//   ];
+
+//   const isJobModule = jobTabs.some(
+//     (tab) => tab.path === location.pathname
+//   );
+
+//   // ===== ATTENDANCE MODULE =====
+//   const attendanceTabs = [
+//     { path: "/attedancesummary", label: "Summary" },
+//     { path: "/attendancelist", label: "Records" },
+//     { path: "/today-attendance", label: "Today" },
+//     { path: "/absent-today", label: "Absent Today" },
+//     { path: "/late-today", label: "Late Today" },
+//     { path: "/regularization", label: "Regularization" },
+//   ];
+
+//   const isAttendanceModule = attendanceTabs.some(
+//     (tab) => tab.path === location.pathname
+//   );
+
+//   // ===== DASHBOARD MODULE CHECK =====
+//   const isDashboardModule = location.pathname === "/dashboard";
+
+//   return (
+//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-gray-200 bg-[#000000] border-b border-[#1f2937] ">
+
+//       {/* LEFT */}
+//       <div className="flex items-center gap-4">
+//         <button
+//           onClick={handleMenuClick}
+//           className="p-2 text-2xl rounded-md hover:bg-[#111111] border border-[#1f2937] text-emerald-400 transition"
+//         >
+//           {isCollapsed ? <RiMenu2Line /> : <RiMenu3Line />}
+//         </button>
+
+//         <div className="px-3 py-1 bg-[#111111] border border-[#1f2937] text-emerald-400 rounded-md">
+//           <span className="text-sm font-semibold">
+//             {getPageTitle()}
+//           </span>
+//         </div>
+//       </div>
+
+//       {/* CENTER */}
+//       <div className="hidden md:flex items-center gap-2">
+
+//         {/* JOB TABS */}
+//         {isJobModule &&
+//           jobTabs
+//             .filter((tab) => tab.path !== location.pathname)
+//             .map((tab) => (
+//               <button
+//                 key={tab.path}
+//                 onClick={() => navigate(tab.path)}
+//                 className="px-3 py-1.5 text-sm font-medium text-gray-200 rounded-md hover:bg-[#111111] border border-[#1f2937] text-emerald-400 transition"
+//               >
+//                 {tab.label}
+//               </button>
+//             ))}
+
+//         {/* ATTENDANCE TABS */}
+//         {isAttendanceModule &&
+//           attendanceTabs
+//             .filter((tab) => tab.path !== location.pathname)
+//             .map((tab) => (
+//               <button
+//                 key={tab.path}
+//                 onClick={() => navigate(tab.path)}
+//                 className="px-3 py-1.5 text-sm font-medium text-gray-200 rounded-md hover:bg-[#111111] border border-[#1f2937] text-emerald-400 transition"
+//               >
+//                 {tab.label}
+//               </button>
+//             ))}
+//       </div>
+
+//       {/* RIGHT */}
+//       <div className="flex items-center gap-3">
+//         {/* Dashboard Circles - Only show on Dashboard */}
+//         {isDashboardModule && (
+//           <div className="flex items-center mr-2">
+//             <button
+//               onClick={() => navigate("/leavelist")}
+//               className="w-9 h-9 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white border-none flex items-center justify-center text-[11px] font-medium text-gray-200 transition  border border-blue-400"
+//               title="Leave Requests"
+//             >
+//               Leave
+//             </button>
+//             <button
+//               onClick={() => navigate("/permissions")}
+//               className="w-8 h-8 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white border-none flex items-center justify-center text-[10px] font-medium text-gray-200 transition  border border-indigo-300 -ml-1"
+//               title="Permissions"
+//             >
+//               Perm
+//             </button>
+//           </div>
+//         )}
+        
+//         <img
+//           src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
+//           alt="Vendor Logo"
+//           className="w-8 h-8 rounded-lg object-cover"
+//         />
+//         <span className="hidden sm:block text-base font-semibold">
 //           Attendance
 //         </span>
 //       </div>
@@ -570,6 +736,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
       "/addemployee": "Add Employee",
       "/employeelist": "Employee List",
       "/attendancelist": "Attendance Records",
+      "/attendancesummary": "Attendance Summary",
       "/attedancesummary": "Attendance Summary",
       "/today-attendance": "Today's Attendance",
       "/late-today": "Late Today",
@@ -614,88 +781,112 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
   );
 
   // ===== ATTENDANCE MODULE =====
+  // ✅ Fixed paths - Added both spellings and all attendance routes
   const attendanceTabs = [
+    // { path: "/attendancesummary", label: "Summary" },
     { path: "/attedancesummary", label: "Summary" },
     { path: "/attendancelist", label: "Records" },
     { path: "/today-attendance", label: "Today" },
-    { path: "/absent-today", label: "Absent Today" },
-    { path: "/late-today", label: "Late Today" },
+    { path: "/absent-today", label: "Absent " },
+    { path: "/late-today", label: "Late " },
     { path: "/regularization", label: "Regularization" },
   ];
 
+  // ✅ Check if current path is ANY attendance related page
   const isAttendanceModule = attendanceTabs.some(
     (tab) => tab.path === location.pathname
-  );
+  ) || location.pathname === "/attendancesummary" || location.pathname === "/attedancesummary";
 
   // ===== DASHBOARD MODULE CHECK =====
   const isDashboardModule = location.pathname === "/dashboard";
 
+  // ✅ Get current attendance tab to show active state
+  const isActiveTab = (path) => {
+    if (path === "/attendancesummary" || path === "/attedancesummary") {
+      return location.pathname === "/attendancesummary" || location.pathname === "/attedancesummary";
+    }
+    return location.pathname === path;
+  };
+
   return (
-    <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-blue-800 shadow-md">
+    <nav className="sticky top-0 z-40 flex items-center justify-between w-full min-h-14 px-4 py-2 text-gray-200 bg-[#000000] border-b border-[#1f2937]  flex-wrap gap-2">
 
       {/* LEFT */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <button
           onClick={handleMenuClick}
-          className="p-2 text-2xl rounded-md hover:bg-blue-700 transition"
+          className="p-2 text-xl rounded-md hover:bg-[#111111] border border-[#1f2937] text-emerald-400 transition"
         >
           {isCollapsed ? <RiMenu2Line /> : <RiMenu3Line />}
         </button>
 
-        <div className="px-3 py-1 bg-blue-700 rounded-md">
-          <span className="text-sm font-semibold">
+        <div className="px-3 py-1.5 bg-[#111111] border border-[#1f2937] text-emerald-400 rounded-md">
+          <span className="text-sm font-semibold whitespace-nowrap">
             {getPageTitle()}
           </span>
         </div>
       </div>
 
-      {/* CENTER */}
-      <div className="hidden md:flex items-center gap-2">
+      {/* CENTER - Scrollable on mobile */}
+      <div className="flex-1 overflow-x-auto">
+        <div className="flex items-center justify-center gap-1 min-w-max">
+          
+          {/* JOB TABS */}
+          {isJobModule &&
+            jobTabs
+              .filter((tab) => tab.path !== location.pathname)
+              .map((tab) => (
+                <button
+                  key={tab.path}
+                  onClick={() => navigate(tab.path)}
+                  className="px-3 py-1.5 text-sm font-medium text-gray-200 rounded-md hover:bg-[#111111] border border-[#1f2937] text-emerald-400 transition whitespace-nowrap"
+                >
+                  {tab.label}
+                </button>
+              ))}
 
-        {/* JOB TABS */}
-        {isJobModule &&
-          jobTabs
-            .filter((tab) => tab.path !== location.pathname)
-            .map((tab) => (
-              <button
-                key={tab.path}
-                onClick={() => navigate(tab.path)}
-                className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-blue-700 transition"
-              >
-                {tab.label}
-              </button>
-            ))}
-
-        {/* ATTENDANCE TABS */}
-        {isAttendanceModule &&
-          attendanceTabs
-            .filter((tab) => tab.path !== location.pathname)
-            .map((tab) => (
-              <button
-                key={tab.path}
-                onClick={() => navigate(tab.path)}
-                className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-blue-700 transition"
-              >
-                {tab.label}
-              </button>
-            ))}
+          {/* ATTENDANCE TABS - Show for ALL attendance pages including Summary */}
+          {isAttendanceModule &&
+            attendanceTabs
+              .filter((tab) => {
+                // Don't filter out current tab, show all but highlight active
+                return true;
+              })
+              .map((tab) => {
+                // Check if this tab is the current page
+                const isCurrent = isActiveTab(tab.path);
+                return (
+                  <button
+                    key={tab.path}
+                    onClick={() => navigate(tab.path)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition whitespace-nowrap ${
+                      isCurrent
+                        ? "bg-emerald-600 text-white shadow-[0_0_10px_rgba(5,150,105,0.4)] border-none"
+                        : "text-gray-200 hover:bg-[#111111] border border-[#1f2937] text-emerald-400"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+        </div>
       </div>
 
       {/* RIGHT */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 shrink-0">
         {/* Dashboard Circles - Only show on Dashboard */}
         {isDashboardModule && (
           <div className="flex items-center mr-2">
             <button
               onClick={() => navigate("/leavelist")}
-              className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 flex items-center justify-center text-[11px] font-medium text-white transition shadow-md border border-blue-400"
+              className="w-9 h-9 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white border-none flex items-center justify-center text-[11px] font-medium text-gray-200 transition  border border-blue-400"
               title="Leave Requests"
             >
               Leave
             </button>
             <button
               onClick={() => navigate("/permissions")}
-              className="w-8 h-8 rounded-full bg-indigo-500 hover:bg-indigo-400 flex items-center justify-center text-[10px] font-medium text-white transition shadow-md border border-indigo-300 -ml-1"
+              className="w-8 h-8 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white border-none flex items-center justify-center text-[10px] font-medium text-gray-200 transition  border border-indigo-300 -ml-1"
               title="Permissions"
             >
               Perm
@@ -708,7 +899,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
           alt="Vendor Logo"
           className="w-8 h-8 rounded-lg object-cover"
         />
-        <span className="hidden sm:block text-base font-semibold">
+        <span className="hidden sm:block text-base font-semibold whitespace-nowrap">
           Attendance
         </span>
       </div>

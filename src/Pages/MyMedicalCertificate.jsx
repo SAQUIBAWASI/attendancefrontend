@@ -33,16 +33,16 @@ const MyMedicalCertificate = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
+    <div className="flex flex-col min-h-screen bg-[#111111]">
       <main className="flex-1 p-0 sm:p-0 lg:p-8">
-        <div className="max-w-9xl p-0 mx-auto bg-white rounded-lg shadow-md">
+        <div className="max-w-9xl p-0 mx-auto bg-[#0a0a0a] rounded-lg shadow-md">
           {loading ? (
             <div className="flex flex-col items-center justify-center p-20 text-indigo-600">
               <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
               <p className="font-bold text-xs uppercase tracking-widest">Loading Records...</p>
             </div>
           ) : certificates.length > 0 ? (
-            <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+            <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
               <table className="min-w-full">
                 <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
                   <tr>
@@ -56,7 +56,7 @@ const MyMedicalCertificate = () => {
                   {certificates.map((cert) => {
                     const isExpired = new Date(cert.expiryDate) < new Date();
                     return (
-                      <tr key={cert._id} className="border-b hover:bg-gray-50">
+                      <tr key={cert._id} className="border-b hover:bg-[#000000]">
                         <td className="p-2 border">{new Date(cert.registrationDate).toLocaleDateString()}</td>
                         <td className="p-2 border">{new Date(cert.expiryDate).toLocaleDateString()}</td>
                         <td className="p-2 border">
@@ -88,7 +88,7 @@ const MyMedicalCertificate = () => {
             </div>
           ) : (
             <div className="p-20 text-center">
-              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
+              <div className="w-16 h-16 bg-[#000000] rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
                 <FaFileMedical size={32} />
               </div>
               <p className="text-gray-500 italic">No medical certificates found.</p>

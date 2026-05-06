@@ -19,7 +19,7 @@ const getStatusColors = (status) => {
     case "Interview Scheduled":
       return { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200", icon: "text-blue-500" };
     default:
-      return { bg: "bg-slate-100", text: "text-slate-800", border: "border-slate-200", icon: "text-slate-500" };
+      return { bg: "bg-[#111111]", text: "text-slate-300", border: "border-[#1f2937]", icon: "text-slate-500" };
   }
 };
 
@@ -52,7 +52,7 @@ const CandidateDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-6 lg:p-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen p-4 md:p-6 lg:p-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
       <motion.div
         initial="hidden"
         animate="visible"
@@ -62,7 +62,7 @@ const CandidateDashboard = () => {
         {/* ── Sleek Header Section (Matched to AllJobs) ── */}
         <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex-shrink-0">
-            <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
+            <h2 className="text-2xl font-bold text-gray-300 tracking-tight">
               Welcome back, {profile?.name || "Candidate"} 👋
             </h2>
             <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mt-1">
@@ -78,9 +78,9 @@ const CandidateDashboard = () => {
               <FaBriefcase className="text-xs" /> Explore Jobs
             </button>
 
-            <div className="bg-white px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-2">
+            <div className="bg-[#0a0a0a] px-4 py-2.5 rounded-xl border border-[#1f2937] shadow-sm flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">{allJobs.length} Live Openings</span>
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{allJobs.length} Live Openings</span>
             </div>
           </div>
         </div>
@@ -99,14 +99,14 @@ const CandidateDashboard = () => {
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate(stat.path)}
-              className="bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between hover:shadow-md hover:border-blue-200 transition-all group cursor-pointer"
+              className="bg-[#0a0a0a] px-4 py-2.5 rounded-xl border border-[#1f2937] shadow-sm flex items-center justify-between hover:shadow-md hover:border-blue-200 transition-all group cursor-pointer"
             >
               <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-gray-50 text-${stat.color}-600 group-hover:bg-${stat.color}-50 transition-colors`}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-[#000000] text-${stat.color}-600 group-hover:bg-${stat.color}-50 transition-colors`}>
                   <stat.icon size={14} />
                 </div>
                 <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                  {stat.label} <span className="text-gray-300 mx-1">:</span> <span className="text-gray-900 font-black">{stat.value}</span>
+                  {stat.label} <span className="text-gray-300 mx-1">:</span> <span className="text-gray-200 font-black">{stat.value}</span>
                 </span>
               </div>
               <FaArrowRight className="text-[10px] text-gray-300 group-hover:text-blue-500 transition-colors" />
@@ -118,14 +118,14 @@ const CandidateDashboard = () => {
         {pendingInterviews.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between px-1">
-              <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
+              <h3 className="text-lg font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                 Interview Invitations
               </h3>
               <span className="text-xs font-bold text-amber-600 uppercase tracking-widest bg-amber-50 px-4 py-1.5 rounded-full border border-amber-100 shadow-sm">Action Required</span>
             </div>
 
-            <div className="overflow-hidden bg-white shadow-xl rounded-2xl border border-gray-100">
+            <div className="overflow-hidden bg-[#0a0a0a] shadow-xl rounded-2xl border border-[#1f2937]">
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
@@ -136,13 +136,13 @@ const CandidateDashboard = () => {
                       <th className="py-2">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-[#1f2937]">
                     {pendingInterviews.map((app) => (
-                      <tr key={app._id} className="group hover:bg-gray-50 transition-all duration-300">
-                        <td className="py-2 px-6 text-center text-sm font-semibold text-gray-800 uppercase tracking-tight">
+                      <tr key={app._id} className="group hover:bg-[#000000] transition-all duration-300">
+                        <td className="py-2 px-6 text-center text-sm font-semibold text-gray-300 uppercase tracking-tight">
                           {app.jobId?.role || "Position Update"}
                         </td>
-                        <td className="py-2 px-6 text-center text-xs font-medium text-gray-600">
+                        <td className="py-2 px-6 text-center text-xs font-medium text-gray-400">
                           <div className="flex items-center justify-center gap-2">
                             <FaClock className="text-blue-400" />
                             {new Date(app.interviewTime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
@@ -173,7 +173,7 @@ const CandidateDashboard = () => {
         {/* ── Recent Activity Feed (Strict Table Style) ── */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
-            <h3 className="text-lg font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
+            <h3 className="text-lg font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-blue-500"></span>
               Application Status Tracker
             </h3>
@@ -185,7 +185,7 @@ const CandidateDashboard = () => {
             </button>
           </div>
 
-          <div className="overflow-hidden bg-white shadow-2xl rounded-3xl border border-gray-100">
+          <div className="overflow-hidden bg-[#0a0a0a] shadow-2xl rounded-3xl border border-[#1f2937]">
             <div className="overflow-x-auto">
               {recentActivity.length > 0 ? (
                 <table className="min-w-full">
@@ -198,12 +198,12 @@ const CandidateDashboard = () => {
                       <th className="py-2 px-8">Quick Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-[#1f2937]">
                     {recentActivity.map((activity) => {
                       const style = getStatusColors(activity.status);
                       return (
                         <tr key={activity._id} className="group hover:bg-indigo-50/20 transition-all duration-300">
-                          <td className="py-2 px-8 text-center text-sm font-bold text-gray-800 uppercase tracking-tight leading-tight">
+                          <td className="py-2 px-8 text-center text-sm font-bold text-gray-300 uppercase tracking-tight leading-tight">
                             {activity.jobId?.role || "Position Update"}
                             {activity.jobId?.department && (
                               <span className="block text-[10px] text-blue-500 mt-1 uppercase tracking-widest font-semibold">
@@ -221,7 +221,7 @@ const CandidateDashboard = () => {
                           </td>
                           <td className="py-2 px-6 text-center w-48">
                             <div className="flex items-center gap-3 justify-center px-4">
-                              <div className="h-2 flex-1 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                              <div className="h-2 flex-1 bg-[#111111] rounded-full overflow-hidden shadow-inner">
                                 <motion.div
                                   initial={{ width: 0 }}
                                   animate={{ width: activity.status === "Hired" ? "100%" : "60%" }}
@@ -246,7 +246,7 @@ const CandidateDashboard = () => {
                                   return (
                                     <button
                                       onClick={() => navigate("/applied-jobs")}
-                                      className="p-1.5 bg-white text-blue-500 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-md border border-gray-100 flex items-center justify-center mx-auto"
+                                      className="p-1.5 bg-[#0a0a0a] text-blue-500 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-md border border-[#1f2937] flex items-center justify-center mx-auto"
                                       title="View Details"
                                     >
                                       <FaEye size={14} />
@@ -296,10 +296,10 @@ const CandidateDashboard = () => {
                 </table>
               ) : (
                 <div className="p-24 text-center">
-                  <div className="w-20 h-20 bg-gray-50 rounded-[2rem] flex items-center justify-center text-gray-300 mx-auto mb-6 border-2 border-dashed border-gray-200">
+                  <div className="w-20 h-20 bg-[#000000] rounded-[2rem] flex items-center justify-center text-gray-300 mx-auto mb-6 border-2 border-dashed border-[#1f2937]">
                     <FaClipboardList size={32} />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-800 uppercase tracking-widest">No Applications Tracked</h3>
+                  <h3 className="text-lg font-bold text-gray-300 uppercase tracking-widest">No Applications Tracked</h3>
                   <p className="text-xs font-medium text-gray-400 mt-2 uppercase tracking-widest">Start your journey by exploring open positions.</p>
                 </div>
               )}

@@ -67,7 +67,7 @@ const CategoryForm = ({ closeModal }) => {
   };
 
   return (
-    <div className="p-6 bg-white rounded shadow w-full max-w-md">
+    <div className="p-6 bg-[#0a0a0a] rounded shadow w-full max-w-md">
       <h3 className="text-lg font-bold mb-4">Create Category</h3>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
@@ -112,7 +112,7 @@ const CategoryForm = ({ closeModal }) => {
           />
           <label
             htmlFor="imageUpload"
-            className="cursor-pointer inline-block px-4 py-2 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 text-sm"
+            className="cursor-pointer inline-block px-4 py-2 bg-[#111111] border border-[#374151] rounded hover:bg-[#1f2937] text-sm"
           >
             Upload Image
           </label>

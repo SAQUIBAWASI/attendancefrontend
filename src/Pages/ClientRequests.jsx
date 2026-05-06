@@ -49,27 +49,27 @@
 //     return (
 //         <div className="p-6">
 //             <div className="mb-6">
-//                 <h1 className="text-2xl font-bold text-gray-800">Pending Client Requests</h1>
-//                 <p className="text-gray-600">Review and manage client registration requests</p>
+//                 <h1 className="text-2xl font-bold text-gray-300">Pending Client Requests</h1>
+//                 <p className="text-gray-400">Review and manage client registration requests</p>
 //             </div>
 
-//             <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+//             <div className="overflow-x-auto bg-[#0a0a0a] shadow-md rounded-lg">
 //                 <table className="min-w-full leading-normal">
 //                     <thead>
 //                         <tr>
-//                             <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+//                             <th className="px-5 py-3 border-b-2 border-[#1f2937] bg-[#111111] text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
 //                                 Date
 //                             </th>
-//                             <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+//                             <th className="px-5 py-3 border-b-2 border-[#1f2937] bg-[#111111] text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
 //                                 Client Details
 //                             </th>
-//                             <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+//                             <th className="px-5 py-3 border-b-2 border-[#1f2937] bg-[#111111] text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
 //                                 Company Info
 //                             </th>
-//                             <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+//                             <th className="px-5 py-3 border-b-2 border-[#1f2937] bg-[#111111] text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
 //                                 Location
 //                             </th>
-//                             <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+//                             <th className="px-5 py-3 border-b-2 border-[#1f2937] bg-[#111111] text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
 //                                 Actions
 //                             </th>
 //                         </tr>
@@ -77,16 +77,16 @@
 //                     <tbody>
 //                         {requests.length === 0 ? (
 //                             <tr>
-//                                 <td colSpan="5" className="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+//                                 <td colSpan="5" className="px-5 py-5 border-b border-[#1f2937] bg-[#0a0a0a] text-sm text-center">
 //                                     No pending requests found.
 //                                 </td>
 //                             </tr>
 //                         ) : (
 //                             requests.map((req) => (
-//                                 <tr key={req._id} className="hover:bg-gray-50 transition-colors duration-150">
-//                                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+//                                 <tr key={req._id} className="hover:bg-[#000000] transition-colors duration-150">
+//                                     <td className="px-5 py-5 border-b border-[#1f2937] bg-[#0a0a0a] text-sm">
 //                                         <div className="text-center">
-//                                             <p className="text-gray-900 font-medium">
+//                                             <p className="text-gray-200 font-medium">
 //                                                 {new Date(req.createdAt).toLocaleDateString('en-US', {
 //                                                     month: 'short',
 //                                                     day: 'numeric'
@@ -100,47 +100,47 @@
 //                                             </p>
 //                                         </div>
 //                                     </td>
-//                                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+//                                     <td className="px-5 py-5 border-b border-[#1f2937] bg-[#0a0a0a] text-sm">
 //                                         <div className="flex flex-col">
-//                                             <p className="text-gray-900 font-semibold text-base mb-1">
+//                                             <p className="text-gray-200 font-semibold text-base mb-1">
 //                                                 {req.fullName}
 //                                             </p>
-//                                             <div className="flex items-center text-gray-600 text-sm mb-1">
+//                                             <div className="flex items-center text-gray-400 text-sm mb-1">
 //                                                 <span className="mr-2">📧</span>
 //                                                 <span>{req.email}</span>
 //                                             </div>
-//                                             <div className="flex items-center text-gray-600 text-sm">
+//                                             <div className="flex items-center text-gray-400 text-sm">
 //                                                 <span className="mr-2">📱</span>
 //                                                 <span>{req.mobileNumber}</span>
 //                                             </div>
 //                                         </div>
 //                                     </td>
-//                                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+//                                     <td className="px-5 py-5 border-b border-[#1f2937] bg-[#0a0a0a] text-sm">
 //                                         <div className="flex flex-col">
 //                                             <div className="flex items-center mb-2">
 //                                                 <FaBuilding className="text-blue-500 mr-2" />
-//                                                 <span className="font-medium text-gray-800">{req.companyName}</span>
+//                                                 <span className="font-medium text-gray-300">{req.companyName}</span>
 //                                             </div>
 //                                             <div className="flex items-center">
 //                                                 <FaUsers className="text-green-500 mr-2" />
-//                                                 <span className="text-gray-600 text-sm">
+//                                                 <span className="text-gray-400 text-sm">
 //                                                     {req.numberOfEmployees} employees
 //                                                 </span>
 //                                             </div>
 //                                         </div>
 //                                     </td>
-//                                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+//                                     <td className="px-5 py-5 border-b border-[#1f2937] bg-[#0a0a0a] text-sm">
 //                                         <div className="flex flex-col">
 //                                             <div className="flex items-center mb-1">
 //                                                 <FaMapMarkerAlt className="text-red-500 mr-2" />
-//                                                 <span className="font-medium text-gray-800">{req.country}</span>
+//                                                 <span className="font-medium text-gray-300">{req.country}</span>
 //                                             </div>
-//                                             <p className="text-gray-600 text-sm truncate max-w-xs">
+//                                             <p className="text-gray-400 text-sm truncate max-w-xs">
 //                                                 {req.address}
 //                                             </p>
 //                                         </div>
 //                                     </td>
-//                                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+//                                     <td className="px-5 py-5 border-b border-[#1f2937] bg-[#0a0a0a] text-sm">
 //                                         <div className="flex justify-center space-x-3">
 //                                             <button
 //                                                 onClick={() => handleStatusUpdate(req._id, "Approved")}
@@ -292,30 +292,30 @@ const ClientRequests = () => {
     return (
         <div className="p-6">
             <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Pending Client Requests</h1>
-                <p className="text-gray-600">Review and manage client registration requests</p>
+                <h1 className="text-2xl font-bold text-gray-300">Pending Client Requests</h1>
+                <p className="text-gray-400">Review and manage client registration requests</p>
             </div>
 
-            <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+            <div className="overflow-x-auto bg-[#0a0a0a] shadow-md rounded-lg">
                 <table className="min-w-full leading-normal">
                     <thead>
                         <tr>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th className="px-5 py-3 border-b-2 border-[#1f2937] bg-[#111111] text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                 Date
                             </th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th className="px-5 py-3 border-b-2 border-[#1f2937] bg-[#111111] text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                 Client Details
                             </th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th className="px-5 py-3 border-b-2 border-[#1f2937] bg-[#111111] text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                 Company Info
                             </th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th className="px-5 py-3 border-b-2 border-[#1f2937] bg-[#111111] text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                 Location
                             </th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th className="px-5 py-3 border-b-2 border-[#1f2937] bg-[#111111] text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                 Selected Products
                             </th>
-                            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th className="px-5 py-3 border-b-2 border-[#1f2937] bg-[#111111] text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                 Actions
                             </th>
                         </tr>
@@ -323,16 +323,16 @@ const ClientRequests = () => {
                     <tbody>
                         {requests.length === 0 ? (
                             <tr>
-                                <td colSpan="6" className="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                                <td colSpan="6" className="px-5 py-5 border-b border-[#1f2937] bg-[#0a0a0a] text-sm text-center">
                                     No pending requests found.
                                 </td>
                             </tr>
                         ) : (
                             requests.map((req) => (
-                                <tr key={req._id} className="hover:bg-gray-50 transition-colors duration-150">
-                                    <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                <tr key={req._id} className="hover:bg-[#000000] transition-colors duration-150">
+                                    <td className="px-5 py-5 border-b border-[#1f2937] bg-[#0a0a0a] text-sm">
                                         <div className="text-center">
-                                            <p className="text-gray-900 font-medium">
+                                            <p className="text-gray-200 font-medium">
                                                 {new Date(req.createdAt).toLocaleDateString('en-US', {
                                                     month: 'short',
                                                     day: 'numeric'
@@ -346,42 +346,42 @@ const ClientRequests = () => {
                                             </p>
                                         </div>
                                     </td>
-                                    <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                    <td className="px-5 py-5 border-b border-[#1f2937] bg-[#0a0a0a] text-sm">
                                         <div className="flex flex-col">
-                                            <p className="text-gray-900 font-semibold text-base mb-1">
+                                            <p className="text-gray-200 font-semibold text-base mb-1">
                                                 {req.fullName}
                                             </p>
-                                            <div className="flex items-center text-gray-600 text-sm mb-1">
+                                            <div className="flex items-center text-gray-400 text-sm mb-1">
                                                 <span className="mr-2">📧</span>
                                                 <span>{req.email}</span>
                                             </div>
-                                            <div className="flex items-center text-gray-600 text-sm">
+                                            <div className="flex items-center text-gray-400 text-sm">
                                                 <span className="mr-2">📱</span>
                                                 <span>{req.mobileNumber}</span>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                    <td className="px-5 py-5 border-b border-[#1f2937] bg-[#0a0a0a] text-sm">
                                         <div className="flex flex-col">
                                             <div className="flex items-center mb-2">
                                                 <FaBuilding className="text-blue-500 mr-2" />
-                                                <span className="font-medium text-gray-800">{req.companyName}</span>
+                                                <span className="font-medium text-gray-300">{req.companyName}</span>
                                             </div>
                                             <div className="flex items-center">
                                                 <FaUsers className="text-green-500 mr-2" />
-                                                <span className="text-gray-600 text-sm">
+                                                <span className="text-gray-400 text-sm">
                                                     {req.numberOfEmployees} employees
                                                 </span>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                    <td className="px-5 py-5 border-b border-[#1f2937] bg-[#0a0a0a] text-sm">
                                         <div className="flex flex-col">
                                             <div className="flex items-center mb-1">
                                                 <FaMapMarkerAlt className="text-red-500 mr-2" />
-                                                <span className="font-medium text-gray-800">{req.country}</span>
+                                                <span className="font-medium text-gray-300">{req.country}</span>
                                             </div>
-                                            <p className="text-gray-600 text-sm truncate max-w-xs">
+                                            <p className="text-gray-400 text-sm truncate max-w-xs">
                                                 {req.address}
                                             </p>
                                             {req.city && req.state && (
@@ -391,7 +391,7 @@ const ClientRequests = () => {
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                    <td className="px-5 py-5 border-b border-[#1f2937] bg-[#0a0a0a] text-sm">
                                         {req.selectedProducts && req.selectedProducts.length > 0 ? (
                                             <div className="w-64">
                                                 <button
@@ -411,17 +411,17 @@ const ClientRequests = () => {
                                                 </button>
                                                 
                                                 {expandedProducts[req._id] && (
-                                                    <div className="mt-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                                    <div className="mt-2 p-2 bg-[#000000] rounded-lg border border-[#1f2937]">
                                                         <div className="grid grid-cols-2 gap-1">
                                                             {req.selectedProducts.map((productId) => (
                                                                 <div
                                                                     key={productId}
-                                                                    className="flex items-center px-2 py-1 text-xs bg-white rounded shadow-sm"
+                                                                    className="flex items-center px-2 py-1 text-xs bg-[#0a0a0a] rounded shadow-sm"
                                                                 >
                                                                     <span className="mr-1">
                                                                         {productIcons[productId] || '📦'}
                                                                     </span>
-                                                                    <span className="truncate text-gray-700">
+                                                                    <span className="truncate text-gray-300">
                                                                         {productNames[productId] || productId}
                                                                     </span>
                                                                 </div>
@@ -437,7 +437,7 @@ const ClientRequests = () => {
                                             </div>
                                         )}
                                     </td>
-                                    <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                    <td className="px-5 py-5 border-b border-[#1f2937] bg-[#0a0a0a] text-sm">
                                         <div className="flex justify-center space-x-3">
                                             <button
                                                 onClick={() => handleStatusUpdate(req._id, "Approved")}

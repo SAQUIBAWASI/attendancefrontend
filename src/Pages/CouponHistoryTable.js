@@ -31,7 +31,7 @@ const CouponHistoryTable = () => {
   if (loading) {
     return (
       <div className="p-6 bg-gradient-to-r from-blue-100 to-green-100 min-h-screen flex items-center justify-center">
-        <div className="text-xl font-semibold text-gray-700">Loading coupon history...</div>
+        <div className="text-xl font-semibold text-gray-300">Loading coupon history...</div>
       </div>
     );
   }
@@ -46,12 +46,12 @@ const CouponHistoryTable = () => {
 
   return (
     <div className="p-6 bg-gradient-to-r from-blue-100 to-green-100 min-h-screen">
-      <div className="max-w-6xl mx-auto bg-white p-6 rounded-xl shadow-lg">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-700 text-center">Coupon Usage History</h2>
+      <div className="max-w-6xl mx-auto bg-[#0a0a0a] p-6 rounded-xl shadow-lg">
+        <h2 className="text-2xl font-semibold mb-4 text-gray-300 text-center">Coupon Usage History</h2>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-200 text-sm">
-            <thead className="bg-green-100 text-gray-600">
+          <table className="min-w-full border border-[#1f2937] text-sm">
+            <thead className="bg-green-100 text-gray-400">
               <tr>
                 <th className="py-2 px-4 border">SI No</th>
                 <th className="py-2 px-4 border">Customer ID</th>

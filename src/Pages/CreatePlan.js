@@ -61,7 +61,7 @@ const CreatePlan = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto bg-white shadow-md rounded p-6">
+    <div className="max-w-3xl mx-auto bg-[#0a0a0a] shadow-md rounded p-6">
       <h2 className="text-2xl font-semibold mb-4 text-blue-900">Create New Plan</h2>
 
       {errorMessage && <p className="text-red-600 mb-4">{errorMessage}</p>}

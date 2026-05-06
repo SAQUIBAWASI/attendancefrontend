@@ -55,14 +55,14 @@ const AllUserCoupons = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold text-center text-gray-800 mb-8">
+    <div className="p-6 bg-[#000000] min-h-screen">
+      <h1 className="text-2xl font-bold text-center text-gray-300 mb-8">
         All User Coupons Dashboard
       </h1>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow">
+      <div className="overflow-x-auto bg-[#0a0a0a] rounded-lg shadow">
         <table className="min-w-full">
-          <thead className="bg-gray-200">
+          <thead className="bg-[#1f2937]">
             <tr>
               <th className="py-3 px-4 text-left">User</th>
               <th className="py-3 px-4 text-left">Coins</th>
@@ -71,10 +71,10 @@ const AllUserCoupons = () => {
               <th className="py-3 px-4 text-left">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-[#1f2937]">
             {users.map((user) => (
               <React.Fragment key={user._id}>
-                <tr className="hover:bg-gray-50">
+                <tr className="hover:bg-[#000000]">
                   <td className="py-4 px-4">
                     <div className="flex items-center">
                       <img 
@@ -116,13 +116,13 @@ const AllUserCoupons = () => {
                 {/* Expanded user details */}
                 {expandedUsers[user._id] && (
                   <tr>
-                    <td colSpan="5" className="px-4 py-4 bg-gray-100">
+                    <td colSpan="5" className="px-4 py-4 bg-[#111111]">
                       {/* Active Coupons Table */}
                       <div className="mb-8">
                         <h3 className="text-lg font-semibold mb-4">Active Coupons</h3>
                         <div className="overflow-x-auto">
-                          <table className="min-w-full bg-white rounded-lg overflow-hidden mb-6">
-                            <thead className="bg-gray-200">
+                          <table className="min-w-full bg-[#0a0a0a] rounded-lg overflow-hidden mb-6">
+                            <thead className="bg-[#1f2937]">
                               <tr>
                                 <th className="py-2 px-4 text-left">Image</th>
                                 <th className="py-2 px-4 text-left">Name</th>
@@ -135,7 +135,7 @@ const AllUserCoupons = () => {
                                 <th className="py-2 px-4 text-left">Status</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
+                            <tbody className="divide-y divide-[#1f2937]">
                               {user.activeCoupons.map((coupon) => (
                                 <tr key={`${user._id}-active-${coupon._id}`}>
                                   <td className="py-3 px-4">
@@ -149,7 +149,7 @@ const AllUserCoupons = () => {
                                   </td>
                                   <td className="py-3 px-4">{coupon.name}</td>
                                   <td className="py-3 px-4">
-                                    <span className={`text-xs px-2 py-1 rounded-full ${categoryColorMap[coupon.category] || 'bg-gray-200'}`}>
+                                    <span className={`text-xs px-2 py-1 rounded-full ${categoryColorMap[coupon.category] || 'bg-[#1f2937]'}`}>
                                       {coupon.category}
                                     </span>
                                   </td>
@@ -180,8 +180,8 @@ const AllUserCoupons = () => {
                       <div>
                         <h3 className="text-lg font-semibold mb-4">Coupon Usage History</h3>
                         <div className="overflow-x-auto">
-                          <table className="min-w-full bg-white rounded-lg overflow-hidden">
-                            <thead className="bg-gray-200">
+                          <table className="min-w-full bg-[#0a0a0a] rounded-lg overflow-hidden">
+                            <thead className="bg-[#1f2937]">
                               <tr>
                                 <th className="py-2 px-4 text-left">Image</th>
                                 <th className="py-2 px-4 text-left">Name</th>
@@ -193,7 +193,7 @@ const AllUserCoupons = () => {
                                 <th className="py-2 px-4 text-left">Status</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
+                            <tbody className="divide-y divide-[#1f2937]">
                               {user.couponHistory.map((coupon) => (
                                 <tr key={`${user._id}-history-${coupon._id}`}>
                                   <td className="py-3 px-4">
@@ -207,7 +207,7 @@ const AllUserCoupons = () => {
                                   </td>
                                   <td className="py-3 px-4">{coupon.name}</td>
                                   <td className="py-3 px-4">
-                                    <span className={`text-xs px-2 py-1 rounded-full ${categoryColorMap[coupon.category] || 'bg-gray-200'}`}>
+                                    <span className={`text-xs px-2 py-1 rounded-full ${categoryColorMap[coupon.category] || 'bg-[#1f2937]'}`}>
                                       {coupon.category}
                                     </span>
                                   </td>
@@ -219,7 +219,7 @@ const AllUserCoupons = () => {
                                   </td>
                                   <td className="py-3 px-4">
                                     <span className={`text-xs px-2 py-1 rounded-full ${
-                                      coupon.status === 'Used' ? 'bg-red-100 text-red-800' : 'bg-gray-100'
+                                      coupon.status === 'Used' ? 'bg-red-100 text-red-800' : 'bg-[#111111]'
                                     }`}>
                                       {coupon.status}
                                     </span>

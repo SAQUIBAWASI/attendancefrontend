@@ -78,17 +78,17 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+      <div className="bg-[#0a0a0a] rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* Modal Header */}
         <div className={`p-6 border-b ${type === 'department' ? 'bg-blue-50' : 'bg-green-50'}`}>
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+              <h3 className="text-2xl font-bold text-gray-300 flex items-center gap-2">
                 <span>{getIcon()}</span>
                 <span>{name}</span>
-                <span className="text-lg text-gray-600">- {getTypeName()} Employees</span>
+                <span className="text-lg text-gray-400">- {getTypeName()} Employees</span>
               </h3>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-400 mt-1">
                 {type === 'department'
                   ? 'All employees in this department'
                   : 'All employees with this role'}
@@ -96,7 +96,7 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl"
+              className="text-gray-400 hover:text-gray-400 text-2xl"
             >
               <FaTimes />
             </button>
@@ -104,11 +104,11 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
 
           {/* Stats */}
           <div className="flex gap-4 mt-4">
-            <div className="bg-white px-4 py-2 rounded-lg border">
+            <div className="bg-[#0a0a0a] px-4 py-2 rounded-lg border">
               <div className="text-xs text-gray-500">Total</div>
               <div className="text-xl font-bold">{employees.length}</div>
             </div>
-            <div className="bg-white px-4 py-2 rounded-lg border">
+            <div className="bg-[#0a0a0a] px-4 py-2 rounded-lg border">
               <div className="text-xs text-gray-500">Showing</div>
               <div className="text-xl font-bold text-blue-600">{filteredEmployees.length}</div>
             </div>
@@ -124,12 +124,12 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
               placeholder="Search employees by name, email, phone, or ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-3 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-400"
               >
                 ✕
               </button>
@@ -146,7 +146,7 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
           ) : error ? (
             <div className="text-center py-12">
               <div className="text-red-500 text-4xl mb-4">⚠️</div>
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">Error Loading Employees</h3>
+              <h3 className="text-xl font-semibold text-gray-400 mb-2">Error Loading Employees</h3>
               <p className="text-gray-500 mb-6">{error}</p>
               <button
                 onClick={fetchEmployees}
@@ -160,7 +160,7 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
               {filteredEmployees.map((employee, index) => (
                 <div
                   key={employee._id || index}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
+                  className="border border-[#1f2937] rounded-lg p-4 hover:bg-[#000000]"
                 >
                   <div className="flex flex-col md:flex-row md:items-start gap-4">
                     {/* Left Section */}
@@ -170,9 +170,9 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
                           <FaUser className={type === 'department' ? 'text-blue-600' : 'text-green-600'} />
                         </div>
                         <div>
-                          <h4 className="font-semibold text-gray-800 text-lg">{employee.name || 'No Name'}</h4>
+                          <h4 className="font-semibold text-gray-300 text-lg">{employee.name || 'No Name'}</h4>
                           <div className="flex flex-wrap gap-2 mt-2">
-                            <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs flex items-center gap-1">
+                            <span className="px-2 py-1 bg-[#111111] text-gray-300 rounded text-xs flex items-center gap-1">
                               <FaIdCard className="text-xs" /> {employee.employeeId || 'N/A'}
                             </span>
                             {employee.role && type !== 'role' && (
@@ -194,19 +194,19 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
                     <div className="md:w-2/5">
                       <div className="space-y-2">
                         {employee.email && (
-                          <div className="flex items-center text-gray-600">
+                          <div className="flex items-center text-gray-400">
                             <FaEnvelope className="mr-2 text-sm" />
                             <span className="text-sm truncate">{employee.email}</span>
                           </div>
                         )}
                         {employee.phone && (
-                          <div className="flex items-center text-gray-600">
+                          <div className="flex items-center text-gray-400">
                             <FaPhone className="mr-2 text-sm" />
                             <span className="text-sm">{employee.phone}</span>
                           </div>
                         )}
                         {employee.joinDate && (
-                          <div className="flex items-center text-gray-600">
+                          <div className="flex items-center text-gray-400">
                             <FaCalendar className="mr-2 text-sm" />
                             <span className="text-sm">
                               {new Date(employee.joinDate).toLocaleDateString()}
@@ -219,15 +219,15 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
 
                   {/* Additional Info */}
                   {(employee.address || employee.shiftType) && (
-                    <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="mt-4 pt-4 border-t border-[#1f2937]">
                       <div className="flex flex-wrap gap-4">
                         {employee.shiftType && (
-                          <div className="text-sm text-gray-600 flex items-center gap-1">
+                          <div className="text-sm text-gray-400 flex items-center gap-1">
                             <FaClock className="text-xs" /> Shift: {employee.shiftType}
                           </div>
                         )}
                         {employee.address && (
-                          <div className="text-sm text-gray-600 flex items-center gap-1">
+                          <div className="text-sm text-gray-400 flex items-center gap-1">
                             <FaMapMarkerAlt className="text-xs" /> {employee.address}
                           </div>
                         )}
@@ -242,7 +242,7 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
               <div className="text-gray-400 text-5xl mb-4">
                 {searchTerm ? '🔍' : getIcon()}
               </div>
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              <h3 className="text-xl font-semibold text-gray-400 mb-2">
                 {searchTerm ? 'No employees found' : 'No employees yet'}
               </h3>
               <p className="text-gray-500">
@@ -255,7 +255,7 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
         </div>
 
         {/* Modal Footer */}
-        <div className="p-6 border-t bg-gray-50">
+        <div className="p-6 border-t bg-[#000000]">
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-500">
               Showing {filteredEmployees.length} of {employees.length} employees
@@ -263,7 +263,7 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
             <div className="flex gap-3">
               <button
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
+                className="px-4 py-2 border border-[#374151] text-gray-300 rounded-lg hover:bg-[#111111]"
               >
                 Close
               </button>

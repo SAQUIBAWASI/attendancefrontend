@@ -92,7 +92,7 @@ const DoctorAppointmentListPending = () => {
   };
 
   return (
-    <div className="p-4 bg-white rounded shadow">
+    <div className="p-4 bg-[#0a0a0a] rounded shadow">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Doctor Appointments (Pending)</h2>
       </div>
@@ -123,7 +123,7 @@ const DoctorAppointmentListPending = () => {
 
       <div className="overflow-x-auto">
         <table className="w-full border rounded text-sm">
-          <thead className="bg-gray-200">
+          <thead className="bg-[#1f2937]">
             <tr>
               <th className="p-2 border">Doctor</th>
               <th className="p-2 border">Specialization</th>
@@ -138,7 +138,7 @@ const DoctorAppointmentListPending = () => {
           </thead>
           <tbody>
             {filteredAppointments.map((appt) => (
-              <tr key={appt.appointmentId} className="hover:bg-gray-50 border-b">
+              <tr key={appt.appointmentId} className="hover:bg-[#000000] border-b">
                 <td className="p-2 border flex items-center gap-2">
                   <img
                     src={appt.doctor_image}
@@ -176,7 +176,7 @@ const DoctorAppointmentListPending = () => {
       {/* Edit Status Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded shadow-lg w-96">
+          <div className="bg-[#0a0a0a] p-6 rounded shadow-lg w-96">
             <h3 className="text-xl font-semibold mb-4">Edit Status</h3>
             <div className="mb-4">
               <label className="block text-sm font-medium mb-2">Status</label>
@@ -199,7 +199,7 @@ const DoctorAppointmentListPending = () => {
                 Save
               </button>
               <button
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded"
+                className="px-4 py-2 bg-gray-300 text-gray-300 rounded"
                 onClick={() => setIsModalOpen(false)}
               >
                 Cancel

@@ -158,23 +158,23 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-7xl">
 //         <h1 className="mb-6 text-3xl font-bold text-blue-700">
 //           📊 Employee Attendance Dashboard
 //         </h1>
 
 //         {/* ✅ Attndance Summary Section */}
-//         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
 //           <h2 className="mb-4 text-2xl font-semibold text-purple-700">
 //             👥 Attndance Summary
 //           </h2>
 
 //           {employeeSummary.length === 0 ? (
-//             <p className="text-gray-600">No summary data available.</p>
+//             <p className="text-gray-400">No summary data available.</p>
 //           ) : (
 //             <div className="overflow-x-auto">
-//               <table className="w-full text-sm border border-gray-200">
+//               <table className="w-full text-sm border border-[#1f2937]">
 //                 <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
 //                   <tr>
 //                     <th className="px-6 py-4 text-left">Employee ID</th>
@@ -193,10 +193,10 @@
 //                       key={emp.employeeId}
 //                       className="transition border-t hover:bg-blue-50"
 //                     >
-//                       <td className="px-6 py-4 font-semibold text-gray-900">
+//                       <td className="px-6 py-4 font-semibold text-gray-200">
 //                         {emp.employeeId}
 //                       </td>
-//                       <td className="px-6 py-4 text-gray-700">
+//                       <td className="px-6 py-4 text-gray-300">
 //                         {emp.employeeEmail}
 //                       </td>
 //                       <td className="px-6 py-4">{emp.totalDays}</td>
@@ -369,16 +369,16 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-7xl">
 //         <h1 className="mb-6 text-3xl font-bold text-blue-700">
 //           📊 Employee Attendance Dashboard
 //         </h1>
 
 //         {/* ✅ Filters Section */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border border-gray-200 shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">From:</label>
+//             <label className="mr-2 font-semibold text-gray-300">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -388,7 +388,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">To:</label>
+//             <label className="mr-2 font-semibold text-gray-300">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -405,7 +405,7 @@
 //           </button>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -423,16 +423,16 @@
 //         </div>
 
 //         {/* ✅ Attndance Summary */}
-//         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
 //           <h2 className="mb-4 text-2xl font-semibold text-purple-700">
 //             👥 Attndance Summary
 //           </h2>
 
 //           {employeeSummary.length === 0 ? (
-//             <p className="text-gray-600">No summary data available.</p>
+//             <p className="text-gray-400">No summary data available.</p>
 //           ) : (
 //             <div className="overflow-x-auto">
-//               <table className="w-full text-sm border border-gray-200">
+//               <table className="w-full text-sm border border-[#1f2937]">
 //                 <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
 //                   <tr>
 //                     <th className="px-6 py-4 text-left">Employee ID</th>
@@ -451,10 +451,10 @@
 //                       key={emp.employeeId}
 //                       className="transition border-t hover:bg-blue-50"
 //                     >
-//                       <td className="px-6 py-4 font-semibold text-gray-900">
+//                       <td className="px-6 py-4 font-semibold text-gray-200">
 //                         {emp.employeeId}
 //                       </td>
-//                       <td className="px-6 py-4 text-gray-700">
+//                       <td className="px-6 py-4 text-gray-300">
 //                         {emp.employeeEmail}
 //                       </td>
 //                       <td className="px-6 py-4">{emp.totalDays}</td>
@@ -688,16 +688,16 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-7xl">
 //         <h1 className="mb-6 text-3xl font-bold text-blue-700">
 //           📊 Employee Attendance Dashboard
 //         </h1>
 
 //         {/* ✅ Filters */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border border-gray-200 shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">From:</label>
+//             <label className="mr-2 font-semibold text-gray-300">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -707,7 +707,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">To:</label>
+//             <label className="mr-2 font-semibold text-gray-300">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -724,7 +724,7 @@
 //           </button>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -742,7 +742,7 @@
 //         </div>
 
 //         {/* ✅ Attndance Summary */}
-//         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
 //           <h2 className="mb-4 text-2xl font-semibold text-purple-700">
 //             👥 Attndance Summary
 //           </h2>
@@ -755,10 +755,10 @@
 //   </button>
 
 //           {employeeSummary.length === 0 ? (
-//             <p className="text-gray-600">No summary data available.</p>
+//             <p className="text-gray-400">No summary data available.</p>
 //           ) : (
 //             <div className="overflow-x-auto">
-//               <table className="w-full text-sm border border-gray-200">
+//               <table className="w-full text-sm border border-[#1f2937]">
 //                 <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
 //                   <tr>
 //                     <th className="px-6 py-3 text-left">Employee ID</th>
@@ -777,10 +777,10 @@
 //                       key={emp.employeeId}
 //                       className="transition border-t hover:bg-blue-50"
 //                     >
-//                       <td className="px-6 py-3 font-semibold text-gray-900">
+//                       <td className="px-6 py-3 font-semibold text-gray-200">
 //                         {emp.employeeId}
 //                       </td>
-//                       <td className="px-6 py-3 text-gray-700">
+//                       <td className="px-6 py-3 text-gray-300">
 //                         {emp.employeeEmail}
 //                       </td>
 
@@ -818,7 +818,7 @@
 //         {/* ✅ Employee Full Details Modal */}
 //         {selectedEmployee && (
 //           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//             <div className="bg-white p-6 rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+//             <div className="bg-[#0a0a0a] p-6 rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
 //               <div className="flex items-center justify-between mb-4">
 //                 <h3 className="text-xl font-semibold text-blue-700">
 //                   🧾 Attendance Details — {selectedEmployee}
@@ -831,7 +831,7 @@
 //                 </button>
 //               </div>
 
-//               <table className="w-full text-sm border border-gray-300">
+//               <table className="w-full text-sm border border-[#374151]">
 //                 <thead className="text-white bg-blue-600">
 //                   <tr>
 //                     <th className="px-4 py-2 text-left">Date</th>
@@ -1091,16 +1091,16 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-7xl">
 //         <h1 className="mb-6 text-3xl font-bold text-blue-700">
 //           📊 Employee Attendance Dashboard
 //         </h1>
 
 //         {/* Filters */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border border-gray-200 shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">From:</label>
+//             <label className="mr-2 font-semibold text-gray-300">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -1110,7 +1110,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">To:</label>
+//             <label className="mr-2 font-semibold text-gray-300">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -1127,7 +1127,7 @@
 //           </button>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -1145,7 +1145,7 @@
 //         </div>
 
 //         {/* Attndance Summary */}
-//         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
 //           <div className="flex items-center justify-between mb-4">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attndance Summary
@@ -1159,10 +1159,10 @@
 //           </div>
 
 //           {employeeSummary.length === 0 ? (
-//             <p className="text-gray-600">No summary data available.</p>
+//             <p className="text-gray-400">No summary data available.</p>
 //           ) : (
 //             <div className="overflow-x-auto">
-//               <table className="w-full text-sm border border-gray-200">
+//               <table className="w-full text-sm border border-[#1f2937]">
 //                 <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
 //                   <tr>
 //                     <th className="px-6 py-3 text-left">Employee ID</th>
@@ -1182,10 +1182,10 @@
 //                       onClick={() => handleViewDetails(emp.employeeId)}
 //                       className="transition border-t cursor-pointer hover:bg-blue-50"
 //                     >
-//                       <td className="px-6 py-3 font-semibold text-gray-900">
+//                       <td className="px-6 py-3 font-semibold text-gray-200">
 //                         {emp.employeeId}
 //                       </td>
-//                       <td className="px-6 py-3 text-gray-700">
+//                       <td className="px-6 py-3 text-gray-300">
 //                         {emp.employeeEmail}
 //                       </td>
 //                       <td className="px-6 py-3 font-semibold text-green-700">
@@ -1217,7 +1217,7 @@
 //         {/* Employee Full Details Modal */}
 //         {selectedEmployee && (
 //           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//             <div className="bg-white p-6 rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+//             <div className="bg-[#0a0a0a] p-6 rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
 //               <div className="flex items-center justify-between mb-4">
 //                 <h3 className="text-xl font-semibold text-blue-700">
 //                   🧾 Attendance Details — {selectedEmployee}
@@ -1230,7 +1230,7 @@
 //                 </button>
 //               </div>
 
-//               <table className="w-full text-sm border border-gray-300">
+//               <table className="w-full text-sm border border-[#374151]">
 //                 <thead className="text-white bg-blue-600">
 //                   <tr>
 //                     <th className="px-4 py-2 text-left">Date</th>
@@ -1480,16 +1480,16 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-7xl">
 //         <h1 className="mb-6 text-3xl font-bold text-blue-700">
 //           📊 Employee Attendance Dashboard
 //         </h1>
 
 //         {/* ✅ Filters */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border border-gray-200 shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">From:</label>
+//             <label className="mr-2 font-semibold text-gray-300">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -1499,7 +1499,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">To:</label>
+//             <label className="mr-2 font-semibold text-gray-300">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -1516,7 +1516,7 @@
 //           </button>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -1534,7 +1534,7 @@
 //         </div>
 
 //         {/* ✅ Attndance Summary */}
-//         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
 //           <div className="flex items-center justify-between mb-4">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attndance Summary
@@ -1548,10 +1548,10 @@
 //           </div>
 
 //           {employeeSummary.length === 0 ? (
-//             <p className="text-gray-600">No summary data available.</p>
+//             <p className="text-gray-400">No summary data available.</p>
 //           ) : (
 //             <div className="overflow-x-auto">
-//               <table className="w-full text-sm border border-gray-200">
+//               <table className="w-full text-sm border border-[#1f2937]">
 //                 <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
 //                   <tr>
 //                     <th className="px-6 py-3 text-left">Employee ID</th>
@@ -1570,10 +1570,10 @@
 //                       onClick={() => handleViewDetails(emp.employeeId)}
 //                       className="transition border-t cursor-pointer hover:bg-blue-50"
 //                     >
-//                       <td className="px-6 py-3 font-semibold text-gray-900">
+//                       <td className="px-6 py-3 font-semibold text-gray-200">
 //                         {emp.employeeId}
 //                       </td>
-//                       <td className="px-6 py-3 text-gray-700">
+//                       <td className="px-6 py-3 text-gray-300">
 //                         {emp.employeeEmail}
 //                       </td>
 //                       <td className="px-6 py-3 font-semibold text-green-700">
@@ -1602,7 +1602,7 @@
 //         {/* ✅ Employee Full Details Modal */}
 //         {selectedEmployee && (
 //           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//             <div className="bg-white p-6 rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+//             <div className="bg-[#0a0a0a] p-6 rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
 //               <div className="flex items-center justify-between mb-4">
 //                 <h3 className="text-xl font-semibold text-blue-700">
 //                   🧾 Attendance Details — {selectedEmployee}
@@ -1615,7 +1615,7 @@
 //                 </button>
 //               </div>
 
-//               <table className="w-full text-sm border border-gray-300">
+//               <table className="w-full text-sm border border-[#374151]">
 //                 <thead className="text-white bg-blue-600">
 //                   <tr>
 //                     <th className="px-4 py-2 text-left">Date</th>
@@ -1877,16 +1877,16 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-7xl">
 //         <h1 className="mb-6 text-3xl font-bold text-blue-700">
 //           📊 Employee Attendance Dashboard
 //         </h1>
 
 //         {/* Filters */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">From:</label>
+//             <label className="mr-2 font-semibold text-gray-300">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -1896,7 +1896,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">To:</label>
+//             <label className="mr-2 font-semibold text-gray-300">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -1913,7 +1913,7 @@
 //           </button>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -1931,7 +1931,7 @@
 //         </div>
 
 //         {/* Summary Table */}
-//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
 //           <div className="flex items-center justify-between mb-4">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attndance Summary
@@ -1986,7 +1986,7 @@
 //         {/* Details Modal */}
 //         {selectedEmployee && (
 //           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-//             <div className="bg-white p-6 rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+//             <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
 //               <div className="flex items-center justify-between mb-4">
 //                 <h3 className="text-xl font-semibold text-blue-700">
 //                   🧾 Attendance Details — {selectedEmployee}
@@ -2413,7 +2413,7 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-7xl">
 
 //         {/* Save Status Alert */}
@@ -2432,9 +2432,9 @@
 //         </h1>
 
 //         {/* Filters */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">From:</label>
+//             <label className="mr-2 font-semibold text-gray-300">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -2444,7 +2444,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">To:</label>
+//             <label className="mr-2 font-semibold text-gray-300">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -2461,7 +2461,7 @@
 //           </button>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -2493,7 +2493,7 @@
 //         </div>
 
 //         {/* Summary Table */}
-//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attndance Summary
@@ -2502,7 +2502,7 @@
 //             <div className="flex flex-wrap items-center gap-4">
 //               {/* Items per page selector */}
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-700">
+//                 <label className="text-sm font-medium text-gray-300">
 //                   Show:
 //                 </label>
 //                 <select
@@ -2515,7 +2515,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-600">entries</span>
+//                 <span className="text-sm text-gray-400">entries</span>
 //               </div>
 
 //               <button
@@ -2582,7 +2582,7 @@
 //                   >
 //                     <td className="px-6 py-3">{emp.employeeId}</td>
 //                     <td className="px-6 py-3">{emp.name}</td>
-//                     <td className="px-6 py-3 font-medium text-gray-700">{emp.month}</td>
+//                     <td className="px-6 py-3 font-medium text-gray-300">{emp.month}</td>
 //                     <td className="px-6 py-3 text-green-700">{emp.presentDays}</td>
 //                     <td className="px-6 py-3 text-orange-700">{emp.lateDays}</td>
 //                     <td className="px-6 py-3 text-blue-700">{emp.onsiteDays}</td>
@@ -2603,7 +2603,7 @@
 //             {/* Pagination Controls */}
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-600">
+//                 <div className="text-sm text-gray-400">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -2614,8 +2614,8 @@
 //                     disabled={currentPage === 1}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${
 //                       currentPage === 1
-//                         ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                     }`}
 //                   >
 //                     Previous
@@ -2629,7 +2629,7 @@
 //                       className={`px-3 py-1 text-sm border rounded-lg ${
 //                         currentPage === page
 //                           ? "text-white bg-blue-600 border-blue-600"
-//                           : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                           : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                     >
 //                       {page}
@@ -2642,8 +2642,8 @@
 //                     disabled={currentPage === totalPages}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${
 //                       currentPage === totalPages
-//                         ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                     }`}
 //                   >
 //                     Next
@@ -2663,7 +2663,7 @@
 //         {/* Details Modal */}
 //         {selectedEmployee && (
 //           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-//             <div className="bg-white p-6 rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+//             <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
 
 //               <div className="flex items-center justify-between mb-4">
 //                 <h3 className="text-xl font-semibold text-blue-700">
@@ -3381,7 +3381,7 @@
 //       case "full_leave":
 //         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
 //     }
 //   };
 
@@ -3438,7 +3438,7 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-7xl">
 
 //         {/* Save Status Alert */}
@@ -3457,7 +3457,7 @@
 //         </h1>
 
 //         {/* ✅ UPDATED: Working Hours Info with new rules */}
-//         <div className="p-4 mb-6 bg-white border border-blue-300 rounded-lg shadow-sm">
+//         <div className="p-4 mb-6 bg-[#0a0a0a] border border-blue-300 rounded-lg shadow-sm">
 //           <h3 className="font-semibold text-blue-700">📋 Working Hours Criteria:</h3>
 //           <div className="grid grid-cols-1 gap-2 mt-2 text-sm md:grid-cols-4">
 //             <div className="flex items-center gap-2">
@@ -3480,9 +3480,9 @@
 //         </div>
 
 //         {/* Filters */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">From:</label>
+//             <label className="mr-2 font-semibold text-gray-300">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -3492,7 +3492,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">To:</label>
+//             <label className="mr-2 font-semibold text-gray-300">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -3509,7 +3509,7 @@
 //           </button>
 
 //           <div className="ml-4">
-//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -3545,7 +3545,7 @@
 //         </div>
 
 //         {/* ✅ UPDATED: Summary Table with "Onsite" column */}
-//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attndance Summary ({employeeSummary.length} employees)
@@ -3554,7 +3554,7 @@
 //             <div className="flex flex-wrap items-center gap-4">
 //               {/* Items per page selector */}
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-700">
+//                 <label className="text-sm font-medium text-gray-300">
 //                   Show:
 //                 </label>
 //                 <select
@@ -3567,7 +3567,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-600">entries</span>
+//                 <span className="text-sm text-gray-400">entries</span>
 //               </div>
 
 //               <button
@@ -3634,7 +3634,7 @@
 //                   >
 //                     <td className="px-6 py-3">{emp.employeeId}</td>
 //                     <td className="px-6 py-3">{emp.name}</td>
-//                     <td className="px-6 py-3 font-medium text-gray-700">{emp.month}</td>
+//                     <td className="px-6 py-3 font-medium text-gray-300">{emp.month}</td>
 //                     <td className="px-6 py-3 text-green-700">{emp.presentDays}</td>
 //                     <td className="px-6 py-3 text-orange-700">{emp.lateDays}</td>
 //                     <td className="px-6 py-3 text-blue-700">{emp.onsiteDays}</td> {/* Changed to onsiteDays */}
@@ -3655,7 +3655,7 @@
 //             {/* Pagination Controls */}
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-600">
+//                 <div className="text-sm text-gray-400">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -3665,8 +3665,8 @@
 //                     disabled={currentPage === 1}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${
 //                       currentPage === 1
-//                         ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                     }`}
 //                   >
 //                     Previous
@@ -3679,7 +3679,7 @@
 //                       className={`px-3 py-1 text-sm border rounded-lg ${
 //                         currentPage === page
 //                           ? "text-white bg-blue-600 border-blue-600"
-//                           : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                           : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                     >
 //                       {page}
@@ -3691,8 +3691,8 @@
 //                     disabled={currentPage === totalPages}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${
 //                       currentPage === totalPages
-//                         ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                     }`}
 //                   >
 //                     Next
@@ -3712,7 +3712,7 @@
 //         {/* Details Modal */}
 //         {selectedEmployee && (
 //           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-//             <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+//             <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
 //               <div className="flex items-center justify-between mb-4">
 //                 <h3 className="text-xl font-semibold text-blue-700">
@@ -3794,7 +3794,7 @@
 //                     return (
 //                       <tr key={i} className="border-t hover:bg-blue-50">
 //                         {/* Employee ID */}
-//                         <td className="px-4 py-2 font-medium text-gray-700">
+//                         <td className="px-4 py-2 font-medium text-gray-300">
 //                           {rec.employeeId}
 //                         </td>
 
@@ -4351,7 +4351,7 @@
 //       case "full_leave":
 //         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
 //     }
 //   };
 
@@ -4605,7 +4605,7 @@
 //   </div>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-7xl">
 
 //         {/* Save Status Alert */}
@@ -4623,7 +4623,7 @@
 //         </h1>
 
 //         {/* Working Hours Info */}
-//         <div className="p-4 mb-6 bg-white border border-blue-300 rounded-lg shadow-sm">
+//         <div className="p-4 mb-6 bg-[#0a0a0a] border border-blue-300 rounded-lg shadow-sm">
 //           <h3 className="font-semibold text-blue-700">📋 Working Hours Criteria:</h3>
 //           <div className="grid grid-cols-1 gap-2 mt-2 text-sm md:grid-cols-4">
 //             <div className="flex items-center gap-2">
@@ -4646,9 +4646,9 @@
 //         </div>
 
 //         {/* Filters */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">From:</label>
+//             <label className="mr-2 font-semibold text-gray-300">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -4658,7 +4658,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-700">To:</label>
+//             <label className="mr-2 font-semibold text-gray-300">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -4675,7 +4675,7 @@
 //           </button>
 
 //           <div className="ml-4">
-//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -4711,7 +4711,7 @@
 //         </div>
 
 //         {/* Summary Table */}
-//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attndance Summary ({employeeSummary.length} employees)
@@ -4726,7 +4726,7 @@
 //             <div className="flex flex-wrap items-center gap-4">
 //               {/* Items per page selector */}
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-700">
+//                 <label className="text-sm font-medium text-gray-300">
 //                   Show:
 //                 </label>
 //                 <select
@@ -4739,7 +4739,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-600">entries</span>
+//                 <span className="text-sm text-gray-400">entries</span>
 //               </div>
 
 //               {/* <button
@@ -4807,7 +4807,7 @@
 //                   >
 //                     <td className="px-6 py-3">{emp.employeeId}</td>
 //                     <td className="px-6 py-3">{emp.name}</td>
-//                     <td className="px-6 py-3 font-medium text-gray-700">{emp.month}</td>
+//                     <td className="px-6 py-3 font-medium text-gray-300">{emp.month}</td>
 //                     <td className="px-6 py-3 text-green-700">{emp.presentDays}</td>
 //                     <td className="px-6 py-3 text-orange-700">{emp.lateDays}</td>
 //                     <td className="px-6 py-3 text-blue-700">{emp.onsiteDays}</td>
@@ -4828,7 +4828,7 @@
 //             {/* Pagination Controls */}
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-600">
+//                 <div className="text-sm text-gray-400">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -4837,8 +4837,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === 1
-//                         ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Previous
@@ -4850,7 +4850,7 @@
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-3 py-1 text-sm border rounded-lg ${currentPage === page
 //                           ? "text-white bg-blue-600 border-blue-600"
-//                           : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                           : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -4861,8 +4861,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                         ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -4882,7 +4882,7 @@
 //         {/* Details Modal */}
 //         {selectedEmployee && (
 //           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-//             <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+//             <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
 //               <div className="flex items-center justify-between mb-4">
 //                 <h3 className="text-xl font-semibold text-blue-700">
@@ -4974,7 +4974,7 @@
 //                     return (
 //                       <tr key={i} className="border-t hover:bg-blue-50">
 //                         {/* Employee ID */}
-//                         <td className="px-4 py-2 font-medium text-gray-700">
+//                         <td className="px-4 py-2 font-medium text-gray-300">
 //                           {rec.employeeId}
 //                         </td>
 
@@ -5651,7 +5651,7 @@
 //       case "full_leave":
 //         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
 //     }
 //   };
 
@@ -5942,7 +5942,7 @@
 //   </div>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-9xl">
 
 //         {/* Save Status Alert */}
@@ -5960,7 +5960,7 @@
 //         </h1>
 
 //        {/* Working Hours Info - UPDATED CRITERIA */}
-// <div className="p-4 mb-6 bg-white border border-blue-300 rounded-lg shadow-sm">
+// <div className="p-4 mb-6 bg-[#0a0a0a] border border-blue-300 rounded-lg shadow-sm">
 
 //   <h3 className="mb-3 font-semibold text-blue-700">
 //     📋 Working Hours Criteria:
@@ -5993,7 +5993,7 @@
 //   <div className="flex flex-wrap items-end gap-4 pt-3 border-t">
 
 //     <div>
-//       <label className="block text-sm font-semibold text-gray-700">From</label>
+//       <label className="block text-sm font-semibold text-gray-300">From</label>
 //       <input
 //         type="date"
 //         value={fromDate}
@@ -6003,7 +6003,7 @@
 //     </div>
 
 //     <div>
-//       <label className="block text-sm font-semibold text-gray-700">To</label>
+//       <label className="block text-sm font-semibold text-gray-300">To</label>
 //       <input
 //         type="date"
 //         value={toDate}
@@ -6013,7 +6013,7 @@
 //     </div>
 
 //     <div>
-//       <label className="block text-sm font-semibold text-gray-700">Month</label>
+//       <label className="block text-sm font-semibold text-gray-300">Month</label>
 //       <input
 //         type="month"
 //         value={selectedMonth}
@@ -6059,7 +6059,7 @@
 //         </div> */}
 
 //         {/* Summary Table - UPDATED COLUMN HEADERS */}
-//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attendance Summary ({employeeSummary.length} employees)
@@ -6075,7 +6075,7 @@
 //             <div className="flex flex-wrap items-center gap-4">
 //               {/* Items per page selector */}
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-700">
+//                 <label className="text-sm font-medium text-gray-300">
 //                   Show:
 //                 </label>
 //                 <select
@@ -6088,7 +6088,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-600">entries</span>
+//                 <span className="text-sm text-gray-400">entries</span>
 //               </div>
 //             </div>
 //           </div>
@@ -6119,7 +6119,7 @@
 //                   >
 //                     <td className="px-6 py-3">{emp.employeeId}</td>
 //                     <td className="px-6 py-3">{emp.name}</td>
-//                     <td className="px-6 py-3 font-medium text-gray-700">{emp.month}</td>
+//                     <td className="px-6 py-3 font-medium text-gray-300">{emp.month}</td>
 //                     <td className="px-6 py-3 text-green-700">{emp.presentDays}</td>
 //                     <td className="px-6 py-3 text-orange-700">{emp.lateDays}</td>
 //                     <td className="px-6 py-3 text-blue-700">{emp.onsiteDays}</td>
@@ -6148,7 +6148,7 @@
 //             {/* Pagination Controls */}
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-600">
+//                 <div className="text-sm text-gray-400">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -6157,8 +6157,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === 1
-//                         ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Previous
@@ -6170,7 +6170,7 @@
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-3 py-1 text-sm border rounded-lg ${currentPage === page
 //                           ? "text-white bg-blue-600 border-blue-600"
-//                           : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                           : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -6181,8 +6181,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                         ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -6203,7 +6203,7 @@
 //        {/* Details Modal */}
 // {selectedEmployee && (
 //   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//     <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+//     <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
 //       {/* 🔹 HEADER */}
 //       <div className="flex items-center justify-between mb-4">
@@ -6314,7 +6314,7 @@
 //                     key={i}
 //                     className={`border-t ${
 //                       rec._absent
-//                         ? "bg-gray-100 text-gray-500"
+//                         ? "bg-[#111111] text-gray-500"
 //                         : highlight
 //                         ? "bg-orange-100"
 //                         : "hover:bg-blue-50"
@@ -7075,7 +7075,7 @@
 //       case "full_leave":
 //         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
 //     }
 //   };
 
@@ -7361,7 +7361,7 @@
 //   </div>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-9xl">
 
 //         {/* Save Status Alert */}
@@ -7383,44 +7383,44 @@
 
 
 
-//         <div className="p-4 mb-6 bg-white border border-blue-300 rounded-lg shadow-sm">
+//         <div className="p-4 mb-6 bg-[#0a0a0a] border border-blue-300 rounded-lg shadow-sm">
 
 //           {/* 🔽 Filters & Actions – Single Row */}
-//           <div className="flex items-end gap-4 pt-3 border-t border-gray-200 flex-nowrap">
+//           <div className="flex items-end gap-4 pt-3 border-t border-[#1f2937] flex-nowrap">
 
 //             <div className="flex flex-col">
-//               <label className="mb-1 text-xs font-medium text-gray-600">
+//               <label className="mb-1 text-xs font-medium text-gray-400">
 //                 From
 //               </label>
 //               <input
 //                 type="date"
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
-//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //               />
 //             </div>
 
 //             <div className="flex flex-col">
-//               <label className="mb-1 text-xs font-medium text-gray-600">
+//               <label className="mb-1 text-xs font-medium text-gray-400">
 //                 To
 //               </label>
 //               <input
 //                 type="date"
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
-//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //               />
 //             </div>
 
 //             <div className="flex flex-col">
-//               <label className="mb-1 text-xs font-medium text-gray-600">
+//               <label className="mb-1 text-xs font-medium text-gray-400">
 //                 Month
 //               </label>
 //               <input
 //                 type="month"
 //                 value={selectedMonth}
 //                 onChange={handleMonthChange}
-//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //               />
 //             </div>
 
@@ -7433,7 +7433,7 @@
 
 //             <button
 //               onClick={clearFilters}
-//               className="px-4 text-sm font-medium text-gray-700 transition bg-gray-100 border border-gray-300 rounded-md h-9 hover:bg-gray-200"
+//               className="px-4 text-sm font-medium text-gray-300 transition bg-[#111111] border border-[#374151] rounded-md h-9 hover:bg-[#1f2937]"
 //             >
 //               Clear
 //             </button>
@@ -7457,7 +7457,7 @@
 
 
 //         {/* Summary Table - UPDATED COLUMN HEADERS */}
-//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attendance Summary ({employeeSummary.length} employees)
@@ -7473,7 +7473,7 @@
 //             <div className="flex flex-wrap items-center gap-4">
 //               {/* Items per page selector */}
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-700">
+//                 <label className="text-sm font-medium text-gray-300">
 //                   Show:
 //                 </label>
 //                 <select
@@ -7486,7 +7486,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-600">entries</span>
+//                 <span className="text-sm text-gray-400">entries</span>
 //               </div>
 //             </div>
 //           </div>
@@ -7517,7 +7517,7 @@
 //                   >
 //                     <td className="py-3 ">{emp.employeeId}</td>
 //                     <td className="py-3 ">{emp.name}</td>
-//                     <td className="py-3 font-medium text-gray-700 ">{emp.month}</td>
+//                     <td className="py-3 font-medium text-gray-300 ">{emp.month}</td>
 //                     <td className="py-3 text-green-700 ">{emp.presentDays}</td>
 //                     <td className="py-3 text-orange-700 ">{emp.lateDays}</td>
 //                     <td className="py-3 text-blue-700 ">{emp.onsiteDays}</td>
@@ -7544,7 +7544,7 @@
 //             {/* Pagination Controls */}
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-600">
+//                 <div className="text-sm text-gray-400">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -7553,8 +7553,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === 1
-//                       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Previous
@@ -7566,7 +7566,7 @@
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-3 py-1 text-sm border rounded-lg ${currentPage === page
 //                         ? "text-white bg-blue-600 border-blue-600"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -7577,8 +7577,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -7623,7 +7623,7 @@
 
 //           return (
 //             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//               <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+//               <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
 //                 {/* 🔹 HEADER */}
 //                 <div className="flex items-center justify-between mb-4">
@@ -8593,7 +8593,7 @@
 //       case "full_leave":
 //         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
 //     }
 //   };
 
@@ -8907,7 +8907,7 @@
 //   </div>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-9xl">
 
 //         {/* Save Status Alert */}
@@ -8922,7 +8922,7 @@
 
 //         {/* Working Hours Info - UPDATED CRITERIA */}
 
-//         <div className="p-3 mb-4 bg-white border border-gray-200 rounded-lg shadow-md">
+//         <div className="p-3 mb-4 bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-md">
 //           <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-end">
 
 //             {/* From Date */}
@@ -8934,7 +8934,7 @@
 //                 type="date"
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -8947,7 +8947,7 @@
 //                 type="date"
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -8960,7 +8960,7 @@
 //                 type="month"
 //                 value={selectedMonth}
 //                 onChange={handleMonthChange}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -8979,7 +8979,7 @@
 
 //               <button
 //                 onClick={clearFilters}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:text-gray-900 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-md shadow-sm hover:bg-[#000000] hover:text-gray-200 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -9002,7 +9002,7 @@
 //         </div>
 
 //         {/* Summary Table - UPDATED COLUMN HEADERS */}
-//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attendance Summary ({employeeSummary.length} employees)
@@ -9011,7 +9011,7 @@
 //             <div className="flex flex-wrap items-center gap-4">
 //               {/* Items per page selector */}
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-700">
+//                 <label className="text-sm font-medium text-gray-300">
 //                   Show:
 //                 </label>
 //                 <select
@@ -9024,7 +9024,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-600">entries</span>
+//                 <span className="text-sm text-gray-400">entries</span>
 //               </div>
 //             </div>
 //           </div>
@@ -9057,7 +9057,7 @@
 //                   >
 //                     <td className="py-3">{emp.employeeId}</td>
 //                     <td className="py-3">{emp.name}</td>
-//                     <td className="py-3 font-medium text-gray-700">{emp.month}</td>
+//                     <td className="py-3 font-medium text-gray-300">{emp.month}</td>
 //                     <td className="py-3 text-green-700">{emp.presentDays}</td>
 //                     <td className="py-3 text-orange-700">{emp.lateDays}</td>
 //                     <td className="py-3 text-blue-700">{emp.onsiteDays}</td>
@@ -9094,7 +9094,7 @@
 //             {/* Pagination Controls */}
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-600">
+//                 <div className="text-sm text-gray-400">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -9103,8 +9103,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === 1
-//                       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Previous
@@ -9116,7 +9116,7 @@
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-3 py-1 text-sm border rounded-lg ${currentPage === page
 //                         ? "text-white bg-blue-600 border-blue-600"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -9127,8 +9127,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -9173,7 +9173,7 @@
 
 //           return (
 //             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//               <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+//               <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
 //                 {/* 🔹 HEADER */}
 //                 <div className="flex items-center justify-between mb-4">
@@ -10435,7 +10435,7 @@
 //       : "-";
 
 //   const getDayTypeBadge = (hours) => {
-//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
+//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
 
 //     const dayType = calculateDayType(selectedEmployee, hours);
 //     switch (dayType) {
@@ -10446,7 +10446,7 @@
 //       case "full_leave":
 //         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
 //     }
 //   };
 
@@ -10771,7 +10771,7 @@
 //   </div>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-9xl">
 
 //         {/* Save Status Alert */}
@@ -10785,8 +10785,8 @@
 //         )}
 
 //         {/* Working Hours Info - UPDATED CRITERIA */}
-//         {/* <div className="p-3 mb-4 bg-white border border-blue-200 rounded-lg shadow-sm">
-//           <div className="text-sm text-gray-700">
+//         {/* <div className="p-3 mb-4 bg-[#0a0a0a] border border-blue-200 rounded-lg shadow-sm">
+//           <div className="text-sm text-gray-300">
 //             <p className="font-semibold text-blue-700">📊 Day Type Criteria (Based on Shift Hours):</p>
 //             <div className="grid grid-cols-1 gap-4 mt-2 md:grid-cols-2">
 //               <div>
@@ -10810,7 +10810,7 @@
 //           </div>
 //         </div> */}
 
-//         <div className="p-3 mb-4 bg-white border border-gray-200 rounded-lg shadow-md">
+//         <div className="p-3 mb-4 bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-md">
 //           <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-end">
 
 //             {/* From Date */}
@@ -10822,7 +10822,7 @@
 //                 type="date"
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -10835,7 +10835,7 @@
 //                 type="date"
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -10848,7 +10848,7 @@
 //                 type="month"
 //                 value={selectedMonth}
 //                 onChange={handleMonthChange}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -10867,7 +10867,7 @@
 
 //               <button
 //                 onClick={clearFilters}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:text-gray-900 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-md shadow-sm hover:bg-[#000000] hover:text-gray-200 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -10890,7 +10890,7 @@
 //         </div>
 
 //         {/* Summary Table - UPDATED COLUMN HEADERS */}
-//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attendance Summary for ({employeeSummary.length} employees)
@@ -10899,7 +10899,7 @@
 //             <div className="flex flex-wrap items-center gap-4">
 //               {/* Items per page selector */}
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-700">
+//                 <label className="text-sm font-medium text-gray-300">
 //                   Show:
 //                 </label>
 //                 <select
@@ -10912,12 +10912,12 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-600">entries</span>
+//                 <span className="text-sm text-gray-400">entries</span>
 //               </div>
 //             </div>
 //           </div>
 
-//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
 //                 <tr>
@@ -10950,9 +10950,9 @@
 //                       onClick={() => handleViewDetails(emp.employeeId)}
 //                       className="border-t cursor-pointer hover:bg-blue-50"
 //                     >
-//                       <td className="p-4 text-sm font-medium text-gray-900">{emp.employeeId}</td>
-//                       <td className="p-4 text-sm font-medium text-gray-900">{emp.name}</td>
-//                       <td className="py-4 font-medium text-gray-900">{emp.month}</td>
+//                       <td className="p-4 text-sm font-medium text-gray-200">{emp.employeeId}</td>
+//                       <td className="p-4 text-sm font-medium text-gray-200">{emp.name}</td>
+//                       <td className="py-4 font-medium text-gray-200">{emp.month}</td>
 //                       <td className="py-4 text-center text-green-700">{emp.presentDays}</td>
 //                       <td className="py-4 text-center text-orange-700">{lateDays}</td>
 //                       <td className="py-4 text-center text-blue-700">{onsiteDays}</td>
@@ -10991,7 +10991,7 @@
 //             {/* Pagination Controls */}
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-600">
+//                 <div className="text-sm text-gray-400">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -11000,8 +11000,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
-//                       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
+//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
 //                       }`}
 //                   >
 //                     Previous
@@ -11013,7 +11013,7 @@
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-4 py-1 text-sm border rounded-lg ${currentPage === page
 //                         ? "text-white bg-blue-600 border-blue-600"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -11024,8 +11024,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -11063,7 +11063,7 @@
 
 //           return (
 //             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//               <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+//               <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
 //                 {/* 🔹 HEADER */}
 //                 <div className="flex items-center justify-between mb-4">
@@ -12398,7 +12398,7 @@
 //       : "-";
 
 //   const getDayTypeBadge = (hours) => {
-//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
+//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
 
 //     const dayType = calculateDayType(selectedEmployee, hours);
 //     switch (dayType) {
@@ -12409,7 +12409,7 @@
 //       case "full_leave":
 //         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
 //     }
 //   };
 
@@ -12474,7 +12474,7 @@
 //   </div>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-9xl">
 
 //         {saveStatus && (
@@ -12486,7 +12486,7 @@
 //           </div>
 //         )}
 
-//         <div className="p-3 mb-4 bg-white border border-gray-200 rounded-lg shadow-md">
+//         <div className="p-3 mb-4 bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-md">
 //           <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-end">
 
 //             <div className="md:col-span-2">
@@ -12497,7 +12497,7 @@
 //                 type="date"
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -12509,7 +12509,7 @@
 //                 type="date"
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -12521,7 +12521,7 @@
 //                 type="month"
 //                 value={selectedMonth}
 //                 onChange={handleMonthChange}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -12539,7 +12539,7 @@
 
 //               <button
 //                 onClick={clearFilters}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:text-gray-900 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-md shadow-sm hover:bg-[#000000] hover:text-gray-200 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -12562,7 +12562,7 @@
 //         </div>
 
 //         {/* Summary Table */}
-//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attendance Summary for ({employeeSummary.length} employees)
@@ -12570,7 +12570,7 @@
 
 //             <div className="flex flex-wrap items-center gap-4">
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-700">
+//                 <label className="text-sm font-medium text-gray-300">
 //                   Show:
 //                 </label>
 //                 <select
@@ -12583,12 +12583,12 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-600">entries</span>
+//                 <span className="text-sm text-gray-400">entries</span>
 //               </div>
 //             </div>
 //           </div>
 
-//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
 //                 <tr>
@@ -12619,9 +12619,9 @@
 //                       onClick={() => handleViewDetails(emp.employeeId)}
 //                       className="border-t cursor-pointer hover:bg-blue-50"
 //                     >
-//                       <td className="p-4 text-sm font-medium text-gray-900">{emp.employeeId}</td>
-//                       <td className="p-4 text-sm font-medium text-gray-900">{emp.name}</td>
-//                       <td className="py-4 font-medium text-gray-900">{emp.month}</td>
+//                       <td className="p-4 text-sm font-medium text-gray-200">{emp.employeeId}</td>
+//                       <td className="p-4 text-sm font-medium text-gray-200">{emp.name}</td>
+//                       <td className="py-4 font-medium text-gray-200">{emp.month}</td>
 //                       <td className="py-4 text-center text-green-700">{emp.presentDays}</td>
 //                       <td className="py-4 text-center text-orange-700">{lateDays}</td>
 //                       <td className="py-4 text-center text-blue-700">{onsiteDays}</td>
@@ -12658,7 +12658,7 @@
 
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-600">
+//                 <div className="text-sm text-gray-400">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -12667,8 +12667,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
-//                       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
+//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
 //                       }`}
 //                   >
 //                     Previous
@@ -12680,7 +12680,7 @@
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-4 py-1 text-sm border rounded-lg ${currentPage === page
 //                         ? "text-white bg-blue-600 border-blue-600"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -12691,8 +12691,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -12729,7 +12729,7 @@
 
 //           return (
 //             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//               <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+//               <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
 //                 <div className="flex items-center justify-between mb-4">
 //                   <h3 className="text-xl font-semibold text-blue-700">
@@ -14050,7 +14050,7 @@
 //       : "-";
 
 //   const getDayTypeBadge = (hours) => {
-//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
+//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
 
 //     const dayType = calculateDayType(selectedEmployee, hours);
 //     switch (dayType) {
@@ -14061,7 +14061,7 @@
 //       case "full_leave":
 //         return <span className="py-2 text-xs text-center text-white bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="py-2 text-xs text-center text-gray-500 bg-gray-200 rounded">Unknown</span>;
+//         return <span className="py-2 text-xs text-center text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
 //     }
 //   };
 
@@ -14126,7 +14126,7 @@
 //   </div>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-9xl">
 
 //         {saveStatus && (
@@ -14138,7 +14138,7 @@
 //           </div>
 //         )}
 
-//         <div className="p-3 mb-4 bg-white border border-gray-200 rounded-lg shadow-md">
+//         <div className="p-3 mb-4 bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-md">
 //           <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-end">
 
 //             <div className="md:col-span-2">
@@ -14149,7 +14149,7 @@
 //                 type="date"
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -14161,7 +14161,7 @@
 //                 type="date"
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -14173,7 +14173,7 @@
 //                 type="month"
 //                 value={selectedMonth}
 //                 onChange={handleMonthChange}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -14191,7 +14191,7 @@
 
 //               <button
 //                 onClick={clearFilters}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:text-gray-900 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-md shadow-sm hover:bg-[#000000] hover:text-gray-200 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -14214,7 +14214,7 @@
 //         </div>
 
 //         {/* Summary Table */}
-//         <div className="p-2 mb-4 bg-white border shadow-lg rounded-2xl">
+//         <div className="p-2 mb-4 bg-[#0a0a0a] border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-2 mb-2 sm:flex-row sm:items-center sm:justify-between">
 //             {/* <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attendance Summary for ({employeeSummary.length} employees)
@@ -14222,7 +14222,7 @@
 
 //             {/* <div className="flex flex-wrap items-center gap-4">
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-700">
+//                 <label className="text-sm font-medium text-gray-300">
 //                   Show:
 //                 </label>
 //                 <select
@@ -14235,12 +14235,12 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-600">entries</span>
+//                 <span className="text-sm text-gray-400">entries</span>
 //               </div>
 //             </div> */}
 //           </div>
 
-//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
@@ -14271,9 +14271,9 @@
 //                       onClick={() => handleViewDetails(emp.employeeId)}
 //                       className="border-t cursor-pointer hover:bg-blue-50"
 //                     >
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900">{emp.employeeId}</td>
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900">{emp.name}</td>
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900">{emp.month}</td>
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200">{emp.employeeId}</td>
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200">{emp.name}</td>
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200">{emp.month}</td>
 //                       <td className="px-2 py-2 text-sm text-center text-green-700">{emp.presentDays}</td>
 //                       <td className="px-2 py-2 text-sm text-center text-orange-700">{lateDays}</td>
 //                       <td className="px-2 py-2 text-sm text-center text-blue-700">{onsiteDays}</td>
@@ -14310,12 +14310,12 @@
 
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 {/* <div className="text-sm text-gray-600">
+//                 {/* <div className="text-sm text-gray-400">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div> */}
 //                    <div className="flex flex-wrap items-center gap-4">
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-700">
+//                 <label className="text-sm font-medium text-gray-300">
 //                   Show:
 //                 </label>
 //                 <select
@@ -14328,7 +14328,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-600">entries</span>
+//                 <span className="text-sm text-gray-400">entries</span>
 //               </div>
 //             </div>
 //                 <div className="flex items-center gap-2">
@@ -14336,8 +14336,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
-//                       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
+//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
 //                       }`}
 //                   >
 //                     Previous
@@ -14349,7 +14349,7 @@
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-4 py-1 text-sm border rounded-lg ${currentPage === page
 //                         ? "text-white bg-blue-600 border-blue-600"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -14360,8 +14360,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -14412,10 +14412,10 @@
 //     </button>
 
 //     {/* White Modal Box */}
-//     <div className="bg-white p-6 rounded-xl shadow-xl max-h-[80vh] overflow-y-auto">
+//     <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-h-[80vh] overflow-y-auto">
 
-//       <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-//         <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//       <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
+//         <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
           
 //           <table className="min-w-full">
 //             <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
@@ -15730,7 +15730,7 @@
 //       : "-";
 
 //   const getDayTypeBadge = (hours) => {
-//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
+//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
 
 //     const dayType = calculateDayType(selectedEmployee, hours);
 //     switch (dayType) {
@@ -15741,7 +15741,7 @@
 //       case "full_leave":
 //         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
 //     }
 //   };
 
@@ -15828,7 +15828,7 @@
 //   </div>;
 
 //   return (
-//      <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+//      <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-9xl">
 
 //         {saveStatus && (
@@ -15841,7 +15841,7 @@
 //         )}
 
 //         {/* Filters - Single Row */}
-//         <div className="p-2 mb-2 bg-white rounded-lg shadow-md">
+//         <div className="p-2 mb-2 bg-[#0a0a0a] rounded-lg shadow-md">
 //           <div className="flex flex-wrap items-center gap-2">
             
 //             {/* ID/Name Search */}
@@ -15854,7 +15854,7 @@
 //                 placeholder="Search by ID or Name..."
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-7 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -15863,7 +15863,7 @@
 //               <select
 //                 value={deptSearchTerm}
 //                 onChange={(e) => setDeptSearchTerm(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+//                 className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent appearance-none bg-[#0a0a0a]"
 //               >
 //                  <option value="">All Departments & Designations</option>
 //                 <option value="Laboratory Medicine">Laboratory Medicine</option>
@@ -15885,7 +15885,7 @@
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
 //                 placeholder="From"
-//                 className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -15896,7 +15896,7 @@
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
 //                 placeholder="To"
-//                 className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -15906,7 +15906,7 @@
 //                 type="month"
 //                 value={selectedMonth}
 //                 onChange={handleMonthChange}
-//                 className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -15924,7 +15924,7 @@
 //             {/* Clear Button */}
 //             <button
 //               onClick={clearFilters}
-//               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 whitespace-nowrap"
+//               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-300 bg-[#0a0a0a] border border-[#374151] rounded-lg shadow-sm hover:bg-[#000000] whitespace-nowrap"
 //             >
 //               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -15946,7 +15946,7 @@
 //         </div>
 
 //        {/* Summary Table */}
-//         <div className="p-0 mb-0 bg-white border shadow-lg rounded-2xl">
+//         <div className="p-0 mb-0 bg-[#0a0a0a] border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-2 mb-2 sm:flex-row sm:items-center sm:justify-between">
 //             {/* <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attendance Summary for ({employeeSummary.length} employees)
@@ -15954,7 +15954,7 @@
 
 //             {/* <div className="flex flex-wrap items-center gap-4">
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-700">
+//                 <label className="text-sm font-medium text-gray-300">
 //                   Show:
 //                 </label>
 //                 <select
@@ -15967,12 +15967,12 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-600">entries</span>
+//                 <span className="text-sm text-gray-400">entries</span>
 //               </div>
 //             </div> */}
 //           </div>
 
-//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
@@ -16003,9 +16003,9 @@
 //                       onClick={() => handleViewDetails(emp.employeeId)}
 //                       className="border-t cursor-pointer hover:bg-blue-50"
 //                     >
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900">{emp.employeeId}</td>
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900">{emp.name}</td>
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900">{emp.month}</td>
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200">{emp.employeeId}</td>
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200">{emp.name}</td>
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200">{emp.month}</td>
 //                       <td className="px-2 py-2 text-sm text-center text-green-700">{emp.presentDays}</td>
 //                       <td className="px-2 py-2 text-sm text-center text-orange-700">{lateDays}</td>
 //                       <td className="px-2 py-2 text-sm text-center text-blue-700">{onsiteDays}</td>
@@ -16042,12 +16042,12 @@
 
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 {/* <div className="text-sm text-gray-600">
+//                 {/* <div className="text-sm text-gray-400">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div> */}
 //                    <div className="flex flex-wrap items-center gap-4">
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-700">
+//                 <label className="text-sm font-medium text-gray-300">
 //                   Show:
 //                 </label>
 //                 <select
@@ -16060,7 +16060,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-600">entries</span>
+//                 <span className="text-sm text-gray-400">entries</span>
 //               </div>
 //             </div>
 //                 <div className="flex items-center gap-2">
@@ -16068,8 +16068,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
-//                       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
+//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
 //                       }`}
 //                   >
 //                     Previous
@@ -16081,7 +16081,7 @@
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-4 py-1 text-sm border rounded-lg ${currentPage === page
 //                         ? "text-white bg-blue-600 border-blue-600"
-//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -16092,8 +16092,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
+//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -16144,10 +16144,10 @@
 //     </button>
 
 //     {/* White Modal Box */}
-//     <div className="bg-white p-6 rounded-xl shadow-xl max-h-[80vh] overflow-y-auto">
+//     <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-h-[80vh] overflow-y-auto">
 
-//       <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-//         <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//       <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
+//         <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
           
 //           <table className="min-w-full">
 //             <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
@@ -16489,6 +16489,30 @@ export default function AttendanceSummary() {
     setUniqueDesignations(Array.from(designations).sort());
   };
 
+  const parseTimeStr = (timeStr) => {
+    if (!timeStr) return null;
+    const match = timeStr.trim().match(/(\d{1,2})[:.](\d{2})\s*(AM|PM|am|pm)?/i);
+    if (!match) return null;
+    let hours = parseInt(match[1]);
+    const minutes = match[2];
+    const ampm = match[3] ? match[3].toUpperCase() : null;
+    if (ampm === "PM" && hours < 12) hours += 12;
+    if (ampm === "AM" && hours === 12) hours = 0;
+    return `${hours.toString().padStart(2, '0')}:${minutes}`;
+  };
+
+  const parseShiftTimeRange = (timeRange) => {
+    if (!timeRange) return { start: null, end: null };
+    let parts = timeRange.split(/[-]| to /i).map(t => t.trim());
+    if (parts.length >= 2) {
+      return {
+        start: parseTimeStr(parts[0]),
+        end: parseTimeStr(parts[1])
+      };
+    }
+    return { start: null, end: null };
+  };
+
   // ✅ Get Employee Shift Time from Master Shifts
   const getEmployeeShift = (employeeId) => {
     const shiftAssignment = shiftsData.find(s =>
@@ -16506,9 +16530,11 @@ export default function AttendanceSummary() {
     }
 
     if (masterShift.isBrakeShift && masterShift.timeSlots && masterShift.timeSlots.length >= 2) {
+      const slot1 = parseShiftTimeRange(masterShift.timeSlots[0]?.timeRange);
+      const slot2 = parseShiftTimeRange(masterShift.timeSlots[1]?.timeRange);
       return {
-        start: masterShift.timeSlots[0]?.timeRange?.split('-')[0]?.trim() || "07:00",
-        end: masterShift.timeSlots[1]?.timeRange?.split('-')[1]?.trim() || "21:30",
+        start: slot1.start || "07:00",
+        end: slot2.end || "21:30",
         grace: 5,
         isBrakeShift: true
       };
@@ -16517,10 +16543,10 @@ export default function AttendanceSummary() {
     if (masterShift.timeSlots && masterShift.timeSlots.length > 0) {
       const timeSlot = masterShift.timeSlots[0];
       if (timeSlot.timeRange) {
-        const [start, end] = timeSlot.timeRange.split('-').map(s => s.trim());
+        const parsed = parseShiftTimeRange(timeSlot.timeRange);
         return {
-          start: start || "09:00",
-          end: end || "18:00",
+          start: parsed.start || "09:00",
+          end: parsed.end || "18:00",
           grace: 5,
           isBrakeShift: false
         };
@@ -16555,7 +16581,11 @@ export default function AttendanceSummary() {
     const [endHour, endMinute] = shift.end.split(':').map(Number);
 
     const startMinutes = startHour * 60 + startMinute;
-    const endMinutes = endHour * 60 + endMinute;
+    let endMinutes = endHour * 60 + endMinute;
+
+    if (endMinutes <= startMinutes) {
+      endMinutes += 24 * 60;
+    }
 
     const totalMinutes = endMinutes - startMinutes;
     return totalMinutes / 60;
@@ -17354,6 +17384,119 @@ export default function AttendanceSummary() {
     }
   };
 
+  const handleBulkSaveAttendance = async () => {
+    try {
+      const editedKeys = Object.keys(editedRows);
+      if (editedKeys.length === 0) {
+        showSaveStatus("No changes to save.", "error");
+        return;
+      }
+      
+      setLoading(true);
+      let successCount = 0;
+
+      // Filter only Half Days for bulk update
+      const halfDayKeys = editedKeys.filter(dateKey => {
+         const edited = editedRows[dateKey];
+         if (!edited) return false;
+         const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
+         const currentHours = edited.hours !== undefined ? edited.hours : (rec ? (rec.totalHours || rec.hours) : 0);
+         return calculateDayType(selectedEmployee, currentHours) === "half";
+      });
+
+      if (halfDayKeys.length === 0) {
+        setLoading(false);
+        showSaveStatus("No Half Days to update in bulk.", "error");
+        return;
+      }
+
+      for (const dateKey of halfDayKeys) {
+        const edited = editedRows[dateKey];
+        if (edited) {
+          const rec = employeeDetails.find(r =>
+            r.checkInTime &&
+            new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey
+          );
+
+          const currentReason = edited.reason !== undefined ? edited.reason : (rec?.reason || "");
+          const currentComment = edited.comment !== undefined ? edited.comment : (rec?.comment || "");
+          const currentHours = edited.hours !== undefined ? edited.hours : (rec ? (rec.totalHours || rec.hours) : 0);
+
+          const formatTimeForInput = (isoString) => {
+            if (!isoString) return "";
+            const d = new Date(isoString);
+            const h = String(d.getHours()).padStart(2, '0');
+            const m = String(d.getMinutes()).padStart(2, '0');
+            return `${h}:${m}`;
+          };
+
+          const baseCheckIn = rec?.checkInTime ? formatTimeForInput(rec.checkInTime) : "";
+          const baseCheckOut = rec?.checkOutTime ? formatTimeForInput(rec.checkOutTime) : "";
+
+          const currentCheckIn = edited.checkInTime !== undefined ? edited.checkInTime : baseCheckIn;
+          const currentCheckOut = edited.checkOutTime !== undefined ? edited.checkOutTime : baseCheckOut;
+
+          const combineDateTime = (timeStr) => {
+            if (!timeStr) return null;
+            return `${dateKey}T${timeStr}:00`;
+          };
+
+          const finalCheckIn = edited.checkInTime !== undefined ? combineDateTime(edited.checkInTime) : undefined;
+          const finalCheckOut = edited.checkOutTime !== undefined ? combineDateTime(edited.checkOutTime) : undefined;
+
+          // If it's a new record and checkIn wasn't edited, we must use the base one
+          const checkInToSend = finalCheckIn !== undefined ? finalCheckIn : (!rec ? combineDateTime(currentCheckIn) : undefined);
+          const checkOutToSend = finalCheckOut !== undefined ? finalCheckOut : (!rec ? combineDateTime(currentCheckOut) : undefined);
+
+          if (!checkInToSend && !rec) continue;
+
+          const payload = {
+            attendanceId: rec?._id,
+            employeeId: selectedEmployee,
+            date: dateKey,
+            hours: currentHours,
+            region: null,
+            comment: currentComment || "Admin Bulk Update",
+            reason: currentReason || "Onsite",
+            checkInTime: checkInToSend,
+            checkOutTime: checkOutToSend
+          };
+
+          try {
+            const res = await fetch(`${BASE_URL}/attendancesummary/update`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            const result = await res.json();
+            if (result.success) {
+               successCount++;
+            }
+          } catch (err) {
+            console.error(`Failed to update ${dateKey}:`, err);
+          }
+        }
+      }
+
+      if (successCount > 0) {
+        showSaveStatus(`✅ ${successCount} records updated successfully!`);
+      } else {
+        showSaveStatus(`❌ No records were updated successfully.`, "error");
+      }
+      
+      if (selectedEmployee) {
+        await handleViewDetails(selectedEmployee);
+      }
+      await calculateSummaryFromBackend();
+      fetchAllData();
+    } catch (error) {
+      console.error(error);
+      showSaveStatus("🚨 Error saving bulk records", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const autoSaveSummary = async (type = "auto", changeTimestamp = null) => {
     if (changeTimestamp && changeTimestamp < lastSaveTimestampRef.current) {
       return;
@@ -17560,7 +17703,7 @@ export default function AttendanceSummary() {
   };
 
   const getDayTypeBadge = (hours) => {
-    if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
+    if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
 
     const dayType = calculateDayType(selectedEmployee, hours);
     switch (dayType) {
@@ -17571,7 +17714,7 @@ export default function AttendanceSummary() {
       case "full_leave":
         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
       default:
-        return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
+        return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
     }
   };
 
@@ -17662,7 +17805,7 @@ export default function AttendanceSummary() {
   </div>;
 
   return (
-     <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+     <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
       <div className="mx-auto max-w-9xl">
 
         {saveStatus && (
@@ -17675,7 +17818,7 @@ export default function AttendanceSummary() {
         )}
 
         {/* Filters - Single Row */}
-        <div className="p-2 mb-2 bg-white rounded-lg shadow-md">
+        <div className="p-2 mb-2 bg-[#0a0a0a] border border-gray-800 rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
             
             {/* ID/Name Search */}
@@ -17688,7 +17831,7 @@ export default function AttendanceSummary() {
                 placeholder="Search by ID or Name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-700 bg-black text-white rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -17699,7 +17842,7 @@ export default function AttendanceSummary() {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDepartment 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                    : 'bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-700'
                 }`}
               >
                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
@@ -17707,13 +17850,13 @@ export default function AttendanceSummary() {
               
               {/* Department Filter Dropdown */}
               {showDepartmentFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#111] border border-gray-800 rounded-md shadow-lg max-h-60">
                   <div 
                     onClick={() => {
                       setFilterDepartment('');
                       setShowDepartmentFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
                   >
                     All Departments
                   </div>
@@ -17742,7 +17885,7 @@ export default function AttendanceSummary() {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDesignation 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
                 }`}
               >
                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
@@ -17750,13 +17893,13 @@ export default function AttendanceSummary() {
               
               {/* Designation Filter Dropdown */}
               {showDesignationFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#111] border border-gray-800 rounded-md shadow-lg max-h-60">
                   <div 
                     onClick={() => {
                       setFilterDesignation('');
                       setShowDesignationFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
                   >
                     All Designations
                   </div>
@@ -17792,7 +17935,7 @@ export default function AttendanceSummary() {
       value={fromDate}
       onChange={(e) => setFromDate(e.target.value)}
       onClick={(e) => e.target.showPicker && e.target.showPicker()}
-      className="w-full pl-14 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg 
+      className="w-full pl-14 pr-3 py-1.5 text-sm border border-gray-700 bg-black text-white rounded-lg 
                  focus:ring-1 focus:ring-[#A97882] focus:border-[#A97882]"
     />
   </div>
@@ -17808,7 +17951,7 @@ export default function AttendanceSummary() {
       value={toDate}
       onChange={(e) => setToDate(e.target.value)}
       onClick={(e) => e.target.showPicker && e.target.showPicker()}
-      className="w-full pl-10 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg 
+      className="w-full pl-10 pr-3 py-1.5 text-sm border border-[#374151] rounded-lg 
                  focus:ring-1 focus:ring-[#A97882] focus:border-[#A97882]"
     />
   </div>
@@ -17820,7 +17963,7 @@ export default function AttendanceSummary() {
                 type="month"
                 value={selectedMonth}
                 onChange={handleMonthChange}
-                className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-2 py-1.5 text-xs border border-gray-700 bg-black text-white rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
               />
             </div>
@@ -17839,7 +17982,7 @@ export default function AttendanceSummary() {
             {/* Clear Button */}
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 whitespace-nowrap"
+              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-300 bg-gray-900 border border-gray-700 rounded-lg shadow-sm hover:bg-gray-800 whitespace-nowrap"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -17861,8 +18004,8 @@ export default function AttendanceSummary() {
         </div>
 
        {/* Summary Table */}
-        <div className="p-0 mb-0 bg-white border shadow-lg rounded-2xl">
-          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+        <div className="p-0 mb-0 bg-[#0a0a0a] border border-gray-800 shadow-lg rounded-2xl">
+          <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
             <table className="min-w-full">
               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
@@ -17895,13 +18038,13 @@ export default function AttendanceSummary() {
                     <tr
                       key={emp.employeeId}
                       onClick={() => handleViewDetails(emp.employeeId)}
-                      className="border-t cursor-pointer hover:bg-blue-50"
+                      className="border-t border-gray-800 cursor-pointer hover:bg-gray-800/50"
                     >
-                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{emp.employeeId}</td>
-                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{emp.name}</td>
-                      <td className="px-2 py-2 text-center text-gray-600">{department}</td>
-                      <td className="px-2 py-2 text-center text-gray-600">{designation}</td>
-                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{emp.month}</td>
+                      <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">{emp.employeeId}</td>
+                      <td className="px-2 py-2 font-medium text-center text-white whitespace-nowrap">{emp.name}</td>
+                      <td className="px-2 py-2 text-center text-gray-400">{department}</td>
+                      <td className="px-2 py-2 text-center text-gray-400">{designation}</td>
+                      <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">{emp.month}</td>
                       <td className="px-2 py-2 font-medium text-center text-green-700">{emp.presentDays}</td>
                       <td className="px-2 py-2 font-medium text-center text-orange-700">{lateDays}</td>
                       <td className="px-2 py-2 font-medium text-center text-blue-700">{onsiteDays}</td>
@@ -17940,7 +18083,7 @@ export default function AttendanceSummary() {
               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-700">
+                    <label className="text-sm font-medium text-gray-300">
                       Show:
                     </label>
                     <select
@@ -17953,7 +18096,7 @@ export default function AttendanceSummary() {
                       <option value={20}>20</option>
                       <option value={50}>50</option>
                     </select>
-                    <span className="text-sm text-gray-600">entries</span>
+                    <span className="text-sm text-gray-400">entries</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -17961,8 +18104,8 @@ export default function AttendanceSummary() {
                     onClick={handlePrevPage}
                     disabled={currentPage === 1}
                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
-                      ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                      : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
+                      ? "text-gray-400 bg-gray-900 border-gray-800 cursor-not-allowed"
+                      : "text-blue-400 bg-[#111] hover:bg-gray-800 border-gray-700"
                       }`}
                   >
                     Previous
@@ -17974,7 +18117,7 @@ export default function AttendanceSummary() {
                       onClick={() => handlePageClick(page)}
                       className={`px-4 py-1 text-sm border rounded-lg ${currentPage === page
                         ? "text-white bg-blue-600 border-blue-600"
-                        : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                        : "text-blue-400 bg-[#111] hover:bg-gray-800 border-gray-700"
                         }`}
                     >
                       {page}
@@ -17985,8 +18128,8 @@ export default function AttendanceSummary() {
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
-                      ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                      : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
+                      ? "text-gray-400 bg-gray-900 border-gray-800 cursor-not-allowed"
+                      : "text-blue-400 bg-[#111] hover:bg-gray-800 border-gray-700"
                       }`}
                   >
                     Next
@@ -18005,7 +18148,7 @@ export default function AttendanceSummary() {
 
         {/* Regularization Requests Section */}
         {/* {regularizationRequests.filter(r => r.status === 'pending').length > 0 && (
-          <div className="p-4 mb-4 mt-6 bg-white border shadow-lg rounded-2xl">
+          <div className="p-4 mb-4 mt-6 bg-[#0a0a0a] border shadow-lg rounded-2xl">
             <h2 className="mb-3 text-lg font-bold text-orange-600 flex items-center gap-2">
               ⏳ Pending Regularization Requests
               <span className="px-2 py-0.5 text-xs bg-orange-100 text-orange-600 rounded-full">
@@ -18014,7 +18157,7 @@ export default function AttendanceSummary() {
             </h2>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
-                <thead className="bg-gray-50 text-gray-700">
+                <thead className="bg-[#000000] text-gray-300">
                   <tr>
                     <th className="py-2 px-3 text-left">Emp ID</th>
                     <th className="py-2 px-3 text-left">Name</th>
@@ -18023,7 +18166,7 @@ export default function AttendanceSummary() {
                     <th className="py-2 px-3 text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-[#1f2937]">
                   {regularizationRequests.filter(r => r.status === 'pending').map((req) => (
                     <tr key={req._id} className="hover:bg-orange-50 transition-colors">
                       <td className="py-2 px-3 font-medium">{req.employeeId}</td>
@@ -18037,7 +18180,7 @@ export default function AttendanceSummary() {
                           ))}
                         </div>
                       </td>
-                      <td className="py-2 px-3 text-gray-600 max-w-xs truncate">{req.comment}</td>
+                      <td className="py-2 px-3 text-gray-400 max-w-xs truncate">{req.comment}</td>
                       <td className="py-2 px-3 text-center">
                         <div className="flex justify-center gap-2">
                           <button
@@ -18087,19 +18230,89 @@ export default function AttendanceSummary() {
   {/* Wrapper for positioning */}
   <div className="relative w-full max-w-7xl">
 
-    {/* Close Button OUTSIDE white box */}
-    <button
-      onClick={closeModal}
-      className="absolute top-[-40px] right-0 text-xl font-bold text-white bg-green-500 px-3 py-1 rounded-full shadow-lg hover:bg-red-600"
-    >
-      ✖
-    </button>
+    {/* Buttons Container OUTSIDE white box */}
+    <div className="absolute top-[-44px] right-0 flex items-center space-x-3">
+        {/* Bulk Set Half Days */}
+        {/* <div className="flex items-center space-x-2 bg-[#111] border border-gray-700 px-3 py-1 rounded-full shadow-lg">
+          <span className="text-gray-300 font-bold text-sm">Half Days ➔</span>
+          <input 
+            type="number" 
+            id="bulkHalfDayHours"
+            defaultValue="9" 
+            className="w-14 px-1 py-0.5 text-white bg-black border border-gray-600 rounded text-sm text-center"
+            step="0.25"
+          /> */}
+          {/* <span className="text-gray-300 text-sm">Hrs</span>
+          <button
+            onClick={() => {
+               const val = parseFloat(document.getElementById('bulkHalfDayHours').value) || 9;
+               const newEdited = { ...editedRows };
+               let count = 0;
+               monthDates.forEach(date => {
+                  const dateKey = date.toLocaleDateString('en-CA');
+                  const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
+                  const edited = editedRows[dateKey] || {};
+                  const currentHours = edited.hours !== undefined ? edited.hours : (rec ? (rec.totalHours || rec.hours) : 0);
+                  
+                  if (rec && calculateDayType(selectedEmployee, currentHours) === "half") {
+                     newEdited[dateKey] = {
+                       ...newEdited[dateKey],
+                       hours: val,
+                       edited: true,
+                       timestamp: Date.now()
+                     };
+                     count++;
+                  }
+               });
+               setEditedRows(newEdited);
+               if (count > 0) {
+                 showSaveStatus(`✅ Applied ${val} hrs to ${count} Half Days! Click 'Save All Changes' to confirm.`);
+               } else {
+                 showSaveStatus(`❌ No Half Days found to update.`, "error");
+               }
+            }}
+            className="text-sm font-bold text-white bg-purple-600 px-3 py-0.5 rounded shadow hover:bg-purple-700 transition-colors"
+          >
+            Apply
+          </button>
+        </div> */}
+
+        {/* Bulk Save Button */}
+        {/* {(() => {
+          const halfDayCount = Object.keys(editedRows).filter(dateKey => {
+             const edited = editedRows[dateKey];
+             const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
+             const currentHours = edited.hours !== undefined ? edited.hours : (rec ? (rec.totalHours || rec.hours) : 0);
+             return calculateDayType(selectedEmployee, currentHours) === "half";
+          }).length;
+          
+          if (halfDayCount > 0) {
+            return (
+            //   <button
+            //     onClick={handleBulkSaveAttendance}
+            //     className="text-sm font-bold text-white bg-blue-600 px-4 py-1.5 rounded-full shadow-lg hover:bg-blue-700 transition-colors animate-fade-in"
+            //   >
+            //     Save Half Days ({halfDayCount})
+            //   </button>
+            );
+          }
+          return null;
+        })()} */}
+
+        {/* Close Button */}
+        <button
+          onClick={closeModal}
+          className="text-lg font-bold text-white bg-green-500 px-3 py-1 rounded-full shadow-lg hover:bg-red-600 transition-colors"
+        >
+          ✖
+        </button>
+    </div>
 
     {/* White Modal Box */}
-    <div className="bg-white p-6 rounded-xl shadow-xl max-h-[80vh] overflow-y-auto">
+    <div className="bg-[#111] p-6 rounded-xl shadow-xl max-h-[80vh] overflow-y-auto border border-gray-800">
 
-      <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-        <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+      <div className="mb-6 overflow-hidden bg-[#111] rounded-lg shadow-lg">
+        <div className="overflow-x-auto bg-[#111] shadow-lg rounded-xl">
           
           <table className="min-w-full">
             <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
@@ -18184,7 +18397,7 @@ export default function AttendanceSummary() {
                 );
 
                 return (
-                  <tr key={dateKey} className="border-t hover:bg-blue-50">
+                  <tr key={dateKey} className="border-t border-gray-800 hover:bg-gray-800/50">
                     <td className="py-2 text-center">
                       {date.toLocaleDateString("en-IN")}
                       {regReq && (
@@ -18200,14 +18413,28 @@ export default function AttendanceSummary() {
                     <td className="py-2 text-center">
                       <input
                         type="time"
-                        className="w-full px-2 py-1 border rounded"
+                        className="w-full px-2 py-1 border border-gray-700 bg-black text-white rounded focus:border-blue-500"
                         value={currentCheckIn}
                         onChange={(e) => {
                           const newval = e.target.value;
-                          setEditedRows(prev => ({
-                            ...prev,
-                            [dateKey]: { ...prev[dateKey], checkInTime: newval }
-                          }));
+                          setEditedRows(prev => {
+                            const newRows = { ...prev };
+                            const currentRow = { ...newRows[dateKey], checkInTime: newval };
+                            
+                            // Auto calculate hours if both checkIn and checkOut exist
+                            const checkOut = currentRow.checkOutTime !== undefined ? currentRow.checkOutTime : baseCheckOut;
+                            if (newval && checkOut) {
+                              const start = new Date(`2000-01-01T${newval}:00`);
+                              const end = new Date(`2000-01-01T${checkOut}:00`);
+                              if (end >= start) {
+                                const diffHours = (end - start) / (1000 * 60 * 60);
+                                currentRow.hours = parseFloat(diffHours.toFixed(2));
+                              }
+                            }
+                            
+                            newRows[dateKey] = currentRow;
+                            return newRows;
+                          });
                         }}
                       />
                     </td>
@@ -18215,21 +18442,35 @@ export default function AttendanceSummary() {
                     <td className="py-2 text-center">
                       <input
                         type="time"
-                        className="w-full px-2 py-1 border rounded"
+                        className="w-full px-2 py-1 border border-gray-700 bg-black text-white rounded focus:border-blue-500"
                         value={currentCheckOut}
                         onChange={(e) => {
                           const newval = e.target.value;
-                          setEditedRows(prev => ({
-                            ...prev,
-                            [dateKey]: { ...prev[dateKey], checkOutTime: newval }
-                          }));
+                          setEditedRows(prev => {
+                            const newRows = { ...prev };
+                            const currentRow = { ...newRows[dateKey], checkOutTime: newval };
+                            
+                            // Auto calculate hours if both checkIn and checkOut exist
+                            const checkIn = currentRow.checkInTime !== undefined ? currentRow.checkInTime : baseCheckIn;
+                            if (newval && checkIn) {
+                              const start = new Date(`2000-01-01T${checkIn}:00`);
+                              const end = new Date(`2000-01-01T${newval}:00`);
+                              if (end >= start) {
+                                const diffHours = (end - start) / (1000 * 60 * 60);
+                                currentRow.hours = parseFloat(diffHours.toFixed(2));
+                              }
+                            }
+                            
+                            newRows[dateKey] = currentRow;
+                            return newRows;
+                          });
                         }}
                       />
                     </td>
 
                     <td className="py-2 text-center">
                       <select
-                        className="w-full px-2 py-1 border rounded"
+                        className="w-full px-2 py-1 border border-gray-700 bg-black text-white rounded"
                         value={currentReason}
                         onChange={e =>
                           handleReasonChange(dateKey, e.target.value)
@@ -18248,7 +18489,7 @@ export default function AttendanceSummary() {
                         step="0.25"
                         min="0"
                         max="24"
-                        className="w-20 px-2 py-1 border rounded"
+                        className="w-20 px-2 py-1 border border-gray-700 bg-black text-white rounded"
                         value={currentHours}
                         onChange={e =>
                           handleHoursChange(dateKey, e.target.value)
@@ -18259,7 +18500,7 @@ export default function AttendanceSummary() {
                     <td className="py-2 text-center">
                       <input
                         type="text"
-                        className="w-full px-2 py-1 border rounded"
+                        className="w-full px-2 py-1 border border-gray-700 bg-black text-white rounded"
                         placeholder="Admin comment"
                         value={currentComment}
                         onChange={e =>
@@ -18268,7 +18509,7 @@ export default function AttendanceSummary() {
                       />
                     </td>
 
-                    <td className="py-2 font-semibold text-center text-indigo-700">
+                    <td className="py-2 font-semibold text-center text-indigo-400">
                       {rec ? otHours.toFixed(2) : "-"}
                     </td>
 
@@ -18280,9 +18521,9 @@ export default function AttendanceSummary() {
                       <button
                         onClick={() => {
                           const finalCheckIn =
-                            combineDateTime(currentCheckIn);
+                            edited.checkInTime !== undefined ? combineDateTime(currentCheckIn) : (!rec ? combineDateTime(currentCheckIn) : undefined);
                           const finalCheckOut =
-                            combineDateTime(currentCheckOut);
+                            edited.checkOutTime !== undefined ? combineDateTime(currentCheckOut) : (!rec ? combineDateTime(currentCheckOut) : undefined);
 
                           handleSaveAttendance(
                             rec,

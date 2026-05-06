@@ -107,7 +107,7 @@ const DoctorList = () => {
   };
 
   return (
-    <div className="p-4 bg-white rounded shadow">
+    <div className="p-4 bg-[#0a0a0a] rounded shadow">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Doctor List</h2>
       </div>
@@ -147,7 +147,7 @@ const DoctorList = () => {
 
       <div className="overflow-y-auto max-h-[400px]">
         <table className="w-full border rounded text-sm">
-          <thead className="bg-gray-200">
+          <thead className="bg-[#1f2937]">
             <tr>
               <th className="p-2 border text-left">Name</th>
               <th className="p-2 border text-left">Category</th>
@@ -162,7 +162,7 @@ const DoctorList = () => {
           </thead>
           <tbody>
             {filteredDoctors.map((doc) => (
-              <tr key={doc._id} className="hover:bg-gray-100 border-b">
+              <tr key={doc._id} className="hover:bg-[#111111] border-b">
                 <td className="p-2 border">{doc.name}</td>
                 <td className="p-2 border">{doc.category}</td>
                 <td className="p-2 border">{doc.specialization}</td>
@@ -204,7 +204,7 @@ const DoctorList = () => {
 {/* Edit Doctor Modal */}
 {editingDoctor && (
   <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center">
-    <div className="bg-white p-6 rounded shadow-md w-3/4 md:w-2/3 lg:w-1/3">
+    <div className="bg-[#0a0a0a] p-6 rounded shadow-md w-3/4 md:w-2/3 lg:w-1/3">
       <h3 className="text-xl font-semibold mb-4">Edit Doctor Details</h3>
       <form>
         {/* First Row with 3 fields */}

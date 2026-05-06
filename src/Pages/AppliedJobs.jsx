@@ -58,13 +58,13 @@ const AppliedJobs = () => {
   const hasFilters = localSearchQuery || statusFilter || dateFilter;
 
   return (
-    <div className="min-h-screen p-4 md:p-6 lg:p-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen p-4 md:p-6 lg:p-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
       <div className="max-w-9xl mx-auto animate-in fade-in duration-700">
 
         {/* Header & Filters */}
         <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex-shrink-0">
-            <h2 className="text-2xl font-bold text-gray-800 tracking-tight">My Applications</h2>
+            <h2 className="text-2xl font-bold text-gray-300 tracking-tight">My Applications</h2>
             <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mt-1">Real-time status tracking for all your applications</p>
           </div>
 
@@ -74,7 +74,7 @@ const AppliedJobs = () => {
             <div className="relative w-full sm:w-auto">
               <input
                 type="date"
-                className="w-full appearance-none bg-white py-2.5 px-4 pr-10 text-xs text-gray-700 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold shadow-sm sm:w-40 cursor-pointer"
+                className="w-full appearance-none bg-[#0a0a0a] py-2.5 px-4 pr-10 text-xs text-gray-300 border border-[#1f2937] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold shadow-sm sm:w-40 cursor-pointer"
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
               />
@@ -94,7 +94,7 @@ const AppliedJobs = () => {
                 <FaBriefcase className="text-xs" />
               </div>
               <div
-                className="w-full bg-white py-2.5 pl-10 pr-10 text-xs text-gray-700 border border-gray-200 rounded-xl font-bold cursor-pointer hover:bg-gray-50 shadow-sm text-ellipsis whitespace-nowrap overflow-hidden"
+                className="w-full bg-[#0a0a0a] py-2.5 pl-10 pr-10 text-xs text-gray-300 border border-[#1f2937] rounded-xl font-bold cursor-pointer hover:bg-[#000000] shadow-sm text-ellipsis whitespace-nowrap overflow-hidden"
                 onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
               >
                 {statusFilter || "Filter by Status"}
@@ -110,7 +110,7 @@ const AppliedJobs = () => {
                 )}
               </div>
               {isStatusDropdownOpen && (
-                <div className="absolute z-[110] w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="absolute z-[110] w-full mt-2 bg-[#0a0a0a] border border-[#1f2937] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="max-h-60 overflow-y-auto py-2">
                     <div
                       className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:bg-blue-50 transition-colors ${!statusFilter ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
@@ -139,7 +139,7 @@ const AppliedJobs = () => {
               </div>
               <input
                 type="text"
-                className="w-full py-2.5 pl-10 pr-10 text-xs text-gray-700 placeholder-gray-400 font-bold border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                className="w-full py-2.5 pl-10 pr-10 text-xs text-gray-300 placeholder-gray-400 font-bold border border-[#1f2937] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
                 placeholder="Search role, status..."
                 value={localSearchQuery}
                 onChange={(e) => setLocalSearchQuery(e.target.value)}
@@ -158,21 +158,21 @@ const AppliedJobs = () => {
             {hasFilters && (
               <button
                 onClick={resetFilters}
-                className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-gray-500 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-all shadow-sm uppercase tracking-widest"
+                className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-gray-500 bg-[#0a0a0a] border border-[#1f2937] hover:bg-[#000000] rounded-xl transition-all shadow-sm uppercase tracking-widest"
               >
                 <FaSync className="text-[10px]" /> Reset
               </button>
             )}
 
-            <div className="bg-white px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-2">
+            <div className="bg-[#0a0a0a] px-4 py-2.5 rounded-xl border border-[#1f2937] shadow-sm flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">{filteredApps.length} Applications</span>
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{filteredApps.length} Applications</span>
             </div>
           </div>
         </div>
 
         {/* Table */}
-        <div className="overflow-hidden bg-white shadow-xl rounded-3xl border border-gray-100">
+        <div className="overflow-hidden bg-[#0a0a0a] shadow-xl rounded-3xl border border-[#1f2937]">
           <div className="overflow-x-auto">
             {filteredApps.length > 0 ? (
               <table className="min-w-full">
@@ -185,11 +185,11 @@ const AppliedJobs = () => {
                     <th className="py-2.5 px-8">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 text-center">
+                <tbody className="divide-y divide-[#1f2937] text-center">
                   {filteredApps.map((app) => (
                     <tr key={app._id} className="group hover:bg-indigo-50/20 transition-all duration-300">
                       <td className="py-2 px-8">
-                        <div className="font-bold text-sm text-gray-800 uppercase tracking-tight">{app.jobId?.role || app.role || "N/A"}</div>
+                        <div className="font-bold text-sm text-gray-300 uppercase tracking-tight">{app.jobId?.role || app.role || "N/A"}</div>
                         <div className="text-[10px] text-blue-500 uppercase tracking-widest mt-1 font-semibold">
                           #{app._id.slice(-6).toUpperCase()}
                         </div>
@@ -199,7 +199,7 @@ const AppliedJobs = () => {
                           Internal Ref
                         </span>
                       </td>
-                      <td className="py-2 px-6 text-xs font-medium text-gray-600 uppercase tracking-tight">
+                      <td className="py-2 px-6 text-xs font-medium text-gray-400 uppercase tracking-tight">
                         <div className="flex items-center justify-center gap-2">
                           <FaCalendarAlt className="text-blue-400" size={12} />
                           {new Date(app.createdAt || app.appliedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
@@ -266,7 +266,7 @@ const AppliedJobs = () => {
                                       {idx === 0 && (
                                         <button
                                           onClick={() => navigate(`/jobs/${app.jobId?._id}`)}
-                                          className="p-2 bg-white text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-all"
+                                          className="p-2 bg-[#0a0a0a] text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-all"
                                           title="View Job"
                                         >
                                           <FaEye size={14} />
@@ -291,10 +291,10 @@ const AppliedJobs = () => {
               </table>
             ) : (
               <div className="p-24 text-center">
-                <div className="w-20 h-20 bg-gray-50 rounded-[2rem] flex items-center justify-center text-gray-200 mx-auto mb-6 border-2 border-dashed border-gray-200">
+                <div className="w-20 h-20 bg-[#000000] rounded-[2rem] flex items-center justify-center text-gray-200 mx-auto mb-6 border-2 border-dashed border-[#1f2937]">
                   <FaFileAlt size={32} />
                 </div>
-                <h3 className="text-lg font-bold text-gray-800 uppercase tracking-widest">No Applications Yet</h3>
+                <h3 className="text-lg font-bold text-gray-300 uppercase tracking-widest">No Applications Yet</h3>
                 <p className="text-xs font-medium text-gray-400 mt-3 uppercase tracking-widest leading-loose max-w-xs mx-auto">
                   Applications you submit will appear here with real-time status updates.
                 </p>

@@ -316,10 +316,10 @@
 //     if (loading) return <div className="p-8 text-center">Loading Score Board...</div>;
 
 //     return (
-//         <div className="w-full min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8">
+//         <div className="w-full min-h-screen bg-[#000000]/50 p-4 md:p-6 lg:p-8">
 //             <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-center xl:justify-between">
 //                 <div className="flex-shrink-0">
-//                     <h2 className="text-base font-bold text-gray-800">Scoring & Selection</h2>
+//                     <h2 className="text-base font-bold text-gray-300">Scoring & Selection</h2>
 //                 </div>
 
 //                 <div className="flex flex-wrap items-center justify-start xl:justify-end gap-3 flex-grow">
@@ -327,7 +327,7 @@
 //                     <div className="relative w-full sm:w-auto">
 //                         <input
 //                             type="date"
-//                             className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm sm:w-40"
+//                             className="w-full appearance-none bg-[#0a0a0a] py-2 px-4 pr-10 text-sm text-gray-300 border border-[#374151] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-[#000000] cursor-pointer shadow-sm sm:w-40"
 //                             value={dateFilter}
 //                             onChange={(e) => setDateFilter(e.target.value)}
 //                         />
@@ -348,7 +348,7 @@
 //                             <FiBriefcaseIcon className="text-sm" />
 //                         </div>
 //                         <div
-//                             className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
+//                             className="w-full bg-[#0a0a0a] py-2 pl-10 pr-10 text-sm text-gray-300 border border-[#374151] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-[#000000] cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
 //                             onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
 //                         >
 //                             {roleFilter || "Select Role"}
@@ -365,13 +365,13 @@
 //                         </div>
 
 //                         {isRoleDropdownOpen && (
-//                             <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-//                                 <div className="p-2 border-b border-gray-100 bg-gray-50">
+//                             <div className="absolute z-50 w-full mt-1 bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+//                                 <div className="p-2 border-b border-[#1f2937] bg-[#000000]">
 //                                     <div className="relative">
 //                                         <FiSearch className="absolute left-2.5 top-2.5 text-gray-400 text-xs" />
 //                                         <input
 //                                             type="text"
-//                                             className="w-full py-1.5 pl-8 pr-4 text-xs bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                             className="w-full py-1.5 pl-8 pr-4 text-xs bg-[#0a0a0a] border border-[#1f2937] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                                             placeholder="Search roles..."
 //                                             value={roleSearchQuery}
 //                                             onChange={(e) => setRoleSearchQuery(e.target.value)}
@@ -382,7 +382,7 @@
 //                                 </div>
 //                                 <div className="max-h-60 overflow-y-auto py-1">
 //                                     <div
-//                                         className={`px-4 py-2 text-xs font-bold cursor-pointer hover:bg-indigo-50 transition-colors ${!roleFilter ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-600'}`}
+//                                         className={`px-4 py-2 text-xs font-bold cursor-pointer hover:bg-indigo-50 transition-colors ${!roleFilter ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-400'}`}
 //                                         onClick={() => { setRoleFilter(""); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
 //                                     >
 //                                         All Roles
@@ -392,7 +392,7 @@
 //                                         .map((r) => (
 //                                             <div
 //                                                 key={r._id}
-//                                                 className={`px-4 py-2 text-xs font-bold cursor-pointer hover:bg-indigo-50 transition-colors ${roleFilter === r.name ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-600'}`}
+//                                                 className={`px-4 py-2 text-xs font-bold cursor-pointer hover:bg-indigo-50 transition-colors ${roleFilter === r.name ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-400'}`}
 //                                                 onClick={() => { setRoleFilter(r.name); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
 //                                             >
 //                                                 {r.name}
@@ -416,7 +416,7 @@
 //                                                 <FaBriefcase className="text-sm" />
 //                                             </div>
 //                                             <div
-//                                                 className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
+//                                                 className="w-full bg-[#0a0a0a] py-2 pl-10 pr-10 text-sm text-gray-300 border border-[#374151] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-[#000000] cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
 //                                                 onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
 //                                             >
 //                                                 {roleFilter || "Select Dept"}
@@ -434,13 +434,13 @@
 //                                             </div>
 
 //                                             {isRoleDropdownOpen && (
-//                                                 <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-//                                                     <div className="p-2 border-b border-gray-100 bg-gray-50">
+//                                                 <div className="absolute z-50 w-full mt-1 bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+//                                                     <div className="p-2 border-b border-[#1f2937] bg-[#000000]">
 //                                                         <div className="relative">
 //                                                             <FaUserTie className="absolute left-2.5 top-2.5 text-gray-400 text-xs" />
 //                                                             <input
 //                                                                 type="text"
-//                                                                 className="w-full py-1.5 pl-8 pr-4 text-xs bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                                                 className="w-full py-1.5 pl-8 pr-4 text-xs bg-[#0a0a0a] border border-[#1f2937] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                                                                 placeholder="Search dept..."
 //                                                                 value={roleSearchQuery}
 //                                                                 onChange={(e) => setRoleSearchQuery(e.target.value)}
@@ -451,7 +451,7 @@
 //                                                     </div>
 //                                                     <div className="max-h-60 overflow-y-auto py-1">
 //                                                         <div
-//                                                             className={`px-4 py-2 text-xs font-bold cursor-pointer hover:bg-indigo-50 transition-colors ${!roleFilter ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-600'}`}
+//                                                             className={`px-4 py-2 text-xs font-bold cursor-pointer hover:bg-indigo-50 transition-colors ${!roleFilter ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-400'}`}
 //                                                             onClick={() => { setRoleFilter(""); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
 //                                                         >
 //                                                             All Depts
@@ -461,7 +461,7 @@
 //                                                             .map((r) => (
 //                                                                 <div
 //                                                                     key={r._id}
-//                                                                     className={`px-4 py-2 text-xs font-bold cursor-pointer hover:bg-indigo-50 transition-colors ${roleFilter === r.name ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-600'}`}
+//                                                                     className={`px-4 py-2 text-xs font-bold cursor-pointer hover:bg-indigo-50 transition-colors ${roleFilter === r.name ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-400'}`}
 //                                                                     onClick={() => { setRoleFilter(r.name); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
 //                                                                 >
 //                                                                     {r.name}
@@ -487,7 +487,7 @@
 //                             <FaStar className="text-[12px]" />
 //                         </div>
 //                         <select
-//                             className="w-full appearance-none bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm"
+//                             className="w-full appearance-none bg-[#0a0a0a] py-2 pl-10 pr-10 text-sm text-gray-300 border border-[#374151] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-[#000000] cursor-pointer shadow-sm"
 //                             value={scoreFilter}
 //                             onChange={(e) => setScoreFilter(Number(e.target.value))}
 //                         >
@@ -516,7 +516,7 @@
 //                         </div>
 //                         <input
 //                             type="text"
-//                             className="w-full py-2 pl-10 pr-10 text-sm text-gray-700 placeholder-gray-400 transition-all border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                             className="w-full py-2 pl-10 pr-10 text-sm text-gray-300 placeholder-gray-400 transition-all border border-[#374151] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                             placeholder="Search name or role..."
 //                             value={searchQuery}
 //                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -536,7 +536,7 @@
 //                         {(searchQuery || roleFilter || scoreFilter > 0) && (
 //                             <button
 //                                 onClick={resetFilters}
-//                                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-colors border border-gray-200"
+//                                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-400 bg-[#111111] hover:bg-[#1f2937] hover:text-gray-200 rounded-lg transition-colors border border-[#1f2937]"
 //                                 title="Reset All Filters"
 //                             >
 //                                 <FaSync className="text-xs" />
@@ -549,7 +549,7 @@
 
 //             {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
 
-//             <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//             <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
 //              <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                         <tr>
@@ -566,15 +566,15 @@
 //                     </thead>
 //                     <tbody>
 //                         {filteredCandidates.map((c) => (
-//                             <tr key={c._id} className="border-b hover:bg-gray-50 transition-colors">
+//                             <tr key={c._id} className="border-b hover:bg-[#000000] transition-colors">
 //                                 <td className="px-2 py-2 font-medium text-center">
 //                                     <div className="flex flex-col">
-//                                         <span className="text-gray-900 whitespace-nowrap">{c.firstName} {c.lastName}</span>
+//                                         <span className="text-gray-200 whitespace-nowrap">{c.firstName} {c.lastName}</span>
 //                                         {/* <span className="text-[10px] text-gray-400 flex items-center justify-center gap-1"><FaEnvelope /> {c.email}</span> */}
 //                                     </div>
 //                                 </td>
 //                                 <td className="px-2 py-2 font-medium text-center">
-//                                     <span className="bg-gray-100 text-gray-600 text-[10px] px-2 py-0.5 rounded uppercase ">
+//                                     <span className="bg-[#111111] text-gray-400 text-[10px] px-2 py-0.5 rounded uppercase ">
 //                                         {c.jobId?.role || "N/A"}
 //                                     </span>
 //                                 </td>
@@ -632,7 +632,7 @@
 //                                 <td className="px-2 py-2 font-medium text-center">
 //                                     <select
 //                                         className={`p-1 border rounded text-[10px]  ${c.status === "Selected" ? "text-green-600 bg-green-50" :
-//                                             c.status === "Interview" ? "text-blue-600 bg-blue-50" : "text-gray-600"
+//                                             c.status === "Interview" ? "text-blue-600 bg-blue-50" : "text-gray-400"
 //                                             }`}
 //                                         value={c.status || "Pending"}
 //                                         onChange={(e) => handleUpdateScore(c._id, "status", e.target.value)}
@@ -739,17 +739,17 @@
 //             {
 //                 isInviteModalOpen && (
 //                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-//                         <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
+//                         <div className="bg-[#0a0a0a] rounded-xl max-w-md w-full p-6 shadow-2xl">
 //                             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
 //                                 <FaPaperPlane className="text-blue-600" /> Send Interview Invite
 //                             </h2>
-//                             <p className="text-sm text-gray-600 mb-4">
-//                                 Candidate: <span className="font-semibold text-gray-800">{selectedCandidate?.firstName} {selectedCandidate?.lastName}</span>
+//                             <p className="text-sm text-gray-400 mb-4">
+//                                 Candidate: <span className="font-semibold text-gray-300">{selectedCandidate?.firstName} {selectedCandidate?.lastName}</span>
 //                             </p>
 
 //                             <div className="space-y-4">
 //                                 <div>
-//                                     <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+//                                     <label className="block text-sm font-medium text-gray-300 mb-1">Subject</label>
 //                                     <input
 //                                         type="text"
 //                                         className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -758,7 +758,7 @@
 //                                     />
 //                                 </div>
 //                                 <div>
-//                                     <label className="block text-sm font-medium text-gray-700 mb-1">Interview Time & Date</label>
+//                                     <label className="block text-sm font-medium text-gray-300 mb-1">Interview Time & Date</label>
 //                                     <input
 //                                         type="datetime-local"
 //                                         className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -767,7 +767,7 @@
 //                                     />
 //                                 </div>
 //                                 <div>
-//                                     <label className="block text-sm font-medium text-gray-700 mb-1">Interview Mode / Location</label>
+//                                     <label className="block text-sm font-medium text-gray-300 mb-1">Interview Mode / Location</label>
 //                                     <select
 //                                         className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 font-bold text-sm"
 //                                         value={inviteForm.interviewMode}
@@ -785,7 +785,7 @@
 
 //                             <div className="flex justify-end gap-3 mt-6">
 //                                 <button
-//                                     className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+//                                     className="px-4 py-2 text-gray-400 hover:bg-[#111111] rounded"
 //                                     onClick={() => setIsInviteModalOpen(false)}
 //                                 >
 //                                     Cancel
@@ -806,14 +806,14 @@
 //             {
 //                 isDocsModalOpen && (
 //                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-//                         <div className="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+//                         <div className="bg-[#0a0a0a] rounded-xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
 //                             <div className="flex justify-between items-center mb-4">
 //                                 <h2 className="text-xl font-bold flex items-center gap-2">
 //                                     <FaSave className="text-indigo-600" /> Document Management
 //                                 </h2>
 //                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${selectedCandidate?.docReviewStatus === 'Accepted' ? 'bg-green-100 text-green-700' :
 //                                     selectedCandidate?.docReviewStatus === 'Pending' ? 'bg-orange-100 text-orange-700' :
-//                                         'bg-gray-100 text-gray-700'
+//                                         'bg-[#111111] text-gray-300'
 //                                     }`}>
 //                                     Review Status: {selectedCandidate?.docReviewStatus}
 //                                 </span>
@@ -821,8 +821,8 @@
 
 //                             <div className="space-y-6">
 //                                 {/* Step 1: Send Agreements */}
-//                                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-//                                     <h3 className="text-sm font-black uppercase text-slate-700 mb-3 tracking-wider">Step 1: Agreements for Candidate</h3>
+//                                 <div className="bg-[#000000] p-4 rounded-lg border border-[#1f2937]">
+//                                     <h3 className="text-sm font-black uppercase text-slate-300 mb-3 tracking-wider">Step 1: Agreements for Candidate</h3>
 //                                     <textarea
 //                                         className="w-full p-3 border rounded-md text-sm min-h-[150px] focus:ring-2 focus:ring-indigo-500"
 //                                         placeholder="Enter agreement terms or instructions..."
@@ -849,10 +849,10 @@
 //                                 {selectedCandidate?.candidateAgreementsUpload && (
 //                                     <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
 //                                         <h3 className="text-sm font-black uppercase text-blue-800 mb-3 tracking-wider">Step 2: Review Uploaded Document</h3>
-//                                         <div className="flex items-center justify-between bg-white p-3 rounded border border-blue-100 mb-4">
+//                                         <div className="flex items-center justify-between bg-[#0a0a0a] p-3 rounded border border-blue-100 mb-4">
 //                                             <div className="flex items-center gap-2">
 //                                                 <FaPaperPlane className="text-blue-500" />
-//                                                 <span className="text-xs font-bold text-slate-700">Signed_Agreement.pdf</span>
+//                                                 <span className="text-xs font-bold text-slate-300">Signed_Agreement.pdf</span>
 //                                             </div>
 //                                             <button
 //                                                 onClick={() => window.open(`${API_BASE_URL.replace('/api', '')}/${selectedCandidate.candidateAgreementsUpload}`, '_blank')}
@@ -879,7 +879,7 @@
 //                                 )}
 
 //                                 {!selectedCandidate?.candidateAgreementsUpload && (
-//                                     <div className="text-center p-8 bg-slate-50 rounded-lg border border-dashed border-slate-300">
+//                                     <div className="text-center p-8 bg-[#000000] rounded-lg border border-dashed border-slate-300">
 //                                         <p className="text-xs font-bold text-slate-400 uppercase">Awaiting candidate upload...</p>
 //                                     </div>
 //                                 )}
@@ -887,7 +887,7 @@
 
 //                             <div className="flex justify-end mt-6">
 //                                 <button
-//                                     className="px-6 py-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:bg-slate-100 rounded"
+//                                     className="px-6 py-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:bg-[#111111] rounded"
 //                                     onClick={() => setIsDocsModalOpen(false)}
 //                                 >
 //                                     Close
@@ -900,13 +900,13 @@
 //             {/* Assessment Detail Modal */}
 //             {isAssessmentModalOpen && selectedAssessmentData && (
 //                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
-//                     <div className="bg-white max-w-4xl w-full rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-100 max-h-[90vh] flex flex-col">
+//                     <div className="bg-[#0a0a0a] max-w-4xl w-full rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-[#1f2937] max-h-[90vh] flex flex-col">
 
 //                         {/* Header matching JobPost */}
-//                         <div className="px-8 pt-8 pb-6 border-b border-gray-100 flex-shrink-0">
+//                         <div className="px-8 pt-8 pb-6 border-b border-[#1f2937] flex-shrink-0">
 //                             <div className="flex items-start justify-between">
 //                                 <div>
-//                                     <h2 className="text-xl text-gray-800 font-bold flex items-center gap-2">
+//                                     <h2 className="text-xl text-gray-300 font-bold flex items-center gap-2">
 //                                         <FaTasks className="text-indigo-600" />
 //                                         Assessment Answer Sheet
 //                                     </h2>
@@ -916,14 +916,14 @@
 //                                 </div>
 //                                 <button
 //                                     onClick={() => setIsAssessmentModalOpen(false)}
-//                                     className="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all"
+//                                     className="p-2 text-gray-400 hover:text-gray-300 hover:bg-[#111111] rounded-xl transition-all"
 //                                 >
 //                                     <FiX className="text-lg" />
 //                                 </button>
 //                             </div>
 
 //                             {/* Clean Stats Line */}
-//                             <div className="flex items-center gap-6  border-t border-gray-100/50">
+//                             <div className="flex items-center gap-6  border-t border-[#1f2937]/50">
 //                                 <div className="flex items-center gap-2">
 //                                     <span className="text-xs font-semibold text-gray-500">Final Score:</span>
 //                                     <span className="text-sm font-black text-indigo-600">
@@ -931,16 +931,16 @@
 //                                     </span>
 //                                 </div>
 
-//                                 <div className="h-4 w-[1px] bg-gray-200"></div>
+//                                 <div className="h-4 w-[1px] bg-[#1f2937]"></div>
 
 //                                 <div className="flex items-center gap-2">
 //                                     <span className="text-xs font-semibold text-gray-500">Questions:</span>
-//                                     <span className="text-sm font-black text-gray-700">
+//                                     <span className="text-sm font-black text-gray-300">
 //                                         {selectedAssessmentData.answers?.length || selectedAssessmentData.totalQuestions || 0}
 //                                     </span>
 //                                 </div>
 
-//                                 <div className="h-4 w-[1px] bg-gray-200"></div>
+//                                 <div className="h-4 w-[1px] bg-[#1f2937]"></div>
 
 //                                 <div className="flex items-center gap-2">
 //                                     <span className="text-xs font-semibold text-gray-500">Status:</span>
@@ -955,7 +955,7 @@
 //                         </div>
 
 //                         {/* Answers List */}
-//                         <div className="p-8 overflow-y-auto space-y-6 flex-grow bg-white">
+//                         <div className="p-8 overflow-y-auto space-y-6 flex-grow bg-[#0a0a0a]">
 //                             {selectedAssessmentData.answers && selectedAssessmentData.answers.length > 0 ? (
 //                                 selectedAssessmentData.answers.map((ans, idx) => {
 //                                     const optionLabels = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -964,14 +964,14 @@
 //                                         : [ans.selectedOption, ans.correctAnswer].filter(Boolean);
 
 //                                     return (
-//                                         <div key={idx} className="bg-white rounded-xl border border-gray-200 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] overflow-hidden">
+//                                         <div key={idx} className="bg-[#0a0a0a] rounded-xl border border-[#1f2937] shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] overflow-hidden">
 //                                             {/* Question Header */}
-//                                             <div className="flex items-start gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50/50">
+//                                             <div className="flex items-start gap-3 px-5 py-4 border-b border-[#1f2937] bg-[#000000]/50">
 //                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-black text-xs ${ans.isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
 //                                                     Q{idx + 1}
 //                                                 </div>
 //                                                 <div className="flex-grow pt-1">
-//                                                     <p className="text-sm font-bold text-gray-800 leading-relaxed">{ans.questionText}</p>
+//                                                     <p className="text-sm font-bold text-gray-300 leading-relaxed">{ans.questionText}</p>
 //                                                 </div>
 //                                                 <div className="shrink-0 pt-1.5 flex items-center gap-1.5">
 //                                                     {ans.isCorrect ? (
@@ -989,8 +989,8 @@
 //                                                     const isCandidateOpt = String(opt).trim() === String(ans.selectedOption).trim();
 //                                                     const label = optionLabels[oIdx] || String(oIdx + 1);
 
-//                                                     let optStyle = "bg-white border-gray-200 text-gray-600";
-//                                                     let radioStyle = "border-gray-200 border-2";
+//                                                     let optStyle = "bg-[#0a0a0a] border-[#1f2937] text-gray-400";
+//                                                     let radioStyle = "border-[#1f2937] border-2";
 //                                                     let badge = null;
 
 //                                                     if (isCorrectOpt && isCandidateOpt) {
@@ -1011,13 +1011,13 @@
 //                                                         <div key={oIdx} className={`flex items-center gap-4 px-4 py-3 rounded-xl border transition-all ${optStyle}`}>
 //                                                             {/* Option Label */}
 //                                                             <div className="shrink-0">
-//                                                                 <span className="text-[10px] font-black text-gray-400 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded uppercase">{label}</span>
+//                                                                 <span className="text-[10px] font-black text-gray-400 bg-[#000000] border border-[#1f2937] px-2 py-0.5 rounded uppercase">{label}</span>
 //                                                             </div>
 
 //                                                             {/* Radio Circle */}
 //                                                             <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${radioStyle}`}>
 //                                                                 {(isCandidateOpt || isCorrectOpt) && (
-//                                                                     <div className={`w-1.5 h-1.5 rounded-full ${isCorrectOpt && !isCandidateOpt ? 'bg-emerald-400' : 'bg-white'}`} />
+//                                                                     <div className={`w-1.5 h-1.5 rounded-full ${isCorrectOpt && !isCandidateOpt ? 'bg-emerald-400' : 'bg-[#0a0a0a]'}`} />
 //                                                                 )}
 //                                                             </div>
 
@@ -1038,21 +1038,21 @@
 //                                     );
 //                                 })
 //                             ) : (
-//                                 <div className="text-center py-20 bg-gray-50 rounded-xl border border-gray-100 flex flex-col items-center justify-center">
-//                                     <div className="w-16 h-16 bg-white text-gray-300 rounded-full flex items-center justify-center mb-4 border border-gray-100 shadow-sm">
+//                                 <div className="text-center py-20 bg-[#000000] rounded-xl border border-[#1f2937] flex flex-col items-center justify-center">
+//                                     <div className="w-16 h-16 bg-[#0a0a0a] text-gray-300 rounded-full flex items-center justify-center mb-4 border border-[#1f2937] shadow-sm">
 //                                         <FaTasks className="text-3xl" />
 //                                     </div>
-//                                     <p className="text-gray-800 font-bold mb-1">No detailed analysis available</p>
+//                                     <p className="text-gray-300 font-bold mb-1">No detailed analysis available</p>
 //                                     <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest max-w-xs">Old assessment record without question tracking</p>
 //                                 </div>
 //                             )}
 //                         </div>
 
 //                         {/* Footer */}
-//                         <div className="px-8 py-4 border-t border-gray-100 bg-gray-50 flex justify-end flex-shrink-0">
+//                         <div className="px-8 py-4 border-t border-[#1f2937] bg-[#000000] flex justify-end flex-shrink-0">
 //                             <button
 //                                 onClick={() => setIsAssessmentModalOpen(false)}
-//                                 className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-[0_2px_4px_rgba(0,0,0,0.02)]"
+//                                 className="px-6 py-2.5 bg-[#0a0a0a] border border-[#1f2937] text-gray-300 hover:bg-[#111111] hover:text-gray-200 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-[0_2px_4px_rgba(0,0,0,0.02)]"
 //                             >
 //                                 Close View
 //                             </button>
@@ -1086,7 +1086,7 @@ const DetailItem = ({ icon, label, value }) => (
         <div className="mt-1 text-blue-500">{icon}</div>
         <div>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{label}</p>
-            <p className="text-sm font-bold text-gray-800">{value}</p>
+            <p className="text-sm font-bold text-gray-300">{value}</p>
         </div>
     </div>
 );
@@ -1451,16 +1451,16 @@ const Score = () => {
     };
 
     if (loading) return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
             <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
             <p className="mt-4 text-gray-500 font-bold animate-pulse">Loading Score Board...</p>
         </div>
     );
 
     return (
-        <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-6 lg:p-8">
+        <div className="w-full min-h-screen bg-gradient-to-br from-[#000000] to-[#0a0a0a] p-4 md:p-6 lg:p-8">
             {/* Filters Section */}
-            <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+            <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
                 <div className="flex flex-wrap items-center gap-2">
 
                     {/* Search Bar */}
@@ -1471,7 +1471,7 @@ const Score = () => {
                             placeholder="Search name or role..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                         />
                     </div>
 
@@ -1481,7 +1481,7 @@ const Score = () => {
                             onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
                             className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${roleFilter
                                     ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
                                 }`}
                         >
                             <FaBriefcase className="text-xs" /> Role {roleFilter && `: ${roleFilter}`}
@@ -1489,13 +1489,13 @@ const Score = () => {
 
                         {/* Role Filter Dropdown */}
                         {isRoleDropdownOpen && (
-                            <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                <div className="p-2 border-b border-gray-100 bg-gray-50">
+                            <div className="absolute z-50 mt-1 w-48 bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                <div className="p-2 border-b border-[#1f2937] bg-[#000000]">
                                     <div className="relative">
                                         <FaUserTie className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
                                         <input
                                             type="text"
-                                            className="w-full py-1 pl-7 pr-2 text-xs bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                            className="w-full py-1 pl-7 pr-2 text-xs bg-[#0a0a0a] border border-[#1f2937] rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                                             placeholder="Search roles..."
                                             value={roleSearchQuery}
                                             onChange={(e) => setRoleSearchQuery(e.target.value)}
@@ -1510,7 +1510,7 @@ const Score = () => {
                                         setIsRoleDropdownOpen(false);
                                         setRoleSearchQuery('');
                                     }}
-                                    className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-gray-100 font-medium ${!roleFilter ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                                    className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-[#1f2937] font-medium ${!roleFilter ? 'bg-blue-50 text-blue-700' : 'text-gray-300'
                                         }`}
                                 >
                                     All Roles
@@ -1525,7 +1525,7 @@ const Score = () => {
                                                 setIsRoleDropdownOpen(false);
                                                 setRoleSearchQuery('');
                                             }}
-                                            className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${roleFilter === r.name ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                                            className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${roleFilter === r.name ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-300'
                                                 }`}
                                         >
                                             {r.name}
@@ -1543,7 +1543,7 @@ const Score = () => {
                     {/* Score Filter */}
                     <div className="relative w-[130px]">
                         <select
-                            className="w-full pl-2 pr-6 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent appearance-none"
+                            className="w-full pl-2 pr-6 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent appearance-none"
                             value={scoreFilter}
                             onChange={(e) => setScoreFilter(Number(e.target.value))}
                         >
@@ -1568,7 +1568,7 @@ const Score = () => {
                             value={dateFilter}
                             onChange={(e) => setDateFilter(e.target.value)}
                             onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                            className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full pl-12 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                         />
                     </div>
 
@@ -1576,7 +1576,7 @@ const Score = () => {
                     {(searchQuery || scoreFilter > 0 || roleFilter || dateFilter) && (
                         <button
                             onClick={resetFilters}
-                            className="h-8 px-3 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition"
+                            className="h-8 px-3 text-xs font-medium text-gray-400 bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937] transition"
                         >
                             Clear
                         </button>
@@ -1586,9 +1586,9 @@ const Score = () => {
 
             {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
 
-            <div className="p-0 mb-0 bg-white border shadow-lg rounded-2xl">
+            <div className="p-0 mb-0 bg-[#0a0a0a] border shadow-lg rounded-2xl">
                 {filteredCandidates.length > 0 ? (
-                    <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+                    <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
                         <table className="min-w-full">
                             <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
                                 <tr>
@@ -1605,14 +1605,14 @@ const Score = () => {
                             </thead>
                             <tbody>
                                 {currentItems.map((c) => (
-                                    <tr key={c._id} className="border-b hover:bg-gray-50 transition-colors">
+                                    <tr key={c._id} className="border-b hover:bg-[#000000] transition-colors">
                                         <td className="px-2 py-2 font-medium text-center">
                                             <div className="flex flex-col">
-                                                <span className="text-gray-900 whitespace-nowrap">{c.firstName} {c.lastName}</span>
+                                                <span className="text-gray-200 whitespace-nowrap">{c.firstName} {c.lastName}</span>
                                             </div>
                                         </td>
                                         <td className="px-2 py-2 font-medium text-center">
-                                            <span className="bg-gray-100 text-gray-600 text-[10px] px-2 py-0.5 rounded uppercase ">
+                                            <span className="bg-[#111111] text-gray-400 text-[10px] px-2 py-0.5 rounded uppercase ">
                                                 {c.jobId?.role || "N/A"}
                                             </span>
                                         </td>
@@ -1683,7 +1683,7 @@ const Score = () => {
                                         <td className="px-2 py-2 font-medium text-center">
                                             <select
                                                 className={`p-1 border rounded text-[10px]  ${c.status === "Selected" ? "text-green-600 bg-green-50" :
-                                                    c.status === "Interview" ? "text-blue-600 bg-blue-50" : "text-gray-600"
+                                                    c.status === "Interview" ? "text-blue-600 bg-blue-50" : "text-gray-400"
                                                     }`}
                                                 value={c.status || "Pending"}
                                                 onChange={(e) => handleUpdateScore(c._id, "status", e.target.value)}
@@ -1751,8 +1751,8 @@ const Score = () => {
 
                         {/* Pagination */}
                         {filteredCandidates.length > 0 && (
-                            <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
-                                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
+                            <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-[#1f2937] bg-[#000000] sm:flex-row">
+                                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-300">
                                     <span>Showing</span>
                                     <span className="font-medium">
                                         {indexOfFirstItem + 1}
@@ -1787,8 +1787,8 @@ const Score = () => {
                                         onClick={handlePrevPage}
                                         disabled={pagination.currentPage === 1}
                                         className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === 1
-                                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                                ? "bg-[#111111] text-gray-400 cursor-not-allowed"
+                                                : "bg-[#0a0a0a] text-gray-300 border-[#374151] hover:bg-[#000000]"
                                             }`}
                                     >
                                         Previous
@@ -1804,7 +1804,7 @@ const Score = () => {
                                                         ? "text-gray-500 cursor-default"
                                                         : pagination.currentPage === page
                                                             ? "bg-blue-600 text-white"
-                                                            : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                                                            : "bg-[#0a0a0a] text-gray-300 border border-[#374151] hover:bg-[#000000]"
                                                     }`}
                                             >
                                                 {page}
@@ -1816,8 +1816,8 @@ const Score = () => {
                                         onClick={handleNextPage}
                                         disabled={pagination.currentPage === pagination.totalPages}
                                         className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === pagination.totalPages
-                                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                                ? "bg-[#111111] text-gray-400 cursor-not-allowed"
+                                                : "bg-[#0a0a0a] text-gray-300 border-[#374151] hover:bg-[#000000]"
                                             }`}
                                     >
                                         Next
@@ -1828,10 +1828,10 @@ const Score = () => {
                     </div>
                 ) : (
                     <div className="p-12 text-center">
-                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
+                        <div className="w-16 h-16 bg-[#000000] rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
                             <FaUserGraduate size={32} />
                         </div>
-                        <h3 className="text-lg font-medium text-gray-800">No candidates found</h3>
+                        <h3 className="text-lg font-medium text-gray-300">No candidates found</h3>
                         <p className="text-gray-500">No candidates matching your filters.</p>
                     </div>
                 )}
@@ -1840,17 +1840,17 @@ const Score = () => {
             {/* Invite Modal */}
             {isInviteModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
+                    <div className="bg-[#0a0a0a] rounded-xl max-w-md w-full p-6 shadow-2xl">
                         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                             Send Interview Invite
                         </h2>
-                        <p className="text-sm text-gray-600 mb-4">
-                            Candidate: <span className="font-semibold text-gray-800">{selectedCandidate?.firstName} {selectedCandidate?.lastName}</span>
+                        <p className="text-sm text-gray-400 mb-4">
+                            Candidate: <span className="font-semibold text-gray-300">{selectedCandidate?.firstName} {selectedCandidate?.lastName}</span>
                         </p>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Subject</label>
                                 <input
                                     type="text"
                                     className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -1859,7 +1859,7 @@ const Score = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Interview Time & Date</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Interview Time & Date</label>
                                 <input
                                     type="datetime-local"
                                     className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -1868,7 +1868,7 @@ const Score = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Interview Mode / Location</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Interview Mode / Location</label>
                                 <select
                                     className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 font-bold text-sm"
                                     value={inviteForm.interviewMode}
@@ -1886,7 +1886,7 @@ const Score = () => {
 
                         <div className="flex justify-end gap-3 mt-6">
                             <button
-                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+                                className="px-4 py-2 text-gray-400 hover:bg-[#111111] rounded"
                                 onClick={() => setIsInviteModalOpen(false)}
                             >
                                 Cancel
@@ -1905,14 +1905,14 @@ const Score = () => {
             {/* Document Management Modal */}
             {isDocsModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+                    <div className="bg-[#0a0a0a] rounded-xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold flex items-center gap-2">
                                 Document Management
                             </h2>
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${selectedCandidate?.docReviewStatus === 'Accepted' ? 'bg-green-100 text-green-700' :
                                 selectedCandidate?.docReviewStatus === 'Pending' ? 'bg-orange-100 text-orange-700' :
-                                    'bg-gray-100 text-gray-700'
+                                    'bg-[#111111] text-gray-300'
                                 }`}>
                                 Review Status: {selectedCandidate?.docReviewStatus}
                             </span>
@@ -1920,8 +1920,8 @@ const Score = () => {
 
                         <div className="space-y-6">
                             {/* Step 1: Send Agreements */}
-                            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                                <h3 className="text-sm font-black uppercase text-slate-700 mb-3 tracking-wider">Step 1: Agreements for Candidate</h3>
+                            <div className="bg-[#000000] p-4 rounded-lg border border-[#1f2937]">
+                                <h3 className="text-sm font-black uppercase text-slate-300 mb-3 tracking-wider">Step 1: Agreements for Candidate</h3>
                                 <textarea
                                     className="w-full p-3 border rounded-md text-sm min-h-[150px] focus:ring-2 focus:ring-indigo-500"
                                     placeholder="Enter agreement terms or instructions..."
@@ -1948,9 +1948,9 @@ const Score = () => {
                             {selectedCandidate?.candidateAgreementsUpload && (
                                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                                     <h3 className="text-sm font-black uppercase text-blue-800 mb-3 tracking-wider">Step 2: Review Uploaded Document</h3>
-                                    <div className="flex items-center justify-between bg-white p-3 rounded border border-blue-100 mb-4">
+                                    <div className="flex items-center justify-between bg-[#0a0a0a] p-3 rounded border border-blue-100 mb-4">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xs font-bold text-slate-700">Signed_Agreement.pdf</span>
+                                            <span className="text-xs font-bold text-slate-300">Signed_Agreement.pdf</span>
                                         </div>
                                         <button
                                             onClick={() => window.open(`${API_BASE_URL.replace('/api', '')}/${selectedCandidate.candidateAgreementsUpload}`, '_blank')}
@@ -1977,7 +1977,7 @@ const Score = () => {
                             )}
 
                             {!selectedCandidate?.candidateAgreementsUpload && (
-                                <div className="text-center p-8 bg-slate-50 rounded-lg border border-dashed border-slate-300">
+                                <div className="text-center p-8 bg-[#000000] rounded-lg border border-dashed border-slate-300">
                                     <p className="text-xs font-bold text-slate-400 uppercase">Awaiting candidate upload...</p>
                                 </div>
                             )}
@@ -1985,7 +1985,7 @@ const Score = () => {
 
                         <div className="flex justify-end mt-6">
                             <button
-                                className="px-6 py-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:bg-slate-100 rounded"
+                                className="px-6 py-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:bg-[#111111] rounded"
                                 onClick={() => setIsDocsModalOpen(false)}
                             >
                                 Close
@@ -1997,12 +1997,12 @@ const Score = () => {
 
             {isAssessmentModalOpen && Array.isArray(selectedAssessmentData) && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
-                    <div className="bg-gray-50 max-w-5xl w-full rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-100 max-h-[95vh] flex flex-col">
+                    <div className="bg-[#000000] max-w-5xl w-full rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-[#1f2937] max-h-[95vh] flex flex-col">
 
-                        <div className="px-8 pt-8 pb-6 border-b border-gray-100 flex-shrink-0 bg-white">
+                        <div className="px-8 pt-8 pb-6 border-b border-[#1f2937] flex-shrink-0 bg-[#0a0a0a]">
                             <div className="flex items-start justify-between">
                                 <div>
-                                    <h2 className="text-xl text-gray-800 font-bold flex items-center gap-2">
+                                    <h2 className="text-xl text-gray-300 font-bold flex items-center gap-2">
                                         Assessment History & Answers
                                     </h2>
                                     <p className="text-[10px] font-bold uppercase tracking-widest mt-1.5 text-gray-500">
@@ -2011,7 +2011,7 @@ const Score = () => {
                                 </div>
                                 <button
                                     onClick={() => setIsAssessmentModalOpen(false)}
-                                    className="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all"
+                                    className="p-2 text-gray-400 hover:text-gray-300 hover:bg-[#111111] rounded-xl transition-all"
                                 >
                                     <FaTimes className="text-lg" />
                                 </button>
@@ -2025,7 +2025,7 @@ const Score = () => {
                                         <div className="px-3 py-1 bg-indigo-600 text-white text-[10px] font-black uppercase rounded-lg">
                                             Test #{rIdx + 1}
                                         </div>
-                                        <h3 className="text-lg font-black text-gray-800 border-b-2 border-indigo-100 pb-1">
+                                        <h3 className="text-lg font-black text-gray-300 border-b-2 border-indigo-100 pb-1">
                                             {result.quizTitle}
                                         </h3>
                                         <div className="flex items-center gap-4 ml-auto">
@@ -2033,10 +2033,10 @@ const Score = () => {
                                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Score</span>
                                                 <span className="text-sm font-black text-indigo-600">{result.score}/100</span>
                                             </div>
-                                            <div className="h-8 w-[1px] bg-gray-200"></div>
+                                            <div className="h-8 w-[1px] bg-[#1f2937]"></div>
                                             <div className="flex flex-col items-end">
                                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Date</span>
-                                                <span className="text-sm font-black text-gray-600">{new Date(result.completedAt || Date.now()).toLocaleDateString()}</span>
+                                                <span className="text-sm font-black text-gray-400">{new Date(result.completedAt || Date.now()).toLocaleDateString()}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -2050,13 +2050,13 @@ const Score = () => {
                                                     : [ans.selectedOption, ans.correctAnswer].filter(Boolean);
 
                                                 return (
-                                                    <div key={idx} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                                                        <div className="flex items-start gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50/50">
+                                                    <div key={idx} className="bg-[#0a0a0a] rounded-xl border border-[#1f2937] shadow-sm overflow-hidden">
+                                                        <div className="flex items-start gap-3 px-5 py-4 border-b border-[#1f2937] bg-[#000000]/50">
                                                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-black text-xs ${ans.isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
                                                                 Q{idx + 1}
                                                             </div>
                                                             <div className="flex-grow pt-1">
-                                                                <p className="text-sm font-bold text-gray-800 leading-relaxed">{ans.questionText}</p>
+                                                                <p className="text-sm font-bold text-gray-300 leading-relaxed">{ans.questionText}</p>
                                                             </div>
                                                             <div className="shrink-0 pt-1.5 flex items-center gap-1.5">
                                                                 {ans.isCorrect ? (
@@ -2073,8 +2073,8 @@ const Score = () => {
                                                                 const isCandidateOpt = String(opt).trim() === String(ans.selectedOption).trim();
                                                                 const label = optionLabels[oIdx] || String(oIdx + 1);
 
-                                                                let optStyle = "bg-white border-gray-200 text-gray-600";
-                                                                let radioStyle = "border-gray-200 border-2";
+                                                                let optStyle = "bg-[#0a0a0a] border-[#1f2937] text-gray-400";
+                                                                let radioStyle = "border-[#1f2937] border-2";
                                                                 let badge = null;
 
                                                                 if (isCorrectOpt && isCandidateOpt) {
@@ -2094,11 +2094,11 @@ const Score = () => {
                                                                 return (
                                                                     <div key={oIdx} className={`flex items-center gap-4 px-4 py-3 rounded-xl border transition-all ${optStyle}`}>
                                                                         <div className="shrink-0">
-                                                                            <span className="text-[10px] font-black text-gray-400 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded uppercase">{label}</span>
+                                                                            <span className="text-[10px] font-black text-gray-400 bg-[#000000] border border-[#1f2937] px-2 py-0.5 rounded uppercase">{label}</span>
                                                                         </div>
                                                                         <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${radioStyle}`}>
                                                                             {(isCandidateOpt || isCorrectOpt) && (
-                                                                                <div className={`w-1.5 h-1.5 rounded-full ${isCorrectOpt && !isCandidateOpt ? 'bg-emerald-400' : 'bg-white'}`} />
+                                                                                <div className={`w-1.5 h-1.5 rounded-full ${isCorrectOpt && !isCandidateOpt ? 'bg-emerald-400' : 'bg-[#0a0a0a]'}`} />
                                                                             )}
                                                                         </div>
                                                                         <p className="text-xs font-semibold flex-grow">{opt}</p>
@@ -2115,20 +2115,20 @@ const Score = () => {
                                                 );
                                             })
                                         ) : (
-                                            <div className="text-center py-10 bg-white rounded-xl border border-dashed border-gray-200 flex flex-col items-center justify-center">
+                                            <div className="text-center py-10 bg-[#0a0a0a] rounded-xl border border-dashed border-[#1f2937] flex flex-col items-center justify-center">
                                                 <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">No detailed analysis for this test</p>
                                             </div>
                                         )}
                                     </div>
-                                    <div className="h-px bg-gray-200 w-full mt-12 opacity-50"></div>
+                                    <div className="h-px bg-[#1f2937] w-full mt-12 opacity-50"></div>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="px-8 py-4 border-t border-gray-100 bg-white flex justify-end flex-shrink-0">
+                        <div className="px-8 py-4 border-t border-[#1f2937] bg-[#0a0a0a] flex justify-end flex-shrink-0">
                             <button
                                 onClick={() => setIsAssessmentModalOpen(false)}
-                                className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-sm"
+                                className="px-6 py-2.5 bg-[#0a0a0a] border border-[#1f2937] text-gray-300 hover:bg-[#111111] hover:text-gray-200 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-sm"
                             >
                                 Close View
                             </button>

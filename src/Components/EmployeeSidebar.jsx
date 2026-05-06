@@ -517,25 +517,25 @@
 //       <div
 //         onMouseEnter={handleMouseEnterSidebar}
 //         onMouseLeave={handleMouseLeaveSidebar}
-//         className={`fixed top-0 left-0 h-full bg-[#1E40AF] text-white z-40 transition-all duration-300 border-r border-blue-800/50
+//         className={`fixed top-0 left-0 h-full bg-[#1E40AF] text-white z-40 transition-all duration-300 border-r border-[#1f2937]
 //         ${isMobile
 //             ? isCollapsed ? "-translate-x-full w-52" : "translate-x-0 w-52"
 //             : isCollapsed ? "w-16" : "w-52"
 //           }`}
 //       >
 //         {/* Header */}
-//         <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-blue-900/40 border-blue-700/50">
+//         <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-[#0a0a0a] border-[#1f2937]">
 //           <div className="flex items-center w-full gap-2 overflow-hidden">
 //             {isCollapsed && !isMobile ? (
 //               <span className="text-xl text-emerald-300">TM</span>
 //             ) : (
 //               <div className="flex flex-col w-full">
-//                 <span className="text-xs uppercase tracking-[0.2em] font-medium text-blue-100 mb-0.5">
+//                 <span className="text-xs uppercase tracking-[0.2em] font-medium text-gray-300 mb-0.5">
 //                   Employee Portal
 //                 </span>
 //                 <div className="flex items-center gap-1.5">
 //                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-//                   <span className="text-xs font-medium truncate text-blue-100/80">
+//                   <span className="text-xs font-medium truncate text-gray-300/80">
 //                     {currentPage}
 //                   </span>
 //                 </div>
@@ -576,7 +576,7 @@
 //                         ? 'text-white'
 //                         : openDropdown === item.name
 //                           ? 'text-emerald-300'
-//                           : 'text-blue-100 group-hover:text-emerald-300'
+//                           : 'text-white group-hover:text-emerald-300'
 //                         }`}>
 //                         {item.icon}
 //                       </span>
@@ -595,11 +595,11 @@
 //                         )}
 //                         <FaChevronDown
 //                           onClick={(e) => toggleDropdown(e, item.name)}
-//                           className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600/50 rounded cursor-pointer ${isDropdownActive(item.dropdown)
+//                           className={`text-xs transition-transform duration-300 p-0 hover:bg-[#1f2937] rounded cursor-pointer ${isDropdownActive(item.dropdown)
 //                             ? 'text-white'
 //                             : openDropdown === item.name
 //                               ? 'text-emerald-300'
-//                               : 'text-blue-300 hover:text-white'
+//                               : 'text-white'
 //                             } ${openDropdown === item.name ? "rotate-180" : ""}`}
 //                           style={{
 //                             width: '20px',
@@ -633,7 +633,7 @@
 //                                 onClick={handleAnyClick}
 //                                 className={`flex items-center gap-2.5 py-1.5 px-0 text-[13px] transition-colors rounded ${isActive(sub.path)
 //                                   ? 'text-emerald-300 font-semibold bg-emerald-900/20'
-//                                   : 'text-blue-100 hover:text-emerald-300 hover:bg-blue-800/40'
+//                                   : 'text-white hover:text-emerald-300 hover:bg-blue-800/40'
 //                                   }`}
 //                               >
 //                                 <div className="flex items-center w-full gap-2">
@@ -670,7 +670,7 @@
 //                 >
 //                   <span className={`text-lg transition-colors duration-200 ${isActive(item.path)
 //                     ? 'text-white'
-//                     : 'text-blue-100 group-hover:text-emerald-300'
+//                     : 'text-white group-hover:text-emerald-300'
 //                     }`}>
 //                     {item.icon}
 //                   </span>
@@ -692,11 +692,11 @@
 //         </nav>
 
 //         {/* Footer */}
-//         <div className="px-4 py-3 text-[10px] text-blue-200/60 border-t border-blue-700/50 bg-blue-900/20">
+//         <div className="px-4 py-3 text-[10px] text-gray-500 border-t border-[#1f2937] bg-[#0a0a0a]">
 //           {!isCollapsed ? (
 //             <div className="flex flex-col gap-0.5">
 //               <div className="flex items-center justify-between">
-//                 <p className="font-semibold tracking-wider uppercase text-blue-200/80">Portal v1.0</p>
+//                 <p className="font-semibold tracking-wider uppercase text-gray-400">Portal v1.0</p>
 //                 <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/20 rounded">
 //                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
 //                   <span className="text-[9px] text-emerald-300 font-medium">Active</span>
@@ -704,7 +704,7 @@
 //               </div>
 //               <p>© {new Date().getFullYear()} Timely Health</p>
 //               <div className="pt-1 mt-1 border-t border-blue-700/30">
-//                 <p className="text-[9px] text-blue-200/70">
+//                 <p className="text-[9px] text-gray-300/70">
 //                   Current: <span className="text-emerald-300">{currentPage}</span>
 //                 </p>
 //               </div>
@@ -996,7 +996,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       { icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/employeedashboard" },
       // { icon: <i className="ri-shield-keyhole-fill"></i>, name: "My Permissions", path: "/mypermissions" },
       {
-        icon: <i className="ri-calendar-check-fill"></i>,
+        icon: <i className="ri-calendar-fill"></i>,
         name: "Attendance",
         dropdown: [
           { name: "Check In", path: "/attendance-capture" },
@@ -1006,7 +1006,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         ]
       },
       {
-        icon: <i className="ri-calendar-close-fill"></i>,name: "Leave", path: "/myleaves" },
+        icon: <i className="ri-calendar-fill"></i>,name: "Leave", path: "/myleaves" },
       {
         icon: <i className="ri-profile-fill"></i>,
         name: "Profile",
@@ -1018,7 +1018,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         ]
       },
       { icon: <i className="ri-money-dollar-box-fill"></i>, name: "My Salary", path: "/mysalary" },
-      { icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/HolidayList" },
+      { icon: <i className="ri-calendar-fill"></i>, name: "Holidays", path: "/HolidayList" },
       { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
     ];
   };
@@ -1047,7 +1047,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     }
     if (attendanceDropdown.length > 0) {
       menu.push({
-        icon: <i className="ri-calendar-check-fill"></i>,
+        icon: <i className="ri-calendar-fill"></i>,
         name: "Attendance",
         dropdown: attendanceDropdown
       });
@@ -1055,7 +1055,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
 
     // Leave Approval (for HR/Admin)
     if (hasPermission("leave_approve")) {
-      menu.push({ icon: <i className="ri-calendar-close-fill"></i>, name: "Leaves", path: "/emp-leaves" });
+      menu.push({ icon: <i className="ri-calendar-fill"></i>, name: "Leaves", path: "/emp-leaves" });
     }
     
     // Manager Approve (for Manager/Team Lead) - Different icon
@@ -1065,7 +1065,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
 
     // Holidays
     if (hasPermission("holidays_view") || hasPermission("user_access_manage") || hasPermission("employee_view_all")) {
-      menu.push({ icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/emp-holidays-calendar" });
+      menu.push({ icon: <i className="ri-calendar-fill"></i>, name: "Holidays", path: "/emp-holidays-calendar" });
     }
 
     // Permissions
@@ -1134,7 +1134,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
 
   if (loading) {
     return (
-      <div className="fixed top-0 left-0 h-full bg-[#1E40AF] text-white z-40 w-52 flex items-center justify-center">
+      <div className="fixed top-0 left-0 h-full bg-[#000000] text-gray-200 z-40 w-52 flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-white rounded-full animate-spin border-t-transparent"></div>
       </div>
     );
@@ -1155,7 +1155,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       <div
         onMouseEnter={handleMouseEnterSidebar}
         onMouseLeave={handleMouseLeaveSidebar}
-        className={`fixed top-0 left-0 h-full bg-[#1E40AF] text-white z-40 transition-all duration-300 border-r border-blue-800/50
+        className={`fixed top-0 left-0 h-full bg-[#000000] text-gray-200 z-40 transition-all duration-300 border-r border-[#1f2937]
         ${
           isMobile
             ? isCollapsed
@@ -1167,17 +1167,17 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-blue-900/40 border-blue-700/50">
+        <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-[#0a0a0a] border-[#1f2937]">
           {isCollapsed && !isMobile ? (
             <span className="text-xl text-emerald-300">TM</span>
           ) : (
             <div className="flex flex-col w-full">
-              <span className="text-xs uppercase tracking-[0.2em] font-medium text-blue-100 mb-0.5">
+              <span className="text-xs uppercase tracking-[0.2em] font-medium text-gray-300 mb-0.5">
                 {hasAnyAdminPermission && isAdminView ? 'Admin Portal' : 'Employee Portal'}
               </span>
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                <span className="text-xs font-medium truncate text-blue-100/80">
+                <span className="text-xs font-medium truncate text-gray-300/80">
                   {currentPage}
                 </span>
               </div>
@@ -1194,10 +1194,10 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                   <div
                     className={`group flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
                       isDropdownActive(item.dropdown)
-                        ? "bg-emerald-600/80 text-white shadow-lg"
+                        ? "bg-emerald-600 text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
                         : openDropdown === item.name
-                        ? "bg-blue-700/70"
-                        : "hover:bg-blue-700/60"
+                        ? "bg-[#1f2937]"
+                        : "hover:bg-[#111111]"
                     }`}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1217,7 +1217,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                           ? "text-white"
                           : openDropdown === item.name
                           ? "text-emerald-300"
-                          : "text-blue-100 group-hover:text-emerald-300"
+                          : "text-white group-hover:text-emerald-300"
                       }`}>
                         {item.icon}
                       </span>
@@ -1235,12 +1235,12 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                         )}
                         <FaChevronDown
                           onClick={(e) => toggleDropdown(e, item.name)}
-                          className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600/50 rounded cursor-pointer ${
+                          className={`text-xs transition-transform duration-300 p-0 hover:bg-[#1f2937] rounded cursor-pointer ${
                             isDropdownActive(item.dropdown)
                               ? "text-white"
                               : openDropdown === item.name
                               ? "text-emerald-300"
-                              : "text-blue-300 hover:text-white"
+                              : "text-white"
                           } ${openDropdown === item.name ? "rotate-180" : ""}`}
                           style={{
                             width: '20px',
@@ -1264,7 +1264,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                             className={`block py-1 text-[13px] transition-colors pl-8 ${
                               isActive(sub.path)
                                 ? "text-emerald-300 font-semibold"
-                                : "text-blue-100 hover:text-emerald-300"
+                                : "text-white hover:text-emerald-300"
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -1284,14 +1284,14 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                   onClick={() => handleItemClick(item.path, item.action)}
                   className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
                     isActive(item.path)
-                      ? "bg-emerald-600/80 text-white shadow-lg"
-                      : "hover:bg-blue-700/60"
+                      ? "bg-emerald-600 text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
+                      : "hover:bg-[#111111]"
                   }`}
                 >
                   <span className={`text-lg transition-colors duration-200 ${
                     isActive(item.path)
                       ? "text-white"
-                      : "text-blue-100 group-hover:text-emerald-300"
+                      : "text-white group-hover:text-emerald-300"
                   }`}>
                     {item.icon}
                   </span>
@@ -1312,13 +1312,13 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         </nav>
 
         {/* Footer with View Toggle Button */}
-        <div className="px-4 py-3 text-[10px] text-blue-200/60 border-t border-blue-700/50 bg-blue-900/20">
+        <div className="px-4 py-3 text-[10px] text-gray-500 border-t border-[#1f2937] bg-[#0a0a0a]">
           {!isCollapsed ? (
             <div className="flex flex-col gap-2">
               {hasAnyAdminPermission && (
                 <button 
                   onClick={toggleView} 
-                  className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-blue-200 transition-all rounded-lg bg-blue-800/50 hover:bg-blue-700/70"
+                  className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-gray-300 transition-all rounded-lg bg-[#111111] hover:bg-[#1f2937]"
                 >
                   <span className="flex items-center gap-2">
                     <i className={`${isAdminView ? 'ri-admin-fill' : 'ri-user-fill'}`}></i>
@@ -1329,7 +1329,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
               )}
               <div className="flex flex-col gap-0.5">
                 <div className="flex items-center justify-between">
-                  <p className="font-semibold tracking-wider uppercase text-blue-200/80">
+                  <p className="font-semibold tracking-wider uppercase text-gray-400">
                     {hasAnyAdminPermission && isAdminView ? 'Admin Portal v1.0' : 'Employee Portal v1.0'}
                   </p>
                   <div className={`flex items-center gap-1 px-2 py-0.5 rounded ${hasAnyAdminPermission && isAdminView ? 'bg-purple-600/20' : 'bg-emerald-600/20'}`}>

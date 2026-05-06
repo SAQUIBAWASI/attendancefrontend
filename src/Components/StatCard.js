@@ -30,15 +30,15 @@ const StatCard = ({
   return (
     <div
       onClick={onClick}
-      className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${borderClass} ${
-        onClick ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5' : 'hover:shadow-md'
+      className={`bg-[#0a0a0a] border border-gray-800 rounded-lg p-3 shadow-sm border-t-4 ${borderClass} ${
+        onClick ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5 hover:border-gray-600' : 'hover:shadow-md'
       } transition-all duration-300 flex items-center justify-between`}
     >
       <div className="flex items-center gap-2">
         {Icon && <Icon className="text-gray-400 text-base flex-shrink-0" />}
-        <div className="text-sm font-medium text-gray-700">{displayLabel}</div>
+        <div className="text-sm font-medium text-gray-300">{displayLabel}</div>
       </div>
-      <div className="text-sm font-bold text-gray-800">
+      <div className="text-sm font-bold text-white">
         {prefix}
         {isCurrency ? "₹" : ""}
         {isStringValue ? (

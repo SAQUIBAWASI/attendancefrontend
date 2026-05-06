@@ -99,7 +99,7 @@ export default function NoticeList() {
   const totalPages = Math.ceil(filteredNotices.length / noticesPerPage);
 
   return (
-    <div className="p-4 border rounded-lg shadow-lg bg-white">
+    <div className="p-4 border rounded-lg shadow-lg bg-[#0a0a0a]">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-blue-900">Notice List</h2>
         <button
@@ -117,13 +117,13 @@ export default function NoticeList() {
           onChange={(e) => setSearch(e.target.value)}
         />
         <div className="flex gap-2">
-          <button className="bg-gray-200 px-4 py-2 rounded" onClick={() => exportData("csv")}>CSV</button>
-          <button className="bg-gray-200 px-4 py-2 rounded" onClick={() => exportData("xlsx")}>Excel</button>
+          <button className="bg-[#1f2937] px-4 py-2 rounded" onClick={() => exportData("csv")}>CSV</button>
+          <button className="bg-[#1f2937] px-4 py-2 rounded" onClick={() => exportData("xlsx")}>Excel</button>
         </div>
       </div>
       {/* Table Wrapper with overflow */}
       <div className="overflow-x-auto mb-4">
-        <table className="w-full border-collapse border border-gray-300">
+        <table className="w-full border-collapse border border-[#374151]">
           <thead>
             <tr className="bg-purple-600">
               <th className="p-2 border text-white">Sl</th>
@@ -182,7 +182,7 @@ export default function NoticeList() {
           <button
             key={index}
             onClick={() => paginate(index + 1)}
-            className={`px-4 py-2 rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            className={`px-4 py-2 rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-[#1f2937]'}`}
           >
             {index + 1}
           </button>
@@ -199,7 +199,7 @@ export default function NoticeList() {
       {/* Add New Notice Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md sm:max-w-lg md:max-w-xl">
+          <div className="bg-[#0a0a0a] p-6 rounded-lg shadow-lg w-full max-w-md sm:max-w-lg md:max-w-xl">
             <h2 className="text-lg font-semibold mb-4">Add New Notice</h2>
 
             <input
@@ -252,7 +252,7 @@ export default function NoticeList() {
       {/* Edit Notice Modal */}
       {editModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md sm:max-w-lg md:max-w-xl">
+          <div className="bg-[#0a0a0a] p-6 rounded-lg shadow-lg w-full max-w-md sm:max-w-lg md:max-w-xl">
             <h2 className="text-lg font-semibold mb-4">Edit Notice</h2>
 
             <input
@@ -305,7 +305,7 @@ export default function NoticeList() {
       {/* Delete Confirmation Modal */}
       {deleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md sm:max-w-lg md:max-w-xl">
+          <div className="bg-[#0a0a0a] p-6 rounded-lg shadow-lg w-full max-w-md sm:max-w-lg md:max-w-xl">
             <h2 className="text-lg font-semibold mb-4">Are you sure you want to delete this notice?</h2>
             <div className="flex justify-end gap-2 mt-4">
               <button
@@ -328,7 +328,7 @@ export default function NoticeList() {
       {/* Success Modal */}
       {successModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
+          <div className="bg-[#0a0a0a] p-6 rounded-lg shadow-lg w-1/3">
             <h2 className="text-lg font-semibold mb-4">Notice has been successfully updated!</h2>
             <div className="flex justify-end gap-2 mt-4">
               <button

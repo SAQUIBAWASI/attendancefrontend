@@ -100,7 +100,7 @@ const DoctorAppointmentList = () => {
   };
 
   return (
-    <div className="p-4 bg-white rounded shadow">
+    <div className="p-4 bg-[#0a0a0a] rounded shadow">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Doctor Appointments</h2>
       </div>
@@ -123,7 +123,7 @@ const DoctorAppointmentList = () => {
 
       <div className="overflow-x-auto">
         <table className="w-full border rounded text-sm">
-          <thead className="bg-gray-200">
+          <thead className="bg-[#1f2937]">
             <tr>
               <th className="p-2 border">Doctor</th>
               <th className="p-2 border">Specialization</th>
@@ -138,7 +138,7 @@ const DoctorAppointmentList = () => {
           </thead>
           <tbody>
             {currentAppointments.map((appt) => (
-              <tr key={appt.appointmentId} className="hover:bg-gray-50 border-b">
+              <tr key={appt.appointmentId} className="hover:bg-[#000000] border-b">
                 <td className="p-2 border flex items-center gap-2">
                   <img
                     src={appt.doctor_image}
@@ -183,7 +183,7 @@ const DoctorAppointmentList = () => {
       <div className="flex justify-between mt-4">
         <button
           onClick={() => setCurrentPage(currentPage - 1)}
-          className="px-4 py-2 bg-gray-300 text-gray-700 rounded"
+          className="px-4 py-2 bg-gray-300 text-gray-300 rounded"
           disabled={currentPage === 1}
         >
           Previous
@@ -193,7 +193,7 @@ const DoctorAppointmentList = () => {
         </div>
         <button
           onClick={() => setCurrentPage(currentPage + 1)}
-          className="px-4 py-2 bg-gray-300 text-gray-700 rounded"
+          className="px-4 py-2 bg-gray-300 text-gray-300 rounded"
           disabled={currentPage === totalPages}
         >
           Next
@@ -203,7 +203,7 @@ const DoctorAppointmentList = () => {
       {/* Status Update Modal */}
       {editAppointment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded shadow-md w-96">
+          <div className="bg-[#0a0a0a] p-6 rounded shadow-md w-96">
             <h3 className="text-lg font-semibold mb-4">Update Status</h3>
             <select
               className="w-full p-2 border rounded mb-4"

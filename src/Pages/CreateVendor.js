@@ -94,7 +94,7 @@ const CreateVendor = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white shadow-md rounded p-6">
+    <div className="max-w-4xl mx-auto bg-[#0a0a0a] shadow-md rounded p-6">
       <h2 className="text-2xl font-semibold mb-6 text-blue-900">Create New Vendor</h2>
 
       {errorMessage && <p className="text-red-600 mb-4">{errorMessage}</p>}
@@ -132,7 +132,7 @@ const CreateVendor = () => {
         {/* Logo Upload */}
         {/* Logo Upload */}
         <div>
-          <label className="block mb-2 font-medium text-gray-700">Business Logo (Image)</label>
+          <label className="block mb-2 font-medium text-gray-300">Business Logo (Image)</label>
 
           <div className="flex items-center gap-3">
             <label
@@ -144,7 +144,7 @@ const CreateVendor = () => {
             </label>
 
             {formData.businessLogo && (
-              <span className="text-sm text-gray-700 truncate max-w-xs">
+              <span className="text-sm text-gray-300 truncate max-w-xs">
                 {formData.businessLogo.name}
               </span>
             )}

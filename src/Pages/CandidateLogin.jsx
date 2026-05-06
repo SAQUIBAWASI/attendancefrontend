@@ -49,16 +49,16 @@ const CandidateLogin = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
-            <div className="w-full max-w-5xl bg-white rounded-[2.5rem] shadow-2xl shadow-indigo-100/50 overflow-hidden flex flex-col md:flex-row border border-slate-100 animate-in fade-in zoom-in duration-500">
+        <div className="min-h-screen bg-[#000000] flex items-center justify-center p-6 font-sans">
+            <div className="w-full max-w-5xl bg-[#0a0a0a] rounded-[2.5rem] shadow-2xl shadow-indigo-100/50 overflow-hidden flex flex-col md:flex-row border border-[#1f2937] animate-in fade-in zoom-in duration-500">
 
                 {/* Visual Side */}
                 <div className="md:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 p-12 text-white flex flex-col justify-between relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15)_0%,transparent_60%)]"></div>
-                    <div className="absolute bottom-[-10%] right-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-[-10%] right-[-10%] w-64 h-64 bg-[#0a0a0a]/10 rounded-full blur-3xl"></div>
 
                     <div className="relative z-10">
-                        <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mb-10 backdrop-blur-md border border-white/30 shadow-xl">
+                        <div className="w-14 h-14 bg-[#0a0a0a]/20 rounded-2xl flex items-center justify-center mb-10 backdrop-blur-md border border-white/30 shadow-xl">
                             <FiUser className="text-2xl" />
                         </div>
                         <h2 className="text-4xl font-black leading-tight mb-4">
@@ -88,9 +88,9 @@ const CandidateLogin = () => {
                 </div>
 
                 {/* Form Side */}
-                <div className="md:w-1/2 p-12 md:p-20 flex flex-col justify-center bg-white">
+                <div className="md:w-1/2 p-12 md:p-20 flex flex-col justify-center bg-[#0a0a0a]">
                     <div className="mb-12">
-                        <h1 className="text-2xl font-black text-slate-800 mb-1">Candidate Login</h1>
+                        <h1 className="text-2xl font-black text-slate-300 mb-1">Candidate Login</h1>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                             Enter your credentials to continue
                         </p>
@@ -119,7 +119,7 @@ const CandidateLogin = () => {
                                     value={formData.email}
                                     onChange={handleChange}
                                     required
-                                    className="w-full pl-11 pr-4 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-700 placeholder:text-slate-300 shadow-sm shadow-slate-100/50"
+                                    className="w-full pl-11 pr-4 py-4 bg-[#0a0a0a] border border-[#1f2937] rounded-xl focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-300 placeholder:text-slate-300 shadow-sm shadow-slate-100/50"
                                     placeholder="alex@example.com"
                                 />
                             </div>

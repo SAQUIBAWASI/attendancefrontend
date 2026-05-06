@@ -76,7 +76,7 @@ const CompanySidebar = ({ isCollapsed, isMobile }) => {
   return (
     <div
       className={`text-white transition-all duration-300 ${isMobile ? (isCollapsed ? "w-0" : "w-64") : isCollapsed ? "w-16" : "w-64"
-        } overflow-y-scroll no-scrollbar h-full flex flex-col bg-white`}
+        } overflow-y-scroll no-scrollbar h-full flex flex-col bg-[#0a0a0a]`}
     >
       <div className="sticky top-0 p-4 font-bold bg-purple-600 flex justify-center text-xl text-white">
         {/* Display the company name */}

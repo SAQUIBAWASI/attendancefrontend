@@ -211,7 +211,7 @@ const LoginPage = () => {
   // If showing products page
   if (showProducts && clientData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <div className="min-h-screen bg-gradient-to-br from-[#000000] via-purple-50 to-pink-50">
         {/* Animated background */}
         <div className="fixed inset-0 overflow-hidden">
           <div className="absolute bg-purple-300 rounded-full top-20 left-10 w-72 h-72 mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
@@ -227,15 +227,15 @@ const LoginPage = () => {
             transition={{ duration: 0.5 }}
             className="mb-8 text-center"
           >
-            <div className="inline-flex items-center px-4 py-2 mb-4 rounded-full shadow-sm bg-white/80 backdrop-blur-sm">
+            <div className="inline-flex items-center px-4 py-2 mb-4 rounded-full shadow-sm bg-[#0a0a0a]/80 backdrop-blur-sm">
               <Sparkles className="w-4 h-4 mr-2 text-yellow-500" />
-              <span className="text-sm text-gray-600">Welcome back, {clientData.name}!</span>
+              <span className="text-sm text-gray-400">Welcome back, {clientData.name}!</span>
             </div>
             
-            <h1 className="mb-2 text-3xl font-bold text-gray-800 md:text-4xl">
+            <h1 className="mb-2 text-3xl font-bold text-gray-300 md:text-4xl">
               Your <span className="text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">Purchased Products</span>
             </h1>
-            <p className="text-gray-600">Select a product to access your dashboard</p>
+            <p className="text-gray-400">Select a product to access your dashboard</p>
           </motion.div>
 
           {/* Client Info Card */}
@@ -243,24 +243,24 @@ const LoginPage = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="p-6 mb-8 border border-gray-100 shadow-lg bg-white/80 backdrop-blur-sm rounded-xl"
+            className="p-6 mb-8 border border-[#1f2937] shadow-lg bg-[#0a0a0a]/80 backdrop-blur-sm rounded-xl"
           >
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <div className="text-center">
                 <p className="text-xs text-gray-500">Client ID</p>
-                <p className="text-sm font-medium text-gray-800">{clientData.clientId}</p>
+                <p className="text-sm font-medium text-gray-300">{clientData.clientId}</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-gray-500">Email</p>
-                <p className="text-sm font-medium text-gray-800">{clientData.email}</p>
+                <p className="text-sm font-medium text-gray-300">{clientData.email}</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-gray-500">Company</p>
-                <p className="text-sm font-medium text-gray-800">{clientData.companyName}</p>
+                <p className="text-sm font-medium text-gray-300">{clientData.companyName}</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-gray-500">Location</p>
-                <p className="text-sm font-medium text-gray-800">{clientData.location}</p>
+                <p className="text-sm font-medium text-gray-300">{clientData.location}</p>
               </div>
             </div>
           </motion.div>
@@ -277,7 +277,7 @@ const LoginPage = () => {
               const productKey = product.toLowerCase();
               const productInfo = productIcons[productKey] || {
                 icon: <Rocket size={24} />,
-                color: "bg-gray-100 text-gray-600",
+                color: "bg-[#111111] text-gray-400",
                 name: product.charAt(0).toUpperCase() + product.slice(1),
                 section: productKey
               };
@@ -291,7 +291,7 @@ const LoginPage = () => {
                   whileHover={{ scale: 1.05, y: -5 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleProductClick(product)}
-                  className="relative p-4 overflow-hidden text-center transition-all duration-300 bg-white shadow-sm cursor-pointer rounded-xl hover:shadow-xl group"
+                  className="relative p-4 overflow-hidden text-center transition-all duration-300 bg-[#0a0a0a] shadow-sm cursor-pointer rounded-xl hover:shadow-xl group"
                 >
                   {/* Gradient overlay on hover */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${productInfo.color.replace('100', '500')} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
@@ -300,7 +300,7 @@ const LoginPage = () => {
                     {productInfo.icon}
                   </div>
                   
-                  <p className="text-sm font-medium text-gray-700 group-hover:text-[#714b67] transition">
+                  <p className="text-sm font-medium text-gray-300 group-hover:text-[#714b67] transition">
                     {productInfo.name}
                   </p>
                   
@@ -326,7 +326,7 @@ const LoginPage = () => {
           >
             <button
               onClick={handleBackToLogin}
-              className="flex items-center justify-center mx-auto text-sm text-gray-500 transition hover:text-gray-700"
+              className="flex items-center justify-center mx-auto text-sm text-gray-500 transition hover:text-gray-300"
             >
               <ArrowRight className="w-4 h-4 mr-1 rotate-180" />
               Back to Login
@@ -384,7 +384,7 @@ const LoginPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative z-10 grid w-full max-w-4xl grid-cols-1 overflow-hidden shadow-2xl bg-white/90 backdrop-blur-md rounded-2xl md:grid-cols-2"
+        className="relative z-10 grid w-full max-w-4xl grid-cols-1 overflow-hidden shadow-2xl bg-[#0a0a0a]/90 backdrop-blur-md rounded-2xl md:grid-cols-2"
       >
         {/* Left Side - Login Form */}
         <div className="flex flex-col justify-center p-6 md:p-8">
@@ -396,7 +396,7 @@ const LoginPage = () => {
           >
             <div className="inline-flex items-center px-3 py-1 mb-2 rounded-full bg-gradient-to-r from-blue-100 to-purple-100">
               <Lock className="w-3 h-3 mr-1 text-blue-600" />
-              <span className="text-xs text-gray-600">Secure Access</span>
+              <span className="text-xs text-gray-400">Secure Access</span>
             </div>
             <h1 className="text-3xl font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
               Welcome Back
@@ -411,14 +411,14 @@ const LoginPage = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex justify-center mb-4"
           >
-            <div className="inline-flex p-1 bg-gray-100 rounded-lg">
+            <div className="inline-flex p-1 bg-[#111111] rounded-lg">
               <button
                 type="button"
                 onClick={() => setLoginType('email')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
                   loginType === 'email' 
-                    ? 'bg-white shadow text-blue-600 scale-105' 
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-[#0a0a0a] shadow text-blue-600 scale-105' 
+                    : 'text-gray-400 hover:text-gray-200'
                 }`}
               >
                 Email Login
@@ -428,8 +428,8 @@ const LoginPage = () => {
                 onClick={() => setLoginType('clientId')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
                   loginType === 'clientId' 
-                    ? 'bg-white shadow text-purple-600 scale-105' 
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-[#0a0a0a] shadow text-purple-600 scale-105' 
+                    : 'text-gray-400 hover:text-gray-200'
                 }`}
               >
                 Client ID
@@ -460,7 +460,7 @@ const LoginPage = () => {
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <label className="block mb-1 text-xs font-medium text-gray-700" htmlFor="email">
+                  <label className="block mb-1 text-xs font-medium text-gray-300" htmlFor="email">
                     Email Address
                   </label>
                   <input
@@ -469,7 +469,7 @@ const LoginPage = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@domain.com"
-                    className="w-full px-3 py-2 text-sm transition-all border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm transition-all border border-[#374151] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 </motion.div>
@@ -481,7 +481,7 @@ const LoginPage = () => {
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <label className="block mb-1 text-xs font-medium text-gray-700" htmlFor="clientId">
+                  <label className="block mb-1 text-xs font-medium text-gray-300" htmlFor="clientId">
                     Client ID
                   </label>
                   <input
@@ -490,7 +490,7 @@ const LoginPage = () => {
                     value={clientId}
                     onChange={(e) => setClientId(e.target.value)}
                     placeholder="CLIENT-XXXXXX"
-                    className="w-full px-3 py-2 text-sm transition-all border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm transition-all border border-[#374151] rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     required
                   />
                 </motion.div>
@@ -502,7 +502,7 @@ const LoginPage = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
-              <label className="block mb-1 text-xs font-medium text-gray-700">
+              <label className="block mb-1 text-xs font-medium text-gray-300">
                 Password
               </label>
               <div className="relative">
@@ -511,7 +511,7 @@ const LoginPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-3 py-2 pr-10 text-sm transition-all border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 pr-10 text-sm transition-all border border-[#374151] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
                 <button
@@ -592,7 +592,7 @@ const LoginPage = () => {
             <div className="space-y-2">
               <motion.div 
                 whileHover={{ scale: 1.02, x: 5 }}
-                className="flex items-center p-2 space-x-2 rounded-lg bg-white/20 backdrop-blur-sm"
+                className="flex items-center p-2 space-x-2 rounded-lg bg-[#0a0a0a]/20 backdrop-blur-sm"
               >
                 <Mail size={14} />
                 <p className="text-xs">Admin/Employee: Use email</p>
@@ -600,7 +600,7 @@ const LoginPage = () => {
               
               <motion.div 
                 whileHover={{ scale: 1.02, x: 5 }}
-                className="flex items-center p-2 space-x-2 rounded-lg bg-white/20 backdrop-blur-sm"
+                className="flex items-center p-2 space-x-2 rounded-lg bg-[#0a0a0a]/20 backdrop-blur-sm"
               >
                 <Key size={14} />
                 <p className="text-xs">Client: Email or Client ID</p>
@@ -608,7 +608,7 @@ const LoginPage = () => {
               
               <motion.div 
                 whileHover={{ scale: 1.02, x: 5 }}
-                className="flex items-center p-2 space-x-2 rounded-lg bg-white/20 backdrop-blur-sm"
+                className="flex items-center p-2 space-x-2 rounded-lg bg-[#0a0a0a]/20 backdrop-blur-sm"
               >
                 <Shield size={14} />
                 <p className="text-xs">Select product after login</p>
@@ -781,7 +781,7 @@ export default LoginPage;
 
 //   if (loading) {
 //     return (
-//       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+//       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#000000] via-purple-50 to-pink-50">
 //         <div className="w-16 h-16 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
 //       </div>
 //     );
@@ -798,7 +798,7 @@ export default LoginPage;
 //     : ['attendance', 'coworking'];
 
 //   return (
-//     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+//     <div className="min-h-screen bg-gradient-to-br from-[#000000] via-purple-50 to-pink-50">
 //       {/* Animated background */}
 //       <div className="fixed inset-0 overflow-hidden">
 //         <div className="absolute bg-purple-300 rounded-full w-96 h-96 top-20 left-10 mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
@@ -813,17 +813,17 @@ export default LoginPage;
 //           animate={{ opacity: 1, y: 0 }}
 //           className="mb-6 text-center sm:mb-8"
 //         >
-//           <div className="inline-flex items-center px-3 py-1 mb-3 rounded-full shadow-sm bg-white/80 backdrop-blur-sm sm:px-4 sm:py-2">
+//           <div className="inline-flex items-center px-3 py-1 mb-3 rounded-full shadow-sm bg-[#0a0a0a]/80 backdrop-blur-sm sm:px-4 sm:py-2">
 //             <Sparkles className="w-3 h-3 mr-1 text-yellow-500 sm:w-4 sm:h-4 sm:mr-2" />
-//             <span className="text-xs text-gray-600 sm:text-sm">
+//             <span className="text-xs text-gray-400 sm:text-sm">
 //               Welcome back, {clientData?.name || 'test'}!
 //             </span>
 //           </div>
           
-//           <h1 className="mb-1 text-2xl font-bold text-gray-800 sm:text-3xl md:text-4xl">
+//           <h1 className="mb-1 text-2xl font-bold text-gray-300 sm:text-3xl md:text-4xl">
 //             Your <span className="text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">Purchased Products</span>
 //           </h1>
-//           <p className="text-xs text-gray-600 sm:text-sm">Select a product to access your dashboard</p>
+//           <p className="text-xs text-gray-400 sm:text-sm">Select a product to access your dashboard</p>
 //         </motion.div>
 
 //         {/* Client Info Card - Exactly as in the image */}
@@ -831,30 +831,30 @@ export default LoginPage;
 //           initial={{ opacity: 0, scale: 0.95 }}
 //           animate={{ opacity: 1, scale: 1 }}
 //           transition={{ delay: 0.1 }}
-//           className="p-4 mb-6 border border-gray-100 shadow-lg bg-white/80 backdrop-blur-sm rounded-xl sm:p-6 sm:mb-8"
+//           className="p-4 mb-6 border border-[#1f2937] shadow-lg bg-[#0a0a0a]/80 backdrop-blur-sm rounded-xl sm:p-6 sm:mb-8"
 //         >
 //           <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
 //             <div className="text-center">
 //               <p className="text-[10px] text-gray-500 sm:text-xs">Client ID</p>
-//               <p className="text-xs font-medium text-gray-800 sm:text-sm">
+//               <p className="text-xs font-medium text-gray-300 sm:text-sm">
 //                 {clientData?.clientId || 'CLIENT-E25998'}
 //               </p>
 //             </div>
 //             <div className="text-center">
 //               <p className="text-[10px] text-gray-500 sm:text-xs">Email</p>
-//               <p className="text-xs font-medium text-gray-800 sm:text-sm">
+//               <p className="text-xs font-medium text-gray-300 sm:text-sm">
 //                 {clientData?.email || 'test@gmail.com'}
 //               </p>
 //             </div>
 //             <div className="text-center">
 //               <p className="text-[10px] text-gray-500 sm:text-xs">Company</p>
-//               <p className="text-xs font-medium text-gray-800 sm:text-sm">
+//               <p className="text-xs font-medium text-gray-300 sm:text-sm">
 //                 {clientData?.companyName || 'Serum Labs'}
 //               </p>
 //             </div>
 //             <div className="text-center">
 //               <p className="text-[10px] text-gray-500 sm:text-xs">Location</p>
-//               <p className="text-xs font-medium text-gray-800 sm:text-sm">
+//               <p className="text-xs font-medium text-gray-300 sm:text-sm">
 //                 {clientData?.location || 'Hyderabad'}
 //               </p>
 //             </div>
@@ -873,7 +873,7 @@ export default LoginPage;
 //             const productKey = typeof product === 'string' ? product.toLowerCase() : '';
 //             const productInfo = productIcons[productKey] || {
 //               icon: <Rocket size={24} />,
-//               color: "bg-gray-100 text-gray-600",
+//               color: "bg-[#111111] text-gray-400",
 //               name: typeof product === 'string' 
 //                 ? product.charAt(0).toUpperCase() + product.slice(1) 
 //                 : 'Product'
@@ -888,13 +888,13 @@ export default LoginPage;
 //                 whileHover={{ scale: 1.03, y: -3 }}
 //                 whileTap={{ scale: 0.98 }}
 //                 onClick={() => handleProductClick(productKey)}
-//                 className="relative p-3 overflow-hidden text-center transition-all duration-300 bg-white shadow-sm cursor-pointer rounded-xl hover:shadow-xl group sm:p-4"
+//                 className="relative p-3 overflow-hidden text-center transition-all duration-300 bg-[#0a0a0a] shadow-sm cursor-pointer rounded-xl hover:shadow-xl group sm:p-4"
 //               >
 //                 <div className={`w-12 h-12 mx-auto mb-2 flex items-center justify-center rounded-xl ${productInfo.color} group-hover:scale-110 transition-transform duration-300 sm:w-14 sm:h-14 sm:mb-3`}>
 //                   {productInfo.icon}
 //                 </div>
                 
-//                 <p className="text-xs font-medium text-gray-700 group-hover:text-[#714b67] transition sm:text-sm">
+//                 <p className="text-xs font-medium text-gray-300 group-hover:text-[#714b67] transition sm:text-sm">
 //                   {productInfo.name}
 //                 </p>
                 
@@ -920,7 +920,7 @@ export default LoginPage;
 //         >
 //           <button
 //             onClick={handleBackToLogin}
-//             className="inline-flex items-center px-3 py-1.5 text-xs text-gray-500 transition hover:text-gray-700 sm:text-sm"
+//             className="inline-flex items-center px-3 py-1.5 text-xs text-gray-500 transition hover:text-gray-300 sm:text-sm"
 //           >
 //             <ArrowRight className="w-3 h-3 mr-1 rotate-180 sm:w-4 sm:h-4" />
 //             ← Back to Login
@@ -1200,7 +1200,7 @@ export default LoginPage;
 //     const products = clientData.accessibleProducts || [];
     
 //     return (
-//       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+//       <div className="min-h-screen bg-gradient-to-br from-[#000000] via-purple-50 to-pink-50">
 //         {/* Animated background */}
 //         <div className="fixed inset-0 overflow-hidden">
 //           <div className="absolute bg-purple-300 rounded-full top-20 left-10 w-72 h-72 mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
@@ -1216,15 +1216,15 @@ export default LoginPage;
 //             transition={{ duration: 0.5 }}
 //             className="mb-8 text-center"
 //           >
-//             <div className="inline-flex items-center px-4 py-2 mb-4 rounded-full shadow-sm bg-white/80 backdrop-blur-sm">
+//             <div className="inline-flex items-center px-4 py-2 mb-4 rounded-full shadow-sm bg-[#0a0a0a]/80 backdrop-blur-sm">
 //               <Sparkles className="w-4 h-4 mr-2 text-yellow-500" />
-//               <span className="text-sm text-gray-600">Welcome back, {clientData.name}!</span>
+//               <span className="text-sm text-gray-400">Welcome back, {clientData.name}!</span>
 //             </div>
             
-//             <h1 className="mb-2 text-3xl font-bold text-gray-800 md:text-4xl">
+//             <h1 className="mb-2 text-3xl font-bold text-gray-300 md:text-4xl">
 //               Your <span className="text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">Purchased Products</span>
 //             </h1>
-//             <p className="text-gray-600">Select a product to access your dashboard</p>
+//             <p className="text-gray-400">Select a product to access your dashboard</p>
 //           </motion.div>
 
 //           {/* Client Info Card */}
@@ -1232,24 +1232,24 @@ export default LoginPage;
 //             initial={{ opacity: 0, scale: 0.95 }}
 //             animate={{ opacity: 1, scale: 1 }}
 //             transition={{ duration: 0.5, delay: 0.2 }}
-//             className="p-6 mb-8 border border-gray-100 shadow-lg bg-white/80 backdrop-blur-sm rounded-xl"
+//             className="p-6 mb-8 border border-[#1f2937] shadow-lg bg-[#0a0a0a]/80 backdrop-blur-sm rounded-xl"
 //           >
 //             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
 //               <div className="text-center">
 //                 <p className="text-xs text-gray-500">Client ID</p>
-//                 <p className="text-sm font-medium text-gray-800">{clientData.clientId}</p>
+//                 <p className="text-sm font-medium text-gray-300">{clientData.clientId}</p>
 //               </div>
 //               <div className="text-center">
 //                 <p className="text-xs text-gray-500">Email</p>
-//                 <p className="text-sm font-medium text-gray-800">{clientData.email}</p>
+//                 <p className="text-sm font-medium text-gray-300">{clientData.email}</p>
 //               </div>
 //               <div className="text-center">
 //                 <p className="text-xs text-gray-500">Company</p>
-//                 <p className="text-sm font-medium text-gray-800">{clientData.companyName}</p>
+//                 <p className="text-sm font-medium text-gray-300">{clientData.companyName}</p>
 //               </div>
 //               <div className="text-center">
 //                 <p className="text-xs text-gray-500">Location</p>
-//                 <p className="text-sm font-medium text-gray-800">{clientData.location}</p>
+//                 <p className="text-sm font-medium text-gray-300">{clientData.location}</p>
 //               </div>
 //             </div>
 //           </motion.div>
@@ -1268,7 +1268,7 @@ export default LoginPage;
 //                 const productKey = productName.toLowerCase();
 //                 const productInfo = productIcons[productKey] || {
 //                   icon: <Rocket size={24} />,
-//                   color: "bg-gray-100 text-gray-600",
+//                   color: "bg-[#111111] text-gray-400",
 //                   name: productName ? productName.charAt(0).toUpperCase() + productName.slice(1) : 'Product',
 //                   section: productKey
 //                 };
@@ -1282,7 +1282,7 @@ export default LoginPage;
 //                     whileHover={{ scale: 1.05, y: -5 }}
 //                     whileTap={{ scale: 0.95 }}
 //                     onClick={() => handleProductClick(productName)}
-//                     className="relative p-4 overflow-hidden text-center transition-all duration-300 bg-white shadow-sm cursor-pointer rounded-xl hover:shadow-xl group"
+//                     className="relative p-4 overflow-hidden text-center transition-all duration-300 bg-[#0a0a0a] shadow-sm cursor-pointer rounded-xl hover:shadow-xl group"
 //                   >
 //                     {/* Gradient overlay on hover */}
 //                     <div className={`absolute inset-0 bg-gradient-to-br ${productInfo.color.replace('100', '500')} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
@@ -1291,7 +1291,7 @@ export default LoginPage;
 //                       {productInfo.icon}
 //                     </div>
                     
-//                     <p className="text-sm font-medium text-gray-700 group-hover:text-[#714b67] transition">
+//                     <p className="text-sm font-medium text-gray-300 group-hover:text-[#714b67] transition">
 //                       {productInfo.name}
 //                     </p>
                     
@@ -1311,7 +1311,7 @@ export default LoginPage;
 //             <motion.div 
 //               initial={{ opacity: 0 }}
 //               animate={{ opacity: 1 }}
-//               className="p-8 text-center bg-white/80 backdrop-blur-sm rounded-xl"
+//               className="p-8 text-center bg-[#0a0a0a]/80 backdrop-blur-sm rounded-xl"
 //             >
 //               <p className="text-gray-500">No products available for this client.</p>
 //             </motion.div>
@@ -1326,7 +1326,7 @@ export default LoginPage;
 //           >
 //             <button
 //               onClick={handleLogout}
-//               className="flex items-center justify-center mx-auto text-sm text-gray-500 transition hover:text-gray-700"
+//               className="flex items-center justify-center mx-auto text-sm text-gray-500 transition hover:text-gray-300"
 //             >
 //               <ArrowRight className="w-4 h-4 mr-1 rotate-180" />
 //               Logout
@@ -1384,7 +1384,7 @@ export default LoginPage;
 //         initial={{ opacity: 0, y: 20 }}
 //         animate={{ opacity: 1, y: 0 }}
 //         transition={{ duration: 0.5 }}
-//         className="relative z-10 grid w-full max-w-4xl grid-cols-1 overflow-hidden shadow-2xl bg-white/90 backdrop-blur-md rounded-2xl md:grid-cols-2"
+//         className="relative z-10 grid w-full max-w-4xl grid-cols-1 overflow-hidden shadow-2xl bg-[#0a0a0a]/90 backdrop-blur-md rounded-2xl md:grid-cols-2"
 //       >
 //         {/* Left Side - Login Form */}
 //         <div className="flex flex-col justify-center p-6 md:p-8">
@@ -1396,7 +1396,7 @@ export default LoginPage;
 //           >
 //             <div className="inline-flex items-center px-3 py-1 mb-2 rounded-full bg-gradient-to-r from-blue-100 to-purple-100">
 //               <Lock className="w-3 h-3 mr-1 text-blue-600" />
-//               <span className="text-xs text-gray-600">Secure Access</span>
+//               <span className="text-xs text-gray-400">Secure Access</span>
 //             </div>
 //             <h1 className="text-3xl font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
 //               Welcome Back
@@ -1411,14 +1411,14 @@ export default LoginPage;
 //             transition={{ duration: 0.5, delay: 0.3 }}
 //             className="flex justify-center mb-4"
 //           >
-//             <div className="inline-flex p-1 bg-gray-100 rounded-lg">
+//             <div className="inline-flex p-1 bg-[#111111] rounded-lg">
 //               <button
 //                 type="button"
 //                 onClick={() => setLoginType('email')}
 //                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
 //                   loginType === 'email' 
-//                     ? 'bg-white shadow text-blue-600 scale-105' 
-//                     : 'text-gray-600 hover:text-gray-900'
+//                     ? 'bg-[#0a0a0a] shadow text-blue-600 scale-105' 
+//                     : 'text-gray-400 hover:text-gray-200'
 //                 }`}
 //               >
 //                 Email Login
@@ -1428,8 +1428,8 @@ export default LoginPage;
 //                 onClick={() => setLoginType('clientId')}
 //                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-300 ${
 //                   loginType === 'clientId' 
-//                     ? 'bg-white shadow text-purple-600 scale-105' 
-//                     : 'text-gray-600 hover:text-gray-900'
+//                     ? 'bg-[#0a0a0a] shadow text-purple-600 scale-105' 
+//                     : 'text-gray-400 hover:text-gray-200'
 //                 }`}
 //               >
 //                 Client ID
@@ -1460,7 +1460,7 @@ export default LoginPage;
 //                   exit={{ opacity: 0, x: 20 }}
 //                   transition={{ duration: 0.3 }}
 //                 >
-//                   <label className="block mb-1 text-xs font-medium text-gray-700" htmlFor="email">
+//                   <label className="block mb-1 text-xs font-medium text-gray-300" htmlFor="email">
 //                     Email Address
 //                   </label>
 //                   <input
@@ -1469,7 +1469,7 @@ export default LoginPage;
 //                     value={email}
 //                     onChange={(e) => setEmail(e.target.value)}
 //                     placeholder="you@domain.com"
-//                     className="w-full px-3 py-2 text-sm transition-all border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//                     className="w-full px-3 py-2 text-sm transition-all border border-[#374151] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 //                     required
 //                   />
 //                 </motion.div>
@@ -1481,7 +1481,7 @@ export default LoginPage;
 //                   exit={{ opacity: 0, x: 20 }}
 //                   transition={{ duration: 0.3 }}
 //                 >
-//                   <label className="block mb-1 text-xs font-medium text-gray-700" htmlFor="clientId">
+//                   <label className="block mb-1 text-xs font-medium text-gray-300" htmlFor="clientId">
 //                     Client ID
 //                   </label>
 //                   <input
@@ -1490,7 +1490,7 @@ export default LoginPage;
 //                     value={clientId}
 //                     onChange={(e) => setClientId(e.target.value)}
 //                     placeholder="CLIENT-XXXXXX"
-//                     className="w-full px-3 py-2 text-sm transition-all border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+//                     className="w-full px-3 py-2 text-sm transition-all border border-[#374151] rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
 //                     required
 //                   />
 //                 </motion.div>
@@ -1502,7 +1502,7 @@ export default LoginPage;
 //               animate={{ opacity: 1 }}
 //               transition={{ duration: 0.5, delay: 0.4 }}
 //             >
-//               <label className="block mb-1 text-xs font-medium text-gray-700">
+//               <label className="block mb-1 text-xs font-medium text-gray-300">
 //                 Password
 //               </label>
 //               <div className="relative">
@@ -1511,7 +1511,7 @@ export default LoginPage;
 //                   value={password}
 //                   onChange={(e) => setPassword(e.target.value)}
 //                   placeholder="••••••••"
-//                   className="w-full px-3 py-2 pr-10 text-sm transition-all border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//                   className="w-full px-3 py-2 pr-10 text-sm transition-all border border-[#374151] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 //                   required
 //                 />
 //                 <button
@@ -1592,7 +1592,7 @@ export default LoginPage;
 //             <div className="space-y-2">
 //               <motion.div 
 //                 whileHover={{ scale: 1.02, x: 5 }}
-//                 className="flex items-center p-2 space-x-2 rounded-lg bg-white/20 backdrop-blur-sm"
+//                 className="flex items-center p-2 space-x-2 rounded-lg bg-[#0a0a0a]/20 backdrop-blur-sm"
 //               >
 //                 <Mail size={14} />
 //                 <p className="text-xs">Admin/Employee: Use email</p>
@@ -1600,7 +1600,7 @@ export default LoginPage;
               
 //               <motion.div 
 //                 whileHover={{ scale: 1.02, x: 5 }}
-//                 className="flex items-center p-2 space-x-2 rounded-lg bg-white/20 backdrop-blur-sm"
+//                 className="flex items-center p-2 space-x-2 rounded-lg bg-[#0a0a0a]/20 backdrop-blur-sm"
 //               >
 //                 <Key size={14} />
 //                 <p className="text-xs">Client: Email or Client ID</p>
@@ -1608,7 +1608,7 @@ export default LoginPage;
               
 //               <motion.div 
 //                 whileHover={{ scale: 1.02, x: 5 }}
-//                 className="flex items-center p-2 space-x-2 rounded-lg bg-white/20 backdrop-blur-sm"
+//                 className="flex items-center p-2 space-x-2 rounded-lg bg-[#0a0a0a]/20 backdrop-blur-sm"
 //               >
 //                 <Shield size={14} />
 //                 <p className="text-xs">Select product after login</p>

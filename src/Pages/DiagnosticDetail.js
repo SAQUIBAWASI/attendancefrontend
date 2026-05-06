@@ -95,13 +95,13 @@ const DiagnosticDetail = () => {
   };
 
   return (
-    <div className="p-4 bg-white rounded shadow">
+    <div className="p-4 bg-[#0a0a0a] rounded shadow">
       <h2 className="text-xl font-semibold">Diagnostic Center Details</h2>
 
       {/* Diagnostic Center Details */}
       <div className="overflow-x-auto mt-4">
         <table className="w-full border rounded text-sm">
-          <thead className="bg-gray-200">
+          <thead className="bg-[#1f2937]">
             <tr>
               <th className="p-2 border text-left">Name</th>
               <th className="p-2 border text-left">Email</th>
@@ -147,7 +147,7 @@ const DiagnosticDetail = () => {
       <h3 className="mt-6 text-lg font-semibold">Contact Persons</h3>
       <div className="overflow-x-auto mt-2">
         <table className="w-full border rounded text-sm">
-          <thead className="bg-gray-200">
+          <thead className="bg-[#1f2937]">
             <tr>
               <th className="p-2 border text-left">Name</th>
               <th className="p-2 border text-left">Designation</th>
@@ -158,7 +158,7 @@ const DiagnosticDetail = () => {
           </thead>
           <tbody>
             {center.contactPersons.map((contact, idx) => (
-              <tr key={idx} className="hover:bg-gray-100 border-b">
+              <tr key={idx} className="hover:bg-[#111111] border-b">
                 <td className="p-2 border">{contact.name}</td>
                 <td className="p-2 border">{contact.designation}</td>
                 <td className="p-2 border">{contact.contactEmail}</td>
@@ -187,7 +187,7 @@ const DiagnosticDetail = () => {
       <h3 className="mt-6 text-lg font-semibold">Tests Offered</h3>
       <div className="overflow-x-auto mt-2">
         <table className="w-full border rounded text-sm">
-          <thead className="bg-gray-200">
+          <thead className="bg-[#1f2937]">
             <tr>
               <th className="p-2 border text-left">Test Name</th>
               <th className="p-2 border text-left">Description</th>
@@ -198,7 +198,7 @@ const DiagnosticDetail = () => {
           </thead>
           <tbody>
             {center.tests.map((test, idx) => (
-              <tr key={idx} className="hover:bg-gray-100 border-b">
+              <tr key={idx} className="hover:bg-[#111111] border-b">
                 <td className="p-2 border">{test.test_name}</td>
                 <td className="p-2 border">{test.description}</td>
                 <td className="p-2 border">{test.price}</td>
@@ -226,7 +226,7 @@ const DiagnosticDetail = () => {
       {/* Edit Center Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded shadow-md w-96">
+          <div className="bg-[#0a0a0a] p-6 rounded shadow-md w-96">
             <h3 className="text-lg font-semibold">Edit Center</h3>
             <form onSubmit={handleSubmitEditCenter}>
               <label className="block mt-4">Name</label>
@@ -244,7 +244,7 @@ const DiagnosticDetail = () => {
               </button>
               <button
                 type="button"
-                className="bg-gray-300 text-gray-700 mt-2 ml-4 py-2 px-4 rounded"
+                className="bg-gray-300 text-gray-300 mt-2 ml-4 py-2 px-4 rounded"
                 onClick={() => setShowEditModal(false)}
               >
                 Cancel
@@ -257,7 +257,7 @@ const DiagnosticDetail = () => {
       {/* Edit Contact Modal */}
       {showContactEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded shadow-md w-96">
+          <div className="bg-[#0a0a0a] p-6 rounded shadow-md w-96">
             <h3 className="text-lg font-semibold">Edit Contact Person</h3>
             <form onSubmit={handleSubmitEditContact}>
               <label className="block mt-4">Name</label>
@@ -275,7 +275,7 @@ const DiagnosticDetail = () => {
               </button>
               <button
                 type="button"
-                className="bg-gray-300 text-gray-700 mt-2 ml-4 py-2 px-4 rounded"
+                className="bg-gray-300 text-gray-300 mt-2 ml-4 py-2 px-4 rounded"
                 onClick={() => setShowContactEditModal(false)}
               >
                 Cancel
@@ -288,7 +288,7 @@ const DiagnosticDetail = () => {
 {/* Edit Test Modal */}
 {showTestEditModal && (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div className="bg-white p-6 rounded shadow-md w-96">
+    <div className="bg-[#0a0a0a] p-6 rounded shadow-md w-96">
       <h3 className="text-lg font-semibold">Edit Test</h3>
       <form onSubmit={handleSubmitEditTest}>
         {/* Test Name Field */}
@@ -335,7 +335,7 @@ const DiagnosticDetail = () => {
         </button>
         <button
           type="button"
-          className="bg-gray-300 text-gray-700 mt-2 py-2 px-4 ml-4 rounded"
+          className="bg-gray-300 text-gray-300 mt-2 py-2 px-4 ml-4 rounded"
           onClick={() => setShowTestEditModal(false)}
         >
           Cancel

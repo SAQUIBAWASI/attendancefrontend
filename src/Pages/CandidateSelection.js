@@ -59,7 +59,7 @@ const CandidateSelection = () => {
   );
 
   return (
-    <div className="min-h-screen p-6 bg-gray-100">
+    <div className="min-h-screen p-6 bg-[#111111]">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Candidate Selection</h2>
         <div className="flex items-center gap-2">
@@ -84,9 +84,9 @@ const CandidateSelection = () => {
       
       {/* Table for Candidate Selection */}
       <div className="overflow-x-auto">
-        <table className="w-full bg-white rounded shadow-md">
+        <table className="w-full bg-[#0a0a0a] rounded shadow-md">
           <thead>
-            <tr className="text-left bg-gray-200">
+            <tr className="text-left bg-[#1f2937]">
               <th className="p-2">Sl. No</th>
               <th className="p-2">Candidate Name</th>
               <th className="p-2">Candidate ID</th>
@@ -175,7 +175,7 @@ const CandidateModal = ({ data, onClose, onSave }) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="p-6 bg-white rounded shadow-lg w-96">
+      <div className="p-6 bg-[#0a0a0a] rounded shadow-lg w-96">
         <h2 className="mb-4 text-xl">{data ? "Edit Candidate" : "New Candidate"}</h2>
 
         <div className="flex flex-wrap gap-4">

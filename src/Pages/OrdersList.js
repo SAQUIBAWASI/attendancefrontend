@@ -76,14 +76,14 @@ const OrdersList = () => {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto bg-white shadow-lg rounded-lg">
+    <div className="p-6 max-w-6xl mx-auto bg-[#0a0a0a] shadow-lg rounded-lg">
       <h2 className="text-2xl font-semibold text-blue-900 mb-6">User Orders</h2>
 
       {ordersData.length === 0 ? (
         <p>No orders found.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-gray-300">
+          <table className="w-full border-collapse border border-[#374151]">
             <thead className="bg-purple-600 text-white">
               <tr>
                 <th className="p-2 border">Sl</th>
@@ -99,7 +99,7 @@ const OrdersList = () => {
             </thead>
             <tbody>
               {ordersData.map((order, index) => (
-                <tr key={order._id} className="border-b hover:bg-gray-50">
+                <tr key={order._id} className="border-b hover:bg-[#000000]">
                   <td className="p-2 border">{index + 1}</td>
                   <td className="p-2 border">{order.user.name}</td>
                   <td className="p-2 border">{order.user.email}</td>
@@ -134,7 +134,7 @@ const OrdersList = () => {
       {/* Modal for Editing Status */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg w-1/3">
+          <div className="bg-[#0a0a0a] p-6 rounded-lg w-1/3">
             <h2 className="text-xl font-semibold">Edit Order Status</h2>
             <div className="my-4">
               <label className="block mb-2" htmlFor="status">Status</label>

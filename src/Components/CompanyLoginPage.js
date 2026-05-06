@@ -72,10 +72,10 @@ const CompanyLoginPage = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 py-10">
-      <div className="flex flex-col md:flex-row items-center bg-white rounded-lg shadow-2xl overflow-hidden max-w-4xl w-full">
+      <div className="flex flex-col md:flex-row items-center bg-[#0a0a0a] rounded-lg shadow-2xl overflow-hidden max-w-4xl w-full">
         {/* Form Section */}
         <div className="w-full md:w-1/2 p-8 space-y-6">
-          <h2 className="text-3xl font-bold text-center text-gray-800">Company Login</h2>
+          <h2 className="text-3xl font-bold text-center text-gray-300">Company Login</h2>
           {error && (
             <div className="p-3 text-red-600 bg-red-100 rounded-md shadow-sm">
               {error}
@@ -89,7 +89,7 @@ const CompanyLoginPage = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-300"
                 htmlFor="email"
               >
                 Email Address
@@ -100,13 +100,13 @@ const CompanyLoginPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="block w-full p-3 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-teal-500 focus:border-teal-600 transition duration-200"
+                className="block w-full p-3 mt-1 border border-[#374151] rounded-md focus:outline-none focus:ring focus:ring-teal-500 focus:border-teal-600 transition duration-200"
                 placeholder="you@domain.com"
               />
             </div>
             <div>
               <label
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-300"
                 htmlFor="password"
               >
                 Password
@@ -117,7 +117,7 @@ const CompanyLoginPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="block w-full p-3 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-teal-500 focus:border-teal-600 transition duration-200"
+                className="block w-full p-3 mt-1 border border-[#374151] rounded-md focus:outline-none focus:ring focus:ring-teal-500 focus:border-teal-600 transition duration-200"
                 placeholder="********"
               />
             </div>

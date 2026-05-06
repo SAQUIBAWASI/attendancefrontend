@@ -28,17 +28,17 @@ const MissingAttendance = () => {
   }, []);
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-6 bg-gray-100">
-      <div className="w-full max-w-4xl p-6 bg-white shadow-lg rounded-xl">
-        <h3 className="mb-6 text-3xl font-semibold text-center text-gray-800">
+    <div className="flex items-center justify-center min-h-screen p-6 bg-[#111111]">
+      <div className="w-full max-w-4xl p-6 bg-[#0a0a0a] shadow-lg rounded-xl">
+        <h3 className="mb-6 text-3xl font-semibold text-center text-gray-300">
           Missing Attendance
         </h3>
 
         {loading ? (
-          <p className="text-lg text-center text-gray-600">Loading records...</p>
+          <p className="text-lg text-center text-gray-400">Loading records...</p>
         ) : missingRecords.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full border border-gray-300 rounded-lg shadow-md">
+            <table className="w-full border border-[#374151] rounded-lg shadow-md">
               <thead>
                 <tr className="text-lg text-white bg-green-500">
                   <th className="p-4 border">Employee</th>
@@ -48,7 +48,7 @@ const MissingAttendance = () => {
               </thead>
               <tbody>
                 {missingRecords.map((record, index) => (
-                  <tr key={record.id} className={`text-lg ${index % 2 === 0 ? "bg-gray-100" : "bg-white"}`}>
+                  <tr key={record.id} className={`text-lg ${index % 2 === 0 ? "bg-[#111111]" : "bg-[#0a0a0a]"}`}>
                     <td className="p-4 border">{record.name}</td>
                     <td className="p-4 border">{record.date}</td>
                     <td className="p-4 border">{record.reason}</td>
@@ -58,7 +58,7 @@ const MissingAttendance = () => {
             </table>
           </div>
         ) : (
-          <p className="text-lg text-center text-gray-600">
+          <p className="text-lg text-center text-gray-400">
             No missing attendance records found.
           </p>
         )}

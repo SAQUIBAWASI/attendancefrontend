@@ -76,11 +76,11 @@ const MonthlyAttendance = () => {
       </button>
 
       {/* Table for Showing Attendance Records */}
-      <div className="mt-12 bg-white p-6 rounded shadow-lg">
+      <div className="mt-12 bg-[#0a0a0a] p-6 rounded shadow-lg">
         <h3 className="mb-4 text-xl font-semibold">Monthly Attendance Records</h3>
         <table className="min-w-full table-auto">
           <thead>
-            <tr className="bg-gray-200">
+            <tr className="bg-[#1f2937]">
               <th className="px-6 py-3 text-left">Employee</th>
               <th className="px-6 py-3 text-left">Year</th>
               <th className="px-6 py-3 text-left">Month</th>
@@ -113,7 +113,7 @@ const MonthlyAttendance = () => {
       {/* Modal for Taking Monthly Attendance */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="p-6 bg-white rounded-lg shadow-lg w-96">
+          <div className="p-6 bg-[#0a0a0a] rounded-lg shadow-lg w-96">
             <h3 className="mb-4 text-lg font-semibold">Take Monthly Attendance</h3>
 
             {/* Employee Selection */}

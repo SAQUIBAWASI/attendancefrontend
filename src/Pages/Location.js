@@ -98,7 +98,7 @@ const AddLocationPage = () => {
   };
 
   return (
-    <div className="max-w-3xl p-6 mx-auto bg-white rounded-lg shadow-lg">
+    <div className="max-w-3xl p-6 mx-auto bg-[#0a0a0a] rounded-lg shadow-lg">
       <h2 className="mb-6 text-2xl font-semibold text-blue-900">Add New Location</h2>
 
       {/* Success / Error Message */}
@@ -116,7 +116,7 @@ const AddLocationPage = () => {
       <form onSubmit={handleSubmit}>
         {/* Location Name */}
         <div className="mb-4">
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="name" className="block text-sm font-medium text-gray-300">
             Location Name
           </label>
           <input
@@ -124,7 +124,7 @@ const AddLocationPage = () => {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
+            className="w-full p-2 mt-1 border border-[#374151] rounded"
             placeholder="Enter location name"
             required
           />
@@ -132,7 +132,7 @@ const AddLocationPage = () => {
 
         {/* Auto Detect Location Button */}
         <div className="flex items-center justify-between mb-3">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-300">
             Detect Location Automatically
           </label>
           <button
@@ -147,7 +147,7 @@ const AddLocationPage = () => {
 
         {/* Latitude */}
         <div className="mb-4">
-          <label htmlFor="latitude" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="latitude" className="block text-sm font-medium text-gray-300">
             Latitude
           </label>
           <input
@@ -155,7 +155,7 @@ const AddLocationPage = () => {
             type="text"
             value={latitude}
             onChange={(e) => setLatitude(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
+            className="w-full p-2 mt-1 border border-[#374151] rounded"
             placeholder="Enter latitude"
             required
           />
@@ -163,7 +163,7 @@ const AddLocationPage = () => {
 
         {/* Longitude */}
         <div className="mb-4">
-          <label htmlFor="longitude" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="longitude" className="block text-sm font-medium text-gray-300">
             Longitude
           </label>
           <input
@@ -171,7 +171,7 @@ const AddLocationPage = () => {
             type="text"
             value={longitude}
             onChange={(e) => setLongitude(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
+            className="w-full p-2 mt-1 border border-[#374151] rounded"
             placeholder="Enter longitude"
             required
           />
@@ -179,14 +179,14 @@ const AddLocationPage = () => {
 
         {/* Full Address */}
         <div className="mb-4">
-          <label htmlFor="fullAddress" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="fullAddress" className="block text-sm font-medium text-gray-300">
             Full Address
           </label>
           <textarea
             id="fullAddress"
             value={fullAddress}
             onChange={(e) => setFullAddress(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
+            className="w-full p-2 mt-1 border border-[#374151] rounded"
             placeholder="Enter full address or use auto-detect"
             rows="3"
             required

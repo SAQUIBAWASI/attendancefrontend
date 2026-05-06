@@ -161,8 +161,8 @@
 //       {/* Header */}
 //       <div className="flex flex-col items-start justify-between gap-4 mb-6 md:flex-row md:items-center">
 //         <div>
-//           <h1 className="text-3xl font-bold text-gray-800">Role Management</h1>
-//           <p className="text-gray-600">Manage all roles and view employees</p>
+//           <h1 className="text-3xl font-bold text-gray-300">Role Management</h1>
+//           <p className="text-gray-400">Manage all roles and view employees</p>
 //         </div>
 //         <button
 //           onClick={handleAdd}
@@ -181,7 +181,7 @@
 //             placeholder="Search roles by name or description..."
 //             value={searchTerm}
 //             onChange={(e) => setSearchTerm(e.target.value)}
-//             className="w-full py-3 pl-10 pr-4 border border-gray-300 rounded-lg"
+//             className="w-full py-3 pl-10 pr-4 border border-[#374151] rounded-lg"
 //           />
 //         </div>
 //       </div>
@@ -203,13 +203,13 @@
 //         {filteredRoles.map((role) => (
 //           <div
 //             key={role._id}
-//             className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md"
+//             className="bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-sm hover:shadow-md"
 //           >
 //             <div className="p-5">
 //               {/* Role Header */}
 //               <div className="flex items-start justify-between mb-3">
 //                 <div>
-//                   <h3 className="text-xl font-semibold text-gray-800">
+//                   <h3 className="text-xl font-semibold text-gray-300">
 //                     {role.name}
 //                   </h3>
 //                   <p className="mt-1 text-sm text-gray-500">
@@ -235,10 +235,10 @@
 //               </div>
 
 //               {/* Employee Count */}
-//               <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-100">
+//               <div className="flex items-center justify-between pt-4 mt-4 border-t border-[#1f2937]">
 //                 <div className="flex items-center space-x-2">
 //                   <div className={`w-3 h-3 rounded-full ${role.employeeCount > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-//                   <span className="text-sm text-gray-600">
+//                   <span className="text-sm text-gray-400">
 //                     {role.employeeCount || 0} employee(s)
 //                   </span>
 //                 </div>
@@ -248,7 +248,7 @@
 //                   className={`px-4 py-2 text-sm font-medium rounded-lg flex items-center gap-2 ${
 //                     role.employeeCount > 0
 //                       ? 'bg-green-100 text-green-700 hover:bg-green-200'
-//                       : 'bg-gray-100 text-gray-500 cursor-not-allowed'
+//                       : 'bg-[#111111] text-gray-500 cursor-not-allowed'
 //                   }`}
 //                 >
 //                   <FaEye /> View Employees
@@ -263,7 +263,7 @@
 //       {filteredRoles.length === 0 && (
 //         <div className="py-12 text-center">
 //           <div className="mb-4 text-6xl text-gray-400">👔</div>
-//           <h3 className="mb-2 text-xl font-semibold text-gray-600">No roles found</h3>
+//           <h3 className="mb-2 text-xl font-semibold text-gray-400">No roles found</h3>
 //           <p className="mb-4 text-gray-500">
 //             {searchTerm ? 'Try a different search term' : 'Add your first role to get started'}
 //           </p>
@@ -281,14 +281,14 @@
 //       {/* Add/Edit Role Modal */}
 //       {showAddModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-800">
+//               <h3 className="text-xl font-semibold text-gray-300">
 //                 {editingRole ? 'Edit Role' : 'Add New Role'}
 //               </h3>
 //               <button
 //                 onClick={handleCloseModal}
-//                 className="text-2xl text-gray-400 hover:text-gray-600"
+//                 className="text-2xl text-gray-400 hover:text-gray-400"
 //               >
 //                 &times;
 //               </button>
@@ -297,7 +297,7 @@
 //             <form onSubmit={handleSubmit} className="p-6">
 //               <div className="space-y-4">
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-700">
+//                   <label className="block mb-2 text-sm font-medium text-gray-300">
 //                     Role Name *
 //                   </label>
 //                   <input
@@ -305,14 +305,14 @@
 //                     name="name"
 //                     value={formData.name}
 //                     onChange={handleInputChange}
-//                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+//                     className="w-full px-4 py-2 border border-[#374151] rounded-lg"
 //                     placeholder="e.g., Manager, Developer"
 //                     required
 //                   />
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-700">
+//                   <label className="block mb-2 text-sm font-medium text-gray-300">
 //                     Description *
 //                   </label>
 //                   <textarea
@@ -320,7 +320,7 @@
 //                     value={formData.description}
 //                     onChange={handleInputChange}
 //                     rows="3"
-//                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+//                     className="w-full px-4 py-2 border border-[#374151] rounded-lg"
 //                     placeholder="Describe the role..."
 //                     required
 //                   />
@@ -331,7 +331,7 @@
 //                 <button
 //                   type="button"
 //                   onClick={handleCloseModal}
-//                   className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg"
+//                   className="px-4 py-2 text-gray-300 border border-[#374151] rounded-lg"
 //                 >
 //                   Cancel
 //                 </button>
@@ -607,7 +607,7 @@ const RoleDashboard = () => {
             placeholder="Search roles by name or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full py-3 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+            className="w-full py-3 pl-10 pr-4 border border-[#374151] rounded-lg focus:ring-2 focus:ring-green-500"
           />
         </div>
 
@@ -634,26 +634,26 @@ const RoleDashboard = () => {
       )}
 
       {/* Roles Table */}
-      <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+      <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
         <table className="min-w-full">
           <thead className="text-left text-sm text-white bg-gradient-to-r from-green-500 to-blue-600">
             <tr>
-              <th className="p-2 font-bold text-left text-gray-800">Role Name</th>
-              <th className="p-2 font-bold text-left text-gray-800">Description</th>
-              <th className="p-2 font-bold text-left text-gray-800">Employees</th>
-              <th className="p-2 font-bold text-left text-gray-800">Status</th>
-              <th className="p-2 font-bold text-left text-gray-800">Actions</th>
+              <th className="p-2 font-bold text-left text-gray-300">Role Name</th>
+              <th className="p-2 font-bold text-left text-gray-300">Description</th>
+              <th className="p-2 font-bold text-left text-gray-300">Employees</th>
+              <th className="p-2 font-bold text-left text-gray-300">Status</th>
+              <th className="p-2 font-bold text-left text-gray-300">Actions</th>
             </tr>
           </thead>
 
           <tbody>
             {filteredRoles.map((role) => (
-              <tr key={role._id} className="border-b hover:bg-gray-50">
+              <tr key={role._id} className="border-b hover:bg-[#000000]">
                 <td className="p-2">
-                  <div className="font-medium text-gray-800">{role.name}</div>
+                  <div className="font-medium text-gray-300">{role.name}</div>
                 </td>
                 <td className="p-2">
-                  <div className="max-w-md text-gray-600">{role.description}</div>
+                  <div className="max-w-md text-gray-400">{role.description}</div>
                 </td>
                 <td className="p-2">
                   <div className="flex items-center">
@@ -663,7 +663,7 @@ const RoleDashboard = () => {
                   </div>
                 </td>
                 <td className="p-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${role.employeeCount > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${role.employeeCount > 0 ? 'bg-green-100 text-green-800' : 'bg-[#111111] text-gray-300'}`}>
                     {role.employeeCount > 0 ? 'Active' : 'No Employees'}
                   </span>
                 </td>
@@ -674,7 +674,7 @@ const RoleDashboard = () => {
                       disabled={!role.employeeCount || role.employeeCount === 0}
                       className={`px-3 py-1 text-sm font-medium rounded-lg flex items-center gap-2 ${role.employeeCount > 0
                           ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                          : 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                          : 'bg-[#111111] text-gray-500 cursor-not-allowed'
                         }`}
                     >
                       <FaEye size={14} /> View
@@ -703,9 +703,9 @@ const RoleDashboard = () => {
 
       {/* Empty State */}
       {filteredRoles.length === 0 && (
-        <div className="py-12 text-center bg-white border border-gray-200 rounded-lg">
+        <div className="py-12 text-center bg-[#0a0a0a] border border-[#1f2937] rounded-lg">
           <div className="mb-4 text-6xl text-gray-400">👔</div>
-          <h3 className="mb-2 text-xl font-semibold text-gray-600">No roles found</h3>
+          <h3 className="mb-2 text-xl font-semibold text-gray-400">No roles found</h3>
           <p className="mb-4 text-gray-500">
             {searchTerm ? 'Try a different search term' : 'Add your first role to get started'}
           </p>
@@ -723,14 +723,14 @@ const RoleDashboard = () => {
       {/* Add/Edit Role Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
+          <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
             <div className="flex items-center justify-between p-6 border-b">
-              <h3 className="text-xl font-semibold text-gray-800">
+              <h3 className="text-xl font-semibold text-gray-300">
                 {editingRole ? 'Edit Role' : 'Add New Role'}
               </h3>
               <button
                 onClick={handleCloseModal}
-                className="text-2xl text-black-800 hover:text-black-600"
+                className="text-2xl text-white-800 hover:text-white-600"
               >
                 &times;
               </button>
@@ -739,7 +739,7 @@ const RoleDashboard = () => {
             <form onSubmit={handleSubmit} className="p-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                  <label className="block mb-2 text-sm font-medium text-gray-300">
                     Role Name *
                   </label>
                   <input
@@ -747,14 +747,14 @@ const RoleDashboard = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-4 py-2 border border-[#374151] rounded-lg"
                     placeholder="e.g., Manager, Developer"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                  <label className="block mb-2 text-sm font-medium text-gray-300">
                     Description *
                   </label>
                   <textarea
@@ -762,7 +762,7 @@ const RoleDashboard = () => {
                     value={formData.description}
                     onChange={handleInputChange}
                     rows="3"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-4 py-2 border border-[#374151] rounded-lg"
                     placeholder="Describe the role..."
                     required
                   />
@@ -773,7 +773,7 @@ const RoleDashboard = () => {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg"
+                  className="px-4 py-2 text-gray-300 border border-[#374151] rounded-lg"
                 >
                   Cancel
                 </button>
@@ -792,19 +792,19 @@ const RoleDashboard = () => {
       {/* Employee Details Modal (Table Format) */}
       {showEmployeeModal && selectedRoleForModal && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-2 overflow-y-auto bg-black bg-opacity-50">
-          <div className="w-full my-8 bg-white rounded-lg shadow-xl max-w-7xl">
+          <div className="w-full my-8 bg-[#0a0a0a] rounded-lg shadow-xl max-w-7xl">
 
             {/* Modal Header */}
             <div className="flex items-center justify-between p-2 border-b">
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">
+                <h2 className="text-2xl font-bold text-gray-300">
                   {selectedRoleForModal.name} - Role Employees
                 </h2>
                 <div className="flex items-center gap-4 mt-2">
-                  <div className="text-gray-600">
+                  <div className="text-gray-400">
                     <span className="font-semibold">Total:</span> {employees.length}
                   </div>
-                  <div className="text-gray-600">
+                  <div className="text-gray-400">
                     <span className="font-semibold">Showing:</span> {filteredEmployees.length}
                   </div>
                 </div>
@@ -812,7 +812,7 @@ const RoleDashboard = () => {
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleCloseEmployeeModal}
-                  className="text-2xl text-gray-500 hover:text-gray-700"
+                  className="text-2xl text-gray-500 hover:text-gray-300"
                 >
                   &times;
                 </button>
@@ -820,7 +820,7 @@ const RoleDashboard = () => {
             </div>
 
             {/* Search Bar */}
-            <div className="p-2 border-b bg-gray-50">
+            <div className="p-2 border-b bg-[#000000]">
               <div className="relative">
                 <FaSearch className="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
                 <input
@@ -828,7 +828,7 @@ const RoleDashboard = () => {
                   placeholder="Search employees by name, email, phone, or ID..."
                   value={employeeSearch}
                   onChange={(e) => setEmployeeSearch(e.target.value)}
-                  className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  className="w-full py-2 pl-10 pr-4 border border-[#374151] rounded-lg focus:ring-2 focus:ring-green-500"
                 />
               </div>
             </div>
@@ -838,7 +838,7 @@ const RoleDashboard = () => {
               {employeeLoading ? (
                 <div className="flex items-center justify-center p-8">
                   <div className="w-8 h-8 border-b-2 border-green-600 rounded-full animate-spin"></div>
-                  <p className="ml-3 text-gray-800">Loading employees...</p>
+                  <p className="ml-3 text-gray-300">Loading employees...</p>
                 </div>
               ) : filteredEmployees.length > 0 ? (
                 <table className="min-w-full">
@@ -855,7 +855,7 @@ const RoleDashboard = () => {
 
                   <tbody>
                     {filteredEmployees.map((emp) => (
-                      <tr key={emp._id || emp.id} className="border-b hover:bg-gray-50">
+                      <tr key={emp._id || emp.id} className="border-b hover:bg-[#000000]">
                         <td className="p-2 font-medium border">{emp.employeeId || emp.empId || 'N/A'}</td>
                         <td className="p-2 border">
                           <div className="font-medium">{emp.name || 'N/A'}</div>
@@ -874,7 +874,7 @@ const RoleDashboard = () => {
               ) : (
                 <div className="p-8 text-center">
                   <div className="mb-3 text-4xl text-gray-400">👨‍💼</div>
-                  <p className="text-gray-600">No employees found with this role.</p>
+                  <p className="text-gray-400">No employees found with this role.</p>
                   <p className="mt-2 text-sm text-gray-500">
                     API Response: {employees.length} employees found in data
                   </p>
@@ -883,14 +883,14 @@ const RoleDashboard = () => {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t bg-gray-50">
+            <div className="p-4 border-t bg-[#000000]">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-400">
                   Showing {filteredEmployees.length} of {employees.length} employees
                 </p>
                 <button
                   onClick={handleCloseEmployeeModal}
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-gray-300 border border-[#374151] rounded-lg hover:bg-[#000000]"
                 >
                   Close
                 </button>

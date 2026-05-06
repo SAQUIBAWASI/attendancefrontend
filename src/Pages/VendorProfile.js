@@ -248,10 +248,10 @@ export default function VendorDetail() {
               <img
                 src={vendor.businessLogo}
                 alt={`${vendor.businessName} Logo`}
-                className="w-40 h-40 rounded-lg object-cover border-2 border-gray-200 shadow-sm transition-transform duration-300 group-hover:scale-105"
+                className="w-40 h-40 rounded-lg object-cover border-2 border-[#1f2937] shadow-sm transition-transform duration-300 group-hover:scale-105"
               />
             ) : (
-              <div className="w-40 h-40 rounded-lg bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
+              <div className="w-40 h-40 rounded-lg bg-[#111111] flex items-center justify-center border-2 border-dashed border-[#374151]">
                 <span className="text-gray-400">No Logo</span>
               </div>
             )}
@@ -260,42 +260,42 @@ export default function VendorDetail() {
 
         {/* Basic Info Table */}
         <div className="flex-grow">
-          <table className="min-w-full bg-white border border-gray-200">
+          <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937]">
             <tbody>
-              <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50 w-1/4">Business Name</td>
+              <tr className="border-b border-[#1f2937]">
+                <td className="py-3 px-4 font-semibold bg-[#000000] w-1/4">Business Name</td>
                 <td className="py-3 px-4">{vendor.businessName}</td>
               </tr>
-              <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Contact Person</td>
+              <tr className="border-b border-[#1f2937]">
+                <td className="py-3 px-4 font-semibold bg-[#000000]">Contact Person</td>
                 <td className="py-3 px-4">{vendor.name}</td>
               </tr>
-              <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Email</td>
+              <tr className="border-b border-[#1f2937]">
+                <td className="py-3 px-4 font-semibold bg-[#000000]">Email</td>
                 <td className="py-3 px-4 break-all">{vendor.email}</td>
               </tr>
-              <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Phone</td>
+              <tr className="border-b border-[#1f2937]">
+                <td className="py-3 px-4 font-semibold bg-[#000000]">Phone</td>
                 <td className="py-3 px-4">{vendor.phone || 'N/A'}</td>
               </tr>
-              <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Location</td>
+              <tr className="border-b border-[#1f2937]">
+                <td className="py-3 px-4 font-semibold bg-[#000000]">Location</td>
                 <td className="py-3 px-4">{vendor.city || 'N/A'}, {vendor.zipcode || 'N/A'}</td>
               </tr>
-              <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Coordinates</td>
+              <tr className="border-b border-[#1f2937]">
+                <td className="py-3 px-4 font-semibold bg-[#000000]">Coordinates</td>
                 <td className="py-3 px-4">
                   {vendor.location?.coordinates
                     ? `${vendor.location.coordinates[0]}, ${vendor.location.coordinates[1]}`
                     : "N/A"}
                 </td>
               </tr>
-              <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Account Created</td>
+              <tr className="border-b border-[#1f2937]">
+                <td className="py-3 px-4 font-semibold bg-[#000000]">Account Created</td>
                 <td className="py-3 px-4">{formatDateTime(vendor.createdAt)}</td>
               </tr>
               <tr>
-                <td className="py-3 px-4 font-semibold bg-gray-50">Last Updated</td>
+                <td className="py-3 px-4 font-semibold bg-[#000000]">Last Updated</td>
                 <td className="py-3 px-4">{formatDateTime(vendor.updatedAt)}</td>
               </tr>
             </tbody>
@@ -308,7 +308,7 @@ export default function VendorDetail() {
   const renderFeedbackSection = () => (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-800">Customer Feedback</h2>
+        <h2 className="text-xl font-bold text-gray-300">Customer Feedback</h2>
         <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
           {feedbacks.length} {feedbacks.length === 1 ? 'Review' : 'Reviews'}
         </span>
@@ -316,19 +316,19 @@ export default function VendorDetail() {
       
       {feedbacks.length ? (
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-200">
+          <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937]">
             <thead>
-              <tr className="bg-gray-100">
-                <th className="py-3 px-4 border border-gray-200">User</th>
-                <th className="py-3 px-4 border border-gray-200">Rating</th>
-                <th className="py-3 px-4 border border-gray-200">Feedback</th>
-                <th className="py-3 px-4 border border-gray-200">Date</th>
+              <tr className="bg-[#111111]">
+                <th className="py-3 px-4 border border-[#1f2937]">User</th>
+                <th className="py-3 px-4 border border-[#1f2937]">Rating</th>
+                <th className="py-3 px-4 border border-[#1f2937]">Feedback</th>
+                <th className="py-3 px-4 border border-[#1f2937]">Date</th>
               </tr>
             </thead>
             <tbody>
               {feedbacks.map((feedback, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="py-3 px-4 border border-gray-200">
+                <tr key={index} className={index % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#000000]'}>
+                  <td className="py-3 px-4 border border-[#1f2937]">
                     <div className="flex items-center">
                       {feedback.userId?.profileImage ? (
                         <img 
@@ -337,19 +337,19 @@ export default function VendorDetail() {
                           className="w-10 h-10 rounded-full mr-3 border-2 border-white shadow"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                        <div className="w-10 h-10 rounded-full bg-[#1f2937] flex items-center justify-center mr-3">
                           <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                           </svg>
                         </div>
                       )}
                       <div>
-                        <div className="font-semibold text-gray-800">{feedback.userId?.name || 'Anonymous'}</div>
+                        <div className="font-semibold text-gray-300">{feedback.userId?.name || 'Anonymous'}</div>
                         <div className="text-xs text-gray-500">Customer</div>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 px-4 border border-gray-200">
+                  <td className="py-3 px-4 border border-[#1f2937]">
                     <div className="flex items-center">
                       <div className="flex mr-2">
                         {[...Array(5)].map((_, i) => (
@@ -363,15 +363,15 @@ export default function VendorDetail() {
                           </svg>
                         ))}
                       </div>
-                      <span className="text-sm font-medium text-gray-600">
+                      <span className="text-sm font-medium text-gray-400">
                         {feedback.stars}.0
                       </span>
                     </div>
                   </td>
-                  <td className="py-3 px-4 border border-gray-200">
+                  <td className="py-3 px-4 border border-[#1f2937]">
                     {feedback.tellUsAboutExperience || 'No comment provided'}
                   </td>
-                  <td className="py-3 px-4 border border-gray-200">
+                  <td className="py-3 px-4 border border-[#1f2937]">
                     {formatDateTime(feedback.createdAt)}
                   </td>
                 </tr>
@@ -380,11 +380,11 @@ export default function VendorDetail() {
           </table>
         </div>
       ) : (
-        <div className="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-200">
+        <div className="bg-[#000000] rounded-xl p-10 text-center border-2 border-dashed border-[#1f2937]">
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
           </svg>
-          <h3 className="mt-2 text-lg font-medium text-gray-700">No feedback received</h3>
+          <h3 className="mt-2 text-lg font-medium text-gray-300">No feedback received</h3>
           <p className="mt-1 text-gray-500">This vendor hasn't received any feedback yet.</p>
         </div>
       )}
@@ -398,9 +398,9 @@ export default function VendorDetail() {
     return (
       <div className="space-y-8">
         {/* Coupon Redemption Stats */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="bg-[#0a0a0a] p-6 rounded-lg border border-[#1f2937]">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Coupon Redemption Statistics</h2>
+            <h2 className="text-xl font-bold text-gray-300">Coupon Redemption Statistics</h2>
             
             {/* Graph Filter Controls */}
             <div className="flex space-x-2 mt-4 md:mt-0">
@@ -409,7 +409,7 @@ export default function VendorDetail() {
                 className={`px-3 py-1 text-sm font-medium rounded-full ${
                   graphFilter === "all" 
                     ? "bg-blue-100 text-blue-800" 
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    : "bg-[#111111] text-gray-400 hover:bg-[#1f2937]"
                 }`}
               >
                 All
@@ -419,7 +419,7 @@ export default function VendorDetail() {
                 className={`px-3 py-1 text-sm font-medium rounded-full ${
                   graphFilter === "overall" 
                     ? "bg-blue-100 text-blue-800" 
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    : "bg-[#111111] text-gray-400 hover:bg-[#1f2937]"
                 }`}
               >
                 Overall
@@ -429,7 +429,7 @@ export default function VendorDetail() {
                 className={`px-3 py-1 text-sm font-medium rounded-full ${
                   graphFilter === "monthly" 
                     ? "bg-green-100 text-green-800" 
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    : "bg-[#111111] text-gray-400 hover:bg-[#1f2937]"
                 }`}
               >
                 Monthly
@@ -439,7 +439,7 @@ export default function VendorDetail() {
                 className={`px-3 py-1 text-sm font-medium rounded-full ${
                   graphFilter === "weekly" 
                     ? "bg-yellow-100 text-yellow-800" 
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    : "bg-[#111111] text-gray-400 hover:bg-[#1f2937]"
                 }`}
               >
                 Weekly
@@ -449,7 +449,7 @@ export default function VendorDetail() {
                 className={`px-3 py-1 text-sm font-medium rounded-full ${
                   graphFilter === "daily" 
                     ? "bg-purple-100 text-purple-800" 
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    : "bg-[#111111] text-gray-400 hover:bg-[#1f2937]"
                 }`}
               >
                 Daily
@@ -477,8 +477,8 @@ export default function VendorDetail() {
           </div>
           
           {/* Enhanced Bar Chart with Filtering */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="bg-[#000000] p-4 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-300 mb-4">
               Redemption Trend {graphFilter !== "all" ? `(${graphFilter.charAt(0).toUpperCase() + graphFilter.slice(1)})` : ""}
             </h3>
             <div className="flex items-end h-32 gap-4">
@@ -500,7 +500,7 @@ export default function VendorDetail() {
         {/* Coupons Table */}
         <div>
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Coupons</h2>
+            <h2 className="text-xl font-bold text-gray-300">Coupons</h2>
             <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
               {coupons.length} {coupons.length === 1 ? 'Coupon' : 'Coupons'}
             </span>
@@ -508,26 +508,26 @@ export default function VendorDetail() {
           
           {coupons.length ? (
             <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-200">
+              <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937]">
                 <thead>
-                  <tr className="bg-gray-100">
-                    <th className="py-3 px-4 border border-gray-200">Image</th>
-                    <th className="py-3 px-4 border border-gray-200">Name</th>
-                    <th className="py-3 px-4 border border-gray-200">Category</th>
-                    <th className="py-3 px-4 border border-gray-200">Discount</th>
-                    <th className="py-3 px-4 border border-gray-200">Code</th>
-                    <th className="py-3 px-4 border border-gray-200">Cost</th>
-                    <th className="py-3 px-4 border border-gray-200">Valid Until</th>
-                    <th className="py-3 px-4 border border-gray-200">User Limit</th>
-                    <th className="py-3 px-4 border border-gray-200">Downloads</th>
-                    <th className="py-3 px-4 border border-gray-200">Status</th>
-                    <th className="py-3 px-4 border border-gray-200">Created</th>
+                  <tr className="bg-[#111111]">
+                    <th className="py-3 px-4 border border-[#1f2937]">Image</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Name</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Category</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Discount</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Code</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Cost</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Valid Until</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">User Limit</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Downloads</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Status</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Created</th>
                   </tr>
                 </thead>
                 <tbody>
                   {coupons.map((coupon, index) => (
-                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="py-3 px-4 border border-gray-200">
+                    <tr key={index} className={index % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#000000]'}>
+                      <td className="py-3 px-4 border border-[#1f2937]">
                         {coupon.couponImage ? (
                           <img 
                             src={coupon.couponImage} 
@@ -535,49 +535,49 @@ export default function VendorDetail() {
                             className="w-16 h-16 object-cover rounded"
                           />
                         ) : (
-                          <div className="w-16 h-16 flex items-center justify-center bg-gray-100 rounded">
+                          <div className="w-16 h-16 flex items-center justify-center bg-[#111111] rounded">
                             <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                             </svg>
                           </div>
                         )}
                       </td>
-                      <td className="py-3 px-4 border border-gray-200 font-semibold">{coupon.name}</td>
-                      <td className="py-3 px-4 border border-gray-200 capitalize">{coupon.category}</td>
-                      <td className="py-3 px-4 border border-gray-200">
+                      <td className="py-3 px-4 border border-[#1f2937] font-semibold">{coupon.name}</td>
+                      <td className="py-3 px-4 border border-[#1f2937] capitalize">{coupon.category}</td>
+                      <td className="py-3 px-4 border border-[#1f2937]">
                         {coupon.discountPercentage}% {coupon.couponCodeType === '%' ? 'off' : ''}
                       </td>
-                      <td className="py-3 px-4 border border-gray-200 font-mono">{coupon.couponCode}</td>
-                      <td className="py-3 px-4 border border-gray-200">
+                      <td className="py-3 px-4 border border-[#1f2937] font-mono">{coupon.couponCode}</td>
+                      <td className="py-3 px-4 border border-[#1f2937]">
                         {coupon.requiredCoins}
                         <svg className="w-4 h-4 ml-1 text-yellow-500 inline" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                         </svg>
                       </td>
-                      <td className="py-3 px-4 border border-gray-200">{formatDate(coupon.validityDate)}</td>
-                      <td className="py-3 px-4 border border-gray-200">{coupon.limitForSameUser || 'Unlimited'}</td>
-                      <td className="py-3 px-4 border border-gray-200">{coupon.downloadedCount || 0}</td>
-                      <td className="py-3 px-4 border border-gray-200">
+                      <td className="py-3 px-4 border border-[#1f2937]">{formatDate(coupon.validityDate)}</td>
+                      <td className="py-3 px-4 border border-[#1f2937]">{coupon.limitForSameUser || 'Unlimited'}</td>
+                      <td className="py-3 px-4 border border-[#1f2937]">{coupon.downloadedCount || 0}</td>
+                      <td className="py-3 px-4 border border-[#1f2937]">
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                           coupon.status === 'approved' ? 'bg-green-100 text-green-800' :
                           coupon.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
+                          'bg-[#111111] text-gray-300'
                         }`}>
                           {coupon.status.charAt(0).toUpperCase() + coupon.status.slice(1)}
                         </span>
                       </td>
-                      <td className="py-3 px-4 border border-gray-200">{formatDate(coupon.createdAt)}</td>
+                      <td className="py-3 px-4 border border-[#1f2937]">{formatDate(coupon.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           ) : (
-            <div className="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-200">
+            <div className="bg-[#000000] rounded-xl p-10 text-center border-2 border-dashed border-[#1f2937]">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
               </svg>
-              <h3 className="mt-2 text-lg font-medium text-gray-700">No coupons created</h3>
+              <h3 className="mt-2 text-lg font-medium text-gray-300">No coupons created</h3>
               <p className="mt-1 text-gray-500">This vendor hasn't created any coupons yet.</p>
             </div>
           )}
@@ -596,8 +596,8 @@ export default function VendorDetail() {
     return (
       <div className="space-y-8">
         {/* Payment Statistics */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800 mb-6">Payment Overview</h2>
+        <div className="bg-[#0a0a0a] p-6 rounded-lg border border-[#1f2937]">
+          <h2 className="text-xl font-bold text-gray-300 mb-6">Payment Overview</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-green-50 p-4 rounded-lg border border-green-100">
@@ -627,7 +627,7 @@ export default function VendorDetail() {
         {/* Payments Table */}
         <div>
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Payment History</h2>
+            <h2 className="text-xl font-bold text-gray-300">Payment History</h2>
             <div className="flex space-x-2">
               <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
                 Send Reminder
@@ -640,25 +640,25 @@ export default function VendorDetail() {
           
           {payments.length ? (
             <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-200">
+              <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937]">
                 <thead>
-                  <tr className="bg-gray-100">
-                    <th className="py-3 px-4 border border-gray-200">Month</th>
-                    <th className="py-3 px-4 border border-gray-200">Amount</th>
-                    <th className="py-3 px-4 border border-gray-200">Status</th>
-                    <th className="py-3 px-4 border border-gray-200">Payment Date</th>
-                    <th className="py-3 px-4 border border-gray-200">Due Date</th>
-                    <th className="py-3 px-4 border border-gray-200">Transaction ID</th>
-                    <th className="py-3 px-4 border border-gray-200">Payment Method</th>
-                    <th className="py-3 px-4 border border-gray-200">Actions</th>
+                  <tr className="bg-[#111111]">
+                    <th className="py-3 px-4 border border-[#1f2937]">Month</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Amount</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Status</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Payment Date</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Due Date</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Transaction ID</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Payment Method</th>
+                    <th className="py-3 px-4 border border-[#1f2937]">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {payments.map((payment, index) => (
-                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="py-3 px-4 border border-gray-200 font-semibold">{payment.month}</td>
-                      <td className="py-3 px-4 border border-gray-200 font-medium">{formatCurrency(payment.amount)}</td>
-                      <td className="py-3 px-4 border border-gray-200">
+                    <tr key={index} className={index % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#000000]'}>
+                      <td className="py-3 px-4 border border-[#1f2937] font-semibold">{payment.month}</td>
+                      <td className="py-3 px-4 border border-[#1f2937] font-medium">{formatCurrency(payment.amount)}</td>
+                      <td className="py-3 px-4 border border-[#1f2937]">
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                           payment.status === 'completed' ? 'bg-green-100 text-green-800' :
                           payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
@@ -667,19 +667,19 @@ export default function VendorDetail() {
                           {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
                         </span>
                       </td>
-                      <td className="py-3 px-4 border border-gray-200">
+                      <td className="py-3 px-4 border border-[#1f2937]">
                         {payment.paymentDate ? formatDate(payment.paymentDate) : 'Not Paid'}
                       </td>
-                      <td className="py-3 px-4 border border-gray-200">
+                      <td className="py-3 px-4 border border-[#1f2937]">
                         {payment.dueDate ? formatDate(payment.dueDate) : 'N/A'}
                       </td>
-                      <td className="py-3 px-4 border border-gray-200 font-mono">
+                      <td className="py-3 px-4 border border-[#1f2937] font-mono">
                         {payment.transactionId || 'N/A'}
                       </td>
-                      <td className="py-3 px-4 border border-gray-200">
+                      <td className="py-3 px-4 border border-[#1f2937]">
                         {payment.paymentMethod}
                       </td>
-                      <td className="py-3 px-4 border border-gray-200">
+                      <td className="py-3 px-4 border border-[#1f2937]">
                         <div className="flex space-x-2">
                           {payment.status !== 'completed' && (
                             <button className="text-green-600 hover:text-green-800" title="Mark as Paid">
@@ -701,11 +701,11 @@ export default function VendorDetail() {
               </table>
             </div>
           ) : (
-            <div className="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-200">
+            <div className="bg-[#000000] rounded-xl p-10 text-center border-2 border-dashed border-[#1f2937]">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h3 className="mt-2 text-lg font-medium text-gray-700">No payment records</h3>
+              <h3 className="mt-2 text-lg font-medium text-gray-300">No payment records</h3>
               <p className="mt-1 text-gray-500">This vendor doesn't have any payment records yet.</p>
             </div>
           )}
@@ -718,7 +718,7 @@ export default function VendorDetail() {
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading vendor details...</p>
+        <p className="text-gray-400">Loading vendor details...</p>
       </div>
     </div>
   );
@@ -750,9 +750,9 @@ export default function VendorDetail() {
           </svg>
           Back to Vendors List
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900 mt-4">Vendor Management</h1>
+        <h1 className="text-3xl font-bold text-gray-200 mt-4">Vendor Management</h1>
         <div className="flex items-center mt-2">
-          <h2 className="text-xl font-semibold text-gray-700">{vendor.businessName}</h2>
+          <h2 className="text-xl font-semibold text-gray-300">{vendor.businessName}</h2>
           <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
             ID: {id}
           </span>
@@ -765,13 +765,13 @@ export default function VendorDetail() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 mb-8">
+      <div className="border-b border-[#1f2937] mb-8">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('profile')}
             className={`py-4 px-1 font-medium text-sm ${activeTab === 'profile' 
               ? 'border-blue-500 text-blue-600 border-b-2' 
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+              : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-[#374151]'}`}
           >
             Profile
           </button>
@@ -779,10 +779,10 @@ export default function VendorDetail() {
             onClick={() => setActiveTab('feedback')}
             className={`py-4 px-1 font-medium text-sm ${activeTab === 'feedback' 
               ? 'border-blue-500 text-blue-600 border-b-2' 
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+              : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-[#374151]'}`}
           >
             Feedback
-            <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">
+            <span className="ml-2 bg-[#111111] text-gray-300 text-xs font-medium px-2 py-0.5 rounded-full">
               {feedbacks.length}
             </span>
           </button>
@@ -790,10 +790,10 @@ export default function VendorDetail() {
             onClick={() => setActiveTab('coupons')}
             className={`py-4 px-1 font-medium text-sm ${activeTab === 'coupons' 
               ? 'border-blue-500 text-blue-600 border-b-2' 
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+              : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-[#374151]'}`}
           >
             Coupons
-            <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">
+            <span className="ml-2 bg-[#111111] text-gray-300 text-xs font-medium px-2 py-0.5 rounded-full">
               {coupons.length}
             </span>
           </button>
@@ -801,10 +801,10 @@ export default function VendorDetail() {
             onClick={() => setActiveTab('payments')}
             className={`py-4 px-1 font-medium text-sm ${activeTab === 'payments' 
               ? 'border-blue-500 text-blue-600 border-b-2' 
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+              : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-[#374151]'}`}
           >
             Payments
-            <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">
+            <span className="ml-2 bg-[#111111] text-gray-300 text-xs font-medium px-2 py-0.5 rounded-full">
               {payments.length}
             </span>
           </button>
@@ -812,7 +812,7 @@ export default function VendorDetail() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-[#0a0a0a] rounded-xl shadow-sm border border-[#1f2937] overflow-hidden">
         {activeTab === 'profile' && renderProfileSection()}
         {activeTab === 'feedback' && renderFeedbackSection()}
         {activeTab === 'coupons' && renderCouponsSection()}

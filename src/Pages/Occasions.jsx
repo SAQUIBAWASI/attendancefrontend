@@ -172,17 +172,17 @@ const Occasions = () => {
   }
 
   return (
-    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100 font-sans">
+    <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a] font-sans">
       <div className="mx-auto max-w-9xl">
 
         {/* --- Header & Filters Panel --- */}
-        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+        <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
             
             {/* Header Title embedded in filter bar for space saving like AllExpensives */}
-            <div className="flex items-center gap-2 pr-4 border-r border-gray-200 mr-2">
+            <div className="flex items-center gap-2 pr-4 border-r border-[#1f2937] mr-2">
                 <FaGift className="text-xl text-indigo-600" />
-                <h1 className="text-sm font-bold tracking-widest text-gray-800 uppercase">Occasions</h1>
+                <h1 className="text-sm font-bold tracking-widest text-gray-300 uppercase">Occasions</h1>
             </div>
 
             {/* Search */}
@@ -193,7 +193,7 @@ const Occasions = () => {
                 placeholder="Search employee or ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
               {searchQuery && (
                 <FaTimes
@@ -208,7 +208,7 @@ const Occasions = () => {
               <select
                 value={monthFilter}
                 onChange={(e) => setMonthFilter(e.target.value)}
-                className="w-full pl-3 pr-6 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 appearance-none bg-white text-gray-700"
+                className="w-full pl-3 pr-6 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 appearance-none bg-[#0a0a0a] text-gray-300"
               >
                 <option value="">All Months</option>
                 {[...Array(12).keys()].map(i => (
@@ -225,7 +225,7 @@ const Occasions = () => {
               <select
                 value={occasionTypeFilter}
                 onChange={(e) => setOccasionTypeFilter(e.target.value)}
-                className="w-full pl-3 pr-6 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 appearance-none bg-white text-gray-700"
+                className="w-full pl-3 pr-6 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 appearance-none bg-[#0a0a0a] text-gray-300"
               >
                 <option value="all">All Occasions</option>
                 <option value="birthday">Birthdays Only</option>
@@ -250,7 +250,7 @@ const Occasions = () => {
                 setOccasionTypeFilter('all');
                 fetchOccasions();
               }}
-              className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 flex items-center gap-1 cursor-pointer"
+              className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937] flex items-center gap-1 cursor-pointer"
             >
               <FaSync className={`text-[10px] ${loading ? 'animate-spin' : ''}`} /> Sync
             </button>
@@ -260,8 +260,8 @@ const Occasions = () => {
         {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-xs font-bold">{error}</div>}
 
         {/* --- Main Table Area --- */}
-        <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+        <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
+          <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
             <table className="min-w-full">
               {/* Sleek Gradient Header matching AllExpensives */}
               <thead className="text-sm text-left text-white bg-gradient-to-r from-indigo-500 to-purple-600">
@@ -274,7 +274,7 @@ const Occasions = () => {
                 </tr>
               </thead>
               
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-[#0a0a0a] divide-y divide-[#1f2937]">
                 {loading && occasions.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="px-2 py-2 text-center">
@@ -299,7 +299,7 @@ const Occasions = () => {
                   filteredRecords.map((occ) => (
                     <tr
                       key={occ.id}
-                      className={`transition-colors hover:bg-gray-50 group ${occ.isToday ? 'bg-orange-50/30' : ''}`}
+                      className={`transition-colors hover:bg-[#000000] group ${occ.isToday ? 'bg-orange-50/30' : ''}`}
                     >
                       <td className="px-4 py-3 text-left whitespace-nowrap">
                         <div className="flex items-center gap-3">
@@ -311,7 +311,7 @@ const Occasions = () => {
                                 {occ.name.split(' ').map(n => n[0]).join('')}
                             </div>
                             <div className="flex flex-col">
-                                <span className="font-bold text-gray-900 flex items-center gap-2">
+                                <span className="font-bold text-gray-200 flex items-center gap-2">
                                     {occ.name}
                                     {occ.isToday && <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-orange-500 text-white animate-pulse">TODAY</span>}
                                 </span>
@@ -323,7 +323,7 @@ const Occasions = () => {
                       </td>
                       
                       <td className="px-4 py-3 text-center whitespace-nowrap">
-                        <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                        <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-[#111111] text-slate-400 border border-[#1f2937]">
                           {occ.role}
                         </span>
                       </td>
@@ -342,7 +342,7 @@ const Occasions = () => {
                       
                       <td className="px-4 py-3 text-center whitespace-nowrap">
                         <div className="flex flex-col items-center">
-                            <span className="text-sm font-bold text-gray-900">
+                            <span className="text-sm font-bold text-gray-200">
                                 {occ.originalDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
                             </span>
                             {occ.type === 'anniversary' && (

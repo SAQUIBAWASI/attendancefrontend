@@ -29,7 +29,7 @@ const LeaveTypeList = () => {
   };
 
   return (
-    <div className="min-h-screen p-6 bg-gray-100">
+    <div className="min-h-screen p-6 bg-[#111111]">
       <div className="flex items-center justify-between pb-2 mb-4 border-b">
         <h2 className="text-xl font-semibold">Leave Type List</h2>
         <button
@@ -43,9 +43,9 @@ const LeaveTypeList = () => {
         </button>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full bg-white rounded shadow-md">
+        <table className="w-full bg-[#0a0a0a] rounded shadow-md">
           <thead>
-            <tr className="text-left bg-gray-200">
+            <tr className="text-left bg-[#1f2937]">
               <th className="p-2">Sl</th>
               <th className="p-2">Leave Type</th>
               <th className="p-2">Days</th>
@@ -100,7 +100,7 @@ const LeaveTypeModal = ({ data, onClose, onSave }) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="p-6 bg-white rounded shadow-lg w-96">
+      <div className="p-6 bg-[#0a0a0a] rounded shadow-lg w-96">
         <h2 className="mb-4 text-xl">{data ? "Edit Leave Type" : "New Leave Type"}</h2>
         <label className="block mb-2">Leave Type Name*</label>
         <input

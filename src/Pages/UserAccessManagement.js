@@ -214,11 +214,11 @@
 //   };
 
 //   return (
-//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-800 bg-gray-50 md:p-8">
+//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-300 bg-[#000000] md:p-8">
 //       <ToastContainer position="top-right" autoClose={3000} />
 
 //       {/* 🟣 LEFT SIDEBAR - TEAMS/DEPARTMENTS */}
-//       <div className="flex flex-col w-64 bg-white border-r border-gray-100 shadow-sm">
+//       <div className="flex flex-col w-64 bg-[#0a0a0a] border-r border-[#1f2937] shadow-sm">
 //         <div className="p-6 border-b border-gray-50">
 //           <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
 //             <FiUsers className="text-blue-600" /> Departments
@@ -231,12 +231,12 @@
 //               onClick={() => setSelectedDepartment(dept)}
 //               className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex justify-between items-center ${selectedDepartment === dept
 //                 ? "bg-blue-600 text-white shadow-lg shadow-blue-100"
-//                 : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+//                 : "text-gray-500 hover:bg-[#000000] hover:text-gray-200"
 //                 }`}
 //             >
 //               <span>{dept}</span>
 //               {selectedDepartment !== dept && dept !== "All" && (
-//                 <span className="bg-gray-100 text-gray-400 text-[10px] px-2 py-0.5 rounded-lg">
+//                 <span className="bg-[#111111] text-gray-400 text-[10px] px-2 py-0.5 rounded-lg">
 //                   {employees.filter(e => e.department === dept).length}
 //                 </span>
 //               )}
@@ -248,9 +248,9 @@
 //       {/* 🔵 RIGHT CONTENT - EMPLOYEE GRID */}
 //       <div className="flex flex-col flex-1 overflow-hidden">
 //         {/* Sleek Sub-Header */}
-//         <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-white/50 backdrop-blur-sm">
+//         <div className="flex items-center justify-between px-8 py-6 border-b border-[#1f2937] bg-[#0a0a0a]/50 backdrop-blur-sm">
 //           <div>
-//             <h1 className="text-xl font-black leading-none text-gray-900">User Access</h1>
+//             <h1 className="text-xl font-black leading-none text-gray-200">User Access</h1>
 //             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Manage platform-wide permissions</p>
 //           </div>
 
@@ -265,14 +265,14 @@
 //                   setGlobalSearchTerm(e.target.value);
 //                   setIsGlobalSearchOpen(true);
 //                 }}
-//                 className="w-full py-2 pr-4 text-sm transition-all bg-white border border-gray-300 rounded-full pl-9 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+//                 className="w-full py-2 pr-4 text-sm transition-all bg-[#0a0a0a] border border-[#374151] rounded-full pl-9 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
 //               />
 //               <FiSearch className="absolute text-gray-400 -translate-y-1/2 left-3 top-1/2" />
 //             </div>
 
 //             {/* Global Search Results Dropdown */}
 //             {isGlobalSearchOpen && globalSearchTerm && (
-//               <div className="absolute right-0 z-30 w-full mt-2 overflow-y-auto duration-200 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 animate-in fade-in zoom-in-95">
+//               <div className="absolute right-0 z-30 w-full mt-2 overflow-y-auto duration-200 bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-xl max-h-60 animate-in fade-in zoom-in-95">
 //                 {filteredGlobalEmployees.length > 0 ? (
 //                   filteredGlobalEmployees.map((emp) => (
 //                     <div
@@ -282,7 +282,7 @@
 //                     >
 //                       <div className="flex items-start justify-between">
 //                         <div>
-//                           <p className="text-sm font-bold text-gray-800 group-hover:text-blue-700">{emp.name}</p>
+//                           <p className="text-sm font-bold text-gray-300 group-hover:text-blue-700">{emp.name}</p>
 //                           <p className="text-[10px] text-gray-500 font-medium uppercase mt-0.5">{emp.role || "No Role"}</p>
 //                         </div>
 //                         <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
@@ -308,10 +308,10 @@
 
 //             {/* 1. Role Selector */}
 //             <div className="flex-1 space-y-1.5 relative" ref={roleDropdownRef}>
-//               <label className="block text-sm font-bold text-gray-700">Select Role</label>
+//               <label className="block text-sm font-bold text-gray-300">Select Role</label>
 //               <div
 //                 onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-//                 className="flex items-center justify-between w-full p-3 text-sm font-medium text-gray-700 transition-all bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer hover:border-blue-400"
+//                 className="flex items-center justify-between w-full p-3 text-sm font-medium text-gray-300 transition-all bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-sm cursor-pointer hover:border-blue-400"
 //               >
 //                 <span>
 //                   {selectedRole ? (
@@ -326,12 +326,12 @@
 
 //               {/* Role Dropdown */}
 //               {isRoleDropdownOpen && (
-//                 <div className="absolute z-20 w-full mt-1 overflow-y-auto duration-200 bg-white border border-gray-100 shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
+//                 <div className="absolute z-20 w-full mt-1 overflow-y-auto duration-200 bg-[#0a0a0a] border border-[#1f2937] shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
 //                   <div
 //                     onClick={() => handleSelectRole("")}
 //                     className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-blue-50"
 //                   >
-//                     <span className="text-sm font-medium text-gray-700">All Roles</span>
+//                     <span className="text-sm font-medium text-gray-300">All Roles</span>
 //                     {!selectedRole && <FiCheck className="text-blue-600" />}
 //                   </div>
 //                   {availableRoles.map(role => (
@@ -341,8 +341,8 @@
 //                       className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-blue-50 group"
 //                     >
 //                       <div className="flex items-center gap-2">
-//                         <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">{role}</span>
-//                         <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{roleStats[role]}</span>
+//                         <span className="text-sm font-medium text-gray-300 group-hover:text-blue-700">{role}</span>
+//                         <span className="text-xs text-gray-400 bg-[#111111] px-1.5 py-0.5 rounded-full">{roleStats[role]}</span>
 //                       </div>
 //                       {selectedRole === role && <FiCheck className="text-blue-600" />}
 //                     </div>
@@ -353,7 +353,7 @@
 
 //             {/* 2. Employee Selector (Context Specific) */}
 //             <div className="flex-[2] space-y-1.5 relative" ref={employeeDropdownRef}>
-//               <label className="block text-sm font-bold text-gray-700">Select Employee</label>
+//               <label className="block text-sm font-bold text-gray-300">Select Employee</label>
 //               <div className="relative">
 //                 <input
 //                   type="text"
@@ -365,7 +365,7 @@
 //                   }}
 //                   onClick={() => setIsEmployeeDropdownOpen(true)}
 //                   placeholder={selectedRole ? `Search in ${selectedRole} (${roleStats[selectedRole] || 0} Users)...` : `Search Employee Name or ID (${employees.length} Users)...`}
-//                   className="w-full p-3 pl-4 pr-10 text-sm font-medium transition-all border border-gray-200 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+//                   className="w-full p-3 pl-4 pr-10 text-sm font-medium transition-all border border-[#1f2937] rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
 //                 />
 //                 <div className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2">
 //                   {loading ? <div className="w-4 h-4 border-2 border-blue-500 rounded-full animate-spin border-t-transparent" /> : <FiUser />}
@@ -374,7 +374,7 @@
 
 //               {/* Employee Dropdown */}
 //               {isEmployeeDropdownOpen && filteredEmployees.length > 0 && (
-//                 <div className="absolute z-10 w-full mt-1 overflow-y-auto duration-200 bg-white border border-gray-100 shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
+//                 <div className="absolute z-10 w-full mt-1 overflow-y-auto duration-200 bg-[#0a0a0a] border border-[#1f2937] shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
 //                   {filteredEmployees.map((emp) => (
 //                     <div
 //                       key={emp._id}
@@ -382,7 +382,7 @@
 //                       className="flex justify-between items-center px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors group border-b border-gray-50 last:border-0"
 //                     >
 //                       <div>
-//                         <p className="text-sm font-bold text-gray-800 group-hover:text-blue-700">{emp.name}</p>
+//                         <p className="text-sm font-bold text-gray-300 group-hover:text-blue-700">{emp.name}</p>
 //                         <div className="flex items-center gap-2 mt-1">
 //                           <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
 //                             {emp.employeeId}
@@ -410,7 +410,7 @@
 //                 {permissionGroups.flatMap(group => group.items.map(item => ({ ...item, type: group.type }))).map((item) => (
 //                   <label
 //                     key={item.id}
-//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-gray-50 transition-colors ${item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
+//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-[#000000] transition-colors ${item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
 //                       }`}
 //                   >
 //                     <div className="relative flex items-center justify-center">
@@ -423,12 +423,12 @@
 //                       />
 //                       <div className={`w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center ${item.type === "immutable"
 //                           ? "bg-blue-500 border-blue-500 text-white"
-//                           : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white group-hover:border-blue-400"
+//                           : "border-[#374151] peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white group-hover:border-blue-400"
 //                         }`}>
 //                         <FiCheck size={10} className={item.type === "toggleable" && !permissions.includes(item.id) ? "hidden" : "block"} />
 //                       </div>
 //                     </div>
-//                     <span className="text-xs font-semibold text-gray-700 group-hover:text-gray-900">
+//                     <span className="text-xs font-semibold text-gray-300 group-hover:text-gray-200">
 //                       {item.name}
 //                     </span>
 //                   </label>
@@ -436,7 +436,7 @@
 //               </div>
 
 //               {/* Action Buttons */}
-//               <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-gray-100">
+//               <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-[#1f2937]">
 //                 <button
 //                   onClick={savePermissions}
 //                   className="px-8 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-lg rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95"
@@ -456,7 +456,7 @@
 //             </div>
 //           ) : (
 //             /* Empty State */
-//             <div className="flex flex-col items-center justify-center py-12 text-gray-300 border border-gray-200 border-dashed bg-gray-50/50 rounded-xl">
+//             <div className="flex flex-col items-center justify-center py-12 text-gray-300 border border-[#1f2937] border-dashed bg-[#000000]/50 rounded-xl">
 //               <FiFilter size={32} className="mb-3 text-blue-300 opacity-50" />
 //               <p className="text-xs font-bold tracking-widest text-gray-400 uppercase">Select Role & Employee to Configure</p>
 //             </div>
@@ -684,15 +684,15 @@
 //   };
 
 //   return (
-//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-800 bg-gray-50 md:p-8">
+//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-300 bg-[#000000] md:p-8">
 //       <ToastContainer position="top-right" autoClose={3000} />
 
-//       <div className="w-full overflow-hidden bg-white border border-gray-200 shadow-sm max-w-8xl rounded-xl">
+//       <div className="w-full overflow-hidden bg-[#0a0a0a] border border-[#1f2937] shadow-sm max-w-8xl rounded-xl">
 //         {/* Header - Enhanced with Global Search */}
-//         <div className="flex flex-col items-center justify-between gap-4 px-6 py-4 border-b border-gray-100 md:flex-row bg-gray-50/50">
+//         <div className="flex flex-col items-center justify-between gap-4 px-6 py-4 border-b border-[#1f2937] md:flex-row bg-[#000000]/50">
 //           <div className="flex items-center gap-2">
 //             <FiSettings className="text-gray-400" />
-//             <h1 className="text-lg font-bold text-gray-800">User Access Management</h1>
+//             <h1 className="text-lg font-bold text-gray-300">User Access Management</h1>
 //           </div>
 
 //           {/* Global Search Bar */}
@@ -706,14 +706,14 @@
 //                   setGlobalSearchTerm(e.target.value);
 //                   setIsGlobalSearchOpen(true);
 //                 }}
-//                 className="w-full py-2 pr-4 text-sm transition-all bg-white border border-gray-300 rounded-full pl-9 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+//                 className="w-full py-2 pr-4 text-sm transition-all bg-[#0a0a0a] border border-[#374151] rounded-full pl-9 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
 //               />
 //               <FiSearch className="absolute text-gray-400 -translate-y-1/2 left-3 top-1/2" />
 //             </div>
 
 //             {/* Global Search Results Dropdown */}
 //             {isGlobalSearchOpen && globalSearchTerm && (
-//               <div className="absolute right-0 z-30 w-full mt-2 overflow-y-auto duration-200 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 animate-in fade-in zoom-in-95">
+//               <div className="absolute right-0 z-30 w-full mt-2 overflow-y-auto duration-200 bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-xl max-h-60 animate-in fade-in zoom-in-95">
 //                 {filteredGlobalEmployees.length > 0 ? (
 //                   filteredGlobalEmployees.map((emp) => (
 //                     <div
@@ -723,7 +723,7 @@
 //                     >
 //                       <div className="flex items-start justify-between">
 //                         <div>
-//                           <p className="text-sm font-bold text-gray-800 group-hover:text-blue-700">{emp.name}</p>
+//                           <p className="text-sm font-bold text-gray-300 group-hover:text-blue-700">{emp.name}</p>
 //                           <p className="text-[10px] text-gray-500 font-medium uppercase mt-0.5">{emp.role || "No Role"}</p>
 //                         </div>
 //                         <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
@@ -749,10 +749,10 @@
 
 //             {/* 1. Role Selector */}
 //             <div className="flex-1 space-y-1.5 relative" ref={roleDropdownRef}>
-//               <label className="block text-sm font-bold text-gray-700">Select Role</label>
+//               <label className="block text-sm font-bold text-gray-300">Select Role</label>
 //               <div 
 //                 onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-//                 className="flex items-center justify-between w-full p-3 text-sm font-medium text-gray-700 transition-all bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer hover:border-blue-400"
+//                 className="flex items-center justify-between w-full p-3 text-sm font-medium text-gray-300 transition-all bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-sm cursor-pointer hover:border-blue-400"
 //               >
 //                 <span>
 //                    {selectedRole ? (
@@ -767,12 +767,12 @@
 
 //               {/* Role Dropdown */}
 //               {isRoleDropdownOpen && (
-//                 <div className="absolute z-20 w-full mt-1 overflow-y-auto duration-200 bg-white border border-gray-100 shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
+//                 <div className="absolute z-20 w-full mt-1 overflow-y-auto duration-200 bg-[#0a0a0a] border border-[#1f2937] shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
 //                   <div 
 //                     onClick={() => handleSelectRole("")}
 //                     className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-blue-50"
 //                   >
-//                     <span className="text-sm font-medium text-gray-700">All Roles</span>
+//                     <span className="text-sm font-medium text-gray-300">All Roles</span>
 //                     {!selectedRole && <FiCheck className="text-blue-600" />}
 //                   </div>
 //                   {availableRoles.map(role => (
@@ -782,8 +782,8 @@
 //                       className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-blue-50 group"
 //                     >
 //                       <div className="flex items-center gap-2">
-//                         <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">{role}</span>
-//                         <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{roleStats[role]}</span>
+//                         <span className="text-sm font-medium text-gray-300 group-hover:text-blue-700">{role}</span>
+//                         <span className="text-xs text-gray-400 bg-[#111111] px-1.5 py-0.5 rounded-full">{roleStats[role]}</span>
 //                       </div>
 //                       {selectedRole === role && <FiCheck className="text-blue-600" />}
 //                     </div>
@@ -794,7 +794,7 @@
 
 //             {/* 2. Employee Selector (Context Specific) */}
 //             <div className="flex-[2] space-y-1.5 relative" ref={employeeDropdownRef}>
-//               <label className="block text-sm font-bold text-gray-700">Select Employee</label>
+//               <label className="block text-sm font-bold text-gray-300">Select Employee</label>
 //               <div className="relative">
 //                 <input
 //                   type="text"
@@ -806,7 +806,7 @@
 //                   }}
 //                   onClick={() => setIsEmployeeDropdownOpen(true)}
 //                   placeholder={selectedRole ? `Search in ${selectedRole} (${roleStats[selectedRole] || 0} Users)...` : `Search Employee Name or ID (${employees.length} Users)...`}
-//                   className="w-full p-3 pl-4 pr-10 text-sm font-medium transition-all border border-gray-200 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+//                   className="w-full p-3 pl-4 pr-10 text-sm font-medium transition-all border border-[#1f2937] rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
 //                 />
 //                 <div className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2">
 //                    {loading ? <div className="w-4 h-4 border-2 border-blue-500 rounded-full animate-spin border-t-transparent"/> : <FiUser />}
@@ -815,7 +815,7 @@
 
 //               {/* Employee Dropdown */}
 //               {isEmployeeDropdownOpen && filteredEmployees.length > 0 && (
-//                 <div className="absolute z-10 w-full mt-1 overflow-y-auto duration-200 bg-white border border-gray-100 shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
+//                 <div className="absolute z-10 w-full mt-1 overflow-y-auto duration-200 bg-[#0a0a0a] border border-[#1f2937] shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
 //                   {filteredEmployees.map((emp) => (
 //                     <div
 //                       key={emp._id}
@@ -823,7 +823,7 @@
 //                       className="flex justify-between items-center px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors group border-b border-gray-50 last:border-0"
 //                     >
 //                       <div>
-//                         <p className="text-sm font-bold text-gray-800 group-hover:text-blue-700">{emp.name}</p>
+//                         <p className="text-sm font-bold text-gray-300 group-hover:text-blue-700">{emp.name}</p>
 //                         <div className="flex items-center gap-2 mt-1">
 //                           <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
 //                              {emp.employeeId}
@@ -851,7 +851,7 @@
 //                 {permissionGroups.flatMap(group => group.items.map(item => ({...item, type: group.type}))).map((item) => (
 //                   <label 
 //                     key={item.id} 
-//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-gray-50 transition-colors ${
+//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-[#000000] transition-colors ${
 //                        item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
 //                     }`}
 //                   >
@@ -866,12 +866,12 @@
 //                       <div className={`w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center ${
 //                          item.type === "immutable"
 //                            ? "bg-blue-500 border-blue-500 text-white"
-//                            : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white group-hover:border-blue-400"
+//                            : "border-[#374151] peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white group-hover:border-blue-400"
 //                       }`}>
 //                         <FiCheck size={10} className={item.type === "toggleable" && !permissions.includes(item.id) ? "hidden" : "block"} />
 //                       </div>
 //                     </div>
-//                     <span className="text-xs font-semibold text-gray-700 group-hover:text-gray-900">
+//                     <span className="text-xs font-semibold text-gray-300 group-hover:text-gray-200">
 //                       {item.name}
 //                     </span>
 //                   </label>
@@ -879,7 +879,7 @@
 //               </div>
 
 //               {/* Action Buttons */}
-//               <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-gray-100">
+//               <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-[#1f2937]">
 //                  <button
 //                     onClick={savePermissions}
 //                     className="px-8 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-lg rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95"
@@ -899,7 +899,7 @@
 //             </div>
 //           ) : (
 //              /* Empty State */
-//              <div className="flex flex-col items-center justify-center py-12 text-gray-300 border border-gray-200 border-dashed bg-gray-50/50 rounded-xl">
+//              <div className="flex flex-col items-center justify-center py-12 text-gray-300 border border-[#1f2937] border-dashed bg-[#000000]/50 rounded-xl">
 //                <FiFilter size={32} className="mb-3 text-blue-300 opacity-50"/>
 //                <p className="text-xs font-bold tracking-widest text-gray-400 uppercase">Select Role & Employee to Configure</p>
 //              </div>
@@ -1193,15 +1193,15 @@
 //   };
 
 //   return (
-//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-800 bg-gray-50 md:p-8">
+//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-300 bg-[#000000] md:p-8">
 //       <ToastContainer position="top-right" autoClose={3000} />
 
-//       <div className="w-full overflow-hidden bg-white border border-gray-200 shadow-sm max-w-8xl rounded-xl">
+//       <div className="w-full overflow-hidden bg-[#0a0a0a] border border-[#1f2937] shadow-sm max-w-8xl rounded-xl">
 //         {/* Header - Enhanced with Global Search */}
-//         <div className="flex flex-col items-center justify-between gap-4 px-6 py-4 border-b border-gray-100 md:flex-row bg-gray-50/50">
+//         <div className="flex flex-col items-center justify-between gap-4 px-6 py-4 border-b border-[#1f2937] md:flex-row bg-[#000000]/50">
 //           <div className="flex items-center gap-2">
 //             <FiSettings className="text-gray-400" />
-//             <h1 className="text-lg font-bold text-gray-800">User Access Management</h1>
+//             <h1 className="text-lg font-bold text-gray-300">User Access Management</h1>
 //           </div>
 
 //           {/* Global Search Bar */}
@@ -1215,14 +1215,14 @@
 //                   setGlobalSearchTerm(e.target.value);
 //                   setIsGlobalSearchOpen(true);
 //                 }}
-//                 className="w-full py-2 pr-4 text-sm transition-all bg-white border border-gray-300 rounded-full pl-9 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+//                 className="w-full py-2 pr-4 text-sm transition-all bg-[#0a0a0a] border border-[#374151] rounded-full pl-9 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
 //               />
 //               <FiSearch className="absolute text-gray-400 -translate-y-1/2 left-3 top-1/2" />
 //             </div>
 
 //             {/* Global Search Results Dropdown */}
 //             {isGlobalSearchOpen && globalSearchTerm && (
-//               <div className="absolute right-0 z-30 w-full mt-2 overflow-y-auto duration-200 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 animate-in fade-in zoom-in-95">
+//               <div className="absolute right-0 z-30 w-full mt-2 overflow-y-auto duration-200 bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-xl max-h-60 animate-in fade-in zoom-in-95">
 //                 {filteredGlobalEmployees.length > 0 ? (
 //                   filteredGlobalEmployees.map((emp) => (
 //                     <div
@@ -1232,7 +1232,7 @@
 //                     >
 //                       <div className="flex items-start justify-between">
 //                         <div>
-//                           <p className="text-sm font-bold text-gray-800 group-hover:text-blue-700">{emp.name}</p>
+//                           <p className="text-sm font-bold text-gray-300 group-hover:text-blue-700">{emp.name}</p>
 //                           <p className="text-[10px] text-gray-500 font-medium uppercase mt-0.5">{emp.role || "No Role"}</p>
 //                         </div>
 //                         <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
@@ -1258,10 +1258,10 @@
 
 //             {/* 1. Role Selector */}
 //             <div className="flex-1 space-y-1.5 relative" ref={roleDropdownRef}>
-//               <label className="block text-sm font-bold text-gray-700">Select Role</label>
+//               <label className="block text-sm font-bold text-gray-300">Select Role</label>
 //               <div 
 //                 onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-//                 className="flex items-center justify-between w-full p-3 text-sm font-medium text-gray-700 transition-all bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer hover:border-blue-400"
+//                 className="flex items-center justify-between w-full p-3 text-sm font-medium text-gray-300 transition-all bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-sm cursor-pointer hover:border-blue-400"
 //               >
 //                 <span>
 //                    {selectedRole ? (
@@ -1276,12 +1276,12 @@
 
 //               {/* Role Dropdown */}
 //               {isRoleDropdownOpen && (
-//                 <div className="absolute z-20 w-full mt-1 overflow-y-auto duration-200 bg-white border border-gray-100 shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
+//                 <div className="absolute z-20 w-full mt-1 overflow-y-auto duration-200 bg-[#0a0a0a] border border-[#1f2937] shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
 //                   <div 
 //                     onClick={() => handleSelectRole("")}
 //                     className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-blue-50"
 //                   >
-//                     <span className="text-sm font-medium text-gray-700">All Roles</span>
+//                     <span className="text-sm font-medium text-gray-300">All Roles</span>
 //                     {!selectedRole && <FiCheck className="text-blue-600" />}
 //                   </div>
 //                   {availableRoles.map(role => (
@@ -1291,8 +1291,8 @@
 //                       className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-blue-50 group"
 //                     >
 //                       <div className="flex items-center gap-2">
-//                         <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">{role}</span>
-//                         <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{roleStats[role]}</span>
+//                         <span className="text-sm font-medium text-gray-300 group-hover:text-blue-700">{role}</span>
+//                         <span className="text-xs text-gray-400 bg-[#111111] px-1.5 py-0.5 rounded-full">{roleStats[role]}</span>
 //                       </div>
 //                       {selectedRole === role && <FiCheck className="text-blue-600" />}
 //                     </div>
@@ -1303,7 +1303,7 @@
 
 //             {/* 2. Employee Selector (Context Specific) */}
 //             <div className="flex-[2] space-y-1.5 relative" ref={employeeDropdownRef}>
-//               <label className="block text-sm font-bold text-gray-700">Select Employee</label>
+//               <label className="block text-sm font-bold text-gray-300">Select Employee</label>
 //               <div className="relative">
 //                 <input
 //                   type="text"
@@ -1315,7 +1315,7 @@
 //                   }}
 //                   onClick={() => setIsEmployeeDropdownOpen(true)}
 //                   placeholder={selectedRole ? `Search in ${selectedRole} (${roleStats[selectedRole] || 0} Users)...` : `Search Employee Name or ID (${employees.length} Users)...`}
-//                   className="w-full p-3 pl-4 pr-10 text-sm font-medium transition-all border border-gray-200 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+//                   className="w-full p-3 pl-4 pr-10 text-sm font-medium transition-all border border-[#1f2937] rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
 //                 />
 //                 <div className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2">
 //                    {loading ? <div className="w-4 h-4 border-2 border-blue-500 rounded-full animate-spin border-t-transparent"/> : <FiUser />}
@@ -1324,7 +1324,7 @@
 
 //               {/* Employee Dropdown */}
 //               {isEmployeeDropdownOpen && filteredEmployees.length > 0 && (
-//                 <div className="absolute z-10 w-full mt-1 overflow-y-auto duration-200 bg-white border border-gray-100 shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
+//                 <div className="absolute z-10 w-full mt-1 overflow-y-auto duration-200 bg-[#0a0a0a] border border-[#1f2937] shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
 //                   {filteredEmployees.map((emp) => (
 //                     <div
 //                       key={emp._id}
@@ -1332,7 +1332,7 @@
 //                       className="flex justify-between items-center px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors group border-b border-gray-50 last:border-0"
 //                     >
 //                       <div>
-//                         <p className="text-sm font-bold text-gray-800 group-hover:text-blue-700">{emp.name}</p>
+//                         <p className="text-sm font-bold text-gray-300 group-hover:text-blue-700">{emp.name}</p>
 //                         <div className="flex items-center gap-2 mt-1">
 //                           <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
 //                              {emp.employeeId}
@@ -1360,7 +1360,7 @@
 //                 {permissionGroups.flatMap(group => group.items.map(item => ({...item, type: group.type}))).map((item) => (
 //                   <label 
 //                     key={item.id} 
-//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-gray-50 transition-colors ${
+//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-[#000000] transition-colors ${
 //                        item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
 //                     }`}
 //                   >
@@ -1375,12 +1375,12 @@
 //                       <div className={`w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center ${
 //                          item.type === "immutable"
 //                            ? "bg-blue-500 border-blue-500 text-white"
-//                            : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white group-hover:border-blue-400"
+//                            : "border-[#374151] peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white group-hover:border-blue-400"
 //                       }`}>
 //                         <FiCheck size={10} className={item.type === "toggleable" && !permissions.includes(item.id) ? "hidden" : "block"} />
 //                       </div>
 //                     </div>
-//                     <span className="text-xs font-semibold text-gray-700 group-hover:text-gray-900">
+//                     <span className="text-xs font-semibold text-gray-300 group-hover:text-gray-200">
 //                       {item.name}
 //                     </span>
 //                   </label>
@@ -1388,7 +1388,7 @@
 //               </div>
 
 //               {/* Action Buttons */}
-//               <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-gray-100">
+//               <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-[#1f2937]">
 //                  <button
 //                     onClick={savePermissions}
 //                     className="px-8 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-lg rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95"
@@ -1408,7 +1408,7 @@
 //             </div>
 //           ) : (
 //              /* Empty State */
-//              <div className="flex flex-col items-center justify-center py-12 text-gray-300 border border-gray-200 border-dashed bg-gray-50/50 rounded-xl">
+//              <div className="flex flex-col items-center justify-center py-12 text-gray-300 border border-[#1f2937] border-dashed bg-[#000000]/50 rounded-xl">
 //                <FiFilter size={32} className="mb-3 text-blue-300 opacity-50"/>
 //                <p className="text-xs font-bold tracking-widest text-gray-400 uppercase">Select Role & Employee to Configure</p>
 //              </div>
@@ -1699,15 +1699,15 @@
 //   };
 
 //   return (
-//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-800 bg-gray-50 md:p-8">
+//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-300 bg-[#000000] md:p-8">
 //       <ToastContainer position="top-right" autoClose={3000} />
 
-//       <div className="w-full overflow-hidden bg-white border border-gray-200 shadow-sm max-w-8xl rounded-xl">
+//       <div className="w-full overflow-hidden bg-[#0a0a0a] border border-[#1f2937] shadow-sm max-w-8xl rounded-xl">
 //         {/* Header */}
-//         {/* <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+//         {/* <div className="px-6 py-4 border-b border-[#1f2937] bg-[#000000]/50">
 //           <div className="flex items-center gap-2">
 //             <FiSettings className="text-gray-400" />
-//             <h1 className="text-lg font-bold text-gray-800">User Access Management</h1>
+//             <h1 className="text-lg font-bold text-gray-300">User Access Management</h1>
 //           </div> */}
 //         {/* </div> */}
 
@@ -1718,7 +1718,7 @@
 
 //             {/* Global Search - First */}
 //             <div className="relative w-full md:w-80" ref={globalSearchRef}>
-//               <label className="block text-gray-700 font-bold text-sm mb-1.5">Quick Search</label>
+//               <label className="block text-gray-300 font-bold text-sm mb-1.5">Quick Search</label>
 //               <div className="relative">
 //                 <input
 //                   type="text"
@@ -1728,14 +1728,14 @@
 //                     setGlobalSearchTerm(e.target.value);
 //                     setIsGlobalSearchOpen(true);
 //                   }}
-//                   className="w-full py-3 pr-4 text-sm transition-all bg-white border border-gray-200 rounded-lg pl-9 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+//                   className="w-full py-3 pr-4 text-sm transition-all bg-[#0a0a0a] border border-[#1f2937] rounded-lg pl-9 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
 //                 />
 //                 <FiSearch className="absolute text-gray-400 -translate-y-1/2 left-3 top-1/2" />
 //               </div>
 
 //               {/* Global Search Results Dropdown */}
 //               {isGlobalSearchOpen && globalSearchTerm && (
-//                 <div className="absolute right-0 z-30 w-full mt-2 overflow-y-auto duration-200 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 animate-in fade-in zoom-in-95">
+//                 <div className="absolute right-0 z-30 w-full mt-2 overflow-y-auto duration-200 bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-xl max-h-60 animate-in fade-in zoom-in-95">
 //                   {filteredGlobalEmployees.length > 0 ? (
 //                     filteredGlobalEmployees.map((emp) => (
 //                       <div
@@ -1745,7 +1745,7 @@
 //                       >
 //                         <div className="flex items-start justify-between">
 //                           <div>
-//                             <p className="text-sm font-bold text-gray-800 group-hover:text-blue-700">{emp.name}</p>
+//                             <p className="text-sm font-bold text-gray-300 group-hover:text-blue-700">{emp.name}</p>
 //                             <p className="text-[10px] text-gray-500 font-medium uppercase mt-0.5">{emp.role || "No Role"}</p>
 //                           </div>
 //                           <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
@@ -1765,10 +1765,10 @@
 
 //             {/* 1. Role Selector - Second */}
 //             <div className="relative flex-1" ref={roleDropdownRef}>
-//               <label className="block text-gray-700 font-bold text-sm mb-1.5">Select Role</label>
+//               <label className="block text-gray-300 font-bold text-sm mb-1.5">Select Role</label>
 //               <div 
 //                 onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-//                 className="flex items-center justify-between w-full p-3 text-sm font-medium text-gray-700 transition-all bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer hover:border-blue-400"
+//                 className="flex items-center justify-between w-full p-3 text-sm font-medium text-gray-300 transition-all bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-sm cursor-pointer hover:border-blue-400"
 //               >
 //                 <span>
 //                    {selectedRole ? (
@@ -1783,12 +1783,12 @@
 
 //               {/* Role Dropdown */}
 //               {isRoleDropdownOpen && (
-//                 <div className="absolute z-20 w-full mt-1 overflow-y-auto duration-200 bg-white border border-gray-100 shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
+//                 <div className="absolute z-20 w-full mt-1 overflow-y-auto duration-200 bg-[#0a0a0a] border border-[#1f2937] shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
 //                   <div 
 //                     onClick={() => handleSelectRole("")}
 //                     className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-blue-50"
 //                   >
-//                     <span className="text-sm font-medium text-gray-700">All Roles</span>
+//                     <span className="text-sm font-medium text-gray-300">All Roles</span>
 //                     {!selectedRole && <FiCheck className="text-blue-600" />}
 //                   </div>
 //                   {availableRoles.map(role => (
@@ -1798,8 +1798,8 @@
 //                       className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-blue-50 group"
 //                     >
 //                       <div className="flex items-center gap-2">
-//                         <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">{role}</span>
-//                         <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{roleStats[role]}</span>
+//                         <span className="text-sm font-medium text-gray-300 group-hover:text-blue-700">{role}</span>
+//                         <span className="text-xs text-gray-400 bg-[#111111] px-1.5 py-0.5 rounded-full">{roleStats[role]}</span>
 //                       </div>
 //                       {selectedRole === role && <FiCheck className="text-blue-600" />}
 //                     </div>
@@ -1810,7 +1810,7 @@
 
 //             {/* 2. Employee Selector - Third */}
 //             <div className="flex-[2] relative" ref={employeeDropdownRef}>
-//               <label className="block text-gray-700 font-bold text-sm mb-1.5">Select Employee</label>
+//               <label className="block text-gray-300 font-bold text-sm mb-1.5">Select Employee</label>
 //               <div className="relative">
 //                 <input
 //                   type="text"
@@ -1822,7 +1822,7 @@
 //                   }}
 //                   onClick={() => setIsEmployeeDropdownOpen(true)}
 //                   placeholder={selectedRole ? `Search in ${selectedRole}...` : `Search Name or ID...`}
-//                   className="w-full p-3 pl-4 pr-10 text-sm font-medium transition-all border border-gray-200 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+//                   className="w-full p-3 pl-4 pr-10 text-sm font-medium transition-all border border-[#1f2937] rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
 //                 />
 //                 <div className="absolute text-gray-400 -translate-y-1/2 right-3 top-1/2">
 //                    {loading ? <div className="w-4 h-4 border-2 border-blue-500 rounded-full animate-spin border-t-transparent"/> : <FiUser />}
@@ -1831,7 +1831,7 @@
 
 //               {/* Employee Dropdown */}
 //               {isEmployeeDropdownOpen && filteredEmployees.length > 0 && (
-//                 <div className="absolute z-10 w-full mt-1 overflow-y-auto duration-200 bg-white border border-gray-100 shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
+//                 <div className="absolute z-10 w-full mt-1 overflow-y-auto duration-200 bg-[#0a0a0a] border border-[#1f2937] shadow-xl rounded-xl max-h-60 animate-in fade-in zoom-in-95">
 //                   {filteredEmployees.map((emp) => (
 //                     <div
 //                       key={emp._id}
@@ -1839,7 +1839,7 @@
 //                       className="flex justify-between items-center px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors group border-b border-gray-50 last:border-0"
 //                     >
 //                       <div>
-//                         <p className="text-sm font-bold text-gray-800 group-hover:text-blue-700">{emp.name}</p>
+//                         <p className="text-sm font-bold text-gray-300 group-hover:text-blue-700">{emp.name}</p>
 //                         <div className="flex items-center gap-2 mt-1">
 //                           <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
 //                              {emp.employeeId}
@@ -1867,7 +1867,7 @@
 //                 {permissionGroups.flatMap(group => group.items.map(item => ({...item, type: group.type}))).map((item) => (
 //                   <label 
 //                     key={item.id} 
-//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-gray-50 transition-colors ${
+//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-[#000000] transition-colors ${
 //                        item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
 //                     }`}
 //                   >
@@ -1882,12 +1882,12 @@
 //                       <div className={`w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center ${
 //                          item.type === "immutable"
 //                            ? "bg-blue-500 border-blue-500 text-white"
-//                            : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white group-hover:border-blue-400"
+//                            : "border-[#374151] peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white group-hover:border-blue-400"
 //                       }`}>
 //                         <FiCheck size={10} className={item.type === "toggleable" && !permissions.includes(item.id) ? "hidden" : "block"} />
 //                       </div>
 //                     </div>
-//                     <span className="text-xs font-semibold text-gray-700 group-hover:text-gray-900">
+//                     <span className="text-xs font-semibold text-gray-300 group-hover:text-gray-200">
 //                       {item.name}
 //                     </span>
 //                   </label>
@@ -1895,7 +1895,7 @@
 //               </div>
 
 //               {/* Action Buttons */}
-//               <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-gray-100">
+//               <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-[#1f2937]">
 //                  <button
 //                     onClick={savePermissions}
 //                     className="px-8 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-lg rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95"
@@ -1915,7 +1915,7 @@
 //             </div>
 //           ) : (
 //              /* Empty State */
-//              <div className="flex flex-col items-center justify-center py-12 text-gray-300 border border-gray-200 border-dashed bg-gray-50/50 rounded-xl">
+//              <div className="flex flex-col items-center justify-center py-12 text-gray-300 border border-[#1f2937] border-dashed bg-[#000000]/50 rounded-xl">
 //                <FiFilter size={32} className="mb-3 text-blue-300 opacity-50"/>
 //                <p className="text-xs font-bold tracking-widest text-gray-400 uppercase">Select Role & Employee to Configure</p>
 //              </div>
@@ -2221,7 +2221,7 @@
 //       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
 //         <div className="text-center">
 //           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div>
-//           <p className="font-semibold text-gray-600">
+//           <p className="font-semibold text-gray-400">
 //             Loading user access...
 //           </p>
 //         </div>
@@ -2235,45 +2235,45 @@
 //       <div className="mx-auto max-w-9xl">
 
 //         {/* Header with gradient - matching other components */}
-//         {/* <div className="p-2 mb-3 bg-white border border-gray-200 shadow-md rounded-xl">
+//         {/* <div className="p-2 mb-3 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
 //           <div className="flex items-end justify-between">
-//             <h1 className="text-xl font-bold text-gray-800">User Access Management</h1>
+//             <h1 className="text-xl font-bold text-gray-300">User Access Management</h1>
 //           </div>
 //         </div> */}
 
 //         {/* Stats Overview - matching other components */}
 //         <div className="grid grid-cols-2 gap-2 mb-3 sm:grid-cols-4">
-//           <div className="px-2 py-2 bg-white border-t-4 border-blue-500 rounded-md shadow-sm">
+//           <div className="px-2 py-2 bg-[#0a0a0a] border-t-4 border-blue-500 rounded-md shadow-sm">
 //             <div className="flex items-center justify-between">
 //               <div>
-//                 <p className="text-xs font-semibold leading-tight text-gray-800">
+//                 <p className="text-xs font-semibold leading-tight text-gray-300">
 //                   Total Employees: {employees.length}
 //                 </p>
 //               </div>
 //             </div>
 //           </div>
-//           <div className="px-2 py-2 bg-white border-t-4 border-green-500 rounded-md shadow-sm">
+//           <div className="px-2 py-2 bg-[#0a0a0a] border-t-4 border-green-500 rounded-md shadow-sm">
 //             <div className="flex items-center justify-between">
 //               <div>
-//                 <p className="text-xs font-semibold leading-tight text-gray-800">
+//                 <p className="text-xs font-semibold leading-tight text-gray-300">
 //                   Roles: {availableRoles.length}
 //                 </p>
 //               </div>
 //             </div>
 //           </div>
-//           <div className="px-2 py-2 bg-white border-t-4 border-purple-500 rounded-md shadow-sm">
+//           <div className="px-2 py-2 bg-[#0a0a0a] border-t-4 border-purple-500 rounded-md shadow-sm">
 //             <div className="flex items-center justify-between">
 //               <div>
-//                 <p className="text-xs font-semibold leading-tight text-gray-800">
+//                 <p className="text-xs font-semibold leading-tight text-gray-300">
 //                   Admins: {employees.filter(e => e.role === 'admin' || e.role === 'Admin').length}
 //                 </p>
 //               </div>
 //             </div>
 //           </div>
-//           <div className="px-2 py-2 bg-white border-t-4 border-yellow-500 rounded-md shadow-sm">
+//           <div className="px-2 py-2 bg-[#0a0a0a] border-t-4 border-yellow-500 rounded-md shadow-sm">
 //             <div className="flex items-center justify-between">
 //               <div>
-//                 <p className="text-xs font-semibold leading-tight text-gray-800">
+//                 <p className="text-xs font-semibold leading-tight text-gray-300">
 //                   Super Admins: {employees.filter(e => e.role === 'super_admin' || e.role === 'Super Admin').length}
 //                 </p>
 //               </div>
@@ -2282,14 +2282,14 @@
 //         </div>
 
 //         {/* Main Content Card */}
-//         <div className="p-3 bg-white border border-gray-200 shadow-md rounded-xl">
+//         <div className="p-3 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
 
 //           {/* --- ALL FILTERS IN ONE ROW --- */}
 //           <div className="flex flex-col items-start gap-3 mb-4 md:flex-row md:items-end">
 
 //             {/* Global Search - First */}
 //             <div className="relative w-full md:w-72" ref={globalSearchRef}>
-//               <label className="block mb-1 text-xs font-medium text-gray-700">Quick Search</label>
+//               <label className="block mb-1 text-xs font-medium text-gray-300">Quick Search</label>
 //               <div className="relative">
 //                 <input
 //                   type="text"
@@ -2299,24 +2299,24 @@
 //                     setGlobalSearchTerm(e.target.value);
 //                     setIsGlobalSearchOpen(true);
 //                   }}
-//                   className="w-full py-2 pl-8 pr-3 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                   className="w-full py-2 pl-8 pr-3 text-xs border border-[#374151] rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //                 />
 //                 <FiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
 //               </div>
 
 //               {/* Global Search Results Dropdown */}
 //               {isGlobalSearchOpen && globalSearchTerm && (
-//                 <div className="absolute right-0 z-30 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                 <div className="absolute right-0 z-30 w-full mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
 //                   {filteredGlobalEmployees.length > 0 ? (
 //                     filteredGlobalEmployees.map((emp) => (
 //                       <div
 //                         key={emp._id}
 //                         onClick={() => handleGlobalSelectEmployee(emp)}
-//                         className="px-3 py-2 transition-colors border-b border-gray-100 cursor-pointer hover:bg-blue-50 last:border-0"
+//                         className="px-3 py-2 transition-colors border-b border-[#1f2937] cursor-pointer hover:bg-blue-50 last:border-0"
 //                       >
 //                         <div className="flex items-start justify-between">
 //                           <div>
-//                             <p className="text-xs font-medium text-gray-800">{emp.name}</p>
+//                             <p className="text-xs font-medium text-gray-300">{emp.name}</p>
 //                             <p className="text-[9px] text-gray-500 mt-0.5">{emp.role || "No Role"}</p>
 //                           </div>
 //                           <span className="text-[8px] font-medium text-white bg-purple-600 px-1.5 py-0.5 rounded-full">
@@ -2336,10 +2336,10 @@
 
 //             {/* 1. Role Selector - Second */}
 //             <div className="relative flex-1" ref={roleDropdownRef}>
-//               <label className="block mb-1 text-xs font-medium text-gray-700">Select Role</label>
+//               <label className="block mb-1 text-xs font-medium text-gray-300">Select Role</label>
 //               <div 
 //                 onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-//                 className="flex items-center justify-between w-full px-3 py-2 text-xs text-gray-700 transition-all bg-white border border-gray-300 rounded-md cursor-pointer hover:border-blue-400"
+//                 className="flex items-center justify-between w-full px-3 py-2 text-xs text-gray-300 transition-all bg-[#0a0a0a] border border-[#374151] rounded-md cursor-pointer hover:border-blue-400"
 //               >
 //                 <span>
 //                    {selectedRole ? (
@@ -2354,12 +2354,12 @@
 
 //               {/* Role Dropdown */}
 //               {isRoleDropdownOpen && (
-//                 <div className="absolute z-20 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-20 w-full mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
 //                   <div 
 //                     onClick={() => handleSelectRole("")}
 //                     className="flex items-center justify-between px-3 py-2 text-xs cursor-pointer hover:bg-blue-50"
 //                   >
-//                     <span className="font-medium text-gray-700">All Roles</span>
+//                     <span className="font-medium text-gray-300">All Roles</span>
 //                     {!selectedRole && <FiCheck className="text-xs text-blue-600" />}
 //                   </div>
 //                   {availableRoles.map(role => (
@@ -2369,8 +2369,8 @@
 //                       className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-blue-50"
 //                     >
 //                       <div className="flex items-center gap-2">
-//                         <span className="text-xs font-medium text-gray-700">{role}</span>
-//                         <span className="text-[9px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">{roleStats[role]}</span>
+//                         <span className="text-xs font-medium text-gray-300">{role}</span>
+//                         <span className="text-[9px] text-gray-500 bg-[#111111] px-1.5 py-0.5 rounded-full">{roleStats[role]}</span>
 //                       </div>
 //                       {selectedRole === role && <FiCheck className="text-xs text-blue-600" />}
 //                     </div>
@@ -2381,7 +2381,7 @@
 
 //             {/* 2. Employee Selector - Third */}
 //             <div className="flex-[2] relative" ref={employeeDropdownRef}>
-//               <label className="block mb-1 text-xs font-medium text-gray-700">Select Employee</label>
+//               <label className="block mb-1 text-xs font-medium text-gray-300">Select Employee</label>
 //               <div className="relative">
 //                 <input
 //                   type="text"
@@ -2393,7 +2393,7 @@
 //                   }}
 //                   onClick={() => setIsEmployeeDropdownOpen(true)}
 //                   placeholder={selectedRole ? `Search in ${selectedRole}...` : `Search Name or ID...`}
-//                   className="w-full px-3 py-2 pr-8 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                   className="w-full px-3 py-2 pr-8 text-xs border border-[#374151] rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //                 />
 //                 <div className="absolute text-gray-400 -translate-y-1/2 right-2 top-1/2">
 //                    {loading ? <div className="w-3 h-3 border-2 border-blue-500 rounded-full border-t-transparent animate-spin"/> : <FiUser className="text-xs" />}
@@ -2402,15 +2402,15 @@
 
 //               {/* Employee Dropdown */}
 //               {isEmployeeDropdownOpen && filteredEmployees.length > 0 && (
-//                 <div className="absolute z-10 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-10 w-full mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
 //                   {filteredEmployees.map((emp) => (
 //                     <div
 //                       key={emp._id}
 //                       onClick={() => handleSelectEmployee(emp)}
-//                       className="flex items-center justify-between px-3 py-2 border-b border-gray-100 cursor-pointer hover:bg-blue-50 last:border-0"
+//                       className="flex items-center justify-between px-3 py-2 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50 last:border-0"
 //                     >
 //                       <div>
-//                         <p className="text-xs font-medium text-gray-800">{emp.name}</p>
+//                         <p className="text-xs font-medium text-gray-300">{emp.name}</p>
 //                         <div className="flex items-center gap-2 mt-0.5">
 //                           <span className="text-[8px] font-medium text-white bg-purple-600 px-1.5 py-0.5 rounded-full">
 //                              {emp.employeeId}
@@ -2441,10 +2441,10 @@
 //                   </span>
 //                 </div>
 //                 <div>
-//                   <p className="text-xs font-semibold text-gray-800">{selectedEmployee.name}</p>
+//                   <p className="text-xs font-semibold text-gray-300">{selectedEmployee.name}</p>
 //                   <div className="flex items-center gap-2 mt-0.5">
 //                     <span className="text-[9px] text-white bg-purple-600 px-1.5 py-0.5 rounded-full">{selectedEmployee.employeeId}</span>
-//                     <span className="text-[9px] text-gray-600">{selectedEmployee.role || 'No Role'}</span>
+//                     <span className="text-[9px] text-gray-400">{selectedEmployee.role || 'No Role'}</span>
 //                   </div>
 //                 </div>
 //               </div>
@@ -2458,7 +2458,7 @@
 //                 {permissionGroups.flatMap(group => group.items.map(item => ({...item, type: group.type}))).map((item) => (
 //                   <label 
 //                     key={item.id} 
-//                     className={`flex items-center gap-2 cursor-pointer select-none py-1 px-2 rounded hover:bg-gray-50 transition-colors ${
+//                     className={`flex items-center gap-2 cursor-pointer select-none py-1 px-2 rounded hover:bg-[#000000] transition-colors ${
 //                        item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
 //                     }`}
 //                   >
@@ -2473,12 +2473,12 @@
 //                       <div className={`w-3.5 h-3.5 rounded border transition-all duration-200 flex items-center justify-center ${
 //                          item.type === "immutable"
 //                            ? "bg-blue-500 border-blue-500 text-white"
-//                            : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white hover:border-blue-400"
+//                            : "border-[#374151] peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white hover:border-blue-400"
 //                       }`}>
 //                         <FiCheck size={8} className={item.type === "toggleable" && !permissions.includes(item.id) ? "hidden" : "block"} />
 //                       </div>
 //                     </div>
-//                     <span className="text-[10px] font-medium text-gray-700">
+//                     <span className="text-[10px] font-medium text-gray-300">
 //                       {item.name}
 //                     </span>
 //                   </label>
@@ -2486,7 +2486,7 @@
 //               </div>
 
 //               {/* Action Buttons */}
-//               <div className="flex justify-end gap-2 pt-3 mt-4 border-t border-gray-200">
+//               <div className="flex justify-end gap-2 pt-3 mt-4 border-t border-[#1f2937]">
 //                  <button
 //                     onClick={savePermissions}
 //                     className="px-4 py-1.5 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition"
@@ -2498,7 +2498,7 @@
 //                       setSelectedEmployee(null);
 //                       setSearchTerm("");
 //                     }}
-//                     className="px-4 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition"
+//                     className="px-4 py-1.5 text-xs font-medium text-gray-300 bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937] transition"
 //                   >
 //                     Cancel
 //                   </button>
@@ -2506,7 +2506,7 @@
 //             </div>
 //           ) : (
 //              /* Empty State */
-//              <div className="flex flex-col items-center justify-center py-8 text-gray-400 border border-gray-300 border-dashed rounded-md bg-gray-50">
+//              <div className="flex flex-col items-center justify-center py-8 text-gray-400 border border-[#374151] border-dashed rounded-md bg-[#000000]">
 //                <FiFilter size={24} className="mb-2 text-blue-400 opacity-50"/>
 //                <p className="text-[10px] font-medium uppercase tracking-wider text-gray-500">Select Role & Employee to Configure</p>
 //              </div>
@@ -2827,7 +2827,7 @@
 //       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
 //         <div className="text-center">
 //           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div>
-//           <p className="font-semibold text-gray-600">
+//           <p className="font-semibold text-gray-400">
 //             Loading user access...
 //           </p>
 //         </div>
@@ -2848,12 +2848,12 @@
 //             { icon: FiShield, label: "Admins", value: employees.filter(e => e.role === 'admin' || e.role === 'Admin').length, color: "border-purple-500" },
 //             { icon: FiStar, label: "Super Admins", value: employees.filter(e => e.role === 'super_admin' || e.role === 'Super Admin').length, color: "border-yellow-500" },
 //           ].map(({ icon: Icon, label, value, color }) => (
-//             <div key={label} className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
+//             <div key={label} className={`bg-[#0a0a0a] rounded-lg p-3 shadow-sm border-t-4 ${color} hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
 //               <div className="flex items-center gap-2">
 //                 <Icon className="text-gray-400 text-base flex-shrink-0" />
-//                 <div className="text-sm font-medium text-gray-700">{label}</div>
+//                 <div className="text-sm font-medium text-gray-300">{label}</div>
 //               </div>
-//               <div className="text-sm font-bold text-gray-800">
+//               <div className="text-sm font-bold text-gray-300">
 //                 <CountUp end={value} duration={2} separator="," />
 //               </div>
 //             </div>
@@ -2861,14 +2861,14 @@
 //         </div>
 
 //         {/* Main Content Card */}
-//         <div className="p-3 bg-white border border-gray-200 shadow-md rounded-xl">
+//         <div className="p-3 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
 
 //           {/* --- ALL FILTERS IN ONE ROW --- */}
 //           <div className="flex flex-col items-start gap-3 mb-4 md:flex-row md:items-end">
 
 //             {/* Global Search - First */}
 //             <div className="relative w-full md:w-72" ref={globalSearchRef}>
-//               <label className="block mb-1 text-xs font-medium text-gray-700">Quick Search</label>
+//               <label className="block mb-1 text-xs font-medium text-gray-300">Quick Search</label>
 //               <div className="relative">
 //                 <input
 //                   type="text"
@@ -2878,24 +2878,24 @@
 //                     setGlobalSearchTerm(e.target.value);
 //                     setIsGlobalSearchOpen(true);
 //                   }}
-//                   className="w-full py-2 pl-8 pr-3 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                   className="w-full py-2 pl-8 pr-3 text-xs border border-[#374151] rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //                 />
 //                 <FiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
 //               </div>
 
 //               {/* Global Search Results Dropdown */}
 //               {isGlobalSearchOpen && globalSearchTerm && (
-//                 <div className="absolute right-0 z-30 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                 <div className="absolute right-0 z-30 w-full mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
 //                   {filteredGlobalEmployees.length > 0 ? (
 //                     filteredGlobalEmployees.map((emp) => (
 //                       <div
 //                         key={emp._id}
 //                         onClick={() => handleGlobalSelectEmployee(emp)}
-//                         className="px-3 py-2 transition-colors border-b border-gray-100 cursor-pointer hover:bg-blue-50 last:border-0"
+//                         className="px-3 py-2 transition-colors border-b border-[#1f2937] cursor-pointer hover:bg-blue-50 last:border-0"
 //                       >
 //                         <div className="flex items-start justify-between">
 //                           <div>
-//                             <p className="text-xs font-medium text-gray-800">{emp.name}</p>
+//                             <p className="text-xs font-medium text-gray-300">{emp.name}</p>
 //                             <p className="text-[9px] text-gray-500 mt-0.5">{emp.role || "No Role"}</p>
 //                           </div>
 //                           <span className="text-[8px] font-medium text-white bg-purple-600 px-1.5 py-0.5 rounded-full">
@@ -2915,10 +2915,10 @@
 
 //             {/* 1. Role Selector - Second */}
 //             <div className="relative flex-1" ref={roleDropdownRef}>
-//               <label className="block mb-1 text-xs font-medium text-gray-700">Select Role</label>
+//               <label className="block mb-1 text-xs font-medium text-gray-300">Select Role</label>
 //               <div
 //                 onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-//                 className="flex items-center justify-between w-full px-3 py-2 text-xs text-gray-700 transition-all bg-white border border-gray-300 rounded-md cursor-pointer hover:border-blue-400"
+//                 className="flex items-center justify-between w-full px-3 py-2 text-xs text-gray-300 transition-all bg-[#0a0a0a] border border-[#374151] rounded-md cursor-pointer hover:border-blue-400"
 //               >
 //                 <span>
 //                   {selectedRole ? (
@@ -2933,12 +2933,12 @@
 
 //               {/* Role Dropdown */}
 //               {isRoleDropdownOpen && (
-//                 <div className="absolute z-20 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-20 w-full mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
 //                   <div
 //                     onClick={() => handleSelectRole("")}
 //                     className="flex items-center justify-between px-3 py-2 text-xs cursor-pointer hover:bg-blue-50"
 //                   >
-//                     <span className="font-medium text-gray-700">All Roles</span>
+//                     <span className="font-medium text-gray-300">All Roles</span>
 //                     {!selectedRole && <FiCheck className="text-xs text-blue-600" />}
 //                   </div>
 //                   {availableRoles.map(role => (
@@ -2948,8 +2948,8 @@
 //                       className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-blue-50"
 //                     >
 //                       <div className="flex items-center gap-2">
-//                         <span className="text-xs font-medium text-gray-700">{role}</span>
-//                         <span className="text-[9px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">{roleStats[role]}</span>
+//                         <span className="text-xs font-medium text-gray-300">{role}</span>
+//                         <span className="text-[9px] text-gray-500 bg-[#111111] px-1.5 py-0.5 rounded-full">{roleStats[role]}</span>
 //                       </div>
 //                       {selectedRole === role && <FiCheck className="text-xs text-blue-600" />}
 //                     </div>
@@ -2960,7 +2960,7 @@
 
 //             {/* 2. Employee Selector - Third */}
 //             <div className="flex-[2] relative" ref={employeeDropdownRef}>
-//               <label className="block mb-1 text-xs font-medium text-gray-700">Select Employee</label>
+//               <label className="block mb-1 text-xs font-medium text-gray-300">Select Employee</label>
 //               <div className="relative">
 //                 <input
 //                   type="text"
@@ -2972,7 +2972,7 @@
 //                   }}
 //                   onClick={() => setIsEmployeeDropdownOpen(true)}
 //                   placeholder={selectedRole ? `Search in ${selectedRole}...` : `Search Name or ID...`}
-//                   className="w-full px-3 py-2 pr-8 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                   className="w-full px-3 py-2 pr-8 text-xs border border-[#374151] rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //                 />
 //                 <div className="absolute text-gray-400 -translate-y-1/2 right-2 top-1/2">
 //                   {loading ? <div className="w-3 h-3 border-2 border-blue-500 rounded-full border-t-transparent animate-spin" /> : <FiUser className="text-xs" />}
@@ -2981,15 +2981,15 @@
 
 //               {/* Employee Dropdown */}
 //               {isEmployeeDropdownOpen && filteredEmployees.length > 0 && (
-//                 <div className="absolute z-10 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-10 w-full mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
 //                   {filteredEmployees.map((emp) => (
 //                     <div
 //                       key={emp._id}
 //                       onClick={() => handleSelectEmployee(emp)}
-//                       className="flex items-center justify-between px-3 py-2 border-b border-gray-100 cursor-pointer hover:bg-blue-50 last:border-0"
+//                       className="flex items-center justify-between px-3 py-2 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50 last:border-0"
 //                     >
 //                       <div>
-//                         <p className="text-xs font-medium text-gray-800">{emp.name}</p>
+//                         <p className="text-xs font-medium text-gray-300">{emp.name}</p>
 //                         <div className="flex items-center gap-2 mt-0.5">
 //                           <span className="text-[8px] font-medium text-white bg-purple-600 px-1.5 py-0.5 rounded-full">
 //                             {emp.employeeId}
@@ -3020,10 +3020,10 @@
 //                   </span>
 //                 </div>
 //                 <div>
-//                   <p className="text-xs font-semibold text-gray-800">{selectedEmployee.name}</p>
+//                   <p className="text-xs font-semibold text-gray-300">{selectedEmployee.name}</p>
 //                   <div className="flex items-center gap-2 mt-0.5">
 //                     <span className="text-[9px] text-white bg-purple-600 px-1.5 py-0.5 rounded-full">{selectedEmployee.employeeId}</span>
-//                     <span className="text-[9px] text-gray-600">{selectedEmployee.role || 'No Role'}</span>
+//                     <span className="text-[9px] text-gray-400">{selectedEmployee.role || 'No Role'}</span>
 //                   </div>
 //                 </div>
 //               </div>
@@ -3037,7 +3037,7 @@
 //                 {permissionGroups.flatMap(group => group.items.map(item => ({ ...item, type: group.type }))).map((item) => (
 //                   <label
 //                     key={item.id}
-//                     className={`flex items-center gap-2 cursor-pointer select-none py-1 px-2 rounded hover:bg-gray-50 transition-colors ${item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
+//                     className={`flex items-center gap-2 cursor-pointer select-none py-1 px-2 rounded hover:bg-[#000000] transition-colors ${item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
 //                       }`}
 //                   >
 //                     <div className="relative flex items-center justify-center">
@@ -3050,12 +3050,12 @@
 //                       />
 //                       <div className={`w-3.5 h-3.5 rounded border transition-all duration-200 flex items-center justify-center ${item.type === "immutable"
 //                           ? "bg-blue-500 border-blue-500 text-white"
-//                           : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white hover:border-blue-400"
+//                           : "border-[#374151] peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white hover:border-blue-400"
 //                         }`}>
 //                         <FiCheck size={8} className={item.type === "toggleable" && !permissions.includes(item.id) ? "hidden" : "block"} />
 //                       </div>
 //                     </div>
-//                     <span className="text-[10px] font-medium text-gray-700">
+//                     <span className="text-[10px] font-medium text-gray-300">
 //                       {item.name}
 //                     </span>
 //                   </label>
@@ -3063,7 +3063,7 @@
 //               </div>
 
 //               {/* Action Buttons */}
-//               <div className="flex justify-end gap-2 pt-3 mt-4 border-t border-gray-200">
+//               <div className="flex justify-end gap-2 pt-3 mt-4 border-t border-[#1f2937]">
 //                 <button
 //                   onClick={savePermissions}
 //                   className="px-4 py-1.5 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition"
@@ -3075,7 +3075,7 @@
 //                     setSelectedEmployee(null);
 //                     setSearchTerm("");
 //                   }}
-//                   className="px-4 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition"
+//                   className="px-4 py-1.5 text-xs font-medium text-gray-300 bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937] transition"
 //                 >
 //                   Cancel
 //                 </button>
@@ -3083,7 +3083,7 @@
 //             </div>
 //           ) : (
 //             /* Empty State */
-//             <div className="flex flex-col items-center justify-center py-8 text-gray-400 border border-gray-300 border-dashed rounded-md bg-gray-50">
+//             <div className="flex flex-col items-center justify-center py-8 text-gray-400 border border-[#374151] border-dashed rounded-md bg-[#000000]">
 //               <FiFilter size={24} className="mb-2 text-blue-400 opacity-50" />
 //               <p className="text-[10px] font-medium uppercase tracking-wider text-gray-500">Select Role & Employee to Configure</p>
 //             </div>
@@ -3402,7 +3402,7 @@ const UserAccessManagement = () => {
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
         <div className="text-center">
           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div>
-          <p className="font-semibold text-gray-600">
+          <p className="font-semibold text-gray-400">
             Loading user access...
           </p>
         </div>
@@ -3417,37 +3417,37 @@ const UserAccessManagement = () => {
 
         {/* Stats Overview - matching other components */}
         <div className="grid grid-cols-2 gap-2 mb-3 sm:grid-cols-4">
-          <div className="px-2 py-2 bg-white border-t-4 border-blue-500 rounded-md shadow-sm">
+          <div className="px-2 py-2 bg-[#0a0a0a] border-t-4 border-blue-500 rounded-md shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold leading-tight text-gray-800">
+                <p className="text-xs font-semibold leading-tight text-gray-300">
                   Total Employees: {employees.length}
                 </p>
               </div>
             </div>
           </div>
-          <div className="px-2 py-2 bg-white border-t-4 border-green-500 rounded-md shadow-sm">
+          <div className="px-2 py-2 bg-[#0a0a0a] border-t-4 border-green-500 rounded-md shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold leading-tight text-gray-800">
+                <p className="text-xs font-semibold leading-tight text-gray-300">
                   Roles: {availableRoles.length}
                 </p>
               </div>
             </div>
           </div>
-          <div className="px-2 py-2 bg-white border-t-4 border-purple-500 rounded-md shadow-sm">
+          <div className="px-2 py-2 bg-[#0a0a0a] border-t-4 border-purple-500 rounded-md shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold leading-tight text-gray-800">
+                <p className="text-xs font-semibold leading-tight text-gray-300">
                   Admins: {employees.filter(e => e.role === 'admin' || e.role === 'Admin').length}
                 </p>
               </div>
             </div>
           </div>
-          <div className="px-2 py-2 bg-white border-t-4 border-yellow-500 rounded-md shadow-sm">
+          <div className="px-2 py-2 bg-[#0a0a0a] border-t-4 border-yellow-500 rounded-md shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold leading-tight text-gray-800">
+                <p className="text-xs font-semibold leading-tight text-gray-300">
                   Super Admins: {employees.filter(e => e.role === 'super_admin' || e.role === 'Super Admin').length}
                 </p>
               </div>
@@ -3456,14 +3456,14 @@ const UserAccessManagement = () => {
         </div>
 
         {/* Main Content Card */}
-        <div className="p-3 bg-white border border-gray-200 shadow-md rounded-xl">
+        <div className="p-3 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
           
           {/* --- ALL FILTERS IN ONE ROW --- */}
           <div className="flex flex-col items-start gap-3 mb-4 md:flex-row md:items-end">
             
             {/* Global Search - First */}
             <div className="relative w-full md:w-72" ref={globalSearchRef}>
-              <label className="block mb-1 text-xs font-medium text-gray-700">Quick Search</label>
+              <label className="block mb-1 text-xs font-medium text-gray-300">Quick Search</label>
               <div className="relative">
                 <input
                   type="text"
@@ -3473,24 +3473,24 @@ const UserAccessManagement = () => {
                     setGlobalSearchTerm(e.target.value);
                     setIsGlobalSearchOpen(true);
                   }}
-                  className="w-full py-2 pl-8 pr-3 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full py-2 pl-8 pr-3 text-xs border border-[#374151] rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                 />
                 <FiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
               </div>
 
               {/* Global Search Results Dropdown */}
               {isGlobalSearchOpen && globalSearchTerm && (
-                <div className="absolute right-0 z-30 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                <div className="absolute right-0 z-30 w-full mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
                   {filteredGlobalEmployees.length > 0 ? (
                     filteredGlobalEmployees.map((emp) => (
                       <div
                         key={emp._id}
                         onClick={() => handleGlobalSelectEmployee(emp)}
-                        className="px-3 py-2 transition-colors border-b border-gray-100 cursor-pointer hover:bg-blue-50 last:border-0"
+                        className="px-3 py-2 transition-colors border-b border-[#1f2937] cursor-pointer hover:bg-blue-50 last:border-0"
                       >
                         <div className="flex items-start justify-between">
                           <div>
-                            <p className="text-xs font-medium text-gray-800">{emp.name}</p>
+                            <p className="text-xs font-medium text-gray-300">{emp.name}</p>
                             <p className="text-[9px] text-gray-500 mt-0.5">{emp.role || "No Role"}</p>
                           </div>
                           <span className="text-[8px] font-medium text-white bg-purple-600 px-1.5 py-0.5 rounded-full">
@@ -3510,10 +3510,10 @@ const UserAccessManagement = () => {
             
             {/* 1. Role Selector - Second */}
             <div className="relative flex-1" ref={roleDropdownRef}>
-              <label className="block mb-1 text-xs font-medium text-gray-700">Select Role</label>
+              <label className="block mb-1 text-xs font-medium text-gray-300">Select Role</label>
               <div 
                 onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-                className="flex items-center justify-between w-full px-3 py-2 text-xs text-gray-700 transition-all bg-white border border-gray-300 rounded-md cursor-pointer hover:border-blue-400"
+                className="flex items-center justify-between w-full px-3 py-2 text-xs text-gray-300 transition-all bg-[#0a0a0a] border border-[#374151] rounded-md cursor-pointer hover:border-blue-400"
               >
                 <span>
                    {selectedRole ? (
@@ -3528,12 +3528,12 @@ const UserAccessManagement = () => {
 
               {/* Role Dropdown */}
               {isRoleDropdownOpen && (
-                <div className="absolute z-20 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                <div className="absolute z-20 w-full mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
                   <div 
                     onClick={() => handleSelectRole("")}
                     className="flex items-center justify-between px-3 py-2 text-xs cursor-pointer hover:bg-blue-50"
                   >
-                    <span className="font-medium text-gray-700">All Roles</span>
+                    <span className="font-medium text-gray-300">All Roles</span>
                     {!selectedRole && <FiCheck className="text-xs text-blue-600" />}
                   </div>
                   {availableRoles.map(role => (
@@ -3543,8 +3543,8 @@ const UserAccessManagement = () => {
                       className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-blue-50"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-gray-700">{role}</span>
-                        <span className="text-[9px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">{roleStats[role]}</span>
+                        <span className="text-xs font-medium text-gray-300">{role}</span>
+                        <span className="text-[9px] text-gray-500 bg-[#111111] px-1.5 py-0.5 rounded-full">{roleStats[role]}</span>
                       </div>
                       {selectedRole === role && <FiCheck className="text-xs text-blue-600" />}
                     </div>
@@ -3555,7 +3555,7 @@ const UserAccessManagement = () => {
 
             {/* 2. Employee Selector - Third */}
             <div className="flex-[2] relative" ref={employeeDropdownRef}>
-              <label className="block mb-1 text-xs font-medium text-gray-700">Select Employee</label>
+              <label className="block mb-1 text-xs font-medium text-gray-300">Select Employee</label>
               <div className="relative">
                 <input
                   type="text"
@@ -3567,7 +3567,7 @@ const UserAccessManagement = () => {
                   }}
                   onClick={() => setIsEmployeeDropdownOpen(true)}
                   placeholder={selectedRole ? `Search in ${selectedRole}...` : `Search Name or ID...`}
-                  className="w-full px-3 py-2 pr-8 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 pr-8 text-xs border border-[#374151] rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                 />
                 <div className="absolute text-gray-400 -translate-y-1/2 right-2 top-1/2">
                    {loading ? <div className="w-3 h-3 border-2 border-blue-500 rounded-full border-t-transparent animate-spin"/> : <FiUser className="text-xs" />}
@@ -3576,15 +3576,15 @@ const UserAccessManagement = () => {
 
               {/* Employee Dropdown */}
               {isEmployeeDropdownOpen && filteredEmployees.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                <div className="absolute z-10 w-full mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
                   {filteredEmployees.map((emp) => (
                     <div
                       key={emp._id}
                       onClick={() => handleSelectEmployee(emp)}
-                      className="flex items-center justify-between px-3 py-2 border-b border-gray-100 cursor-pointer hover:bg-blue-50 last:border-0"
+                      className="flex items-center justify-between px-3 py-2 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50 last:border-0"
                     >
                       <div>
-                        <p className="text-xs font-medium text-gray-800">{emp.name}</p>
+                        <p className="text-xs font-medium text-gray-300">{emp.name}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[8px] font-medium text-white bg-purple-600 px-1.5 py-0.5 rounded-full">
                              {emp.employeeId}
@@ -3615,10 +3615,10 @@ const UserAccessManagement = () => {
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-gray-800">{selectedEmployee.name}</p>
+                  <p className="text-xs font-semibold text-gray-300">{selectedEmployee.name}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-[9px] text-white bg-purple-600 px-1.5 py-0.5 rounded-full">{selectedEmployee.employeeId}</span>
-                    <span className="text-[9px] text-gray-600">{selectedEmployee.role || 'No Role'}</span>
+                    <span className="text-[9px] text-gray-400">{selectedEmployee.role || 'No Role'}</span>
                   </div>
                 </div>
               </div>
@@ -3627,7 +3627,7 @@ const UserAccessManagement = () => {
 
           {/* --- PERMISSIONS GRID --- */}
           <div className="pt-2 mt-4">
-            <h3 className="mb-4 text-sm font-extrabold text-gray-800 border-b border-gray-100 pb-3 flex items-center justify-between">
+            <h3 className="mb-4 text-sm font-extrabold text-gray-300 border-b border-[#1f2937] pb-3 flex items-center justify-between">
               <span>{selectedEmployee ? `Permissions Profile: ${selectedEmployee.name}` : 'Platform Permission Models (Read-Only)'}</span>
               {selectedEmployee && (
                 <span className="text-[10px] font-bold text-white bg-gradient-to-r from-purple-500 to-indigo-600 px-2 py-0.5 rounded-full shadow-sm">
@@ -3645,7 +3645,7 @@ const UserAccessManagement = () => {
 
             <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 ${!selectedEmployee ? 'opacity-60 pointer-events-none grayscale-[10%]' : ''}`}>
               {permissionGroups.map((group, groupIndex) => (
-                <div key={groupIndex} className="p-4 bg-white border border-gray-100 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] rounded-2xl hover:shadow-[0_8px_20px_-6px_rgba(6,81,237,0.15)] transition-all duration-300">
+                <div key={groupIndex} className="p-4 bg-[#0a0a0a] border border-[#1f2937] shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] rounded-2xl hover:shadow-[0_8px_20px_-6px_rgba(6,81,237,0.15)] transition-all duration-300">
                   <h4 className="mb-4 text-[11px] font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-indigo-700 uppercase tracking-widest flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
                     {group.title}
@@ -3669,12 +3669,12 @@ const UserAccessManagement = () => {
                           <div className={`w-4 h-4 rounded-md border transition-all duration-300 flex items-center justify-center ${
                              group.type === "immutable"
                                ? "bg-gradient-to-br from-gray-400 to-gray-500 border-transparent text-white shadow-sm"
-                               : "border-gray-300 peer-checked:bg-gradient-to-br peer-checked:from-purple-500 peer-checked:to-indigo-600 peer-checked:border-transparent peer-checked:text-white group-hover:border-purple-400 group-hover:shadow-[0_0_0_4px_rgba(168,85,247,0.1)]"
+                               : "border-[#374151] peer-checked:bg-gradient-to-br peer-checked:from-purple-500 peer-checked:to-indigo-600 peer-checked:border-transparent peer-checked:text-white group-hover:border-purple-400 group-hover:shadow-[0_0_0_4px_rgba(168,85,247,0.1)]"
                           }`}>
                             <FiCheck size={10} className={group.type === "toggleable" && !permissions.includes(item.id) ? "opacity-0 scale-50 transition-all duration-200" : "opacity-100 scale-100 transition-all duration-300"} />
                           </div>
                         </div>
-                        <span className="text-xs font-semibold text-gray-600 group-hover:text-purple-900 leading-tight transition-colors">
+                        <span className="text-xs font-semibold text-gray-400 group-hover:text-purple-900 leading-tight transition-colors">
                           {item.name}
                         </span>
                       </label>
@@ -3685,13 +3685,13 @@ const UserAccessManagement = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-gray-100">
+            <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-[#1f2937]">
               <button
                 onClick={() => {
                   setSelectedEmployee(null);
                   setSearchTerm("");
                 }}
-                className="px-6 py-2.5 text-xs font-bold text-gray-600 bg-white border border-gray-200 hover:border-gray-300 rounded-xl hover:bg-gray-50 transition-all active:scale-95 shadow-sm"
+                className="px-6 py-2.5 text-xs font-bold text-gray-400 bg-[#0a0a0a] border border-[#1f2937] hover:border-[#374151] rounded-xl hover:bg-[#000000] transition-all active:scale-95 shadow-sm"
               >
                 Clear Selection
               </button>

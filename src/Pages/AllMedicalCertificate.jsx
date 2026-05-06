@@ -35,12 +35,12 @@ const StatCard = ({ icon: Icon, label, value, color, isPercentage }) => {
   const currentTheme = themes[color] || themes.indigo;
 
   return (
-    <div className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
+    <div className={`bg-[#0a0a0a] rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
       <div className="flex items-center gap-2">
         <Icon className="text-gray-400 text-base flex-shrink-0" />
-        <div className="text-sm font-medium text-gray-700">{label}</div>
+        <div className="text-sm font-medium text-gray-300">{label}</div>
       </div>
-      <div className="text-sm font-bold text-gray-800">
+      <div className="text-sm font-bold text-gray-300">
         <CountUp end={value} duration={2} separator="," />
         {isPercentage && "%"}
       </div>
@@ -65,12 +65,12 @@ const QualityCard = ({ label, value, total, color }) => {
         <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">{label}</span>
       </div>
       <div className="flex items-baseline justify-between">
-        <span className="text-xl font-black text-gray-800">
+        <span className="text-xl font-black text-gray-300">
           <CountUp end={value} duration={1.5} />
         </span>
-        <span className="text-[10px] font-bold text-gray-600">{percentage}%</span>
+        <span className="text-[10px] font-bold text-gray-400">{percentage}%</span>
       </div>
-      <div className="w-full h-1 bg-white rounded-full mt-2 overflow-hidden">
+      <div className="w-full h-1 bg-[#0a0a0a] rounded-full mt-2 overflow-hidden">
         <div
           className={`h-full rounded-full ${
             color === 'amber' ? 'bg-amber-500' :
@@ -91,8 +91,8 @@ const StatusTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="px-3 py-2 text-xs bg-white border border-gray-100 rounded-lg shadow-xl font-black uppercase tracking-tight">
-        <p className="text-gray-900 mb-0.5 leading-none">{data.label}</p>
+      <div className="px-3 py-2 text-xs bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-xl font-black uppercase tracking-tight">
+        <p className="text-gray-200 mb-0.5 leading-none">{data.label}</p>
         <p className="leading-none text-blue-600">Count: {data.val}</p>
       </div>
     );
@@ -273,7 +273,7 @@ const AllMedicalCertificate = () => {
   const total = certificates.length;
 
   return (
-    <div className="min-h-screen p-2 lg:p-6 bg-gray-50/50">
+    <div className="min-h-screen p-2 lg:p-6 bg-[#000000]/50">
       <div className="max-w-9xl mx-auto">
         
         {/* 1. Top Summary Stats - Matching RecruitmentDashboard */}
@@ -288,10 +288,10 @@ const AllMedicalCertificate = () => {
         {/* 2. Charts Section - Matching RecruitmentDashboard layout */}
         <div className="grid grid-cols-1 gap-4 mb-4 lg:grid-cols-2">
           {/* Compliance Distribution - Bar Chart */}
-          <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
+          <div className="bg-[#0a0a0a] px-2 py-2 rounded-2xl shadow-sm border border-[#1f2937] flex flex-col h-[400px]">
             <div className="flex items-center justify-between mb-3 px-2">
               <div>
-                <h3 className="text-base font-bold text-gray-800">Compliance Health</h3>
+                <h3 className="text-base font-bold text-gray-300">Compliance Health</h3>
                 <p className="text-xs text-gray-500">Medical certificate risk levels</p>
               </div>
               <button 
@@ -331,10 +331,10 @@ const AllMedicalCertificate = () => {
           </div>
 
           {/* Quality Metrics Breakdown */}
-          <div className="bg-white px-4 py-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
+          <div className="bg-[#0a0a0a] px-4 py-4 rounded-2xl shadow-sm border border-[#1f2937] flex flex-col h-[400px]">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-base font-bold text-gray-800">Risk Metrics</h3>
+                <h3 className="text-base font-bold text-gray-300">Risk Metrics</h3>
                 <p className="text-xs text-gray-500">Distribution analysis</p>
               </div>
               <FiTrendingUp className="text-2xl text-rose-400 opacity-50" />
@@ -347,7 +347,7 @@ const AllMedicalCertificate = () => {
               <QualityCard label="Monitoring Health" value={chartData[3].val} total={total} color="indigo" />
             </div>
 
-            <div className="mt-auto pt-3 border-t border-gray-100">
+            <div className="mt-auto pt-3 border-t border-[#1f2937]">
               <div className="flex justify-between text-xs">
                 <span className="text-gray-500 font-medium">Compliance Rate</span>
                 <span className="font-bold text-emerald-600">{total > 0 ? ((chartData[3].val / total) * 100).toFixed(1) : 0}%</span>
@@ -361,7 +361,7 @@ const AllMedicalCertificate = () => {
         </div>
 
         {/* Filters Section */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6 flex flex-wrap items-center gap-3">
+        <div className="bg-[#0a0a0a] rounded-2xl p-4 shadow-sm border border-[#1f2937] mb-6 flex flex-wrap items-center gap-3">
           <div className="relative flex-grow min-w-[240px]">
             <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 text-sm" />
             <input 
@@ -369,13 +369,13 @@ const AllMedicalCertificate = () => {
               placeholder="Search Candidate ID or Name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-100 rounded-xl text-xs font-medium text-gray-700 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+              className="w-full pl-10 pr-4 py-2 border border-[#1f2937] rounded-xl text-xs font-medium text-gray-300 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
             />
           </div>
           <select 
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 bg-gray-50 border-0 rounded-xl text-xs font-bold text-gray-700 cursor-pointer"
+            className="px-4 py-2 bg-[#000000] border-0 rounded-xl text-xs font-bold text-gray-300 cursor-pointer"
           >
             <option value="all">All Certificates</option>
             <option value="expired">EXPIRED</option>
@@ -385,14 +385,14 @@ const AllMedicalCertificate = () => {
           </select>
           <button 
             onClick={fetchCertificates}
-            className="p-2.5 bg-gray-50 text-gray-500 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all border border-gray-100"
+            className="p-2.5 bg-[#000000] text-gray-500 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all border border-[#1f2937]"
             title="Refresh Data"
           >
             <FaSync size={12} className={loading ? 'animate-spin' : ''} />
           </button>
           <button 
             onClick={handleReset}
-            className="px-4 py-2 bg-gray-50 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 transition-all border border-gray-100"
+            className="px-4 py-2 bg-[#000000] text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 transition-all border border-[#1f2937]"
           >
             Clear
           </button>
@@ -402,29 +402,29 @@ const AllMedicalCertificate = () => {
         </div>
 
         {/* Specialized Medical Certificate Table - Kept as requested */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-[#0a0a0a] rounded-2xl shadow-sm border border-[#1f2937] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-gray-50/50">
-                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">ID</th>
-                  <th className="px-4 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Candidate Name</th>
-                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Reg. Date</th>
-                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Exp. Date</th>
-                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Status</th>
-                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Action</th>
+                <tr className="bg-[#000000]/50">
+                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-[#1f2937]">ID</th>
+                  <th className="px-4 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-[#1f2937]">Candidate Name</th>
+                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-[#1f2937]">Reg. Date</th>
+                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-[#1f2937]">Exp. Date</th>
+                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-[#1f2937]">Status</th>
+                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-[#1f2937]">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {currentItems.map((c) => {
                   const info = getStatusInfo(c.expiryDate);
                   return (
-                    <tr key={c._id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 text-center font-bold text-gray-900 text-xs">
+                    <tr key={c._id} className="hover:bg-[#000000] transition-colors">
+                      <td className="px-4 py-3 text-center font-bold text-gray-200 text-xs">
                         {c.employeeId || c.candidateId || "N/A"}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="font-bold text-gray-900 text-sm whitespace-nowrap">{c.employeeName || c.candidateName || "N/A"}</div>
+                        <div className="font-bold text-gray-200 text-sm whitespace-nowrap">{c.employeeName || c.candidateName || "N/A"}</div>
                       </td>
                       <td className="px-4 py-3 text-center font-medium text-gray-500 text-xs text-gray-400">
                         {new Date(c.registrationDate).toLocaleDateString()}
@@ -467,7 +467,7 @@ const AllMedicalCertificate = () => {
             </table>
           </div>
           {filteredCertificates.length === 0 && (
-            <div className="p-10 text-center bg-white text-gray-400 text-xs font-bold uppercase">
+            <div className="p-10 text-center bg-[#0a0a0a] text-gray-400 text-xs font-bold uppercase">
               No matching records found
             </div>
           )}
@@ -483,14 +483,14 @@ const AllMedicalCertificate = () => {
               <button 
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-50 disabled:opacity-30"
+                className="px-4 py-2 bg-[#0a0a0a] border border-[#1f2937] rounded-xl text-xs font-bold text-gray-500 hover:bg-[#000000] disabled:opacity-30"
               >
                 Prev
               </button>
               <button 
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-50 disabled:opacity-30"
+                className="px-4 py-2 bg-[#0a0a0a] border border-[#1f2937] rounded-xl text-xs font-bold text-gray-500 hover:bg-[#000000] disabled:opacity-30"
               >
                 Next
               </button>

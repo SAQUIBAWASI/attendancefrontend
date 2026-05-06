@@ -45,7 +45,7 @@ export default function AdminEmployeeLocations() {
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="p-6 bg-[#111111] min-h-screen">
       <h2 className="text-2xl font-semibold mb-6 text-center">
         🧭 Employee Location Management
       </h2>
@@ -56,9 +56,9 @@ export default function AdminEmployeeLocations() {
         </div>
       )}
 
-      <div className="overflow-x-auto bg-white rounded-xl shadow-md p-4">
-        <table className="min-w-full border border-gray-200">
-          <thead className="bg-gray-200 text-gray-700">
+      <div className="overflow-x-auto bg-[#0a0a0a] rounded-xl shadow-md p-4">
+        <table className="min-w-full border border-[#1f2937]">
+          <thead className="bg-[#1f2937] text-gray-300">
             <tr>
               <th className="py-2 px-4 border">Employee ID</th>
               <th className="py-2 px-4 border">Name</th>
@@ -101,7 +101,7 @@ export default function AdminEmployeeLocations() {
       </div>
 
       {selected && (
-        <div className="mt-6 p-4 bg-white rounded-xl shadow-md">
+        <div className="mt-6 p-4 bg-[#0a0a0a] rounded-xl shadow-md">
           <h3 className="text-lg font-semibold mb-2">
             Assign Location for Employee ID: {selected}
           </h3>

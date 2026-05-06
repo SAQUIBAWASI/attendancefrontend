@@ -106,13 +106,13 @@ const SelectProducts = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-200 py-12 px-4">
-            <div className="max-w-6xl mx-auto bg-white/90 backdrop-blur-md shadow-xl rounded-2xl p-8">
+            <div className="max-w-6xl mx-auto bg-[#0a0a0a]/90 backdrop-blur-md shadow-xl rounded-2xl p-8">
                 {/* Header */}
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-extrabold bg-gradient-to-r from-green-600 to-blue-600 text-transparent bg-clip-text mb-2">
                         Explore Our Solutions
                     </h1>
-                    <p className="text-gray-600 text-lg">
+                    <p className="text-gray-400 text-lg">
                         Click on any app to get started
                     </p>
                 </div>
@@ -142,7 +142,7 @@ const SelectProducts = () => {
                                         className={`p-6 rounded-xl border-2 transition-all duration-200 text-center group ${
                                             selectedApps.includes(product.id)
                                                 ? 'border-blue-500 bg-blue-50 shadow-lg transform scale-105 ring-2 ring-blue-300'
-                                                : 'border-gray-200 hover:border-blue-300 hover:shadow-md hover:bg-white'
+                                                : 'border-[#1f2937] hover:border-blue-300 hover:shadow-md hover:bg-[#0a0a0a]'
                                         }`}
                                     >
                                         <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">
@@ -151,7 +151,7 @@ const SelectProducts = () => {
                                         <div className={`font-semibold ${
                                             selectedApps.includes(product.id) 
                                                 ? 'text-blue-700' 
-                                                : 'text-gray-700'
+                                                : 'text-gray-300'
                                         }`}>
                                             {product.name}
                                         </div>
@@ -182,10 +182,10 @@ const SelectProducts = () => {
 
                     {/* Quote Section */}
                     <div className="text-center mb-8">
-                        <p className="text-gray-600 italic">
+                        <p className="text-gray-400 italic">
                             "Imagine a vast collection of business apps at your disposal."
                         </p>
-                        <p className="text-gray-700 font-medium mt-2">
+                        <p className="text-gray-300 font-medium mt-2">
                             Got something to improve? There is an app for that.
                         </p>
                         <p className="text-gray-500 text-sm mt-1">
@@ -195,19 +195,19 @@ const SelectProducts = () => {
 
                     {/* Selected Apps Summary */}
                     {selectedApps.length > 0 && (
-                        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                        <div className="mb-6 p-4 bg-gradient-to-r from-[#000000] to-purple-50 rounded-lg border border-blue-200">
                             <div className="flex items-center justify-between flex-wrap gap-2">
                                 <div className="flex items-center gap-2">
                                     <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
                                         {selectedApps.length}
                                     </span>
-                                    <span className="text-gray-700 font-medium">app(s) selected:</span>
+                                    <span className="text-gray-300 font-medium">app(s) selected:</span>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {selectedApps.map(id => {
                                         const product = products.find(p => p.id === id);
                                         return (
-                                            <span key={id} className="px-3 py-1 bg-white rounded-full text-sm border border-blue-300 text-blue-700">
+                                            <span key={id} className="px-3 py-1 bg-[#0a0a0a] rounded-full text-sm border border-blue-300 text-blue-700">
                                                 {product?.icon} {product?.name}
                                             </span>
                                         );

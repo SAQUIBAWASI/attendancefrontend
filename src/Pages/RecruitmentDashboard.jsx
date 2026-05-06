@@ -57,8 +57,8 @@ const StatusTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="px-3 py-2 text-xs bg-white border border-gray-100 rounded-lg shadow-xl">
-        <p className="font-bold text-gray-800 mb-0.5 leading-none">{data.name}</p>
+      <div className="px-3 py-2 text-xs bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-xl">
+        <p className="font-bold text-gray-300 mb-0.5 leading-none">{data.name}</p>
         <p className="leading-none text-gray-500">Count: {data.value}</p>
       </div>
     );
@@ -70,8 +70,8 @@ const ScoreTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="px-3 py-2 text-xs bg-white border border-gray-100 rounded-lg shadow-xl">
-        <p className="font-bold text-gray-800 mb-0.5 leading-none">{data.range}</p>
+      <div className="px-3 py-2 text-xs bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-xl">
+        <p className="font-bold text-gray-300 mb-0.5 leading-none">{data.range}</p>
         <p className="leading-none text-gray-500">Candidates: {data.count}</p>
       </div>
     );
@@ -163,10 +163,10 @@ const RecruitmentDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen p-2 lg:p-6 bg-gray-50/50">
+    <div className="min-h-screen p-2 lg:p-6 bg-[#000000]/50">
       {/* Header Section */}
       {/* <div className="mb-6">
-        <h1 className="text-2xl font-black text-gray-800">Recruitment Overview</h1>
+        <h1 className="text-2xl font-black text-gray-300">Recruitment Overview</h1>
         <p className="text-sm text-gray-500 font-medium">Data-driven insights for your hiring funnel</p>
       </div> */}
 
@@ -213,15 +213,15 @@ const RecruitmentDashboard = () => {
       {/* 2. Charts Section - Like AttendanceDashboard layout */}
       <div className="grid grid-cols-1 gap-4 mb-4 lg:grid-cols-2">
         {/* Status Distribution - Pie Chart */}
-        <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
+        <div className="bg-[#0a0a0a] px-2 py-2 rounded-2xl shadow-sm border border-[#1f2937] flex flex-col h-[400px]">
           <div className="flex items-center justify-between mb-3 px-2">
             <div>
-              <h3 className="text-base font-bold text-gray-800"> Applicants Status</h3>
+              <h3 className="text-base font-bold text-gray-300"> Applicants Status</h3>
               <p className="text-xs text-gray-500">Breakdown of applicants by stage</p>
             </div>
             <div className="flex items-center gap-2">
               <select
-                className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-indigo-600 bg-white"
+                className="px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-indigo-600 bg-[#0a0a0a]"
                 value={statusRole}
                 onChange={(e) => setStatusRole(e.target.value)}
               >
@@ -276,15 +276,15 @@ const RecruitmentDashboard = () => {
         </div>
 
         {/* Score Distribution - Bar Chart */}
-        <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
+        <div className="bg-[#0a0a0a] px-2 py-2 rounded-2xl shadow-sm border border-[#1f2937] flex flex-col h-[400px]">
           <div className="flex items-center justify-between mb-3 px-2">
             <div>
-              <h3 className="text-base font-bold text-gray-800">Score Distribution</h3>
+              <h3 className="text-base font-bold text-gray-300">Score Distribution</h3>
               <p className="text-xs text-gray-500">Candidates by score range</p>
             </div>
             <div className="flex items-center gap-2">
               <select
-                className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-emerald-600 bg-white"
+                className="px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-emerald-600 bg-[#0a0a0a]"
                 value={scoreRole}
                 onChange={(e) => setScoreRole(e.target.value)}
               >
@@ -343,10 +343,10 @@ const RecruitmentDashboard = () => {
       {/* 3. Quality Metrics & Quick Actions - Like AttendanceDashboard layout */}
       <div className="grid grid-cols-1 gap-8 mb-8 lg:grid-cols-2">
         {/* Quality Metrics Cards */}
-        <div className="bg-white px-4 py-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
+        <div className="bg-[#0a0a0a] px-4 py-4 rounded-2xl shadow-sm border border-[#1f2937] flex flex-col h-[400px]">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-base font-bold text-gray-800">Quality Metrics</h3>
+              <h3 className="text-base font-bold text-gray-300">Quality Metrics</h3>
               <p className="text-xs text-gray-500">Candidates scoring above thresholds</p>
             </div>
             <FiTrendingUp className="text-2xl text-indigo-400 opacity-50" />
@@ -385,7 +385,7 @@ const RecruitmentDashboard = () => {
             />
           </div>
 
-          <div className="mt-4 pt-3 border-t border-gray-100">
+          <div className="mt-4 pt-3 border-t border-[#1f2937]">
             <div className="flex justify-between text-xs">
               <span className="text-gray-500">Interview to Selection Rate</span>
               <span className="font-bold text-emerald-600">{interviewToSelectedRate}%</span>
@@ -398,15 +398,15 @@ const RecruitmentDashboard = () => {
         </div>
 
         {/* 3. Hiring TAT (Turnaround Time) - Candidate-wise Graph */}
-        <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
+        <div className="bg-[#0a0a0a] px-2 py-2 rounded-2xl shadow-sm border border-[#1f2937] flex flex-col h-[400px]">
           <div className="flex items-center justify-between mb-3 px-2">
             <div>
-              <h3 className="text-base font-bold text-gray-800">Hiring TAT (Days)</h3>
+              <h3 className="text-base font-bold text-gray-300">Hiring TAT (Days)</h3>
               <p className="text-xs text-gray-500">Candidate-wise hiring duration</p>
             </div>
             <div className="flex items-center gap-2">
               <select
-                className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-indigo-600 bg-white"
+                className="px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-indigo-600 bg-[#0a0a0a]"
                 value={tatRole}
                 onChange={(e) => setTatRole(e.target.value)}
               >
@@ -472,17 +472,17 @@ const RecruitmentDashboard = () => {
 
 
       {/* 4. Monthly Trend - Additional Chart like AttendanceDashboard */}
-      <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[300px] mb-4">
+      <div className="bg-[#0a0a0a] px-2 py-2 rounded-2xl shadow-sm border border-[#1f2937] flex flex-col h-[300px] mb-4">
         <div className="flex items-center justify-between mb-3 px-2 flex-wrap gap-2">
           <div>
-            <h3 className="text-base font-bold text-gray-800">Monthly Application Trend</h3>
+            <h3 className="text-base font-bold text-gray-300">Monthly Application Trend</h3>
             <p className="text-xs text-gray-500">
               {trendMonth ? `Daily breakdown for ${new Date(trendMonth + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })}` : 'Applications over the last 6 months'}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <select
-              className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-indigo-600 bg-white"
+              className="px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-indigo-600 bg-[#0a0a0a]"
               value={trendRole}
               onChange={(e) => setTrendRole(e.target.value)}
             >
@@ -493,7 +493,7 @@ const RecruitmentDashboard = () => {
             </select>
             <input
               type="month"
-              className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-indigo-600 bg-white cursor-pointer"
+              className="px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-indigo-600 bg-[#0a0a0a] cursor-pointer"
               value={trendMonth}
               onChange={(e) => setTrendMonth(e.target.value)}
               title="Filter by month for daily view"
@@ -579,14 +579,14 @@ const StatCard = ({ icon: Icon, label, value, color, onClick, isPercentage }) =>
 
   return (
     <div
-      className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}
+      className={`bg-[#0a0a0a] rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}
       onClick={onClick}
     >
       <div className="flex items-center gap-2">
         <Icon className="text-gray-400 text-base flex-shrink-0" />
-        <div className="text-sm font-medium text-gray-700">{label}</div>
+        <div className="text-sm font-medium text-gray-300">{label}</div>
       </div>
-      <div className="text-sm font-bold text-gray-800">
+      <div className="text-sm font-bold text-gray-300">
         <CountUp end={value} duration={2} separator="," />
         {isPercentage && "%"}
       </div>
@@ -612,12 +612,12 @@ const QualityCard = ({ label, value, total, color }) => {
         <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">{label}</span>
       </div>
       <div className="flex items-baseline justify-between">
-        <span className="text-xl font-black text-gray-800">
+        <span className="text-xl font-black text-gray-300">
           <CountUp end={value} duration={1.5} />
         </span>
-        <span className="text-[10px] font-bold text-gray-600">{percentage}%</span>
+        <span className="text-[10px] font-bold text-gray-400">{percentage}%</span>
       </div>
-      <div className="w-full h-1 bg-white rounded-full mt-2 overflow-hidden">
+      <div className="w-full h-1 bg-[#0a0a0a] rounded-full mt-2 overflow-hidden">
         <div
           className={`h-full rounded-full ${color === 'amber' ? 'bg-amber-500' :
             color === 'emerald' ? 'bg-emerald-500' :

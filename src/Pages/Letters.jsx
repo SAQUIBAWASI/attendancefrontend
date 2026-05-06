@@ -70,7 +70,7 @@ const Letters = () => {
       case "internship": return "bg-orange-100 text-orange-800 border-orange-200";
       case "relieving": return "bg-rose-100 text-rose-800 border-rose-200";
       case "resignation": return "bg-amber-100 text-amber-800 border-amber-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      default: return "bg-[#111111] text-gray-300 border-[#1f2937]";
     }
   };
 
@@ -143,15 +143,15 @@ const Letters = () => {
   const hasFilters = localSearchQuery || typeFilter || dateFilter;
 
   return (
-    <div className="min-h-screen p-4 md:p-6 lg:p-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen p-4 md:p-6 lg:p-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
       <div className="max-w-9xl mx-auto animate-in fade-in duration-700">
 
         {/* Header & Filters Section */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-6">
+        <div className="bg-[#0a0a0a] p-6 rounded-3xl shadow-sm border border-[#1f2937] mb-6">
           <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Offer Letters & Documents</h2>
+                <h2 className="text-2xl font-bold text-gray-300 tracking-tight">Offer Letters & Documents</h2>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mt-2">Access your formal offer letters and employment agreements</p>
               </div>
               {canResignApp && (
@@ -176,7 +176,7 @@ const Letters = () => {
               <div className="relative w-full sm:w-auto">
                 <input
                   type="date"
-                  className="w-full bg-gray-50 py-2.5 px-4 pr-10 text-xs text-gray-700 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold shadow-sm sm:w-40 cursor-pointer transition-all"
+                  className="w-full bg-[#000000] py-2.5 px-4 pr-10 text-xs text-gray-300 border border-[#1f2937] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold shadow-sm sm:w-40 cursor-pointer transition-all"
                   value={dateFilter}
                   onChange={(e) => setDateFilter(e.target.value)}
                 />
@@ -185,14 +185,14 @@ const Letters = () => {
               {/* Document Type Dropdown */}
               <div className="relative w-full sm:w-52" ref={typeDropdownRef}>
                 <div
-                  className="w-full bg-gray-50 py-2.5 px-4 text-xs text-gray-700 border border-gray-100 rounded-xl font-bold cursor-pointer hover:bg-gray-100 shadow-sm transition-all flex items-center justify-between"
+                  className="w-full bg-[#000000] py-2.5 px-4 text-xs text-gray-300 border border-[#1f2937] rounded-xl font-bold cursor-pointer hover:bg-[#111111] shadow-sm transition-all flex items-center justify-between"
                   onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
                 >
                   <span className="truncate">{typeFilter || "Filter by Doc Type"}</span>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={`text-gray-400 transition-transform duration-200 ${isTypeDropdownOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
                 </div>
                 {isTypeDropdownOpen && (
-                  <div className="absolute z-[110] w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="absolute z-[110] w-full mt-2 bg-[#0a0a0a] border border-[#1f2937] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
                     <div className="max-h-60 overflow-y-auto py-2">
                       <div
                         className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-blue-50 transition-colors ${!typeFilter ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
@@ -221,7 +221,7 @@ const Letters = () => {
                 </div>
                 <input
                   type="text"
-                  className="w-full py-2.5 pl-10 pr-4 bg-gray-50 text-xs text-gray-700 placeholder-gray-400 font-bold border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all"
+                  className="w-full py-2.5 pl-10 pr-4 bg-[#000000] text-xs text-gray-300 placeholder-gray-400 font-bold border border-[#1f2937] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all"
                   placeholder="Search role, doc type..."
                   value={localSearchQuery}
                   onChange={(e) => setLocalSearchQuery(e.target.value)}
@@ -230,7 +230,7 @@ const Letters = () => {
 
               {/* Reset */}
               {hasFilters && (
-                <button onClick={resetFilters} className="p-2.5 text-gray-400 hover:text-rose-500 bg-gray-50 hover:bg-rose-50 border border-gray-100 rounded-xl transition-all shadow-sm" title="Reset Filters">
+                <button onClick={resetFilters} className="p-2.5 text-gray-400 hover:text-rose-500 bg-[#000000] hover:bg-rose-50 border border-[#1f2937] rounded-xl transition-all shadow-sm" title="Reset Filters">
                   <FaSync className="text-xs" />
                 </button>
               )}
@@ -243,7 +243,7 @@ const Letters = () => {
         </div>
 
         {/* Table Area */}
-        <div className="bg-white shadow-xl rounded-3xl border border-gray-100 overflow-hidden">
+        <div className="bg-[#0a0a0a] shadow-xl rounded-3xl border border-[#1f2937] overflow-hidden">
           {filteredLetters.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="min-w-full">
@@ -265,7 +265,7 @@ const Letters = () => {
                             <FaFilePdf size={12} />
                           </div>
                           <div className="text-left">
-                            <div className="font-bold text-sm text-gray-800 uppercase tracking-tight">{app.jobId?.role || app.role || "N/A"}</div>
+                            <div className="font-bold text-sm text-gray-300 uppercase tracking-tight">{app.jobId?.role || app.role || "N/A"}</div>
                             <div className="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5 font-medium">Formal Documentation</div>
                           </div>
                         </div>
@@ -275,14 +275,14 @@ const Letters = () => {
                           {app.documentType || "Offer"}
                         </span>
                       </td>
-                      <td className="py-2 px-6 text-xs font-bold text-gray-600 uppercase tracking-tight">
+                      <td className="py-2 px-6 text-xs font-bold text-gray-400 uppercase tracking-tight">
                         <div className="flex items-center justify-center gap-2">
                           <FaCalendarAlt className="text-blue-400" size={10} />
                           {new Date(app.offerSentAt || app.updatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                         </div>
                       </td>
                       <td className="py-2 px-6">
-                        <span className="font-bold text-[10px] text-gray-400 border border-gray-100 px-2 py-0.5 rounded bg-gray-50 uppercase tracking-widest">
+                        <span className="font-bold text-[10px] text-gray-400 border border-[#1f2937] px-2 py-0.5 rounded bg-[#000000] uppercase tracking-widest">
                           #{app._id.slice(-6).toUpperCase()}
                         </span>
                       </td>
@@ -321,10 +321,10 @@ const Letters = () => {
             </div>
           ) : (
             <div className="p-24 text-center">
-              <div className="w-20 h-20 bg-gray-50 rounded-[2.5rem] flex items-center justify-center text-gray-200 mx-auto mb-6 border-2 border-dashed border-gray-100">
+              <div className="w-20 h-20 bg-[#000000] rounded-[2.5rem] flex items-center justify-center text-gray-200 mx-auto mb-6 border-2 border-dashed border-[#1f2937]">
                 <FaInbox size={32} />
               </div>
-              <h3 className="text-lg font-bold text-gray-800 uppercase tracking-widest">No Letters Yet</h3>
+              <h3 className="text-lg font-bold text-gray-300 uppercase tracking-widest">No Letters Yet</h3>
               <p className="text-[10px] font-bold text-gray-400 mt-3 uppercase tracking-widest leading-loose max-w-xs mx-auto">
                 Offer letters and official documents will appear here once issued by HR.
               </p>
@@ -336,13 +336,13 @@ const Letters = () => {
       {/* Resignation Modal */}
       {isResignModalOpen && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <div className="bg-[#0a0a0a] rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-8 py-5 border-b border-[#1f2937] flex justify-between items-center bg-[#000000]/50">
               <div className="flex items-center gap-3">
                 <div className="bg-rose-100 text-rose-600 p-2 rounded-xl">
                   <FaSignOutAlt size={16} />
                 </div>
-                <h2 className="text-xl font-bold text-gray-800 tracking-tight">File Resignation</h2>
+                <h2 className="text-xl font-bold text-gray-300 tracking-tight">File Resignation</h2>
               </div>
               <button onClick={() => setIsResignModalOpen(false)} className="text-gray-400 hover:text-rose-500 transition-colors">
                 <FaTimes size={18} />
@@ -352,14 +352,14 @@ const Letters = () => {
             <form onSubmit={handleSubmitResignation} className="p-8">
               <div className="mb-6">
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">
-                  Submitting resignation for: <span className="text-gray-800">{canResignApp?.jobId?.role || canResignApp?.role || "N/A"}</span>
+                  Submitting resignation for: <span className="text-gray-300">{canResignApp?.jobId?.role || canResignApp?.role || "N/A"}</span>
                 </p>
-                <label className="block text-xs font-black text-gray-600 uppercase tracking-widest mb-2 px-1">Resignation statement / reason *</label>
+                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Resignation statement / reason *</label>
                 <textarea
                   required
                   value={resignationLetter}
                   onChange={(e) => setResignationLetter(e.target.value)}
-                  className="w-full h-40 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all text-sm font-medium text-gray-700 shadow-sm"
+                  className="w-full h-40 p-4 bg-[#000000] border border-[#1f2937] rounded-2xl focus:bg-[#0a0a0a] focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all text-sm font-medium text-gray-300 shadow-sm"
                   placeholder="Please state your reason for resignation and your intended last working day..."
                 />
               </div>
@@ -368,7 +368,7 @@ const Letters = () => {
                 <button
                   type="button"
                   onClick={() => setIsResignModalOpen(false)}
-                  className="flex-1 px-6 py-3 rounded-2xl font-bold text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all text-xs uppercase tracking-widest border border-gray-100"
+                  className="flex-1 px-6 py-3 rounded-2xl font-bold text-gray-400 hover:bg-[#000000] hover:text-gray-400 transition-all text-xs uppercase tracking-widest border border-[#1f2937]"
                 >
                   Cancel
                 </button>

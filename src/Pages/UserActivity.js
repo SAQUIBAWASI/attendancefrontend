@@ -154,24 +154,24 @@
 //   const getActionBadgeColor = (action) => {
 //     const colorMap = {
 //       login: "bg-green-100 text-green-800",
-//       logout: "bg-gray-100 text-gray-800",
+//       logout: "bg-[#111111] text-gray-300",
 //       leave_apply: "bg-blue-100 text-blue-800",
 //       leave_approve: "bg-emerald-100 text-emerald-800",
 //       leave_reject: "bg-red-100 text-red-800",
 //       payslip_download: "bg-purple-100 text-purple-800",
 //     };
-//     return colorMap[action] || "bg-gray-100 text-gray-800";
+//     return colorMap[action] || "bg-[#111111] text-gray-300";
 //   };
 
 //   return (
-//      <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+//      <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-9xl">
 //         {/* Header */}
 //         {/* <div className="mb-6">
-//           <h1 className="mb-2 text-3xl font-bold text-gray-800">
+//           <h1 className="mb-2 text-3xl font-bold text-gray-300">
 //             User Activity Log
 //           </h1>
-//           <p className="text-gray-600">
+//           <p className="text-gray-400">
 //             Track all employee and admin actions in real-time
 //           </p>
 //         </div> */}
@@ -179,11 +179,11 @@
 //         {/* Statistics Cards */}
 //         {/* {stats && (
 //           <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2">
-//             <div className="p-4 bg-white border-l-4 border-blue-500 rounded-lg shadow-md">
+//             <div className="p-4 bg-[#0a0a0a] border-l-4 border-blue-500 rounded-lg shadow-md">
 //               <div className="flex items-center justify-between">
 //                 <div>
-//                   <p className="text-sm text-gray-600">Total Activities</p>
-//                   <p className="text-2xl font-bold text-gray-800">
+//                   <p className="text-sm text-gray-400">Total Activities</p>
+//                   <p className="text-2xl font-bold text-gray-300">
 //                     {stats.totalActivities}
 //                   </p>
 //                 </div>
@@ -191,11 +191,11 @@
 //               </div>
 //             </div>
 
-//             <div className="p-4 bg-white border-l-4 border-green-500 rounded-lg shadow-md">
+//             <div className="p-4 bg-[#0a0a0a] border-l-4 border-green-500 rounded-lg shadow-md">
 //               <div className="flex items-center justify-between">
 //                 <div>
-//                   <p className="text-sm text-gray-600">Employee Actions</p>
-//                   <p className="text-2xl font-bold text-gray-800">
+//                   <p className="text-sm text-gray-400">Employee Actions</p>
+//                   <p className="text-2xl font-bold text-gray-300">
 //                     {stats.byRole.find((r) => r._id === "employee")?.count || 0}
 //                   </p>
 //                 </div>
@@ -203,11 +203,11 @@
 //               </div>
 //             </div>
 
-//             <div className="p-4 bg-white border-l-4 border-purple-500 rounded-lg shadow-md">
+//             <div className="p-4 bg-[#0a0a0a] border-l-4 border-purple-500 rounded-lg shadow-md">
 //               <div className="flex items-center justify-between">
 //                 <div>
-//                   <p className="text-sm text-gray-600">Admin Actions</p>
-//                   <p className="text-2xl font-bold text-gray-800">
+//                   <p className="text-sm text-gray-400">Admin Actions</p>
+//                   <p className="text-2xl font-bold text-gray-300">
 //                     {stats.byRole.find((r) => r._id === "admin")?.count || 0}
 //                   </p>
 //                 </div>
@@ -219,10 +219,10 @@
 
 //         {/* Filters */}
 
-//         <div className="p-2 mb-2 bg-white rounded-lg shadow-md">
+//         <div className="p-2 mb-2 bg-[#0a0a0a] rounded-lg shadow-md">
 //           {/* <div className="flex items-center gap-2 mb-4">
 //             <FiFilter className="text-xl text-blue-600" />
-//             <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
+//             <h2 className="text-lg font-semibold text-gray-300">Filters</h2>
 //           </div> */}
 
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -235,7 +235,7 @@
 //                 value={filters.search}
 //                 onChange={handleFilterChange}
 //                 placeholder="Search by name or email"
-//                 className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full py-2 pl-10 pr-4 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -244,7 +244,7 @@
 //               name="action"
 //               value={filters.action}
 //               onChange={handleFilterChange}
-//               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//               className="px-4 py-2 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 //             >
 //               <option value="">All Actions</option>
 //               <option value="login">Login</option>
@@ -260,7 +260,7 @@
 //               name="userRole"
 //               value={filters.userRole}
 //               onChange={handleFilterChange}
-//               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//               className="px-4 py-2 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 //             >
 //               <option value="">All Roles</option>
 //               <option value="employee">Employee</option>
@@ -269,25 +269,25 @@
 
 //             {/* Start Date */}
 //             <div className="relative">
-//               <FaCalendarAlt className="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+//               <FaCalendarAlt className="absolute text-white transform -translate-y-1/2 left-3 top-1/2" />
 //               <input
 //                 type="date"
 //                 name="startDate"
 //                 value={filters.startDate}
 //                 onChange={handleFilterChange}
-//                 className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full py-2 pl-10 pr-4 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
 //             {/* End Date */}
 //             <div className="relative">
-//               <FaCalendarAlt className="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+//               <FaCalendarAlt className="absolute text-white transform -translate-y-1/2 left-3 top-1/2" />
 //               <input
 //                 type="date"
 //                 name="endDate"
 //                 value={filters.endDate}
 //                 onChange={handleFilterChange}
-//                 className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full py-2 pl-10 pr-4 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 //           </div>
@@ -296,7 +296,7 @@
 //           {/* <div className="flex gap-3 mt-4">
 //             <button
 //               onClick={resetFilters}
-//               className="flex items-center gap-2 px-4 py-2 text-gray-700 transition-colors bg-gray-100 rounded-lg hover:bg-gray-200"
+//               className="flex items-center gap-2 px-4 py-2 text-gray-300 transition-colors bg-[#111111] rounded-lg hover:bg-[#1f2937]"
 //             >
 //               <FiRefreshCw className="text-sm" />
 //               Reset Filters
@@ -312,8 +312,8 @@
 //         </div>
 
 //         {/* Activities Table */}
-//         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//         <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
+//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
@@ -334,13 +334,13 @@
 //                   </th>
 //                 </tr>
 //               </thead>
-//               <tbody className="bg-white divide-y divide-gray-200">
+//               <tbody className="bg-[#0a0a0a] divide-y divide-[#1f2937]">
 //                 {loading ? (
 //                   <tr>
 //                     <td colSpan="5" className="px-2 py-2 text-center">
 //                       <div className="flex items-center justify-center">
 //                         <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-//                         <span className="ml-2 text-gray-600">
+//                         <span className="ml-2 text-gray-400">
 //                           Loading activities...
 //                         </span>
 //                       </div>
@@ -356,9 +356,9 @@
 //                   activities.map((activity) => (
 //                     <tr
 //                       key={activity._id}
-//                       className="transition-colors hover:bg-gray-50"
+//                       className="transition-colors hover:bg-[#000000]"
 //                     >
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
 //                         {new Date(activity.createdAt).toLocaleString("en-IN", {
 //                           dateStyle: "medium",
 //                           timeStyle: "short",
@@ -366,7 +366,7 @@
 //                       </td>
 //                       <td className="px-2 py-2 text-center whitespace-nowrap">
 //                         <div className="flex flex-col">
-//                           <span className="text-sm font-medium text-gray-900">
+//                           <span className="text-sm font-medium text-gray-200">
 //                             {activity.userName}
 //                           </span>
 //                           <span className="text-xs text-gray-500">
@@ -394,7 +394,7 @@
 //                           {formatActionName(activity.action)}
 //                         </span>
 //                       </td>
-//                       <td className="px-2 py-2 text-sm text-center text-gray-700">
+//                       <td className="px-2 py-2 text-sm text-center text-gray-300">
 //                         {activity.actionDetails}
 //                       </td>
 //                     </tr>
@@ -406,11 +406,11 @@
 
 //           {/* Pagination */}
 //           {!loading && activities.length > 0 && (
-//             <div className="flex items-center justify-between px-2 py-2 text-center border-t border-gray-200 bg-gray-50">
+//             <div className="flex items-center justify-between px-2 py-2 text-center border-t border-[#1f2937] bg-[#000000]">
 //               <div className="flex flex-wrap items-center justify-between gap-4">
   
 //   {/* Left Side - Showing Info + Select */}
-//   <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
+//   <div className="flex flex-wrap items-center gap-2 text-sm text-gray-300">
     
 //     <span>Showing</span>
 
@@ -463,7 +463,7 @@
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === 1}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-lg hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Previous
 //                 </button>
@@ -489,7 +489,7 @@
 //                           }
 //                           className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === page
 //                             ? "bg-blue-600 text-white"
-//                             : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+//                             : "bg-[#0a0a0a] text-gray-300 border border-[#374151] hover:bg-[#000000]"
 //                             }`}
 //                         >
 //                           {page}
@@ -517,7 +517,7 @@
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === pagination.totalPages}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-lg hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Next
 //                 </button>
@@ -828,13 +828,13 @@
 //   const getActionBadgeColor = (action) => {
 //     const colorMap = {
 //       login: "bg-green-100 text-green-800",
-//       logout: "bg-gray-100 text-gray-800",
+//       logout: "bg-[#111111] text-gray-300",
 //       leave_apply: "bg-blue-100 text-blue-800",
 //       leave_approve: "bg-emerald-100 text-emerald-800",
 //       leave_reject: "bg-red-100 text-red-800",
 //       payslip_download: "bg-purple-100 text-purple-800",
 //     };
-//     return colorMap[action] || "bg-gray-100 text-gray-800";
+//     return colorMap[action] || "bg-[#111111] text-gray-300";
 //   };
 
 //   // Pagination handlers
@@ -852,11 +852,11 @@
 //   const currentItems = filteredActivities.slice(indexOfFirstItem, indexOfLastItem);
 
 //   return (
-//     <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-9xl">
 
 //         {/* Filters */}
-//         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+//         <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
 //           <div className="flex flex-wrap items-center gap-2">
             
 //             {/* Search */}
@@ -867,7 +867,7 @@
 //                 placeholder="Search by name or email..."
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -875,7 +875,7 @@
 //             <select
 //               value={actionFilter}
 //               onChange={(e) => setActionFilter(e.target.value)}
-//               className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
+//               className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
 //             >
 //               <option value="">All Actions</option>
 //               <option value="login">Login</option>
@@ -890,7 +890,7 @@
 //             <select
 //               value={userRoleFilter}
 //               onChange={(e) => setUserRoleFilter(e.target.value)}
-//               className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[90px]"
+//               className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[90px]"
 //             >
 //               <option value="">All Roles</option>
 //               <option value="employee">Employee</option>
@@ -904,7 +904,7 @@
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDepartment 
 //                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+//                     : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
 //                 }`}
 //               >
 //                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
@@ -912,13 +912,13 @@
               
 //               {/* Department Filter Dropdown */}
 //               {/* {showDepartmentFilter && (
-//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
 //                   <div 
 //                     onClick={() => {
 //                       setFilterDepartment('');
 //                       setShowDepartmentFilter(false);
 //                     }}
-//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+//                     className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
 //                   >
 //                     All Departments
 //                   </div>
@@ -947,7 +947,7 @@
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDesignation 
 //                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+//                     : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
 //                 }`}
 //               >
 //                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
@@ -955,13 +955,13 @@
               
 //               {/* Designation Filter Dropdown */}
 //               {/* {showDesignationFilter && (
-//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
 //                   <div 
 //                     onClick={() => {
 //                       setFilterDesignation('');
 //                       setShowDesignationFilter(false);
 //                     }}
-//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+//                     className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
 //                   >
 //                     All Designations
 //                   </div> */}
@@ -993,7 +993,7 @@
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-12 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -1007,19 +1007,19 @@
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-10 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
 //             {/* Month Selector */}
 //             <div className="relative w-[130px]">
-//               <FaCalendarAlt className="absolute text-xs text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+//               <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
 //               <input
 //                 type="month"
 //                 value={selectedMonth}
 //                 onChange={(e) => setSelectedMonth(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -1035,7 +1035,7 @@
 //             {(searchTerm || actionFilter || userRoleFilter || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
 //               <button
 //                 onClick={resetFilters}
-//                 className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+//                 className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
 //               >
 //                 Clear
 //               </button>
@@ -1044,8 +1044,8 @@
 //         </div>
 
 //       {/* Activities Table */}
-//         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//         <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
+//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
@@ -1058,13 +1058,13 @@
 //                   <th className="py-2 text-center">Details</th>
 //                 </tr>
 //               </thead>
-//               <tbody className="bg-white divide-y divide-gray-200">
+//               <tbody className="bg-[#0a0a0a] divide-y divide-[#1f2937]">
 //                 {loading ? (
 //                   <tr>
 //                     <td colSpan="7" className="px-2 py-2 text-center">
 //                       <div className="flex items-center justify-center">
 //                         <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-//                         <span className="ml-2 text-gray-600">
+//                         <span className="ml-2 text-gray-400">
 //                           Loading activities...
 //                         </span>
 //                       </div>
@@ -1080,9 +1080,9 @@
 //                   currentItems.map((activity) => (
 //                     <tr
 //                       key={activity._id}
-//                       className="transition-colors hover:bg-gray-50"
+//                       className="transition-colors hover:bg-[#000000]"
 //                     >
-//                       <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+//                       <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
 //                         {new Date(activity.createdAt).toLocaleString("en-IN", {
 //                           dateStyle: "medium",
 //                           timeStyle: "short",
@@ -1090,7 +1090,7 @@
 //                       </td>
 //                       <td className="px-2 py-2 text-center whitespace-nowrap">
 //                         <div className="flex flex-col">
-//                           <span className="font-medium text-gray-900">
+//                           <span className="font-medium text-gray-200">
 //                             {activity.userName}
 //                           </span>
 //                           <span className="text-xs text-gray-500">
@@ -1098,10 +1098,10 @@
 //                           </span>
 //                         </div>
 //                       </td>
-//                       {/* <td className="px-2 py-2 text-sm text-center text-gray-600 whitespace-nowrap">
+//                       {/* <td className="px-2 py-2 text-sm text-center text-gray-400 whitespace-nowrap">
 //                         {activity.department}
 //                       </td>
-//                       <td className="px-2 py-2 text-sm text-center text-gray-600 whitespace-nowrap">
+//                       <td className="px-2 py-2 text-sm text-center text-gray-400 whitespace-nowrap">
 //                         {activity.designation}
 //                       </td> */}
 //                       <td className="px-2 py-2 text-center whitespace-nowrap">
@@ -1124,7 +1124,7 @@
 //                           {formatActionName(activity.action)}
 //                         </span>
 //                       </td>
-//                       <td className="px-2 py-2 text-sm text-center text-gray-700">
+//                       <td className="px-2 py-2 text-sm text-center text-gray-300">
 //                         {activity.actionDetails}
 //                       </td>
 //                     </tr>
@@ -1136,8 +1136,8 @@
 
 //           {/* Pagination */}
 //           {!loading && filteredActivities.length > 0 && (
-//             <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-gray-50">
-//               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
+//             <div className="flex items-center justify-between px-2 py-2 border-t border-[#1f2937] bg-[#000000]">
+//               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-300">
 //                 <span>Showing</span>
 //                 <span className="font-medium">
 //                   {indexOfFirstItem + 1}
@@ -1176,7 +1176,7 @@
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === 1}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-lg hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Previous
 //                 </button>
@@ -1202,7 +1202,7 @@
 //                           className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
 //                             pagination.currentPage === page
 //                               ? "bg-blue-600 text-white"
-//                               : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+//                               : "bg-[#0a0a0a] text-gray-300 border border-[#374151] hover:bg-[#000000]"
 //                           }`}
 //                         >
 //                           {page}
@@ -1230,7 +1230,7 @@
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === pagination.totalPages}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-lg hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Next
 //                 </button>
@@ -1652,13 +1652,13 @@
 //   const getActionBadgeColor = (action) => {
 //     const colorMap = {
 //       login: "bg-green-100 text-green-800",
-//       logout: "bg-gray-100 text-gray-800",
+//       logout: "bg-[#111111] text-gray-300",
 //       leave_apply: "bg-blue-100 text-blue-800",
 //       leave_approve: "bg-emerald-100 text-emerald-800",
 //       leave_reject: "bg-red-100 text-red-800",
 //       payslip_download: "bg-purple-100 text-purple-800",
 //     };
-//     return colorMap[action] || "bg-gray-100 text-gray-800";
+//     return colorMap[action] || "bg-[#111111] text-gray-300";
 //   };
 
 //   // Pagination handlers
@@ -1693,11 +1693,11 @@
 //   };
 
 //   return (
-//     <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-9xl">
 
 //         {/* Filters */}
-//         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+//         <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
 //           <div className="flex flex-wrap items-center gap-2">
             
 //             {/* Search */}
@@ -1708,7 +1708,7 @@
 //                 placeholder="Search by name or email..."
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -1716,7 +1716,7 @@
 //             <select
 //               value={actionFilter}
 //               onChange={(e) => setActionFilter(e.target.value)}
-//               className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
+//               className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
 //             >
 //               <option value="">All Actions</option>
 //               <option value="login">Login</option>
@@ -1731,7 +1731,7 @@
 //             <select
 //               value={userRoleFilter}
 //               onChange={(e) => setUserRoleFilter(e.target.value)}
-//               className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[90px]"
+//               className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[90px]"
 //             >
 //               <option value="">All Roles</option>
 //               <option value="employee">Employee</option>
@@ -1745,7 +1745,7 @@
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDepartment 
 //                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+//                     : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
 //                 }`}
 //               >
 //                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
@@ -1753,13 +1753,13 @@
               
 //               {/* Department Filter Dropdown */}
 //               {showDepartmentFilter && (
-//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
 //                   <div 
 //                     onClick={() => {
 //                       setFilterDepartment('');
 //                       setShowDepartmentFilter(false);
 //                     }}
-//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+//                     className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
 //                   >
 //                     All Departments
 //                   </div>
@@ -1793,7 +1793,7 @@
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDesignation 
 //                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+//                     : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
 //                 }`}
 //               >
 //                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
@@ -1801,13 +1801,13 @@
               
 //               {/* Designation Filter Dropdown */}
 //               {showDesignationFilter && (
-//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
 //                   <div 
 //                     onClick={() => {
 //                       setFilterDesignation('');
 //                       setShowDesignationFilter(false);
 //                     }}
-//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+//                     className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
 //                   >
 //                     All Designations
 //                   </div>
@@ -1844,7 +1844,7 @@
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-12 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -1858,19 +1858,19 @@
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-10 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
 //             {/* Month Selector */}
 //             <div className="relative w-[130px]">
-//               <FaCalendarAlt className="absolute text-xs text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+//               <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
 //               <input
 //                 type="month"
 //                 value={selectedMonth}
 //                 onChange={(e) => setSelectedMonth(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -1886,7 +1886,7 @@
 //             {(searchTerm || actionFilter || userRoleFilter || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
 //               <button
 //                 onClick={resetFilters}
-//                 className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+//                 className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
 //               >
 //                 Clear
 //               </button>
@@ -1895,8 +1895,8 @@
 //         </div>
 
 //         {/* Activities Table */}
-//         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//         <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
+//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
@@ -1909,13 +1909,13 @@
 //                   <th className="py-2 text-center">DETAILS</th>
 //                 </tr>
 //               </thead>
-//               <tbody className="bg-white divide-y divide-gray-200">
+//               <tbody className="bg-[#0a0a0a] divide-y divide-[#1f2937]">
 //                 {loading ? (
 //                   <tr>
 //                     <td colSpan="7" className="px-2 py-2 text-center">
 //                       <div className="flex items-center justify-center">
 //                         <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-//                         <span className="ml-2 text-gray-600">
+//                         <span className="ml-2 text-gray-400">
 //                           Loading activities...
 //                         </span>
 //                       </div>
@@ -1931,9 +1931,9 @@
 //                   currentItems.map((activity) => (
 //                     <tr
 //                       key={activity._id}
-//                       className="transition-colors hover:bg-gray-50"
+//                       className="transition-colors hover:bg-[#000000]"
 //                     >
-//                       <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+//                       <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
 //                         {new Date(activity.createdAt).toLocaleString("en-IN", {
 //                           dateStyle: "medium",
 //                           timeStyle: "short",
@@ -1941,7 +1941,7 @@
 //                       </td>
 //                       <td className="px-2 py-2 text-center whitespace-nowrap">
 //                         <div className="flex flex-col">
-//                           <span className="font-medium text-gray-900">
+//                           <span className="font-medium text-gray-200">
 //                             {activity.userName || "N/A"}
 //                           </span>
 //                           <span className="text-xs text-gray-500">
@@ -1949,10 +1949,10 @@
 //                           </span>
 //                         </div>
 //                       </td>
-//                       <td className="px-2 py-2 text-sm text-center text-gray-600 whitespace-nowrap">
+//                       <td className="px-2 py-2 text-sm text-center text-gray-400 whitespace-nowrap">
 //                         {activity.department}
 //                       </td>
-//                       <td className="px-2 py-2 text-sm text-center text-gray-600 whitespace-nowrap">
+//                       <td className="px-2 py-2 text-sm text-center text-gray-400 whitespace-nowrap">
 //                         {activity.designation}
 //                       </td>
 //                       <td className="px-2 py-2 text-center whitespace-nowrap">
@@ -1975,7 +1975,7 @@
 //                           {formatActionName(activity.action)}
 //                         </span>
 //                       </td>
-//                       <td className="px-2 py-2 text-sm text-center text-gray-700">
+//                       <td className="px-2 py-2 text-sm text-center text-gray-300">
 //                         {activity.actionDetails || "-"}
 //                       </td>
 //                     </tr>
@@ -1987,8 +1987,8 @@
 
 //           {/* Pagination */}
 //           {!loading && filteredActivities.length > 0 && (
-//             <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-gray-50">
-//               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
+//             <div className="flex items-center justify-between px-2 py-2 border-t border-[#1f2937] bg-[#000000]">
+//               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-300">
 //                 <span>Showing</span>
 //                 <span className="font-medium">
 //                   {indexOfFirstItem + 1}
@@ -2027,7 +2027,7 @@
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === 1}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-lg hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Previous
 //                 </button>
@@ -2048,7 +2048,7 @@
 //                         className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
 //                           pagination.currentPage === page
 //                             ? "bg-blue-600 text-white"
-//                             : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+//                             : "bg-[#0a0a0a] text-gray-300 border border-[#374151] hover:bg-[#000000]"
 //                         }`}
 //                       >
 //                         {page}
@@ -2065,7 +2065,7 @@
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === pagination.totalPages}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-lg hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Next
 //                 </button>
@@ -2382,7 +2382,7 @@ const UserActivity = () => {
   const getActionBadgeColor = (action) => {
     const colorMap = {
       login: "bg-green-100 text-green-800",
-      logout: "bg-gray-100 text-gray-800",
+      logout: "bg-[#111111] text-gray-300",
       leave_apply: "bg-blue-100 text-blue-800",
       leave_approve: "bg-emerald-100 text-emerald-800",
       leave_reject: "bg-red-100 text-red-800",
@@ -2427,11 +2427,11 @@ const UserActivity = () => {
   };
 
   return (
-    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
       <div className="mx-auto max-w-9xl">
 
         {/* Filters */}
-        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+        <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
             
             {/* Search */}
@@ -2442,7 +2442,7 @@ const UserActivity = () => {
                 placeholder="Search by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -2450,7 +2450,7 @@ const UserActivity = () => {
             <select
               value={actionFilter}
               onChange={(e) => setActionFilter(e.target.value)}
-              className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
+              className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
             >
               <option value="">All Actions</option>
               <option value="login">Login</option>
@@ -2468,7 +2468,7 @@ const UserActivity = () => {
             <select
               value={userRoleFilter}
               onChange={(e) => setUserRoleFilter(e.target.value)}
-              className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[90px]"
+              className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[90px]"
             >
               <option value="">All Roles</option>
               <option value="employee">Employee</option>
@@ -2482,7 +2482,7 @@ const UserActivity = () => {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDepartment 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
                 }`}
               >
                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
@@ -2490,13 +2490,13 @@ const UserActivity = () => {
               
               {/* Department Filter Dropdown */}
               {showDepartmentFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
                   <div 
                     onClick={() => {
                       setFilterDepartment('');
                       setShowDepartmentFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
                   >
                     All Departments
                   </div>
@@ -2530,7 +2530,7 @@ const UserActivity = () => {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDesignation 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
                 }`}
               >
                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
@@ -2538,13 +2538,13 @@ const UserActivity = () => {
               
               {/* Designation Filter Dropdown */}
               {showDesignationFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
                   <div 
                     onClick={() => {
                       setFilterDesignation('');
                       setShowDesignationFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
                   >
                     All Designations
                   </div>
@@ -2581,7 +2581,7 @@ const UserActivity = () => {
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-12 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -2595,19 +2595,19 @@ const UserActivity = () => {
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             {/* Month Selector */}
             <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="month"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -2623,7 +2623,7 @@ const UserActivity = () => {
             {(searchTerm || actionFilter || userRoleFilter || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
               <button
                 onClick={resetFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
               >
                 Clear
               </button>
@@ -2632,8 +2632,8 @@ const UserActivity = () => {
         </div>
 
         {/* Activities Table */}
-        <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+        <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
+          <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
             <table className="min-w-full">
               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
@@ -2646,13 +2646,13 @@ const UserActivity = () => {
                   <th className="py-2 text-center">DETAILS</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-[#0a0a0a] divide-y divide-[#1f2937]">
                 {loading ? (
                   <tr>
                     <td colSpan="7" className="px-2 py-2 text-center">
                       <div className="flex items-center justify-center">
                         <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-                        <span className="ml-2 text-gray-600">
+                        <span className="ml-2 text-gray-400">
                           Loading activities...
                         </span>
                       </div>
@@ -2668,9 +2668,9 @@ const UserActivity = () => {
                   currentItems.map((activity) => (
                     <tr
                       key={activity._id}
-                      className="transition-colors hover:bg-gray-50"
+                      className="transition-colors hover:bg-[#000000]"
                     >
-                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+                      <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
                         {new Date(activity.createdAt).toLocaleString("en-IN", {
                           dateStyle: "medium",
                           timeStyle: "short",
@@ -2678,7 +2678,7 @@ const UserActivity = () => {
                       </td>
                       <td className="px-2 py-2 text-center whitespace-nowrap">
                         <div className="flex flex-col">
-                          <span className="font-medium text-gray-900">
+                          <span className="font-medium text-gray-200">
                             {activity.userName || "N/A"}
                           </span>
                           <span className="text-xs text-gray-500">
@@ -2686,10 +2686,10 @@ const UserActivity = () => {
                           </span>
                         </div>
                       </td>
-                      <td className="px-2 py-2 text-sm text-center text-gray-600 whitespace-nowrap">
+                      <td className="px-2 py-2 text-sm text-center text-gray-400 whitespace-nowrap">
                         {activity.department}
                       </td>
-                      <td className="px-2 py-2 text-sm text-center text-gray-600 whitespace-nowrap">
+                      <td className="px-2 py-2 text-sm text-center text-gray-400 whitespace-nowrap">
                         {activity.designation}
                       </td>
                       <td className="px-2 py-2 text-center whitespace-nowrap">
@@ -2712,7 +2712,7 @@ const UserActivity = () => {
                           {formatActionName(activity.action)}
                         </span>
                       </td>
-                      <td className="px-2 py-2 text-sm text-center text-gray-700">
+                      <td className="px-2 py-2 text-sm text-center text-gray-300">
                         {activity.actionDetails || "-"}
                       </td>
                     </tr>
@@ -2724,8 +2724,8 @@ const UserActivity = () => {
 
           {/* Pagination */}
           {!loading && filteredActivities.length > 0 && (
-            <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-gray-50">
-              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
+            <div className="flex items-center justify-between px-2 py-2 border-t border-[#1f2937] bg-[#000000]">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-300">
                 <span>Showing</span>
                 <span className="font-medium">
                   {indexOfFirstItem + 1}
@@ -2764,7 +2764,7 @@ const UserActivity = () => {
                     }))
                   }
                   disabled={pagination.currentPage === 1}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-lg hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
@@ -2785,7 +2785,7 @@ const UserActivity = () => {
                         className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
                           pagination.currentPage === page
                             ? "bg-blue-600 text-white"
-                            : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                            : "bg-[#0a0a0a] text-gray-300 border border-[#374151] hover:bg-[#000000]"
                         }`}
                       >
                         {page}
@@ -2802,7 +2802,7 @@ const UserActivity = () => {
                     }))
                   }
                   disabled={pagination.currentPage === pagination.totalPages}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-lg hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -3053,13 +3053,13 @@ export default UserActivity;
 //   const getActionBadgeColor = (action) => {
 //     const colorMap = {
 //       login: "bg-green-100 text-green-800",
-//       logout: "bg-gray-100 text-gray-800",
+//       logout: "bg-[#111111] text-gray-300",
 //       leave_apply: "bg-blue-100 text-blue-800",
 //       leave_approve: "bg-emerald-100 text-emerald-800",
 //       leave_reject: "bg-red-100 text-red-800",
 //       payslip_download: "bg-purple-100 text-purple-800",
 //     };
-//     return colorMap[action] || "bg-gray-100 text-gray-800";
+//     return colorMap[action] || "bg-[#111111] text-gray-300";
 //   };
 
 //   // Pagination calculations
@@ -3068,11 +3068,11 @@ export default UserActivity;
 //   const currentItems = activities;
 
 //   return (
-//     <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+//     <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //       <div className="mx-auto max-w-9xl">
 
 //         {/* Filters */}
-//         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+//         <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
 //           <div className="flex flex-wrap items-center gap-2">
             
 //             {/* Search */}
@@ -3083,7 +3083,7 @@ export default UserActivity;
 //                 placeholder="Search by name or email..."
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -3091,7 +3091,7 @@ export default UserActivity;
 //             <select
 //               value={actionFilter}
 //               onChange={(e) => setActionFilter(e.target.value)}
-//               className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[120px]"
+//               className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[120px]"
 //             >
 //               <option value="">All Actions</option>
 //               <option value="login">Login</option>
@@ -3106,7 +3106,7 @@ export default UserActivity;
 //             <select
 //               value={userRoleFilter}
 //               onChange={(e) => setUserRoleFilter(e.target.value)}
-//               className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
+//               className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
 //             >
 //               <option value="">All Roles</option>
 //               <option value="employee">Employee</option>
@@ -3120,7 +3120,7 @@ export default UserActivity;
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDepartment 
 //                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+//                     : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
 //                 }`}
 //               >
 //                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
@@ -3128,13 +3128,13 @@ export default UserActivity;
               
 //               {/* Department Filter Dropdown */}
 //               {showDepartmentFilter && (
-//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
 //                   <div 
 //                     onClick={() => {
 //                       setFilterDepartment('');
 //                       setShowDepartmentFilter(false);
 //                     }}
-//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+//                     className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
 //                   >
 //                     All Departments
 //                   </div>
@@ -3163,7 +3163,7 @@ export default UserActivity;
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDesignation 
 //                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+//                     : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
 //                 }`}
 //               >
 //                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
@@ -3171,13 +3171,13 @@ export default UserActivity;
               
 //               {/* Designation Filter Dropdown */}
 //               {showDesignationFilter && (
-//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
 //                   <div 
 //                     onClick={() => {
 //                       setFilterDesignation('');
 //                       setShowDesignationFilter(false);
 //                     }}
-//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+//                     className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
 //                   >
 //                     All Designations
 //                   </div>
@@ -3201,25 +3201,25 @@ export default UserActivity;
 
 //             {/* Start Date */}
 //             <div className="relative w-[130px]">
-//               <FaCalendarAlt className="absolute text-xs text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+//               <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
 //               <input
 //                 type="date"
 //                 value={startDate}
 //                 onChange={(e) => setStartDate(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
 //             {/* End Date */}
 //             <div className="relative w-[130px]">
-//               <FaCalendarAlt className="absolute text-xs text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+//               <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
 //               <input
 //                 type="date"
 //                 value={endDate}
 //                 onChange={(e) => setEndDate(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -3235,7 +3235,7 @@ export default UserActivity;
 //             {(searchTerm || actionFilter || userRoleFilter || filterDepartment || filterDesignation || startDate || endDate) && (
 //               <button
 //                 onClick={resetFilters}
-//                 className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+//                 className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
 //               >
 //                 Clear
 //               </button>
@@ -3244,8 +3244,8 @@ export default UserActivity;
 //         </div>
 
 //         {/* Activities Table */}
-//         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//         <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
+//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
@@ -3258,13 +3258,13 @@ export default UserActivity;
 //                   <th className="py-2 text-center">Details</th>
 //                 </tr>
 //               </thead>
-//               <tbody className="bg-white divide-y divide-gray-200">
+//               <tbody className="bg-[#0a0a0a] divide-y divide-[#1f2937]">
 //                 {loading ? (
 //                   <tr>
 //                     <td colSpan="7" className="px-2 py-2 text-center">
 //                       <div className="flex items-center justify-center">
 //                         <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-//                         <span className="ml-2 text-gray-600">
+//                         <span className="ml-2 text-gray-400">
 //                           Loading activities...
 //                         </span>
 //                       </div>
@@ -3280,9 +3280,9 @@ export default UserActivity;
 //                   currentItems.map((activity) => (
 //                     <tr
 //                       key={activity._id}
-//                       className="transition-colors hover:bg-gray-50"
+//                       className="transition-colors hover:bg-[#000000]"
 //                     >
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
 //                         {new Date(activity.createdAt).toLocaleString("en-IN", {
 //                           dateStyle: "medium",
 //                           timeStyle: "short",
@@ -3290,7 +3290,7 @@ export default UserActivity;
 //                       </td>
 //                       <td className="px-2 py-2 text-center whitespace-nowrap">
 //                         <div className="flex flex-col">
-//                           <span className="text-sm font-medium text-gray-900">
+//                           <span className="text-sm font-medium text-gray-200">
 //                             {activity.userName}
 //                           </span>
 //                           <span className="text-xs text-gray-500">
@@ -3298,10 +3298,10 @@ export default UserActivity;
 //                           </span>
 //                         </div>
 //                       </td>
-//                       <td className="px-2 py-2 text-sm text-center text-gray-600 whitespace-nowrap">
+//                       <td className="px-2 py-2 text-sm text-center text-gray-400 whitespace-nowrap">
 //                         {activity.department}
 //                       </td>
-//                       <td className="px-2 py-2 text-sm text-center text-gray-600 whitespace-nowrap">
+//                       <td className="px-2 py-2 text-sm text-center text-gray-400 whitespace-nowrap">
 //                         {activity.designation}
 //                       </td>
 //                       <td className="px-2 py-2 text-center whitespace-nowrap">
@@ -3324,7 +3324,7 @@ export default UserActivity;
 //                           {formatActionName(activity.action)}
 //                         </span>
 //                       </td>
-//                       <td className="px-2 py-2 text-sm text-center text-gray-700">
+//                       <td className="px-2 py-2 text-sm text-center text-gray-300">
 //                         {activity.actionDetails}
 //                       </td>
 //                     </tr>
@@ -3336,8 +3336,8 @@ export default UserActivity;
 
 //           {/* Pagination */}
 //           {!loading && activities.length > 0 && (
-//             <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-gray-50">
-//               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
+//             <div className="flex items-center justify-between px-2 py-2 border-t border-[#1f2937] bg-[#000000]">
+//               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-300">
 //                 <span>Showing</span>
 //                 <span className="font-medium">
 //                   {(pagination.currentPage - 1) * pagination.limit + 1}
@@ -3380,7 +3380,7 @@ export default UserActivity;
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === 1}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-lg hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Previous
 //                 </button>
@@ -3406,7 +3406,7 @@ export default UserActivity;
 //                           className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
 //                             pagination.currentPage === page
 //                               ? "bg-blue-600 text-white"
-//                               : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+//                               : "bg-[#0a0a0a] text-gray-300 border border-[#374151] hover:bg-[#000000]"
 //                           }`}
 //                         >
 //                           {page}
@@ -3434,7 +3434,7 @@ export default UserActivity;
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === pagination.totalPages}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-lg hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Next
 //                 </button>

@@ -845,7 +845,7 @@
 
 //     return (
 //       <div
-//         className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}
+//         className={`bg-[#0a0a0a] rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}
 //       >
 //         <div className="flex items-center gap-2">
 //           {typeof Icon === 'string' ? (
@@ -853,13 +853,13 @@
 //           ) : (
 //             <Icon className="text-gray-400 text-base flex-shrink-0" />
 //           )}
-//           <div className="text-sm font-medium text-gray-700">{label}</div>
+//           <div className="text-sm font-medium text-gray-300">{label}</div>
 //         </div>
 //         <div className="text-sm font-bold flex items-center">
 //           {typeof value === 'number' ? (
 //             <CountUp end={value} duration={2} separator="," prefix={prefix} />
 //           ) : (
-//             <span className="text-gray-800">{value}</span>
+//             <span className="text-gray-300">{value}</span>
 //           )}
 //         </div>
 //       </div>
@@ -868,10 +868,10 @@
 
 //   if (loading) {
 //     return (
-//       <div className="flex items-center justify-center min-h-screen bg-gray-100 font-sans">
+//       <div className="flex items-center justify-center min-h-screen bg-[#111111] font-sans">
 //         <div className="text-center">
 //           <div className="w-16 h-16 mx-auto mb-4 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-//           <p className="text-lg font-semibold text-gray-700">Loading your salary data...</p>
+//           <p className="text-lg font-semibold text-gray-300">Loading your salary data...</p>
 //         </div>
 //       </div>
 //     );
@@ -879,8 +879,8 @@
 
 //   if (error) {
 //     return (
-//       <div className="flex items-center justify-center min-h-screen bg-gray-100 font-sans">
-//         <div className="max-w-md p-8 text-center bg-white border border-red-200 shadow-lg rounded-2xl">
+//       <div className="flex items-center justify-center min-h-screen bg-[#111111] font-sans">
+//         <div className="max-w-md p-8 text-center bg-[#0a0a0a] border border-red-200 shadow-lg rounded-2xl">
 //           <div className="mb-4 text-4xl text-red-500">❌</div>
 //           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
 //           <button
@@ -895,13 +895,13 @@
 //   }
 
 //   return (
-//     <div className="min-h-screen px-2 py-2 bg-gray-100 font-sans sm:px-3 sm:py-3">
+//     <div className="min-h-screen px-2 py-2 bg-[#111111] font-sans sm:px-3 sm:py-3">
 //       <div className="mx-auto max-w-9xl">
 
 //         {/* Header */}
 //         {/* <div className="mb-3">
-//           <h1 className="text-lg font-bold text-gray-800 sm:text-xl md:text-2xl">💰 My Salary Records</h1>
-//           <p className="text-xs text-gray-600 sm:text-sm">View and download your salary slips</p>
+//           <h1 className="text-lg font-bold text-gray-300 sm:text-xl md:text-2xl">💰 My Salary Records</h1>
+//           <p className="text-xs text-gray-400 sm:text-sm">View and download your salary slips</p>
 //         </div> */}
 
 //         {/* Stats Overview - Dashboard Style */}
@@ -935,7 +935,7 @@
 //         </div>
 
 //         {/* Filters Section - Synced with design system */}
-//         <div className="p-2 mb-3 bg-white rounded-lg shadow-md border border-gray-100">
+//         <div className="p-2 mb-3 bg-[#0a0a0a] rounded-lg shadow-md border border-[#1f2937]">
 //           <div className="flex flex-wrap items-center gap-2">
 
 //             {/* Search Bar */}
@@ -946,7 +946,7 @@
 //                 placeholder="Search by month..."
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -958,7 +958,7 @@
 //                 onChange={handleMonthSelect}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
 //                 placeholder="Select Month"
-//                 className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //                 max={getCurrentMonth()}
 //               />
 //             </div>
@@ -969,7 +969,7 @@
 //                 setSelectedMonth("");
 //                 fetchSalaryData();
 //               }}
-//               className="h-8 px-3 text-xs font-medium text-gray-700 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+//               className="h-8 px-3 text-xs font-medium text-gray-300 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
 //             >
 //               Current
 //             </button>
@@ -988,7 +988,7 @@
 //             {(searchTerm || selectedMonth) && (
 //               <button
 //                 onClick={handleClearFilter}
-//                 className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+//                 className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
 //               >
 //                 Clear
 //               </button>
@@ -1010,11 +1010,11 @@
 //                 </div>
 //               )}
 //               {searchTerm && (
-//                 <div className="flex items-center gap-1 px-2 py-0.5 text-xs text-gray-800 bg-gray-100 rounded-full">
+//                 <div className="flex items-center gap-1 px-2 py-0.5 text-xs text-gray-300 bg-[#111111] rounded-full">
 //                   <span>Search: "{searchTerm}"</span>
 //                   <button
 //                     onClick={() => setSearchTerm("")}
-//                     className="text-gray-600 hover:text-gray-800"
+//                     className="text-gray-400 hover:text-gray-300"
 //                   >
 //                     <X size={10} />
 //                   </button>
@@ -1070,11 +1070,11 @@
 //         </div>
 
 //         {/* Table Container */}
-//         <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
+//         <div className="overflow-hidden bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
 //           {filteredRecords.length === 0 ? (
 //             <div className="py-16 text-center">
 //               <div className="mb-4 text-6xl">📭</div>
-//               <p className="mb-4 text-lg font-semibold text-gray-600">
+//               <p className="mb-4 text-lg font-semibold text-gray-400">
 //                 {records.length === 0 ? "No salary records found." : "No records match your filters."}
 //               </p>
 //               {records.length > 0 && (
@@ -1103,7 +1103,7 @@
 //                       <th className="py-2.5 px-2">ACTIONS</th>
 //                     </tr>
 //                   </thead>
-//                   <tbody className="divide-y divide-gray-200">
+//                   <tbody className="divide-y divide-[#1f2937]">
 //                     {currentRecords.map((emp, index) => {
 //                       const dailyRate = calculateDailyRate(emp);
 //                       const isCurrentMonth = emp.isCurrentMonth;
@@ -1111,7 +1111,7 @@
 //                       return (
 //                         <tr
 //                           key={index}
-//                           className={`hover:bg-blue-50 transition duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+//                           className={`hover:bg-blue-50 transition duration-150 ${index % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#000000]'}`}
 //                         >
 //                           <td className="px-2 py-1.5 text-center">
 //                             <div>
@@ -1209,8 +1209,8 @@
 
 //               {/* Pagination */}
 //               {filteredRecords.length > 0 && (
-//                 <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-gray-200 sm:flex-row">
-//                   <div className="text-xs text-gray-600">
+//                 <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-[#1f2937] sm:flex-row">
+//                   <div className="text-xs text-gray-400">
 //                     Showing {indexOfFirstRecord + 1} to {Math.min(indexOfLastRecord, filteredRecords.length)} of {filteredRecords.length} entries
 //                   </div>
 
@@ -1219,8 +1219,8 @@
 //                       onClick={handlePrevious}
 //                       disabled={currentPage === 1}
 //                       className={`px-3 py-1 text-xs border rounded-lg ${currentPage === 1
-//                         ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-//                         : 'text-blue-600 bg-white hover:bg-blue-50 border-blue-200'
+//                         ? 'text-gray-400 bg-[#111111] cursor-not-allowed'
+//                         : 'text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200'
 //                         }`}
 //                     >
 //                       Previous
@@ -1232,7 +1232,7 @@
 //                         onClick={() => handlePageClick(pageNumber)}
 //                         className={`px-3 py-1 text-xs border rounded-lg ${currentPage === pageNumber
 //                           ? 'text-white bg-blue-600 border-blue-600'
-//                           : 'text-blue-600 bg-white hover:bg-blue-50 border-blue-300'
+//                           : 'text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300'
 //                           }`}
 //                       >
 //                         {pageNumber}
@@ -1243,8 +1243,8 @@
 //                       onClick={handleNext}
 //                       disabled={currentPage === totalPages}
 //                       className={`px-3 py-1 text-xs border rounded-lg ${currentPage === totalPages
-//                         ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-//                         : 'text-blue-600 bg-white hover:bg-blue-50 border-blue-300'
+//                         ? 'text-gray-400 bg-[#111111] cursor-not-allowed'
+//                         : 'text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300'
 //                         }`}
 //                     >
 //                       Next
@@ -1260,16 +1260,16 @@
 //       {/* Details Modal */}
 //       {showDetailsModal && selectedEmployee && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//           <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
+//           <div className="bg-[#0a0a0a] rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
 
 //             {/* Header */}
-//             <div className="sticky top-0 z-10 flex items-center justify-between mb-4 bg-white">
-//               <h2 className="text-xl font-bold text-gray-800">
+//             <div className="sticky top-0 z-10 flex items-center justify-between mb-4 bg-[#0a0a0a]">
+//               <h2 className="text-xl font-bold text-gray-300">
 //                 Salary Details
 //               </h2>
 //               <button
 //                 onClick={handleCloseModal}
-//                 className="text-gray-500 hover:text-gray-700"
+//                 className="text-gray-500 hover:text-gray-300"
 //               >
 //                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1289,27 +1289,27 @@
 
 //               {/* Info */}
 //               <div className="flex flex-col flex-1 space-y-1">
-//                 <h3 className="text-lg font-semibold text-gray-800">
+//                 <h3 className="text-lg font-semibold text-gray-300">
 //                   {currentEmployee?.name || selectedEmployee.name}
 //                 </h3>
 
-//                 <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm text-gray-600">
+//                 <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm text-gray-400">
 //                   <p>
-//                     <span className="font-medium text-gray-700">ID:</span> {selectedEmployee.employeeId}
+//                     <span className="font-medium text-gray-300">ID:</span> {selectedEmployee.employeeId}
 //                   </p>
 
 //                   <p>
-//                     <span className="font-medium text-gray-700">Month:</span>{" "}
+//                     <span className="font-medium text-gray-300">Month:</span>{" "}
 //                     {selectedEmployee.monthFormatted || formatMonthDisplay(selectedEmployee.month)}
 //                     ({selectedEmployee.monthDays || monthDays} days)
 //                   </p>
 
 //                   <p>
-//                     <span className="font-medium text-gray-700">Department:</span> {selectedEmployee.department}
+//                     <span className="font-medium text-gray-300">Department:</span> {selectedEmployee.department}
 //                   </p>
 
 //                   <p>
-//                     <span className="font-medium text-gray-700">Designation:</span> {selectedEmployee.designation}
+//                     <span className="font-medium text-gray-300">Designation:</span> {selectedEmployee.designation}
 //                   </p>
 //                 </div>
 //               </div>
@@ -1319,63 +1319,63 @@
 //             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-3 mb-6 text-sm">
 
 //               <div className="flex justify-between border-b pb-1">
-//                 <span className="text-gray-600">Present Days</span>
+//                 <span className="text-gray-400">Present Days</span>
 //                 <span className="font-semibold text-green-600">
 //                   {selectedEmployee.presentDays || 0}
 //                 </span>
 //               </div>
 
 //               <div className="flex justify-between border-b pb-1">
-//                 <span className="text-gray-600">Working Days</span>
+//                 <span className="text-gray-400">Working Days</span>
 //                 <span className="font-semibold text-blue-600">
 //                   {selectedEmployee.workingDays || 0}
 //                 </span>
 //               </div>
 
 //               <div className="flex justify-between border-b pb-1">
-//                 <span className="text-gray-600">Half Days</span>
+//                 <span className="text-gray-400">Half Days</span>
 //                 <span className="font-semibold text-yellow-600">
 //                   {selectedEmployee.halfDays || 0}
 //                 </span>
 //               </div>
 
 //               <div className="flex justify-between border-b pb-1">
-//                 <span className="text-gray-600">WeekOff Days</span>
+//                 <span className="text-gray-400">WeekOff Days</span>
 //                 <span className="font-semibold text-purple-600">
 //                   {selectedEmployee.weekOffs || 0}
 //                 </span>
 //               </div>
 
 //               <div className="flex justify-between border-b pb-1">
-//                 <span className="text-gray-600">Month Days</span>
-//                 <span className="font-semibold text-gray-800">
+//                 <span className="text-gray-400">Month Days</span>
+//                 <span className="font-semibold text-gray-300">
 //                   {selectedEmployee.monthDays || monthDays}
 //                 </span>
 //               </div>
 
 //               <div className="flex justify-between border-b pb-1">
-//                 <span className="text-gray-600">Monthly Salary</span>
+//                 <span className="text-gray-400">Monthly Salary</span>
 //                 <span className="font-semibold text-blue-600">
 //                   ₹{selectedEmployee.salaryPerMonth || 0}
 //                 </span>
 //               </div>
 
 //               <div className="flex justify-between border-b pb-1">
-//                 <span className="text-gray-600">Daily Rate</span>
-//                 <span className="font-semibold text-gray-800">
+//                 <span className="text-gray-400">Daily Rate</span>
+//                 <span className="font-semibold text-gray-300">
 //                   ₹{calculateDailyRate(selectedEmployee)}/day
 //                 </span>
 //               </div>
 
 //               <div className="flex justify-between border-b pb-1">
-//                 <span className="text-gray-600">Calculated Salary</span>
+//                 <span className="text-gray-400">Calculated Salary</span>
 //                 <span className="font-semibold text-green-600">
 //                   ₹{selectedEmployee.calculatedSalary || 0}
 //                 </span>
 //               </div>
 
 //               <div className="sm:col-span-2 flex justify-between border-b pb-1">
-//                 <span className="text-gray-600">Approved Leaves</span>
+//                 <span className="text-gray-400">Approved Leaves</span>
 //                 <span className="font-semibold text-red-600">
 //                   {getLeaveTypes(selectedEmployee) || "No Approved Leaves"}
 //                 </span>
@@ -1619,14 +1619,22 @@ export default function EmployeeDashboard() {
 
   // ✅ Helper to get Employee Data
   const getEmployeeData = (employee) => {
-    return employeesMasterData[employee.employeeId] || {
-      salaryPerMonth: employee.salaryPerMonth || 0,
+    const masterData = employeesMasterData[employee.employeeId] || {};
+    return {
+      ...masterData,
+      salaryPerMonth: employee.salaryPerMonth || masterData.salaryPerMonth || 0,
       shiftHours: 8,
-      weekOffPerMonth: employee.weekOffs || 0,
-      name: employee.name || '',
-      designation: '',
-      department: '',
-      joiningDate: '',
+      weekOffPerMonth: employee.weekOffs || masterData.weekOffPerMonth || 0,
+      name: employee.name || masterData.name || '',
+      designation: employee.designation || masterData.designation || '',
+      department: employee.department || masterData.department || '',
+      joiningDate: masterData.joiningDate || '',
+      bankAccount: masterData.bankAccount || '',
+      panNo: masterData.panCard || '',
+      pfNo: masterData.pfNo || '',
+      uanNo: masterData.uanNo || '',
+      esicNo: masterData.esicNo || '',
+      branch: masterData.branch || '',
       employeeId: employee.employeeId
     };
   };
@@ -1787,15 +1795,17 @@ export default function EmployeeDashboard() {
           employees.forEach(emp => {
             empMap[emp.employeeId] = {
               salaryPerMonth: emp.salaryPerMonth || 0,
-              shiftHours: emp.shiftHours || 8,
-              weekOffPerMonth: emp.weekOffPerMonth || 0,
               name: emp.name,
               employeeId: emp.employeeId,
               department: emp.department || '',
               designation: emp.role || emp.designation || '',
               joiningDate: emp.joinDate || emp.joiningDate || '',
-              bankAccount: emp.bankAccount || '',
-              panCard: emp.panCard || '',
+              bankAccount: emp.bankAccount || emp.bankAccountNo || '',
+              panCard: emp.panCard || emp.panNumber || '',
+              pfNo: emp.pfNumber || emp.pfNo || '',
+              uanNo: emp.uanNumber || emp.uanNo || '',
+              esicNo: emp.esicNumber || emp.esicNo || '',
+              branch: emp.branch || '',
               weekOffDay: emp.weekOffDay || '',
               weekOffType: emp.weekOffType || '0+4'
             };
@@ -1890,7 +1900,6 @@ export default function EmployeeDashboard() {
     const dailyRate = calculateDailyRate(employee);
     const dailyRateNumber = parseFloat(dailyRate) || 0;
     
-
     // ✅ Filter leaves for the specific month
     const targetMonth = employee.month && employee.month !== "Not specified" ? employee.month : getCurrentMonth();
     const monthLeaves = { CL: 0, EL: 0, COFF: 0, LOP: 0, Other: 0 };
@@ -1913,76 +1922,271 @@ export default function EmployeeDashboard() {
       });
     }
 
-
     const leaves = leavesData;
 
     const actualWeekOffDays = employee.weekOffs || 0;
-    const presentDays = employee.presentDays || 0;
-    const halfDays = employee.halfDays || 0;
+    const presentDays = employee.workingDays ?? employee.presentDays ?? 0;
+    const halfDays = employee.halfDays || employee.halfDayWorking || 0;
     const paidLeaveDays = (leaves.CL || 0) + (leaves.SL || 0) + (leaves.EL || 0) + (leaves.COFF || 0);
     
     const compOffBalance = employee.compOffBalance || 0;
     const compOffPay = compOffBalance * dailyRateNumber;
     
-    const totalPaidDays = presentDays + (halfDays * 0.5) + actualWeekOffDays + paidLeaveDays + compOffBalance;
-    const halfDayDeductionAmount = (halfDays * 0.5) * dailyRateNumber;
+    let totalPaidDays = presentDays + (halfDays * 0.5) + actualWeekOffDays + paidLeaveDays + compOffBalance;
+    const halfDayDeductionDays = halfDays * 0.5;
+    const halfDayDeductionAmount = halfDayDeductionDays * dailyRateNumber;
     const totalUnpaidDays = Math.max(0, totalMonthDays - totalPaidDays);
-    const lopAmount = totalUnpaidDays * dailyRateNumber;
+    const lopDays = Math.max(0, totalUnpaidDays - halfDayDeductionDays);
     
     const grossSalary = employeeData.salaryPerMonth || 0;
-    const totalEarnings = grossSalary + compOffPay;
-    const netPay = employee.calculatedSalary || (totalEarnings - (halfDayDeductionAmount + lopAmount));
+    const bonus = employee.extraWork?.bonus || 0;
+    const extraDaysPay = (employee.extraWork?.extraDays || 0) * dailyRateNumber;
+    const totalEarnings = grossSalary + bonus + extraDaysPay + compOffPay;
+    
+    const otherDeductions = employee.extraWork?.deductions || 0;
+
+    const netPay = employee.calculatedSalary || (totalEarnings - (halfDayDeductionAmount + (lopDays * dailyRateNumber) + otherDeductions));
+
+    const lopAmount = Math.max(0, totalEarnings - netPay - halfDayDeductionAmount - otherDeductions);
+
+    const totalDeductions = halfDayDeductionAmount + lopAmount + otherDeductions;
+
+    const numberToWords = (num) => {
+      const a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+      const b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
+      if ((num = num.toString()).length > 9) return 'overflow';
+      const n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+      if (!n) return;
+      let str = '';
+      str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
+      str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
+      str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
+      str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
+      str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + 'Rupees Only' : 'Rupees Only';
+      return str.trim();
+    };
+
+    const actualEarnings = totalEarnings - lopAmount - halfDayDeductionAmount;
+
+    // Calculate Fixed Earnings
+    const grossTotal = employeeData.salaryPerMonth || employee.salaryPerMonthSnapshot || 0;
+    
+    // Fallback to master components scaled by historical ratio if historical components are missing
+    const masterComponentsSum = (employeeData.basicPay || 0) + (employeeData.hra || 0) + (employeeData.conveyanceAllowance || 0) + (employeeData.medicalAllowance || 0) + (employeeData.performanceAllowance || 0) + (employeeData.specialAllowance || 0);
+    const masterGross = masterComponentsSum > 0 ? masterComponentsSum : (employeeData.masterSalaryPerMonth || employeeData.originalSalary || 1);
+    const historicalRatio = grossTotal > 0 && masterGross > 0 ? (grossTotal / masterGross) : 1;
+    const useMasterComponents = !(employee.basicPay > 0) && (employeeData.basicPay > 0);
+    
+    const safeBasic = useMasterComponents ? (employeeData.basicPay * historicalRatio) : (employee.basicPay > 0 ? employee.basicPay : grossTotal);
+    const safeHra = useMasterComponents ? (employeeData.hra * historicalRatio) : (employee.hra || 0);
+    const safeConv = useMasterComponents ? (employeeData.conveyanceAllowance * historicalRatio) : (employee.conveyanceAllowance || 0);
+    const safeMed = useMasterComponents ? (employeeData.medicalAllowance * historicalRatio) : (employee.medicalAllowance || 0);
+    const safePerf = useMasterComponents ? (employeeData.performanceAllowance * historicalRatio) : (employee.performanceAllowance || 0);
+    const safeSpec = useMasterComponents ? (employeeData.specialAllowance * historicalRatio) : (employee.specialAllowance || 0);
+
+    // Always show all earnings labels, but keep amount as 0 if not present (will be formatted to blank later)
+    const earningsList = [
+      { label: 'Basic Pay', amount: safeBasic },
+      { label: 'HRA', amount: safeHra },
+      { label: 'Conveyance Allowance', amount: safeConv },
+      { label: 'Medical Allowance', amount: safeMed },
+      { label: 'Performance Allowance', amount: safePerf },
+      { label: 'Special Allowance', amount: safeSpec }
+    ];
+
+    const extraPay = (employee.extraWork?.bonus || 0) + ((employee.extraWork?.extraDays || 0) * (employee.salaryPerDay || 0)); // Approx extra pay
+    if (extraPay > 0) {
+      earningsList.push({ label: 'Bonus & Extra Pay', amount: extraPay });
+    }
+
+    const deductionsList = [];
+    
+    // LOP / Absent Deductions
+    const lopDedAmt = lopAmount + halfDayDeductionAmount;
+    if (lopDedAmt > 0) {
+      deductionsList.push({ label: 'LWP / Absent Deduction', amount: lopDedAmt });
+    }
+
+    const gmcAmt = employee.gmcAmount || employee.gmc || employeeData.gmc || 0;
+    const ptaxAmt = employee.ptax || employeeData.profTax || 0;
+    const otherDedAmt = otherDeductions + (employee.otherDeductions || 0);
+    
+    deductionsList.push({ label: 'GMC', amount: gmcAmt });
+    deductionsList.push({ label: 'PROF TAX', amount: ptaxAmt });
+    deductionsList.push({ label: 'Other Deductions', amount: otherDedAmt });
+    
+    const totalFixedEarnings = earningsList.reduce((sum, item) => sum + item.amount, 0);
+    const totalDeductionsAmt = deductionsList.reduce((sum, item) => sum + item.amount, 0);
+    
+    const calculatedNetPay = totalFixedEarnings - totalDeductionsAmt;
+    const netPayRounded = Math.round(calculatedNetPay);
+    const netPayInWords = numberToWords(netPayRounded);
+    
+    // Build rows
+    let dynamicRowsHTML = '';
+    const maxRows = Math.max(earningsList.length, deductionsList.length);
+    for (let i = 0; i < maxRows; i++) {
+      const earn = earningsList[i];
+      const ded = deductionsList[i];
+      const earnAmtStr = earn && earn.amount > 0 ? earn.amount.toFixed(2) : '';
+      const dedAmtStr = ded && ded.amount > 0 ? ded.amount.toFixed(2) : '';
+      
+      dynamicRowsHTML += `<tr>
+        <td style="border-top: none; border-bottom: none;">${earn ? earn.label : ''}</td>
+        <td style="border-top: none; border-bottom: none; text-align: right; padding-right: 15px;">${earnAmtStr}</td>
+        <td style="border-top: none; border-bottom: none;">${ded ? ded.label : ''}</td>
+        <td style="border-top: none; border-bottom: none; text-align: right; padding-right: 15px;">${dedAmtStr}</td>
+      </tr>`;
+    }
+    
+    // Fill remaining empty space (optional to make it look like a fixed height table)
+    const minRows = 8; // e.g. always have at least 8 rows for the main body
+    for (let i = maxRows; i < minRows; i++) {
+      dynamicRowsHTML += `<tr>
+        <td style="border-top: none; border-bottom: none; height: 20px;"></td>
+        <td style="border-top: none; border-bottom: none;"></td>
+        <td style="border-top: none; border-bottom: none;"></td>
+        <td style="border-top: none; border-bottom: none;"></td>
+      </tr>`;
+    }
 
     return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Payslip - ${employee.name}</title>
-        <style>
-          @page { size: A4; margin: 0; }
-          body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #000; }
-          .invoice-container { width: 100%; max-width: 210mm; margin: 0 auto; border: 1px solid #000; }
-          table { width: 100%; border-collapse: collapse; }
-          th, td { padding: 4px 8px; border: 1px solid #000; font-size: 12px; vertical-align: middle; }
-          .header-cell { border: none; padding: 2px 2px; text-align: center; border-bottom: 1px solid #000; }
-          .section-header { background-color: #f0f0f0; font-weight: bold; text-align: center; text-transform: uppercase; }
-          .amount-col { text-align: right; width: 15%; }
-          .label-col { text-align: left; width: 35%; }
-        </style>
-      </head>
-      <body>
-        <div class="invoice-container">
-          <table>
-            <tr>
-              <td colspan="4" class="header-cell">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                  <div style="width: 130px;"><img src="${logo}" alt="Logo" style="height: 110px; width: auto;"></div>
-                  <div style="flex: 1; text-align: center;">
-                    <h1 style="margin: 0; font-size: 24px;">Timely Health Tech Pvt Ltd</h1>
-                    <p style="margin: 0; font-size: 11px;">H. No: 1-98/9/25/p, # 301, 3rd Floor, Sri Sai Balaji Avenue,<br>Arunodaya Colony, Madhapur, Hyderabad, TG - 500081</p>
-                  </div>
-                </div>
-                <div style="text-align: center; margin-top: 10px;">
-                  <span style="font-size: 18px; font-weight: bold;">PAYSLIP ${formatMonthDisplay(employee.month).toUpperCase()}</span>
-                </div>
-              </td>
-            </tr>
-            <tr><td><strong>ID</strong></td><td>${employee.employeeId}</td><td><strong>Name</strong></td><td>${employee.name}</td></tr>
-            <tr><td><strong>Month</strong></td><td>${formatMonthDisplay(employee.month)}</td><td><strong>Total Days</strong></td><td>${totalMonthDays} Days</td></tr>
-            ${compOffBalance > 0 ? `<tr style="background-color: #f3e8ff;"><td colspan="4"><strong>✅ Comp-off Summary:</strong> Earned: ${employee.compOffEarned} | Used: ${employee.compOffUsed} | Balance: ${compOffBalance} days (₹${Math.round(compOffPay)})</td></tr>` : ''}
-            <tr class="section-header"><td colspan="2">EARNINGS</td><td colspan="2">DEDUCTIONS</td></tr>
-            <tr><td class="label-col">Basic Salary</td><td class="amount-col">₹${Math.round(grossSalary)}</td><td class="label-col">LOP / Absent</td><td class="amount-col" style="color:red;">-₹${Math.round(lopAmount)}</td></tr>
-            <tr><td class="label-col">Working Days (${presentDays})</td><td class="amount-col">-</td><td class="label-col">Half Day Deductions (${halfDays} HD)</td><td class="amount-col" style="color:red;">-₹${Math.round(halfDayDeductionAmount)}</td></tr>
-            <tr><td class="label-col">Week Off Days (${actualWeekOffDays})</td><td class="amount-col">-</td><td class="label-col"></td><td class="amount-col"></td></tr>
-            ${compOffBalance > 0 ? `<tr style="background-color: #f3e8ff;"><td class="label-col"><strong>Comp-off Payment (${compOffBalance} days)</strong></td><td class="amount-col"><strong>₹${Math.round(compOffPay)}</strong></td><td class="label-col"></td><td class="amount-col"></td></tr>` : ''}
-            <tr style="font-weight: bold; background-color: #f0f0f0;"><td class="label-col">Gross Earnings</td><td class="amount-col">₹${Math.round(totalEarnings)}</td><td class="label-col">Total Deductions</td><td class="amount-col" style="color:red;">₹${Math.round(halfDayDeductionAmount + lopAmount)}</td></tr>
-            <tr style="font-weight: bold; background-color: #e0eee0;"><td colspan="2" style="text-align: right;">NET PAY</td><td colspan="2" style="text-align: left;">₹${Math.round(netPay)}</td></tr>
-          </table>
-          <div style="text-align: center; font-size: 10px; margin-top: 10px;">This is a computer-generated document.</div>
-        </div>
-      </body>
-      </html>
+        <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+                <title>Payslip - ${employee.name}</title>
+                <style>
+                  @page {size: A4; margin: 0; }
+                  body {
+                    font-family: Arial, sans-serif;
+                    margin: 0;
+                    padding: 20px;
+                    color: #000;
+                  }
+                  .invoice-container {
+                    width: 100%;
+                    max-width: 210mm;
+                    margin: 0 auto;
+                    border: 1px solid #000; 
+                  }
+                  table {width: 100%; border-collapse: collapse; }
+                  th, td {
+                    padding: 4px 8px;
+                    border: 1px solid #000;
+                    font-size: 12px;
+                    vertical-align: middle;
+                  }
+                  .header-cell {border: none; padding: 10px; text-align: left; border-bottom: 1px solid #000; }
+                  .section-header {
+                    text-align: center;
+                    padding: 5px;
+                  }
+                  .amount-col {text-align: right; width: 15%; }
+                  .label-col {text-align: left; width: 35%; }
+                </style>
+            </head>
+            <body>
+              <div class="invoice-container">
+                <table>
+                  <tr>
+                    <td colspan="6" class="header-cell">
+                      <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="width: 200px;">
+                          <img src="${logo}" alt="Logo" style="height: 40px; width: auto; object-fit: contain; display: block;">
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                          <h2 style="margin: 0; font-size: 16px;">Timely Health Tech Pvt Ltd</h2>
+                        </div>
+                        <div style="width: 200px;"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="6" class="section-header">
+                      Payment Slip For The Month Of - ${formatMonthDisplay(employee.month)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td width="15%">Employee ID</td>
+                    <td width="20%">${employee.employeeId}</td>
+                    <td width="15%">Employee</td>
+                    <td width="25%">${employee.name}</td>
+                    <td width="10%">PAN No.</td>
+                    <td width="15%">${employeeData.panNo || ''}</td>
+                  </tr>
+                  <tr>
+                    <td>Joining Date</td>
+                    <td>${employeeData.joiningDate ? new Date(employeeData.joiningDate).toLocaleDateString('en-GB').replace(/\//g, '-') : '-'}</td>
+                    <td>Department</td>
+                    <td>${employeeData.department || employee.department || '-'}</td>
+                    <td>Designation</td>
+                    <td>${employeeData.designation || employee.designation || '-'}</td>
+                  </tr>
+                  <tr>
+                    <td>PF No.</td>
+                    <td>${employeeData.pfNo || ''}</td>
+                    <td>UAN No.</td>
+                    <td>${employeeData.uanNo || ''}</td>
+                    <td>Branch</td>
+                    <td>${employeeData.branch || ''}</td>
+                  </tr>
+                  <tr>
+                    <td>ESIC No.</td>
+                    <td>${employeeData.esicNo || ''}</td>
+                    <td>Bank Account</td>
+                    <td colspan="3">${employeeData.bankAccount || ''}</td>
+                  </tr>
+                  <tr style="background-color: #f0f0f0;">
+                    <td colspan="6" style="padding: 0;">
+                      <table style="border: none; width: 100%;">
+                        <tr>
+                          <td style="border: none; border-right: 1px solid #000; width: 10%;">Days Paid</td>
+                          <td style="border: none; border-right: 1px solid #000; width: 6%; text-align: center;">${(monthDays || 30).toFixed(1)}</td>
+                          <td style="border: none; border-right: 1px solid #000; width: 12%;">Present Days</td>
+                          <td style="border: none; border-right: 1px solid #000; width: 6%; text-align: center;">${presentDays}</td>
+                          <td style="border: none; border-right: 1px solid #000; width: 12%;">W.Off/Pd.Off</td>
+                          <td style="border: none; border-right: 1px solid #000; width: 6%; text-align: center;">${actualWeekOffDays}</td>
+                          <td style="border: none; border-right: 1px solid #000; width: 12%;">LWP/Absent</td>
+                          <td style="border: none; border-right: 1px solid #000; width: 6%; text-align: center;">${lopDays}</td>
+                          <td style="border: none; border-right: 1px solid #000; width: 12%;">Leave Availed</td>
+                          <td style="border: none; border-right: 1px solid #000; width: 6%; text-align: center;">${paidLeaveDays}</td>
+                          <td style="border: none; border-right: 1px solid #000; width: 12%;">Balance Leave</td>
+                          <td style="border: none; width: 6%; text-align: center;">${employeeData.leaveBalance || '0.00'}</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+                <table style="border-top: none;">
+                  <tr style="background-color: #f0f0f0;">
+                    <td class="label-col"><strong>Earnings</strong></td>
+                    <td class="amount-col" style="text-align: center;"><strong>Actual Amt</strong></td>
+                    <td class="label-col"><strong>Deductions & Recoveries</strong></td>
+                    <td class="amount-col" style="text-align: center;"><strong>Actual Amt</strong></td>
+                  </tr>
+                  ${dynamicRowsHTML}
+                  <tr>
+                    <td><strong>Total Earnings</strong></td>
+                    <td style="padding: 4px 15px 4px 8px;"><div style="display: flex; justify-content: space-between;"><span>(₹)</span> <strong>${Math.round(totalFixedEarnings).toFixed(2)}</strong></div></td>
+                    <td><strong>Total Deductions</strong></td>
+                    <td style="padding: 4px 15px 4px 8px;"><div style="display: flex; justify-content: space-between;"><span>(₹)</span> <strong>${Math.round(totalDeductionsAmt).toFixed(2)}</strong></div></td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" style="border-bottom: none; border-left: none;"></td>
+                    <td><strong>Net Payable</strong></td>
+                    <td style="padding: 4px 15px 4px 8px;"><div style="display: flex; justify-content: space-between;"><span>(₹)</span> <strong>${netPayRounded.toFixed(2)}</strong></div></td>
+                  </tr>
+                  <tr>
+                    <td colspan="4"><strong>Net Payable(In words):</strong> ${netPayInWords}</td>
+                  </tr>
+                  <tr>
+                    <td colspan="4">Note : This is a System generated slip and does not require company sign and stamp.</td>
+                  </tr>
+                </table>
+              </div>
+            </body>
+          </html>
     `;
   };
 
@@ -2039,10 +2243,10 @@ export default function EmployeeDashboard() {
   const currentEmployee = getCurrentEmployee();
 
   const StatCard = ({ icon: Icon, label, value, color, prefix = "" }) => (
-    <div className={`bg-white rounded-lg p-3 shadow-sm border-t-4 border-${color}-500 flex items-center justify-between`}>
+    <div className={`bg-[#0a0a0a] rounded-lg p-3 shadow-sm border-t-4 border-${color}-500 flex items-center justify-between`}>
       <div className="flex items-center gap-2">
         <Icon className="text-gray-400 text-base" />
-        <div className="text-sm font-medium text-gray-700">{label}</div>
+        <div className="text-sm font-medium text-gray-300">{label}</div>
       </div>
       <div className="text-sm font-bold">
         {typeof value === 'number' ? <CountUp end={value} duration={2} separator="," prefix={prefix} /> : value}
@@ -2052,10 +2256,10 @@ export default function EmployeeDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="flex items-center justify-center min-h-screen bg-[#111111]">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-          <p className="text-lg font-semibold text-gray-700">Loading your salary data...</p>
+          <p className="text-lg font-semibold text-gray-300">Loading your salary data...</p>
         </div>
       </div>
     );
@@ -2063,8 +2267,8 @@ export default function EmployeeDashboard() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="max-w-md p-8 text-center bg-white rounded-2xl shadow-lg">
+      <div className="flex items-center justify-center min-h-screen bg-[#111111]">
+        <div className="max-w-md p-8 text-center bg-[#0a0a0a] rounded-2xl shadow-lg">
           <div className="mb-4 text-4xl text-red-500">❌</div>
           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
           <button onClick={() => fetchSalaryData(selectedMonth)} className="px-6 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700">Retry</button>
@@ -2074,7 +2278,7 @@ export default function EmployeeDashboard() {
   }
 
   return (
-    <div className="min-h-screen px-2 py-2 bg-gray-100 font-sans sm:px-3 sm:py-3">
+    <div className="min-h-screen px-2 py-2 bg-[#111111] font-sans sm:px-3 sm:py-3">
       <div className="mx-auto max-w-9xl">
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-4">
@@ -2085,7 +2289,7 @@ export default function EmployeeDashboard() {
         </div>
 
         {/* Filters */}
-        <div className="p-2 mb-3 bg-white rounded-lg shadow-md">
+        <div className="p-2 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
@@ -2094,11 +2298,11 @@ export default function EmployeeDashboard() {
             <div className="relative w-[140px]">
               <input type="month" value={selectedMonth} onChange={handleMonthSelect} className="w-full px-2 py-1.5 text-xs border rounded-lg" max={getCurrentMonth()} />
             </div>
-            <button onClick={() => { setSelectedMonth(""); fetchSalaryData(); }} className="h-8 px-3 text-xs font-medium text-gray-700 bg-gray-100 border rounded-md hover:bg-gray-200">Current</button>
+            <button onClick={() => { setSelectedMonth(""); fetchSalaryData(); }} className="h-8 px-3 text-xs font-medium text-gray-300 bg-[#111111] border rounded-md hover:bg-[#1f2937]">Current</button>
             <button onClick={() => fetchSalaryData(selectedMonth)} disabled={isLoadingMonth} className="h-8 px-3 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1">
               <RefreshCw size={12} className={isLoadingMonth ? "animate-spin" : ""} /> {isLoadingMonth ? "..." : "Refresh"}
             </button>
-            {(searchTerm || selectedMonth) && <button onClick={handleClearFilter} className="h-8 px-3 text-xs font-medium text-gray-600 bg-gray-100 border rounded-md hover:bg-gray-200">Clear</button>}
+            {(searchTerm || selectedMonth) && <button onClick={handleClearFilter} className="h-8 px-3 text-xs font-medium text-gray-400 bg-[#111111] border rounded-md hover:bg-[#1f2937]">Clear</button>}
           </div>
         </div>
 
@@ -2110,11 +2314,11 @@ export default function EmployeeDashboard() {
         </div>
 
         {/* Table */}
-        <div className="overflow-hidden bg-white rounded-2xl shadow-lg">
+        <div className="overflow-hidden bg-[#0a0a0a] rounded-2xl shadow-lg">
           {filteredRecords.length === 0 ? (
             <div className="py-16 text-center">
               <div className="mb-4 text-6xl">📭</div>
-              <p className="mb-4 text-lg font-semibold text-gray-600">No salary records found.</p>
+              <p className="mb-4 text-lg font-semibold text-gray-400">No salary records found.</p>
             </div>
           ) : (
             <>
@@ -2134,11 +2338,11 @@ export default function EmployeeDashboard() {
                       <th className="py-2.5 px-2">ACTIONS</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-[#1f2937]">
                     {currentRecords.map((emp, idx) => {
                       const dailyRate = calculateDailyRate(emp);
                       return (
-                        <tr key={idx} className={`hover:bg-blue-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                        <tr key={idx} className={`hover:bg-blue-50 ${idx % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#000000]'}`}>
                           <td className="px-2 py-1.5 text-center text-xs font-semibold">
                             {emp.monthFormatted || formatMonthDisplay(emp.month)}
                             <div className="text-[9px] text-gray-500">{emp.monthDays} days</div>
@@ -2191,11 +2395,11 @@ export default function EmployeeDashboard() {
               </div>
               {filteredRecords.length > 0 && (
                 <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t sm:flex-row">
-                  <div className="text-xs text-gray-600">Showing {indexOfFirstRecord + 1} to {Math.min(indexOfLastRecord, filteredRecords.length)} of {filteredRecords.length} entries</div>
+                  <div className="text-xs text-gray-400">Showing {indexOfFirstRecord + 1} to {Math.min(indexOfLastRecord, filteredRecords.length)} of {filteredRecords.length} entries</div>
                   <div className="flex space-x-1">
-                    <button onClick={handlePrevious} disabled={currentPage === 1} className={`px-3 py-1 text-xs border rounded-lg ${currentPage === 1 ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-blue-600 bg-white hover:bg-blue-50'}`}>Previous</button>
-                    {getPageNumbers().map(p => <button key={p} onClick={() => handlePageClick(p)} className={`px-3 py-1 text-xs border rounded-lg ${currentPage === p ? 'text-white bg-blue-600' : 'text-blue-600 bg-white hover:bg-blue-50'}`}>{p}</button>)}
-                    <button onClick={handleNext} disabled={currentPage === totalPages} className={`px-3 py-1 text-xs border rounded-lg ${currentPage === totalPages ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-blue-600 bg-white hover:bg-blue-50'}`}>Next</button>
+                    <button onClick={handlePrevious} disabled={currentPage === 1} className={`px-3 py-1 text-xs border rounded-lg ${currentPage === 1 ? 'text-gray-400 bg-[#111111] cursor-not-allowed' : 'text-blue-600 bg-[#0a0a0a] hover:bg-blue-50'}`}>Previous</button>
+                    {getPageNumbers().map(p => <button key={p} onClick={() => handlePageClick(p)} className={`px-3 py-1 text-xs border rounded-lg ${currentPage === p ? 'text-white bg-blue-600' : 'text-blue-600 bg-[#0a0a0a] hover:bg-blue-50'}`}>{p}</button>)}
+                    <button onClick={handleNext} disabled={currentPage === totalPages} className={`px-3 py-1 text-xs border rounded-lg ${currentPage === totalPages ? 'text-gray-400 bg-[#111111] cursor-not-allowed' : 'text-blue-600 bg-[#0a0a0a] hover:bg-blue-50'}`}>Next</button>
                   </div>
                 </div>
               )}
@@ -2207,10 +2411,10 @@ export default function EmployeeDashboard() {
       {/* ✅ DETAILS MODAL - EXACTLY LIKE PAYROLL */}
       {showDetailsModal && selectedEmployee && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
-            <div className="sticky top-0 z-10 flex items-center justify-between mb-4 bg-white">
-              <h2 className="text-xl font-bold text-gray-800">Employee Details</h2>
-              <button onClick={handleCloseModal} className="text-gray-500 hover:text-gray-700">
+          <div className="bg-[#0a0a0a] rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
+            <div className="sticky top-0 z-10 flex items-center justify-between mb-4 bg-[#0a0a0a]">
+              <h2 className="text-xl font-bold text-gray-300">Employee Details</h2>
+              <button onClick={handleCloseModal} className="text-gray-500 hover:text-gray-300">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -2222,12 +2426,12 @@ export default function EmployeeDashboard() {
                 <span className="text-lg font-semibold text-blue-800">{selectedEmployee.name?.charAt(0) || 'E'}</span>
               </div>
               <div className="flex flex-col flex-1 space-y-1">
-                <h3 className="text-lg font-semibold text-gray-800">{selectedEmployee.name}</h3>
-                <div className="grid grid-cols-2 text-sm text-gray-600 gap-x-6 gap-y-1">
-                  <p><span className="font-medium text-gray-700">ID:</span> {selectedEmployee.employeeId}</p>
-                  <p><span className="font-medium text-gray-700">Department:</span> {selectedEmployee.department || 'N/A'}</p>
-                  <p><span className="font-medium text-gray-700">Designation:</span> {selectedEmployee.designation || 'N/A'}</p>
-                  <p><span className="font-medium text-gray-700">Month:</span> {selectedEmployee.month || selectedMonth || "Current"} ({selectedEmployee.monthDays || monthDays} days)</p>
+                <h3 className="text-lg font-semibold text-gray-300">{selectedEmployee.name}</h3>
+                <div className="grid grid-cols-2 text-sm text-gray-400 gap-x-6 gap-y-1">
+                  <p><span className="font-medium text-gray-300">ID:</span> {selectedEmployee.employeeId}</p>
+                  <p><span className="font-medium text-gray-300">Department:</span> {selectedEmployee.department || 'N/A'}</p>
+                  <p><span className="font-medium text-gray-300">Designation:</span> {selectedEmployee.designation || 'N/A'}</p>
+                  <p><span className="font-medium text-gray-300">Month:</span> {selectedEmployee.month || selectedMonth || "Current"} ({selectedEmployee.monthDays || monthDays} days)</p>
                 </div>
               </div>
             </div>
@@ -2238,7 +2442,7 @@ export default function EmployeeDashboard() {
                 <p className="text-sm font-medium text-purple-800">Comp-off Summary - {formatMonthDisplay(selectedEmployee.month || selectedMonth)}</p>
                 <div className="flex items-center justify-center gap-2 mt-2">
                   <div className="text-center">
-                    <span className="text-xs text-gray-600">Leave Taken</span>
+                    <span className="text-xs text-gray-400">Leave Taken</span>
                     <p className="text-2xl font-bold text-blue-600">
                       {(() => {
                         const leaves = employeeLeaves[selectedEmployee.employeeId];
@@ -2248,7 +2452,7 @@ export default function EmployeeDashboard() {
                   </div>
                   <span className="text-2xl font-bold text-gray-400">-</span>
                   <div className="text-center">
-                    <span className="text-xs text-gray-600">Comp-off Used</span>
+                    <span className="text-xs text-gray-400">Comp-off Used</span>
                     <p className="text-2xl font-bold text-purple-600">
                       {(() => {
                         const leaves = employeeLeaves[selectedEmployee.employeeId];
@@ -2260,7 +2464,7 @@ export default function EmployeeDashboard() {
                   </div>
                   <span className="text-2xl font-bold text-gray-400">=</span>
                   <div className="text-center">
-                    <span className="text-xs text-gray-600">Balance</span>
+                    <span className="text-xs text-gray-400">Balance</span>
                     <p className="text-2xl font-bold text-green-600">
                       {(() => {
                         const leaves = employeeLeaves[selectedEmployee.employeeId];
@@ -2276,21 +2480,21 @@ export default function EmployeeDashboard() {
             )}
 
             <div className="grid grid-cols-1 mt-4 mb-4 text-sm sm:grid-cols-2 gap-x-10 gap-y-2">
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-600">Present Days</span><span className="font-semibold text-green-600">{selectedEmployee.presentDays || 0}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-600">Working Days</span><span className="font-semibold text-blue-600">{selectedEmployee.workingDays || 0}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-600">Half Days</span><span className="font-semibold text-yellow-600">{selectedEmployee.halfDays || 0}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-600">WeekOff Days</span><span className="font-semibold text-purple-600">{selectedEmployee.weekOffs || 0}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-600">Month Days</span><span className="font-semibold text-gray-800">{selectedEmployee.monthDays || monthDays}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-600">Monthly Salary</span><span className="font-semibold text-blue-600">₹{selectedEmployee.salaryPerMonth || 0}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-600">Daily Rate</span><span className="font-semibold text-gray-800">₹{calculateDailyRate(selectedEmployee)}/day</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-600">Calculated Salary</span><span className="font-semibold text-green-600">₹{Math.round(selectedEmployee.calculatedSalary || 0)}</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-400">Present Days</span><span className="font-semibold text-green-600">{selectedEmployee.presentDays || 0}</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-400">Working Days</span><span className="font-semibold text-blue-600">{selectedEmployee.workingDays || 0}</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-400">Half Days</span><span className="font-semibold text-yellow-600">{selectedEmployee.halfDays || 0}</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-400">WeekOff Days</span><span className="font-semibold text-purple-600">{selectedEmployee.weekOffs || 0}</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-400">Month Days</span><span className="font-semibold text-gray-300">{selectedEmployee.monthDays || monthDays}</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-400">Monthly Salary</span><span className="font-semibold text-blue-600">₹{selectedEmployee.salaryPerMonth || 0}</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-400">Daily Rate</span><span className="font-semibold text-gray-300">₹{calculateDailyRate(selectedEmployee)}/day</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-400">Calculated Salary</span><span className="font-semibold text-green-600">₹{Math.round(selectedEmployee.calculatedSalary || 0)}</span></div>
               <div className="flex flex-col pb-2 border-b sm:col-span-2">
                 <div className="flex justify-between mb-2">
-                  <span className="font-medium text-gray-600">Approved Leaves</span>
+                  <span className="font-medium text-gray-400">Approved Leaves</span>
                   <span className="font-semibold text-red-600">{getLeaveTypes(selectedEmployee) || "0"}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-600">Comp-off Collection</span>
+                  <span className="font-medium text-gray-400">Comp-off Collection</span>
                   <span className="px-3 py-1 text-sm font-semibold text-purple-700 bg-purple-100 rounded-full">
                     {(() => {
                       const leaves = employeeLeaves[selectedEmployee.employeeId];
@@ -3110,11 +3314,11 @@ export default function EmployeeDashboard() {
 //   // Stat Card component
 //   const StatCard = ({ label, value, color }) => {
 //     return (
-//       <div className={`px-2 py-2 bg-white border-t-4 ${color} rounded-md shadow-sm`}>
+//       <div className={`px-2 py-2 bg-[#0a0a0a] border-t-4 ${color} rounded-md shadow-sm`}>
 //         <div className="flex items-center justify-between">
 //           <div>
-//             <p className="text-center text-xs font-medium text-gray-700">{label}</p>
-//             <p className="text-center text-sm font-bold text-gray-800">{value}</p>
+//             <p className="text-center text-xs font-medium text-gray-300">{label}</p>
+//             <p className="text-center text-sm font-bold text-gray-300">{value}</p>
 //           </div>
 //         </div>
 //       </div>
@@ -3123,10 +3327,10 @@ export default function EmployeeDashboard() {
 
 //   if (loading) {
 //     return (
-//       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+//       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
 //         <div className="text-center">
 //           <div className="w-16 h-16 mx-auto mb-4 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-//           <p className="text-lg font-semibold text-gray-700">Loading your salary data...</p>
+//           <p className="text-lg font-semibold text-gray-300">Loading your salary data...</p>
 //         </div>
 //       </div>
 //     );
@@ -3134,8 +3338,8 @@ export default function EmployeeDashboard() {
 
 //   if (error) {
 //     return (
-//       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-//         <div className="max-w-md p-8 text-center bg-white border border-red-200 shadow-lg rounded-2xl">
+//       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//         <div className="max-w-md p-8 text-center bg-[#0a0a0a] border border-red-200 shadow-lg rounded-2xl">
 //           <div className="mb-4 text-4xl text-red-500">❌</div>
 //           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
 //           <button
@@ -3155,8 +3359,8 @@ export default function EmployeeDashboard() {
 
 //         {/* Header */}
 //         {/* <div className="mb-3">
-//           <h1 className="text-lg font-bold text-gray-800 sm:text-xl md:text-2xl">💰 My Salary Records</h1>
-//           <p className="text-xs text-gray-600 sm:text-sm">View and download your salary slips</p>
+//           <h1 className="text-lg font-bold text-gray-300 sm:text-xl md:text-2xl">💰 My Salary Records</h1>
+//           <p className="text-xs text-gray-400 sm:text-sm">View and download your salary slips</p>
 //         </div> */}
 
 //         {/* Stats Overview */}
@@ -3188,7 +3392,7 @@ export default function EmployeeDashboard() {
 //         </div>
 
 //         {/* Filters Section - Only Month Filter */}
-//         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+//         <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
 //           <div className="flex flex-wrap items-center gap-2">
             
 //             {/* Search Bar */}
@@ -3199,7 +3403,7 @@ export default function EmployeeDashboard() {
 //                 placeholder="Search by month..."
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -3211,7 +3415,7 @@ export default function EmployeeDashboard() {
 //                 onChange={handleMonthSelect}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
 //                 placeholder="Select Month"
-//                 className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //                 max={getCurrentMonth()}
 //               />
 //             </div>
@@ -3222,7 +3426,7 @@ export default function EmployeeDashboard() {
 //                 setSelectedMonth("");
 //                 fetchSalaryData();
 //               }}
-//               className="h-8 px-3 text-xs font-medium text-gray-700 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+//               className="h-8 px-3 text-xs font-medium text-gray-300 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
 //             >
 //               Current
 //             </button>
@@ -3241,7 +3445,7 @@ export default function EmployeeDashboard() {
 //             {(searchTerm || selectedMonth) && (
 //               <button
 //                 onClick={handleClearFilter}
-//                 className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+//                 className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
 //               >
 //                 Clear
 //               </button>
@@ -3263,11 +3467,11 @@ export default function EmployeeDashboard() {
 //                 </div>
 //               )}
 //               {searchTerm && (
-//                 <div className="flex items-center gap-1 px-2 py-0.5 text-xs text-gray-800 bg-gray-100 rounded-full">
+//                 <div className="flex items-center gap-1 px-2 py-0.5 text-xs text-gray-300 bg-[#111111] rounded-full">
 //                   <span>Search: "{searchTerm}"</span>
 //                   <button
 //                     onClick={() => setSearchTerm("")}
-//                     className="text-gray-600 hover:text-gray-800"
+//                     className="text-gray-400 hover:text-gray-300"
 //                   >
 //                     <X size={10} />
 //                   </button>
@@ -3324,11 +3528,11 @@ export default function EmployeeDashboard() {
 //         </div>
 
 //         {/* Table Container */}
-//         <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
+//         <div className="overflow-hidden bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
 //           {filteredRecords.length === 0 ? (
 //             <div className="py-16 text-center">
 //               <div className="mb-4 text-6xl">📭</div>
-//               <p className="mb-4 text-lg font-semibold text-gray-600">
+//               <p className="mb-4 text-lg font-semibold text-gray-400">
 //                 {records.length === 0 ? "No salary records found." : "No records match your filters."}
 //               </p>
 //               {records.length > 0 && (
@@ -3357,7 +3561,7 @@ export default function EmployeeDashboard() {
 //                       <th className="px-2 py-1.5 text-center">Actions</th>
 //                     </tr>
 //                   </thead>
-//                   <tbody className="divide-y divide-gray-200">
+//                   <tbody className="divide-y divide-[#1f2937]">
 //                     {currentRecords.map((emp, index) => {
 //                       const dailyRate = calculateDailyRate(emp);
 //                       const isCurrentMonth = emp.isCurrentMonth;
@@ -3365,7 +3569,7 @@ export default function EmployeeDashboard() {
 //                       return (
 //                         <tr
 //                           key={index}
-//                           className={`hover:bg-blue-50 transition duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+//                           className={`hover:bg-blue-50 transition duration-150 ${index % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#000000]'}`}
 //                         >
 //                           <td className="px-2 py-1.5 text-center">
 //                             <div>
@@ -3464,8 +3668,8 @@ export default function EmployeeDashboard() {
 
 //               {/* Pagination */}
 //               {filteredRecords.length > 0 && (
-//                 <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-gray-200 sm:flex-row">
-//                   <div className="text-xs text-gray-600">
+//                 <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-[#1f2937] sm:flex-row">
+//                   <div className="text-xs text-gray-400">
 //                     Showing {indexOfFirstRecord + 1} to {Math.min(indexOfLastRecord, filteredRecords.length)} of {filteredRecords.length} entries
 //                   </div>
 
@@ -3475,8 +3679,8 @@ export default function EmployeeDashboard() {
 //                       disabled={currentPage === 1}
 //                       className={`px-3 py-1 text-xs border rounded-lg ${
 //                         currentPage === 1
-//                           ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-//                           : 'text-blue-600 bg-white hover:bg-blue-50 border-blue-200'
+//                           ? 'text-gray-400 bg-[#111111] cursor-not-allowed'
+//                           : 'text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200'
 //                       }`}
 //                     >
 //                       Previous
@@ -3489,7 +3693,7 @@ export default function EmployeeDashboard() {
 //                         className={`px-3 py-1 text-xs border rounded-lg ${
 //                           currentPage === pageNumber
 //                             ? 'text-white bg-blue-600 border-blue-600'
-//                             : 'text-blue-600 bg-white hover:bg-blue-50 border-blue-300'
+//                             : 'text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300'
 //                         }`}
 //                       >
 //                         {pageNumber}
@@ -3501,8 +3705,8 @@ export default function EmployeeDashboard() {
 //                       disabled={currentPage === totalPages}
 //                       className={`px-3 py-1 text-xs border rounded-lg ${
 //                         currentPage === totalPages
-//                           ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-//                           : 'text-blue-600 bg-white hover:bg-blue-50 border-blue-300'
+//                           ? 'text-gray-400 bg-[#111111] cursor-not-allowed'
+//                           : 'text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300'
 //                       }`}
 //                     >
 //                       Next
@@ -3518,14 +3722,14 @@ export default function EmployeeDashboard() {
 //       {/* Details Modal */}
 //       {showDetailsModal && selectedEmployee && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="bg-white rounded-lg p-4 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+//           <div className="bg-[#0a0a0a] rounded-lg p-4 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
 //             <div className="flex items-center justify-between mb-4">
-//               <h2 className="text-lg font-bold text-gray-800">
+//               <h2 className="text-lg font-bold text-gray-300">
 //                 Salary Details - {selectedEmployee.monthFormatted || formatMonthDisplay(selectedEmployee.month)}
 //               </h2>
 //               <button
 //                 onClick={handleCloseModal}
-//                 className="text-gray-500 hover:text-gray-700"
+//                 className="text-gray-500 hover:text-gray-300"
 //               >
 //                 <X size={20} />
 //               </button>
@@ -3558,7 +3762,7 @@ export default function EmployeeDashboard() {
 //               </div>
 //             )}
 
-//             <div className="p-3 mb-4 rounded-lg bg-gray-50">
+//             <div className="p-3 mb-4 rounded-lg bg-[#000000]">
 //               <div className="flex items-center space-x-3">
 //                 <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
 //                   <span className="text-base font-semibold text-blue-800">
@@ -3566,39 +3770,39 @@ export default function EmployeeDashboard() {
 //                   </span>
 //                 </div>
 //                 <div>
-//                   <h3 className="text-base font-semibold text-gray-800">
+//                   <h3 className="text-base font-semibold text-gray-300">
 //                     {currentEmployee?.name || selectedEmployee.name}
 //                   </h3>
-//                   <p className="text-xs text-gray-600">ID: {selectedEmployee.employeeId}</p>
-//                   <p className="text-xs text-gray-600">Month: {selectedEmployee.monthFormatted || formatMonthDisplay(selectedEmployee.month)}</p>
-//                   <p className="text-xs text-gray-600">Days in Month: {selectedEmployee.monthDays || 30}</p>
+//                   <p className="text-xs text-gray-400">ID: {selectedEmployee.employeeId}</p>
+//                   <p className="text-xs text-gray-400">Month: {selectedEmployee.monthFormatted || formatMonthDisplay(selectedEmployee.month)}</p>
+//                   <p className="text-xs text-gray-400">Days in Month: {selectedEmployee.monthDays || 30}</p>
 //                 </div>
 //               </div>
 //             </div>
 
 //             <div className="grid grid-cols-2 gap-3 mb-4">
-//               <div className="p-2 bg-white border rounded-lg">
-//                 <p className="text-xs text-gray-600">Present Days</p>
+//               <div className="p-2 bg-[#0a0a0a] border rounded-lg">
+//                 <p className="text-xs text-gray-400">Present Days</p>
 //                 <p className="text-base font-semibold text-green-600">{selectedEmployee.presentDays || 0}</p>
 //               </div>
-//               <div className="p-2 bg-white border rounded-lg">
-//                 <p className="text-xs text-gray-600">Working Days</p>
+//               <div className="p-2 bg-[#0a0a0a] border rounded-lg">
+//                 <p className="text-xs text-gray-400">Working Days</p>
 //                 <p className="text-base font-semibold text-blue-600">{selectedEmployee.workingDays || 0}</p>
 //               </div>
-//               <div className="p-2 bg-white border rounded-lg">
-//                 <p className="text-xs text-gray-600">Half Days</p>
+//               <div className="p-2 bg-[#0a0a0a] border rounded-lg">
+//                 <p className="text-xs text-gray-400">Half Days</p>
 //                 <p className="text-base font-semibold text-yellow-600">{selectedEmployee.halfDays || 0}</p>
 //               </div>
-//               <div className="p-2 bg-white border rounded-lg">
-//                 <p className="text-xs text-gray-600">WeekOff Days</p>
+//               <div className="p-2 bg-[#0a0a0a] border rounded-lg">
+//                 <p className="text-xs text-gray-400">WeekOff Days</p>
 //                 <p className="text-base font-semibold text-purple-600">{selectedEmployee.weekOffs || 0}</p>
 //               </div>
-//               <div className="p-2 bg-white border rounded-lg">
-//                 <p className="text-xs text-gray-600">Total Leaves</p>
+//               <div className="p-2 bg-[#0a0a0a] border rounded-lg">
+//                 <p className="text-xs text-gray-400">Total Leaves</p>
 //                 <p className="text-base font-semibold text-orange-600">{selectedEmployee.totalLeaves || 0}</p>
 //               </div>
-//               <div className="p-2 bg-white border rounded-lg">
-//                 <p className="text-xs text-gray-600">Daily Rate</p>
+//               <div className="p-2 bg-[#0a0a0a] border rounded-lg">
+//                 <p className="text-xs text-gray-400">Daily Rate</p>
 //                 <p className="text-base font-semibold text-blue-700">₹{calculateDailyRate(selectedEmployee)}/day</p>
 //               </div>
 //             </div>
@@ -3606,30 +3810,30 @@ export default function EmployeeDashboard() {
 //             <div className="p-3 mb-4 rounded-lg bg-blue-50">
 //               <h3 className="mb-2 text-base font-semibold text-blue-800">Salary Information</h3>
 //               <div className="grid grid-cols-2 gap-3">
-//                 <div className="p-2 bg-white border rounded-lg">
-//                   <p className="text-xs text-gray-600">Monthly Salary</p>
+//                 <div className="p-2 bg-[#0a0a0a] border rounded-lg">
+//                   <p className="text-xs text-gray-400">Monthly Salary</p>
 //                   <p className="text-base font-semibold text-blue-700">₹{selectedEmployee.salaryPerMonth || 0}</p>
 //                 </div>
-//                 <div className="p-2 bg-white border rounded-lg">
-//                   <p className="text-xs text-gray-600">Calculated Salary</p>
+//                 <div className="p-2 bg-[#0a0a0a] border rounded-lg">
+//                   <p className="text-xs text-gray-400">Calculated Salary</p>
 //                   <p className="text-base font-semibold text-green-600">₹{selectedEmployee.calculatedSalary || 0}</p>
 //                 </div>
 //               </div>
 //             </div>
 
-//             <div className="p-3 mb-4 rounded-lg bg-gray-50">
-//               <p className="text-xs text-gray-600">Approved Leaves</p>
+//             <div className="p-3 mb-4 rounded-lg bg-[#000000]">
+//               <p className="text-xs text-gray-400">Approved Leaves</p>
 //               <p className="text-sm font-semibold text-red-600">{getLeaveTypes(selectedEmployee)}</p>
 //             </div>
 
-//             <div className="flex justify-end pt-4 space-x-2 border-t border-gray-200">
+//             <div className="flex justify-end pt-4 space-x-2 border-t border-[#1f2937]">
 //               <button
 //                 onClick={() => downloadSalarySlip(selectedEmployee)}
 //                 disabled={!selectedEmployee.canDownload}
 //                 className={`px-4 py-2 text-sm transition duration-200 rounded-lg ${
 //                   selectedEmployee.canDownload
 //                     ? 'text-white bg-purple-500 hover:bg-purple-600'
-//                     : 'text-gray-400 bg-gray-200 cursor-not-allowed'
+//                     : 'text-gray-400 bg-[#1f2937] cursor-not-allowed'
 //                 }`}
 //               >
 //                 {selectedEmployee.canDownload ? 'Download Slip' : 'Available from 30th'}

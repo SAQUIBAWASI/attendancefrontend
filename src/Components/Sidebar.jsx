@@ -191,25 +191,25 @@
 
 //       {/* Sidebar */}
 //       <div
-//         className={`fixed top-0 left-0 h-full bg-[#1E40AF] text-white z-50 transition-all duration-300 border-r border-blue-800/50
+//         className={`fixed top-0 left-0 h-full bg-[#1E40AF] text-white z-50 transition-all duration-300 border-r border-[#1f2937]
 //         ${isMobile
 //             ? isCollapsed ? "-translate-x-full w-52" : "translate-x-0 w-52"
 //             : isCollapsed ? "w-16" : "w-52"
 //           }`}
 //       >
 //         {/* Header with Current Page */}
-//         <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-blue-900/40 border-blue-700/50">
+//         <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-[#0a0a0a] border-[#1f2937]">
 //           <div className="flex items-center w-full gap-2 overflow-hidden">
 //             {isCollapsed && !isMobile ? (
 //               <span className="text-xl text-emerald-300">TM</span>
 //             ) : (
 //               <div className="flex flex-col w-full">
-//                 <span className="text-xs uppercase tracking-[0.2em] font-medium text-blue-100 mb-0.5">
+//                 <span className="text-xs uppercase tracking-[0.2em] font-medium text-gray-300 mb-0.5">
 //                   Team Management
 //                 </span>
 //                 <div className="flex items-center gap-1.5">
 //                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-//                   <span className="text-xs font-medium truncate text-blue-100/80">
+//                   <span className="text-xs font-medium truncate text-gray-300/80">
 //                     {currentPage}
 //                   </span>
 //                 </div>
@@ -247,7 +247,7 @@
 //                           ? 'text-white' 
 //                           : openDropdown === item.name 
 //                             ? 'text-emerald-300' 
-//                             : 'text-blue-100 group-hover:text-emerald-300'
+//                             : 'text-white group-hover:text-emerald-300'
 //                       }`}>
 //                         {item.icon}
 //                       </span>
@@ -272,7 +272,7 @@
 //                               ? 'text-white' 
 //                               : openDropdown === item.name 
 //                                 ? 'text-emerald-300' 
-//                                 : 'text-blue-300 hover:text-white'
+//                                 : 'text-white'
 //                           } ${openDropdown === item.name ? "rotate-180" : ""}`}
 //                         />
 //                       </div>
@@ -290,7 +290,7 @@
 //                             className={`block py-1 text-[13px] transition-colors relative before:absolute before:left-[-1.1rem] before:top-1/2 before:w-2 before:h-[1px] before:bg-blue-700 ${
 //                               isActive(sub.path)
 //                                 ? 'text-emerald-300 font-semibold'
-//                                 : 'text-blue-100 hover:text-emerald-300'
+//                                 : 'text-white hover:text-emerald-300'
 //                             }`}
 //                           >
 //                             <div className="flex items-center gap-2">
@@ -325,7 +325,7 @@
 //                   <span className={`text-lg transition-colors duration-200 ${
 //                     isActive(item.path) 
 //                       ? 'text-white' 
-//                       : 'text-blue-100 group-hover:text-emerald-300'
+//                       : 'text-white group-hover:text-emerald-300'
 //                   }`}>
 //                     {item.icon}
 //                   </span>
@@ -348,11 +348,11 @@
 //         </nav>
 
 //         {/* Footer with Page Indicator */}
-//         <div className="px-4 py-3 text-[10px] text-blue-200/60 border-t border-blue-700/50 bg-blue-900/20">
+//         <div className="px-4 py-3 text-[10px] text-gray-500 border-t border-[#1f2937] bg-[#0a0a0a]">
 //           {!isCollapsed ? (
 //             <div className="flex flex-col gap-0.5">
 //               <div className="flex items-center justify-between">
-//                 <p className="font-semibold tracking-wider uppercase text-blue-200/80">System v1.2</p>
+//                 <p className="font-semibold tracking-wider uppercase text-gray-400">System v1.2</p>
 //                 <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/20 rounded">
 //                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
 //                   <span className="text-[9px] text-emerald-300 font-medium">Active</span>
@@ -360,7 +360,7 @@
 //               </div>
 //               <p>© 2026 Timely Health</p>
 //               <div className="pt-1 mt-1 border-t border-blue-700/30">
-//                 <p className="text-[9px] text-blue-200/70">
+//                 <p className="text-[9px] text-gray-300/70">
 //                   Current: <span className="text-emerald-300">{currentPage}</span>
 //                 </p>
 //               </div>
@@ -585,25 +585,25 @@
 
 //       {/* Sidebar */}
 //       <div
-//         className={`fixed top-0 left-0 h-full bg-[#1E40AF] text-white z-50 transition-all duration-300 border-r border-blue-800/50
+//         className={`fixed top-0 left-0 h-full bg-[#1E40AF] text-white z-50 transition-all duration-300 border-r border-[#1f2937]
 //         ${isMobile
 //             ? isCollapsed ? "-translate-x-full w-52" : "translate-x-0 w-52"
 //             : isCollapsed ? "w-16" : "w-52"
 //           }`}
 //       >
 //         {/* Header with Current Page */}
-//         <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-blue-900/40 border-blue-700/50">
+//         <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-[#0a0a0a] border-[#1f2937]">
 //           <div className="flex items-center w-full gap-2 overflow-hidden">
 //             {isCollapsed && !isMobile ? (
 //               <span className="text-xl text-emerald-300">TM</span>
 //             ) : (
 //               <div className="flex flex-col w-full">
-//                 <span className="text-xs uppercase tracking-[0.2em] font-medium text-blue-100 mb-0.5">
+//                 <span className="text-xs uppercase tracking-[0.2em] font-medium text-gray-300 mb-0.5">
 //                   Team Management
 //                 </span>
 //                 <div className="flex items-center gap-1.5">
 //                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-//                   <span className="text-xs font-medium truncate text-blue-100/80">
+//                   <span className="text-xs font-medium truncate text-gray-300/80">
 //                     {currentPage}
 //                   </span>
 //                 </div>
@@ -639,7 +639,7 @@
 //                           ? 'text-white'
 //                           : openDropdown === item.name
 //                             ? 'text-emerald-300'
-//                             : 'text-blue-100 group-hover:text-emerald-300'
+//                             : 'text-white group-hover:text-emerald-300'
 //                         }`}>
 //                         {item.icon}
 //                       </span>
@@ -658,11 +658,11 @@
 //                         )}
 //                         <FaChevronDown
 //                           onClick={(e) => toggleDropdown(e, item.name)}
-//                           className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600/50 rounded cursor-pointer ${isDropdownActive(item.dropdown)
+//                           className={`text-xs transition-transform duration-300 p-0 hover:bg-[#1f2937] rounded cursor-pointer ${isDropdownActive(item.dropdown)
 //                             ? 'text-white'
 //                             : openDropdown === item.name
 //                               ? 'text-emerald-300'
-//                               : 'text-blue-300 hover:text-white'
+//                               : 'text-white'
 //                             } ${openDropdown === item.name ? "rotate-180" : ""}`}
 //                           style={{
 //                             width: '20px',
@@ -685,7 +685,7 @@
 //                             onClick={handleAnyClick}
 //                             className={`block py-1 text-[13px] transition-colors relative before:absolute before:left-[-1.1rem] before:top-1/2 before:w-2 before:h-[1px] before:bg-blue-700 ${isActive(sub.path)
 //                                 ? 'text-emerald-300 font-semibold'
-//                                 : 'text-blue-100 hover:text-emerald-300'
+//                                 : 'text-white hover:text-emerald-300'
 //                               }`}
 //                           >
 //                             <div className="flex items-center gap-2">
@@ -718,7 +718,7 @@
 //                 >
 //                   <span className={`text-lg transition-colors duration-200 ${isActive(item.path)
 //                       ? 'text-white'
-//                       : 'text-blue-100 group-hover:text-emerald-300'
+//                       : 'text-white group-hover:text-emerald-300'
 //                     }`}>
 //                     {item.icon}
 //                   </span>
@@ -740,11 +740,11 @@
 //         </nav>
 
 //         {/* Footer with Page Indicator */}
-//         <div className="px-4 py-3 text-[10px] text-blue-200/60 border-t border-blue-700/50 bg-blue-900/20">
+//         <div className="px-4 py-3 text-[10px] text-gray-500 border-t border-[#1f2937] bg-[#0a0a0a]">
 //           {!isCollapsed ? (
 //             <div className="flex flex-col gap-0.5">
 //               <div className="flex items-center justify-between">
-//                 <p className="font-semibold tracking-wider uppercase text-blue-200/80">System v1.2</p>
+//                 <p className="font-semibold tracking-wider uppercase text-gray-400">System v1.2</p>
 //                 <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/20 rounded">
 //                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
 //                   <span className="text-[9px] text-emerald-300 font-medium">Active</span>
@@ -752,7 +752,7 @@
 //               </div>
 //               <p>© 2026 Timely Health</p>
 //               <div className="pt-1 mt-1 border-t border-blue-700/30">
-//                 <p className="text-[9px] text-blue-200/70">
+//                 <p className="text-[9px] text-gray-300/70">
 //                   Current: <span className="text-emerald-300">{currentPage}</span>
 //                 </p>
 //               </div>
@@ -1032,7 +1032,7 @@
 //       <div
 //         onMouseEnter={handleMouseEnterSidebar}
 //         onMouseLeave={handleMouseLeaveSidebar}
-//         className={`fixed top-0 left-0 h-full bg-[#1E40AF] text-white z-50 transition-all duration-300 border-r border-blue-800/50
+//         className={`fixed top-0 left-0 h-full bg-[#1E40AF] text-white z-50 transition-all duration-300 border-r border-[#1f2937]
 //         ${
 //           isMobile
 //             ? isCollapsed
@@ -1044,17 +1044,17 @@
 //         }`}
 //       >
 //         {/* Header */}
-//         <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-blue-900/40 border-blue-700/50">
+//         <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-[#0a0a0a] border-[#1f2937]">
 //           {isCollapsed && !isMobile ? (
 //             <span className="text-xl text-emerald-300">TM</span>
 //           ) : (
 //             <div className="flex flex-col w-full">
-//               <span className="text-xs uppercase tracking-[0.2em] font-medium text-blue-100 mb-0.5">
+//               <span className="text-xs uppercase tracking-[0.2em] font-medium text-gray-300 mb-0.5">
 //                 Team Management
 //               </span>
 //               <div className="flex items-center gap-1.5">
 //                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-//                 <span className="text-xs font-medium truncate text-blue-100/80">
+//                 <span className="text-xs font-medium truncate text-gray-300/80">
 //                   {currentPage}
 //                 </span>
 //               </div>
@@ -1071,10 +1071,10 @@
 //                   <div
 //                     className={`group flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
 //                       isDropdownActive(item.dropdown)
-//                         ? "bg-emerald-600/80 text-white shadow-lg"
+//                         ? "bg-emerald-600 text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
 //                         : openDropdown === item.name
-//                         ? "bg-blue-700/70"
-//                         : "hover:bg-blue-700/60"
+//                         ? "bg-[#1f2937]"
+//                         : "hover:bg-[#111111]"
 //                     }`}
 //                     onClick={(e) => {
 //                       e.stopPropagation();
@@ -1097,7 +1097,7 @@
 //                           ? "text-white"
 //                           : openDropdown === item.name
 //                           ? "text-emerald-300"
-//                           : "text-blue-100 group-hover:text-emerald-300"
+//                           : "text-white group-hover:text-emerald-300"
 //                       }`}>
 //                         {item.icon}
 //                       </span>
@@ -1115,12 +1115,12 @@
 //                         )}
 //                         <FaChevronDown
 //                           onClick={(e) => toggleDropdown(e, item.name)}
-//                           className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600/50 rounded cursor-pointer ${
+//                           className={`text-xs transition-transform duration-300 p-0 hover:bg-[#1f2937] rounded cursor-pointer ${
 //                             isDropdownActive(item.dropdown)
 //                               ? "text-white"
 //                               : openDropdown === item.name
 //                               ? "text-emerald-300"
-//                               : "text-blue-300 hover:text-white"
+//                               : "text-white"
 //                           } ${openDropdown === item.name ? "rotate-180" : ""}`}
 //                           style={{
 //                             width: '20px',
@@ -1144,7 +1144,7 @@
 //                             className={`block py-1 text-[13px] transition-colors pl-8 ${
 //                               isActive(sub.path)
 //                                 ? "text-emerald-300 font-semibold"
-//                                 : "text-blue-100 hover:text-emerald-300"
+//                                 : "text-white hover:text-emerald-300"
 //                             }`}
 //                           >
 //                             <div className="flex items-center gap-2">
@@ -1167,14 +1167,14 @@
 //                   onMouseLeave={() => isCollapsed && !isMobile && setHoveredItem(null)}
 //                   className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
 //                     isActive(item.path)
-//                       ? "bg-emerald-600/80 text-white shadow-lg"
-//                       : "hover:bg-blue-700/60"
+//                       ? "bg-emerald-600 text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
+//                       : "hover:bg-[#111111]"
 //                   }`}
 //                 >
 //                   <span className={`text-lg transition-colors duration-200 ${
 //                     isActive(item.path)
 //                       ? "text-white"
-//                       : "text-blue-100 group-hover:text-emerald-300"
+//                       : "text-white group-hover:text-emerald-300"
 //                   }`}>
 //                     {item.icon}
 //                   </span>
@@ -1195,11 +1195,11 @@
 //         </nav>
 
 //         {/* Footer */}
-//         <div className="px-4 py-3 text-[10px] text-blue-200/60 border-t border-blue-700/50 bg-blue-900/20">
+//         <div className="px-4 py-3 text-[10px] text-gray-500 border-t border-[#1f2937] bg-[#0a0a0a]">
 //           {!isCollapsed ? (
 //             <div className="flex flex-col gap-0.5">
 //               <div className="flex items-center justify-between">
-//                 <p className="font-semibold tracking-wider uppercase text-blue-200/80">System v1.2</p>
+//                 <p className="font-semibold tracking-wider uppercase text-gray-400">System v1.2</p>
 //                 <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/20 rounded">
 //                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
 //                   <span className="text-[9px] text-emerald-300 font-medium">Active</span>
@@ -1329,7 +1329,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       path: "/employeelist",
     },
     {
-      icon: <i className="ri-calendar-check-fill"></i>,
+      icon: <i className="ri-calendar-fill"></i>,
       name: "Attendance",
       dropdown: [
         { name: "Attendance Summary", path: "/attedancesummary" },
@@ -1341,12 +1341,12 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       ],
     },
     {
-      icon: <i className="ri-calendar-close-fill"></i>,
+      icon: <i className="ri-calendar-fill"></i>,
       name: "Leaves",
       path: "/leavelist",
     },
     {
-      icon: <i className="ri-calendar-event-fill"></i>,
+      icon: <i className="ri-calendar-fill"></i>,
       name: "Holidays",
       path: "/holidays-calendar",
     },
@@ -1473,7 +1473,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       <div
         onMouseEnter={handleMouseEnterSidebar}
         onMouseLeave={handleMouseLeaveSidebar}
-        className={`fixed top-0 left-0 h-full bg-[#1E40AF] text-white z-50 transition-all duration-300 border-r border-blue-800/50
+        className={`fixed top-0 left-0 h-full bg-[#000000] text-gray-200 z-50 transition-all duration-300 border-r border-[#1f2937]
         ${
           isMobile
             ? isCollapsed
@@ -1485,17 +1485,17 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-blue-900/40 border-blue-700/50">
+        <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-[#0a0a0a] border-[#1f2937]">
           {isCollapsed && !isMobile ? (
             <span className="text-xl text-emerald-300">TM</span>
           ) : (
             <div className="flex flex-col w-full">
-              <span className="text-xs uppercase tracking-[0.2em] font-medium text-blue-100 mb-0.5">
+              <span className="text-xs uppercase tracking-[0.2em] font-medium text-gray-300 mb-0.5">
                 Team Management
               </span>
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                <span className="text-xs font-medium truncate text-blue-100/80">
+                <span className="text-xs font-medium truncate text-gray-300/80">
                   {currentPage}
                 </span>
               </div>
@@ -1512,10 +1512,10 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                   <div
                     className={`group flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
                       isDropdownActive(item.dropdown)
-                        ? "bg-emerald-600/80 text-white shadow-lg"
+                        ? "bg-emerald-600 text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
                         : openDropdown === item.name
-                        ? "bg-blue-700/70"
-                        : "hover:bg-blue-700/60"
+                        ? "bg-[#1f2937]"
+                        : "hover:bg-[#111111]"
                     }`}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1535,7 +1535,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                           ? "text-white"
                           : openDropdown === item.name
                           ? "text-emerald-300"
-                          : "text-blue-100 group-hover:text-emerald-300"
+                          : "text-white group-hover:text-emerald-300"
                       }`}>
                         {item.icon}
                       </span>
@@ -1553,12 +1553,12 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                         )}
                         <FaChevronDown
                           onClick={(e) => toggleDropdown(e, item.name)}
-                          className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600/50 rounded cursor-pointer ${
+                          className={`text-xs transition-transform duration-300 p-0 hover:bg-[#1f2937] rounded cursor-pointer ${
                             isDropdownActive(item.dropdown)
                               ? "text-white"
                               : openDropdown === item.name
                               ? "text-emerald-300"
-                              : "text-blue-300 hover:text-white"
+                              : "text-white"
                           } ${openDropdown === item.name ? "rotate-180" : ""}`}
                           style={{
                             width: '20px',
@@ -1582,7 +1582,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                             className={`block py-1 text-[13px] transition-colors  ${
                               isActive(sub.path)
                                 ? "text-emerald-300 font-semibold"
-                                : "text-blue-100 hover:text-emerald-300"
+                                : "text-white hover:text-emerald-300"
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -1602,14 +1602,14 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                   onClick={() => handleItemClick(item.path, item.action)}
                   className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
                     isActive(item.path)
-                      ? "bg-emerald-600/80 text-white shadow-lg"
-                      : "hover:bg-blue-700/60"
+                      ? "bg-emerald-600 text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
+                      : "hover:bg-[#111111]"
                   }`}
                 >
                   <span className={`text-lg transition-colors duration-200 ${
                     isActive(item.path)
                       ? "text-white"
-                      : "text-blue-100 group-hover:text-emerald-300"
+                      : "text-white group-hover:text-emerald-300"
                   }`}>
                     {item.icon}
                   </span>
@@ -1630,11 +1630,11 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         </nav>
 
         {/* Footer */}
-        <div className="px-4 py-3 text-[10px] text-blue-200/60 border-t border-blue-700/50 bg-blue-900/20">
+        <div className="px-4 py-3 text-[10px] text-gray-500 border-t border-[#1f2937] bg-[#0a0a0a]">
           {!isCollapsed ? (
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center justify-between">
-                <p className="font-semibold tracking-wider uppercase text-blue-200/80">System v1.2</p>
+                <p className="font-semibold tracking-wider uppercase text-gray-400">System v1.2</p>
                 <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/20 rounded">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
                   <span className="text-[9px] text-emerald-300 font-medium">Active</span>

@@ -65,7 +65,7 @@ export default function ReceivedPayments() {
   };
 
   return (
-    <div className="p-4 border rounded-lg shadow-lg bg-white">
+    <div className="p-4 border rounded-lg shadow-lg bg-[#0a0a0a]">
       <h2 className="text-xl font-semibold text-blue-900 mb-4">Received Payments</h2>
 
       <div className="flex justify-between items-center mb-4 gap-4 flex-wrap">
@@ -99,7 +99,7 @@ export default function ReceivedPayments() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300">
+        <table className="w-full border-collapse border border-[#374151]">
           <thead>
             <tr className="bg-blue-600 text-white">
               <th className="p-2 border">Sl</th>
@@ -126,7 +126,7 @@ export default function ReceivedPayments() {
                     className={`px-2 py-1 rounded text-sm ${
                       payment.status === "Paid"
                         ? "bg-green-500 text-white"
-                        : "bg-yellow-400 text-black"
+                        : "bg-yellow-400 text-white"
                     }`}
                   >
                     {payment.status}

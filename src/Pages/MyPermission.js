@@ -246,7 +246,7 @@ const EmployeePermissions = () => {
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-          <p className="text-lg font-semibold text-gray-700">Loading your permission records...</p>
+          <p className="text-lg font-semibold text-gray-300">Loading your permission records...</p>
         </div>
       </div>
     );
@@ -255,7 +255,7 @@ const EmployeePermissions = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
-        <div className="max-w-md p-8 text-center bg-white border border-red-200 shadow-lg rounded-2xl">
+        <div className="max-w-md p-8 text-center bg-[#0a0a0a] border border-red-200 shadow-lg rounded-2xl">
           <div className="mb-4 text-4xl text-red-500">❌</div>
           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
           <button
@@ -297,7 +297,7 @@ const EmployeePermissions = () => {
         </div>
 
         {/* Filters Section */}
-        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+        <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
 
             {/* Search */}
@@ -308,31 +308,31 @@ const EmployeePermissions = () => {
                 placeholder="Search by reason or status..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             {/* Date Filter */}
             <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="date"
                 value={selectedDate}
                 onChange={handleDateChange}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             {/* Month Filter */}
             <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="month"
                 value={selectedMonth}
                 onChange={handleMonthChange}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -348,7 +348,7 @@ const EmployeePermissions = () => {
             {(searchTerm || selectedDate || selectedMonth) && (
               <button
                 onClick={clearFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-600 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
               >
                 Clear Filters
               </button>
@@ -356,7 +356,7 @@ const EmployeePermissions = () => {
           </div>
 
           {/* Results Count */}
-          <div className="flex items-center justify-between mt-2 text-xs text-gray-600">
+          <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
             <span>
               Showing <strong>{filteredPermissions.length}</strong> of{" "}
               <strong>{permissions.length}</strong> records
@@ -368,11 +368,11 @@ const EmployeePermissions = () => {
         </div>
 
         {/* Table Section */}
-        <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
+        <div className="overflow-hidden bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
           {filteredPermissions.length === 0 ? (
             <div className="py-16 text-center">
               <div className="mb-4 text-6xl">📭</div>
-              <p className="mb-4 text-lg font-semibold text-gray-600">
+              <p className="mb-4 text-lg font-semibold text-gray-400">
                 {permissions.length === 0
                   ? "No permission records found."
                   : "No records match your filters."}
@@ -399,11 +399,11 @@ const EmployeePermissions = () => {
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-[#1f2937]">
                     {currentRecords.map((p, index) => (
                       <tr
                         key={p._id || index}
-                        className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                        className={`${index % 2 === 0 ? "bg-[#0a0a0a]" : "bg-[#000000]"
                           } hover:bg-blue-50 transition duration-150`}
                       >
                         <td className="px-2 py-1.5 text-center text-xs sm:text-sm">
@@ -415,7 +415,7 @@ const EmployeePermissions = () => {
                           </span>
                         </td>
                         <td className="px-2 py-1.5 text-center max-w-[180px]">
-                          <span className="text-xs text-gray-700 truncate block">
+                          <span className="text-xs text-gray-300 truncate block">
                             {p.reason}
                           </span>
                         </td>
@@ -452,10 +452,10 @@ const EmployeePermissions = () => {
 
               {/* Pagination */}
               {filteredPermissions.length > 0 && (
-                <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-gray-200 sm:flex-row">
+                <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-[#1f2937] sm:flex-row">
                   <div className="flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-2">
-                      <label className="text-xs font-medium text-gray-700">Show:</label>
+                      <label className="text-xs font-medium text-gray-300">Show:</label>
                       <select
                         value={itemsPerPage}
                         onChange={handleItemsPerPageChange}
@@ -466,9 +466,9 @@ const EmployeePermissions = () => {
                         <option value={20}>20</option>
                         <option value={50}>50</option>
                       </select>
-                      <span className="text-xs text-gray-600">entries</span>
+                      <span className="text-xs text-gray-400">entries</span>
                     </div>
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-gray-400">
                       Showing{" "}
                       <strong>
                         {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredPermissions.length)}
@@ -495,10 +495,10 @@ const EmployeePermissions = () => {
                         onClick={() => typeof page === "number" && handlePageClick(page)}
                         disabled={page === "..."}
                         className={`px-3 py-1 text-xs font-semibold rounded-lg transition min-w-[28px] ${page === "..."
-                          ? "bg-gray-200 text-gray-500 cursor-default"
+                          ? "bg-[#1f2937] text-gray-500 cursor-default"
                           : currentPage === page
                             ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            : "bg-[#1f2937] text-gray-300 hover:bg-gray-300"
                           }`}
                       >
                         {page}
@@ -526,12 +526,12 @@ const EmployeePermissions = () => {
       {/* Permission Request Modal */}
       {isPermissionModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="w-full max-w-md p-4 bg-white rounded-lg shadow-xl sm:p-6">
+          <div className="w-full max-w-md p-4 bg-[#0a0a0a] rounded-lg shadow-xl sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-800 sm:text-xl">Request Permission</h3>
+              <h3 className="text-lg font-bold text-gray-300 sm:text-xl">Request Permission</h3>
               <button
                 onClick={() => setIsPermissionModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-300"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -541,10 +541,10 @@ const EmployeePermissions = () => {
 
             <form onSubmit={handlePermissionSubmit} className="space-y-3">
               <div>
-                <label className="block mb-1 text-xs font-medium text-gray-700">Reason</label>
+                <label className="block mb-1 text-xs font-medium text-gray-300">Reason</label>
                 <textarea
                   required
-                  className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 text-sm border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                   rows="3"
                   value={permissionForm.reason}
                   onChange={(e) => setPermissionForm({ ...permissionForm, reason: e.target.value })}
@@ -553,12 +553,12 @@ const EmployeePermissions = () => {
               </div>
 
               <div>
-                <label className="block mb-1 text-xs font-medium text-gray-700">Duration (minutes)</label>
+                <label className="block mb-1 text-xs font-medium text-gray-300">Duration (minutes)</label>
                 <input
                   type="number"
                   required
                   min="1"
-                  className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 text-sm border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                   value={permissionForm.duration}
                   onChange={(e) => setPermissionForm({ ...permissionForm, duration: e.target.value })}
                   placeholder="e.g. 30"
@@ -569,7 +569,7 @@ const EmployeePermissions = () => {
                 <button
                   type="button"
                   onClick={() => setIsPermissionModalOpen(false)}
-                  className="flex-1 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                  className="flex-1 py-2 text-sm text-gray-300 bg-[#111111] rounded-lg hover:bg-[#1f2937]"
                 >
                   Cancel
                 </button>

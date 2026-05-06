@@ -70,7 +70,7 @@ const PlanList = () => {
   const totalPages = Math.ceil(filteredPlans.length / plansPerPage);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto bg-white shadow-lg rounded-lg">
+    <div className="p-6 max-w-6xl mx-auto bg-[#0a0a0a] shadow-lg rounded-lg">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold text-blue-900">Plan List</h2>
         <input
@@ -83,7 +83,7 @@ const PlanList = () => {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300">
+        <table className="w-full border-collapse border border-[#374151]">
           <thead className="bg-purple-600 text-white">
             <tr>
               <th className="p-2 border">Sl</th>
@@ -98,7 +98,7 @@ const PlanList = () => {
           </thead>
           <tbody>
             {currentPlans.map((plan, index) => (
-              <tr key={plan._id} className="border-b hover:bg-gray-50">
+              <tr key={plan._id} className="border-b hover:bg-[#000000]">
                 <td className="p-2 border">{index + 1 + indexOfFirstPlan}</td>
                 <td className="p-2 border">{plan.name}</td>
                 <td className="p-2 border">₹{plan.originalPrice}</td>
@@ -150,7 +150,7 @@ const PlanList = () => {
             key={index}
             onClick={() => setCurrentPage(index + 1)}
             className={`px-4 py-2 rounded ${
-              currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+              currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-[#1f2937]"
             }`}
           >
             {index + 1}
@@ -168,7 +168,7 @@ const PlanList = () => {
       {/* Edit Modal */}
       {isModalOpen && selectedPlan && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white p-6 rounded shadow-lg w-full max-w-lg">
+          <div className="bg-[#0a0a0a] p-6 rounded shadow-lg w-full max-w-lg">
             <h3 className="text-lg font-semibold mb-4">Edit Plan</h3>
             <div className="space-y-3">
               <input

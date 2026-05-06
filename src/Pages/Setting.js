@@ -51,7 +51,7 @@ const Settings = ({ userId, closeModal }) => {
   };
 
   return (
-    <div className="p-6 bg-white rounded shadow">
+    <div className="p-6 bg-[#0a0a0a] rounded shadow">
       <h3 className="text-lg font-bold mb-4">Settings</h3>
       <form onSubmit={handleSubmit}>
         <div className="flex gap-4 mb-4">
