@@ -43,20 +43,20 @@
 //       case "checked-out":
 //         return "bg-blue-100 text-blue-800";
 //       default:
-//         return "bg-[#111111] text-gray-300";
+//         return "bg-gray-100 text-gray-700";
 //     }
 //   };
 
 //   if (loading)
-//     return <p className="mt-6 text-center text-gray-400">Loading today's attendance...</p>;
+//     return <p className="mt-6 text-center text-gray-500">Loading today's attendance...</p>;
 
 //   if (error)
 //     return <p className="mt-6 text-center text-red-600">{error}</p>;
 
 //   return (
-//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-[#0a0a0a] rounded-lg shadow-md">
+//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-white rounded-lg shadow-md">
 //       <div className="flex items-center justify-between mb-4">
-//         <h3 className="text-2xl font-bold text-gray-300">Today's Attendance</h3>
+//         <h3 className="text-2xl font-bold text-gray-700">Today's Attendance</h3>
 
 //         <button
 //           onClick={() => navigate("/attendance-records")}
@@ -67,8 +67,8 @@
 //       </div>
 
 //       <div className="overflow-x-auto">
-//         <table className="min-w-full text-sm text-left border border-[#1f2937]">
-//           <thead className="text-gray-300 bg-[#111111]">
+//         <table className="min-w-full text-sm text-left border border-gray-200">
+//           <thead className="text-gray-700 bg-gray-100">
 //             <tr>
 //               <th className="px-4 py-2 border">Employee ID</th>
 //               <th className="px-4 py-2 border">Name</th>
@@ -84,7 +84,7 @@
 //           <tbody>
 //             {todayRecords.length > 0 ? (
 //               todayRecords.map((rec) => (
-//                 <tr key={rec._id} className="border-t hover:bg-[#000000]">
+//                 <tr key={rec._id} className="border-t hover:bg-gray-50">
 //                   <td className="px-4 py-2 font-medium">{rec.employeeId}</td>
 //                   <td className="px-4 py-2">{rec.employeeName}</td>
 //                   <td className="px-4 py-2">
@@ -165,18 +165,18 @@
 //       case "checked-out":
 //         return "bg-blue-100 text-blue-800";
 //       default:
-//         return "bg-[#111111] text-gray-300";
+//         return "bg-gray-100 text-gray-700";
 //     }
 //   };
 
 //   if (loading)
-//     return <p className="mt-6 text-center text-gray-400">Loading today's attendance...</p>;
+//     return <p className="mt-6 text-center text-gray-500">Loading today's attendance...</p>;
 //   if (error) return <p className="mt-6 text-center text-red-600">{error}</p>;
 
 //   return (
-//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-[#0a0a0a] rounded-lg shadow-md">
+//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-white rounded-lg shadow-md">
 //       <div className="flex items-center justify-between mb-4">
-//         <h3 className="text-2xl font-bold text-gray-300">Today's Attendance</h3>
+//         <h3 className="text-2xl font-bold text-gray-700">Today's Attendance</h3>
 //         <button
 //           onClick={() => navigate("/attendance-records")}
 //           className="px-4 py-2 text-sm text-white transition bg-blue-600 rounded hover:bg-blue-700"
@@ -186,8 +186,8 @@
 //       </div>
 
 //       <div className="overflow-x-auto">
-//         <table className="min-w-full text-sm text-left border border-[#1f2937]">
-//           <thead className="text-gray-300 bg-[#111111]">
+//         <table className="min-w-full text-sm text-left border border-gray-200">
+//           <thead className="text-gray-700 bg-gray-100">
 //             <tr>
 //               <th className="px-4 py-2 border">Employee ID</th>
 //               <th className="px-4 py-2 border">Email</th>
@@ -204,7 +204,7 @@
 //               todayRecords.map((rec) => (
 //                 <tr
 //                   key={rec._id}
-//                   className="border-t cursor-pointer hover:bg-[#000000]"
+//                   className="border-t cursor-pointer hover:bg-gray-50"
 //                   onClick={() =>
 //                     navigate(`/employee-details/${rec.employeeId}`)
 //                   }
@@ -488,7 +488,7 @@
 //       case "checked-out":
 //         return "bg-blue-100 text-blue-800";
 //       default:
-//         return "bg-[#111111] text-gray-300";
+//         return "bg-gray-100 text-gray-700";
 //     }
 //   };
 
@@ -500,12 +500,12 @@
 
 //   if (loading)
 //     return (
-//       <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//       <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
 //         <div className="mx-auto max-w-9xl">
-//           <div className="p-8 text-center bg-[#0a0a0a] rounded-lg shadow-md">
+//           <div className="p-8 text-center bg-white rounded-lg shadow-md">
 //             <div className="flex items-center justify-center">
 //               <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-//               <span className="ml-2 text-gray-400">Loading today's attendance...</span>
+//               <span className="ml-2 text-gray-500">Loading today's attendance...</span>
 //             </div>
 //           </div>
 //         </div>
@@ -514,9 +514,9 @@
     
 //   if (error)
 //     return (
-//       <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//       <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
 //         <div className="mx-auto max-w-9xl">
-//           <div className="p-8 text-center bg-[#0a0a0a] rounded-lg shadow-md">
+//           <div className="p-8 text-center bg-white rounded-lg shadow-md">
 //             <p className="text-red-600">{error}</p>
 //           </div>
 //         </div>
@@ -524,21 +524,21 @@
 //     );
 
 //   return (
-//     <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-9xl">
 //         {/* Filters */}
-//         <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
+//         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
 //           <div className="flex flex-wrap items-center gap-2">
             
 //             {/* ID/Name Search */}
 //             <div className="relative flex-1 min-w-[180px]">
-//               <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+//               <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
 //               <input
 //                 type="text"
 //                 placeholder="Search by ID or Name..."
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -549,7 +549,7 @@
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDepartment 
 //                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-//                     : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
 //                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
@@ -557,13 +557,13 @@
               
 //               {/* Department Filter Dropdown */}
 //               {showDepartmentFilter && (
-//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
 //                   <div 
 //                     onClick={() => {
 //                       setFilterDepartment('');
 //                       setShowDepartmentFilter(false);
 //                     }}
-//                     className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
+//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
 //                   >
 //                     All Departments
 //                   </div>
@@ -592,7 +592,7 @@
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDesignation 
 //                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-//                     : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
 //                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
@@ -600,13 +600,13 @@
               
 //               {/* Designation Filter Dropdown */}
 //               {showDesignationFilter && (
-//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
 //                   <div 
 //                     onClick={() => {
 //                       setFilterDesignation('');
 //                       setShowDesignationFilter(false);
 //                     }}
-//                     className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
+//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
 //                   >
 //                     All Designations
 //                   </div>
@@ -638,7 +638,7 @@
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-12 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -652,7 +652,7 @@
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-10 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -664,7 +664,7 @@
 //                 value={selectedMonth}
 //                 onChange={(e) => setSelectedMonth(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -672,7 +672,7 @@
 //             {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate) && (
 //               <button
 //                 onClick={clearFilters}
-//                 className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
+//                 className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
 //               >
 //                 Clear
 //               </button>
@@ -681,17 +681,17 @@
 //         </div>
 
 //         {filteredRecords.length === 0 ? (
-//           <div className="p-8 text-center bg-[#0a0a0a] rounded-lg shadow-md">
+//           <div className="p-8 text-center bg-white rounded-lg shadow-md">
 //             <p className="text-lg text-gray-500">No attendance records found</p>
-//             <p className="mt-2 text-sm text-gray-400">
+//             <p className="mt-2 text-sm text-gray-500">
 //               {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate) && "Try clearing filters"}
 //             </p>
 //           </div>
 //         ) : (
 //           <>
 //             {/* Attendance Table */}
-//             <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
-//               <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+//               <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //                 <table className="min-w-full">
 //                   <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                     <tr>
@@ -711,26 +711,26 @@
 //                     {currentRows.map((rec) => (
 //                       <tr
 //                         key={rec._id}
-//                         className="transition-colors border-t hover:bg-[#000000]"
+//                         className="transition-colors border-t hover:bg-gray-50"
 //                       >
-//                         <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
 //                           {rec.employeeId || "-"}
 //                         </td>
-//                         <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
 //                           {rec.name}
 //                         </td>
-//                         <td className="px-2 py-2 text-center text-gray-400">
+//                         <td className="px-2 py-2 text-center text-gray-500">
 //                           {rec.department}
 //                         </td>
-//                         <td className="px-2 py-2 text-center text-gray-400">
+//                         <td className="px-2 py-2 text-center text-gray-500">
 //                           {rec.designation}
 //                         </td>
-//                         <td className="px-2 py-2 text-center text-gray-400">
+//                         <td className="px-2 py-2 text-center text-gray-500">
 //                           {rec.checkInTime
 //                             ? new Date(rec.checkInTime).toLocaleTimeString()
 //                             : "-"}
 //                         </td>
-//                         <td className="px-2 py-2 text-center text-gray-400">
+//                         <td className="px-2 py-2 text-center text-gray-500">
 //                           {rec.checkOutTime
 //                             ? new Date(rec.checkOutTime).toLocaleTimeString()
 //                             : "-"}
@@ -740,7 +740,7 @@
 //                             {rec.totalHours?.toFixed(2) || "0.00"}h
 //                           </span>
 //                         </td>
-//                         <td className="px-2 py-2 text-sm font-medium text-center text-gray-300 whitespace-nowrap">
+//                         <td className="px-2 py-2 text-sm font-medium text-center text-gray-700 whitespace-nowrap">
 //                           {rec.distance?.toFixed(2) || "-"}
 //                         </td>
 //                         <td className="px-2 py-2 text-sm font-medium text-center text-gray-500 whitespace-nowrap">
@@ -765,8 +765,8 @@
 
 //               {/* Pagination */}
 //               {filteredRecords.length > 0 && (
-//                 <div className="flex items-center justify-between px-2 py-2 border-t border-[#1f2937] bg-[#000000]">
-//                   <div className="flex flex-wrap items-center gap-2 text-xs text-gray-300">
+//                 <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-gray-50">
+//                   <div className="flex flex-wrap items-center gap-2 text-xs text-gray-700">
 //                     <span>Showing</span>
 //                     <span className="font-medium">
 //                       {indexOfFirstRow + 1}
@@ -806,7 +806,7 @@
 //                         }))
 //                       }
 //                       disabled={pagination.currentPage === 1}
-//                       className="px-2 py-1 text-xs font-medium text-gray-300 bg-[#0a0a0a] border border-[#374151] rounded-md hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
+//                       className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
 //                     >
 //                       Previous
 //                     </button>
@@ -832,7 +832,7 @@
 //                               className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
 //                                 pagination.currentPage === page
 //                                   ? "bg-blue-600 text-white"
-//                                   : "bg-[#0a0a0a] text-gray-300 border border-[#374151] hover:bg-[#000000]"
+//                                   : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
 //                               }`}
 //                             >
 //                               {page}
@@ -860,7 +860,7 @@
 //                         }))
 //                       }
 //                       disabled={pagination.currentPage === pagination.totalPages}
-//                       className="px-2 py-1 text-xs font-medium text-gray-300 bg-[#0a0a0a] border border-[#374151] rounded-md hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
+//                       className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
 //                     >
 //                       Next
 //                     </button>
@@ -1064,7 +1064,7 @@ const TodayAttendance = () => {
       case "checked-out":
         return "bg-blue-100 text-blue-800";
       default:
-        return "bg-[#111111] text-gray-300";
+        return "bg-gray-100 text-gray-700";
     }
   };
 
@@ -1076,12 +1076,12 @@ const TodayAttendance = () => {
 
   if (loading)
     return (
-      <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+      <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="mx-auto max-w-9xl">
-          <div className="p-8 text-center bg-[#0a0a0a] rounded-lg shadow-md">
+          <div className="p-8 text-center bg-white rounded-lg shadow-md">
             <div className="flex items-center justify-center">
               <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-              <span className="ml-2 text-gray-400">Loading attendance...</span>
+              <span className="ml-2 text-gray-500">Loading attendance...</span>
             </div>
           </div>
         </div>
@@ -1090,9 +1090,9 @@ const TodayAttendance = () => {
     
   if (error)
     return (
-      <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+      <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="mx-auto max-w-9xl">
-          <div className="p-8 text-center bg-[#0a0a0a] rounded-lg shadow-md">
+          <div className="p-8 text-center bg-white rounded-lg shadow-md">
             <p className="text-red-600">{error}</p>
           </div>
         </div>
@@ -1100,20 +1100,20 @@ const TodayAttendance = () => {
     );
 
   return (
-    <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="mx-auto max-w-9xl">
         {/* Filters - Same style as Attendance Summary */}
-        <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
+        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
             
             <div className="relative flex-1 min-w-[180px]">
-              <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="text"
                 placeholder="Search by ID or Name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -1123,15 +1123,15 @@ const TodayAttendance = () => {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDepartment 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
               </button>
               
               {showDepartmentFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
-                  <div onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); }} className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                  <div onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); }} className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50">
                     All Departments
                   </div>
                   {uniqueDepartments.map(dept => (
@@ -1149,15 +1149,15 @@ const TodayAttendance = () => {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDesignation 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
               </button>
               
               {showDesignationFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
-                  <div onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); }} className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                  <div onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); }} className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50">
                     All Designations
                   </div>
                   {uniqueDesignations.map(des => (
@@ -1176,7 +1176,7 @@ const TodayAttendance = () => {
                 type="date"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="w-full pl-12 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500"
+                className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
@@ -1187,7 +1187,7 @@ const TodayAttendance = () => {
                 type="date"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="w-full pl-10 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500"
+                className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
@@ -1198,7 +1198,7 @@ const TodayAttendance = () => {
                 type="month"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500"
+                className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
@@ -1212,7 +1212,7 @@ const TodayAttendance = () => {
 
             {/* Clear Button */}
             {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate) && (
-              <button onClick={clearFilters} className="h-8 px-3 text-xs font-medium text-gray-400 bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]">
+              <button onClick={clearFilters} className="h-8 px-3 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">
                 Clear
               </button>
             )}
@@ -1220,11 +1220,11 @@ const TodayAttendance = () => {
         </div>
 
         {filteredRecords.length === 0 ? (
-          <div className="p-8 text-center bg-[#0a0a0a] rounded-lg shadow-md">
+          <div className="p-8 text-center bg-white rounded-lg shadow-md">
             <p className="text-lg text-gray-500">No attendance records found</p>
           </div>
         ) : (
-          <div className="overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
+          <div className="overflow-hidden bg-white rounded-lg shadow-lg">
             <div className="overflow-x-auto">
               <table className="min-w-full">
                 <thead className="bg-gradient-to-r from-green-500 to-blue-600">
@@ -1241,9 +1241,9 @@ const TodayAttendance = () => {
                 </thead>
                 <tbody>
                   {currentRows.map((rec) => (
-                    <tr key={rec._id} className="border-t hover:bg-[#000000]">
-                      <td className="px-2 py-2 text-center">{rec.employeeId || "-"}</td>
-                      <td className="px-2 py-2 text-center">{rec.name}</td>
+                    <tr key={rec._id} className="border-t hover:bg-gray-50">
+                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{rec.employeeId || "-"}</td>
+                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{rec.name}</td>
                       <td className="px-2 py-2 text-center">{rec.department}</td>
                       <td className="px-2 py-2 text-center">{rec.designation}</td>
                       <td className="px-2 py-2 text-center">{rec.checkInTime ? new Date(rec.checkInTime).toLocaleTimeString() : "-"}</td>
@@ -1267,7 +1267,7 @@ const TodayAttendance = () => {
             {/* Pagination */}
             {filteredRecords.length > 0 && (
               <div className="flex justify-between px-2 py-2 border-t">
-                <div className="text-xs text-gray-300">
+                <div className="text-xs text-gray-700">
                   Showing {indexOfFirstRow + 1} to {Math.min(indexOfLastRow, filteredRecords.length)} of {filteredRecords.length} results
                   <select value={pagination.limit} onChange={(e) => handleItemsPerPageChange(Number(e.target.value))} className="ml-2 p-1 text-xs border rounded">
                     <option value={5}>5</option>
@@ -1528,7 +1528,7 @@ export default TodayAttendance;
 //       case "checked-out":
 //         return "bg-blue-100 text-blue-800";
 //       default:
-//         return "bg-[#111111] text-gray-300";
+//         return "bg-gray-100 text-gray-700";
 //     }
 //   };
 
@@ -1540,12 +1540,12 @@ export default TodayAttendance;
 
 //   if (loading)
 //     return (
-//       <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//       <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
 //         <div className="mx-auto max-w-9xl">
-//           <div className="p-8 text-center bg-[#0a0a0a] rounded-lg shadow-md">
+//           <div className="p-8 text-center bg-white rounded-lg shadow-md">
 //             <div className="flex items-center justify-center">
 //               <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-//               <span className="ml-2 text-gray-400">Loading today's attendance...</span>
+//               <span className="ml-2 text-gray-500">Loading today's attendance...</span>
 //             </div>
 //           </div>
 //         </div>
@@ -1554,9 +1554,9 @@ export default TodayAttendance;
     
 //   if (error)
 //     return (
-//       <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//       <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
 //         <div className="mx-auto max-w-9xl">
-//           <div className="p-8 text-center bg-[#0a0a0a] rounded-lg shadow-md">
+//           <div className="p-8 text-center bg-white rounded-lg shadow-md">
 //             <p className="text-red-600">{error}</p>
 //           </div>
 //         </div>
@@ -1564,21 +1564,21 @@ export default TodayAttendance;
 //     );
 
 //   return (
-//     <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-9xl">
 //         {/* Filters */}
-//         <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
+//         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
 //           <div className="flex flex-wrap items-center gap-2">
             
 //             {/* ID/Name Search */}
 //             <div className="relative flex-1 min-w-[180px]">
-//               <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+//               <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
 //               <input
 //                 type="text"
 //                 placeholder="Search by ID or Name..."
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -1589,7 +1589,7 @@ export default TodayAttendance;
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDepartment 
 //                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-//                     : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
 //                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
@@ -1597,13 +1597,13 @@ export default TodayAttendance;
               
 //               {/* Department Filter Dropdown */}
 //               {showDepartmentFilter && (
-//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
 //                   <div 
 //                     onClick={() => {
 //                       setFilterDepartment('');
 //                       setShowDepartmentFilter(false);
 //                     }}
-//                     className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
+//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
 //                   >
 //                     All Departments
 //                   </div>
@@ -1632,7 +1632,7 @@ export default TodayAttendance;
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDesignation 
 //                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-//                     : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
 //                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
@@ -1640,13 +1640,13 @@ export default TodayAttendance;
               
 //               {/* Designation Filter Dropdown */}
 //               {showDesignationFilter && (
-//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
 //                   <div 
 //                     onClick={() => {
 //                       setFilterDesignation('');
 //                       setShowDesignationFilter(false);
 //                     }}
-//                     className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
+//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
 //                   >
 //                     All Designations
 //                   </div>
@@ -1678,7 +1678,7 @@ export default TodayAttendance;
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-12 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -1692,7 +1692,7 @@ export default TodayAttendance;
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-10 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -1704,7 +1704,7 @@ export default TodayAttendance;
 //                 value={selectedMonth}
 //                 onChange={(e) => setSelectedMonth(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -1712,7 +1712,7 @@ export default TodayAttendance;
 //             {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate) && (
 //               <button
 //                 onClick={clearFilters}
-//                 className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
+//                 className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
 //               >
 //                 Clear
 //               </button>
@@ -1721,17 +1721,17 @@ export default TodayAttendance;
 //         </div>
 
 //         {filteredRecords.length === 0 ? (
-//           <div className="p-8 text-center bg-[#0a0a0a] rounded-lg shadow-md">
+//           <div className="p-8 text-center bg-white rounded-lg shadow-md">
 //             <p className="text-lg text-gray-500">No attendance records found</p>
-//             <p className="mt-2 text-sm text-gray-400">
+//             <p className="mt-2 text-sm text-gray-500">
 //               {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate) && "Try clearing filters"}
 //             </p>
 //           </div>
 //         ) : (
 //           <>
 //             {/* Attendance Table */}
-//             <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
-//               <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+//               <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //                 <table className="min-w-full">
 //                   <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                     <tr>
@@ -1751,31 +1751,31 @@ export default TodayAttendance;
 //                     {currentRows.map((rec) => (
 //                       <tr
 //                         key={rec._id}
-//                         className="transition-colors border-t hover:bg-[#000000]"
+//                         className="transition-colors border-t hover:bg-gray-50"
 //                       >
-//                         <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
 //                           {rec.employeeId || "-"}
 //                         </td>
 
-//                         <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
 //                           {rec.name}
 //                         </td>
 
-//                         <td className="px-2 py-2 text-center text-gray-400">
+//                         <td className="px-2 py-2 text-center text-gray-500">
 //                           {rec.department}
 //                         </td>
 
-//                         <td className="px-2 py-2 text-center text-gray-400">
+//                         <td className="px-2 py-2 text-center text-gray-500">
 //                           {rec.designation}
 //                         </td>
 
-//                         <td className="px-2 py-2 text-center text-gray-400">
+//                         <td className="px-2 py-2 text-center text-gray-500">
 //                           {rec.checkInTime
 //                             ? new Date(rec.checkInTime).toLocaleTimeString()
 //                             : "-"}
 //                         </td>
 
-//                         <td className="px-2 py-2 text-center text-gray-400">
+//                         <td className="px-2 py-2 text-center text-gray-500">
 //                           {rec.checkOutTime
 //                             ? new Date(rec.checkOutTime).toLocaleTimeString()
 //                             : "-"}
@@ -1787,7 +1787,7 @@ export default TodayAttendance;
 //                           </span>
 //                         </td>
 
-//                         <td className="px-2 py-2 text-sm font-medium text-center text-gray-300 whitespace-nowrap">
+//                         <td className="px-2 py-2 text-sm font-medium text-center text-gray-700 whitespace-nowrap">
 //                           {rec.distance?.toFixed(2) || "-"}
 //                         </td>
 
@@ -1814,8 +1814,8 @@ export default TodayAttendance;
 
 //               {/* Pagination */}
 //               {filteredRecords.length > 0 && (
-//                 <div className="flex items-center justify-between px-2 py-2 border-t border-[#1f2937] bg-[#000000]">
-//                   <div className="flex flex-wrap items-center gap-2 text-xs text-gray-300">
+//                 <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-gray-50">
+//                   <div className="flex flex-wrap items-center gap-2 text-xs text-gray-700">
 //                     <span>Showing</span>
 //                     <span className="font-medium">
 //                       {indexOfFirstRow + 1}
@@ -1855,7 +1855,7 @@ export default TodayAttendance;
 //                         }))
 //                       }
 //                       disabled={pagination.currentPage === 1}
-//                       className="px-2 py-1 text-xs font-medium text-gray-300 bg-[#0a0a0a] border border-[#374151] rounded-md hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
+//                       className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
 //                     >
 //                       Previous
 //                     </button>
@@ -1881,7 +1881,7 @@ export default TodayAttendance;
 //                               className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
 //                                 pagination.currentPage === page
 //                                   ? "bg-blue-600 text-white"
-//                                   : "bg-[#0a0a0a] text-gray-300 border border-[#374151] hover:bg-[#000000]"
+//                                   : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
 //                               }`}
 //                             >
 //                               {page}
@@ -1909,7 +1909,7 @@ export default TodayAttendance;
 //                         }))
 //                       }
 //                       disabled={pagination.currentPage === pagination.totalPages}
-//                       className="px-2 py-1 text-xs font-medium text-gray-300 bg-[#0a0a0a] border border-[#374151] rounded-md hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
+//                       className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
 //                     >
 //                       Next
 //                     </button>

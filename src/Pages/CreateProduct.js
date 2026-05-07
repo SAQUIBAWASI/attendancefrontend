@@ -95,7 +95,7 @@ const CreateProductForm = () => {
   };
 
   return (
-    <div className="p-6 bg-[#0a0a0a] rounded shadow">
+    <div className="p-6 bg-white rounded shadow">
       <h3 className="text-lg font-bold mb-4">Create Product</h3>
       <form onSubmit={handleSubmit}>
         {/* Product Basic Details */}

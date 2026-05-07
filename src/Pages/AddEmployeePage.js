@@ -94,7 +94,7 @@
 //   };
 
 //   return (
-//     <div className="max-w-4xl p-6 mx-auto bg-[#0a0a0a] rounded-lg shadow-lg">
+//     <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
 //       <h2 className="mb-6 text-2xl font-semibold text-blue-900">Add New Employee</h2>
 
 //       {/* Success or Error Message */}
@@ -112,7 +112,7 @@
 //       <form onSubmit={handleSubmit}>
 //         {/* Name */}
 //         <div className="mb-4">
-//           <label htmlFor="name" className="block text-sm font-medium text-gray-300">
+//           <label htmlFor="name" className="block text-sm font-medium text-gray-700">
 //             Full Name
 //           </label>
 //           <input
@@ -120,7 +120,7 @@
 //             type="text"
 //             value={name}
 //             onChange={(e) => setName(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             placeholder="Enter employee name"
 //             required
 //           />
@@ -128,7 +128,7 @@
 
 //         {/* Email */}
 //         <div className="mb-4">
-//           <label htmlFor="email" className="block text-sm font-medium text-gray-300">
+//           <label htmlFor="email" className="block text-sm font-medium text-gray-700">
 //             Email Address
 //           </label>
 //           <input
@@ -136,14 +136,14 @@
 //             type="email"
 //             value={email}
 //             onChange={(e) => setEmail(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             placeholder="Enter employee email"
 //             required
 //           />
 //         </div>
 //         {/* Password */}
 //         <div className="mb-4">
-//           <label htmlFor="password" className="block text-sm font-medium text-gray-300">
+//           <label htmlFor="password" className="block text-sm font-medium text-gray-700">
 //             Password
 //           </label>
 //           <input
@@ -151,7 +151,7 @@
 //             type="password"
 //             value={password}
 //             onChange={(e) => setPassword(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             placeholder="Enter employee password"
 //             required
 //           />
@@ -160,14 +160,14 @@
 
 //         {/* Department */}
 //         <div className="mb-4">
-//           <label htmlFor="department" className="block text-sm font-medium text-gray-300">
+//           <label htmlFor="department" className="block text-sm font-medium text-gray-700">
 //             Department
 //           </label>
 //           <select
 //             id="department"
 //             value={department}
 //             onChange={(e) => setDepartment(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             required
 //           >
 //             <option value="">Select Department</option>
@@ -181,14 +181,14 @@
 
 //         {/* Role */}
 //         <div className="mb-4">
-//           <label htmlFor="role" className="block text-sm font-medium text-gray-300">
+//           <label htmlFor="role" className="block text-sm font-medium text-gray-700">
 //             Role
 //           </label>
 //           <select
 //             id="role"
 //             value={role}
 //             onChange={(e) => setRole(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             required
 //           >
 //             <option value="">Select Role</option>
@@ -202,7 +202,7 @@
 
 //         {/* Join Date */}
 //         <div className="mb-4">
-//           <label htmlFor="joinDate" className="block text-sm font-medium text-gray-300">
+//           <label htmlFor="joinDate" className="block text-sm font-medium text-gray-700">
 //             Join Date
 //           </label>
 //           <input
@@ -210,13 +210,13 @@
 //             type="date"
 //             value={joinDate}
 //             onChange={(e) => setJoinDate(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //           />
 //         </div>
 
 //         {/* Phone */}
 //         <div className="mb-4">
-//           <label htmlFor="phone" className="block text-sm font-medium text-gray-300">
+//           <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
 //             Phone Number
 //           </label>
 //           <input
@@ -224,21 +224,21 @@
 //             type="tel"
 //             value={phone}
 //             onChange={(e) => setPhone(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             placeholder="e.g. +91 9876543210"
 //           />
 //         </div>
 
 //         {/* Address */}
 //         <div className="mb-4">
-//           <label htmlFor="address" className="block text-sm font-medium text-gray-300">
+//           <label htmlFor="address" className="block text-sm font-medium text-gray-700">
 //             Address
 //           </label>
 //           <textarea
 //             id="address"
 //             value={address}
 //             onChange={(e) => setAddress(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             placeholder="Enter full address"
 //             rows="3"
 //           ></textarea>
@@ -246,7 +246,7 @@
 
 //         {/* Employee ID */}
 //         <div className="mb-4">
-//           <label htmlFor="employeeId" className="block text-sm font-medium text-gray-300">
+//           <label htmlFor="employeeId" className="block text-sm font-medium text-gray-700">
 //             Employee ID
 //           </label>
 //           <input
@@ -254,7 +254,7 @@
 //             type="text"
 //             value={employeeId}
 //             onChange={(e) => setEmployeeId(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             placeholder="Enter unique employee ID"
 //             required
 //           />
@@ -434,7 +434,7 @@
 //   };
 
 //   return (
-//     <div className="max-w-4xl p-6 mx-auto bg-[#0a0a0a] rounded-lg shadow-lg">
+//     <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
 //       <h2 className="mb-6 text-2xl font-semibold text-blue-900">
 //         Add New Employee
 //       </h2>
@@ -453,55 +453,55 @@
 //       <form onSubmit={handleSubmit}>
 //         {/* Name */}
 //         <div className="mb-4">
-//           <label className="block text-sm font-medium text-gray-300">
+//           <label className="block text-sm font-medium text-gray-700">
 //             Full Name
 //           </label>
 //           <input
 //             type="text"
 //             value={name}
 //             onChange={(e) => setName(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             required
 //           />
 //         </div>
 
 //         {/* Email */}
 //         <div className="mb-4">
-//           <label className="block text-sm font-medium text-gray-300">
+//           <label className="block text-sm font-medium text-gray-700">
 //             Email
 //           </label>
 //           <input
 //             type="email"
 //             value={email}
 //             onChange={(e) => setEmail(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             required
 //           />
 //         </div>
 
 //         {/* Password */}
 //         <div className="mb-4">
-//           <label className="block text-sm font-medium text-gray-300">
+//           <label className="block text-sm font-medium text-gray-700">
 //             Password
 //           </label>
 //           <input
 //             type="password"
 //             value={password}
 //             onChange={(e) => setPassword(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             required
 //           />
 //         </div>
 
 //         {/* Department */}
 //         <div className="mb-4">
-//           <label className="block text-sm font-medium text-gray-300">
+//           <label className="block text-sm font-medium text-gray-700">
 //             Department
 //           </label>
 //           <select
 //             value={department}
 //             onChange={(e) => setDepartment(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             required
 //           >
 //             <option value="">Select Department</option>
@@ -515,11 +515,11 @@
 
 //         {/* Role */}
 //         <div className="mb-4">
-//           <label className="block text-sm font-medium text-gray-300">Role</label>
+//           <label className="block text-sm font-medium text-gray-700">Role</label>
 //           <select
 //             value={role}
 //             onChange={(e) => setRole(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             required
 //           >
 //             <option value="">Select Role</option>
@@ -533,66 +533,66 @@
 
 //         {/* Join Date */}
 //         <div className="mb-4">
-//           <label className="block text-sm font-medium text-gray-300">
+//           <label className="block text-sm font-medium text-gray-700">
 //             Join Date
 //           </label>
 //           <input
 //             type="date"
 //             value={joinDate}
 //             onChange={(e) => setJoinDate(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             required
 //           />
 //         </div>
 
 //         {/* Phone */}
 //         <div className="mb-4">
-//           <label className="block text-sm font-medium text-gray-300">
+//           <label className="block text-sm font-medium text-gray-700">
 //             Phone
 //           </label>
 //           <input
 //             type="tel"
 //             value={phone}
 //             onChange={(e) => setPhone(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //           />
 //         </div>
 
 //         {/* Address */}
 //         <div className="mb-4">
-//           <label className="block text-sm font-medium text-gray-300">
+//           <label className="block text-sm font-medium text-gray-700">
 //             Address
 //           </label>
 //           <textarea
 //             value={address}
 //             onChange={(e) => setAddress(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //           ></textarea>
 //         </div>
 
 //         {/* Employee ID */}
 //         <div className="mb-4">
-//           <label className="block text-sm font-medium text-gray-300">
+//           <label className="block text-sm font-medium text-gray-700">
 //             Employee ID
 //           </label>
 //           <input
 //             type="text"
 //             value={employeeId}
 //             onChange={(e) => setEmployeeId(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             required
 //           />
 //         </div>
 
 //         {/* ✅ Shift */}
 //         <div className="mb-4">
-//           <label className="block text-sm font-medium text-gray-300">
+//           <label className="block text-sm font-medium text-gray-700">
 //             Shift Assignment
 //           </label>
 //           <select
 //             value={shift}
 //             onChange={(e) => setShift(e.target.value)}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded"
 //             required
 //           >
 //             <option value="">Select Shift</option>
@@ -606,12 +606,12 @@
 
 //         {/* ✅ Location Modal */}
 //         <div className="mb-4">
-//           <label className="block text-sm font-medium text-gray-300">
+//           <label className="block text-sm font-medium text-gray-700">
 //             Location
 //           </label>
 //           <div
 //             onClick={handleOpenLocationModal}
-//             className="w-full p-2 mt-1 border border-[#374151] rounded cursor-pointer hover:border-blue-400 bg-[#000000]"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded cursor-pointer hover:border-blue-400 bg-gray-50"
 //           >
 //             {locationId
 //               ? locations.find((loc) => loc._id === locationId)?.name ||
@@ -635,12 +635,12 @@
 //       {/* ✅ Location Modal */}
 //       {showLocationModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black bg-opacity-40">
-//           <div className="relative w-full max-w-md p-6 bg-[#0a0a0a] rounded-lg shadow-lg">
+//           <div className="relative w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
 //             <h3 className="mb-4 text-lg font-semibold">Select Location</h3>
 //             <select
 //               value={locationId}
 //               onChange={(e) => handleSelectLocation(e.target.value)}
-//               className="w-full p-2 border border-[#374151] rounded"
+//               className="w-full p-2 border border-gray-300 rounded"
 //             >
 //               <option value="">Select a Location</option>
 //               {locations.map((loc) => (
@@ -813,7 +813,7 @@
 //   };
 
 //   return (
-//     <div className="max-w-4xl p-6 mx-auto bg-[#0a0a0a] rounded-lg shadow-lg">
+//     <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
 //       <h2 className="mb-6 text-2xl font-bold text-blue-900">Add New Employee Data</h2>
 
 //       {successMessage && (
@@ -865,7 +865,7 @@
 //           <button
 //             type="button"
 //             onClick={() => setShowPassword(!showPassword)}
-//             className="absolute text-gray-400 right-3 top-9"
+//             className="absolute text-gray-500 right-3 top-9"
 //           >
 //             {showPassword ? <FaEyeSlash /> : <FaEye />}
 //           </button>
@@ -1203,7 +1203,7 @@
 //   };
 
 //   return (
-//     <div className="max-w-4xl p-6 mx-auto bg-[#0a0a0a] rounded-lg shadow-lg">
+//     <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
 //       <h2 className="mb-6 text-2xl font-bold text-blue-900">
 //         Add New Employee Data
 //       </h2>
@@ -1346,7 +1346,7 @@
 //           <input
 //             value={employeeId}
 //             onChange={(e) => setEmployeeId(e.target.value)}
-//             className={`w-full p-2 border rounded ${editingEmployee ? 'bg-[#111111] cursor-not-allowed' : ''}`}
+//             className={`w-full p-2 border rounded ${editingEmployee ? 'bg-gray-100 cursor-not-allowed' : ''}`}
 //             required
 //             readOnly={!!editingEmployee}
 //           />
@@ -1380,7 +1380,7 @@
 //         <div className="mb-4">
 //   {/* Label + Button */}
 //   <div className="flex items-center justify-between mb-1">
-//     <label className="text-sm font-medium text-gray-300">
+//     <label className="text-sm font-medium text-gray-700">
 //       Location
 //     </label>
 
@@ -1758,7 +1758,7 @@
 //   };
 
 //   return (
-//     <div className="max-w-4xl p-6 mx-auto bg-[#0a0a0a] rounded-lg shadow-lg">
+//     <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
 //       <h2 className="mb-6 text-2xl font-bold text-blue-900">
 //         {editingEmployee ? "Edit Employee" : "Add New Employee"}
 //       </h2>
@@ -1890,7 +1890,7 @@
 //         </div>
 
 //         {/* ✅ ENHANCED SHIFT SECTION WITH TIME PICKERS */}
-//         <div className="p-4 mb-4 border rounded-lg bg-[#000000]">
+//         <div className="p-4 mb-4 border rounded-lg bg-gray-50">
 //           <label className="block mb-2 text-sm font-medium">Shift Details *</label>
 
 //           <div className="flex gap-2 mb-3">
@@ -1930,7 +1930,7 @@
 //               </div>
 
 //               <div>
-//                 <label className="block mb-1 text-xs text-gray-400">Shift Type Code *</label>
+//                 <label className="block mb-1 text-xs text-gray-500">Shift Type Code *</label>
 //                 <input
 //                   type="text"
 //                   placeholder="Enter shift type (A, B, C, etc.)"
@@ -1950,7 +1950,7 @@
 
 //               <div className="grid grid-cols-2 gap-3">
 //                 <div>
-//                   <label className="block mb-1 text-xs text-gray-400">Start Time *</label>
+//                   <label className="block mb-1 text-xs text-gray-500">Start Time *</label>
 //                   <input
 //                     type="time"
 //                     value={customShiftStartTime}
@@ -1960,7 +1960,7 @@
 //                   />
 //                 </div>
 //                 <div>
-//                   <label className="block mb-1 text-xs text-gray-400">End Time *</label>
+//                   <label className="block mb-1 text-xs text-gray-500">End Time *</label>
 //                   <input
 //                     type="time"
 //                     value={customShiftEndTime}
@@ -1975,7 +1975,7 @@
 //             <div className="space-y-3">
 //               {/* Show shift details if existing shift is selected */}
 //               {shiftType && (
-//                 <div className="p-3 bg-[#0a0a0a] border border-[#1f2937] rounded">
+//                 <div className="p-3 bg-white border border-gray-200 rounded">
 //                   <div className="flex items-center justify-between mb-2">
 //                     <span className="text-sm font-medium">
 //                       Selected: <span className="text-blue-600">Shift {shiftType}</span>
@@ -1987,7 +1987,7 @@
 
 //                   <div className="grid grid-cols-2 gap-3">
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-400">Start Time *</label>
+//                       <label className="block mb-1 text-xs text-gray-500">Start Time *</label>
 //                       <input
 //                         type="time"
 //                         value={shiftStartTime}
@@ -1997,7 +1997,7 @@
 //                       />
 //                     </div>
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-400">End Time *</label>
+//                       <label className="block mb-1 text-xs text-gray-500">End Time *</label>
 //                       <input
 //                         type="time"
 //                         value={shiftEndTime}
@@ -2051,7 +2051,7 @@
 //           <input
 //             value={employeeId}
 //             onChange={(e) => setEmployeeId(e.target.value)}
-//             className={`w-full p-2 border rounded ${editingEmployee ? 'bg-[#111111] cursor-not-allowed' : ''}`}
+//             className={`w-full p-2 border rounded ${editingEmployee ? 'bg-gray-100 cursor-not-allowed' : ''}`}
 //             required
 //             readOnly={!!editingEmployee}
 //           />
@@ -2074,7 +2074,7 @@
 
 //         {/* <div className="mb-4">
 //           <div className="flex items-center justify-between mb-1">
-//             <label className="text-sm font-medium text-gray-300">
+//             <label className="text-sm font-medium text-gray-700">
 //               Location
 //             </label>
 //             <button onClick={() => navigate("/addlocation")}
@@ -2102,7 +2102,7 @@
 //         <div className="mb-4">
 //           {/* Label + Button */}
 //           <div className="flex items-center justify-between mb-1">
-//             <label className="text-sm font-medium text-gray-300">
+//             <label className="text-sm font-medium text-gray-700">
 //               Location
 //             </label>
 
@@ -2566,7 +2566,7 @@
 //   };
 
 //   return (
-//     <div className="max-w-4xl p-6 mx-auto bg-[#0a0a0a] rounded-lg shadow-lg">
+//     <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
 //       <h2 className="mb-6 text-2xl font-bold text-blue-900">
 //         {editingEmployee ? "Edit Employee" : "Add New Employee"}
 //       </h2>
@@ -2611,7 +2611,7 @@
 
 //         {/* ✅ ENHANCED DEPARTMENT SELECTION */}
 //         <div className="mb-4">
-//           <label className="block mb-2 text-sm font-medium text-gray-300">
+//           <label className="block mb-2 text-sm font-medium text-gray-700">
 //             Department *
 //           </label>
 //           <div className="flex gap-2">
@@ -2678,7 +2678,7 @@
 
 //         {/* ✅ ENHANCED ROLE SELECTION */}
 //         <div className="mb-4">
-//           <label className="block mb-2 text-sm font-medium text-gray-300">
+//           <label className="block mb-2 text-sm font-medium text-gray-700">
 //             Role *
 //           </label>
 //           <div className="flex gap-2">
@@ -2744,7 +2744,7 @@
 //         </div>
 
 //         {/* ✅ SHIFT SECTION */}
-//         <div className="p-4 mb-4 border rounded-lg bg-[#000000]">
+//         <div className="p-4 mb-4 border rounded-lg bg-gray-50">
 //           <label className="block mb-2 text-sm font-medium">Shift Details *</label>
 
 //           <div className="flex gap-2 mb-3">
@@ -2784,7 +2784,7 @@
 //               </div>
 
 //               <div>
-//                 <label className="block mb-1 text-xs text-gray-400">Shift Type Code *</label>
+//                 <label className="block mb-1 text-xs text-gray-500">Shift Type Code *</label>
 //                 <input
 //                   type="text"
 //                   placeholder="Enter shift type (A, B, C, etc.)"
@@ -2804,7 +2804,7 @@
 
 //               <div className="grid grid-cols-2 gap-3">
 //                 <div>
-//                   <label className="block mb-1 text-xs text-gray-400">Start Time *</label>
+//                   <label className="block mb-1 text-xs text-gray-500">Start Time *</label>
 //                   <input
 //                     type="time"
 //                     value={customShiftStartTime}
@@ -2814,7 +2814,7 @@
 //                   />
 //                 </div>
 //                 <div>
-//                   <label className="block mb-1 text-xs text-gray-400">End Time *</label>
+//                   <label className="block mb-1 text-xs text-gray-500">End Time *</label>
 //                   <input
 //                     type="time"
 //                     value={customShiftEndTime}
@@ -2828,7 +2828,7 @@
 //           ) : (
 //             <div className="space-y-3">
 //               {shiftType && (
-//                 <div className="p-3 bg-[#0a0a0a] border border-[#1f2937] rounded">
+//                 <div className="p-3 bg-white border border-gray-200 rounded">
 //                   <div className="flex items-center justify-between mb-2">
 //                     <span className="text-sm font-medium">
 //                       Selected: <span className="text-blue-600">Shift {shiftType}</span>
@@ -2840,7 +2840,7 @@
 
 //                   <div className="grid grid-cols-2 gap-3">
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-400">Start Time *</label>
+//                       <label className="block mb-1 text-xs text-gray-500">Start Time *</label>
 //                       <input
 //                         type="time"
 //                         value={shiftStartTime}
@@ -2850,7 +2850,7 @@
 //                       />
 //                     </div>
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-400">End Time *</label>
+//                       <label className="block mb-1 text-xs text-gray-500">End Time *</label>
 //                       <input
 //                         type="time"
 //                         value={shiftEndTime}
@@ -2902,7 +2902,7 @@
 //           <input
 //             value={employeeId}
 //             onChange={(e) => setEmployeeId(e.target.value)}
-//             className={`w-full p-2 border rounded ${editingEmployee ? 'bg-[#111111] cursor-not-allowed' : ''}`}
+//             className={`w-full p-2 border rounded ${editingEmployee ? 'bg-gray-100 cursor-not-allowed' : ''}`}
 //             required
 //             readOnly={!!editingEmployee}
 //           />
@@ -2926,7 +2926,7 @@
 //         {/* ✅ ENHANCED LOCATION SELECTION */}
 //         {/* <div className="mb-4">
 //           <div className="flex items-center justify-between mb-1">
-//             <label className="text-sm font-medium text-gray-300">
+//             <label className="text-sm font-medium text-gray-700">
 //               Location
 //             </label>
 //             <button onClick={() => navigate("/addlocation")}
@@ -2954,7 +2954,7 @@
 //         <div className="mb-4">
 //           {/* Label + Button */}
 //           <div className="flex items-center justify-between mb-1">
-//             <label className="text-sm font-medium text-gray-300">
+//             <label className="text-sm font-medium text-gray-700">
 //               Location
 //             </label>
 
@@ -3537,12 +3537,12 @@
 
 //   return (
 //     <div className="max-w-6xl p-4 mx-auto">
-//       <div className="p-6 bg-[#0a0a0a] shadow-lg rounded-xl">
+//       <div className="p-6 bg-white shadow-lg rounded-xl">
 //         <div className="mb-6">
-//           <h2 className="text-2xl font-bold text-gray-300">
+//           <h2 className="text-2xl font-bold text-gray-700">
 //             {editingEmployee ? "Edit Employee" : "Add New Employee"}
 //           </h2>
-//           <p className="mt-1 text-sm text-gray-400">Fill in the employee details below</p>
+//           <p className="mt-1 text-sm text-gray-500">Fill in the employee details below</p>
 //         </div>
 
 //         {successMessage && (
@@ -3561,34 +3561,34 @@
 //           {/* Row 1: Name, Email, Password */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaIdCard className="inline mr-1 text-blue-500" /> Full Name *
 //               </label>
 //               <input 
 //                 value={name} 
 //                 onChange={(e) => setName(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="John Doe"
 //                 required 
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaEnvelope className="inline mr-1 text-blue-500" /> Email *
 //               </label>
 //               <input 
 //                 type="email" 
 //                 value={email} 
 //                 onChange={(e) => setEmail(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="john@example.com"
 //                 required 
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaLock className="inline mr-1 text-blue-500" /> Password {!editingEmployee && "*"}
 //               </label>
 //               <div className="relative">
@@ -3596,14 +3596,14 @@
 //                   type={showPassword ? "text" : "password"}
 //                   value={password}
 //                   onChange={(e) => setPassword(e.target.value)}
-//                   className="w-full p-2.5 pr-10 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                   className="w-full p-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                   placeholder={editingEmployee ? "Keep blank for no change" : "Enter password"}
 //                   required={!editingEmployee}
 //                 />
 //                 <button 
 //                   type="button" 
 //                   onClick={() => setShowPassword(!showPassword)} 
-//                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-400"
+//                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-500"
 //                 >
 //                   {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
 //                 </button>
@@ -3614,7 +3614,7 @@
 //           {/* Row 2: Department, Role, Employee ID */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaBuilding className="inline mr-1 text-blue-500" /> Department *
 //               </label>
 //               <select
@@ -3626,7 +3626,7 @@
 //                     setDepartment(e.target.value);
 //                   }
 //                 }}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required
 //               >
 //                 <option value="">Select Department</option>
@@ -3642,7 +3642,7 @@
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaUserTie className="inline mr-1 text-blue-500" /> Role *
 //               </label>
 //               <select
@@ -3654,7 +3654,7 @@
 //                     setRole(e.target.value);
 //                   }
 //                 }}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required
 //               >
 //                 <option value="">Select Role</option>
@@ -3670,13 +3670,13 @@
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaBriefcase className="inline mr-1 text-blue-500" /> Employee ID *
 //               </label>
 //               <input
 //                 value={employeeId}
 //                 onChange={(e) => setEmployeeId(e.target.value)}
-//                 className={`w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${editingEmployee ? 'bg-[#000000]' : ''}`}
+//                 className={`w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${editingEmployee ? 'bg-gray-50' : ''}`}
 //                 placeholder="EMP001"
 //                 required
 //                 readOnly={!!editingEmployee}
@@ -3687,32 +3687,32 @@
 //           {/* Row 3: Join Date, Phone, Location */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaCalendar className="inline mr-1 text-blue-500" /> Join Date *
 //               </label>
 //               <input 
 //                 type="date" 
 //                 value={joinDate} 
 //                 onChange={(e) => setJoinDate(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required 
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaPhone className="inline mr-1 text-blue-500" /> Phone Number
 //               </label>
 //               <input 
 //                 value={phone} 
 //                 onChange={(e) => setPhone(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="+91 9876543210"
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaMapMarkerAlt className="inline mr-1 text-blue-500" /> Location *
 //               </label>
 //               <select
@@ -3725,7 +3725,7 @@
 //                   }
 //                   setLocationId(selectedValue);
 //                 }}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required
 //               >
 //                 <option value="">Select Location</option>
@@ -3744,7 +3744,7 @@
 //           {/* Row 4: Shift Details */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaClock className="inline mr-1 text-blue-500" /> Shift Type *
 //               </label>
 //               <select
@@ -3756,7 +3756,7 @@
 //                     setShiftType(e.target.value);
 //                   }
 //                 }}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required
 //               >
 //                 <option value="">Select Shift</option>
@@ -3772,40 +3772,40 @@
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 Start Time *
 //               </label>
 //               <input
 //                 type="time"
 //                 value={shiftStartTime}
 //                 onChange={(e) => setShiftStartTime(e.target.value)}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 End Time *
 //               </label>
 //               <input
 //                 type="time"
 //                 value={shiftEndTime}
 //                 onChange={(e) => setShiftEndTime(e.target.value)}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 Shift Hours/Day *
 //               </label>
 //               <input 
 //                 type="number" 
 //                 value={shiftHours} 
 //                 onChange={(e) => setShiftHours(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 min="1"
 //                 max="24"
 //                 required 
@@ -3816,7 +3816,7 @@
 //           {/* Row 5: Salary Details */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaDollarSign className="inline mr-1 text-blue-500" /> Salary/Month *
 //               </label>
 //               <div className="relative">
@@ -3827,7 +3827,7 @@
 //                   type="number" 
 //                   value={salaryPerMonth} 
 //                   onChange={(e) => setSalaryPerMonth(e.target.value)} 
-//                   className="pl-8 w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                   className="pl-8 w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                   placeholder="0.00"
 //                   required 
 //                 />
@@ -3835,14 +3835,14 @@
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 Week Off/Month *
 //               </label>
 //               <input 
 //                 type="number" 
 //                 value={weekOffPerMonth} 
 //                 onChange={(e) => setWeekOffPerMonth(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 min="0"
 //                 max="30"
 //                 required 
@@ -3850,13 +3850,13 @@
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaHome className="inline mr-1 text-blue-500" /> Address
 //               </label>
 //               <input
 //                 value={address}
 //                 onChange={(e) => setAddress(e.target.value)}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="Enter address"
 //               />
 //             </div>
@@ -3894,10 +3894,10 @@
 //       {/* ✅ SHIFT MODAL */}
 //       {showShiftModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="bg-[#0a0a0a] rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+//           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-300">Create Custom Shift</h3>
-//               <button onClick={() => setShowShiftModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">
+//               <h3 className="text-xl font-semibold text-gray-700">Create Custom Shift</h3>
+//               <button onClick={() => setShowShiftModal(false)} className="text-2xl text-gray-500 hover:text-gray-500">
 //                 &times;
 //               </button>
 //             </div>
@@ -3906,7 +3906,7 @@
 //               <div className="space-y-6">
 //                 <div className="grid grid-cols-2 gap-4">
 //                   <div>
-//                     <label className="block mb-2 text-sm font-medium text-gray-300">
+//                     <label className="block mb-2 text-sm font-medium text-gray-700">
 //                       Shift Type (Single letter E-Z) *
 //                     </label>
 //                     <input
@@ -3917,7 +3917,7 @@
 //                         ...prev, 
 //                         shiftType: e.target.value.toUpperCase().replace(/[^A-Z]/g, '')
 //                       }))}
-//                       className="w-full px-4 py-2 uppercase border border-[#374151] rounded-lg"
+//                       className="w-full px-4 py-2 uppercase border border-gray-300 rounded-lg"
 //                       placeholder="E"
 //                       required
 //                     />
@@ -3925,14 +3925,14 @@
 //                   </div>
                   
 //                   <div>
-//                     <label className="block mb-2 text-sm font-medium text-gray-300">
+//                     <label className="block mb-2 text-sm font-medium text-gray-700">
 //                       Shift Name *
 //                     </label>
 //                     <input
 //                       type="text"
 //                       value={createShiftForm.shiftName}
 //                       onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftName: e.target.value }))}
-//                       className="w-full px-4 py-2 border border-[#374151] rounded-lg"
+//                       className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 //                       placeholder="e.g., Extended Shift E"
 //                       required
 //                     />
@@ -3941,7 +3941,7 @@
 
 //                 <div>
 //                   <div className="flex items-center justify-between mb-3">
-//                     <label className="block text-sm font-medium text-gray-300">
+//                     <label className="block text-sm font-medium text-gray-700">
 //                       Configure Time Slots (Minimum 1 required) *
 //                     </label>
 //                     <button
@@ -3955,7 +3955,7 @@
                   
 //                   <div className="space-y-3">
 //                     {createShiftForm.timeSlots.map((slot, index) => (
-//                       <div key={slot.slotId} className="p-4 border rounded-lg bg-[#000000]">
+//                       <div key={slot.slotId} className="p-4 border rounded-lg bg-gray-50">
 //                         <div className="flex items-center justify-between mb-2">
 //                           <span className="text-sm font-medium">Slot {index + 1}</span>
 //                           {createShiftForm.timeSlots.length > 1 && (
@@ -3971,24 +3971,24 @@
                         
 //                         <div className="grid grid-cols-2 gap-3">
 //                           <div>
-//                             <label className="block mb-1 text-xs text-gray-400">Time Range *</label>
+//                             <label className="block mb-1 text-xs text-gray-500">Time Range *</label>
 //                             <input
 //                               type="text"
 //                               value={slot.timeRange}
 //                               onChange={(e) => updateTimeSlot(index, 'timeRange', e.target.value)}
-//                               className="w-full px-3 py-2 text-sm border border-[#374151] rounded"
+//                               className="w-full px-3 py-2 text-sm border border-gray-300 rounded"
 //                               placeholder="e.g., 10:00 - 19:00"
 //                               required
 //                             />
 //                           </div>
                           
 //                           <div>
-//                             <label className="block mb-1 text-xs text-gray-400">Description *</label>
+//                             <label className="block mb-1 text-xs text-gray-500">Description *</label>
 //                             <input
 //                               type="text"
 //                               value={slot.description}
 //                               onChange={(e) => updateTimeSlot(index, 'description', e.target.value)}
-//                               className="w-full px-3 py-2 text-sm border border-[#374151] rounded"
+//                               className="w-full px-3 py-2 text-sm border border-gray-300 rounded"
 //                               placeholder="e.g., Morning 10 to 7"
 //                               required
 //                             />
@@ -4017,7 +4017,7 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowShiftModal(false)}
-//                   className="px-4 py-2 text-gray-300 border border-[#374151] rounded-lg hover:bg-[#000000]"
+//                   className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
 //                 >
 //                   Cancel
 //                 </button>
@@ -4036,10 +4036,10 @@
 //       {/* ✅ DEPARTMENT MODAL */}
 //       {showDeptModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-300">Add New Department</h3>
-//               <button onClick={() => setShowDeptModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">
+//               <h3 className="text-xl font-semibold text-gray-700">Add New Department</h3>
+//               <button onClick={() => setShowDeptModal(false)} className="text-2xl text-gray-500 hover:text-gray-500">
 //                 &times;
 //               </button>
 //             </div>
@@ -4047,28 +4047,28 @@
 //             <form onSubmit={handleCreateDepartment} className="p-6">
 //               <div className="space-y-4">
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-300">
+//                   <label className="block mb-2 text-sm font-medium text-gray-700">
 //                     Department Name *
 //                   </label>
 //                   <input
 //                     type="text"
 //                     value={deptForm.name}
 //                     onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))}
-//                     className="w-full px-4 py-2 border border-[#374151] rounded-lg"
+//                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 //                     placeholder="e.g., Sales, Development"
 //                     required
 //                   />
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-300">
+//                   <label className="block mb-2 text-sm font-medium text-gray-700">
 //                     Description
 //                   </label>
 //                   <textarea
 //                     value={deptForm.description}
 //                     onChange={(e) => setDeptForm(prev => ({ ...prev, description: e.target.value }))}
 //                     rows="3"
-//                     className="w-full px-4 py-2 border border-[#374151] rounded-lg"
+//                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 //                     placeholder="Describe the department..."
 //                   />
 //                 </div>
@@ -4078,7 +4078,7 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowDeptModal(false)}
-//                   className="px-4 py-2 text-gray-300 border border-[#374151] rounded-lg"
+//                   className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg"
 //                 >
 //                   Cancel
 //                 </button>
@@ -4097,10 +4097,10 @@
 //       {/* ✅ ROLE MODAL */}
 //       {showRoleModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-300">Add New Role</h3>
-//               <button onClick={() => setShowRoleModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">
+//               <h3 className="text-xl font-semibold text-gray-700">Add New Role</h3>
+//               <button onClick={() => setShowRoleModal(false)} className="text-2xl text-gray-500 hover:text-gray-500">
 //                 &times;
 //               </button>
 //             </div>
@@ -4108,28 +4108,28 @@
 //             <form onSubmit={handleCreateRole} className="p-6">
 //               <div className="space-y-4">
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-300">
+//                   <label className="block mb-2 text-sm font-medium text-gray-700">
 //                     Role Name *
 //                   </label>
 //                   <input
 //                     type="text"
 //                     value={roleForm.name}
 //                     onChange={(e) => setRoleForm(prev => ({ ...prev, name: e.target.value }))}
-//                     className="w-full px-4 py-2 border border-[#374151] rounded-lg"
+//                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 //                     placeholder="e.g., Manager, Developer"
 //                     required
 //                   />
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-300">
+//                   <label className="block mb-2 text-sm font-medium text-gray-700">
 //                     Description
 //                   </label>
 //                   <textarea
 //                     value={roleForm.description}
 //                     onChange={(e) => setRoleForm(prev => ({ ...prev, description: e.target.value }))}
 //                     rows="3"
-//                     className="w-full px-4 py-2 border border-[#374151] rounded-lg"
+//                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 //                     placeholder="Describe the role..."
 //                   />
 //                 </div>
@@ -4139,7 +4139,7 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowRoleModal(false)}
-//                   className="px-4 py-2 text-gray-300 border border-[#374151] rounded-lg"
+//                   className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg"
 //                 >
 //                   Cancel
 //                 </button>
@@ -4158,10 +4158,10 @@
 //       {/* ✅ LOCATION MODAL */}
 //       {showLocationModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="bg-[#0a0a0a] rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+//           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-300">Add New Location</h3>
-//               <button onClick={() => setShowLocationModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">
+//               <h3 className="text-xl font-semibold text-gray-700">Add New Location</h3>
+//               <button onClick={() => setShowLocationModal(false)} className="text-2xl text-gray-500 hover:text-gray-500">
 //                 &times;
 //               </button>
 //             </div>
@@ -4169,21 +4169,21 @@
 //             <form onSubmit={handleCreateLocation} className="p-6">
 //               <div className="space-y-6">
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-300">
+//                   <label className="block mb-2 text-sm font-medium text-gray-700">
 //                     Location Name *
 //                   </label>
 //                   <input
 //                     type="text"
 //                     value={locationForm.name}
 //                     onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))}
-//                     className="w-full px-4 py-2 border border-[#374151] rounded-lg"
+//                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 //                     placeholder="e.g., Main Office, Branch Office"
 //                     required
 //                   />
 //                 </div>
 
 //                 <div className="flex items-center justify-between mb-3">
-//                   <label className="block text-sm font-medium text-gray-300">
+//                   <label className="block text-sm font-medium text-gray-700">
 //                     Location Coordinates
 //                   </label>
 //                   <button
@@ -4197,28 +4197,28 @@
 
 //                 <div className="grid grid-cols-2 gap-4">
 //                   <div>
-//                     <label className="block mb-2 text-sm font-medium text-gray-300">
+//                     <label className="block mb-2 text-sm font-medium text-gray-700">
 //                       Latitude *
 //                     </label>
 //                     <input
 //                       type="text"
 //                       value={locationForm.latitude}
 //                       onChange={(e) => setLocationForm(prev => ({ ...prev, latitude: e.target.value }))}
-//                       className="w-full px-4 py-2 border border-[#374151] rounded-lg"
+//                       className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 //                       placeholder="e.g., 28.6139"
 //                       required
 //                     />
 //                   </div>
                   
 //                   <div>
-//                     <label className="block mb-2 text-sm font-medium text-gray-300">
+//                     <label className="block mb-2 text-sm font-medium text-gray-700">
 //                       Longitude *
 //                     </label>
 //                     <input
 //                       type="text"
 //                       value={locationForm.longitude}
 //                       onChange={(e) => setLocationForm(prev => ({ ...prev, longitude: e.target.value }))}
-//                       className="w-full px-4 py-2 border border-[#374151] rounded-lg"
+//                       className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 //                       placeholder="e.g., 77.2090"
 //                       required
 //                     />
@@ -4226,14 +4226,14 @@
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-2 text-sm font-medium text-gray-300">
+//                   <label className="block mb-2 text-sm font-medium text-gray-700">
 //                     Full Address *
 //                   </label>
 //                   <textarea
 //                     value={locationForm.fullAddress}
 //                     onChange={(e) => setLocationForm(prev => ({ ...prev, fullAddress: e.target.value }))}
 //                     rows="3"
-//                     className="w-full px-4 py-2 border border-[#374151] rounded-lg"
+//                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 //                     placeholder="Enter full address"
 //                     required
 //                   />
@@ -4244,7 +4244,7 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowLocationModal(false)}
-//                   className="px-4 py-2 text-gray-300 border border-[#374151] rounded-lg"
+//                   className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg"
 //                 >
 //                   Cancel
 //                 </button>
@@ -5009,12 +5009,12 @@
 
 //   return (
 //     <div className="max-w-6xl p-4 mx-auto">
-//       <div className="p-6 bg-[#0a0a0a] shadow-lg rounded-xl">
+//       <div className="p-6 bg-white shadow-lg rounded-xl">
 //         <div className="mb-6">
-//           <h2 className="text-2xl font-bold text-gray-300">
+//           <h2 className="text-2xl font-bold text-gray-700">
 //             {editingEmployee ? "Edit Employee" : "Add New Employee"}
 //           </h2>
-//           <p className="mt-1 text-sm text-gray-400">Fill in the employee details below</p>
+//           <p className="mt-1 text-sm text-gray-500">Fill in the employee details below</p>
 //         </div>
 
 //         {successMessage && (
@@ -5034,34 +5034,34 @@
 //           {/* ROW 1: Basic Personal Info */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaIdCard className="inline mr-1 text-blue-500" /> Full Name *
 //               </label>
 //               <input 
 //                 value={name} 
 //                 onChange={(e) => setName(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="John Doe"
 //                 required 
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaEnvelope className="inline mr-1 text-blue-500" /> Email *
 //               </label>
 //               <input 
 //                 type="email" 
 //                 value={email} 
 //                 onChange={(e) => setEmail(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="john@example.com"
 //                 required 
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaLock className="inline mr-1 text-blue-500" /> Password {!editingEmployee && "*"}
 //               </label>
 //               <div className="relative">
@@ -5069,14 +5069,14 @@
 //                   type={showPassword ? "text" : "password"}
 //                   value={password}
 //                   onChange={(e) => setPassword(e.target.value)}
-//                   className="w-full p-2.5 pr-10 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                   className="w-full p-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                   placeholder={editingEmployee ? "Keep blank for no change" : "Enter password"}
 //                   required={!editingEmployee}
 //                 />
 //                 <button 
 //                   type="button" 
 //                   onClick={() => setShowPassword(!showPassword)} 
-//                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-400"
+//                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-500"
 //                 >
 //                   {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
 //                 </button>
@@ -5084,13 +5084,13 @@
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaPhone className="inline mr-1 text-blue-500" /> Phone
 //               </label>
 //               <input 
 //                 value={phone} 
 //                 onChange={(e) => setPhone(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="+91 9876543210"
 //               />
 //             </div>
@@ -5099,7 +5099,7 @@
 //           {/* ROW 2: DOB, Employee ID, Join Date, Location */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaCalendar className="inline mr-1 text-blue-500" /> Date of Birth
 //               </label>
 //               <input 
@@ -5107,19 +5107,19 @@
 //                 value={dob} 
 //                 onChange={(e) => setDob(e.target.value)} 
 //                 max={getCurrentDate()}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //               />
 //               {dob && <p className="mt-1 text-xs text-gray-500">DD/MM/YYYY</p>}
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaBriefcase className="inline mr-1 text-blue-500" /> Employee ID *
 //               </label>
 //               <input
 //                 value={employeeId}
 //                 onChange={(e) => setEmployeeId(e.target.value)}
-//                 className={`w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${editingEmployee ? 'bg-[#000000]' : ''}`}
+//                 className={`w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${editingEmployee ? 'bg-gray-50' : ''}`}
 //                 placeholder="EMP001"
 //                 required
 //                 readOnly={!!editingEmployee}
@@ -5127,20 +5127,20 @@
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaCalendar className="inline mr-1 text-blue-500" /> Join Date *
 //               </label>
 //               <input 
 //                 type="date" 
 //                 value={joinDate} 
 //                 onChange={(e) => setJoinDate(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required 
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaMapMarkerAlt className="inline mr-1 text-blue-500" /> Location *
 //               </label>
 //               <select
@@ -5153,7 +5153,7 @@
 //                   }
 //                   setLocationId(selectedValue);
 //                 }}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required
 //               >
 //                 <option value="">Select Location</option>
@@ -5168,7 +5168,7 @@
 //           {/* ROW 3: Department & Role */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaBuilding className="inline mr-1 text-blue-500" /> Department *
 //               </label>
 //               <select
@@ -5180,7 +5180,7 @@
 //                     setDepartment(e.target.value);
 //                   }
 //                 }}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required
 //               >
 //                 <option value="">Select Department</option>
@@ -5194,7 +5194,7 @@
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaUserTie className="inline mr-1 text-blue-500" /> Role *
 //               </label>
 //               <select
@@ -5206,7 +5206,7 @@
 //                     setRole(e.target.value);
 //                   }
 //                 }}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required
 //               >
 //                 <option value="">Select Role</option>
@@ -5223,26 +5223,26 @@
 //           {/* ADDRESS SECTION */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
-//                 <FaMapMarkerAlt className="inline mr-1 text-gray-400" /> Address Line 1 *
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
+//                 <FaMapMarkerAlt className="inline mr-1 text-gray-500" /> Address Line 1 *
 //               </label>
 //               <input 
 //                 value={addressLine1} 
 //                 onChange={(e) => setAddressLine1(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="House no, Street, Area"
 //                 required
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
-//                 <FaMapMarkerAlt className="inline mr-1 text-gray-400" /> Address Line 2
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
+//                 <FaMapMarkerAlt className="inline mr-1 text-gray-500" /> Address Line 2
 //               </label>
 //               <input 
 //                 value={addressLine2} 
 //                 onChange={(e) => setAddressLine2(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="Landmark, Building name"
 //               />
 //             </div>
@@ -5250,54 +5250,54 @@
 
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
-//                 <FaMapPin className="inline mr-1 text-gray-400" /> Pin Code *
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
+//                 <FaMapPin className="inline mr-1 text-gray-500" /> Pin Code *
 //               </label>
 //               <input 
 //                 type="text" 
 //                 value={pinCode} 
 //                 onChange={handlePinCodeChange}
 //                 maxLength="6"
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="110001"
 //                 required
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
-//                 <FaCity className="inline mr-1 text-gray-400" /> City *
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
+//                 <FaCity className="inline mr-1 text-gray-500" /> City *
 //               </label>
 //               <input 
 //                 value={city} 
 //                 onChange={(e) => setCity(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="City"
 //                 required
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
-//                 <FaGlobeAsia className="inline mr-1 text-gray-400" /> State *
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
+//                 <FaGlobeAsia className="inline mr-1 text-gray-500" /> State *
 //               </label>
 //               <input 
 //                 value={state} 
 //                 onChange={(e) => setState(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="State"
 //                 required
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
-//                 <FaGlobeAsia className="inline mr-1 text-gray-400" /> Country
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
+//                 <FaGlobeAsia className="inline mr-1 text-gray-500" /> Country
 //               </label>
 //               <select
 //                 value={country}
 //                 onChange={(e) => setCountry(e.target.value)}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //               >
 //                 <option value="India">India</option>
 //                 <option value="USA">USA</option>
@@ -5310,20 +5310,20 @@
 //           {/* ✅ UPDATED WEEK OFF SECTION WITH SIMPLE MULTI-SELECT DROPDOWN */}
 // {/* ✅ UPDATED WEEK OFF SECTION WITH PROPER MULTI-SELECT DROPDOWN */}
 // <div className="pt-6 border-t">
-//   <h3 className="mb-4 text-lg font-semibold text-gray-300">
+//   <h3 className="mb-4 text-lg font-semibold text-gray-700">
 //     <FaCalendar className="inline mr-2 text-blue-500" /> Week Off Selection
 //   </h3>
   
 //   <div className="space-y-6">
 //     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //       <div>
-//         <label className="block mb-1 text-sm font-medium text-gray-300">
+//         <label className="block mb-1 text-sm font-medium text-gray-700">
 //           Week Off Type *
 //         </label>
 //         <select
 //           value={weekOffType}
 //           onChange={(e) => handleWeekOffTypeChange(e.target.value)}
-//           className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//           className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //           required
 //         >
 //           <option value="">Select Type</option>
@@ -5334,7 +5334,7 @@
 
 //       {weekOffType === 'number' && (
 //         <div>
-//           <label className="block mb-1 text-sm font-medium text-gray-300">
+//           <label className="block mb-1 text-sm font-medium text-gray-700">
 //             Number of Week Offs/Month *
 //           </label>
 //           <input
@@ -5343,7 +5343,7 @@
 //             onChange={(e) => handleWeekOffCountChange(e.target.value)}
 //             min="0"
 //             max="30"
-//             className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//             className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //             placeholder="Enter number"
 //             required
 //           />
@@ -5351,7 +5351,7 @@
 //       )}
 
 //       <div>
-//         <label className="block mb-1 text-sm font-medium text-gray-300">
+//         <label className="block mb-1 text-sm font-medium text-gray-700">
 //           Week Offs per Month
 //         </label>
 //         <div className="relative">
@@ -5359,7 +5359,7 @@
 //             type="number" 
 //             value={autoWeekOffPerMonth} 
 //             readOnly
-//             className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-[#000000]"
+//             className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
 //           />
 //           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
 //             <span className="text-green-600">
@@ -5375,26 +5375,26 @@
 //     {weekOffType === 'day' && (
 //       <div className="space-y-3">
 //         <div className="relative">
-//           <label className="block mb-1 text-sm font-medium text-gray-300">
+//           <label className="block mb-1 text-sm font-medium text-gray-700">
 //             Select Day(s) *
 //           </label>
           
 //           {/* Custom Dropdown Button */}
 //           <div 
-//             className="w-full p-2.5 border border-[#374151] rounded-lg bg-[#0a0a0a] cursor-pointer hover:border-blue-400 transition-colors flex items-center justify-between"
+//             className="w-full p-2.5 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-blue-400 transition-colors flex items-center justify-between"
 //             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
 //           >
 //             <div className="flex-1">
 //               {selectedDays.length > 0 ? (
-//                 <span className="text-gray-300">
+//                 <span className="text-gray-700">
 //                   {selectedDays.length} day(s) selected
 //                 </span>
 //               ) : (
-//                 <span className="text-gray-400">Click to select days...</span>
+//                 <span className="text-gray-500">Click to select days...</span>
 //               )}
 //             </div>
 //             <svg 
-//               className={`w-5 h-5 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} 
+//               className={`w-5 h-5 text-gray-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} 
 //               fill="none" 
 //               stroke="currentColor" 
 //               viewBox="0 0 24 24" 
@@ -5406,10 +5406,10 @@
 
 //           {/* Dropdown Options */}
 //           {isDropdownOpen && (
-//             <div className="absolute z-10 w-full mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#374151] rounded-lg shadow-lg max-h-60">
-//               <div className="p-3 border-b bg-[#000000]">
+//             <div className="absolute z-10 w-full mt-1 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg max-h-60">
+//               <div className="p-3 border-b bg-gray-50">
 //                 <div className="flex items-center justify-between">
-//                   <span className="text-sm font-medium text-gray-300">Select Multiple Days</span>
+//                   <span className="text-sm font-medium text-gray-700">Select Multiple Days</span>
 //                   <div className="flex gap-2">
 //                     <button
 //                       type="button"
@@ -5433,7 +5433,7 @@
 //                         setWeekOffPerMonth("0");
 //                         setIsDropdownOpen(false);
 //                       }}
-//                       className="px-2 py-1 text-xs text-gray-300 bg-[#111111] rounded hover:bg-[#1f2937]"
+//                       className="px-2 py-1 text-xs text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
 //                     >
 //                       Clear All
 //                     </button>
@@ -5449,7 +5449,7 @@
 //                   return (
 //                     <div 
 //                       key={day.id}
-//                       className={`p-3 rounded-lg cursor-pointer hover:bg-[#000000] transition-colors ${
+//                       className={`p-3 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${
 //                         isSelected ? 'bg-blue-50 border border-blue-200' : ''
 //                       }`}
 //                       onClick={() => {
@@ -5468,14 +5468,14 @@
 //                           <div className={`w-5 h-5 border rounded mr-3 flex items-center justify-center ${
 //                             isSelected 
 //                               ? 'bg-blue-500 border-blue-500' 
-//                               : 'border-[#374151]'
+//                               : 'border-gray-300'
 //                           }`}>
 //                             {isSelected && (
 //                               <FaCheck className="w-3 h-3 text-white" />
 //                             )}
 //                           </div>
 //                           <div>
-//                             <div className="font-medium text-gray-300">{day.name}</div>
+//                             <div className="font-medium text-gray-700">{day.name}</div>
 //                             <div className="text-xs text-gray-500">{day.short}</div>
 //                           </div>
 //                         </div>
@@ -5512,16 +5512,16 @@
 //                 })}
 //               </div>
               
-//               <div className="p-3 border-t bg-[#000000]">
+//               <div className="p-3 border-t bg-gray-50">
 //                 <div className="flex items-center justify-between">
-//                   <div className="text-sm text-gray-300">
+//                   <div className="text-sm text-gray-700">
 //                     <span className="font-medium">Total Selected:</span> {selectedDays.length} day{selectedDays.length !== 1 ? 's' : ''}
 //                   </div>
 //                   <div className="text-sm font-medium text-green-600">
 //                     Week Offs/Month: {selectedDays.length}
 //                   </div>
 //                 </div>
-//                 <p className="mt-2 text-xs text-gray-400">
+//                 <p className="mt-2 text-xs text-gray-500">
 //                   <strong>How to select:</strong> Click on any day to add it. Click multiple times on same day to add multiple times.
 //                 </p>
 //               </div>
@@ -5531,9 +5531,9 @@
 
 //         {/* Selected Summary (Only if there are selections) */}
 //         {selectedDays.length > 0 && (
-//           <div className="p-4 rounded-lg bg-[#000000]">
+//           <div className="p-4 rounded-lg bg-gray-50">
 //             <div className="flex items-center justify-between mb-3">
-//               <h4 className="font-medium text-gray-300">Selected Days Summary</h4>
+//               <h4 className="font-medium text-gray-700">Selected Days Summary</h4>
 //               <button
 //                 type="button"
 //                 onClick={() => {
@@ -5556,9 +5556,9 @@
 //               });
               
 //               return Object.entries(dayGroups).map(([dayName, count], index) => (
-//                 <div key={index} className="flex items-center justify-between p-3 mb-2 bg-[#0a0a0a] border rounded">
+//                 <div key={index} className="flex items-center justify-between p-3 mb-2 bg-white border rounded">
 //                   <div className="flex items-center">
-//                     <span className="font-medium text-gray-300">{dayName}</span>
+//                     <span className="font-medium text-gray-700">{dayName}</span>
 //                     <span className="ml-2 text-sm text-gray-500">
 //                       ({daysOfWeek.find(d => d.name === dayName)?.short})
 //                     </span>
@@ -5588,15 +5588,15 @@
 //             <div className="pt-3 mt-3 border-t">
 //               <div className="flex items-center justify-between">
 //                 <div>
-//                   <span className="font-bold text-gray-300">Total Days Selected:</span>
+//                   <span className="font-bold text-gray-700">Total Days Selected:</span>
 //                   <span className="ml-2 text-lg font-bold text-blue-600">{selectedDays.length}</span>
 //                 </div>
 //                 <div>
-//                   <span className="font-bold text-gray-300">Week Offs/Month:</span>
+//                   <span className="font-bold text-gray-700">Week Offs/Month:</span>
 //                   <span className="ml-2 text-xl font-bold text-green-600">{selectedDays.length}</span>
 //                 </div>
 //               </div>
-//               <p className="mt-2 text-xs text-gray-400">
+//               <p className="mt-2 text-xs text-gray-500">
 //                 Each selected day (including multiple selections of same day) = 1 week off per month
 //               </p>
 //             </div>
@@ -5604,7 +5604,7 @@
 //         )}
         
 //         {/* Instructions */}
-//         {/* <div className="p-3 text-sm text-gray-400 rounded-lg bg-blue-50">
+//         {/* <div className="p-3 text-sm text-gray-500 rounded-lg bg-blue-50">
 //           <p className="mb-1 font-medium text-blue-800">💡 Instructions:</p>
 //           <ul className="pl-5 space-y-1 list-disc">
 //             <li>Click on the dropdown to open day selection</li>
@@ -5622,13 +5622,13 @@
 //           {/* SHIFT SECTION */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaClock className="inline mr-1 text-blue-500" /> Shift Type *
 //               </label>
 //               <select
 //                 value={shiftType}
 //                 onChange={(e) => handleShiftChange(e.target.value)}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required
 //               >
 //                 <option value="">Select Shift</option>
@@ -5648,42 +5648,42 @@
 //             {showShiftDetails && (
 //               <>
 //                 <div>
-//                   <label className="block mb-1 text-sm font-medium text-gray-300">
+//                   <label className="block mb-1 text-sm font-medium text-gray-700">
 //                     Start Time *
 //                   </label>
 //                   <input
 //                     type="time"
 //                     value={shiftStartTime}
 //                     onChange={(e) => setShiftStartTime(e.target.value)}
-//                     className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-[#000000]"
+//                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
 //                     required
 //                     readOnly
 //                   />
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-1 text-sm font-medium text-gray-300">
+//                   <label className="block mb-1 text-sm font-medium text-gray-700">
 //                     End Time *
 //                   </label>
 //                   <input
 //                     type="time"
 //                     value={shiftEndTime}
 //                     onChange={(e) => setShiftEndTime(e.target.value)}
-//                     className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-[#000000]"
+//                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
 //                     required
 //                     readOnly
 //                   />
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-1 text-sm font-medium text-gray-300">
+//                   <label className="block mb-1 text-sm font-medium text-gray-700">
 //                     Shift Hours/Day *
 //                   </label>
 //                   <input 
 //                     type="number" 
 //                     value={shiftHours} 
 //                     onChange={(e) => setShiftHours(e.target.value)} 
-//                     className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                     min="1"
 //                     max="24"
 //                     required 
@@ -5696,7 +5696,7 @@
 //           {/* SALARY SECTION */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaDollarSign className="inline mr-1 text-blue-500" /> Salary/Month *
 //               </label>
 //               <div className="relative">
@@ -5707,7 +5707,7 @@
 //                   type="number" 
 //                   value={salaryPerMonth} 
 //                   onChange={(e) => setSalaryPerMonth(e.target.value)} 
-//                   className="pl-8 w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                   className="pl-8 w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                   placeholder="0.00"
 //                   required 
 //                 />
@@ -5715,14 +5715,14 @@
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 Week Offs/Month *
 //               </label>
 //               <input 
 //                 type="number" 
 //                 value={weekOffPerMonth} 
 //                 readOnly
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-[#000000]"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
 //                 placeholder="0"
 //                 required 
 //               />
@@ -5762,10 +5762,10 @@
 //       {/* CREATE SHIFT MODAL */}
 //       {showShiftModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-300">Create New Shift</h3>
-//               <button onClick={() => setShowShiftModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">
+//               <h3 className="text-xl font-semibold text-gray-700">Create New Shift</h3>
+//               <button onClick={() => setShowShiftModal(false)} className="text-2xl text-gray-500 hover:text-gray-500">
 //                 &times;
 //               </button>
 //             </div>
@@ -5774,7 +5774,7 @@
 //               <div className="space-y-6">
 //                 <div className="grid grid-cols-2 gap-4">
 //                   <div>
-//                     <label className="block mb-2 text-sm font-medium text-gray-300">
+//                     <label className="block mb-2 text-sm font-medium text-gray-700">
 //                       Shift Type (Letter A-Z) *
 //                     </label>
 //                     <input
@@ -5785,7 +5785,7 @@
 //                         ...prev, 
 //                         shiftType: e.target.value.toUpperCase().replace(/[^A-Z]/g, '')
 //                       }))}
-//                       className="w-full px-4 py-2 text-sm uppercase border border-[#374151] rounded-lg"
+//                       className="w-full px-4 py-2 text-sm uppercase border border-gray-300 rounded-lg"
 //                       placeholder="E"
 //                       required
 //                     />
@@ -5793,14 +5793,14 @@
 //                   </div>
                   
 //                   <div>
-//                     <label className="block mb-2 text-sm font-medium text-gray-300">
+//                     <label className="block mb-2 text-sm font-medium text-gray-700">
 //                       Shift Name *
 //                     </label>
 //                     <input
 //                       type="text"
 //                       value={createShiftForm.shiftName}
 //                       onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftName: e.target.value }))}
-//                       className="w-full px-4 py-2 text-sm border border-[#374151] rounded-lg"
+//                       className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
 //                       placeholder="e.g., Extended Shift E"
 //                       required
 //                     />
@@ -5809,30 +5809,30 @@
 
 //                 {/* Single Time Slot Configuration */}
 //                 <div>
-//                   <label className="block mb-3 text-sm font-medium text-gray-300">
+//                   <label className="block mb-3 text-sm font-medium text-gray-700">
 //                     Time Slot Configuration *
 //                   </label>
                   
-//                   <div className="p-3 space-y-3 border rounded-lg bg-[#000000]">
+//                   <div className="p-3 space-y-3 border rounded-lg bg-gray-50">
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-400">Time Range *</label>
+//                       <label className="block mb-1 text-xs text-gray-500">Time Range *</label>
 //                       <input
 //                         type="text"
 //                         value={createShiftForm.timeRange}
 //                         onChange={(e) => setCreateShiftForm(prev => ({ ...prev, timeRange: e.target.value }))}
-//                         className="w-full px-3 py-2 text-sm border border-[#374151] rounded"
+//                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded"
 //                         placeholder="e.g., 10:00 - 19:00"
 //                         required
 //                       />
 //                     </div>
                     
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-400">Description *</label>
+//                       <label className="block mb-1 text-xs text-gray-500">Description *</label>
 //                       <input
 //                         type="text"
 //                         value={createShiftForm.description}
 //                         onChange={(e) => setCreateShiftForm(prev => ({ ...prev, description: e.target.value }))}
-//                         className="w-full px-3 py-2 text-sm border border-[#374151] rounded"
+//                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded"
 //                         placeholder="e.g., Morning 10 to 7"
 //                         required
 //                       />
@@ -5858,7 +5858,7 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowShiftModal(false)}
-//                   className="px-4 py-2 text-sm text-gray-300 border border-[#374151] rounded-lg hover:bg-[#000000]"
+//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
 //                 >
 //                   Cancel
 //                 </button>
@@ -5877,18 +5877,18 @@
 //       {/* DEPARTMENT MODAL */}
 //       {showDeptModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-300">Add New Department</h3>
-//               <button onClick={() => setShowDeptModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">&times;</button>
+//               <h3 className="text-xl font-semibold text-gray-700">Add New Department</h3>
+//               <button onClick={() => setShowDeptModal(false)} className="text-2xl text-gray-500 hover:text-gray-500">&times;</button>
 //             </div>
 //             <form onSubmit={handleCreateDepartment} className="p-6">
 //               <div className="space-y-4">
-//                 <div><label className="block mb-2 text-sm font-medium text-gray-300">Department Name *</label><input type="text" value={deptForm.name} onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="e.g., Sales, Development" required /></div>
-//                 <div><label className="block mb-2 text-sm font-medium text-gray-300">Description</label><textarea value={deptForm.description} onChange={(e) => setDeptForm(prev => ({ ...prev, description: e.target.value }))} rows="3" className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="Describe the department..." /></div>
+//                 <div><label className="block mb-2 text-sm font-medium text-gray-700">Department Name *</label><input type="text" value={deptForm.name} onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., Sales, Development" required /></div>
+//                 <div><label className="block mb-2 text-sm font-medium text-gray-700">Description</label><textarea value={deptForm.description} onChange={(e) => setDeptForm(prev => ({ ...prev, description: e.target.value }))} rows="3" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Describe the department..." /></div>
 //               </div>
 //               <div className="flex justify-end pt-6 mt-6 space-x-3 border-t">
-//                 <button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 text-sm text-gray-300 border border-[#374151] rounded-lg">Cancel</button>
+//                 <button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg">Cancel</button>
 //                 <button type="submit" className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">Add Department</button>
 //               </div>
 //             </form>
@@ -5899,18 +5899,18 @@
 //       {/* ROLE MODAL */}
 //       {showRoleModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-300">Add New Role</h3>
-//               <button onClick={() => setShowRoleModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">&times;</button>
+//               <h3 className="text-xl font-semibold text-gray-700">Add New Role</h3>
+//               <button onClick={() => setShowRoleModal(false)} className="text-2xl text-gray-500 hover:text-gray-500">&times;</button>
 //             </div>
 //             <form onSubmit={handleCreateRole} className="p-6">
 //               <div className="space-y-4">
-//                 <div><label className="block mb-2 text-sm font-medium text-gray-300">Role Name *</label><input type="text" value={roleForm.name} onChange={(e) => setRoleForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="e.g., Manager, Developer" required /></div>
-//                 <div><label className="block mb-2 text-sm font-medium text-gray-300">Description</label><textarea value={roleForm.description} onChange={(e) => setRoleForm(prev => ({ ...prev, description: e.target.value }))} rows="3" className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="Describe the role..." /></div>
+//                 <div><label className="block mb-2 text-sm font-medium text-gray-700">Role Name *</label><input type="text" value={roleForm.name} onChange={(e) => setRoleForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., Manager, Developer" required /></div>
+//                 <div><label className="block mb-2 text-sm font-medium text-gray-700">Description</label><textarea value={roleForm.description} onChange={(e) => setRoleForm(prev => ({ ...prev, description: e.target.value }))} rows="3" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Describe the role..." /></div>
 //               </div>
 //               <div className="flex justify-end pt-6 mt-6 space-x-3 border-t">
-//                 <button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 text-sm text-gray-300 border border-[#374151] rounded-lg">Cancel</button>
+//                 <button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg">Cancel</button>
 //                 <button type="submit" className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700">Add Role</button>
 //               </div>
 //             </form>
@@ -5921,23 +5921,23 @@
 //       {/* LOCATION MODAL */}
 //       {showLocationModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="bg-[#0a0a0a] rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+//           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-300">Add New Location</h3>
-//               <button onClick={() => setShowLocationModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">&times;</button>
+//               <h3 className="text-xl font-semibold text-gray-700">Add New Location</h3>
+//               <button onClick={() => setShowLocationModal(false)} className="text-2xl text-gray-500 hover:text-gray-500">&times;</button>
 //             </div>
 //             <form onSubmit={handleCreateLocation} className="p-6">
 //               <div className="space-y-6">
-//                 <div><label className="block mb-2 text-sm font-medium text-gray-300">Location Name *</label><input type="text" value={locationForm.name} onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="e.g., Main Office, Branch Office" required /></div>
-//                 <div className="flex items-center justify-between mb-3"><label className="block text-sm font-medium text-gray-300">Location Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-4 py-2 text-sm text-white bg-green-600 rounded hover:bg-green-700">📍 Get Current Location</button></div>
+//                 <div><label className="block mb-2 text-sm font-medium text-gray-700">Location Name *</label><input type="text" value={locationForm.name} onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., Main Office, Branch Office" required /></div>
+//                 <div className="flex items-center justify-between mb-3"><label className="block text-sm font-medium text-gray-700">Location Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-4 py-2 text-sm text-white bg-green-600 rounded hover:bg-green-700">📍 Get Current Location</button></div>
 //                 <div className="grid grid-cols-2 gap-4">
-//                   <div><label className="block mb-2 text-sm font-medium text-gray-300">Latitude *</label><input type="text" value={locationForm.latitude} onChange={(e) => setLocationForm(prev => ({ ...prev, latitude: e.target.value }))} className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="e.g., 28.6139" required /></div>
-//                   <div><label className="block mb-2 text-sm font-medium text-gray-300">Longitude *</label><input type="text" value={locationForm.longitude} onChange={(e) => setLocationForm(prev => ({ ...prev, longitude: e.target.value }))} className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="e.g., 77.2090" required /></div>
+//                   <div><label className="block mb-2 text-sm font-medium text-gray-700">Latitude *</label><input type="text" value={locationForm.latitude} onChange={(e) => setLocationForm(prev => ({ ...prev, latitude: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., 28.6139" required /></div>
+//                   <div><label className="block mb-2 text-sm font-medium text-gray-700">Longitude *</label><input type="text" value={locationForm.longitude} onChange={(e) => setLocationForm(prev => ({ ...prev, longitude: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., 77.2090" required /></div>
 //                 </div>
-//                 <div><label className="block mb-2 text-sm font-medium text-gray-300">Full Address *</label><textarea value={locationForm.fullAddress} onChange={(e) => setLocationForm(prev => ({ ...prev, fullAddress: e.target.value }))} rows="3" className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="Enter full address" required /></div>
+//                 <div><label className="block mb-2 text-sm font-medium text-gray-700">Full Address *</label><textarea value={locationForm.fullAddress} onChange={(e) => setLocationForm(prev => ({ ...prev, fullAddress: e.target.value }))} rows="3" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Enter full address" required /></div>
 //               </div>
 //               <div className="flex justify-end pt-6 mt-6 space-x-3 border-t">
-//                 <button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 text-sm text-gray-300 border border-[#374151] rounded-lg">Cancel</button>
+//                 <button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg">Cancel</button>
 //                 <button type="submit" className="px-4 py-2 text-sm text-white bg-purple-600 rounded-lg hover:bg-purple-700">Add Location</button>
 //               </div>
 //             </form>
@@ -6739,12 +6739,12 @@
 
 //   return (
 //     <div className="max-w-6xl p-4 mx-auto">
-//       <div className="p-6 bg-[#0a0a0a] shadow-lg rounded-xl">
+//       <div className="p-6 bg-white shadow-lg rounded-xl">
 //         <div className="mb-6">
-//           <h2 className="text-2xl font-bold text-gray-300">
+//           <h2 className="text-2xl font-bold text-gray-700">
 //             {editingEmployee ? "Edit Employee" : "Add New Employee"}
 //           </h2>
-//           <p className="mt-1 text-sm text-gray-400">
+//           <p className="mt-1 text-sm text-gray-500">
 //             {editingEmployee 
 //               ? "Update employee details" 
 //               : "Search existing employee by phone number or add new"}
@@ -6769,14 +6769,14 @@
 //           {/* ROW 1: Phone Search - Compact Layout */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaPhone className="inline mr-1 text-blue-500" /> Phone Number *
 //               </label>
 //               <div className="relative">
 //                 <input 
 //                   value={phone} 
 //                   onChange={handlePhoneChange}
-//                   className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                   className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                   placeholder="10-digit phone"
 //                   required 
 //                 />
@@ -6799,25 +6799,25 @@
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 Alternate Number
 //               </label>
 //               <input 
 //                 value={alternateNumber} 
 //                 onChange={(e) => setAlternateNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="Alternate phone"
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 Parents Name
 //               </label>
 //               <input 
 //                 value={parentsName} 
 //                 onChange={(e) => setParentsName(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="Parents' full name"
 //               />
 //             </div>
@@ -6826,21 +6826,21 @@
 //           {/* ROW 2: Email & Password */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaEnvelope className="inline mr-1 text-blue-500" /> Email *
 //               </label>
 //               <input 
 //                 type="email" 
 //                 value={email} 
 //                 onChange={(e) => setEmail(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="john@example.com"
 //                 required 
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaLock className="inline mr-1 text-blue-500" /> Password {!editingEmployee && !employeeFound && "*"}
 //               </label>
 //               <div className="relative">
@@ -6848,14 +6848,14 @@
 //                   type={showPassword ? "text" : "password"}
 //                   value={password}
 //                   onChange={(e) => setPassword(e.target.value)}
-//                   className="w-full p-2.5 pr-10 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                   className="w-full p-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                   placeholder={editingEmployee || employeeFound ? "Keep blank for no change" : "Enter password"}
 //                   required={!editingEmployee && !employeeFound}
 //                 />
 //                 <button 
 //                   type="button" 
 //                   onClick={() => setShowPassword(!showPassword)} 
-//                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-400"
+//                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-500"
 //                 >
 //                   {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
 //                 </button>
@@ -6863,7 +6863,7 @@
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaCalendar className="inline mr-1 text-blue-500" /> Date of Birth
 //               </label>
 //               <input 
@@ -6871,7 +6871,7 @@
 //                 value={dob} 
 //                 onChange={(e) => setDob(e.target.value)} 
 //                 max={getCurrentDate()}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //               />
 //               {dob && <p className="mt-1 text-xs text-gray-500">DD/MM/YYYY</p>}
 //             </div>
@@ -6880,39 +6880,39 @@
 //           {/* ROW 3: First Name, Last Name, Employee ID */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaUser className="inline mr-1 text-blue-500" /> First Name *
 //               </label>
 //               <input 
 //                 value={firstName} 
 //                 onChange={(e) => setFirstName(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="John"
 //                 required 
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaUser className="inline mr-1 text-blue-500" /> Last Name
 //               </label>
 //               <input 
 //                 value={lastName} 
 //                 onChange={(e) => setLastName(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="Doe"
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaBriefcase className="inline mr-1 text-blue-500" /> Employee ID *
 //               </label>
 //               <input
 //                 value={employeeId}
 //                 onChange={(e) => setEmployeeId(e.target.value)}
-//                 className={`w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-//                   editingEmployee || employeeFound ? 'bg-[#000000]' : ''
+//                 className={`w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+//                   editingEmployee || employeeFound ? 'bg-gray-50' : ''
 //                 }`}
 //                 placeholder="EMP001"
 //                 required
@@ -6924,20 +6924,20 @@
 //           {/* ROW 4: Join Date, Location, Department */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaCalendar className="inline mr-1 text-blue-500" /> Join Date *
 //               </label>
 //               <input 
 //                 type="date" 
 //                 value={joinDate} 
 //                 onChange={(e) => setJoinDate(e.target.value)} 
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required 
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaMapMarkerAlt className="inline mr-1 text-blue-500" /> Location *
 //               </label>
 //               <select
@@ -6950,7 +6950,7 @@
 //                   }
 //                   setLocationId(selectedValue);
 //                 }}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required
 //               >
 //                 <option value="">Select Location</option>
@@ -6962,7 +6962,7 @@
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaBuilding className="inline mr-1 text-blue-500" /> Department *
 //               </label>
 //               <select
@@ -6974,7 +6974,7 @@
 //                     setDepartment(e.target.value);
 //                   }
 //                 }}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required
 //               >
 //                 <option value="">Select Department</option>
@@ -6991,7 +6991,7 @@
 //           {/* ROW 5: Role & Week Offs */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaUserTie className="inline mr-1 text-blue-500" /> Role *
 //               </label>
 //               <select
@@ -7003,7 +7003,7 @@
 //                     setRole(e.target.value);
 //                   }
 //                 }}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 required
 //               >
 //                 <option value="">Select Role</option>
@@ -7017,7 +7017,7 @@
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaCalendar className="inline mr-1 text-blue-500" /> Week Offs per Month *
 //               </label>
 //               <input
@@ -7026,7 +7026,7 @@
 //                 onChange={(e) => setWeekOffsPerMonth(e.target.value)}
 //                 min="0"
 //                 max="30"
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 placeholder="Enter number of week offs"
 //                 required
 //               />
@@ -7036,32 +7036,32 @@
 
 //           {/* ADDRESS SECTION */}
 //           <div className="pt-6 border-t">
-//             <h3 className="mb-4 text-lg font-semibold text-gray-300">
+//             <h3 className="mb-4 text-lg font-semibold text-gray-700">
 //               <FaMapMarkerAlt className="inline mr-2 text-blue-500" /> Address Details
 //             </h3>
             
 //             <div className="grid grid-cols-1 gap-4 mb-4 md:grid-cols-2">
 //               <div>
-//                 <label className="block mb-1 text-sm font-medium text-gray-300">
+//                 <label className="block mb-1 text-sm font-medium text-gray-700">
 //                   Address Line 1 *
 //                 </label>
 //                 <input 
 //                   value={addressLine1} 
 //                   onChange={(e) => setAddressLine1(e.target.value)} 
-//                   className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                   className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                   placeholder="House no, Street, Area"
 //                   required
 //                 />
 //               </div>
 
 //               <div>
-//                 <label className="block mb-1 text-sm font-medium text-gray-300">
+//                 <label className="block mb-1 text-sm font-medium text-gray-700">
 //                   Address Line 2
 //                 </label>
 //                 <input 
 //                   value={addressLine2} 
 //                   onChange={(e) => setAddressLine2(e.target.value)} 
-//                   className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                   className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                   placeholder="Landmark, Building name"
 //                 />
 //               </div>
@@ -7069,54 +7069,54 @@
 
 //             <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
 //               <div>
-//                 <label className="block mb-1 text-sm font-medium text-gray-300">
-//                   <FaMapPin className="inline mr-1 text-gray-400" /> Pin Code *
+//                 <label className="block mb-1 text-sm font-medium text-gray-700">
+//                   <FaMapPin className="inline mr-1 text-gray-500" /> Pin Code *
 //                 </label>
 //                 <input 
 //                   type="text" 
 //                   value={pinCode} 
 //                   onChange={handlePinCodeChange}
 //                   maxLength="6"
-//                   className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                   className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                   placeholder="110001"
 //                   required
 //                 />
 //               </div>
 
 //               <div>
-//                 <label className="block mb-1 text-sm font-medium text-gray-300">
-//                   <FaCity className="inline mr-1 text-gray-400" /> City *
+//                 <label className="block mb-1 text-sm font-medium text-gray-700">
+//                   <FaCity className="inline mr-1 text-gray-500" /> City *
 //                 </label>
 //                 <input 
 //                   value={city} 
 //                   onChange={(e) => setCity(e.target.value)} 
-//                   className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                   className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                   placeholder="City"
 //                   required
 //                 />
 //               </div>
 
 //               <div>
-//                 <label className="block mb-1 text-sm font-medium text-gray-300">
-//                   <FaGlobeAsia className="inline mr-1 text-gray-400" /> State *
+//                 <label className="block mb-1 text-sm font-medium text-gray-700">
+//                   <FaGlobeAsia className="inline mr-1 text-gray-500" /> State *
 //                 </label>
 //                 <input 
 //                   value={state} 
 //                   onChange={(e) => setState(e.target.value)} 
-//                   className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                   className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                   placeholder="State"
 //                   required
 //                 />
 //               </div>
 
 //               <div>
-//                 <label className="block mb-1 text-sm font-medium text-gray-300">
-//                   <FaGlobeAsia className="inline mr-1 text-gray-400" /> Country
+//                 <label className="block mb-1 text-sm font-medium text-gray-700">
+//                   <FaGlobeAsia className="inline mr-1 text-gray-500" /> Country
 //                 </label>
 //                 <select
 //                   value={country}
 //                   onChange={(e) => setCountry(e.target.value)}
-//                   className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                   className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                 >
 //                   <option value="India">India</option>
 //                   <option value="USA">USA</option>
@@ -7130,13 +7130,13 @@
 //           {/* SHIFT SECTION */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaClock className="inline mr-1 text-blue-500" /> Shift Type *
 //               </label>
 //               <select
 //                 value={shiftType}
 //                 onChange={(e) => handleShiftChange(e.target.value)}
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //               >
 //                 <option value="">Select Shift</option>
 //                 {shiftList && shiftList.length > 0 ? (
@@ -7155,40 +7155,40 @@
 //             {showShiftDetails && (
 //               <>
 //                 <div>
-//                   <label className="block mb-1 text-sm font-medium text-gray-300">
+//                   <label className="block mb-1 text-sm font-medium text-gray-700">
 //                     Start Time
 //                   </label>
 //                   <input
 //                     type="time"
 //                     value={shiftStartTime}
 //                     onChange={(e) => setShiftStartTime(e.target.value)}
-//                     className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-[#000000]"
+//                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
 //                     readOnly
 //                   />
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-1 text-sm font-medium text-gray-300">
+//                   <label className="block mb-1 text-sm font-medium text-gray-700">
 //                     End Time
 //                   </label>
 //                   <input
 //                     type="time"
 //                     value={shiftEndTime}
 //                     onChange={(e) => setShiftEndTime(e.target.value)}
-//                     className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-[#000000]"
+//                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
 //                     readOnly
 //                   />
 //                 </div>
 
 //                 <div>
-//                   <label className="block mb-1 text-sm font-medium text-gray-300">
+//                   <label className="block mb-1 text-sm font-medium text-gray-700">
 //                     Shift Hours/Day
 //                   </label>
 //                   <input 
 //                     type="number" 
 //                     value={shiftHours} 
 //                     onChange={(e) => setShiftHours(e.target.value)} 
-//                     className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                     min="1"
 //                     max="24"
 //                   />
@@ -7200,7 +7200,7 @@
 //           {/* SALARY & LEAVES SECTION */}
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 <FaDollarSign className="inline mr-1 text-blue-500" /> CTC (Yearly) *
 //               </label>
 //               <div className="relative">
@@ -7215,7 +7215,7 @@
 //                     setCtcYearly(val);
 //                     setSalaryPerMonth(val ? Math.round(Number(val) / 12) : "");
 //                   }} 
-//                   className="pl-8 w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+//                   className="pl-8 w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
 //                   placeholder="0.00"
 //                   required 
 //                 />
@@ -7224,32 +7224,32 @@
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">
+//               <label className="block mb-1 text-sm font-medium text-gray-700">
 //                 Week Offs/Month
 //               </label>
 //               <input 
 //                 type="number" 
 //                 value={weekOffsPerMonth} 
 //                 readOnly
-//                 className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-[#000000]"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
 //                 placeholder="0"
 //                 required 
 //               />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">CL Limit/Month *</label>
-//               <input type="number" min="0" value={maxCL} onChange={(e) => setMaxCL(e.target.value)} className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required />
+//               <label className="block mb-1 text-sm font-medium text-gray-700">CL Limit/Month *</label>
+//               <input type="number" min="0" value={maxCL} onChange={(e) => setMaxCL(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required />
 //             </div>
             
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">SL Limit/Month *</label>
-//               <input type="number" min="0" value={maxSL} onChange={(e) => setMaxSL(e.target.value)} className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required />
+//               <label className="block mb-1 text-sm font-medium text-gray-700">SL Limit/Month *</label>
+//               <input type="number" min="0" value={maxSL} onChange={(e) => setMaxSL(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required />
 //             </div>
 
 //             <div>
-//               <label className="block mb-1 text-sm font-medium text-gray-300">EL Limit/Year *</label>
-//               <input type="number" min="0" value={maxEL} onChange={(e) => setMaxEL(e.target.value)} className="w-full p-2.5 border border-[#374151] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required />
+//               <label className="block mb-1 text-sm font-medium text-gray-700">EL Limit/Year *</label>
+//               <input type="number" min="0" value={maxEL} onChange={(e) => setMaxEL(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" required />
 //             </div>
 //           </div>
 
@@ -7285,10 +7285,10 @@
 //       {/* CREATE SHIFT MODAL */}
 //       {showShiftModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-300">Create New Shift</h3>
-//               <button onClick={() => setShowShiftModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">
+//               <h3 className="text-xl font-semibold text-gray-700">Create New Shift</h3>
+//               <button onClick={() => setShowShiftModal(false)} className="text-2xl text-gray-500 hover:text-gray-500">
 //                 &times;
 //               </button>
 //             </div>
@@ -7297,7 +7297,7 @@
 //               <div className="space-y-6">
 //                 <div className="grid grid-cols-2 gap-4">
 //                   <div>
-//                     <label className="block mb-2 text-sm font-medium text-gray-300">
+//                     <label className="block mb-2 text-sm font-medium text-gray-700">
 //                       Shift Type (Letter A-Z) *
 //                     </label>
 //                     <input
@@ -7308,7 +7308,7 @@
 //                         ...prev, 
 //                         shiftType: e.target.value.toUpperCase().replace(/[^A-Z]/g, '')
 //                       }))}
-//                       className="w-full px-4 py-2 text-sm uppercase border border-[#374151] rounded-lg"
+//                       className="w-full px-4 py-2 text-sm uppercase border border-gray-300 rounded-lg"
 //                       placeholder="E"
 //                       required
 //                     />
@@ -7316,14 +7316,14 @@
 //                   </div>
                   
 //                   <div>
-//                     <label className="block mb-2 text-sm font-medium text-gray-300">
+//                     <label className="block mb-2 text-sm font-medium text-gray-700">
 //                       Shift Name *
 //                     </label>
 //                     <input
 //                       type="text"
 //                       value={createShiftForm.shiftName}
 //                       onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftName: e.target.value }))}
-//                       className="w-full px-4 py-2 text-sm border border-[#374151] rounded-lg"
+//                       className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg"
 //                       placeholder="e.g., Extended Shift E"
 //                       required
 //                     />
@@ -7332,30 +7332,30 @@
 
 //                 {/* Single Time Slot Configuration */}
 //                 <div>
-//                   <label className="block mb-3 text-sm font-medium text-gray-300">
+//                   <label className="block mb-3 text-sm font-medium text-gray-700">
 //                     Time Slot Configuration *
 //                   </label>
                   
-//                   <div className="p-3 space-y-3 border rounded-lg bg-[#000000]">
+//                   <div className="p-3 space-y-3 border rounded-lg bg-gray-50">
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-400">Time Range *</label>
+//                       <label className="block mb-1 text-xs text-gray-500">Time Range *</label>
 //                       <input
 //                         type="text"
 //                         value={createShiftForm.timeRange}
 //                         onChange={(e) => setCreateShiftForm(prev => ({ ...prev, timeRange: e.target.value }))}
-//                         className="w-full px-3 py-2 text-sm border border-[#374151] rounded"
+//                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded"
 //                         placeholder="e.g., 10:00 - 19:00"
 //                         required
 //                       />
 //                     </div>
                     
 //                     <div>
-//                       <label className="block mb-1 text-xs text-gray-400">Description *</label>
+//                       <label className="block mb-1 text-xs text-gray-500">Description *</label>
 //                       <input
 //                         type="text"
 //                         value={createShiftForm.description}
 //                         onChange={(e) => setCreateShiftForm(prev => ({ ...prev, description: e.target.value }))}
-//                         className="w-full px-3 py-2 text-sm border border-[#374151] rounded"
+//                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded"
 //                         placeholder="e.g., Morning 10 to 7"
 //                         required
 //                       />
@@ -7381,7 +7381,7 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowShiftModal(false)}
-//                   className="px-4 py-2 text-sm text-gray-300 border border-[#374151] rounded-lg hover:bg-[#000000]"
+//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
 //                 >
 //                   Cancel
 //                 </button>
@@ -7400,18 +7400,18 @@
 //       {/* DEPARTMENT MODAL */}
 //       {showDeptModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-300">Add New Department</h3>
-//               <button onClick={() => setShowDeptModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">&times;</button>
+//               <h3 className="text-xl font-semibold text-gray-700">Add New Department</h3>
+//               <button onClick={() => setShowDeptModal(false)} className="text-2xl text-gray-500 hover:text-gray-500">&times;</button>
 //             </div>
 //             <form onSubmit={handleCreateDepartment} className="p-6">
 //               <div className="space-y-4">
-//                 <div><label className="block mb-2 text-sm font-medium text-gray-300">Department Name *</label><input type="text" value={deptForm.name} onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="e.g., Sales, Development" required /></div>
-//                 <div><label className="block mb-2 text-sm font-medium text-gray-300">Description</label><textarea value={deptForm.description} onChange={(e) => setDeptForm(prev => ({ ...prev, description: e.target.value }))} rows="3" className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="Describe the department..." /></div>
+//                 <div><label className="block mb-2 text-sm font-medium text-gray-700">Department Name *</label><input type="text" value={deptForm.name} onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., Sales, Development" required /></div>
+//                 <div><label className="block mb-2 text-sm font-medium text-gray-700">Description</label><textarea value={deptForm.description} onChange={(e) => setDeptForm(prev => ({ ...prev, description: e.target.value }))} rows="3" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Describe the department..." /></div>
 //               </div>
 //               <div className="flex justify-end pt-6 mt-6 space-x-3 border-t">
-//                 <button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 text-sm text-gray-300 border border-[#374151] rounded-lg">Cancel</button>
+//                 <button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg">Cancel</button>
 //                 <button type="submit" className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">Add Department</button>
 //               </div>
 //             </form>
@@ -7422,18 +7422,18 @@
 //       {/* ROLE MODAL */}
 //       {showRoleModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-300">Add New Role</h3>
-//               <button onClick={() => setShowRoleModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">&times;</button>
+//               <h3 className="text-xl font-semibold text-gray-700">Add New Role</h3>
+//               <button onClick={() => setShowRoleModal(false)} className="text-2xl text-gray-500 hover:text-gray-500">&times;</button>
 //             </div>
 //             <form onSubmit={handleCreateRole} className="p-6">
 //               <div className="space-y-4">
-//                 <div><label className="block mb-2 text-sm font-medium text-gray-300">Role Name *</label><input type="text" value={roleForm.name} onChange={(e) => setRoleForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="e.g., Manager, Developer" required /></div>
-//                 <div><label className="block mb-2 text-sm font-medium text-gray-300">Description</label><textarea value={roleForm.description} onChange={(e) => setRoleForm(prev => ({ ...prev, description: e.target.value }))} rows="3" className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="Describe the role..." /></div>
+//                 <div><label className="block mb-2 text-sm font-medium text-gray-700">Role Name *</label><input type="text" value={roleForm.name} onChange={(e) => setRoleForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., Manager, Developer" required /></div>
+//                 <div><label className="block mb-2 text-sm font-medium text-gray-700">Description</label><textarea value={roleForm.description} onChange={(e) => setRoleForm(prev => ({ ...prev, description: e.target.value }))} rows="3" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Describe the role..." /></div>
 //               </div>
 //               <div className="flex justify-end pt-6 mt-6 space-x-3 border-t">
-//                 <button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 text-sm text-gray-300 border border-[#374151] rounded-lg">Cancel</button>
+//                 <button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg">Cancel</button>
 //                 <button type="submit" className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700">Add Role</button>
 //               </div>
 //             </form>
@@ -7444,23 +7444,23 @@
 //       {/* LOCATION MODAL */}
 //       {showLocationModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="bg-[#0a0a0a] rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+//           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex items-center justify-between p-6 border-b">
-//               <h3 className="text-xl font-semibold text-gray-300">Add New Location</h3>
-//               <button onClick={() => setShowLocationModal(false)} className="text-2xl text-gray-400 hover:text-gray-400">&times;</button>
+//               <h3 className="text-xl font-semibold text-gray-700">Add New Location</h3>
+//               <button onClick={() => setShowLocationModal(false)} className="text-2xl text-gray-500 hover:text-gray-500">&times;</button>
 //             </div>
 //             <form onSubmit={handleCreateLocation} className="p-6">
 //               <div className="space-y-6">
-//                 <div><label className="block mb-2 text-sm font-medium text-gray-300">Location Name *</label><input type="text" value={locationForm.name} onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="e.g., Main Office, Branch Office" required /></div>
-//                 <div className="flex items-center justify-between mb-3"><label className="block text-sm font-medium text-gray-300">Location Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-4 py-2 text-sm text-white bg-green-600 rounded hover:bg-green-700">📍 Get Current Location</button></div>
+//                 <div><label className="block mb-2 text-sm font-medium text-gray-700">Location Name *</label><input type="text" value={locationForm.name} onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., Main Office, Branch Office" required /></div>
+//                 <div className="flex items-center justify-between mb-3"><label className="block text-sm font-medium text-gray-700">Location Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-4 py-2 text-sm text-white bg-green-600 rounded hover:bg-green-700">📍 Get Current Location</button></div>
 //                 <div className="grid grid-cols-2 gap-4">
-//                   <div><label className="block mb-2 text-sm font-medium text-gray-300">Latitude *</label><input type="text" value={locationForm.latitude} onChange={(e) => setLocationForm(prev => ({ ...prev, latitude: e.target.value }))} className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="e.g., 28.6139" required /></div>
-//                   <div><label className="block mb-2 text-sm font-medium text-gray-300">Longitude *</label><input type="text" value={locationForm.longitude} onChange={(e) => setLocationForm(prev => ({ ...prev, longitude: e.target.value }))} className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="e.g., 77.2090" required /></div>
+//                   <div><label className="block mb-2 text-sm font-medium text-gray-700">Latitude *</label><input type="text" value={locationForm.latitude} onChange={(e) => setLocationForm(prev => ({ ...prev, latitude: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., 28.6139" required /></div>
+//                   <div><label className="block mb-2 text-sm font-medium text-gray-700">Longitude *</label><input type="text" value={locationForm.longitude} onChange={(e) => setLocationForm(prev => ({ ...prev, longitude: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., 77.2090" required /></div>
 //                 </div>
-//                 <div><label className="block mb-2 text-sm font-medium text-gray-300">Full Address *</label><textarea value={locationForm.fullAddress} onChange={(e) => setLocationForm(prev => ({ ...prev, fullAddress: e.target.value }))} rows="3" className="w-full px-4 py-2 border border-[#374151] rounded-lg" placeholder="Enter full address" required /></div>
+//                 <div><label className="block mb-2 text-sm font-medium text-gray-700">Full Address *</label><textarea value={locationForm.fullAddress} onChange={(e) => setLocationForm(prev => ({ ...prev, fullAddress: e.target.value }))} rows="3" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Enter full address" required /></div>
 //               </div>
 //               <div className="flex justify-end pt-6 mt-6 space-x-3 border-t">
-//                 <button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 text-sm text-gray-300 border border-[#374151] rounded-lg">Cancel</button>
+//                 <button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg">Cancel</button>
 //                 <button type="submit" className="px-4 py-2 text-sm text-white bg-purple-600 rounded-lg hover:bg-purple-700">Add Location</button>
 //               </div>
 //             </form>
@@ -8025,12 +8025,12 @@
 
 //   return (
 //     <div className="max-w-7xl p-4 mx-auto">
-//       <div className="p-6 bg-[#0a0a0a] shadow-lg rounded-xl">
+//       <div className="p-6 bg-white shadow-lg rounded-xl">
 //         <div className="mb-6">
-//           <h2 className="text-2xl font-bold text-gray-300">
+//           <h2 className="text-2xl font-bold text-gray-700">
 //             {editingEmployee ? "Edit Employee" : "Add New Employee"}
 //           </h2>
-//           <p className="mt-1 text-sm text-gray-400">Fill all employee details below</p>
+//           <p className="mt-1 text-sm text-gray-500">Fill all employee details below</p>
 //         </div>
 
 //         {successMessage && (
@@ -8079,14 +8079,14 @@
 //                   <label className="block mb-1 text-sm font-medium">Password {!editingEmployee && !employeeFound && "*"}</label>
 //                   <div className="relative">
 //                     <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2.5 pr-10 border rounded-lg" placeholder={editingEmployee || employeeFound ? "Keep blank for no change" : "Enter password"} required={!editingEmployee && !employeeFound} />
-//                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-400">{showPassword ? <FaEyeSlash /> : <FaEye />}</button>
+//                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-500">{showPassword ? <FaEyeSlash /> : <FaEye />}</button>
 //                   </div>
 //                 </div>
 //                 <div><label className="block mb-1 text-sm font-medium">Date of Birth</label><input type="date" value={dob} onChange={(e) => setDob(e.target.value)} max={getCurrentDate()} className="w-full p-2.5 border rounded-lg" /></div>
 //               </div>
 
 //               <div>
-//                 <h4 className="mb-2 font-semibold text-gray-300"><FaMapMarkerAlt className="inline mr-1" /> Address</h4>
+//                 <h4 className="mb-2 font-semibold text-gray-700"><FaMapMarkerAlt className="inline mr-1" /> Address</h4>
 //                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-3">
 //                   <div><label className="block mb-1 text-sm">Address Line 1 *</label><input value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} className="w-full p-2.5 border rounded-lg" required /></div>
 //                   <div><label className="block mb-1 text-sm">Address Line 2</label><input value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} className="w-full p-2.5 border rounded-lg" /></div>
@@ -8110,7 +8110,7 @@
 //             </div>
 //             <div className="p-4 space-y-4">
 //               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-//                 <div><label className="block mb-1 text-sm">Employee ID *</label><input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className="w-full p-2.5 border rounded-lg bg-[#000000]" readOnly /></div>
+//                 <div><label className="block mb-1 text-sm">Employee ID *</label><input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className="w-full p-2.5 border rounded-lg bg-gray-50" readOnly /></div>
 //                 <div><label className="block mb-1 text-sm">Join Date *</label><input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} className="w-full p-2.5 border rounded-lg" required /></div>
 //               </div>
 //               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -8181,7 +8181,7 @@
 //                   </div>
 //                 </div>
 //               </div>
-//               <div className="bg-[#000000] p-3 rounded-lg border mt-3">
+//               <div className="bg-gray-50 p-3 rounded-lg border mt-3">
 //                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
 //                   <div><label className="font-semibold">Total Earnings</label><div className="text-lg">₹{totalEarnings.toLocaleString()}</div></div>
 //                   <div><label className="font-semibold">Total Deductions</label><div className="text-lg text-red-600">₹{totalDeductions.toLocaleString()}</div></div>
@@ -8196,7 +8196,7 @@
 //           <div className="border rounded-lg overflow-hidden">
 //             <div className="bg-red-50 px-4 py-3 border-b">
 //               <h3 className="text-lg font-semibold text-red-800">
-//                 <FaCalendarAlt className="inline mr-2 text-white" /> 5. HR & Leave Policy
+//                 <FaCalendarAlt className="inline mr-2 text-gray-500" /> 5. HR & Leave Policy
 //               </h3>
 //             </div>
 //             <div className="p-4 space-y-4">
@@ -8206,14 +8206,14 @@
 //               </div>
 //               {showShiftDetails && (
 //                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-//                   <div><label className="block mb-1 text-sm">Start Time</label><input type="time" value={shiftStartTime} readOnly className="w-full p-2.5 border rounded-lg bg-[#000000]" /></div>
-//                   <div><label className="block mb-1 text-sm">End Time</label><input type="time" value={shiftEndTime} readOnly className="w-full p-2.5 border rounded-lg bg-[#000000]" /></div>
+//                   <div><label className="block mb-1 text-sm">Start Time</label><input type="time" value={shiftStartTime} readOnly className="w-full p-2.5 border rounded-lg bg-gray-50" /></div>
+//                   <div><label className="block mb-1 text-sm">End Time</label><input type="time" value={shiftEndTime} readOnly className="w-full p-2.5 border rounded-lg bg-gray-50" /></div>
 //                 </div>
 //               )}
 //               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //                 <div><label className="block mb-1 text-sm">Week Off Day</label><select value={weekOffDay} onChange={(e) => setWeekOffDay(e.target.value)} className="w-full p-2.5 border rounded-lg"><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div>
 //                 <div><label className="block mb-1 text-sm">Week Offs per Month *</label><input type="number" value={weekOffsPerMonth} onChange={(e) => setWeekOffsPerMonth(e.target.value)} min="0" max="30" className="w-full p-2.5 border rounded-lg" required /></div>
-//                 <div><label className="block mb-1 text-sm">Monthly Salary (Net)</label><input type="number" value={netSalary} readOnly className="w-full p-2.5 border rounded-lg bg-[#000000]" /></div>
+//                 <div><label className="block mb-1 text-sm">Monthly Salary (Net)</label><input type="number" value={netSalary} readOnly className="w-full p-2.5 border rounded-lg bg-gray-50" /></div>
 //                 <div><label className="block mb-1 text-sm">Annual CTC (Yearly)</label><input type="number" value={ctc} onChange={(e) => setCtc(e.target.value)} className="w-full p-2.5 border rounded-lg" placeholder="e.g. 500000" /></div>
 //               </div>
 //               <div>
@@ -8240,7 +8240,7 @@
 //       {/* MODALS */}
 //       {showShiftModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Create New Shift</h3><button onClick={() => setShowShiftModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateCustomShift} className="p-4 space-y-4">
 //               <div className="grid grid-cols-2 gap-3"><input type="text" placeholder="Shift Type (A-Z)" value={createShiftForm.shiftType} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftType: e.target.value.toUpperCase() }))} className="p-2 border rounded" required /><input type="text" placeholder="Shift Name" value={createShiftForm.shiftName} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftName: e.target.value }))} className="p-2 border rounded" required /></div>
@@ -8254,7 +8254,7 @@
 
 //       {showDeptModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Department</h3><button onClick={() => setShowDeptModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateDepartment} className="p-4 space-y-4">
 //               <input type="text" placeholder="Department Name" value={deptForm.name} onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
@@ -8267,7 +8267,7 @@
 
 //       {showRoleModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Role</h3><button onClick={() => setShowRoleModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateRole} className="p-4 space-y-4">
 //               <input type="text" placeholder="Role Name" value={roleForm.name} onChange={(e) => setRoleForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
@@ -8280,7 +8280,7 @@
 
 //       {showLocationModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-2xl bg-[#0a0a0a] rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+//           <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Location</h3><button onClick={() => setShowLocationModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateLocation} className="p-4 space-y-4">
 //               <input type="text" placeholder="Location Name" value={locationForm.name} onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
@@ -8989,12 +8989,12 @@
 
 //   return (
 //     <div className="max-w-7xl p-4 mx-auto">
-//       <div className="p-6 bg-[#0a0a0a] shadow-lg rounded-xl">
+//       <div className="p-6 bg-white shadow-lg rounded-xl">
 //         <div className="mb-6">
-//           <h2 className="text-2xl font-bold text-gray-300">
+//           <h2 className="text-2xl font-bold text-gray-700">
 //             {editingEmployee ? "Edit Employee" : "Add New Employee"}
 //           </h2>
-//           <p className="mt-1 text-sm text-gray-400">Fill all employee details below</p>
+//           <p className="mt-1 text-sm text-gray-500">Fill all employee details below</p>
 //         </div>
 
 //         {successMessage && (
@@ -9048,14 +9048,14 @@
 //                   <label className="block mb-1 text-sm font-medium">Password {!editingEmployee && !employeeFound && "*"}</label>
 //                   <div className="relative">
 //                     <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2.5 pr-10 border rounded-lg" placeholder={editingEmployee || employeeFound ? "Keep blank for no change" : "Enter password"} required={!editingEmployee && !employeeFound} />
-//                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-400">{showPassword ? <FaEyeSlash /> : <FaEye />}</button>
+//                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-500">{showPassword ? <FaEyeSlash /> : <FaEye />}</button>
 //                   </div>
 //                 </div>
 //                 <div><label className="block mb-1 text-sm font-medium">Date of Birth</label><input type="date" value={dob} onChange={(e) => setDob(e.target.value)} max={getCurrentDate()} className="w-full p-2.5 border rounded-lg" /></div>
 //               </div>
 
 //               <div>
-//                 <h4 className="mb-2 font-semibold text-gray-300"><FaMapMarkerAlt className="inline mr-1" /> Address</h4>
+//                 <h4 className="mb-2 font-semibold text-gray-700"><FaMapMarkerAlt className="inline mr-1" /> Address</h4>
 //                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-3">
 //                   <div><label className="block mb-1 text-sm">Address Line 1 *</label><input value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} className="w-full p-2.5 border rounded-lg" required /></div>
 //                   <div><label className="block mb-1 text-sm">Address Line 2</label><input value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} className="w-full p-2.5 border rounded-lg" /></div>
@@ -9149,7 +9149,7 @@
 //                   </div>
 //                 </div>
 //               </div>
-//               <div className="bg-[#000000] p-3 rounded-lg border mt-3">
+//               <div className="bg-gray-50 p-3 rounded-lg border mt-3">
 //                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
 //                   <div><label className="font-semibold">Total Earnings</label><div className="text-lg">₹{totalEarnings.toLocaleString()}</div></div>
 //                   <div><label className="font-semibold">Total Deductions</label><div className="text-lg text-red-600">₹{totalDeductions.toLocaleString()}</div></div>
@@ -9182,7 +9182,7 @@
 //           <div className="border rounded-lg overflow-hidden">
 //             <div className="bg-red-50 px-4 py-3 border-b">
 //               <h3 className="text-lg font-semibold text-red-800">
-//                 <FaCalendarAlt className="inline mr-2 text-white" /> 5. HR & Leave Policy
+//                 <FaCalendarAlt className="inline mr-2 text-gray-500" /> 5. HR & Leave Policy
 //               </h3>
 //             </div>
 //             <div className="p-4 space-y-4">
@@ -9193,21 +9193,21 @@
 //               {showShiftDetails && shiftTimeSlots && shiftTimeSlots.length > 0 && (
 //                 <div className="space-y-3">
 //                   {shiftTimeSlots.map((slot, index) => (
-//                     <div key={index} className="grid grid-cols-1 gap-4 md:grid-cols-3 bg-[#000000] p-3 rounded-lg border">
+//                     <div key={index} className="grid grid-cols-1 gap-4 md:grid-cols-3 bg-gray-50 p-3 rounded-lg border">
 //                       <div className="col-span-1 md:col-span-3 text-xs font-semibold text-gray-500 uppercase">
 //                         {slot.description || `Time Slot ${index + 1}`}
 //                       </div>
 //                       <div>
 //                         <label className="block mb-1 text-sm">Start Time</label>
-//                         <input type="time" value={slot.timeRange.split(/[-]| to /i)[0]?.trim().match(/(\d+):(\d+)/) ? slot.timeRange.split(/[-]| to /i)[0].trim() : ''} readOnly className="w-full p-2.5 border rounded-lg bg-[#111111]" />
+//                         <input type="time" value={slot.timeRange.split(/[-]| to /i)[0]?.trim().match(/(\d+):(\d+)/) ? slot.timeRange.split(/[-]| to /i)[0].trim() : ''} readOnly className="w-full p-2.5 border rounded-lg bg-gray-100" />
 //                       </div>
 //                       <div>
 //                         <label className="block mb-1 text-sm">End Time</label>
-//                         <input type="time" value={slot.timeRange.split(/[-]| to /i)[1]?.trim().match(/(\d+):(\d+)/) ? slot.timeRange.split(/[-]| to /i)[1].trim() : ''} readOnly className="w-full p-2.5 border rounded-lg bg-[#111111]" />
+//                         <input type="time" value={slot.timeRange.split(/[-]| to /i)[1]?.trim().match(/(\d+):(\d+)/) ? slot.timeRange.split(/[-]| to /i)[1].trim() : ''} readOnly className="w-full p-2.5 border rounded-lg bg-gray-100" />
 //                       </div>
 //                       <div>
 //                         <label className="block mb-1 text-sm">Time Range (Text)</label>
-//                         <input type="text" value={slot.timeRange} readOnly className="w-full p-2.5 border rounded-lg bg-[#111111]" />
+//                         <input type="text" value={slot.timeRange} readOnly className="w-full p-2.5 border rounded-lg bg-gray-100" />
 //                       </div>
 //                     </div>
 //                   ))}
@@ -9216,7 +9216,7 @@
 //               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //                 <div><label className="block mb-1 text-sm">Week Off Day</label><select value={weekOffDay} onChange={(e) => setWeekOffDay(e.target.value)} className="w-full p-2.5 border rounded-lg"><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div>
 //                 <div><label className="block mb-1 text-sm">Week Offs per Month *</label><input type="number" value={weekOffsPerMonth} onChange={(e) => setWeekOffsPerMonth(e.target.value)} min="0" max="30" className="w-full p-2.5 border rounded-lg" required /></div>
-//                 <div><label className="block mb-1 text-sm">Monthly Salary (Net)</label><input type="number" value={netSalary} readOnly className="w-full p-2.5 border rounded-lg bg-[#000000]" /></div>
+//                 <div><label className="block mb-1 text-sm">Monthly Salary (Net)</label><input type="number" value={netSalary} readOnly className="w-full p-2.5 border rounded-lg bg-gray-50" /></div>
 //                 <div><label className="block mb-1 text-sm">Annual CTC (Yearly)</label><input type="number" value={ctc} onChange={(e) => setCtc(e.target.value)} className="w-full p-2.5 border rounded-lg" placeholder="e.g. 500000" /></div>
 //               </div>
 //               <div>
@@ -9297,11 +9297,11 @@
 //                     <p className="text-sm font-semibold text-indigo-800 mb-2">📊 Increment Preview:</p>
 //                     <div className="grid grid-cols-2 gap-3 text-sm">
 //                       <div>
-//                         <span className="text-gray-400">Current Salary:</span>
-//                         <p className="font-bold text-gray-300">₹{netSalary.toLocaleString()}</p>
+//                         <span className="text-gray-500">Current Salary:</span>
+//                         <p className="font-bold text-gray-700">₹{netSalary.toLocaleString()}</p>
 //                       </div>
 //                       <div>
-//                         <span className="text-gray-400">Increment:</span>
+//                         <span className="text-gray-500">Increment:</span>
 //                         <p className="font-bold text-green-600">
 //                           {incrementType === 'percentage' 
 //                             ? `${incrementValue}%`
@@ -9310,11 +9310,11 @@
 //                         </p>
 //                       </div>
 //                       <div>
-//                         <span className="text-gray-400">Effective From:</span>
+//                         <span className="text-gray-500">Effective From:</span>
 //                         <p className="font-medium">{new Date(incrementEffectiveDate).toLocaleDateString()}</p>
 //                       </div>
 //                       <div>
-//                         <span className="text-gray-400">New Salary:</span>
+//                         <span className="text-gray-500">New Salary:</span>
 //                         <p className="font-bold text-green-700 text-lg">
 //                           ₹{incrementType === 'percentage' 
 //                             ? Math.round(netSalary * (1 + incrementValue/100)).toLocaleString()
@@ -9336,7 +9336,7 @@
 //                   Apply Increment
 //                 </button>
                 
-//                 <div className="text-xs text-gray-500 bg-[#000000] p-2 rounded-lg">
+//                 <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg">
 //                   <p className="font-medium">ℹ️ Note:</p>
 //                   <ul className="list-disc list-inside space-y-0.5 mt-1">
 //                     <li>Increment will be effective from the selected date</li>
@@ -9361,7 +9361,7 @@
 //       {/* MODALS */}
 //       {showShiftModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Create New Shift</h3><button onClick={() => setShowShiftModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateCustomShift} className="p-4 space-y-4">
 //               <div className="grid grid-cols-2 gap-3"><input type="text" placeholder="Shift Type (A-Z)" value={createShiftForm.shiftType} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftType: e.target.value.toUpperCase() }))} className="p-2 border rounded" required /><input type="text" placeholder="Shift Name" value={createShiftForm.shiftName} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftName: e.target.value }))} className="p-2 border rounded" required /></div>
@@ -9375,7 +9375,7 @@
 
 //       {showDeptModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Department</h3><button onClick={() => setShowDeptModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateDepartment} className="p-4 space-y-4">
 //               <input type="text" placeholder="Department Name" value={deptForm.name} onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
@@ -9388,7 +9388,7 @@
 
 //       {showRoleModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Role</h3><button onClick={() => setShowRoleModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateRole} className="p-4 space-y-4">
 //               <input type="text" placeholder="Role Name" value={roleForm.name} onChange={(e) => setRoleForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
@@ -9401,7 +9401,7 @@
 
 //       {showLocationModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-2xl bg-[#0a0a0a] rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+//           <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Location</h3><button onClick={() => setShowLocationModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateLocation} className="p-4 space-y-4">
 //               <input type="text" placeholder="Location Name" value={locationForm.name} onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
@@ -10140,12 +10140,12 @@
 
 //   return (
 //     <div className="max-w-7xl p-4 mx-auto">
-//       <div className="p-6 bg-[#0a0a0a] shadow-lg rounded-xl">
+//       <div className="p-6 bg-white shadow-lg rounded-xl">
 //         <div className="mb-6">
-//           <h2 className="text-2xl font-bold text-gray-300">
+//           <h2 className="text-2xl font-bold text-gray-700">
 //             {editingEmployee ? "Edit Employee" : "Add New Employee"}
 //           </h2>
-//           <p className="mt-1 text-sm text-gray-400">Fill all employee details below</p>
+//           <p className="mt-1 text-sm text-gray-500">Fill all employee details below</p>
 //         </div>
 
 //         {successMessage && (
@@ -10199,14 +10199,14 @@
 //                   <label className="block mb-1 text-sm font-medium">Password {!editingEmployee && !employeeFound && "*"}</label>
 //                   <div className="relative">
 //                     <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2.5 pr-10 border rounded-lg" placeholder={editingEmployee || employeeFound ? "Keep blank for no change" : "Enter password"} required={!editingEmployee && !employeeFound} />
-//                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-400">{showPassword ? <FaEyeSlash /> : <FaEye />}</button>
+//                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-500">{showPassword ? <FaEyeSlash /> : <FaEye />}</button>
 //                   </div>
 //                 </div>
 //                 <div><label className="block mb-1 text-sm font-medium">Date of Birth</label><input type="date" value={dob} onChange={(e) => setDob(e.target.value)} max={getCurrentDate()} className="w-full p-2.5 border rounded-lg" /></div>
 //               </div>
 
 //               <div>
-//                 <h4 className="mb-2 font-semibold text-gray-300"><FaMapMarkerAlt className="inline mr-1" /> Address</h4>
+//                 <h4 className="mb-2 font-semibold text-gray-700"><FaMapMarkerAlt className="inline mr-1" /> Address</h4>
 //                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-3">
 //                   <div><label className="block mb-1 text-sm">Address Line 1 *</label><input value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} className="w-full p-2.5 border rounded-lg" required /></div>
 //                   <div><label className="block mb-1 text-sm">Address Line 2</label><input value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} className="w-full p-2.5 border rounded-lg" /></div>
@@ -10300,7 +10300,7 @@
 //                   </div>
 //                 </div>
 //               </div>
-//               <div className="bg-[#000000] p-3 rounded-lg border mt-3">
+//               <div className="bg-gray-50 p-3 rounded-lg border mt-3">
 //                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
 //                   <div><label className="font-semibold">Total Earnings</label><div className="text-lg">₹{totalEarnings.toLocaleString()}</div></div>
 //                   <div><label className="font-semibold">Total Deductions</label><div className="text-lg text-red-600">₹{totalDeductions.toLocaleString()}</div></div>
@@ -10333,7 +10333,7 @@
 //           <div className="border rounded-lg overflow-hidden">
 //             <div className="bg-red-50 px-4 py-3 border-b">
 //               <h3 className="text-lg font-semibold text-red-800">
-//                 <FaCalendarAlt className="inline mr-2 text-white" /> 5. HR & Leave Policy
+//                 <FaCalendarAlt className="inline mr-2 text-gray-500" /> 5. HR & Leave Policy
 //               </h3>
 //             </div>
 //             <div className="p-4 space-y-4">
@@ -10361,8 +10361,8 @@
 //               {/* Shift Details Display */}
 //               {showShiftDetails && selectedShift && (
 //                 <div className="border rounded-lg overflow-hidden bg-gradient-to-r from-gray-50 to-white">
-//                   <div className="bg-[#111111] px-3 py-2 border-b">
-//                     <h4 className="text-sm font-semibold text-gray-300">Shift Details</h4>
+//                   <div className="bg-gray-100 px-3 py-2 border-b">
+//                     <h4 className="text-sm font-semibold text-gray-700">Shift Details</h4>
 //                   </div>
 //                   <div className="p-3">
 //                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -10383,7 +10383,7 @@
 //                       <p className="text-xs text-gray-500 mb-1">Time Slots</p>
 //                       <div className="space-y-2">
 //                         {shiftTimeSlots.map((slot, idx) => (
-//                           <div key={idx} className="bg-[#000000] p-2 rounded border">
+//                           <div key={idx} className="bg-gray-50 p-2 rounded border">
 //                             <div className="grid grid-cols-3 gap-2 text-xs">
 //                               <div>
 //                                 <span className="text-gray-500">Time:</span>
@@ -10419,7 +10419,7 @@
 //               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //                 <div><label className="block mb-1 text-sm">Week Off Day</label><select value={weekOffDay} onChange={(e) => setWeekOffDay(e.target.value)} className="w-full p-2.5 border rounded-lg"><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div>
 //                 <div><label className="block mb-1 text-sm">Week Offs per Month *</label><input type="number" value={weekOffsPerMonth} onChange={(e) => setWeekOffsPerMonth(e.target.value)} min="0" max="30" className="w-full p-2.5 border rounded-lg" required /></div>
-//                 <div><label className="block mb-1 text-sm">Monthly Salary (Net)</label><input type="number" value={netSalary} readOnly className="w-full p-2.5 border rounded-lg bg-[#000000]" /></div>
+//                 <div><label className="block mb-1 text-sm">Monthly Salary (Net)</label><input type="number" value={netSalary} readOnly className="w-full p-2.5 border rounded-lg bg-gray-50" /></div>
 //                 <div><label className="block mb-1 text-sm">Annual CTC (Yearly)</label><input type="number" value={ctc} onChange={(e) => setCtc(e.target.value)} className="w-full p-2.5 border rounded-lg" placeholder="e.g. 500000" /></div>
 //               </div>
 //               <div>
@@ -10500,11 +10500,11 @@
 //                     <p className="text-sm font-semibold text-indigo-800 mb-2">📊 Increment Preview:</p>
 //                     <div className="grid grid-cols-2 gap-3 text-sm">
 //                       <div>
-//                         <span className="text-gray-400">Current Salary:</span>
-//                         <p className="font-bold text-gray-300">₹{netSalary.toLocaleString()}</p>
+//                         <span className="text-gray-500">Current Salary:</span>
+//                         <p className="font-bold text-gray-700">₹{netSalary.toLocaleString()}</p>
 //                       </div>
 //                       <div>
-//                         <span className="text-gray-400">Increment:</span>
+//                         <span className="text-gray-500">Increment:</span>
 //                         <p className="font-bold text-green-600">
 //                           {incrementType === 'percentage' 
 //                             ? `${incrementValue}%`
@@ -10513,11 +10513,11 @@
 //                         </p>
 //                       </div>
 //                       <div>
-//                         <span className="text-gray-400">Effective From:</span>
+//                         <span className="text-gray-500">Effective From:</span>
 //                         <p className="font-medium">{new Date(incrementEffectiveDate).toLocaleDateString()}</p>
 //                       </div>
 //                       <div>
-//                         <span className="text-gray-400">New Salary:</span>
+//                         <span className="text-gray-500">New Salary:</span>
 //                         <p className="font-bold text-green-700 text-lg">
 //                           ₹{incrementType === 'percentage' 
 //                             ? Math.round(netSalary * (1 + incrementValue/100)).toLocaleString()
@@ -10539,7 +10539,7 @@
 //                   Apply Increment
 //                 </button>
                 
-//                 <div className="text-xs text-gray-500 bg-[#000000] p-2 rounded-lg">
+//                 <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg">
 //                   <p className="font-medium">ℹ️ Note:</p>
 //                   <ul className="list-disc list-inside space-y-0.5 mt-1">
 //                     <li>Increment will be effective from the selected date</li>
@@ -10564,7 +10564,7 @@
 //       {/* MODALS */}
 //       {showShiftModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Create New Shift</h3><button onClick={() => setShowShiftModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateCustomShift} className="p-4 space-y-4">
 //               <div className="grid grid-cols-2 gap-3"><input type="text" placeholder="Shift Type (A-Z)" value={createShiftForm.shiftType} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftType: e.target.value.toUpperCase() }))} className="p-2 border rounded" required /><input type="text" placeholder="Shift Name" value={createShiftForm.shiftName} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftName: e.target.value }))} className="p-2 border rounded" required /></div>
@@ -10578,7 +10578,7 @@
 
 //       {showDeptModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Department</h3><button onClick={() => setShowDeptModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateDepartment} className="p-4 space-y-4">
 //               <input type="text" placeholder="Department Name" value={deptForm.name} onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
@@ -10591,7 +10591,7 @@
 
 //       {showRoleModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-md bg-[#0a0a0a] rounded-lg shadow-xl">
+//           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Role</h3><button onClick={() => setShowRoleModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateRole} className="p-4 space-y-4">
 //               <input type="text" placeholder="Role Name" value={roleForm.name} onChange={(e) => setRoleForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
@@ -10604,7 +10604,7 @@
 
 //       {showLocationModal && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="w-full max-w-2xl bg-[#0a0a0a] rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+//           <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Location</h3><button onClick={() => setShowLocationModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateLocation} className="p-4 space-y-4">
 //               <input type="text" placeholder="Location Name" value={locationForm.name} onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
@@ -11393,7 +11393,7 @@ const AddEmployeePage = () => {
                   <label className="block mb-1 text-sm font-medium text-gray-700">Password {!editingEmployee && !employeeFound && "*"}</label>
                   <div className="relative">
                     <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2.5 pr-10 border rounded-lg text-gray-800" placeholder={editingEmployee || employeeFound ? "Keep blank for no change" : "Enter password"} required={!editingEmployee && !employeeFound} />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-400">{showPassword ? <FaEyeSlash /> : <FaEye />}</button>
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-500">{showPassword ? <FaEyeSlash /> : <FaEye />}</button>
                   </div>
                 </div>
                 <div><label className="block mb-1 text-sm font-medium text-gray-700">Date of Birth</label><input type="date" value={dob} onChange={(e) => setDob(e.target.value)} max={getCurrentDate()} className="w-full p-2.5 border rounded-lg text-gray-800" /></div>
@@ -11527,7 +11527,7 @@ const AddEmployeePage = () => {
           <div className="border rounded-lg overflow-hidden">
             <div className="bg-red-50 px-4 py-3 border-b">
               <h3 className="text-lg font-semibold text-red-800">
-                <FaCalendarAlt className="inline mr-2 text-white" /> 5. HR & Leave Policy
+                <FaCalendarAlt className="inline mr-2 text-gray-500" /> 5. HR & Leave Policy
               </h3>
             </div>
             <div className="p-4 space-y-4">

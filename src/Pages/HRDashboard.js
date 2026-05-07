@@ -35,29 +35,29 @@ const HRDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-[#000000]">
+    <div className="min-h-screen p-6 bg-gray-50">
       <div className="mb-4">
-        <div className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-bold inline-block">
+        <div className="bg-purple-600 text-gray-900 px-3 py-1 rounded-full text-xs font-bold inline-block">
           HR DASHBOARD
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-[#0a0a0a] p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-gray-500">Total Employees</h3>
           <p className="text-2xl font-bold">{stats.totalEmployees}</p>
         </div>
-        <div className="bg-[#0a0a0a] p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-gray-500">Present Today</h3>
           <p className="text-2xl font-bold text-green-600">{stats.presentToday}</p>
         </div>
-        <div className="bg-[#0a0a0a] p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-gray-500">Pending Leaves</h3>
           <p className="text-2xl font-bold text-orange-600">{stats.pendingLeaves}</p>
         </div>
       </div>
 
-      <div className="bg-[#0a0a0a] p-6 rounded-lg shadow">
+      <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-lg font-semibold mb-4">Employee List</h3>
         <table className="w-full">
           <thead>

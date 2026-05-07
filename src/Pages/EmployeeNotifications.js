@@ -83,7 +83,7 @@ const EmployeeNotifications = () => {
   return (
     <div className="max-w-4xl mx-auto p-4 lg:p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-300 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-700 flex items-center gap-2">
           <MdNotificationsActive className="text-blue-600" />
           My Notifications
         </h1>
@@ -105,7 +105,7 @@ const EmployeeNotifications = () => {
               onClick={() => !notif.isRead && markAsRead(notif._id)}
               className={`relative flex gap-3 p-3 rounded-lg transition-all border cursor-pointer
                 ${notif.isRead
-                  ? "bg-[#0a0a0a] border-[#1f2937]"
+                  ? "bg-white border-gray-200"
                   : "bg-blue-50/50 border-blue-100 hover:bg-blue-50"
                 } shadow-sm hover:shadow-md`}
             >
@@ -114,19 +114,19 @@ const EmployeeNotifications = () => {
                 <div className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full bg-blue-600"></div>
               )}
 
-              <div className="flex-shrink-0 mt-0.5 text-lg p-1.5 bg-[#0a0a0a] rounded-md shadow-sm h-fit">
+              <div className="flex-shrink-0 mt-0.5 text-lg p-1.5 bg-white rounded-md shadow-sm h-fit">
                 {iconMap[notif.type] || iconMap.default}
               </div>
 
               <div className="flex-1">
-                <h3 className={`text-sm font-semibold mb-0.5 ${notif.isRead ? 'text-gray-300' : 'text-gray-200'}`}>
+                <h3 className={`text-sm font-semibold mb-0.5 ${notif.isRead ? 'text-gray-700' : 'text-gray-900'}`}>
                   {notif.title}
                 </h3>
-                <p className="text-xs text-gray-400 leading-snug mb-1.5">
+                <p className="text-xs text-gray-500 leading-snug mb-1.5">
                   {notif.message}
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-gray-400 font-medium bg-[#000000] px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] text-gray-500 font-medium bg-gray-50 px-1.5 py-0.5 rounded">
                     {new Date(notif.createdAt).toLocaleString()}
                   </span>
                   {notif.type === 'shift' && (
@@ -140,11 +140,11 @@ const EmployeeNotifications = () => {
             </div>
           ))
         ) : (
-          <div className="text-center py-12 bg-[#0a0a0a] rounded-2xl border border-dashed border-[#1f2937]">
-            <div className="bg-[#000000] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400 text-2xl">
+          <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-200">
+            <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-500 text-2xl">
               <MdNotificationsActive />
             </div>
-            <h3 className="text-gray-200 font-semibold mb-1">No notifications yet</h3>
+            <h3 className="text-gray-900 font-semibold mb-1">No notifications yet</h3>
             <p className="text-gray-500 text-sm">We'll notify you when something important happens.</p>
           </div>
         )}

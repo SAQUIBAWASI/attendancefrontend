@@ -56,10 +56,10 @@ const PendingAttendance = () => {
   if (loading) return <div className="p-10 text-center font-medium text-blue-600 animate-pulse">Loading Pending Requests...</div>;
 
   return (
-    <div className="p-6 bg-[#0a0a0a] rounded-2xl shadow-sm border border-[#1f2937] max-w-6xl mx-auto mt-8">
+    <div className="p-6 bg-white rounded-2xl shadow-sm border border-gray-200 max-w-6xl mx-auto mt-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-black text-gray-300 tracking-tight">Pending Approval Queue</h2>
+          <h2 className="text-2xl font-black text-gray-700 tracking-tight">Pending Approval Queue</h2>
           <p className="text-sm text-gray-500">Review and action employee leave & attendance requests</p>
         </div>
         <div className="px-4 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-100 uppercase tracking-widest">
@@ -67,9 +67,9 @@ const PendingAttendance = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-[#1f2937]">
+      <div className="overflow-x-auto rounded-xl border border-gray-200">
         <table className="w-full text-sm text-left">
-          <thead className="text-xs text-gray-400 uppercase bg-[#000000]/50 font-bold border-b border-[#1f2937]">
+          <thead className="text-xs text-gray-500 uppercase bg-gray-50/50 font-bold border-b border-gray-200">
             <tr>
               <th className="px-6 py-4">Employee</th>
               <th className="px-6 py-4">Request Type</th>
@@ -82,10 +82,10 @@ const PendingAttendance = () => {
           <tbody className="divide-y divide-gray-50">
             {requests.length > 0 ? (
               requests.map((rec) => (
-                <tr key={rec._id} className="hover:bg-[#000000]/50 transition-colors group">
+                <tr key={rec._id} className="hover:bg-gray-50/50 transition-colors group">
                   <td className="px-6 py-4">
-                    <div className="font-bold text-gray-300">{rec.employeeName}</div>
-                    <div className="text-[10px] text-gray-400 font-mono tracking-tighter">{rec.employeeId}</div>
+                    <div className="font-bold text-gray-700">{rec.employeeName}</div>
+                    <div className="text-[10px] text-gray-500 font-mono tracking-tighter">{rec.employeeId}</div>
                   </td>
                   <td className="px-6 py-4">
                     <span className="px-2 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase rounded border border-indigo-100">
@@ -95,7 +95,7 @@ const PendingAttendance = () => {
                   <td className="px-6 py-4 text-gray-500">
                     <div className="flex flex-col">
                       <span>{new Date(rec.startDate).toLocaleDateString()}</span>
-                      <span className="text-[10px] text-gray-300">to {new Date(rec.endDate).toLocaleDateString()}</span>
+                      <span className="text-[10px] text-gray-700">to {new Date(rec.endDate).toLocaleDateString()}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center font-black text-blue-600">{rec.days}</td>
@@ -107,7 +107,7 @@ const PendingAttendance = () => {
                       <button
                         title="Approve"
                         onClick={() => updateRequestStatus(rec._id, "Approved")}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
                       >
                         <FaCheckCircle />
                       </button>
@@ -131,7 +131,7 @@ const PendingAttendance = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="px-6 py-12 text-center text-gray-400 italic">
+                <td colSpan="6" className="px-6 py-12 text-center text-gray-500 italic">
                   No pending requests found in the queue.
                 </td>
               </tr>

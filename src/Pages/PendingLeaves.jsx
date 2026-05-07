@@ -306,7 +306,7 @@ const PendingLeaves = () => {
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
         <div className="text-center">
           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div>
-          <p className="font-semibold text-gray-400">
+          <p className="font-semibold text-gray-500">
             Loading pending requests...
           </p>
         </div>
@@ -334,24 +334,24 @@ const PendingLeaves = () => {
 
 
         {/* Filters Section */}
-        <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
+        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
 
             {/* Title / Back Indicator */}
-            <div className="flex items-center gap-2 pr-4 border-r border-[#1f2937] mr-2">
+            <div className="flex items-center gap-2 pr-4 border-r border-gray-200 mr-2">
                 <FiClock className="text-xl text-yellow-600" />
-                <h1 className="text-sm font-bold tracking-widest text-gray-300 uppercase">{isManager ? "Pending" : "Manager Approved"}</h1>
+                <h1 className="text-sm font-bold tracking-widest text-gray-700 uppercase">{isManager ? "Pending" : "Manager Approved"}</h1>
             </div>
 
             {/* ID/Name Search */}
             <div className="relative flex-1 min-w-[180px]">
-              <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="text"
                 placeholder="Search by ID or Name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -359,7 +359,7 @@ const PendingLeaves = () => {
             <select
               value={leaveTypeFilter}
               onChange={(e) => setLeaveTypeFilter(e.target.value)}
-              className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
+              className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
             >
               <option value="all">All Types</option>
               <option value="sick">Sick Leave</option>
@@ -372,7 +372,7 @@ const PendingLeaves = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[120px]"
+              className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[120px]"
             >
               <option value="all">All Statuses</option>
               <option value="pending">Pending</option>
@@ -387,7 +387,7 @@ const PendingLeaves = () => {
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                   }`}
               >
                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
@@ -395,13 +395,13 @@ const PendingLeaves = () => {
 
               {/* Department Filter Dropdown */}
               {showDepartmentFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
                   <div
                     onClick={() => {
                       setFilterDepartment('');
                       setShowDepartmentFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
                   >
                     All Departments
                   </div>
@@ -428,7 +428,7 @@ const PendingLeaves = () => {
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                   }`}
               >
                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
@@ -436,13 +436,13 @@ const PendingLeaves = () => {
 
               {/* Designation Filter Dropdown */}
               {showDesignationFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
                   <div
                     onClick={() => {
                       setFilterDesignation('');
                       setShowDesignationFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
                   >
                     All Designations
                   </div>
@@ -473,7 +473,7 @@ const PendingLeaves = () => {
                 value={startDateFilter}
                 onChange={(e) => setStartDateFilter(e.target.value)}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-12 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -487,7 +487,7 @@ const PendingLeaves = () => {
                 value={endDateFilter}
                 onChange={(e) => setEndDateFilter(e.target.value)}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-10 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -495,7 +495,7 @@ const PendingLeaves = () => {
             {(searchTerm || filterDepartment || filterDesignation || leaveTypeFilter !== "all" || startDateFilter || endDateFilter) && (
               <button
                 onClick={clearFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
+                className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
               >
                 Clear
               </button>
@@ -514,8 +514,8 @@ const PendingLeaves = () => {
         </div>
 
         {/* ✅ Table */}
-        <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
-          <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+        <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
               <thead className="text-sm text-left text-white bg-gradient-to-r from-yellow-500 to-amber-600">
                 <tr>
@@ -537,26 +537,26 @@ const PendingLeaves = () => {
                     return (
                       <tr
                         key={l._id}
-                        className="transition border-b hover:bg-[#000000]"
+                        className="transition border-b hover:bg-gray-50"
                       >
-                        <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           {l.employeeId || "N/A"}
                         </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           <div className="font-medium">{l.employeeName}</div>
                         </td>
-                        <td className="px-2 py-2 text-center text-gray-400 ">
+                        <td className="px-2 py-2 text-center text-gray-500 ">
                           {empDetails.department}
                         </td>
-                        <td className="px-2 py-2 text-center text-gray-400 ">
+                        <td className="px-2 py-2 text-center text-gray-500 ">
                           {empDetails.designation}
                         </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           {new Date(l.startDate).toLocaleDateString()} <br />
-                          <span className="text-xs text-gray-400">to</span> <br />
+                          <span className="text-xs text-gray-500">to</span> <br />
                           {new Date(l.endDate).toLocaleDateString()}
                         </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           <span className="px-2 py-2 text-xs text-center text-blue-700 bg-blue-100 rounded-full">
                             {l.days} {l.days === 1 ? 'day' : 'days'}
                           </span>
@@ -564,12 +564,12 @@ const PendingLeaves = () => {
                         <td className="max-w-xs px-2 py-2 font-medium text-center text-gray-500 truncate whitespace-nowrap">
                           {l.reason}
                         </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           <span className={`px-2 py-2 text-xs text-center rounded-full ${l.status === 'manager_approved' ? 'text-blue-700 bg-blue-100' : 'text-yellow-700 bg-yellow-100'}`}>
                             ⏳ {l.status === 'manager_approved' ? 'Manager Approved' : 'Pending'}
                           </span>
                         </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           <div className="flex justify-center gap-2">
                             <button
                               onClick={() => updateLeaveStatus(l._id, isManager ? "manager_approved" : "approved")}
@@ -605,7 +605,7 @@ const PendingLeaves = () => {
           <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
-                <label className="font-medium text-gray-300 ">
+                <label className="font-medium text-gray-700 ">
                   Show:
                 </label>
                 <select
@@ -618,7 +618,7 @@ const PendingLeaves = () => {
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                 </select>
-                <span className="text-sm text-gray-400">entries</span>
+                <span className="text-sm text-gray-500">entries</span>
               </div>
             </div>
 
@@ -627,8 +627,8 @@ const PendingLeaves = () => {
                 onClick={handlePrevPage}
                 disabled={currentPage === 1}
                 className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
-                    ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-                    : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
+                    ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+                    : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
                   }`}
               >
                 Previous
@@ -640,10 +640,10 @@ const PendingLeaves = () => {
                   onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                   disabled={page === "..."}
                   className={`px-4 py-1 text-sm border rounded-lg ${page === "..."
-                      ? "text-gray-500 bg-[#000000] cursor-default"
+                      ? "text-gray-500 bg-gray-50 cursor-default"
                       : currentPage === page
                         ? "text-white bg-blue-600 border-blue-600"
-                        : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+                        : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                     }`}
                 >
                   {page}
@@ -654,8 +654,8 @@ const PendingLeaves = () => {
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
                 className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
-                    ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-                    : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+                    ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+                    : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                   }`}
               >
                 Next

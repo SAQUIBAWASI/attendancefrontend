@@ -238,18 +238,18 @@ const CreateCoupon = () => {
   };
 
   return (
-    <div className="p-6 min-h-screen bg-[#000000]">
+    <div className="p-6 min-h-screen bg-gray-50">
       <h1 className="text-2xl font-semibold text-center mb-6 text-blue-900 mt-10">Create Coupons</h1>
 
       {/* Mode selector */}
       <div className="flex justify-center mb-6">
-        <div className="bg-[#0a0a0a] p-1 rounded-md shadow-sm">
+        <div className="bg-white p-1 rounded-md shadow-sm">
           <button
             type="button"
             className={`px-4 py-2 rounded-md text-sm font-medium ${
               creationMode === "single" 
                 ? "bg-purple-900 text-white" 
-                : "text-gray-300 hover:bg-[#111111]"
+                : "text-gray-700 hover:bg-gray-100"
             }`}
             onClick={() => setCreationMode("single")}
           >
@@ -260,7 +260,7 @@ const CreateCoupon = () => {
             className={`px-4 py-2 rounded-md text-sm font-medium ${
               creationMode === "bulk" 
                 ? "bg-purple-900 text-white" 
-                : "text-gray-300 hover:bg-[#111111]"
+                : "text-gray-700 hover:bg-gray-100"
             }`}
             onClick={() => setCreationMode("bulk")}
           >
@@ -271,17 +271,17 @@ const CreateCoupon = () => {
 
       <form
         onSubmit={creationMode === "single" ? handleAddCoupon : handleBulkCreate}
-        className="bg-[#0a0a0a] p-6 rounded-md shadow-md max-w-4xl mx-auto"
+        className="bg-white p-6 rounded-md shadow-md max-w-4xl mx-auto"
         encType="multipart/form-data"
       >
-        <h2 className="text-lg font-semibold mb-4 text-gray-300 flex items-center gap-2">
+        <h2 className="text-lg font-semibold mb-4 text-gray-700 flex items-center gap-2">
           {creationMode === "single" ? <FaPlus /> : <FaCopy />} 
           {creationMode === "single" ? "Add Coupon" : "Bulk Create Coupons"}
         </h2>
 
         {/* Vendor Dropdown */}
         <div className="mb-4">
-          <label className="block mb-1 text-gray-400 font-medium">Select Vendor</label>
+          <label className="block mb-1 text-gray-500 font-medium">Select Vendor</label>
           {loadingVendors ? (
             <p>Loading vendors...</p>
           ) : errorVendors ? (
@@ -292,7 +292,7 @@ const CreateCoupon = () => {
               value={formData.vendorId}
               onChange={handleFormChange}
               required
-              className="px-3 py-2 border border-[#374151] rounded w-full max-w-sm"
+              className="px-3 py-2 border border-gray-300 rounded w-full max-w-sm"
             >
               {vendors.map((vendor) => (
                 <option key={vendor._id} value={vendor._id}>
@@ -306,7 +306,7 @@ const CreateCoupon = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
           {creationMode === "single" ? (
             <div className="flex flex-col">
-              <label className="mb-1 text-gray-400 font-medium">Coupon Name</label>
+              <label className="mb-1 text-gray-500 font-medium">Coupon Name</label>
               <input
                 type="text"
                 name="name"
@@ -314,13 +314,13 @@ const CreateCoupon = () => {
                 onChange={handleFormChange}
                 required
                 placeholder="e.g. Summer Feast"
-                className="px-3 py-2 border border-[#374151] rounded"
+                className="px-3 py-2 border border-gray-300 rounded"
               />
             </div>
           ) : (
             <>
               <div className="flex flex-col">
-                <label className="mb-1 text-gray-400 font-medium">Number of Coupons</label>
+                <label className="mb-1 text-gray-500 font-medium">Number of Coupons</label>
                 <input
                   type="number"
                   name="count"
@@ -330,22 +330,22 @@ const CreateCoupon = () => {
                   min="1"
                   max="1000"
                   placeholder="e.g. 100"
-                  className="px-3 py-2 border border-[#374151] rounded"
+                  className="px-3 py-2 border border-gray-300 rounded"
                 />
               </div>
               <div className="flex flex-col">
-                <label className="mb-1 text-gray-400 font-medium">Name Prefix (Optional)</label>
+                <label className="mb-1 text-gray-500 font-medium">Name Prefix (Optional)</label>
                 <input
                   type="text"
                   name="namePrefix"
                   value={bulkFormData.namePrefix}
                   onChange={handleBulkFormChange}
                   placeholder="e.g. SUMMER"
-                  className="px-3 py-2 border border-[#374151] rounded"
+                  className="px-3 py-2 border border-gray-300 rounded"
                 />
               </div>
               <div className="flex flex-col">
-                <label className="mb-1 text-gray-400 font-medium">Name Suffix</label>
+                <label className="mb-1 text-gray-500 font-medium">Name Suffix</label>
                 <input
                   type="text"
                   name="nameSuffix"
@@ -353,7 +353,7 @@ const CreateCoupon = () => {
                   onChange={handleBulkFormChange}
                   required
                   placeholder="e.g. COUPON"
-                  className="px-3 py-2 border border-[#374151] rounded"
+                  className="px-3 py-2 border border-gray-300 rounded"
                 />
               </div>
               <div className="flex flex-col justify-end">
@@ -365,7 +365,7 @@ const CreateCoupon = () => {
           )}
 
           <div className="flex flex-col">
-            <label className="mb-1 text-gray-400 font-medium">Discount ({formData.couponCodeType})</label>
+            <label className="mb-1 text-gray-500 font-medium">Discount ({formData.couponCodeType})</label>
             <input
               type="number"
               name="discountPercentage"
@@ -375,25 +375,25 @@ const CreateCoupon = () => {
               min="1"
               max={formData.couponCodeType === "%" ? "100" : ""}
               placeholder={formData.couponCodeType === "%" ? "e.g. 20" : "e.g. 500"}
-              className="px-3 py-2 border border-[#374151] rounded"
+              className="px-3 py-2 border border-gray-300 rounded"
             />
           </div>
 
           <div className="flex flex-col">
-            <label className="mb-1 text-gray-400 font-medium">Valid Till</label>
+            <label className="mb-1 text-gray-500 font-medium">Valid Till</label>
             <input
               type="date"
               name="validityDate"
               value={formData.validityDate}
               onChange={handleFormChange}
               required
-              className="px-3 py-2 border border-[#374151] rounded"
+              className="px-3 py-2 border border-gray-300 rounded"
             />
           </div>
 
           {/* Category Dropdown (from API) */}
           <div className="flex flex-col">
-            <label className="mb-1 text-gray-400 font-medium">Category</label>
+            <label className="mb-1 text-gray-500 font-medium">Category</label>
             {loadingCategories ? (
               <p>Loading categories...</p>
             ) : errorCategories ? (
@@ -403,7 +403,7 @@ const CreateCoupon = () => {
                 name="category"
                 value={formData.category}
                 onChange={handleFormChange}
-                className="px-3 py-2 border border-[#374151] rounded"
+                className="px-3 py-2 border border-gray-300 rounded"
               >
                 {categories.map((cat) => (
                   <option key={cat._id} value={cat.categoryName}>
@@ -415,12 +415,12 @@ const CreateCoupon = () => {
           </div>
 
           <div className="flex flex-col">
-            <label className="mb-1 text-gray-400 font-medium">Coupon Code Type</label>
+            <label className="mb-1 text-gray-500 font-medium">Coupon Code Type</label>
             <select
               name="couponCodeType"
               value={formData.couponCodeType}
               onChange={handleFormChange}
-              className="px-3 py-2 border border-[#374151] rounded"
+              className="px-3 py-2 border border-gray-300 rounded"
             >
               <option value="%">Percentage (%)</option>
               <option value="₹">Fixed Amount (₹)</option>
@@ -428,7 +428,7 @@ const CreateCoupon = () => {
           </div>
 
           <div className="flex flex-col">
-            <label className="mb-1 text-gray-400 font-medium">Limit For Same User</label>
+            <label className="mb-1 text-gray-500 font-medium">Limit For Same User</label>
             <input
               type="number"
               name="limitForSameUser"
@@ -436,20 +436,20 @@ const CreateCoupon = () => {
               onChange={handleFormChange}
               required
               min="1"
-              className="px-3 py-2 border border-[#374151] rounded"
+              className="px-3 py-2 border border-gray-300 rounded"
             />
           </div>
 
           {/* Image Upload */}
           <div className="flex flex-col md:col-span-2">
-            <label className="mb-1 text-gray-400 font-medium">Coupon Image</label>
+            <label className="mb-1 text-gray-500 font-medium">Coupon Image</label>
             <div className="flex items-center gap-4">
-              <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-[#374151] rounded cursor-pointer hover:bg-[#000000]">
+              <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:bg-gray-50">
                 {imagePreview ? (
                   <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded" />
                 ) : (
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <FaUpload className="w-8 h-8 text-gray-400 mb-2" />
+                    <FaUpload className="w-8 h-8 text-gray-500 mb-2" />
                     <p className="text-xs text-gray-500">Upload Image</p>
                   </div>
                 )}

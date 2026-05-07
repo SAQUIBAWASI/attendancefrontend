@@ -96,7 +96,7 @@ const AdminNotifications = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-300">
+      <h1 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-700">
         <MdNotificationsActive className="text-blue-600 text-xl" />
         Admin Notifications
       </h1>
@@ -106,19 +106,19 @@ const AdminNotifications = () => {
           notifications.map((notif) => (
             <div
               key={notif._id}
-              className="flex items-start justify-between bg-[#0a0a0a] p-3 rounded-md shadow-sm border border-[#1f2937] hover:shadow-md transition"
+              className="flex items-start justify-between bg-white p-3 rounded-md shadow-sm border border-gray-200 hover:shadow-md transition"
             >
               <div className="flex gap-3">
                 <div className="text-xl mt-0.5">
-                  {iconMap[notif.type] || <MdNotificationsActive className="text-gray-400" />}
+                  {iconMap[notif.type] || <MdNotificationsActive className="text-gray-500" />}
                 </div>
                 <div>
-                  <h2 className="text-sm font-semibold text-gray-300">{notif.title}</h2>
+                  <h2 className="text-sm font-semibold text-gray-700">{notif.title}</h2>
                   {notif.vendorName && (
                     <p className="text-xs text-gray-500 italic">Vendor: {notif.vendorName}</p>
                   )}
-                  <p className="text-xs text-gray-400 leading-tight">{notif.message}</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-500 leading-tight">{notif.message}</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">
                     {new Date(notif.createdAt).toLocaleString()}
                   </p>
                 </div>

@@ -138,7 +138,7 @@ export default function VendorInvoiceList() {
   };
 
   return (
-    <div className="p-4 border rounded-lg shadow-lg bg-[#0a0a0a]">
+    <div className="p-4 border rounded-lg shadow-lg bg-white">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-blue-900">Monthly Coupon Invoices</h2>
       </div>
@@ -162,14 +162,14 @@ export default function VendorInvoiceList() {
             <option value={100}>100</option>
             <option value={200}>200</option>
           </select>
-          <button className="bg-[#1f2937] px-4 py-2 rounded" onClick={handleDownloadCSV}>
+          <button className="bg-gray-200 px-4 py-2 rounded" onClick={handleDownloadCSV}>
             Download CSV
           </button>
         </div>
       </div>
 
       <div className="overflow-x-auto mb-4">
-        <table className="w-full border-collapse border border-[#374151]">
+        <table className="w-full border-collapse border border-gray-300">
           <thead>
             <tr className="bg-blue-600 text-white">
               <th className="p-2 border">Sl</th>
@@ -253,7 +253,7 @@ export default function VendorInvoiceList() {
             key={index}
             onClick={() => setCurrentPage(index + 1)}
             className={`px-4 py-2 rounded ${
-              currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-[#1f2937]"
+              currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
             }`}
           >
             {index + 1}

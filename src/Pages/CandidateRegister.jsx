@@ -54,16 +54,16 @@ const CandidateRegister = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#000000] flex items-center justify-center p-6 font-sans">
-            <div className="w-full max-w-6xl bg-[#0a0a0a] rounded-[2.5rem] shadow-2xl shadow-indigo-100/50 overflow-hidden flex flex-col md:flex-row border border-[#1f2937] animate-in fade-in zoom-in duration-500">
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 font-sans">
+            <div className="w-full max-w-6xl bg-white rounded-[2.5rem] shadow-2xl shadow-indigo-100/50 overflow-hidden flex flex-col md:flex-row border border-gray-200 animate-in fade-in zoom-in duration-500">
 
                 {/* Visual Side */}
                 <div className="md:w-5/12 bg-indigo-600 p-12 text-white flex flex-col justify-between relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at -20% -20%,rgba(255,255,255,0.2)_0%,transparent_60%)]"></div>
-                    <div className="absolute bottom-[-10%] right-[-10%] w-64 h-64 bg-[#0a0a0a]/10 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-[-10%] right-[-10%] w-64 h-64 bg-black/10 rounded-full blur-3xl"></div>
 
                     <div className="relative z-10">
-                        <div className="w-14 h-14 bg-[#0a0a0a]/20 rounded-2xl flex items-center justify-center mb-10 backdrop-blur-md border border-white/30 shadow-xl">
+                        <div className="w-14 h-14 bg-black/20 rounded-2xl flex items-center justify-center mb-10 backdrop-blur-md border border-white/30 shadow-xl">
                             <FiUser className="text-2xl" />
                         </div>
                         <h2 className="text-4xl font-black leading-tight mb-4">
@@ -77,13 +77,13 @@ const CandidateRegister = () => {
 
                     <div className="relative z-10 space-y-6">
                         <div className="flex items-center gap-4 group">
-                            <div className="w-10 h-10 bg-[#0a0a0a]/10 rounded-xl flex items-center justify-center border border-white/20 group-hover:bg-[#0a0a0a]/20 transition-all">
+                            <div className="w-10 h-10 bg-black/10 rounded-xl flex items-center justify-center border border-white/20 group-hover:bg-black/20 transition-all">
                                 <FiCheckCircle className="text-indigo-200" />
                             </div>
                             <span className="text-xs font-bold text-indigo-100 uppercase tracking-wider">Quick 1-minute setup</span>
                         </div>
                         <div className="flex items-center gap-4 group">
-                            <div className="w-10 h-10 bg-[#0a0a0a]/10 rounded-xl flex items-center justify-center border border-white/20 group-hover:bg-[#0a0a0a]/20 transition-all">
+                            <div className="w-10 h-10 bg-black/10 rounded-xl flex items-center justify-center border border-white/20 group-hover:bg-black/20 transition-all">
                                 <FiCheckCircle className="text-indigo-200" />
                             </div>
                             <span className="text-xs font-bold text-indigo-100 uppercase tracking-wider">Apply with one click</span>
@@ -92,10 +92,10 @@ const CandidateRegister = () => {
                 </div>
 
                 {/* Form Side */}
-                <div className="md:w-7/12 p-12 md:p-16 flex flex-col justify-center overflow-y-auto max-h-[90vh] no-scrollbar bg-[#0a0a0a]">
+                <div className="md:w-7/12 p-12 md:p-16 flex flex-col justify-center overflow-y-auto max-h-[90vh] no-scrollbar bg-white">
                     <div className="mb-12">
-                        <h1 className="text-2xl font-black text-slate-300 mb-1">Create Account</h1>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <h1 className="text-2xl font-black text-slate-700 mb-1">Create Account</h1>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                             Join the elite talent pool
                         </p>
                     </div>
@@ -113,9 +113,9 @@ const CandidateRegister = () => {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 text-[10px]">Full Name</label>
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 text-[10px]">Full Name</label>
                                 <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-indigo-600 transition-colors">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-700 group-focus-within:text-indigo-600 transition-colors">
                                         <FiUser className="text-lg" />
                                     </div>
                                     <input
@@ -124,16 +124,16 @@ const CandidateRegister = () => {
                                         value={formData.name}
                                         onChange={handleChange}
                                         required
-                                        className="w-full pl-11 pr-4 py-3.5 bg-[#0a0a0a] border border-[#1f2937] rounded-xl focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-300 placeholder:text-slate-300 shadow-sm shadow-slate-100/50"
+                                        className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-700 placeholder:text-slate-700 shadow-sm shadow-slate-100/50"
                                         placeholder="Alex Johnson"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email</label>
                                 <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-indigo-600 transition-colors">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-700 group-focus-within:text-indigo-600 transition-colors">
                                         <FiMail className="text-lg" />
                                     </div>
                                     <input
@@ -142,16 +142,16 @@ const CandidateRegister = () => {
                                         value={formData.email}
                                         onChange={handleChange}
                                         required
-                                        className="w-full pl-11 pr-4 py-3.5 bg-[#0a0a0a] border border-[#1f2937] rounded-xl focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-300 placeholder:text-slate-300 shadow-sm shadow-slate-100/50"
+                                        className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-700 placeholder:text-slate-700 shadow-sm shadow-slate-100/50"
                                         placeholder="alex@example.com"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mobile</label>
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Mobile</label>
                                 <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-indigo-600 transition-colors">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-700 group-focus-within:text-indigo-600 transition-colors">
                                         <FiPhone className="text-lg" />
                                     </div>
                                     <input
@@ -160,16 +160,16 @@ const CandidateRegister = () => {
                                         value={formData.phone}
                                         onChange={handleChange}
                                         required
-                                        className="w-full pl-11 pr-4 py-3.5 bg-[#0a0a0a] border border-[#1f2937] rounded-xl focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-300 placeholder:text-slate-300 shadow-sm shadow-slate-100/50"
+                                        className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-700 placeholder:text-slate-700 shadow-sm shadow-slate-100/50"
                                         placeholder="+1 234 567 890"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password</label>
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Password</label>
                                 <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-indigo-600 transition-colors">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-700 group-focus-within:text-indigo-600 transition-colors">
                                         <FiLock className="text-lg" />
                                     </div>
                                     <input
@@ -178,13 +178,13 @@ const CandidateRegister = () => {
                                         value={formData.password}
                                         onChange={handleChange}
                                         required
-                                        className="w-full pl-11 pr-12 py-3.5 bg-[#0a0a0a] border border-[#1f2937] rounded-xl focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-300 placeholder:text-slate-300 shadow-sm shadow-slate-100/50"
+                                        className="w-full pl-11 pr-12 py-3.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-700 placeholder:text-slate-700 shadow-sm shadow-slate-100/50"
                                         placeholder="••••••••"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-300 hover:text-indigo-600"
+                                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-700 hover:text-indigo-600"
                                     >
                                         {showPassword ? <FiEyeOff className="text-lg" /> : <FiEye className="text-lg" />}
                                     </button>
@@ -193,9 +193,9 @@ const CandidateRegister = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Location / Address</label>
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Location / Address</label>
                             <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-indigo-600 transition-colors">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-700 group-focus-within:text-indigo-600 transition-colors">
                                     <FiMapPin className="text-lg" />
                                 </div>
                                 <input
@@ -203,7 +203,7 @@ const CandidateRegister = () => {
                                     name="address"
                                     value={formData.address}
                                     onChange={handleChange}
-                                    className="w-full pl-11 pr-4 py-3.5 bg-[#0a0a0a] border border-[#1f2937] rounded-xl focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-300 placeholder:text-slate-300 shadow-sm shadow-slate-100/50"
+                                    className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-700 placeholder:text-slate-700 shadow-sm shadow-slate-100/50"
                                     placeholder="City, Country"
                                 />
                             </div>
@@ -211,9 +211,9 @@ const CandidateRegister = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Experience (Years)</label>
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Experience (Years)</label>
                                 <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-indigo-600 transition-colors">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-700 group-focus-within:text-indigo-600 transition-colors">
                                         <FiBriefcase className="text-lg" />
                                     </div>
                                     <input
@@ -221,15 +221,15 @@ const CandidateRegister = () => {
                                         name="experience"
                                         value={formData.experience}
                                         onChange={handleChange}
-                                        className="w-full pl-11 pr-4 py-3.5 bg-[#000000]/50 border border-[#1f2937] rounded-xl border-dashed focus:bg-[#0a0a0a] focus:border-solid focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-300"
+                                        className="w-full pl-11 pr-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl border-dashed focus:bg-white focus:border-solid focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-700"
                                         placeholder="e.g. 5 Years"
                                     />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Key Skills</label>
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Key Skills</label>
                                 <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-indigo-600 transition-colors">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-700 group-focus-within:text-indigo-600 transition-colors">
                                         <FiLayers className="text-lg" />
                                     </div>
                                     <input
@@ -237,7 +237,7 @@ const CandidateRegister = () => {
                                         name="skills"
                                         value={formData.skills}
                                         onChange={handleChange}
-                                        className="w-full pl-11 pr-4 py-3.5 bg-[#000000]/50 border border-[#1f2937] rounded-xl border-dashed focus:bg-[#0a0a0a] focus:border-solid focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-300"
+                                        className="w-full pl-11 pr-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl border-dashed focus:bg-white focus:border-solid focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-700"
                                         placeholder="React, Node.js, AWS"
                                     />
                                 </div>
@@ -260,7 +260,7 @@ const CandidateRegister = () => {
                         </button>
                     </form>
 
-                    <p className="mt-10 text-center text-[11px] text-slate-400 font-bold uppercase tracking-wider">
+                    <p className="mt-10 text-center text-[11px] text-slate-500 font-bold uppercase tracking-wider">
                         Already have an account?{" "}
                         <Link to="/candidate-login" className="text-indigo-600 font-black hover:underline underline-offset-8 transition-all">
                             Log In

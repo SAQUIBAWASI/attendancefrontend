@@ -31,7 +31,7 @@ const LeaveApplicationList = () => {
   );
 
   return (
-    <div className="p-6 bg-[#0a0a0a] rounded-lg shadow-lg">
+    <div className="p-6 bg-white rounded-lg shadow-lg">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold">Leave Approval List</h2>
         <input
@@ -47,9 +47,9 @@ const LeaveApplicationList = () => {
         // Show message if there is no data or an error
         <div className="text-center text-red-500">{errorMessage}</div>
       ) : (
-        <table className="min-w-full bg-[#0a0a0a] border rounded-lg">
+        <table className="min-w-full bg-white border rounded-lg">
           <thead>
-            <tr className="text-left bg-[#1f2937]">
+            <tr className="text-left bg-gray-200">
               <th className="px-4 py-2 border">SI</th>
               <th className="px-4 py-2 border">Employee Name</th>
               <th className="px-4 py-2 border">Type</th>
@@ -68,7 +68,7 @@ const LeaveApplicationList = () => {
           <tbody>
             {filteredData.length > 0 ? (
               filteredData.map((item, index) => (
-                <tr key={item.id} className="border-b hover:bg-[#111111]">
+                <tr key={item.id} className="border-b hover:bg-gray-100">
                   <td className="px-4 py-2 border">{index + 1}</td>
                   <td className="px-4 py-2 border">{item.employee}</td>
                   <td className="px-4 py-2 border">{item.type}</td>

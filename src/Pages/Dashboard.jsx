@@ -593,9 +593,9 @@
 //     if (active && payload && payload.length) {
 //       const data = payload[0].payload;
 //       return (
-//         <div className="p-2 text-xs bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-lg">
+//         <div className="p-2 text-xs bg-white border border-gray-200 rounded-lg shadow-lg">
 //           <p className="font-semibold">{data.name} ({data.id})</p>
-//           <p className="text-gray-400">Full Days: {data.count}</p>
+//           <p className="text-gray-500">Full Days: {data.count}</p>
 //         </div>
 //       );
 //     }
@@ -608,8 +608,8 @@
 //     if (active && payload && payload.length) {
 //       const data = payload[0].payload;
 //       return (
-//         <div className="px-3 py-2 text-xs bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-xl">
-//           <p className="font-bold text-gray-300 mb-0.5 leading-none">{data.name}</p>
+//         <div className="px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg shadow-xl">
+//           <p className="font-bold text-gray-700 mb-0.5 leading-none">{data.name}</p>
 //           <p className="leading-none text-gray-500">
 //             {data.type === 'minutes' ? `Late Duration: ${data.value} mins` : `Late Days: ${data.value}`}
 //           </p>
@@ -624,8 +624,8 @@
 //     if (active && payload && payload.length) {
 //       const data = payload[0].payload;
 //       return (
-//         <div className="px-3 py-2 text-xs bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-xl">
-//           <p className="font-bold text-gray-300 mb-0.5 leading-none">{data.name}</p>
+//         <div className="px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg shadow-xl">
+//           <p className="font-bold text-gray-700 mb-0.5 leading-none">{data.name}</p>
 //           <p className="leading-none text-gray-500">
 //             {data.type === 'daysSince' ? `Days Since Last: ${data.value}` : `Absent Days: ${data.value}`}
 //           </p>
@@ -649,7 +649,7 @@
 //   };
 
 //   return (
-//     <div className="min-h-screen p-2 lg:p-6 bg-[#000000]/50">
+//     <div className="min-h-screen p-2 lg:p-6 bg-gray-50/50">
 //       {/* 1. Top Summary Stats - Updated Cards */}
 //       <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-5">
 //         <StatCard
@@ -694,10 +694,10 @@
 //       {/* 3. Historical Performance */}
 //       <div className="grid grid-cols-1 gap-4 mb-4 lg:grid-cols-2">
 //         {/* Attendance Performance */}
-//         <div className="bg-[#0a0a0a] px-2 py-2 rounded-2xl shadow-sm border border-[#1f2937] flex flex-col h-[380px]">
+//         <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[380px]">
 //           <div className="flex items-center justify-between mb-3">
 //             <div>
-//               <h3 className="text-base font-bold text-gray-300">Attendance Performance (Full Days)</h3>
+//               <h3 className="text-base font-bold text-gray-700">Attendance Performance (Full Days)</h3>
 //               {/* <p className="text-xs text-gray-500">Most consistent present employees</p> */}
 //             </div>
 //             <button onClick={() => navigate("/attedancesummary")} className="font-bold text-indigo-600 transition-colors text-s hover:text-indigo-800">View Report →</button>
@@ -731,16 +731,16 @@
 //                 </BarChart>
 //               </ResponsiveContainer>
 //             ) : (
-//               <div className="flex items-center justify-center h-full text-sm text-gray-400">No attendance data available</div>
+//               <div className="flex items-center justify-center h-full text-sm text-gray-500">No attendance data available</div>
 //             )}
 //           </div>
 //         </div>
 
 //         {/* Top Late Comers */}
-//         <div className="bg-[#0a0a0a] px-2 py-2 rounded-2xl shadow-sm border border-[#1f2937] flex flex-col h-[380px]">
+//         <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[380px]">
 //           <div className="flex items-center justify-between mb-3">
 //             <div>
-//               <h3 className="text-base font-bold text-gray-300">Top Late Comers</h3>
+//               <h3 className="text-base font-bold text-gray-700">Top Late Comers</h3>
 //             </div>
 //             <button
 //               onClick={() => navigate("/late-today")}
@@ -791,7 +791,7 @@
 //                 </BarChart>
 //               </ResponsiveContainer>
 //             ) : (
-//               <div className="flex items-center justify-center h-full text-sm text-gray-400">
+//               <div className="flex items-center justify-center h-full text-sm text-gray-500">
 //                 No monthly late data available
 //               </div>
 //             )}
@@ -802,10 +802,10 @@
 //       {/* 3. Late & Absent Analysis */}
 //       <div className="grid grid-cols-1 gap-8 mb-8 lg:grid-cols-2">
 //         {/* Late Analysis (Pie Chart) */}
-//         <div className="bg-[#0a0a0a] px-2 py-2 rounded-2xl shadow-sm border border-[#1f2937] flex flex-col h-[400px]">
+//         <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[400px]">
 //           <div className="flex flex-col mb-2">
 //             <div className="flex items-center justify-between mb-2">
-//               <h3 className="text-base font-bold text-gray-300">Late Analysis</h3>
+//               <h3 className="text-base font-bold text-gray-700">Late Analysis</h3>
 //               <div className="flex items-center gap-2">
 //                 {/* Month Filter */}
 //                 <input
@@ -815,14 +815,14 @@
 //                     setLateMonth(e.target.value);
 //                     setLateDate(""); // Clear date when month changes to default to month view
 //                   }}
-//                   className="px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-red-600"
+//                   className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-red-600"
 //                 />
 //                 {/* Date Filter */}
 //                 <input
 //                   type="date"
 //                   value={lateDate}
 //                   onChange={(e) => setLateDate(e.target.value)}
-//                   className="px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-red-600"
+//                   className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-red-600"
 //                 />
 //                 <button
 //                   onClick={() => navigate("/late-today")}
@@ -864,7 +864,7 @@
 //                 </PieChart>
 //               </ResponsiveContainer>
 //             ) : (
-//               <div className="flex flex-col items-center justify-center h-full text-sm text-gray-400">
+//               <div className="flex flex-col items-center justify-center h-full text-sm text-gray-500">
 //                 <FiClock className="w-10 h-10 mb-2 opacity-20" />
 //                 <p>No late records found</p>
 //               </div>
@@ -873,10 +873,10 @@
 //         </div>
 
 //         {/* Absent Analysis (Bar Chart) */}
-//         <div className="bg-[#0a0a0a] px-2 py-2 rounded-2xl shadow-sm border border-[#1f2937] flex flex-col h-[400px]">
+//         <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[400px]">
 //           <div className="flex flex-col mb-2">
 //             <div className="flex items-center justify-between mb-2">
-//               <h3 className="text-base font-bold text-gray-300">Absent Analysis</h3>
+//               <h3 className="text-base font-bold text-gray-700">Absent Analysis</h3>
 //               <div className="flex items-center gap-2">
 //                 {/* Month Filter */}
 //                 <input
@@ -886,14 +886,14 @@
 //                     setAbsentMonth(e.target.value);
 //                     setAbsentDate("");
 //                   }}
-//                   className="px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-red-600"
+//                   className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-red-600"
 //                 />
 //                 {/* Date Filter */}
 //                 <input
 //                   type="date"
 //                   value={absentDate}
 //                   onChange={(e) => setAbsentDate(e.target.value)}
-//                   className="px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-red-600"
+//                   className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-red-600"
 //                 />
 //                 <button
 //                   onClick={() => navigate("/absent-today")}
@@ -935,7 +935,7 @@
 //                 </PieChart>
 //               </ResponsiveContainer>
 //             ) : (
-//               <div className="flex flex-col items-center justify-center h-full text-sm text-gray-400">
+//               <div className="flex flex-col items-center justify-center h-full text-sm text-gray-500">
 //                 <FiUserX className="w-8 h-8 mb-2 opacity-20" />
 //                 <p>No absent records found</p>
 //               </div>
@@ -960,12 +960,12 @@
 
 //   return (
 //     <div
-//       className={`bg-[#0a0a0a] rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}
+//       className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${currentTheme} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}
 //       onClick={onClick}
 //     >
 //       <div className="flex items-center gap-2">
-//         <Icon className="text-gray-400 text-base flex-shrink-0" />
-//         <div className="text-sm font-medium text-gray-300">{label}</div>
+//         <Icon className="text-gray-500 text-base flex-shrink-0" />
+//         <div className="text-sm font-medium text-gray-700">{label}</div>
 //       </div>
 //       <div className="text-sm font-bold">
 //         <CountUp end={value} duration={2} separator="," />
@@ -1591,9 +1591,9 @@ const AttendanceDashboard = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="p-2 text-xs bg-[#111] border border-gray-700 rounded-lg shadow-lg">
-          <p className="font-semibold text-white">{data.name} ({data.id})</p>
-          <p className="text-gray-300">Attendance: {data.count} days</p>
+        <div className="p-2 text-xs bg-white border border-gray-300 rounded-lg shadow-lg">
+          <p className="font-semibold text-gray-900">{data.name} ({data.id})</p>
+          <p className="text-gray-700">Attendance: {data.count} days</p>
         </div>
       );
     }
@@ -1605,9 +1605,9 @@ const AttendanceDashboard = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="p-2 text-xs bg-[#111] border border-gray-700 rounded-lg shadow-lg">
-          <p className="font-semibold text-white">{data.name} ({data.id})</p>
-          <p className="text-gray-300">Leaves: {data.count} days</p>
+        <div className="p-2 text-xs bg-white border border-gray-300 rounded-lg shadow-lg">
+          <p className="font-semibold text-gray-900">{data.name} ({data.id})</p>
+          <p className="text-gray-700">Leaves: {data.count} days</p>
         </div>
       );
     }
@@ -1619,9 +1619,9 @@ const AttendanceDashboard = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="px-3 py-2 text-xs bg-[#111] border border-gray-700 rounded-lg shadow-xl">
-          <p className="font-bold text-white mb-0.5 leading-none">{data.name}</p>
-          <p className="leading-none text-gray-400">
+        <div className="px-3 py-2 text-xs bg-white border border-gray-300 rounded-lg shadow-xl">
+          <p className="font-bold text-gray-900 mb-0.5 leading-none">{data.name}</p>
+          <p className="leading-none text-gray-500">
             {data.type === 'minutes' ? `Late Duration: ${data.value} mins` : `Late Days: ${data.value}`}
           </p>
         </div>
@@ -1635,9 +1635,9 @@ const AttendanceDashboard = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="px-3 py-2 text-xs bg-[#111] border border-gray-700 rounded-lg shadow-xl">
-          <p className="font-bold text-white mb-0.5 leading-none">{data.name}</p>
-          <p className="leading-none text-gray-400">
+        <div className="px-3 py-2 text-xs bg-white border border-gray-300 rounded-lg shadow-xl">
+          <p className="font-bold text-gray-900 mb-0.5 leading-none">{data.name}</p>
+          <p className="leading-none text-gray-500">
             {data.type === 'daysSince' ? `Days Since Last: ${data.value}` : `Absent Days: ${data.value}`}
           </p>
         </div>
@@ -1660,7 +1660,7 @@ const AttendanceDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen p-2 lg:p-6 bg-black text-gray-200">
+    <div className="min-h-screen p-2 lg:p-6 bg-white text-gray-900">
       {/* 1. Top Summary Stats - Updated Cards */}
       <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard
@@ -1704,17 +1704,17 @@ const AttendanceDashboard = () => {
       {/* 3. Historical Performance */}
       <div className="grid grid-cols-1 gap-4 mb-4 lg:grid-cols-2">
         {/* Attendance Performance */}
-        <div className="bg-[#0a0a0a] px-2 py-2 rounded-2xl shadow-sm border border-gray-800 flex flex-col h-[380px]">
+        <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[380px]">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-base font-bold text-white">Top Attendance Performance</h3>
+              <h3 className="text-base font-bold text-gray-900">Top Attendance Performance</h3>
             </div>
             <div className="flex items-center gap-2">
               <input
                 type="month"
                 value={attendanceMonth}
                 onChange={(e) => setAttendanceMonth(e.target.value)}
-                className="px-2 py-1 text-xs border border-gray-700 bg-black text-white rounded focus:ring-1 focus:ring-indigo-600"
+                className="px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded focus:ring-1 focus:ring-indigo-600"
               />
               <button onClick={() => navigate("/attedancesummary")} className="font-bold text-indigo-600 transition-colors text-s hover:text-indigo-800 hidden sm:block">View Report →</button>
             </div>
@@ -1748,23 +1748,23 @@ const AttendanceDashboard = () => {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-sm text-gray-400">No attendance data available</div>
+              <div className="flex items-center justify-center h-full text-sm text-gray-500">No attendance data available</div>
             )}
           </div>
         </div>
 
         {/* Most Late Comings */}
-        <div className="bg-[#0a0a0a] px-2 py-2 rounded-2xl shadow-sm border border-gray-800 flex flex-col h-[380px]">
+        <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[380px]">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-base font-bold text-white">Most Late Comings</h3>
+              <h3 className="text-base font-bold text-gray-900">Most Late Comings</h3>
             </div>
             <div className="flex items-center gap-2">
               <input
                 type="month"
                 value={topLateMonth}
                 onChange={(e) => setTopLateMonth(e.target.value)}
-                className="px-2 py-1 text-xs border border-gray-700 bg-black text-white rounded focus:ring-1 focus:ring-rose-600"
+                className="px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded focus:ring-1 focus:ring-rose-600"
               />
               <button
                 onClick={() => navigate("/late-today")}
@@ -1816,7 +1816,7 @@ const AttendanceDashboard = () => {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-sm text-gray-400">
+              <div className="flex items-center justify-center h-full text-sm text-gray-500">
                 No monthly late data available
               </div>
             )}
@@ -1827,10 +1827,10 @@ const AttendanceDashboard = () => {
       {/* 3. Late & Absent Analysis */}
       <div className="grid grid-cols-1 gap-8 mb-8 lg:grid-cols-2">
         {/* Late Analysis (Pie Chart) */}
-        <div className="bg-[#0a0a0a] px-2 py-2 rounded-2xl shadow-sm border border-gray-800 flex flex-col h-[400px]">
+        <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[400px]">
           <div className="flex flex-col mb-2">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-base font-bold text-white">Late Analysis</h3>
+              <h3 className="text-base font-bold text-gray-900">Late Analysis</h3>
               <div className="flex items-center gap-2">
                 {/* Month Filter */}
                 <input
@@ -1840,14 +1840,14 @@ const AttendanceDashboard = () => {
                     setLateMonth(e.target.value);
                     setLateDate(""); // Clear date when month changes to default to month view
                   }}
-                  className="px-2 py-1 text-xs border border-gray-700 bg-black text-white rounded focus:ring-1 focus:ring-red-600"
+                  className="px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded focus:ring-1 focus:ring-red-600"
                 />
                 {/* Date Filter */}
                 <input
                   type="date"
                   value={lateDate}
                   onChange={(e) => setLateDate(e.target.value)}
-                  className="px-2 py-1 text-xs border border-gray-700 bg-black text-white rounded focus:ring-1 focus:ring-red-600"
+                  className="px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded focus:ring-1 focus:ring-red-600"
                 />
                 <button
                   onClick={() => navigate("/late-today")}
@@ -1857,7 +1857,7 @@ const AttendanceDashboard = () => {
                 </button>
               </div>
             </div>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-500">
               {lateDate ? `Late Minutes on ${lateDate}` : `Late Days in ${lateMonth}`}
             </p>
           </div>
@@ -1889,7 +1889,7 @@ const AttendanceDashboard = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-sm text-gray-400">
+              <div className="flex flex-col items-center justify-center h-full text-sm text-gray-500">
                 <FiClock className="w-10 h-10 mb-2 opacity-20" />
                 <p>No late records found</p>
               </div>
@@ -1898,10 +1898,10 @@ const AttendanceDashboard = () => {
         </div>
 
         {/* Absent Analysis (Bar Chart) */}
-        <div className="bg-[#0a0a0a] px-2 py-2 rounded-2xl shadow-sm border border-gray-800 flex flex-col h-[400px]">
+        <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[400px]">
           <div className="flex flex-col mb-2">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-base font-bold text-white">Absent Analysis</h3>
+              <h3 className="text-base font-bold text-gray-900">Absent Analysis</h3>
               <div className="flex items-center gap-2">
                 {/* Month Filter */}
                 <input
@@ -1911,14 +1911,14 @@ const AttendanceDashboard = () => {
                     setAbsentMonth(e.target.value);
                     setAbsentDate("");
                   }}
-                  className="px-2 py-1 text-xs border border-gray-700 bg-black text-white rounded focus:ring-1 focus:ring-red-600"
+                  className="px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded focus:ring-1 focus:ring-red-600"
                 />
                 {/* Date Filter */}
                 <input
                   type="date"
                   value={absentDate}
                   onChange={(e) => setAbsentDate(e.target.value)}
-                  className="px-2 py-1 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-red-600"
+                  className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-red-600"
                 />
                 <button
                   onClick={() => navigate("/absent-today")}
@@ -1960,7 +1960,7 @@ const AttendanceDashboard = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-sm text-gray-400">
+              <div className="flex flex-col items-center justify-center h-full text-sm text-gray-500">
                 <FiUserX className="w-8 h-8 mb-2 opacity-20" />
                 <p>No absent records found</p>
               </div>

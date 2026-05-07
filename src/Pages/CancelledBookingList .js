@@ -119,7 +119,7 @@ const CancelledBookingList = () => {
   };
 
   return (
-    <div className="p-6 bg-[#0a0a0a] rounded shadow">
+    <div className="p-6 bg-white rounded shadow">
       <h3 className="text-lg font-bold mb-4">Cancelled Order List</h3>
       <button
         onClick={generatePDF}

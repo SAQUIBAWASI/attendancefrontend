@@ -54,7 +54,7 @@ const LogoList = () => {
   };
 
   return (
-    <div className="p-4 border rounded-lg shadow-lg bg-[#0a0a0a]">
+    <div className="p-4 border rounded-lg shadow-lg bg-white">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-blue-900">Logo List</h2>
         <input
@@ -66,7 +66,7 @@ const LogoList = () => {
       </div>
 
       <div className="overflow-x-auto mb-4">
-        <table className="w-full border-collapse border border-[#374151]">
+        <table className="w-full border-collapse border border-gray-300">
           <thead>
             <tr className="bg-purple-600 text-white">
               <th className="p-2 border">Sl</th>
@@ -122,7 +122,7 @@ const LogoList = () => {
             key={index}
             onClick={() => setCurrentPage(index + 1)}
             className={`px-4 py-2 rounded ${
-              currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-[#1f2937]"
+              currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
             }`}
           >
             {index + 1}

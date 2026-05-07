@@ -67,7 +67,7 @@ const Recruitment = () => {
 
   return (
     <div className="p-4 max-w-6xl mx-auto">
-      <div className="bg-[#0a0a0a] shadow-md rounded-lg p-4">
+      <div className="bg-white shadow-md rounded-lg p-4">
         <div className="flex justify-between mb-4">
           <h2 className="text-xl font-bold">Candidate List</h2>
           <button onClick={() => { setShowForm(true); setEditMode(false); }} className="bg-black text-white p-2 rounded flex items-center">
@@ -77,7 +77,7 @@ const Recruitment = () => {
 
         <table className="w-full border text-left">
           <thead>
-            <tr className="bg-[#111111] border">
+            <tr className="bg-gray-100 border">
               <th className="p-2 border">SL</th>
               <th className="p-2 border">Name</th>
               <th className="p-2 border">Candidate ID</th>
@@ -113,7 +113,7 @@ const Recruitment = () => {
 
       {showForm && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-          <div className="bg-[#0a0a0a] p-6 rounded-lg shadow-lg w-96">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h3 className="text-lg font-bold mb-4">{editMode ? "Edit Candidate" : "Add New Candidate"}</h3>
             {Object.keys(candidateData).map((key) => (
               key !== "id" && (
@@ -129,7 +129,7 @@ const Recruitment = () => {
 
 {showPopup && viewCandidate && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-          <div className="bg-[#0a0a0a] p-6 rounded-lg shadow-lg w-96">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h3 className="text-lg font-bold mb-4">Candidate Details</h3>
             <p><strong>Name:</strong> {viewCandidate.name}</p>
             <p><strong>Email:</strong> {viewCandidate.email}</p>

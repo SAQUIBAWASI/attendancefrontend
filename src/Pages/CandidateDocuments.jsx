@@ -14,26 +14,26 @@ const CandidateDocuments = () => {
   });
 
   return (
-    <div className="min-h-screen p-4 md:p-6 lg:p-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+    <div className="min-h-screen p-4 md:p-6 lg:p-8 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="max-w-9xl mx-auto animate-in fade-in duration-700">
 
         {/* Header & Filters */}
-        <div className="bg-[#0a0a0a] p-6 rounded-3xl shadow-sm border border-[#1f2937] mb-6">
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 mb-6">
           <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-300 tracking-tight">Compliance & Agreements</h2>
+              <h2 className="text-2xl font-bold text-gray-700 tracking-tight">Compliance & Agreements</h2>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mt-2">Regulatory documents and digital contract history</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
               {/* Search */}
               <div className="relative w-full sm:w-80">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
                   <FaSearch className="text-xs" />
                 </div>
                 <input
                   type="text"
-                  className="w-full py-2.5 pl-10 pr-4 bg-[#000000] text-xs text-gray-300 placeholder-gray-400 font-bold border border-[#1f2937] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all"
+                  className="w-full py-2.5 pl-10 pr-4 bg-gray-50 text-xs text-gray-700 placeholder-gray-400 font-bold border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all"
                   placeholder="Search by position..."
                   value={localSearchQuery}
                   onChange={(e) => setLocalSearchQuery(e.target.value)}
@@ -49,7 +49,7 @@ const CandidateDocuments = () => {
         </div>
 
         {/* Table Section */}
-        <div className="bg-[#0a0a0a] shadow-xl rounded-3xl border border-[#1f2937] overflow-hidden">
+        <div className="bg-white shadow-xl rounded-3xl border border-gray-200 overflow-hidden">
           {agreementApps.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="min-w-full">
@@ -71,17 +71,17 @@ const CandidateDocuments = () => {
                             <FaShieldAlt size={14} />
                           </div>
                           <div className="text-left">
-                            <div className="font-bold text-sm text-gray-300 uppercase tracking-tight">{app.jobId?.role || "Position Asset"}</div>
-                            <div className="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5 font-medium">Regulatory Contract</div>
+                            <div className="font-bold text-sm text-gray-700 uppercase tracking-tight">{app.jobId?.role || "Position Asset"}</div>
+                            <div className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 font-medium">Regulatory Contract</div>
                           </div>
                         </div>
                       </td>
                       <td className="py-2 px-6">
-                        <span className="font-bold text-[10px] text-gray-400 border border-[#1f2937] px-2 py-0.5 rounded bg-[#000000] uppercase tracking-widest">
+                        <span className="font-bold text-[10px] text-gray-500 border border-gray-200 px-2 py-0.5 rounded bg-gray-50 uppercase tracking-widest">
                           #{app._id.slice(-8).toUpperCase()}
                         </span>
                       </td>
-                      <td className="py-2 px-6 text-xs font-bold text-gray-400 uppercase tracking-tight">
+                      <td className="py-2 px-6 text-xs font-bold text-gray-500 uppercase tracking-tight">
                         <div className="flex items-center justify-center gap-2">
                           <FaCalendarAlt className="text-blue-400" size={10} />
                           {new Date(app.updatedAt).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -89,7 +89,7 @@ const CandidateDocuments = () => {
                       </td>
                       <td className="py-2 px-6">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold uppercase tracking-widest">
-                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-600"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>
                           Verified
                         </div>
                       </td>
@@ -109,11 +109,11 @@ const CandidateDocuments = () => {
             </div>
           ) : (
             <div className="p-24 text-center">
-              <div className="w-20 h-20 bg-[#000000] rounded-[2.5rem] flex items-center justify-center text-gray-200 mx-auto mb-6 border-2 border-dashed border-[#1f2937]">
+              <div className="w-20 h-20 bg-gray-50 rounded-[2.5rem] flex items-center justify-center text-gray-900 mx-auto mb-6 border-2 border-dashed border-gray-200">
                 <FaInbox size={32} />
               </div>
-              <h3 className="text-lg font-bold text-gray-300 uppercase tracking-widest">No Archival Records</h3>
-              <p className="text-[10px] font-bold text-gray-400 mt-3 uppercase tracking-widest leading-loose max-w-xs mx-auto">
+              <h3 className="text-lg font-bold text-gray-700 uppercase tracking-widest">No Archival Records</h3>
+              <p className="text-[10px] font-bold text-gray-500 mt-3 uppercase tracking-widest leading-loose max-w-xs mx-auto">
                 Regulatory agreements and archival documents will be accessible once selections are finalized.
               </p>
             </div>

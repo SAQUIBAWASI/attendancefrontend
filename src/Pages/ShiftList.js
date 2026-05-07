@@ -38,10 +38,10 @@
 //   };
 
 //   return (
-//     <div className="min-h-screen p-6 bg-[#000000]">
-//       <div className="max-w-5xl p-6 mx-auto bg-[#0a0a0a] shadow-lg rounded-2xl">
+//     <div className="min-h-screen p-6 bg-gray-50">
+//       <div className="max-w-5xl p-6 mx-auto bg-white shadow-lg rounded-2xl">
 //         <div className="flex items-center justify-between mb-6">
-//           <h1 className="text-2xl font-bold text-gray-300">Assigned Shifts</h1>
+//           <h1 className="text-2xl font-bold text-gray-700">Assigned Shifts</h1>
 //           <button
 //             onClick={() => navigate("/shift")}
 //             className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
@@ -51,16 +51,16 @@
 //         </div>
 
 //         {loading ? (
-//           <div className="py-8 text-center text-gray-400">Loading shifts...</div>
+//           <div className="py-8 text-center text-gray-500">Loading shifts...</div>
 //         ) : shifts.length === 0 ? (
 //           <div className="py-10 text-center text-gray-500">
 //             No shifts assigned yet.
 //           </div>
 //         ) : (
 //           <div className="overflow-x-auto">
-//             <table className="w-full border border-[#1f2937] rounded-lg">
+//             <table className="w-full border border-gray-200 rounded-lg">
 //               <thead>
-//                 <tr className="text-sm font-semibold text-left text-gray-300 bg-[#111111]">
+//                 <tr className="text-sm font-semibold text-left text-gray-700 bg-gray-100">
 //                   <th className="px-4 py-3 border-b">Employee ID</th>
 //                   <th className="px-4 py-3 border-b">Employee Name</th>
 //                   <th className="px-4 py-3 border-b">Shift Type</th>
@@ -73,7 +73,7 @@
 //                 {shifts.map((shift) => (
 //                   <tr
 //                     key={shift._id}
-//                     className="text-sm text-gray-300 border-b hover:bg-[#000000]"
+//                     className="text-sm text-gray-700 border-b hover:bg-gray-50"
 //                   >
 //                     <td className="px-4 py-3">{shift.employeeId}</td>
 //                     <td className="px-4 py-3">{shift.employeeName}</td>
@@ -157,11 +157,11 @@ export default function ShiftList() {
   };
 
   return (
-    <div className="min-h-screen p-6 bg-[#000000]">
-      <div className="max-w-5xl p-6 mx-auto bg-[#0a0a0a] shadow-lg rounded-2xl">
+    <div className="min-h-screen p-6 bg-gray-50">
+      <div className="max-w-5xl p-6 mx-auto bg-white shadow-lg rounded-2xl">
         {/* Header Section */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-300">Assigned Shifts</h1>
+          <h1 className="text-2xl font-bold text-gray-700">Assigned Shifts</h1>
           <button
             onClick={() => navigate("/shift")}
             className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
@@ -172,16 +172,16 @@ export default function ShiftList() {
 
         {/* Loading / Empty / Table */}
         {loading ? (
-          <div className="py-8 text-center text-gray-400">Loading shifts...</div>
+          <div className="py-8 text-center text-gray-500">Loading shifts...</div>
         ) : !Array.isArray(shifts) || shifts.length === 0 ? (
           <div className="py-10 text-center text-gray-500">
             No shifts assigned yet.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border border-[#1f2937] rounded-lg">
+            <table className="w-full border border-gray-200 rounded-lg">
               <thead>
-                <tr className="text-sm font-semibold text-left text-gray-300 bg-[#111111]">
+                <tr className="text-sm font-semibold text-left text-gray-700 bg-gray-100">
                   <th className="px-4 py-3 border-b">Employee ID</th>
                   <th className="px-4 py-3 border-b">Employee Name</th>
                   <th className="px-4 py-3 border-b">Shift Type</th>
@@ -194,7 +194,7 @@ export default function ShiftList() {
                 {shifts.map((shift) => (
                   <tr
                     key={shift._id}
-                    className="text-sm text-gray-300 border-b hover:bg-[#000000]"
+                    className="text-sm text-gray-700 border-b hover:bg-gray-50"
                   >
                     <td className="px-4 py-3">{shift.employeeId}</td>
                     <td className="px-4 py-3">{shift.employeeName}</td>

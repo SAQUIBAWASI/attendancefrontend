@@ -104,27 +104,27 @@ const RedeemedCouponsList = () => {
 
   if (loading) {
     return (
-      <div className="p-4 bg-[#0a0a0a] shadow rounded flex items-center justify-center">
-        <div className="text-lg font-semibold text-gray-300">Loading redeemed coupons...</div>
+      <div className="p-4 bg-white shadow rounded flex items-center justify-center">
+        <div className="text-lg font-semibold text-gray-700">Loading redeemed coupons...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4 bg-[#0a0a0a] shadow rounded flex items-center justify-center">
+      <div className="p-4 bg-white shadow rounded flex items-center justify-center">
         <div className="text-lg font-semibold text-red-600">Error: {error}</div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 bg-[#0a0a0a] shadow rounded mx-auto max-w-full overflow-x-auto">
+    <div className="p-4 bg-white shadow rounded mx-auto max-w-full overflow-x-auto">
       {/* Controls */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
           <select
-            className="border border-[#374151] p-1 rounded text-sm"
+            className="border border-gray-300 p-1 rounded text-sm"
             value={filter}
             onChange={e => handleFilterChange(e.target.value)}
           >
@@ -140,14 +140,14 @@ const RedeemedCouponsList = () => {
             <div className="flex items-center gap-1 text-sm">
               <input
                 type="date"
-                className="border border-[#374151] p-1 rounded"
+                className="border border-gray-300 p-1 rounded"
                 value={customFrom}
                 onChange={e => setCustomFrom(e.target.value)}
               />
-              <span className="text-gray-400">to</span>
+              <span className="text-gray-500">to</span>
               <input
                 type="date"
-                className="border border-[#374151] p-1 rounded"
+                className="border border-gray-300 p-1 rounded"
                 value={customTo}
                 onChange={e => setCustomTo(e.target.value)}
               />
@@ -157,7 +157,7 @@ const RedeemedCouponsList = () => {
 
         <div className="flex gap-2 items-center">
           <select
-            className="border border-[#374151] p-1 rounded text-sm"
+            className="border border-gray-300 p-1 rounded text-sm"
             value={downloadLimit}
             onChange={e => setDownloadLimit(parseInt(e.target.value))}
           >
@@ -181,7 +181,7 @@ const RedeemedCouponsList = () => {
 
       {/* Table */}
       <div className="overflow-x-auto text-xs">
-        <table className="w-full border border-[#374151]">
+        <table className="w-full border border-gray-300">
           <thead className="bg-blue-600 text-white">
             <tr>
               <th className="p-1 border">SI No</th>
@@ -239,7 +239,7 @@ const RedeemedCouponsList = () => {
           <button
             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="px-2 py-1 bg-[#1f2937] rounded disabled:opacity-50 text-xs"
+            className="px-2 py-1 bg-gray-200 rounded disabled:opacity-50 text-xs"
           >
             Prev
           </button>
@@ -249,7 +249,7 @@ const RedeemedCouponsList = () => {
               key={i + 1}
               onClick={() => setCurrentPage(i + 1)}
               className={`px-2 py-1 rounded text-xs ${
-                currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-[#111111]'
+                currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-100'
               }`}
             >
               {i + 1}
@@ -259,7 +259,7 @@ const RedeemedCouponsList = () => {
           <button
             onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
-            className="px-2 py-1 bg-[#1f2937] rounded disabled:opacity-50 text-xs"
+            className="px-2 py-1 bg-gray-200 rounded disabled:opacity-50 text-xs"
           >
             Next
           </button>

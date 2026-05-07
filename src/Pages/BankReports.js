@@ -174,44 +174,44 @@ const BankReports = () => {
   const hasActiveFilters = searchTerm || deptFilter || roleFilter || verifiedFilter;
 
   return (
-    <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="mx-auto max-w-9xl">
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-2 mb-2 sm:grid-cols-3">
-          <div className="p-3 bg-[#0a0a0a] border-l-4 border-blue-500 rounded-lg shadow-md flex items-center justify-between">
-            <div className="text-sm font-medium text-gray-300">Total Bank Records</div>
-            <div className="text-sm font-bold text-gray-300">
+          <div className="p-3 bg-white border-l-4 border-blue-500 rounded-lg shadow-md flex items-center justify-between">
+            <div className="text-sm font-medium text-gray-700">Total Bank Records</div>
+            <div className="text-sm font-bold text-gray-700">
               <CountUp end={allData.length} duration={2} separator="," />
             </div>
           </div>
-          <div className="p-3 bg-[#0a0a0a] border-l-4 border-green-500 rounded-lg shadow-md flex items-center justify-between">
-            <div className="text-sm font-medium text-gray-300">Verified</div>
-            <div className="text-sm font-bold text-gray-300">
+          <div className="p-3 bg-white border-l-4 border-green-500 rounded-lg shadow-md flex items-center justify-between">
+            <div className="text-sm font-medium text-gray-700">Verified</div>
+            <div className="text-sm font-bold text-gray-700">
               <CountUp end={verifiedCount} duration={2} separator="," />
             </div>
           </div>
-          <div className="p-3 bg-[#0a0a0a] border-l-4 border-yellow-500 rounded-lg shadow-md flex items-center justify-between">
-            <div className="text-sm font-medium text-gray-300">Pending</div>
-            <div className="text-sm font-bold text-gray-300">
+          <div className="p-3 bg-white border-l-4 border-yellow-500 rounded-lg shadow-md flex items-center justify-between">
+            <div className="text-sm font-medium text-gray-700">Pending</div>
+            <div className="text-sm font-bold text-gray-700">
               <CountUp end={pendingCount} duration={2} separator="," />
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
+        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
 
             {/* Search */}
             <div className="relative flex-1 min-w-[180px]">
-              <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="text"
                 placeholder="Search by name, email, bank or IFSC..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
               />
             </div>
 
@@ -219,7 +219,7 @@ const BankReports = () => {
             <select
               value={deptFilter}
               onChange={(e) => setDeptFilter(e.target.value)}
-              className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[130px] outline-none"
+              className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[130px] outline-none"
             >
               <option value="">All Departments</option>
               {departments.map((d) => (
@@ -231,7 +231,7 @@ const BankReports = () => {
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[120px] outline-none"
+              className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[120px] outline-none"
             >
               <option value="">All Roles</option>
               {roles.map((r) => (
@@ -243,7 +243,7 @@ const BankReports = () => {
             <select
               value={verifiedFilter}
               onChange={(e) => setVerifiedFilter(e.target.value)}
-              className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[110px] outline-none"
+              className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[110px] outline-none"
             >
               <option value="">All Status</option>
               <option value="verified">Verified</option>
@@ -262,7 +262,7 @@ const BankReports = () => {
             {hasActiveFilters && (
               <button
                 onClick={resetFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
+                className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
               >
                 Clear
               </button>
@@ -271,8 +271,8 @@ const BankReports = () => {
         </div>
 
         {/* Table */}
-        <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
-          <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+        <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
@@ -284,13 +284,13 @@ const BankReports = () => {
                   <th className="px-2 py-2 text-center">Uploaded</th>
                 </tr>
               </thead>
-              <tbody className="bg-[#0a0a0a] divide-y divide-[#1f2937]">
+              <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
                     <td colSpan="6" className="px-2 py-8 text-center">
                       <div className="flex items-center justify-center">
                         <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin" />
-                        <span className="ml-2 text-gray-400 text-sm">
+                        <span className="ml-2 text-gray-500 text-sm">
                           Loading bank records...
                         </span>
                       </div>
@@ -318,17 +318,17 @@ const BankReports = () => {
                   currentItems.map((row, idx) => (
                     <tr
                       key={row._id}
-                      className="transition-colors hover:bg-[#000000]"
+                      className="transition-colors hover:bg-gray-50"
                     >
                       {/* # */}
-                      <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+                      <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
                         {indexOfFirstItem + idx + 1}
                       </td>
 
                       {/* Name */}
                       <td className="px-2 py-2 text-center whitespace-nowrap">
                         <div className="flex flex-col items-center">
-                          <span className="text-sm font-medium text-gray-200">
+                          <span className="text-sm font-medium text-gray-900">
                             {row.name}
                           </span>
                           <span className="text-xs text-gray-500">
@@ -338,22 +338,22 @@ const BankReports = () => {
                       </td>
 
                       {/* Bank Name */}
-                      <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+                      <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
                         {row.bankName}
                       </td>
 
                       {/* Account Number */}
-                      <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap font-mono">
+                      <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap font-mono">
                         {row.accountNumber}
                       </td>
 
                       {/* IFSC */}
-                      <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap font-mono">
+                      <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap font-mono">
                         {row.ifscCode}
                       </td>
 
                       {/* Uploaded At */}
-                      <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+                      <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
                         {row.uploadedAt
                           ? new Date(row.uploadedAt).toLocaleDateString("en-IN", {
                               day: "2-digit",
@@ -371,9 +371,9 @@ const BankReports = () => {
 
           {/* Pagination */}
           {!loading && filteredData.length > 0 && (
-            <div className="flex items-center justify-between px-2 py-2 border-t border-[#1f2937] bg-[#000000]">
+            <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-gray-50">
               {/* Left: showing info + per page */}
-              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-300">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
                 <span>Showing</span>
                 <span className="font-medium">{indexOfFirstItem + 1}</span>
                 <span>to</span>
@@ -405,7 +405,7 @@ const BankReports = () => {
                     }))
                   }
                   disabled={pagination.currentPage === 1}
-                  className="px-4 py-2 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-lg hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
@@ -431,7 +431,7 @@ const BankReports = () => {
                           className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
                             pagination.currentPage === page
                               ? "bg-blue-600 text-white"
-                              : "bg-[#0a0a0a] text-gray-300 border border-[#374151] hover:bg-[#000000]"
+                              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                           }`}
                         >
                           {page}
@@ -459,7 +459,7 @@ const BankReports = () => {
                     }))
                   }
                   disabled={pagination.currentPage === pagination.totalPages}
-                  className="px-4 py-2 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-lg hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>

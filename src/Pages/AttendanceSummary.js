@@ -158,23 +158,23 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-7xl">
 //         <h1 className="mb-6 text-3xl font-bold text-blue-700">
 //           📊 Employee Attendance Dashboard
 //         </h1>
 
 //         {/* ✅ Attndance Summary Section */}
-//         <div className="p-6 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
 //           <h2 className="mb-4 text-2xl font-semibold text-purple-700">
 //             👥 Attndance Summary
 //           </h2>
 
 //           {employeeSummary.length === 0 ? (
-//             <p className="text-gray-400">No summary data available.</p>
+//             <p className="text-gray-500">No summary data available.</p>
 //           ) : (
 //             <div className="overflow-x-auto">
-//               <table className="w-full text-sm border border-[#1f2937]">
+//               <table className="w-full text-sm border border-gray-200">
 //                 <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
 //                   <tr>
 //                     <th className="px-6 py-4 text-left">Employee ID</th>
@@ -193,10 +193,10 @@
 //                       key={emp.employeeId}
 //                       className="transition border-t hover:bg-blue-50"
 //                     >
-//                       <td className="px-6 py-4 font-semibold text-gray-200">
+//                       <td className="px-6 py-4 font-semibold text-gray-900">
 //                         {emp.employeeId}
 //                       </td>
-//                       <td className="px-6 py-4 text-gray-300">
+//                       <td className="px-6 py-4 text-gray-700">
 //                         {emp.employeeEmail}
 //                       </td>
 //                       <td className="px-6 py-4">{emp.totalDays}</td>
@@ -369,16 +369,16 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-7xl">
 //         <h1 className="mb-6 text-3xl font-bold text-blue-700">
 //           📊 Employee Attendance Dashboard
 //         </h1>
 
 //         {/* ✅ Filters Section */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border border-gray-200 shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">From:</label>
+//             <label className="mr-2 font-semibold text-gray-700">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -388,7 +388,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">To:</label>
+//             <label className="mr-2 font-semibold text-gray-700">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -399,13 +399,13 @@
 
 //           <button
 //             onClick={handleDateRangeFilter}
-//             className="py-2 text-center text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="py-2 text-center text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             Apply Date Range
 //           </button>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -416,23 +416,23 @@
 
 //           <button
 //             onClick={clearFilters}
-//             className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
+//             className="px-4 py-2 text-gray-900 bg-gray-500 rounded-lg hover:bg-gray-600"
 //           >
 //             Clear
 //           </button>
 //         </div>
 
 //         {/* ✅ Attndance Summary */}
-//         <div className="p-6 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
 //           <h2 className="mb-4 text-2xl font-semibold text-purple-700">
 //             👥 Attndance Summary
 //           </h2>
 
 //           {employeeSummary.length === 0 ? (
-//             <p className="text-gray-400">No summary data available.</p>
+//             <p className="text-gray-500">No summary data available.</p>
 //           ) : (
 //             <div className="overflow-x-auto">
-//               <table className="w-full text-sm border border-[#1f2937]">
+//               <table className="w-full text-sm border border-gray-200">
 //                 <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
 //                   <tr>
 //                     <th className="px-6 py-4 text-left">Employee ID</th>
@@ -451,10 +451,10 @@
 //                       key={emp.employeeId}
 //                       className="transition border-t hover:bg-blue-50"
 //                     >
-//                       <td className="px-6 py-4 font-semibold text-gray-200">
+//                       <td className="px-6 py-4 font-semibold text-gray-900">
 //                         {emp.employeeId}
 //                       </td>
-//                       <td className="px-6 py-4 text-gray-300">
+//                       <td className="px-6 py-4 text-gray-700">
 //                         {emp.employeeEmail}
 //                       </td>
 //                       <td className="px-6 py-4">{emp.totalDays}</td>
@@ -688,16 +688,16 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-7xl">
 //         <h1 className="mb-6 text-3xl font-bold text-blue-700">
 //           📊 Employee Attendance Dashboard
 //         </h1>
 
 //         {/* ✅ Filters */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border border-gray-200 shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">From:</label>
+//             <label className="mr-2 font-semibold text-gray-700">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -707,7 +707,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">To:</label>
+//             <label className="mr-2 font-semibold text-gray-700">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -718,13 +718,13 @@
 
 //           <button
 //             onClick={handleDateRangeFilter}
-//             className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="px-4 py-2 text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             Apply
 //           </button>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -735,30 +735,30 @@
 
 //           <button
 //             onClick={clearFilters}
-//             className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
+//             className="px-4 py-2 text-gray-900 bg-gray-500 rounded-lg hover:bg-gray-600"
 //           >
 //             Clear
 //           </button>
 //         </div>
 
 //         {/* ✅ Attndance Summary */}
-//         <div className="p-6 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
 //           <h2 className="mb-4 text-2xl font-semibold text-purple-700">
 //             👥 Attndance Summary
 //           </h2>
 
 //            <button
 //     onClick={downloadAllSummary}
-//     className="px-4 py-2 text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700"
+//     className="px-4 py-2 text-gray-900 bg-green-600 rounded-lg shadow-md hover:bg-green-700"
 //   >
 //     ⬇ Download Summary
 //   </button>
 
 //           {employeeSummary.length === 0 ? (
-//             <p className="text-gray-400">No summary data available.</p>
+//             <p className="text-gray-500">No summary data available.</p>
 //           ) : (
 //             <div className="overflow-x-auto">
-//               <table className="w-full text-sm border border-[#1f2937]">
+//               <table className="w-full text-sm border border-gray-200">
 //                 <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
 //                   <tr>
 //                     <th className="px-6 py-3 text-left">Employee ID</th>
@@ -777,10 +777,10 @@
 //                       key={emp.employeeId}
 //                       className="transition border-t hover:bg-blue-50"
 //                     >
-//                       <td className="px-6 py-3 font-semibold text-gray-200">
+//                       <td className="px-6 py-3 font-semibold text-gray-900">
 //                         {emp.employeeId}
 //                       </td>
-//                       <td className="px-6 py-3 text-gray-300">
+//                       <td className="px-6 py-3 text-gray-700">
 //                         {emp.employeeEmail}
 //                       </td>
 
@@ -802,7 +802,7 @@
 //                       <td className="px-6 py-3 text-center">
 //                         <button
 //                           onClick={() => handleViewDetails(emp.employeeId)}
-//                           className="px-3 py-1 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+//                           className="px-3 py-1 text-gray-900 bg-indigo-600 rounded-lg hover:bg-indigo-700"
 //                         >
 //                           View Details
 //                         </button>
@@ -818,7 +818,7 @@
 //         {/* ✅ Employee Full Details Modal */}
 //         {selectedEmployee && (
 //           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//             <div className="bg-[#0a0a0a] p-6 rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+//             <div className="bg-white p-6 rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
 //               <div className="flex items-center justify-between mb-4">
 //                 <h3 className="text-xl font-semibold text-blue-700">
 //                   🧾 Attendance Details — {selectedEmployee}
@@ -831,7 +831,7 @@
 //                 </button>
 //               </div>
 
-//               <table className="w-full text-sm border border-[#374151]">
+//               <table className="w-full text-sm border border-gray-300">
 //                 <thead className="text-white bg-blue-600">
 //                   <tr>
 //                     <th className="px-4 py-2 text-left">Date</th>
@@ -1091,16 +1091,16 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-7xl">
 //         <h1 className="mb-6 text-3xl font-bold text-blue-700">
 //           📊 Employee Attendance Dashboard
 //         </h1>
 
 //         {/* Filters */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border border-gray-200 shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">From:</label>
+//             <label className="mr-2 font-semibold text-gray-700">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -1110,7 +1110,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">To:</label>
+//             <label className="mr-2 font-semibold text-gray-700">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -1121,13 +1121,13 @@
 
 //           <button
 //             onClick={handleDateRangeFilter}
-//             className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="px-4 py-2 text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             Apply
 //           </button>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -1138,31 +1138,31 @@
 
 //           <button
 //             onClick={clearFilters}
-//             className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
+//             className="px-4 py-2 text-gray-900 bg-gray-500 rounded-lg hover:bg-gray-600"
 //           >
 //             Clear
 //           </button>
 //         </div>
 
 //         {/* Attndance Summary */}
-//         <div className="p-6 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
 //           <div className="flex items-center justify-between mb-4">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attndance Summary
 //             </h2>
 //             <button
 //               onClick={downloadAllSummary}
-//               className="px-4 py-2 text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700"
+//               className="px-4 py-2 text-gray-900 bg-green-600 rounded-lg shadow-md hover:bg-green-700"
 //             >
 //               ⬇ Download Summary
 //             </button>
 //           </div>
 
 //           {employeeSummary.length === 0 ? (
-//             <p className="text-gray-400">No summary data available.</p>
+//             <p className="text-gray-500">No summary data available.</p>
 //           ) : (
 //             <div className="overflow-x-auto">
-//               <table className="w-full text-sm border border-[#1f2937]">
+//               <table className="w-full text-sm border border-gray-200">
 //                 <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
 //                   <tr>
 //                     <th className="px-6 py-3 text-left">Employee ID</th>
@@ -1182,10 +1182,10 @@
 //                       onClick={() => handleViewDetails(emp.employeeId)}
 //                       className="transition border-t cursor-pointer hover:bg-blue-50"
 //                     >
-//                       <td className="px-6 py-3 font-semibold text-gray-200">
+//                       <td className="px-6 py-3 font-semibold text-gray-900">
 //                         {emp.employeeId}
 //                       </td>
-//                       <td className="px-6 py-3 text-gray-300">
+//                       <td className="px-6 py-3 text-gray-700">
 //                         {emp.employeeEmail}
 //                       </td>
 //                       <td className="px-6 py-3 font-semibold text-green-700">
@@ -1217,7 +1217,7 @@
 //         {/* Employee Full Details Modal */}
 //         {selectedEmployee && (
 //           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//             <div className="bg-[#0a0a0a] p-6 rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+//             <div className="bg-white p-6 rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
 //               <div className="flex items-center justify-between mb-4">
 //                 <h3 className="text-xl font-semibold text-blue-700">
 //                   🧾 Attendance Details — {selectedEmployee}
@@ -1230,7 +1230,7 @@
 //                 </button>
 //               </div>
 
-//               <table className="w-full text-sm border border-[#374151]">
+//               <table className="w-full text-sm border border-gray-300">
 //                 <thead className="text-white bg-blue-600">
 //                   <tr>
 //                     <th className="px-4 py-2 text-left">Date</th>
@@ -1480,16 +1480,16 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-7xl">
 //         <h1 className="mb-6 text-3xl font-bold text-blue-700">
 //           📊 Employee Attendance Dashboard
 //         </h1>
 
 //         {/* ✅ Filters */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border border-gray-200 shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">From:</label>
+//             <label className="mr-2 font-semibold text-gray-700">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -1499,7 +1499,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">To:</label>
+//             <label className="mr-2 font-semibold text-gray-700">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -1510,13 +1510,13 @@
 
 //           <button
 //             onClick={handleDateRangeFilter}
-//             className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="px-4 py-2 text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             Apply
 //           </button>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -1527,31 +1527,31 @@
 
 //           <button
 //             onClick={clearFilters}
-//             className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
+//             className="px-4 py-2 text-gray-900 bg-gray-500 rounded-lg hover:bg-gray-600"
 //           >
 //             Clear
 //           </button>
 //         </div>
 
 //         {/* ✅ Attndance Summary */}
-//         <div className="p-6 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
 //           <div className="flex items-center justify-between mb-4">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attndance Summary
 //             </h2>
 //             <button
 //               onClick={downloadAllSummary}
-//               className="px-4 py-2 text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700"
+//               className="px-4 py-2 text-gray-900 bg-green-600 rounded-lg shadow-md hover:bg-green-700"
 //             >
 //               ⬇ Download Summary
 //             </button>
 //           </div>
 
 //           {employeeSummary.length === 0 ? (
-//             <p className="text-gray-400">No summary data available.</p>
+//             <p className="text-gray-500">No summary data available.</p>
 //           ) : (
 //             <div className="overflow-x-auto">
-//               <table className="w-full text-sm border border-[#1f2937]">
+//               <table className="w-full text-sm border border-gray-200">
 //                 <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
 //                   <tr>
 //                     <th className="px-6 py-3 text-left">Employee ID</th>
@@ -1570,10 +1570,10 @@
 //                       onClick={() => handleViewDetails(emp.employeeId)}
 //                       className="transition border-t cursor-pointer hover:bg-blue-50"
 //                     >
-//                       <td className="px-6 py-3 font-semibold text-gray-200">
+//                       <td className="px-6 py-3 font-semibold text-gray-900">
 //                         {emp.employeeId}
 //                       </td>
-//                       <td className="px-6 py-3 text-gray-300">
+//                       <td className="px-6 py-3 text-gray-700">
 //                         {emp.employeeEmail}
 //                       </td>
 //                       <td className="px-6 py-3 font-semibold text-green-700">
@@ -1602,7 +1602,7 @@
 //         {/* ✅ Employee Full Details Modal */}
 //         {selectedEmployee && (
 //           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//             <div className="bg-[#0a0a0a] p-6 rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+//             <div className="bg-white p-6 rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
 //               <div className="flex items-center justify-between mb-4">
 //                 <h3 className="text-xl font-semibold text-blue-700">
 //                   🧾 Attendance Details — {selectedEmployee}
@@ -1615,7 +1615,7 @@
 //                 </button>
 //               </div>
 
-//               <table className="w-full text-sm border border-[#374151]">
+//               <table className="w-full text-sm border border-gray-300">
 //                 <thead className="text-white bg-blue-600">
 //                   <tr>
 //                     <th className="px-4 py-2 text-left">Date</th>
@@ -1877,16 +1877,16 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-7xl">
 //         <h1 className="mb-6 text-3xl font-bold text-blue-700">
 //           📊 Employee Attendance Dashboard
 //         </h1>
 
 //         {/* Filters */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">From:</label>
+//             <label className="mr-2 font-semibold text-gray-700">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -1896,7 +1896,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">To:</label>
+//             <label className="mr-2 font-semibold text-gray-700">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -1907,13 +1907,13 @@
 
 //           <button
 //             onClick={handleDateRangeFilter}
-//             className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="px-4 py-2 text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             Apply
 //           </button>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -1924,21 +1924,21 @@
 
 //           <button
 //             onClick={clearFilters}
-//             className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
+//             className="px-4 py-2 text-gray-900 bg-gray-500 rounded-lg hover:bg-gray-600"
 //           >
 //             Clear
 //           </button>
 //         </div>
 
 //         {/* Summary Table */}
-//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
 //           <div className="flex items-center justify-between mb-4">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attndance Summary
 //             </h2>
 //             <button
 //               onClick={downloadAllSummary}
-//               className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//               className="px-4 py-2 text-gray-900 bg-green-600 rounded-lg hover:bg-green-700"
 //             >
 //               ⬇ Download Summary
 //             </button>
@@ -1986,7 +1986,7 @@
 //         {/* Details Modal */}
 //         {selectedEmployee && (
 //           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-//             <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+//             <div className="bg-white p-6 rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
 //               <div className="flex items-center justify-between mb-4">
 //                 <h3 className="text-xl font-semibold text-blue-700">
 //                   🧾 Attendance Details — {selectedEmployee}
@@ -2413,12 +2413,12 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-7xl">
 
 //         {/* Save Status Alert */}
 //         {saveStatus && (
-//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${
+//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-gray-900 animate-fade-in ${
 //             saveStatus.includes("✅") || saveStatus.includes("successfully") 
 //               ? "bg-green-500 border-l-4 border-green-600" 
 //               : "bg-red-500 border-l-4 border-red-600"
@@ -2432,9 +2432,9 @@
 //         </h1>
 
 //         {/* Filters */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">From:</label>
+//             <label className="mr-2 font-semibold text-gray-700">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -2444,7 +2444,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">To:</label>
+//             <label className="mr-2 font-semibold text-gray-700">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -2455,13 +2455,13 @@
 
 //           <button
 //             onClick={handleDateRangeFilter}
-//             className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="px-4 py-2 text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             Apply
 //           </button>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -2472,7 +2472,7 @@
 
 //           <button
 //             onClick={clearFilters}
-//             className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
+//             className="px-4 py-2 text-gray-900 bg-gray-500 rounded-lg hover:bg-gray-600"
 //           >
 //             Clear
 //           </button>
@@ -2480,7 +2480,7 @@
 //           {/* Manual Save Button */}
 //           <button
 //             onClick={handleManualSave}
-//             className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600"
+//             className="px-4 py-2 text-gray-900 bg-orange-500 rounded-lg hover:bg-orange-600"
 //             title="Manually save current summary to database"
 //           >
 //             💾 Save Now
@@ -2493,7 +2493,7 @@
 //         </div>
 
 //         {/* Summary Table */}
-//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attndance Summary
@@ -2502,7 +2502,7 @@
 //             <div className="flex flex-wrap items-center gap-4">
 //               {/* Items per page selector */}
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-300">
+//                 <label className="text-sm font-medium text-gray-700">
 //                   Show:
 //                 </label>
 //                 <select
@@ -2515,7 +2515,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-400">entries</span>
+//                 <span className="text-sm text-gray-500">entries</span>
 //               </div>
 
 //               <button
@@ -2550,7 +2550,7 @@
 //                   link.download = "employee_summary.csv";
 //                   link.click();
 //                 }}
-//                 className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//                 className="px-4 py-2 text-gray-900 bg-green-600 rounded-lg hover:bg-green-700"
 //               >
 //                 ⬇ Download Summary
 //               </button>
@@ -2582,7 +2582,7 @@
 //                   >
 //                     <td className="px-6 py-3">{emp.employeeId}</td>
 //                     <td className="px-6 py-3">{emp.name}</td>
-//                     <td className="px-6 py-3 font-medium text-gray-300">{emp.month}</td>
+//                     <td className="px-6 py-3 font-medium text-gray-700">{emp.month}</td>
 //                     <td className="px-6 py-3 text-green-700">{emp.presentDays}</td>
 //                     <td className="px-6 py-3 text-orange-700">{emp.lateDays}</td>
 //                     <td className="px-6 py-3 text-blue-700">{emp.onsiteDays}</td>
@@ -2603,7 +2603,7 @@
 //             {/* Pagination Controls */}
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-400">
+//                 <div className="text-sm text-gray-500">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -2614,8 +2614,8 @@
 //                     disabled={currentPage === 1}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${
 //                       currentPage === 1
-//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                     }`}
 //                   >
 //                     Previous
@@ -2628,8 +2628,8 @@
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-3 py-1 text-sm border rounded-lg ${
 //                         currentPage === page
-//                           ? "text-white bg-blue-600 border-blue-600"
-//                           : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                           ? "text-gray-900 bg-blue-600 border-blue-600"
+//                           : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                     >
 //                       {page}
@@ -2642,8 +2642,8 @@
 //                     disabled={currentPage === totalPages}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${
 //                       currentPage === totalPages
-//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                     }`}
 //                   >
 //                     Next
@@ -2663,7 +2663,7 @@
 //         {/* Details Modal */}
 //         {selectedEmployee && (
 //           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-//             <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+//             <div className="bg-white p-6 rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
 
 //               <div className="flex items-center justify-between mb-4">
 //                 <h3 className="text-xl font-semibold text-blue-700">
@@ -2778,7 +2778,7 @@
 //                         {/* Save Button */}
 //                         <td className="px-4 py-2">
 //                           <button
-//                             className="px-3 py-1 text-white bg-green-600 rounded hover:bg-green-700"
+//                             className="px-3 py-1 text-gray-900 bg-green-600 rounded hover:bg-green-700"
 //                             onClick={() => handleSaveAttendance(rec, rec.hours || rec.totalHours, rec.region, i)}
 //                           >
 //                             Save
@@ -3375,13 +3375,13 @@
 //     const dayType = calculateDayType(hours);
 //     switch (dayType) {
 //       case "full":
-//         return <span className="px-2 py-1 text-xs text-white bg-green-500 rounded">Full Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-green-500 rounded">Full Day</span>;
 //       case "half":
-//         return <span className="px-2 py-1 text-xs text-white bg-yellow-500 rounded">Half Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-yellow-500 rounded">Half Day</span>;
 //       case "full_leave":
-//         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
 //     }
 //   };
 
@@ -3438,12 +3438,12 @@
 //   if (error) return <p>Error: {error}</p>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-7xl">
 
 //         {/* Save Status Alert */}
 //         {saveStatus && (
-//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${
+//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-gray-900 animate-fade-in ${
 //             saveStatus.includes("✅") || saveStatus.includes("successfully") 
 //               ? "bg-green-500 border-l-4 border-green-600" 
 //               : "bg-red-500 border-l-4 border-red-600"
@@ -3457,7 +3457,7 @@
 //         </h1>
 
 //         {/* ✅ UPDATED: Working Hours Info with new rules */}
-//         <div className="p-4 mb-6 bg-[#0a0a0a] border border-blue-300 rounded-lg shadow-sm">
+//         <div className="p-4 mb-6 bg-white border border-blue-300 rounded-lg shadow-sm">
 //           <h3 className="font-semibold text-blue-700">📋 Working Hours Criteria:</h3>
 //           <div className="grid grid-cols-1 gap-2 mt-2 text-sm md:grid-cols-4">
 //             <div className="flex items-center gap-2">
@@ -3480,9 +3480,9 @@
 //         </div>
 
 //         {/* Filters */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">From:</label>
+//             <label className="mr-2 font-semibold text-gray-700">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -3492,7 +3492,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">To:</label>
+//             <label className="mr-2 font-semibold text-gray-700">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -3503,13 +3503,13 @@
 
 //           <button
 //             onClick={handleDateRangeFilter}
-//             className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="px-4 py-2 text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             Apply Date Filter
 //           </button>
 
 //           <div className="ml-4">
-//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -3520,7 +3520,7 @@
 
 //           <button
 //             onClick={clearFilters}
-//             className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
+//             className="px-4 py-2 text-gray-900 bg-gray-500 rounded-lg hover:bg-gray-600"
 //           >
 //             Clear All
 //           </button>
@@ -3528,7 +3528,7 @@
 //           {/* Manual Save Button */}
 //           <button
 //             onClick={handleManualSave}
-//             className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600"
+//             className="px-4 py-2 text-gray-900 bg-orange-500 rounded-lg hover:bg-orange-600"
 //             title="Manually save current summary to database"
 //           >
 //             💾 Save Now
@@ -3545,7 +3545,7 @@
 //         </div>
 
 //         {/* ✅ UPDATED: Summary Table with "Onsite" column */}
-//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attndance Summary ({employeeSummary.length} employees)
@@ -3554,7 +3554,7 @@
 //             <div className="flex flex-wrap items-center gap-4">
 //               {/* Items per page selector */}
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-300">
+//                 <label className="text-sm font-medium text-gray-700">
 //                   Show:
 //                 </label>
 //                 <select
@@ -3567,7 +3567,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-400">entries</span>
+//                 <span className="text-sm text-gray-500">entries</span>
 //               </div>
 
 //               <button
@@ -3602,7 +3602,7 @@
 //                   link.download = "employee_summary.csv";
 //                   link.click();
 //                 }}
-//                 className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//                 className="px-4 py-2 text-gray-900 bg-green-600 rounded-lg hover:bg-green-700"
 //               >
 //                 ⬇ Download Summary
 //               </button>
@@ -3634,7 +3634,7 @@
 //                   >
 //                     <td className="px-6 py-3">{emp.employeeId}</td>
 //                     <td className="px-6 py-3">{emp.name}</td>
-//                     <td className="px-6 py-3 font-medium text-gray-300">{emp.month}</td>
+//                     <td className="px-6 py-3 font-medium text-gray-700">{emp.month}</td>
 //                     <td className="px-6 py-3 text-green-700">{emp.presentDays}</td>
 //                     <td className="px-6 py-3 text-orange-700">{emp.lateDays}</td>
 //                     <td className="px-6 py-3 text-blue-700">{emp.onsiteDays}</td> {/* Changed to onsiteDays */}
@@ -3655,7 +3655,7 @@
 //             {/* Pagination Controls */}
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-400">
+//                 <div className="text-sm text-gray-500">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -3665,8 +3665,8 @@
 //                     disabled={currentPage === 1}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${
 //                       currentPage === 1
-//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                     }`}
 //                   >
 //                     Previous
@@ -3678,8 +3678,8 @@
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-3 py-1 text-sm border rounded-lg ${
 //                         currentPage === page
-//                           ? "text-white bg-blue-600 border-blue-600"
-//                           : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                           ? "text-gray-900 bg-blue-600 border-blue-600"
+//                           : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                     >
 //                       {page}
@@ -3691,8 +3691,8 @@
 //                     disabled={currentPage === totalPages}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${
 //                       currentPage === totalPages
-//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                     }`}
 //                   >
 //                     Next
@@ -3712,7 +3712,7 @@
 //         {/* Details Modal */}
 //         {selectedEmployee && (
 //           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-//             <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+//             <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
 //               <div className="flex items-center justify-between mb-4">
 //                 <h3 className="text-xl font-semibold text-blue-700">
@@ -3722,7 +3722,7 @@
 //                   {/* Download Button */}
 //                   <button
 //                     onClick={() => downloadEmployeeDetails(selectedEmployee, employeeDetails)}
-//                     className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//                     className="flex items-center gap-2 px-4 py-2 text-gray-900 bg-green-600 rounded-lg hover:bg-green-700"
 //                     title="Download attendance details as CSV"
 //                   >
 //                     ⬇ Download Details
@@ -3794,7 +3794,7 @@
 //                     return (
 //                       <tr key={i} className="border-t hover:bg-blue-50">
 //                         {/* Employee ID */}
-//                         <td className="px-4 py-2 font-medium text-gray-300">
+//                         <td className="px-4 py-2 font-medium text-gray-700">
 //                           {rec.employeeId}
 //                         </td>
 
@@ -3870,7 +3870,7 @@
 
 //                         <td className="px-4 py-2">
 //                           <button
-//                             className="px-3 py-1 text-white bg-green-600 rounded hover:bg-green-700"
+//                             className="px-3 py-1 text-gray-900 bg-green-600 rounded hover:bg-green-700"
 //                             onClick={() => handleSaveAttendance(rec, rec.hours || rec.totalHours, rec.region, i)}
 //                           >
 //                             Save
@@ -4345,13 +4345,13 @@
 //     const dayType = calculateDayType(hours);
 //     switch (dayType) {
 //       case "full":
-//         return <span className="px-2 py-1 text-xs text-white bg-green-500 rounded">Full Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-green-500 rounded">Full Day</span>;
 //       case "half":
-//         return <span className="px-2 py-1 text-xs text-white bg-yellow-500 rounded">Half Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-yellow-500 rounded">Half Day</span>;
 //       case "full_leave":
-//         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
 //     }
 //   };
 
@@ -4605,12 +4605,12 @@
 //   </div>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-7xl">
 
 //         {/* Save Status Alert */}
 //         {saveStatus && (
-//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
+//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-gray-900 animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
 //               ? "bg-green-500 border-l-4 border-green-600"
 //               : "bg-red-500 border-l-4 border-red-600"
 //             }`}>
@@ -4623,7 +4623,7 @@
 //         </h1>
 
 //         {/* Working Hours Info */}
-//         <div className="p-4 mb-6 bg-[#0a0a0a] border border-blue-300 rounded-lg shadow-sm">
+//         <div className="p-4 mb-6 bg-white border border-blue-300 rounded-lg shadow-sm">
 //           <h3 className="font-semibold text-blue-700">📋 Working Hours Criteria:</h3>
 //           <div className="grid grid-cols-1 gap-2 mt-2 text-sm md:grid-cols-4">
 //             <div className="flex items-center gap-2">
@@ -4646,9 +4646,9 @@
 //         </div>
 
 //         {/* Filters */}
-//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-[#0a0a0a] border shadow-md rounded-xl">
+//         <div className="flex flex-wrap items-center gap-4 p-5 mb-8 bg-white border shadow-md rounded-xl">
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">From:</label>
+//             <label className="mr-2 font-semibold text-gray-700">From:</label>
 //             <input
 //               type="date"
 //               value={fromDate}
@@ -4658,7 +4658,7 @@
 //           </div>
 
 //           <div>
-//             <label className="mr-2 font-semibold text-gray-300">To:</label>
+//             <label className="mr-2 font-semibold text-gray-700">To:</label>
 //             <input
 //               type="date"
 //               value={toDate}
@@ -4669,13 +4669,13 @@
 
 //           <button
 //             onClick={handleDateRangeFilter}
-//             className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="px-4 py-2 text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             Apply Date Filter
 //           </button>
 
 //           <div className="ml-4">
-//             <label className="mr-2 font-semibold text-gray-300">Month:</label>
+//             <label className="mr-2 font-semibold text-gray-700">Month:</label>
 //             <input
 //               type="month"
 //               value={selectedMonth}
@@ -4686,7 +4686,7 @@
 
 //           <button
 //             onClick={clearFilters}
-//             className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
+//             className="px-4 py-2 text-gray-900 bg-gray-500 rounded-lg hover:bg-gray-600"
 //           >
 //             Clear All
 //           </button>
@@ -4694,7 +4694,7 @@
 //           {/* Manual Save Button */}
 //           <button
 //             onClick={handleManualSave}
-//             className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600"
+//             className="px-4 py-2 text-gray-900 bg-orange-500 rounded-lg hover:bg-orange-600"
 //             title="Manually save current summary to database"
 //           >
 //             💾 Save Now
@@ -4711,14 +4711,14 @@
 //         </div>
 
 //         {/* Summary Table */}
-//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attndance Summary ({employeeSummary.length} employees)
 //             </h2>
 //               <button
 //                     onClick={downloadCombinedExcel}
-//                     className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//                     className="flex items-center gap-2 px-4 py-2 text-gray-900 bg-green-600 rounded-lg hover:bg-green-700"
 //                   >
 //                     ⬇ Download Attendance
 //                   </button>
@@ -4726,7 +4726,7 @@
 //             <div className="flex flex-wrap items-center gap-4">
 //               {/* Items per page selector */}
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-300">
+//                 <label className="text-sm font-medium text-gray-700">
 //                   Show:
 //                 </label>
 //                 <select
@@ -4739,7 +4739,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-400">entries</span>
+//                 <span className="text-sm text-gray-500">entries</span>
 //               </div>
 
 //               {/* <button
@@ -4774,7 +4774,7 @@
 //                   link.download = "employee_summary.csv";
 //                   link.click();
 //                 }}
-//                 className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//                 className="px-4 py-2 text-gray-900 bg-green-600 rounded-lg hover:bg-green-700"
 //               >
 //                 ⬇ Download Summary
 //               </button> */}
@@ -4807,7 +4807,7 @@
 //                   >
 //                     <td className="px-6 py-3">{emp.employeeId}</td>
 //                     <td className="px-6 py-3">{emp.name}</td>
-//                     <td className="px-6 py-3 font-medium text-gray-300">{emp.month}</td>
+//                     <td className="px-6 py-3 font-medium text-gray-700">{emp.month}</td>
 //                     <td className="px-6 py-3 text-green-700">{emp.presentDays}</td>
 //                     <td className="px-6 py-3 text-orange-700">{emp.lateDays}</td>
 //                     <td className="px-6 py-3 text-blue-700">{emp.onsiteDays}</td>
@@ -4828,7 +4828,7 @@
 //             {/* Pagination Controls */}
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-400">
+//                 <div className="text-sm text-gray-500">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -4837,8 +4837,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === 1
-//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Previous
@@ -4849,8 +4849,8 @@
 //                       key={page}
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-3 py-1 text-sm border rounded-lg ${currentPage === page
-//                           ? "text-white bg-blue-600 border-blue-600"
-//                           : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                           ? "text-gray-900 bg-blue-600 border-blue-600"
+//                           : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -4861,8 +4861,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -4882,7 +4882,7 @@
 //         {/* Details Modal */}
 //         {selectedEmployee && (
 //           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-//             <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+//             <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
 //               <div className="flex items-center justify-between mb-4">
 //                 <h3 className="text-xl font-semibold text-blue-700">
@@ -4893,7 +4893,7 @@
 
 //                   {/* <button
 //                     onClick={() => downloadEmployeeDetails(selectedEmployee, employeeDetails)}
-//                     className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//                     className="flex items-center gap-2 px-4 py-2 text-gray-900 bg-green-600 rounded-lg hover:bg-green-700"
 //                     title="Download attendance details as CSV"
 //                   >
 //                     ⬇ Download Details
@@ -4901,7 +4901,7 @@
 
 //                   <button
 //                     onClick={downloadCombinedExcel}
-//                     className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//                     className="flex items-center gap-2 px-4 py-2 text-gray-900 bg-green-600 rounded-lg hover:bg-green-700"
 //                   >
 //                     ⬇ Download Attendance
 //                   </button>
@@ -4974,7 +4974,7 @@
 //                     return (
 //                       <tr key={i} className="border-t hover:bg-blue-50">
 //                         {/* Employee ID */}
-//                         <td className="px-4 py-2 font-medium text-gray-300">
+//                         <td className="px-4 py-2 font-medium text-gray-700">
 //                           {rec.employeeId}
 //                         </td>
 
@@ -5050,7 +5050,7 @@
 
 //                         <td className="px-4 py-2">
 //                           <button
-//                             className="px-3 py-1 text-white bg-green-600 rounded hover:bg-green-700"
+//                             className="px-3 py-1 text-gray-900 bg-green-600 rounded hover:bg-green-700"
 //                             onClick={() => handleSaveAttendance(rec, rec.hours || rec.totalHours, rec.region, rec.comment, i)}
 //                           >
 //                             Save
@@ -5645,13 +5645,13 @@
 //     const dayType = calculateDayType(hours);
 //     switch (dayType) {
 //       case "full":
-//         return <span className="px-2 py-1 text-xs text-white bg-green-500 rounded">Full Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-green-500 rounded">Full Day</span>;
 //       case "half":
-//         return <span className="px-2 py-1 text-xs text-white bg-yellow-500 rounded">Half Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-yellow-500 rounded">Half Day</span>;
 //       case "full_leave":
-//         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
 //     }
 //   };
 
@@ -5942,12 +5942,12 @@
 //   </div>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-9xl">
 
 //         {/* Save Status Alert */}
 //         {saveStatus && (
-//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
+//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-gray-900 animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
 //               ? "bg-green-500 border-l-4 border-green-600"
 //               : "bg-red-500 border-l-4 border-red-600"
 //             }`}>
@@ -5960,7 +5960,7 @@
 //         </h1>
 
 //        {/* Working Hours Info - UPDATED CRITERIA */}
-// <div className="p-4 mb-6 bg-[#0a0a0a] border border-blue-300 rounded-lg shadow-sm">
+// <div className="p-4 mb-6 bg-white border border-blue-300 rounded-lg shadow-sm">
 
 //   <h3 className="mb-3 font-semibold text-blue-700">
 //     📋 Working Hours Criteria:
@@ -5993,7 +5993,7 @@
 //   <div className="flex flex-wrap items-end gap-4 pt-3 border-t">
 
 //     <div>
-//       <label className="block text-sm font-semibold text-gray-300">From</label>
+//       <label className="block text-sm font-semibold text-gray-700">From</label>
 //       <input
 //         type="date"
 //         value={fromDate}
@@ -6003,7 +6003,7 @@
 //     </div>
 
 //     <div>
-//       <label className="block text-sm font-semibold text-gray-300">To</label>
+//       <label className="block text-sm font-semibold text-gray-700">To</label>
 //       <input
 //         type="date"
 //         value={toDate}
@@ -6013,7 +6013,7 @@
 //     </div>
 
 //     <div>
-//       <label className="block text-sm font-semibold text-gray-300">Month</label>
+//       <label className="block text-sm font-semibold text-gray-700">Month</label>
 //       <input
 //         type="month"
 //         value={selectedMonth}
@@ -6024,21 +6024,21 @@
 
 //     <button
 //       onClick={() => handleDateRangeFilter(fromDate, toDate)}
-//       className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//       className="px-4 py-2 text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //     >
 //       Apply
 //     </button>
 
 //     <button
 //       onClick={clearFilters}
-//       className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
+//       className="px-4 py-2 text-gray-900 bg-gray-500 rounded-lg hover:bg-gray-600"
 //     >
 //       Clear
 //     </button>
 
 //     {/* <button
 //       onClick={handleManualSave}
-//       className="px-4 py-2 text-white bg-orange-500 rounded-lg hover:bg-orange-600"
+//       className="px-4 py-2 text-gray-900 bg-orange-500 rounded-lg hover:bg-orange-600"
 //     >
 //       💾 Save
 //     </button> */}
@@ -6059,7 +6059,7 @@
 //         </div> */}
 
 //         {/* Summary Table - UPDATED COLUMN HEADERS */}
-//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attendance Summary ({employeeSummary.length} employees)
@@ -6067,7 +6067,7 @@
 
 //             <button
 //               onClick={downloadCombinedExcel}
-//               className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//               className="flex items-center gap-2 px-4 py-2 text-gray-900 bg-green-600 rounded-lg hover:bg-green-700"
 //             >
 //               ⬇ Download Attendance
 //             </button>
@@ -6075,7 +6075,7 @@
 //             <div className="flex flex-wrap items-center gap-4">
 //               {/* Items per page selector */}
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-300">
+//                 <label className="text-sm font-medium text-gray-700">
 //                   Show:
 //                 </label>
 //                 <select
@@ -6088,7 +6088,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-400">entries</span>
+//                 <span className="text-sm text-gray-500">entries</span>
 //               </div>
 //             </div>
 //           </div>
@@ -6119,7 +6119,7 @@
 //                   >
 //                     <td className="px-6 py-3">{emp.employeeId}</td>
 //                     <td className="px-6 py-3">{emp.name}</td>
-//                     <td className="px-6 py-3 font-medium text-gray-300">{emp.month}</td>
+//                     <td className="px-6 py-3 font-medium text-gray-700">{emp.month}</td>
 //                     <td className="px-6 py-3 text-green-700">{emp.presentDays}</td>
 //                     <td className="px-6 py-3 text-orange-700">{emp.lateDays}</td>
 //                     <td className="px-6 py-3 text-blue-700">{emp.onsiteDays}</td>
@@ -6148,7 +6148,7 @@
 //             {/* Pagination Controls */}
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-400">
+//                 <div className="text-sm text-gray-500">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -6157,8 +6157,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === 1
-//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Previous
@@ -6169,8 +6169,8 @@
 //                       key={page}
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-3 py-1 text-sm border rounded-lg ${currentPage === page
-//                           ? "text-white bg-blue-600 border-blue-600"
-//                           : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                           ? "text-gray-900 bg-blue-600 border-blue-600"
+//                           : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -6181,8 +6181,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                         ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -6203,7 +6203,7 @@
 //        {/* Details Modal */}
 // {selectedEmployee && (
 //   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//     <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+//     <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
 //       {/* 🔹 HEADER */}
 //       <div className="flex items-center justify-between mb-4">
@@ -6214,7 +6214,7 @@
 //         <div className="flex items-center gap-3">
 //           <button
 //             onClick={downloadCombinedExcel}
-//             className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//             className="flex items-center gap-2 px-4 py-2 text-gray-900 bg-green-600 rounded-lg hover:bg-green-700"
 //           >
 //             ⬇ Download Attendance
 //           </button>
@@ -6314,7 +6314,7 @@
 //                     key={i}
 //                     className={`border-t ${
 //                       rec._absent
-//                         ? "bg-[#111111] text-gray-500"
+//                         ? "bg-gray-100 text-gray-500"
 //                         : highlight
 //                         ? "bg-orange-100"
 //                         : "hover:bg-blue-50"
@@ -6383,7 +6383,7 @@
 //                         <button
 //                           disabled={!edited?.comment}
 //                           onClick={() => handleSave(rec, i)}
-//                           className={`px-3 py-1 text-white rounded ${
+//                           className={`px-3 py-1 text-gray-900 rounded ${
 //                             edited?.comment
 //                               ? "bg-green-600 hover:bg-green-700"
 //                               : "bg-gray-400 cursor-not-allowed"
@@ -7069,13 +7069,13 @@
 //     const dayType = calculateDayType(hours);
 //     switch (dayType) {
 //       case "full":
-//         return <span className="px-2 py-1 text-xs text-white bg-green-500 rounded">Full Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-green-500 rounded">Full Day</span>;
 //       case "half":
-//         return <span className="px-2 py-1 text-xs text-white bg-yellow-500 rounded">Half Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-yellow-500 rounded">Half Day</span>;
 //       case "full_leave":
-//         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
 //     }
 //   };
 
@@ -7361,12 +7361,12 @@
 //   </div>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-9xl">
 
 //         {/* Save Status Alert */}
 //         {saveStatus && (
-//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
+//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-gray-900 animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
 //             ? "bg-green-500 border-l-4 border-green-600"
 //             : "bg-red-500 border-l-4 border-red-600"
 //             }`}>
@@ -7383,64 +7383,64 @@
 
 
 
-//         <div className="p-4 mb-6 bg-[#0a0a0a] border border-blue-300 rounded-lg shadow-sm">
+//         <div className="p-4 mb-6 bg-white border border-blue-300 rounded-lg shadow-sm">
 
 //           {/* 🔽 Filters & Actions – Single Row */}
-//           <div className="flex items-end gap-4 pt-3 border-t border-[#1f2937] flex-nowrap">
+//           <div className="flex items-end gap-4 pt-3 border-t border-gray-200 flex-nowrap">
 
 //             <div className="flex flex-col">
-//               <label className="mb-1 text-xs font-medium text-gray-400">
+//               <label className="mb-1 text-xs font-medium text-gray-500">
 //                 From
 //               </label>
 //               <input
 //                 type="date"
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
-//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //               />
 //             </div>
 
 //             <div className="flex flex-col">
-//               <label className="mb-1 text-xs font-medium text-gray-400">
+//               <label className="mb-1 text-xs font-medium text-gray-500">
 //                 To
 //               </label>
 //               <input
 //                 type="date"
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
-//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //               />
 //             </div>
 
 //             <div className="flex flex-col">
-//               <label className="mb-1 text-xs font-medium text-gray-400">
+//               <label className="mb-1 text-xs font-medium text-gray-500">
 //                 Month
 //               </label>
 //               <input
 //                 type="month"
 //                 value={selectedMonth}
 //                 onChange={handleMonthChange}
-//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //               />
 //             </div>
 
 //             <button
 //               onClick={() => handleDateRangeFilter(fromDate, toDate)}
-//               className="px-4 text-sm font-medium text-white transition bg-blue-600 rounded-md h-9 hover:bg-blue-700"
+//               className="px-4 text-sm font-medium text-gray-900 transition bg-blue-600 rounded-md h-9 hover:bg-blue-700"
 //             >
 //               Apply
 //             </button>
 
 //             <button
 //               onClick={clearFilters}
-//               className="px-4 text-sm font-medium text-gray-300 transition bg-[#111111] border border-[#374151] rounded-md h-9 hover:bg-[#1f2937]"
+//               className="px-4 text-sm font-medium text-gray-700 transition bg-gray-100 border border-gray-300 rounded-md h-9 hover:bg-gray-200"
 //             >
 //               Clear
 //             </button>
 
 //             <button
 //               onClick={downloadCombinedExcel}
-//               className="flex items-center gap-2 px-4 text-sm font-medium text-white transition bg-green-600 rounded-md h-9 hover:bg-green-700"
+//               className="flex items-center gap-2 px-4 text-sm font-medium text-gray-900 transition bg-green-600 rounded-md h-9 hover:bg-green-700"
 //             >
 //              ⬇ Download
 //             </button>
@@ -7457,7 +7457,7 @@
 
 
 //         {/* Summary Table - UPDATED COLUMN HEADERS */}
-//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attendance Summary ({employeeSummary.length} employees)
@@ -7465,7 +7465,7 @@
 
 //             {/* <button
 //               onClick={downloadCombinedExcel}
-//               className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//               className="flex items-center gap-2 px-4 py-2 text-gray-900 bg-green-600 rounded-lg hover:bg-green-700"
 //             >
 //               ⬇ Download
 //             </button> */}
@@ -7473,7 +7473,7 @@
 //             <div className="flex flex-wrap items-center gap-4">
 //               {/* Items per page selector */}
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-300">
+//                 <label className="text-sm font-medium text-gray-700">
 //                   Show:
 //                 </label>
 //                 <select
@@ -7486,7 +7486,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-400">entries</span>
+//                 <span className="text-sm text-gray-500">entries</span>
 //               </div>
 //             </div>
 //           </div>
@@ -7517,7 +7517,7 @@
 //                   >
 //                     <td className="py-3 ">{emp.employeeId}</td>
 //                     <td className="py-3 ">{emp.name}</td>
-//                     <td className="py-3 font-medium text-gray-300 ">{emp.month}</td>
+//                     <td className="py-3 font-medium text-gray-700 ">{emp.month}</td>
 //                     <td className="py-3 text-green-700 ">{emp.presentDays}</td>
 //                     <td className="py-3 text-orange-700 ">{emp.lateDays}</td>
 //                     <td className="py-3 text-blue-700 ">{emp.onsiteDays}</td>
@@ -7544,7 +7544,7 @@
 //             {/* Pagination Controls */}
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-400">
+//                 <div className="text-sm text-gray-500">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -7553,8 +7553,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === 1
-//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Previous
@@ -7565,8 +7565,8 @@
 //                       key={page}
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-3 py-1 text-sm border rounded-lg ${currentPage === page
-//                         ? "text-white bg-blue-600 border-blue-600"
-//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-900 bg-blue-600 border-blue-600"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -7577,8 +7577,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -7623,7 +7623,7 @@
 
 //           return (
 //             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//               <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+//               <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
 //                 {/* 🔹 HEADER */}
 //                 <div className="flex items-center justify-between mb-4">
@@ -7747,7 +7747,7 @@
 //                             <button
 //                               disabled={!rec || !(edited?.comment || rec?.comment)}
 //                               onClick={() => handleSave(rec, dateKey)}
-//                               className={`px-3 py-1 text-white rounded ${rec && (edited?.comment || rec?.comment)
+//                               className={`px-3 py-1 text-gray-900 rounded ${rec && (edited?.comment || rec?.comment)
 //                                 ? "bg-green-600 hover:bg-green-700"
 //                                 : "bg-gray-400 cursor-not-allowed"
 //                                 }`}
@@ -8587,13 +8587,13 @@
 //     const dayType = calculateDayType(hours);
 //     switch (dayType) {
 //       case "full":
-//         return <span className="px-2 py-1 text-xs text-white bg-green-500 rounded">Full Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-green-500 rounded">Full Day</span>;
 //       case "half":
-//         return <span className="px-2 py-1 text-xs text-white bg-yellow-500 rounded">Half Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-yellow-500 rounded">Half Day</span>;
 //       case "full_leave":
-//         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
 //     }
 //   };
 
@@ -8907,12 +8907,12 @@
 //   </div>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-9xl">
 
 //         {/* Save Status Alert */}
 //         {saveStatus && (
-//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
+//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-gray-900 animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
 //             ? "bg-green-500 border-l-4 border-green-600"
 //             : "bg-red-500 border-l-4 border-red-600"
 //             }`}>
@@ -8922,7 +8922,7 @@
 
 //         {/* Working Hours Info - UPDATED CRITERIA */}
 
-//         <div className="p-3 mb-4 bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-md">
+//         <div className="p-3 mb-4 bg-white border border-gray-200 rounded-lg shadow-md">
 //           <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-end">
 
 //             {/* From Date */}
@@ -8934,7 +8934,7 @@
 //                 type="date"
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -8947,7 +8947,7 @@
 //                 type="date"
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -8960,7 +8960,7 @@
 //                 type="month"
 //                 value={selectedMonth}
 //                 onChange={handleMonthChange}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -8969,7 +8969,7 @@
 
 //               <button
 //                 onClick={() => handleDateRangeFilter(fromDate, toDate)}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors bg-blue-600 rounded-md shadow-sm hover:bg-blue-700 focus:ring-1 focus:ring-blue-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-900 transition-colors bg-blue-600 rounded-md shadow-sm hover:bg-blue-700 focus:ring-1 focus:ring-blue-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -8979,7 +8979,7 @@
 
 //               <button
 //                 onClick={clearFilters}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-md shadow-sm hover:bg-[#000000] hover:text-gray-200 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:text-gray-900 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -8989,7 +8989,7 @@
 
 //               <button
 //                 onClick={downloadCombinedExcel}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:ring-1 focus:ring-green-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-900 transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:ring-1 focus:ring-green-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -9002,7 +9002,7 @@
 //         </div>
 
 //         {/* Summary Table - UPDATED COLUMN HEADERS */}
-//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attendance Summary ({employeeSummary.length} employees)
@@ -9011,7 +9011,7 @@
 //             <div className="flex flex-wrap items-center gap-4">
 //               {/* Items per page selector */}
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-300">
+//                 <label className="text-sm font-medium text-gray-700">
 //                   Show:
 //                 </label>
 //                 <select
@@ -9024,7 +9024,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-400">entries</span>
+//                 <span className="text-sm text-gray-500">entries</span>
 //               </div>
 //             </div>
 //           </div>
@@ -9057,7 +9057,7 @@
 //                   >
 //                     <td className="py-3">{emp.employeeId}</td>
 //                     <td className="py-3">{emp.name}</td>
-//                     <td className="py-3 font-medium text-gray-300">{emp.month}</td>
+//                     <td className="py-3 font-medium text-gray-700">{emp.month}</td>
 //                     <td className="py-3 text-green-700">{emp.presentDays}</td>
 //                     <td className="py-3 text-orange-700">{emp.lateDays}</td>
 //                     <td className="py-3 text-blue-700">{emp.onsiteDays}</td>
@@ -9080,7 +9080,7 @@
 //                           e.stopPropagation();
 //                           downloadSingleEmployeeExcel(emp.employeeId);
 //                         }}
-//                         className="flex items-center justify-center px-3 py-1 text-sm text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
+//                         className="flex items-center justify-center px-3 py-1 text-sm text-gray-900 transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
 //                         title={`Download ${emp.name}'s report (ZIP)`}
 //                       >
 //                         ⬇
@@ -9094,7 +9094,7 @@
 //             {/* Pagination Controls */}
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-400">
+//                 <div className="text-sm text-gray-500">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -9103,8 +9103,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === 1
-//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Previous
@@ -9115,8 +9115,8 @@
 //                       key={page}
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-3 py-1 text-sm border rounded-lg ${currentPage === page
-//                         ? "text-white bg-blue-600 border-blue-600"
-//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-900 bg-blue-600 border-blue-600"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -9127,8 +9127,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-3 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -9173,7 +9173,7 @@
 
 //           return (
 //             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//               <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+//               <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
 //                 {/* 🔹 HEADER */}
 //                 <div className="flex items-center justify-between mb-4">
@@ -9297,7 +9297,7 @@
 //                             <button
 //                               disabled={!rec || !(edited?.comment || rec?.comment)}
 //                               onClick={() => handleSave(rec, dateKey)}
-//                               className={`px-3 py-1 text-white rounded ${rec && (edited?.comment || rec?.comment)
+//                               className={`px-3 py-1 text-gray-900 rounded ${rec && (edited?.comment || rec?.comment)
 //                                 ? "bg-green-600 hover:bg-green-700"
 //                                 : "bg-gray-400 cursor-not-allowed"
 //                                 }`}
@@ -10435,18 +10435,18 @@
 //       : "-";
 
 //   const getDayTypeBadge = (hours) => {
-//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
+//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
 
 //     const dayType = calculateDayType(selectedEmployee, hours);
 //     switch (dayType) {
 //       case "full":
-//         return <span className="px-2 py-1 text-xs text-white bg-green-500 rounded">Full Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-green-500 rounded">Full Day</span>;
 //       case "half":
-//         return <span className="px-2 py-1 text-xs text-white bg-yellow-500 rounded">Half Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-yellow-500 rounded">Half Day</span>;
 //       case "full_leave":
-//         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
 //     }
 //   };
 
@@ -10771,12 +10771,12 @@
 //   </div>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-9xl">
 
 //         {/* Save Status Alert */}
 //         {saveStatus && (
-//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
+//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-gray-900 animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
 //             ? "bg-green-500 border-l-4 border-green-600"
 //             : "bg-red-500 border-l-4 border-red-600"
 //             }`}>
@@ -10785,8 +10785,8 @@
 //         )}
 
 //         {/* Working Hours Info - UPDATED CRITERIA */}
-//         {/* <div className="p-3 mb-4 bg-[#0a0a0a] border border-blue-200 rounded-lg shadow-sm">
-//           <div className="text-sm text-gray-300">
+//         {/* <div className="p-3 mb-4 bg-white border border-blue-200 rounded-lg shadow-sm">
+//           <div className="text-sm text-gray-700">
 //             <p className="font-semibold text-blue-700">📊 Day Type Criteria (Based on Shift Hours):</p>
 //             <div className="grid grid-cols-1 gap-4 mt-2 md:grid-cols-2">
 //               <div>
@@ -10810,7 +10810,7 @@
 //           </div>
 //         </div> */}
 
-//         <div className="p-3 mb-4 bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-md">
+//         <div className="p-3 mb-4 bg-white border border-gray-200 rounded-lg shadow-md">
 //           <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-end">
 
 //             {/* From Date */}
@@ -10822,7 +10822,7 @@
 //                 type="date"
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -10835,7 +10835,7 @@
 //                 type="date"
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -10848,7 +10848,7 @@
 //                 type="month"
 //                 value={selectedMonth}
 //                 onChange={handleMonthChange}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -10857,7 +10857,7 @@
 
 //               <button
 //                 onClick={() => handleDateRangeFilter(fromDate, toDate)}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors bg-blue-600 rounded-md shadow-sm hover:bg-blue-700 focus:ring-1 focus:ring-blue-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-900 transition-colors bg-blue-600 rounded-md shadow-sm hover:bg-blue-700 focus:ring-1 focus:ring-blue-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -10867,7 +10867,7 @@
 
 //               <button
 //                 onClick={clearFilters}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-md shadow-sm hover:bg-[#000000] hover:text-gray-200 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:text-gray-900 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -10877,7 +10877,7 @@
 
 //               <button
 //                 onClick={downloadCombinedExcel}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:ring-1 focus:ring-green-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-900 transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:ring-1 focus:ring-green-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -10890,7 +10890,7 @@
 //         </div>
 
 //         {/* Summary Table - UPDATED COLUMN HEADERS */}
-//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attendance Summary for ({employeeSummary.length} employees)
@@ -10899,7 +10899,7 @@
 //             <div className="flex flex-wrap items-center gap-4">
 //               {/* Items per page selector */}
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-300">
+//                 <label className="text-sm font-medium text-gray-700">
 //                   Show:
 //                 </label>
 //                 <select
@@ -10912,12 +10912,12 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-400">entries</span>
+//                 <span className="text-sm text-gray-500">entries</span>
 //               </div>
 //             </div>
 //           </div>
 
-//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
 //                 <tr>
@@ -10950,9 +10950,9 @@
 //                       onClick={() => handleViewDetails(emp.employeeId)}
 //                       className="border-t cursor-pointer hover:bg-blue-50"
 //                     >
-//                       <td className="p-4 text-sm font-medium text-gray-200">{emp.employeeId}</td>
-//                       <td className="p-4 text-sm font-medium text-gray-200">{emp.name}</td>
-//                       <td className="py-4 font-medium text-gray-200">{emp.month}</td>
+//                       <td className="p-4 text-sm font-medium text-gray-900">{emp.employeeId}</td>
+//                       <td className="p-4 text-sm font-medium text-gray-900">{emp.name}</td>
+//                       <td className="py-4 font-medium text-gray-900">{emp.month}</td>
 //                       <td className="py-4 text-center text-green-700">{emp.presentDays}</td>
 //                       <td className="py-4 text-center text-orange-700">{lateDays}</td>
 //                       <td className="py-4 text-center text-blue-700">{onsiteDays}</td>
@@ -10976,7 +10976,7 @@
 //                             e.stopPropagation();
 //                             downloadSingleEmployeeExcel(emp.employeeId);
 //                           }}
-//                           className="inline-flex items-center justify-center px-4 py-1 text-sm text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
+//                           className="inline-flex items-center justify-center px-4 py-1 text-sm text-gray-900 transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
 //                           title={`Download ${emp.name}'s report (ZIP)`}
 //                         >
 //                           ⬇
@@ -10991,7 +10991,7 @@
 //             {/* Pagination Controls */}
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-400">
+//                 <div className="text-sm text-gray-500">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -11000,8 +11000,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
-//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
+//                       ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
 //                       }`}
 //                   >
 //                     Previous
@@ -11012,8 +11012,8 @@
 //                       key={page}
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-4 py-1 text-sm border rounded-lg ${currentPage === page
-//                         ? "text-white bg-blue-600 border-blue-600"
-//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-900 bg-blue-600 border-blue-600"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -11024,8 +11024,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -11063,7 +11063,7 @@
 
 //           return (
 //             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//               <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+//               <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
 //                 {/* 🔹 HEADER */}
 //                 <div className="flex items-center justify-between mb-4">
@@ -11254,7 +11254,7 @@
 //                                   finalCheckOut
 //                                 );
 //                               }}
-//                               className={`px-4 py-1 text-white rounded ${
+//                               className={`px-4 py-1 text-gray-900 rounded ${
 //                                 (currentCheckIn || rec) 
 //                                   ? "bg-green-600 hover:bg-green-700"
 //                                   : "bg-gray-400 cursor-not-allowed" // Disable if no check-in and no existing rec
@@ -12398,18 +12398,18 @@
 //       : "-";
 
 //   const getDayTypeBadge = (hours) => {
-//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
+//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
 
 //     const dayType = calculateDayType(selectedEmployee, hours);
 //     switch (dayType) {
 //       case "full":
-//         return <span className="px-2 py-1 text-xs text-white bg-green-500 rounded">Full Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-green-500 rounded">Full Day</span>;
 //       case "half":
-//         return <span className="px-2 py-1 text-xs text-white bg-yellow-500 rounded">Half Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-yellow-500 rounded">Half Day</span>;
 //       case "full_leave":
-//         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
 //     }
 //   };
 
@@ -12474,11 +12474,11 @@
 //   </div>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-9xl">
 
 //         {saveStatus && (
-//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
+//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-gray-900 animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
 //             ? "bg-green-500 border-l-4 border-green-600"
 //             : "bg-red-500 border-l-4 border-red-600"
 //             }`}>
@@ -12486,7 +12486,7 @@
 //           </div>
 //         )}
 
-//         <div className="p-3 mb-4 bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-md">
+//         <div className="p-3 mb-4 bg-white border border-gray-200 rounded-lg shadow-md">
 //           <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-end">
 
 //             <div className="md:col-span-2">
@@ -12497,7 +12497,7 @@
 //                 type="date"
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -12509,7 +12509,7 @@
 //                 type="date"
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -12521,7 +12521,7 @@
 //                 type="month"
 //                 value={selectedMonth}
 //                 onChange={handleMonthChange}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -12529,7 +12529,7 @@
 
 //               <button
 //                 onClick={() => handleDateRangeFilter(fromDate, toDate)}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors bg-blue-600 rounded-md shadow-sm hover:bg-blue-700 focus:ring-1 focus:ring-blue-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-900 transition-colors bg-blue-600 rounded-md shadow-sm hover:bg-blue-700 focus:ring-1 focus:ring-blue-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -12539,7 +12539,7 @@
 
 //               <button
 //                 onClick={clearFilters}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-md shadow-sm hover:bg-[#000000] hover:text-gray-200 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:text-gray-900 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -12549,7 +12549,7 @@
 
 //               <button
 //                 onClick={downloadCombinedExcel}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:ring-1 focus:ring-green-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-900 transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:ring-1 focus:ring-green-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -12562,7 +12562,7 @@
 //         </div>
 
 //         {/* Summary Table */}
-//         <div className="p-6 mb-8 bg-[#0a0a0a] border shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-white border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //             <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attendance Summary for ({employeeSummary.length} employees)
@@ -12570,7 +12570,7 @@
 
 //             <div className="flex flex-wrap items-center gap-4">
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-300">
+//                 <label className="text-sm font-medium text-gray-700">
 //                   Show:
 //                 </label>
 //                 <select
@@ -12583,12 +12583,12 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-400">entries</span>
+//                 <span className="text-sm text-gray-500">entries</span>
 //               </div>
 //             </div>
 //           </div>
 
-//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
 //                 <tr>
@@ -12619,9 +12619,9 @@
 //                       onClick={() => handleViewDetails(emp.employeeId)}
 //                       className="border-t cursor-pointer hover:bg-blue-50"
 //                     >
-//                       <td className="p-4 text-sm font-medium text-gray-200">{emp.employeeId}</td>
-//                       <td className="p-4 text-sm font-medium text-gray-200">{emp.name}</td>
-//                       <td className="py-4 font-medium text-gray-200">{emp.month}</td>
+//                       <td className="p-4 text-sm font-medium text-gray-900">{emp.employeeId}</td>
+//                       <td className="p-4 text-sm font-medium text-gray-900">{emp.name}</td>
+//                       <td className="py-4 font-medium text-gray-900">{emp.month}</td>
 //                       <td className="py-4 text-center text-green-700">{emp.presentDays}</td>
 //                       <td className="py-4 text-center text-orange-700">{lateDays}</td>
 //                       <td className="py-4 text-center text-blue-700">{onsiteDays}</td>
@@ -12644,7 +12644,7 @@
 //                             e.stopPropagation();
 //                             downloadSingleEmployeeExcel(emp.employeeId);
 //                           }}
-//                           className="inline-flex items-center justify-center px-4 py-1 text-sm text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
+//                           className="inline-flex items-center justify-center px-4 py-1 text-sm text-gray-900 transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
 //                           title={`Download ${emp.name}'s report (ZIP)`}
 //                         >
 //                           ⬇
@@ -12658,7 +12658,7 @@
 
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 <div className="text-sm text-gray-400">
+//                 <div className="text-sm text-gray-500">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div>
 
@@ -12667,8 +12667,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
-//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
+//                       ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
 //                       }`}
 //                   >
 //                     Previous
@@ -12679,8 +12679,8 @@
 //                       key={page}
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-4 py-1 text-sm border rounded-lg ${currentPage === page
-//                         ? "text-white bg-blue-600 border-blue-600"
-//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-900 bg-blue-600 border-blue-600"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -12691,8 +12691,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -12729,7 +12729,7 @@
 
 //           return (
 //             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-//               <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
+//               <div className="bg-white p-6 rounded-xl shadow-xl max-w-7xl w-full max-h-[80vh] overflow-y-auto">
 
 //                 <div className="flex items-center justify-between mb-4">
 //                   <h3 className="text-xl font-semibold text-blue-700">
@@ -12911,7 +12911,7 @@
 //                                   finalCheckOut
 //                                 );
 //                               }}
-//                               className={`px-4 py-1 text-white rounded ${(currentCheckIn || rec)
+//                               className={`px-4 py-1 text-gray-900 rounded ${(currentCheckIn || rec)
 //                                 ? "bg-green-600 hover:bg-green-700"
 //                                 : "bg-gray-400 cursor-not-allowed"
 //                                 }`}
@@ -14050,18 +14050,18 @@
 //       : "-";
 
 //   const getDayTypeBadge = (hours) => {
-//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
+//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
 
 //     const dayType = calculateDayType(selectedEmployee, hours);
 //     switch (dayType) {
 //       case "full":
-//         return <span className="py-2 text-xs text-center text-white bg-green-500 rounded">Full Day</span>;
+//         return <span className="py-2 text-xs text-center text-gray-900 bg-green-500 rounded">Full Day</span>;
 //       case "half":
-//         return <span className="py-2 text-xs text-center text-white bg-yellow-500 rounded">Half Day</span>;
+//         return <span className="py-2 text-xs text-center text-gray-900 bg-yellow-500 rounded">Half Day</span>;
 //       case "full_leave":
-//         return <span className="py-2 text-xs text-center text-white bg-red-500 rounded">Full Day Leave</span>;
+//         return <span className="py-2 text-xs text-center text-gray-900 bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="py-2 text-xs text-center text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
+//         return <span className="py-2 text-xs text-center text-gray-500 bg-gray-200 rounded">Unknown</span>;
 //     }
 //   };
 
@@ -14126,11 +14126,11 @@
 //   </div>;
 
 //   return (
-//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-9xl">
 
 //         {saveStatus && (
-//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
+//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-gray-900 animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
 //             ? "bg-green-500 border-l-4 border-green-600"
 //             : "bg-red-500 border-l-4 border-red-600"
 //             }`}>
@@ -14138,7 +14138,7 @@
 //           </div>
 //         )}
 
-//         <div className="p-3 mb-4 bg-[#0a0a0a] border border-[#1f2937] rounded-lg shadow-md">
+//         <div className="p-3 mb-4 bg-white border border-gray-200 rounded-lg shadow-md">
 //           <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-end">
 
 //             <div className="md:col-span-2">
@@ -14149,7 +14149,7 @@
 //                 type="date"
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -14161,7 +14161,7 @@
 //                 type="date"
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -14173,7 +14173,7 @@
 //                 type="month"
 //                 value={selectedMonth}
 //                 onChange={handleMonthChange}
-//                 className="w-full px-2 py-1.5 text-sm transition-all border border-[#374151] rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-sm transition-all border border-gray-300 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -14181,7 +14181,7 @@
 
 //               <button
 //                 onClick={() => handleDateRangeFilter(fromDate, toDate)}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors bg-blue-600 rounded-md shadow-sm hover:bg-blue-700 focus:ring-1 focus:ring-blue-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-900 transition-colors bg-blue-600 rounded-md shadow-sm hover:bg-blue-700 focus:ring-1 focus:ring-blue-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -14191,7 +14191,7 @@
 
 //               <button
 //                 onClick={clearFilters}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-300 transition-colors bg-[#0a0a0a] border border-[#374151] rounded-md shadow-sm hover:bg-[#000000] hover:text-gray-200 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:text-gray-900 focus:ring-1 focus:ring-gray-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -14201,7 +14201,7 @@
 
 //               <button
 //                 onClick={downloadCombinedExcel}
-//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:ring-1 focus:ring-green-500 focus:ring-offset-1"
+//                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-900 transition-colors bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:ring-1 focus:ring-green-500 focus:ring-offset-1"
 //               >
 //                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -14214,7 +14214,7 @@
 //         </div>
 
 //         {/* Summary Table */}
-//         <div className="p-2 mb-4 bg-[#0a0a0a] border shadow-lg rounded-2xl">
+//         <div className="p-2 mb-4 bg-white border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-2 mb-2 sm:flex-row sm:items-center sm:justify-between">
 //             {/* <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attendance Summary for ({employeeSummary.length} employees)
@@ -14222,7 +14222,7 @@
 
 //             {/* <div className="flex flex-wrap items-center gap-4">
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-300">
+//                 <label className="text-sm font-medium text-gray-700">
 //                   Show:
 //                 </label>
 //                 <select
@@ -14235,12 +14235,12 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-400">entries</span>
+//                 <span className="text-sm text-gray-500">entries</span>
 //               </div>
 //             </div> */}
 //           </div>
 
-//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
@@ -14271,9 +14271,9 @@
 //                       onClick={() => handleViewDetails(emp.employeeId)}
 //                       className="border-t cursor-pointer hover:bg-blue-50"
 //                     >
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200">{emp.employeeId}</td>
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200">{emp.name}</td>
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200">{emp.month}</td>
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900">{emp.employeeId}</td>
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900">{emp.name}</td>
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900">{emp.month}</td>
 //                       <td className="px-2 py-2 text-sm text-center text-green-700">{emp.presentDays}</td>
 //                       <td className="px-2 py-2 text-sm text-center text-orange-700">{lateDays}</td>
 //                       <td className="px-2 py-2 text-sm text-center text-blue-700">{onsiteDays}</td>
@@ -14296,7 +14296,7 @@
 //                             e.stopPropagation();
 //                             downloadSingleEmployeeExcel(emp.employeeId);
 //                           }}
-//                           className="inline-flex items-center justify-center px-4 py-1 text-sm text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
+//                           className="inline-flex items-center justify-center px-4 py-1 text-sm text-gray-900 transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
 //                           title={`Download ${emp.name}'s report (ZIP)`}
 //                         >
 //                           ⬇
@@ -14310,12 +14310,12 @@
 
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 {/* <div className="text-sm text-gray-400">
+//                 {/* <div className="text-sm text-gray-500">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div> */}
 //                    <div className="flex flex-wrap items-center gap-4">
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-300">
+//                 <label className="text-sm font-medium text-gray-700">
 //                   Show:
 //                 </label>
 //                 <select
@@ -14328,7 +14328,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-400">entries</span>
+//                 <span className="text-sm text-gray-500">entries</span>
 //               </div>
 //             </div>
 //                 <div className="flex items-center gap-2">
@@ -14336,8 +14336,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
-//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
+//                       ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
 //                       }`}
 //                   >
 //                     Previous
@@ -14348,8 +14348,8 @@
 //                       key={page}
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-4 py-1 text-sm border rounded-lg ${currentPage === page
-//                         ? "text-white bg-blue-600 border-blue-600"
-//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-900 bg-blue-600 border-blue-600"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -14360,8 +14360,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -14406,16 +14406,16 @@
 //     {/* Close Button OUTSIDE white box */}
 //     <button
 //       onClick={closeModal}
-//       className="absolute top-[-40px] right-0 text-xl font-bold text-white bg-green-500 px-3 py-1 rounded-full shadow-lg hover:bg-blue-600"
+//       className="absolute top-[-40px] right-0 text-xl font-bold text-gray-900 bg-green-500 px-3 py-1 rounded-full shadow-lg hover:bg-blue-600"
 //     >
 //       ✖
 //     </button>
 
 //     {/* White Modal Box */}
-//     <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-h-[80vh] overflow-y-auto">
+//     <div className="bg-white p-6 rounded-xl shadow-xl max-h-[80vh] overflow-y-auto">
 
-//       <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
-//         <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//       <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+//         <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
           
 //           <table className="min-w-full">
 //             <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
@@ -14599,7 +14599,7 @@
 //                             finalCheckOut
 //                           );
 //                         }}
-//                         className={`px-4 py-1 text-white rounded ${
+//                         className={`px-4 py-1 text-gray-900 rounded ${
 //                           (currentCheckIn || rec)
 //                             ? "bg-green-600 hover:bg-green-700"
 //                             : "bg-gray-400 cursor-not-allowed"
@@ -15730,18 +15730,18 @@
 //       : "-";
 
 //   const getDayTypeBadge = (hours) => {
-//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
+//     if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
 
 //     const dayType = calculateDayType(selectedEmployee, hours);
 //     switch (dayType) {
 //       case "full":
-//         return <span className="px-2 py-1 text-xs text-white bg-green-500 rounded">Full Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-green-500 rounded">Full Day</span>;
 //       case "half":
-//         return <span className="px-2 py-1 text-xs text-white bg-yellow-500 rounded">Half Day</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-yellow-500 rounded">Half Day</span>;
 //       case "full_leave":
-//         return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-900 bg-red-500 rounded">Full Day Leave</span>;
 //       default:
-//         return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
+//         return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
 //     }
 //   };
 
@@ -15828,11 +15828,11 @@
 //   </div>;
 
 //   return (
-//      <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//      <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-9xl">
 
 //         {saveStatus && (
-//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
+//           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-gray-900 animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
 //             ? "bg-green-500 border-l-4 border-green-600"
 //             : "bg-red-500 border-l-4 border-red-600"
 //             }`}>
@@ -15841,12 +15841,12 @@
 //         )}
 
 //         {/* Filters - Single Row */}
-//         <div className="p-2 mb-2 bg-[#0a0a0a] rounded-lg shadow-md">
+//         <div className="p-2 mb-2 bg-white rounded-lg shadow-md">
 //           <div className="flex flex-wrap items-center gap-2">
             
 //             {/* ID/Name Search */}
 //             <div className="relative flex-1 min-w-[180px]">
-//               <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//               <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 //               </svg>
 //               <input
@@ -15854,7 +15854,7 @@
 //                 placeholder="Search by ID or Name..."
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="w-full pl-7 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -15863,7 +15863,7 @@
 //               <select
 //                 value={deptSearchTerm}
 //                 onChange={(e) => setDeptSearchTerm(e.target.value)}
-//                 className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent appearance-none bg-[#0a0a0a]"
+//                 className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
 //               >
 //                  <option value="">All Departments & Designations</option>
 //                 <option value="Laboratory Medicine">Laboratory Medicine</option>
@@ -15885,7 +15885,7 @@
 //                 value={fromDate}
 //                 onChange={(e) => setFromDate(e.target.value)}
 //                 placeholder="From"
-//                 className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -15896,7 +15896,7 @@
 //                 value={toDate}
 //                 onChange={(e) => setToDate(e.target.value)}
 //                 placeholder="To"
-//                 className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -15906,14 +15906,14 @@
 //                 type="month"
 //                 value={selectedMonth}
 //                 onChange={handleMonthChange}
-//                 className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
 //             {/* Apply Button */}
 //             <button
 //               onClick={handleDateRangeFilter}
-//               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
+//               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-900 bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
 //             >
 //               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -15924,7 +15924,7 @@
 //             {/* Clear Button */}
 //             <button
 //               onClick={clearFilters}
-//               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-300 bg-[#0a0a0a] border border-[#374151] rounded-lg shadow-sm hover:bg-[#000000] whitespace-nowrap"
+//               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 whitespace-nowrap"
 //             >
 //               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -15935,7 +15935,7 @@
 //             {/* Download Button */}
 //             <button
 //               onClick={downloadCombinedExcel}
-//               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-white bg-green-600 rounded-lg shadow-sm hover:bg-green-700 whitespace-nowrap"
+//               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-900 bg-green-600 rounded-lg shadow-sm hover:bg-green-700 whitespace-nowrap"
 //             >
 //               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -15946,7 +15946,7 @@
 //         </div>
 
 //        {/* Summary Table */}
-//         <div className="p-0 mb-0 bg-[#0a0a0a] border shadow-lg rounded-2xl">
+//         <div className="p-0 mb-0 bg-white border shadow-lg rounded-2xl">
 //           <div className="flex flex-col gap-2 mb-2 sm:flex-row sm:items-center sm:justify-between">
 //             {/* <h2 className="text-2xl font-semibold text-purple-700">
 //               👥 Attendance Summary for ({employeeSummary.length} employees)
@@ -15954,7 +15954,7 @@
 
 //             {/* <div className="flex flex-wrap items-center gap-4">
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-300">
+//                 <label className="text-sm font-medium text-gray-700">
 //                   Show:
 //                 </label>
 //                 <select
@@ -15967,12 +15967,12 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-400">entries</span>
+//                 <span className="text-sm text-gray-500">entries</span>
 //               </div>
 //             </div> */}
 //           </div>
 
-//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
@@ -16003,9 +16003,9 @@
 //                       onClick={() => handleViewDetails(emp.employeeId)}
 //                       className="border-t cursor-pointer hover:bg-blue-50"
 //                     >
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200">{emp.employeeId}</td>
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200">{emp.name}</td>
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200">{emp.month}</td>
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900">{emp.employeeId}</td>
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900">{emp.name}</td>
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900">{emp.month}</td>
 //                       <td className="px-2 py-2 text-sm text-center text-green-700">{emp.presentDays}</td>
 //                       <td className="px-2 py-2 text-sm text-center text-orange-700">{lateDays}</td>
 //                       <td className="px-2 py-2 text-sm text-center text-blue-700">{onsiteDays}</td>
@@ -16028,7 +16028,7 @@
 //                             e.stopPropagation();
 //                             downloadSingleEmployeeExcel(emp.employeeId);
 //                           }}
-//                           className="inline-flex items-center justify-center px-4 py-1 text-sm text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
+//                           className="inline-flex items-center justify-center px-4 py-1 text-sm text-gray-900 transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
 //                           title={`Download ${emp.name}'s report (ZIP)`}
 //                         >
 //                           ⬇
@@ -16042,12 +16042,12 @@
 
 //             {employeeSummary.length > 0 && (
 //               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-//                 {/* <div className="text-sm text-gray-400">
+//                 {/* <div className="text-sm text-gray-500">
 //                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, employeeSummary.length)} of {employeeSummary.length} entries
 //                 </div> */}
 //                    <div className="flex flex-wrap items-center gap-4">
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-300">
+//                 <label className="text-sm font-medium text-gray-700">
 //                   Show:
 //                 </label>
 //                 <select
@@ -16060,7 +16060,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-400">entries</span>
+//                 <span className="text-sm text-gray-500">entries</span>
 //               </div>
 //             </div>
 //                 <div className="flex items-center gap-2">
@@ -16068,8 +16068,8 @@
 //                     onClick={handlePrevPage}
 //                     disabled={currentPage === 1}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
-//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
+//                       ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
 //                       }`}
 //                   >
 //                     Previous
@@ -16080,8 +16080,8 @@
 //                       key={page}
 //                       onClick={() => handlePageClick(page)}
 //                       className={`px-4 py-1 text-sm border rounded-lg ${currentPage === page
-//                         ? "text-white bg-blue-600 border-blue-600"
-//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                         ? "text-gray-900 bg-blue-600 border-blue-600"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                         }`}
 //                     >
 //                       {page}
@@ -16092,8 +16092,8 @@
 //                     onClick={handleNextPage}
 //                     disabled={currentPage === totalPages}
 //                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                       ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                       ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                   >
 //                     Next
@@ -16138,16 +16138,16 @@
 //     {/* Close Button OUTSIDE white box */}
 //     <button
 //       onClick={closeModal}
-//       className="absolute top-[-40px] right-0 text-xl font-bold text-white bg-green-500 px-3 py-1 rounded-full shadow-lg hover:bg-blue-600"
+//       className="absolute top-[-40px] right-0 text-xl font-bold text-gray-900 bg-green-500 px-3 py-1 rounded-full shadow-lg hover:bg-blue-600"
 //     >
 //       ✖
 //     </button>
 
 //     {/* White Modal Box */}
-//     <div className="bg-[#0a0a0a] p-6 rounded-xl shadow-xl max-h-[80vh] overflow-y-auto">
+//     <div className="bg-white p-6 rounded-xl shadow-xl max-h-[80vh] overflow-y-auto">
 
-//       <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
-//         <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//       <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+//         <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
           
 //           <table className="min-w-full">
 //             <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
@@ -16331,7 +16331,7 @@
 //                             finalCheckOut
 //                           );
 //                         }}
-//                         className={`px-4 py-1 text-white rounded ${
+//                         className={`px-4 py-1 text-gray-900 rounded ${
 //                           (currentCheckIn || rec)
 //                             ? "bg-green-600 hover:bg-green-700"
 //                             : "bg-gray-400 cursor-not-allowed"
@@ -17703,18 +17703,18 @@ export default function AttendanceSummary() {
   };
 
   const getDayTypeBadge = (hours) => {
-    if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
+    if (!selectedEmployee) return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
 
     const dayType = calculateDayType(selectedEmployee, hours);
     switch (dayType) {
       case "full":
-        return <span className="px-2 py-1 text-xs text-white bg-green-500 rounded">Full Day</span>;
+        return <span className="px-2 py-1 text-xs text-gray-900 bg-green-500 rounded">Full Day</span>;
       case "half":
-        return <span className="px-2 py-1 text-xs text-white bg-yellow-500 rounded">Half Day</span>;
+        return <span className="px-2 py-1 text-xs text-gray-900 bg-yellow-500 rounded">Half Day</span>;
       case "full_leave":
-        return <span className="px-2 py-1 text-xs text-white bg-red-500 rounded">Full Day Leave</span>;
+        return <span className="px-2 py-1 text-xs text-gray-900 bg-red-500 rounded">Full Day Leave</span>;
       default:
-        return <span className="px-2 py-1 text-xs text-gray-500 bg-[#1f2937] rounded">Unknown</span>;
+        return <span className="px-2 py-1 text-xs text-gray-500 bg-gray-200 rounded">Unknown</span>;
     }
   };
 
@@ -17805,11 +17805,11 @@ export default function AttendanceSummary() {
   </div>;
 
   return (
-     <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+     <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="mx-auto max-w-9xl">
 
         {saveStatus && (
-          <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
+          <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-gray-900 animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
             ? "bg-green-500 border-l-4 border-green-600"
             : "bg-red-500 border-l-4 border-red-600"
             }`}>
@@ -17818,12 +17818,12 @@ export default function AttendanceSummary() {
         )}
 
         {/* Filters - Single Row */}
-        <div className="p-2 mb-2 bg-[#0a0a0a] border border-gray-800 rounded-lg shadow-md">
+        <div className="p-2 mb-2 bg-white border border-gray-200 rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
             
             {/* ID/Name Search */}
             <div className="relative flex-1 min-w-[180px]">
-              <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
@@ -17831,7 +17831,7 @@ export default function AttendanceSummary() {
                 placeholder="Search by ID or Name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-700 bg-black text-white rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -17842,7 +17842,7 @@ export default function AttendanceSummary() {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDepartment 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-gray-900 text-gray-300 hover:bg-gray-800 border border-gray-700'
+                    : 'bg-white text-gray-900 hover:bg-gray-100 border border-gray-300'
                 }`}
               >
                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
@@ -17850,13 +17850,13 @@ export default function AttendanceSummary() {
               
               {/* Department Filter Dropdown */}
               {showDepartmentFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#111] border border-gray-800 rounded-md shadow-lg max-h-60">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
                   <div 
                     onClick={() => {
                       setFilterDepartment('');
                       setShowDepartmentFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
                   >
                     All Departments
                   </div>
@@ -17885,7 +17885,7 @@ export default function AttendanceSummary() {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDesignation 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
@@ -17893,13 +17893,13 @@ export default function AttendanceSummary() {
               
               {/* Designation Filter Dropdown */}
               {showDesignationFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#111] border border-gray-800 rounded-md shadow-lg max-h-60">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
                   <div 
                     onClick={() => {
                       setFilterDesignation('');
                       setShowDesignationFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
                   >
                     All Designations
                   </div>
@@ -17935,7 +17935,7 @@ export default function AttendanceSummary() {
       value={fromDate}
       onChange={(e) => setFromDate(e.target.value)}
       onClick={(e) => e.target.showPicker && e.target.showPicker()}
-      className="w-full pl-14 pr-3 py-1.5 text-sm border border-gray-700 bg-black text-white rounded-lg 
+      className="w-full pl-14 pr-3 py-1.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg 
                  focus:ring-1 focus:ring-[#A97882] focus:border-[#A97882]"
     />
   </div>
@@ -17951,7 +17951,7 @@ export default function AttendanceSummary() {
       value={toDate}
       onChange={(e) => setToDate(e.target.value)}
       onClick={(e) => e.target.showPicker && e.target.showPicker()}
-      className="w-full pl-10 pr-3 py-1.5 text-sm border border-[#374151] rounded-lg 
+      className="w-full pl-10 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg 
                  focus:ring-1 focus:ring-[#A97882] focus:border-[#A97882]"
     />
   </div>
@@ -17963,7 +17963,7 @@ export default function AttendanceSummary() {
                 type="month"
                 value={selectedMonth}
                 onChange={handleMonthChange}
-                className="w-full px-2 py-1.5 text-xs border border-gray-700 bg-black text-white rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-2 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
               />
             </div>
@@ -17971,7 +17971,7 @@ export default function AttendanceSummary() {
             {/* Apply Button */}
             <button
               onClick={handleDateRangeFilter}
-              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
+              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-900 bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -17982,7 +17982,7 @@ export default function AttendanceSummary() {
             {/* Clear Button */}
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-300 bg-gray-900 border border-gray-700 rounded-lg shadow-sm hover:bg-gray-800 whitespace-nowrap"
+              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 whitespace-nowrap"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -17993,7 +17993,7 @@ export default function AttendanceSummary() {
             {/* Download Button */}
             <button
               onClick={downloadCombinedExcel}
-              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-white bg-green-600 rounded-lg shadow-sm hover:bg-green-700 whitespace-nowrap"
+              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-900 bg-green-600 rounded-lg shadow-sm hover:bg-green-700 whitespace-nowrap"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -18004,8 +18004,8 @@ export default function AttendanceSummary() {
         </div>
 
        {/* Summary Table */}
-        <div className="p-0 mb-0 bg-[#0a0a0a] border border-gray-800 shadow-lg rounded-2xl">
-          <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+        <div className="p-0 mb-0 bg-white border border-gray-200 shadow-lg rounded-2xl">
+          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
@@ -18038,13 +18038,13 @@ export default function AttendanceSummary() {
                     <tr
                       key={emp.employeeId}
                       onClick={() => handleViewDetails(emp.employeeId)}
-                      className="border-t border-gray-800 cursor-pointer hover:bg-gray-800/50"
+                      className="border-t border-gray-200 cursor-pointer hover:bg-gray-50"
                     >
-                      <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">{emp.employeeId}</td>
-                      <td className="px-2 py-2 font-medium text-center text-white whitespace-nowrap">{emp.name}</td>
-                      <td className="px-2 py-2 text-center text-gray-400">{department}</td>
-                      <td className="px-2 py-2 text-center text-gray-400">{designation}</td>
-                      <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">{emp.month}</td>
+                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{emp.employeeId}</td>
+                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{emp.name}</td>
+                      <td className="px-2 py-2 text-center text-gray-500">{department}</td>
+                      <td className="px-2 py-2 text-center text-gray-500">{designation}</td>
+                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{emp.month}</td>
                       <td className="px-2 py-2 font-medium text-center text-green-700">{emp.presentDays}</td>
                       <td className="px-2 py-2 font-medium text-center text-orange-700">{lateDays}</td>
                       <td className="px-2 py-2 font-medium text-center text-blue-700">{onsiteDays}</td>
@@ -18067,7 +18067,7 @@ export default function AttendanceSummary() {
                             e.stopPropagation();
                             downloadSingleEmployeeExcel(emp.employeeId);
                           }}
-                          className="inline-flex items-center justify-center px-4 py-1 font-medium text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
+                          className="inline-flex items-center justify-center px-4 py-1 font-medium text-gray-900 transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
                           title={`Download ${emp.name}'s report (ZIP)`}
                         >
                           ⬇
@@ -18083,7 +18083,7 @@ export default function AttendanceSummary() {
               <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-300">
+                    <label className="text-sm font-medium text-gray-700">
                       Show:
                     </label>
                     <select
@@ -18096,7 +18096,7 @@ export default function AttendanceSummary() {
                       <option value={20}>20</option>
                       <option value={50}>50</option>
                     </select>
-                    <span className="text-sm text-gray-400">entries</span>
+                    <span className="text-sm text-gray-500">entries</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -18104,8 +18104,8 @@ export default function AttendanceSummary() {
                     onClick={handlePrevPage}
                     disabled={currentPage === 1}
                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
-                      ? "text-gray-400 bg-gray-900 border-gray-800 cursor-not-allowed"
-                      : "text-blue-400 bg-[#111] hover:bg-gray-800 border-gray-700"
+                      ? "text-gray-500 bg-gray-900 border-gray-200 cursor-not-allowed"
+                      : "text-blue-400 bg-white hover:bg-gray-100 border-gray-300"
                       }`}
                   >
                     Previous
@@ -18116,8 +18116,8 @@ export default function AttendanceSummary() {
                       key={page}
                       onClick={() => handlePageClick(page)}
                       className={`px-4 py-1 text-sm border rounded-lg ${currentPage === page
-                        ? "text-white bg-blue-600 border-blue-600"
-                        : "text-blue-400 bg-[#111] hover:bg-gray-800 border-gray-700"
+                        ? "text-gray-900 bg-blue-600 border-blue-600"
+                        : "text-blue-400 bg-white hover:bg-gray-100 border-gray-300"
                         }`}
                     >
                       {page}
@@ -18128,8 +18128,8 @@ export default function AttendanceSummary() {
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
                     className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
-                      ? "text-gray-400 bg-gray-900 border-gray-800 cursor-not-allowed"
-                      : "text-blue-400 bg-[#111] hover:bg-gray-800 border-gray-700"
+                      ? "text-gray-500 bg-gray-900 border-gray-200 cursor-not-allowed"
+                      : "text-blue-400 bg-white hover:bg-gray-100 border-gray-300"
                       }`}
                   >
                     Next
@@ -18148,7 +18148,7 @@ export default function AttendanceSummary() {
 
         {/* Regularization Requests Section */}
         {/* {regularizationRequests.filter(r => r.status === 'pending').length > 0 && (
-          <div className="p-4 mb-4 mt-6 bg-[#0a0a0a] border shadow-lg rounded-2xl">
+          <div className="p-4 mb-4 mt-6 bg-white border shadow-lg rounded-2xl">
             <h2 className="mb-3 text-lg font-bold text-orange-600 flex items-center gap-2">
               ⏳ Pending Regularization Requests
               <span className="px-2 py-0.5 text-xs bg-orange-100 text-orange-600 rounded-full">
@@ -18157,7 +18157,7 @@ export default function AttendanceSummary() {
             </h2>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
-                <thead className="bg-[#000000] text-gray-300">
+                <thead className="bg-gray-50 text-gray-700">
                   <tr>
                     <th className="py-2 px-3 text-left">Emp ID</th>
                     <th className="py-2 px-3 text-left">Name</th>
@@ -18166,7 +18166,7 @@ export default function AttendanceSummary() {
                     <th className="py-2 px-3 text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#1f2937]">
+                <tbody className="divide-y divide-gray-200">
                   {regularizationRequests.filter(r => r.status === 'pending').map((req) => (
                     <tr key={req._id} className="hover:bg-orange-50 transition-colors">
                       <td className="py-2 px-3 font-medium">{req.employeeId}</td>
@@ -18180,18 +18180,18 @@ export default function AttendanceSummary() {
                           ))}
                         </div>
                       </td>
-                      <td className="py-2 px-3 text-gray-400 max-w-xs truncate">{req.comment}</td>
+                      <td className="py-2 px-3 text-gray-500 max-w-xs truncate">{req.comment}</td>
                       <td className="py-2 px-3 text-center">
                         <div className="flex justify-center gap-2">
                           <button
                             onClick={() => updateRegularizationStatus(req._id, 'approved')}
-                            className="px-3 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition-colors"
+                            className="px-3 py-1 bg-green-500 text-gray-900 rounded text-xs hover:bg-green-600 transition-colors"
                           >
                             Approve
                           </button>
                           <button
                             onClick={() => updateRegularizationStatus(req._id, 'rejected')}
-                            className="px-3 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors"
+                            className="px-3 py-1 bg-red-500 text-gray-900 rounded text-xs hover:bg-red-600 transition-colors"
                           >
                             Reject
                           </button>
@@ -18233,16 +18233,16 @@ export default function AttendanceSummary() {
     {/* Buttons Container OUTSIDE white box */}
     <div className="absolute top-[-44px] right-0 flex items-center space-x-3">
         {/* Bulk Set Half Days */}
-        {/* <div className="flex items-center space-x-2 bg-[#111] border border-gray-700 px-3 py-1 rounded-full shadow-lg">
-          <span className="text-gray-300 font-bold text-sm">Half Days ➔</span>
+        {/* <div className="flex items-center space-x-2 bg-white border border-gray-300 px-3 py-1 rounded-full shadow-lg">
+          <span className="text-gray-700 font-bold text-sm">Half Days ➔</span>
           <input 
             type="number" 
             id="bulkHalfDayHours"
             defaultValue="9" 
-            className="w-14 px-1 py-0.5 text-white bg-black border border-gray-600 rounded text-sm text-center"
+            className="w-14 px-1 py-0.5 text-gray-900 bg-white border border-gray-600 rounded text-sm text-center"
             step="0.25"
           /> */}
-          {/* <span className="text-gray-300 text-sm">Hrs</span>
+          {/* <span className="text-gray-700 text-sm">Hrs</span>
           <button
             onClick={() => {
                const val = parseFloat(document.getElementById('bulkHalfDayHours').value) || 9;
@@ -18271,7 +18271,7 @@ export default function AttendanceSummary() {
                  showSaveStatus(`❌ No Half Days found to update.`, "error");
                }
             }}
-            className="text-sm font-bold text-white bg-purple-600 px-3 py-0.5 rounded shadow hover:bg-purple-700 transition-colors"
+            className="text-sm font-bold text-gray-900 bg-purple-600 px-3 py-0.5 rounded shadow hover:bg-purple-700 transition-colors"
           >
             Apply
           </button>
@@ -18290,7 +18290,7 @@ export default function AttendanceSummary() {
             return (
             //   <button
             //     onClick={handleBulkSaveAttendance}
-            //     className="text-sm font-bold text-white bg-blue-600 px-4 py-1.5 rounded-full shadow-lg hover:bg-blue-700 transition-colors animate-fade-in"
+            //     className="text-sm font-bold text-gray-900 bg-blue-600 px-4 py-1.5 rounded-full shadow-lg hover:bg-blue-700 transition-colors animate-fade-in"
             //   >
             //     Save Half Days ({halfDayCount})
             //   </button>
@@ -18302,17 +18302,17 @@ export default function AttendanceSummary() {
         {/* Close Button */}
         <button
           onClick={closeModal}
-          className="text-lg font-bold text-white bg-green-500 px-3 py-1 rounded-full shadow-lg hover:bg-red-600 transition-colors"
+          className="text-lg font-bold text-gray-900 bg-green-500 px-3 py-1 rounded-full shadow-lg hover:bg-red-600 transition-colors"
         >
           ✖
         </button>
     </div>
 
     {/* White Modal Box */}
-    <div className="bg-[#111] p-6 rounded-xl shadow-xl max-h-[80vh] overflow-y-auto border border-gray-800">
+    <div className="bg-white p-6 rounded-xl shadow-xl max-h-[80vh] overflow-y-auto border border-gray-200">
 
-      <div className="mb-6 overflow-hidden bg-[#111] rounded-lg shadow-lg">
-        <div className="overflow-x-auto bg-[#111] shadow-lg rounded-xl">
+      <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+        <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
           
           <table className="min-w-full">
             <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
@@ -18397,7 +18397,7 @@ export default function AttendanceSummary() {
                 );
 
                 return (
-                  <tr key={dateKey} className="border-t border-gray-800 hover:bg-gray-800/50">
+                  <tr key={dateKey} className="border-t border-gray-200 hover:bg-gray-50">
                     <td className="py-2 text-center">
                       {date.toLocaleDateString("en-IN")}
                       {regReq && (
@@ -18413,7 +18413,7 @@ export default function AttendanceSummary() {
                     <td className="py-2 text-center">
                       <input
                         type="time"
-                        className="w-full px-2 py-1 border border-gray-700 bg-black text-white rounded focus:border-blue-500"
+                        className="w-full px-2 py-1 border border-gray-300 bg-white text-gray-900 rounded focus:border-blue-500"
                         value={currentCheckIn}
                         onChange={(e) => {
                           const newval = e.target.value;
@@ -18442,7 +18442,7 @@ export default function AttendanceSummary() {
                     <td className="py-2 text-center">
                       <input
                         type="time"
-                        className="w-full px-2 py-1 border border-gray-700 bg-black text-white rounded focus:border-blue-500"
+                        className="w-full px-2 py-1 border border-gray-300 bg-white text-gray-900 rounded focus:border-blue-500"
                         value={currentCheckOut}
                         onChange={(e) => {
                           const newval = e.target.value;
@@ -18470,7 +18470,7 @@ export default function AttendanceSummary() {
 
                     <td className="py-2 text-center">
                       <select
-                        className="w-full px-2 py-1 border border-gray-700 bg-black text-white rounded"
+                        className="w-full px-2 py-1 border border-gray-300 bg-white text-gray-900 rounded"
                         value={currentReason}
                         onChange={e =>
                           handleReasonChange(dateKey, e.target.value)
@@ -18489,7 +18489,7 @@ export default function AttendanceSummary() {
                         step="0.25"
                         min="0"
                         max="24"
-                        className="w-20 px-2 py-1 border border-gray-700 bg-black text-white rounded"
+                        className="w-20 px-2 py-1 border border-gray-300 bg-white text-gray-900 rounded"
                         value={currentHours}
                         onChange={e =>
                           handleHoursChange(dateKey, e.target.value)
@@ -18500,7 +18500,7 @@ export default function AttendanceSummary() {
                     <td className="py-2 text-center">
                       <input
                         type="text"
-                        className="w-full px-2 py-1 border border-gray-700 bg-black text-white rounded"
+                        className="w-full px-2 py-1 border border-gray-300 bg-white text-gray-900 rounded"
                         placeholder="Admin comment"
                         value={currentComment}
                         onChange={e =>
@@ -18537,7 +18537,7 @@ export default function AttendanceSummary() {
                             finalCheckOut
                           );
                         }}
-                        className={`px-4 py-1 text-white rounded ${
+                        className={`px-4 py-1 text-gray-900 rounded ${
                           (currentCheckIn || rec)
                             ? "bg-green-600 hover:bg-green-700"
                             : "bg-gray-400 cursor-not-allowed"

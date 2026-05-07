@@ -25,7 +25,7 @@ export default function AssignLocation() {
   };
 
   return (
-    <div className="p-6 max-w-md mx-auto bg-[#0a0a0a] rounded-xl shadow-md">
+    <div className="p-6 max-w-md mx-auto bg-white rounded-xl shadow-md">
       <h2 className="text-xl font-semibold mb-4">Assign Location to Employee</h2>
 
       <input
@@ -64,7 +64,7 @@ export default function AssignLocation() {
         Assign Location
       </button>
 
-      {message && <p className="mt-4 text-center text-gray-300">{message}</p>}
+      {message && <p className="mt-4 text-center text-gray-700">{message}</p>}
     </div>
   );
 }

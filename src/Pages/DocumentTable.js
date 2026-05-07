@@ -40,12 +40,12 @@ const DocumentTable = () => {
 
   return (
     <div className="p-6 bg-gradient-to-r from-blue-100 to-green-100 min-h-screen">
-      <div className="max-w-5xl mx-auto bg-[#0a0a0a] p-6 rounded-xl shadow-lg">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-300 text-center">Uploaded Documents</h2>
+      <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow-lg">
+        <h2 className="text-2xl font-semibold mb-4 text-gray-700 text-center">Uploaded Documents</h2>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full border border-[#1f2937] text-sm">
-            <thead className="bg-green-100 text-gray-400">
+          <table className="min-w-full border border-gray-200 text-sm">
+            <thead className="bg-green-100 text-gray-500">
               <tr>
                 <th className="py-2 px-4 border">#</th>
                 <th className="py-2 px-4 border">Document Name</th>

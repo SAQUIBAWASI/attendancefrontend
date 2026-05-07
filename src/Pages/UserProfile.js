@@ -121,10 +121,10 @@ function UserDetail() {
             <img
               src={user.profileImage}
               alt={`${user.name}'s profile`}
-              className="w-32 h-32 rounded-full object-cover border border-[#374151]"
+              className="w-32 h-32 rounded-full object-cover border border-gray-300"
             />
           ) : (
-            <div className="w-32 h-32 rounded-full bg-[#1f2937] flex items-center justify-center">
+            <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center">
               <span className="text-gray-500">No Image</span>
             </div>
           )}
@@ -132,30 +132,30 @@ function UserDetail() {
 
         {/* Basic Info Table */}
         <div className="flex-grow">
-          <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937]">
+          <table className="min-w-full bg-white border border-gray-200">
             <tbody>
-              <tr className="border-b border-[#1f2937]">
-                <td className="py-2 px-4 font-semibold bg-[#000000] w-1/4">Name</td>
+              <tr className="border-b border-gray-200">
+                <td className="py-2 px-4 font-semibold bg-gray-50 w-1/4">Name</td>
                 <td className="py-2 px-4">{user.name}</td>
               </tr>
-              <tr className="border-b border-[#1f2937]">
-                <td className="py-2 px-4 font-semibold bg-[#000000]">Email</td>
+              <tr className="border-b border-gray-200">
+                <td className="py-2 px-4 font-semibold bg-gray-50">Email</td>
                 <td className="py-2 px-4">{user.email}</td>
               </tr>
-              <tr className="border-b border-[#1f2937]">
-                <td className="py-2 px-4 font-semibold bg-[#000000]">Phone</td>
+              <tr className="border-b border-gray-200">
+                <td className="py-2 px-4 font-semibold bg-gray-50">Phone</td>
                 <td className="py-2 px-4">{user.phone || 'N/A'}</td>
               </tr>
-              <tr className="border-b border-[#1f2937]">
-                <td className="py-2 px-4 font-semibold bg-[#000000]">Date of Birth</td>
+              <tr className="border-b border-gray-200">
+                <td className="py-2 px-4 font-semibold bg-gray-50">Date of Birth</td>
                 <td className="py-2 px-4">{formatDate(user.dateOfBirth)}</td>
               </tr>
-              <tr className="border-b border-[#1f2937]">
-                <td className="py-2 px-4 font-semibold bg-[#000000]">Location</td>
+              <tr className="border-b border-gray-200">
+                <td className="py-2 px-4 font-semibold bg-gray-50">Location</td>
                 <td className="py-2 px-4">{user.city || 'N/A'}, {user.zipcode || 'N/A'}</td>
               </tr>
               <tr>
-                <td className="py-2 px-4 font-semibold bg-[#000000]">Account Created</td>
+                <td className="py-2 px-4 font-semibold bg-gray-50">Account Created</td>
                 <td className="py-2 px-4">{formatDateTime(user.createdAt)}</td>
               </tr>
             </tbody>
@@ -165,21 +165,21 @@ function UserDetail() {
 
       {/* Stats Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937]">
+        <table className="min-w-full bg-white border border-gray-200">
           <thead>
-            <tr className="bg-[#111111]">
-              <th className="py-2 px-4 border border-[#1f2937]">Coins</th>
-              <th className="py-2 px-4 border border-[#1f2937]">Coupons</th>
-              <th className="py-2 px-4 border border-[#1f2937]">Favorite Coupons</th>
-              <th className="py-2 px-4 border border-[#1f2937]">Status</th>
+            <tr className="bg-gray-100">
+              <th className="py-2 px-4 border border-gray-200">Coins</th>
+              <th className="py-2 px-4 border border-gray-200">Coupons</th>
+              <th className="py-2 px-4 border border-gray-200">Favorite Coupons</th>
+              <th className="py-2 px-4 border border-gray-200">Status</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="py-2 px-4 border border-[#1f2937] text-center text-2xl font-bold">{user.coins ?? 0}</td>
-              <td className="py-2 px-4 border border-[#1f2937] text-center text-2xl font-bold">{user.coupons ?? 0}</td>
-              <td className="py-2 px-4 border border-[#1f2937] text-center text-2xl font-bold">{user.favoriteCoupons?.length ?? 0}</td>
-              <td className="py-2 px-4 border border-[#1f2937] text-center text-2xl font-bold">{user.onlineStatus ? 'Online' : 'Offline'}</td>
+              <td className="py-2 px-4 border border-gray-200 text-center text-2xl font-bold">{user.coins ?? 0}</td>
+              <td className="py-2 px-4 border border-gray-200 text-center text-2xl font-bold">{user.coupons ?? 0}</td>
+              <td className="py-2 px-4 border border-gray-200 text-center text-2xl font-bold">{user.favoriteCoupons?.length ?? 0}</td>
+              <td className="py-2 px-4 border border-gray-200 text-center text-2xl font-bold">{user.onlineStatus ? 'Online' : 'Offline'}</td>
             </tr>
           </tbody>
         </table>
@@ -192,26 +192,26 @@ function UserDetail() {
       <h2 className="text-xl font-bold mb-4">Steps History</h2>
       {user.steps?.length ? (
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937]">
+          <table className="min-w-full bg-white border border-gray-200">
             <thead>
-              <tr className="bg-[#111111]">
-                <th className="py-2 px-4 border border-[#1f2937]">Date</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Day</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Steps</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Distance (km)</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Calories</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Time Spent</th>
+              <tr className="bg-gray-100">
+                <th className="py-2 px-4 border border-gray-200">Date</th>
+                <th className="py-2 px-4 border border-gray-200">Day</th>
+                <th className="py-2 px-4 border border-gray-200">Steps</th>
+                <th className="py-2 px-4 border border-gray-200">Distance (km)</th>
+                <th className="py-2 px-4 border border-gray-200">Calories</th>
+                <th className="py-2 px-4 border border-gray-200">Time Spent</th>
               </tr>
             </thead>
             <tbody>
               {user.steps.map((step, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#000000]'}>
-                  <td className="py-2 px-4 border border-[#1f2937]">{formatDate(step.date)}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{step.day}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{step.stepsCount || step.count || 'N/A'}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{step.distance || 'N/A'}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{step.kcal || 'N/A'}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{step.timeSpent || 'N/A'}</td>
+                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td className="py-2 px-4 border border-gray-200">{formatDate(step.date)}</td>
+                  <td className="py-2 px-4 border border-gray-200">{step.day}</td>
+                  <td className="py-2 px-4 border border-gray-200">{step.stepsCount || step.count || 'N/A'}</td>
+                  <td className="py-2 px-4 border border-gray-200">{step.distance || 'N/A'}</td>
+                  <td className="py-2 px-4 border border-gray-200">{step.kcal || 'N/A'}</td>
+                  <td className="py-2 px-4 border border-gray-200">{step.timeSpent || 'N/A'}</td>
                 </tr>
               ))}
             </tbody>
@@ -242,24 +242,24 @@ function UserDetail() {
         <h3 className="font-semibold mb-4 text-lg">My Coupons ({user.MyCoupons?.length || 0})</h3>
         {user.MyCoupons?.length ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937]">
+            <table className="min-w-full bg-white border border-gray-200">
               <thead>
-                <tr className="bg-[#111111]">
-                  <th className="py-2 px-4 border border-[#1f2937]">Image</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Name</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Category</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Discount</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Code</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Valid Until</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Downloads</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Status</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Claimed At</th>
+                <tr className="bg-gray-100">
+                  <th className="py-2 px-4 border border-gray-200">Image</th>
+                  <th className="py-2 px-4 border border-gray-200">Name</th>
+                  <th className="py-2 px-4 border border-gray-200">Category</th>
+                  <th className="py-2 px-4 border border-gray-200">Discount</th>
+                  <th className="py-2 px-4 border border-gray-200">Code</th>
+                  <th className="py-2 px-4 border border-gray-200">Valid Until</th>
+                  <th className="py-2 px-4 border border-gray-200">Downloads</th>
+                  <th className="py-2 px-4 border border-gray-200">Status</th>
+                  <th className="py-2 px-4 border border-gray-200">Claimed At</th>
                 </tr>
               </thead>
               <tbody>
                 {user.MyCoupons.map((myCoupon, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#000000]'}>
-                    <td className="py-2 px-4 border border-[#1f2937]">
+                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="py-2 px-4 border border-gray-200">
                       {myCoupon.couponId?.couponImage ? (
                         <img
                           src={myCoupon.couponId.couponImage}
@@ -270,28 +270,28 @@ function UserDetail() {
                         'No Image'
                       )}
                     </td>
-                    <td className="py-2 px-4 border border-[#1f2937]">{myCoupon.couponId?.name || 'Unnamed Coupon'}</td>
-                    <td className="py-2 px-4 border border-[#1f2937] capitalize">{myCoupon.couponId?.category || 'No category'}</td>
-                    <td className="py-2 px-4 border border-[#1f2937]">{myCoupon.couponId?.discountPercentage}% {myCoupon.couponId?.couponCodeType === '%' ? 'off' : ''}</td>
-                    <td className="py-2 px-4 border border-[#1f2937] font-mono">{myCoupon.couponId?.couponCode}</td>
-                    <td className="py-2 px-4 border border-[#1f2937]">{formatDate(myCoupon.couponId?.validityDate)}</td>
-                    <td className="py-2 px-4 border border-[#1f2937]">{myCoupon.downloadedCount || 0} / {myCoupon.couponId?.limitForSameUser || '∞'}</td>
-                    <td className="py-2 px-4 border border-[#1f2937]">
+                    <td className="py-2 px-4 border border-gray-200">{myCoupon.couponId?.name || 'Unnamed Coupon'}</td>
+                    <td className="py-2 px-4 border border-gray-200 capitalize">{myCoupon.couponId?.category || 'No category'}</td>
+                    <td className="py-2 px-4 border border-gray-200">{myCoupon.couponId?.discountPercentage}% {myCoupon.couponId?.couponCodeType === '%' ? 'off' : ''}</td>
+                    <td className="py-2 px-4 border border-gray-200 font-mono">{myCoupon.couponId?.couponCode}</td>
+                    <td className="py-2 px-4 border border-gray-200">{formatDate(myCoupon.couponId?.validityDate)}</td>
+                    <td className="py-2 px-4 border border-gray-200">{myCoupon.downloadedCount || 0} / {myCoupon.couponId?.limitForSameUser || '∞'}</td>
+                    <td className="py-2 px-4 border border-gray-200">
                       <span className={`px-2 py-1 text-xs rounded-full ${myCoupon.status === 'Active' ? 'bg-green-100 text-green-800' :
                           myCoupon.status === 'Expired' ? 'bg-red-100 text-red-800' :
-                            'bg-[#111111] text-gray-300'
+                            'bg-gray-100 text-gray-700'
                         }`}>
                         {myCoupon.status}
                       </span>
                     </td>
-                    <td className="py-2 px-4 border border-[#1f2937]">{formatDateTime(myCoupon.claimedAt)}</td>
+                    <td className="py-2 px-4 border border-gray-200">{formatDateTime(myCoupon.claimedAt)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <div className="bg-[#000000] rounded-lg p-8 text-center">
+          <div className="bg-gray-50 rounded-lg p-8 text-center">
             <p className="text-gray-500">No coupons claimed yet</p>
           </div>
         )}
@@ -301,23 +301,23 @@ function UserDetail() {
         <h3 className="font-semibold mb-4 text-lg">Favorite Coupons ({user.favoriteCoupons?.length || 0})</h3>
         {user.favoriteCoupons?.length ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937]">
+            <table className="min-w-full bg-white border border-gray-200">
               <thead>
-                <tr className="bg-[#111111]">
-                  <th className="py-2 px-4 border border-[#1f2937]">Image</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Name</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Category</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Discount</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Cost</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Valid Until</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Status</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Created</th>
+                <tr className="bg-gray-100">
+                  <th className="py-2 px-4 border border-gray-200">Image</th>
+                  <th className="py-2 px-4 border border-gray-200">Name</th>
+                  <th className="py-2 px-4 border border-gray-200">Category</th>
+                  <th className="py-2 px-4 border border-gray-200">Discount</th>
+                  <th className="py-2 px-4 border border-gray-200">Cost</th>
+                  <th className="py-2 px-4 border border-gray-200">Valid Until</th>
+                  <th className="py-2 px-4 border border-gray-200">Status</th>
+                  <th className="py-2 px-4 border border-gray-200">Created</th>
                 </tr>
               </thead>
               <tbody>
                 {user.favoriteCoupons.map((coupon, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#000000]'}>
-                    <td className="py-2 px-4 border border-[#1f2937]">
+                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="py-2 px-4 border border-gray-200">
                       {coupon.couponImage ? (
                         <img
                           src={coupon.couponImage}
@@ -328,12 +328,12 @@ function UserDetail() {
                         'No Image'
                       )}
                     </td>
-                    <td className="py-2 px-4 border border-[#1f2937]">{coupon.name}</td>
-                    <td className="py-2 px-4 border border-[#1f2937] capitalize">{coupon.category}</td>
-                    <td className="py-2 px-4 border border-[#1f2937]">{coupon.discountPercentage}% {coupon.couponCodeType === '%' ? 'off' : ''}</td>
-                    <td className="py-2 px-4 border border-[#1f2937]">{coupon.requiredCoins} coins</td>
-                    <td className="py-2 px-4 border border-[#1f2937]">{formatDate(coupon.validityDate)}</td>
-                    <td className="py-2 px-4 border border-[#1f2937]">
+                    <td className="py-2 px-4 border border-gray-200">{coupon.name}</td>
+                    <td className="py-2 px-4 border border-gray-200 capitalize">{coupon.category}</td>
+                    <td className="py-2 px-4 border border-gray-200">{coupon.discountPercentage}% {coupon.couponCodeType === '%' ? 'off' : ''}</td>
+                    <td className="py-2 px-4 border border-gray-200">{coupon.requiredCoins} coins</td>
+                    <td className="py-2 px-4 border border-gray-200">{formatDate(coupon.validityDate)}</td>
+                    <td className="py-2 px-4 border border-gray-200">
                       <span className={`px-2 py-1 text-xs rounded-full ${coupon.status === 'approved' ? 'bg-green-100 text-green-800' :
                           coupon.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                             'bg-red-100 text-red-800'
@@ -341,14 +341,14 @@ function UserDetail() {
                         {coupon.status}
                       </span>
                     </td>
-                    <td className="py-2 px-4 border border-[#1f2937]">{formatDate(coupon.createdAt)}</td>
+                    <td className="py-2 px-4 border border-gray-200">{formatDate(coupon.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <div className="bg-[#000000] rounded-lg p-8 text-center">
+          <div className="bg-gray-50 rounded-lg p-8 text-center">
             <p className="text-gray-500">No favorite coupons added yet</p>
           </div>
         )}
@@ -361,26 +361,26 @@ function UserDetail() {
       <h2 className="text-xl font-bold mb-4">Coin History</h2>
       {user.coinHistory?.length ? (
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937]">
+          <table className="min-w-full bg-white border border-gray-200">
             <thead>
-              <tr className="bg-[#111111]">
-                <th className="py-2 px-4 border border-[#1f2937]">Type</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Amount</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Message</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Recipient</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Date</th>
+              <tr className="bg-gray-100">
+                <th className="py-2 px-4 border border-gray-200">Type</th>
+                <th className="py-2 px-4 border border-gray-200">Amount</th>
+                <th className="py-2 px-4 border border-gray-200">Message</th>
+                <th className="py-2 px-4 border border-gray-200">Recipient</th>
+                <th className="py-2 px-4 border border-gray-200">Date</th>
               </tr>
             </thead>
             <tbody>
               {user.coinHistory.map((entry, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#000000]'}>
-                  <td className="py-2 px-4 border border-[#1f2937] capitalize">{entry.type}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{entry.amount || 'N/A'}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{entry.message || 'N/A'}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">
+                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td className="py-2 px-4 border border-gray-200 capitalize">{entry.type}</td>
+                  <td className="py-2 px-4 border border-gray-200">{entry.amount || 'N/A'}</td>
+                  <td className="py-2 px-4 border border-gray-200">{entry.message || 'N/A'}</td>
+                  <td className="py-2 px-4 border border-gray-200">
                     {entry.toUser ? (entry.toUser.name || entry.toUser._id) : 'N/A'}
                   </td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{formatDateTime(entry.timestamp)}</td>
+                  <td className="py-2 px-4 border border-gray-200">{formatDateTime(entry.timestamp)}</td>
                 </tr>
               ))}
             </tbody>
@@ -397,28 +397,28 @@ function UserDetail() {
       <h2 className="text-xl font-bold mb-4">Notifications ({user.notifications?.length || 0})</h2>
       {user.notifications?.length ? (
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937]">
+          <table className="min-w-full bg-white border border-gray-200">
             <thead>
-              <tr className="bg-[#111111]">
-                <th className="py-2 px-4 border border-[#1f2937]">Sender</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Message</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Type</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Status</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Date</th>
+              <tr className="bg-gray-100">
+                <th className="py-2 px-4 border border-gray-200">Sender</th>
+                <th className="py-2 px-4 border border-gray-200">Message</th>
+                <th className="py-2 px-4 border border-gray-200">Type</th>
+                <th className="py-2 px-4 border border-gray-200">Status</th>
+                <th className="py-2 px-4 border border-gray-200">Date</th>
               </tr>
             </thead>
             <tbody>
               {user.notifications.map((notification, index) => (
-                <tr key={index} className={notification.read ? 'bg-[#0a0a0a]' : 'bg-blue-50'}>
-                  <td className="py-2 px-4 border border-[#1f2937]">{notification.vendorName || 'System'}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{notification.message}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{notification.type}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">
-                    <span className={`px-2 py-1 text-xs rounded-full ${notification.read ? 'bg-[#1f2937]' : 'bg-blue-200'}`}>
+                <tr key={index} className={notification.read ? 'bg-white' : 'bg-blue-50'}>
+                  <td className="py-2 px-4 border border-gray-200">{notification.vendorName || 'System'}</td>
+                  <td className="py-2 px-4 border border-gray-200">{notification.message}</td>
+                  <td className="py-2 px-4 border border-gray-200">{notification.type}</td>
+                  <td className="py-2 px-4 border border-gray-200">
+                    <span className={`px-2 py-1 text-xs rounded-full ${notification.read ? 'bg-gray-200' : 'bg-blue-200'}`}>
                       {notification.read ? 'Read' : 'Unread'}
                     </span>
                   </td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{formatDateTime(notification.createdAt)}</td>
+                  <td className="py-2 px-4 border border-gray-200">{formatDateTime(notification.createdAt)}</td>
                 </tr>
               ))}
             </tbody>
@@ -436,46 +436,46 @@ function UserDetail() {
 
       {user.MyChatMembers?.length ? (
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937]">
+          <table className="min-w-full bg-white border border-gray-200">
             <thead>
-              <tr className="bg-[#111111]">
-                <th className="py-2 px-4 border border-[#1f2937]">Profile</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Name</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Email</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Phone</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Location</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Coins</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Member Since</th>
-                <th className="py-2 px-4 border border-[#1f2937]">Status</th>
+              <tr className="bg-gray-100">
+                <th className="py-2 px-4 border border-gray-200">Profile</th>
+                <th className="py-2 px-4 border border-gray-200">Name</th>
+                <th className="py-2 px-4 border border-gray-200">Email</th>
+                <th className="py-2 px-4 border border-gray-200">Phone</th>
+                <th className="py-2 px-4 border border-gray-200">Location</th>
+                <th className="py-2 px-4 border border-gray-200">Coins</th>
+                <th className="py-2 px-4 border border-gray-200">Member Since</th>
+                <th className="py-2 px-4 border border-gray-200">Status</th>
               </tr>
             </thead>
             <tbody>
               {user.MyChatMembers.map((member, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#000000]'}>
-                  <td className="py-2 px-4 border border-[#1f2937]">
+                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td className="py-2 px-4 border border-gray-200">
                     {member.userId.profileImage ? (
                       <img
                         src={member.userId.profileImage}
                         alt={`${member.userId.name}'s profile`}
-                        className="w-12 h-12 rounded-full object-cover border border-[#374151]"
+                        className="w-12 h-12 rounded-full object-cover border border-gray-300"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-[#1f2937] flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
                         <span className="text-gray-500 text-sm">
                           {member.userId.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
                     )}
                   </td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{member.userId.name}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{member.userId.email}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{member.userId.phone || 'N/A'}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">
+                  <td className="py-2 px-4 border border-gray-200">{member.userId.name}</td>
+                  <td className="py-2 px-4 border border-gray-200">{member.userId.email}</td>
+                  <td className="py-2 px-4 border border-gray-200">{member.userId.phone || 'N/A'}</td>
+                  <td className="py-2 px-4 border border-gray-200">
                     {member.userId.city || 'N/A'}, {member.userId.zipcode || 'N/A'}
                   </td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{member.userId.coins || 0}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">{formatDate(member.userId.createdAt)}</td>
-                  <td className="py-2 px-4 border border-[#1f2937]">
+                  <td className="py-2 px-4 border border-gray-200">{member.userId.coins || 0}</td>
+                  <td className="py-2 px-4 border border-gray-200">{formatDate(member.userId.createdAt)}</td>
+                  <td className="py-2 px-4 border border-gray-200">
                     <span className={`px-2 py-1 text-xs rounded-full ${member.status === 'Accepted' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                       {member.status === 'Accepted' ? 'Connected' : 'Pending'}
                     </span>
@@ -486,7 +486,7 @@ function UserDetail() {
           </table>
         </div>
       ) : (
-        <div className="bg-[#000000] rounded-lg p-8 text-center">
+        <div className="bg-gray-50 rounded-lg p-8 text-center">
           <p className="text-gray-500">No chat members found</p>
         </div>
       )}
@@ -522,16 +522,16 @@ function UserDetail() {
         <h2 className="text-xl font-bold mb-4">Time Spent by Category</h2>
         {categoryStats.length ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937]">
+            <table className="min-w-full bg-white border border-gray-200">
               <thead>
-                <tr className="bg-[#111111]">
-                  <th className="py-2 px-4 border border-[#1f2937]">Category</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Time Spent</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Coins Earned</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Sessions</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Last Activity</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Avg. Time/Session</th>
-                  <th className="py-2 px-4 border border-[#1f2937]">Coins/Hour</th>
+                <tr className="bg-gray-100">
+                  <th className="py-2 px-4 border border-gray-200">Category</th>
+                  <th className="py-2 px-4 border border-gray-200">Time Spent</th>
+                  <th className="py-2 px-4 border border-gray-200">Coins Earned</th>
+                  <th className="py-2 px-4 border border-gray-200">Sessions</th>
+                  <th className="py-2 px-4 border border-gray-200">Last Activity</th>
+                  <th className="py-2 px-4 border border-gray-200">Avg. Time/Session</th>
+                  <th className="py-2 px-4 border border-gray-200">Coins/Hour</th>
                 </tr>
               </thead>
               <tbody>
@@ -540,16 +540,16 @@ function UserDetail() {
                   const coinsPerHour = Math.round((category.coinsEarned / category.timeSpent) * 3600);
                   
                   return (
-                    <tr key={index} className={index % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#000000]'}>
-                      <td className="py-2 px-4 border border-[#1f2937] font-semibold capitalize">{category.category}</td>
-                      <td className="py-2 px-4 border border-[#1f2937]">{formatTimeSpent(category.timeSpent)}</td>
-                      <td className="py-2 px-4 border border-[#1f2937]">
+                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="py-2 px-4 border border-gray-200 font-semibold capitalize">{category.category}</td>
+                      <td className="py-2 px-4 border border-gray-200">{formatTimeSpent(category.timeSpent)}</td>
+                      <td className="py-2 px-4 border border-gray-200">
                         <span className="font-medium text-green-600">{category.coinsEarned} coins</span>
                       </td>
-                      <td className="py-2 px-4 border border-[#1f2937]">{category.sessions}</td>
-                      <td className="py-2 px-4 border border-[#1f2937]">{formatDate(category.lastActivity)}</td>
-                      <td className="py-2 px-4 border border-[#1f2937]">{formatTimeSpent(avgTimePerSession)}</td>
-                      <td className="py-2 px-4 border border-[#1f2937]">
+                      <td className="py-2 px-4 border border-gray-200">{category.sessions}</td>
+                      <td className="py-2 px-4 border border-gray-200">{formatDate(category.lastActivity)}</td>
+                      <td className="py-2 px-4 border border-gray-200">{formatTimeSpent(avgTimePerSession)}</td>
+                      <td className="py-2 px-4 border border-gray-200">
                         <span className="font-medium text-blue-600">{coinsPerHour} coins/h</span>
                       </td>
                     </tr>
@@ -565,16 +565,16 @@ function UserDetail() {
         {/* Time Distribution Chart (Visual Representation) */}
         <div className="mt-8">
           <h3 className="text-lg font-semibold mb-4">Time Distribution by Category</h3>
-          <div className="bg-[#000000] p-4 rounded-lg">
+          <div className="bg-gray-50 p-4 rounded-lg">
             {categoryStats.map((category, index) => {
               const percentage = Math.round((category.timeSpent / totalTimeSpent) * 100);
               return (
                 <div key={index} className="mb-2">
                   <div className="flex justify-between mb-1">
                     <span className="text-sm font-medium capitalize">{category.category}</span>
-                    <span className="text-sm text-gray-400">{percentage}%</span>
+                    <span className="text-sm text-gray-500">{percentage}%</span>
                   </div>
-                  <div className="w-full bg-[#1f2937] rounded-full h-2.5">
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
                     <div 
                       className={`h-2.5 rounded-full ${
                         index % 5 === 0 ? 'bg-blue-500' :
@@ -606,47 +606,47 @@ function UserDetail() {
       <h1 className="text-2xl font-bold mb-6">User Details: {user.name}</h1>
 
       {/* Tabs */}
-      <div className="border-b border-[#1f2937] mb-6">
+      <div className="border-b border-gray-200 mb-6">
         <nav className="flex space-x-4 overflow-x-auto">
           <button
             onClick={() => setActiveTab('profile')}
-            className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'profile' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'profile' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Profile
           </button>
           <button
             onClick={() => setActiveTab('steps')}
-            className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'steps' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'steps' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Steps
           </button>
           <button
             onClick={() => setActiveTab('coupons')}
-            className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'coupons' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'coupons' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Coupons
           </button>
           <button
             onClick={() => setActiveTab('coins')}
-            className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'coins' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'coins' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Coin History
           </button>
           <button
             onClick={() => setActiveTab('notifications')}
-            className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'notifications' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'notifications' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Notifications
           </button>
           <button
             onClick={() => setActiveTab('chat')}
-            className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'chat' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'chat' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Chat Members
           </button>
           <button
             onClick={() => setActiveTab('category')}
-            className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'category' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`py-2 px-4 font-medium whitespace-nowrap ${activeTab === 'category' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Category Time
           </button>
@@ -654,7 +654,7 @@ function UserDetail() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-[#0a0a0a] p-6 rounded-lg shadow">
+      <div className="bg-white p-6 rounded-lg shadow">
         {activeTab === 'profile' && renderProfileSection()}
         {activeTab === 'steps' && renderStepsSection()}
         {activeTab === 'coupons' && renderCouponsSection()}

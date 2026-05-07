@@ -72,7 +72,7 @@ const AttendanceForm = () => {
   };
 
   return (
-    <div className="min-h-screen p-6 bg-[#111111]">
+    <div className="min-h-screen p-6 bg-gray-100">
       {/* Add Attendance Button */}
       <button
         onClick={() => setIsModalOpen(true)}
@@ -82,11 +82,11 @@ const AttendanceForm = () => {
       </button>
 
       {/* Table for Showing Attendance Records */}
-      <div className="mt-12 bg-[#0a0a0a] p-6 rounded shadow-lg">
+      <div className="mt-12 bg-white p-6 rounded shadow-lg">
         <h3 className="mb-4 text-xl font-semibold">Attendance Records</h3>
         <table className="min-w-full table-auto">
           <thead>
-            <tr className="bg-[#1f2937]">
+            <tr className="bg-gray-200">
               <th className="px-4 py-2 text-left">Employee</th>
               <th className="px-4 py-2 text-left">Time</th>
               <th className="px-4 py-2 text-left">Status</th>
@@ -115,12 +115,12 @@ const AttendanceForm = () => {
       {/* Modal for Taking Attendance */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="p-6 bg-[#0a0a0a] rounded-lg shadow-lg w-96">
+          <div className="p-6 bg-white rounded-lg shadow-lg w-96">
             <h3 className="mb-4 text-lg font-semibold">Take Attendance</h3>
 
             {/* Employee Selection */}
             <div className="mb-4">
-              <label className="block mb-2 font-semibold text-gray-300">
+              <label className="block mb-2 font-semibold text-gray-700">
                 Employee <span className="text-red-500">*</span>
               </label>
               <select
@@ -136,7 +136,7 @@ const AttendanceForm = () => {
 
             {/* Time Selection */}
             <div className="mb-4">
-              <label className="block mb-2 font-semibold text-gray-300">
+              <label className="block mb-2 font-semibold text-gray-700">
                 Time <span className="text-red-500">*</span>
               </label>
               <input
@@ -149,7 +149,7 @@ const AttendanceForm = () => {
 
             {/* Status Selection */}
             <div className="mb-4">
-              <label className="block mb-2 font-semibold text-gray-300">
+              <label className="block mb-2 font-semibold text-gray-700">
                 Status <span className="text-red-500">*</span>
               </label>
               <select

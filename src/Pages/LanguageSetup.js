@@ -23,7 +23,7 @@ const LanguageList = () => {
   };
 
   return (
-    <div className="max-w-4xl p-6 mx-auto bg-[#0a0a0a] rounded-lg shadow">
+    <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Language List</h2>
         <button
@@ -35,7 +35,7 @@ const LanguageList = () => {
       </div>
       <table className="w-full border border-collapse">
         <thead>
-          <tr className="bg-[#111111]">
+          <tr className="bg-gray-100">
             <th className="px-4 py-2 border">Sl</th>
             <th className="px-4 py-2 border">Name</th>
             <th className="px-4 py-2 border">Code</th>
@@ -66,7 +66,7 @@ const LanguageList = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="p-6 bg-[#0a0a0a] rounded-lg shadow-lg w-96">
+          <div className="p-6 bg-white rounded-lg shadow-lg w-96">
             <h3 className="mb-4 text-lg font-semibold">Add Language</h3>
             <label className="block mb-2">Language Name *</label>
             <input

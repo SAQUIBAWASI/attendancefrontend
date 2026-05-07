@@ -217,7 +217,7 @@
 //     };
 
 //     if (loading) return (
-//         <div className="flex items-center justify-center min-h-screen bg-[#000000]">
+//         <div className="flex items-center justify-center min-h-screen bg-gray-50">
 //             <div className="flex flex-col items-center gap-4">
 //                 <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
 //                 <p className="text-gray-500 font-bold animate-pulse">Syncing assessments...</p>
@@ -226,29 +226,29 @@
 //     );
 
 //     return (
-//         <div className="w-full min-h-screen bg-[#000000]/50 p-4 md:p-6 lg:p-8">
+//         <div className="w-full min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8">
 //             {/* Header Section */}
 //             <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-center xl:justify-between">
 //                 <div className="flex-shrink-0">
-//                     <h2 className="text-base font-bold text-gray-300">Assessment Manager</h2>
+//                     <h2 className="text-base font-bold text-gray-700">Assessment Manager</h2>
 //                 </div>
 
 //                 <div className="flex flex-wrap items-center justify-start xl:justify-end gap-3 w-full xl:w-auto">
 //                     {/* Date Filter */}
 //                     <div className="relative group w-full sm:w-40">
-//                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+//                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 group-focus-within:text-indigo-500 transition-colors">
 //                             <FiCalendar className="text-sm" />
 //                         </div>
 //                         <input
 //                             type="date"
-//                             className="w-full pl-10 pr-10 py-2 bg-[#0a0a0a] border border-[#374151] rounded-lg text-sm font-bold text-gray-300 focus:ring-2 focus:ring-blue-500 transition-all outline-none shadow-sm"
+//                             className="w-full pl-10 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold text-gray-700 focus:ring-2 focus:ring-blue-500 transition-all outline-none shadow-sm"
 //                             value={dateFilter}
 //                             onChange={(e) => setDateFilter(e.target.value)}
 //                         />
 //                         {dateFilter && (
 //                             <button
 //                                 onClick={() => setDateFilter("")}
-//                                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-rose-500 transition-colors"
+//                                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-rose-500 transition-colors"
 //                             >
 //                                 <FiX className="text-sm" />
 //                             </button>
@@ -257,11 +257,11 @@
 
 //                     {/* Searchable Role Filter */}
 //                     <div className="relative group w-full sm:w-56" ref={roleDropdownRef}>
-//                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors z-10">
+//                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 group-focus-within:text-indigo-500 transition-colors z-10">
 //                             <FiBriefcase className="text-sm" />
 //                         </div>
 //                         <div
-//                             className="w-full pl-10 pr-10 py-2 bg-[#0a0a0a] border border-[#374151] rounded-lg text-sm font-bold text-gray-300 focus:ring-2 focus:ring-blue-500 transition-all outline-none cursor-pointer relative overflow-hidden text-ellipsis whitespace-nowrap shadow-sm"
+//                             className="w-full pl-10 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold text-gray-700 focus:ring-2 focus:ring-blue-500 transition-all outline-none cursor-pointer relative overflow-hidden text-ellipsis whitespace-nowrap shadow-sm"
 //                             onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
 //                         >
 //                             {roleFilter || "Select Role"}
@@ -269,22 +269,22 @@
 //                         <div className="absolute inset-y-0 right-0 pr-3 flex items-center z-10">
 //                             {roleFilter ? (
 //                                 <FiX
-//                                     className="text-xs text-gray-400 hover:text-rose-500 cursor-pointer transition-colors"
+//                                     className="text-xs text-gray-500 hover:text-rose-500 cursor-pointer transition-colors"
 //                                     onClick={(e) => { e.stopPropagation(); setRoleFilter(""); }}
 //                                 />
 //                             ) : (
-//                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 pointer-events-none"><path d="m6 9 6 6 6-6" /></svg>
+//                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 pointer-events-none"><path d="m6 9 6 6 6-6" /></svg>
 //                             )}
 //                         </div>
 
 //                         {isRoleDropdownOpen && (
-//                             <div className="absolute z-50 w-full mt-2 bg-[#0a0a0a] border border-[#1f2937] rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-//                                 <div className="p-3 border-b border-[#1f2937] bg-[#000000]/50">
+//                             <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+//                                 <div className="p-3 border-b border-gray-200 bg-gray-50/50">
 //                                     <div className="relative">
-//                                         <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+//                                         <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs" />
 //                                         <input
 //                                             type="text"
-//                                             className="w-full py-2 pl-9 pr-4 text-xs bg-[#0a0a0a] border border-[#1f2937] rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+//                                             className="w-full py-2 pl-9 pr-4 text-xs bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
 //                                             placeholder="Search roles..."
 //                                             value={roleSearchQuery}
 //                                             onChange={(e) => setRoleSearchQuery(e.target.value)}
@@ -295,7 +295,7 @@
 //                                 </div>
 //                                 <div className="max-h-64 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-gray-200">
 //                                     <div
-//                                         className={`px-4 py-2.5 text-xs font-bold cursor-pointer hover:bg-[#000000] transition-colors ${!roleFilter ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-400'}`}
+//                                         className={`px-4 py-2.5 text-xs font-bold cursor-pointer hover:bg-gray-50 transition-colors ${!roleFilter ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-500'}`}
 //                                         onClick={() => { setRoleFilter(""); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
 //                                     >
 //                                         All Roles
@@ -305,7 +305,7 @@
 //                                         .map((r) => (
 //                                             <div
 //                                                 key={r._id}
-//                                                 className={`px-4 py-2.5 text-xs font-bold cursor-pointer hover:bg-[#000000] border-l-2 transition-all ${roleFilter === r.name ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-400 border-transparent'}`}
+//                                                 className={`px-4 py-2.5 text-xs font-bold cursor-pointer hover:bg-gray-50 border-l-2 transition-all ${roleFilter === r.name ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-500 border-transparent'}`}
 //                                                 onClick={() => { setRoleFilter(r.name); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
 //                                             >
 //                                                 {r.name}
@@ -319,11 +319,11 @@
 
 //                     {/* Experience Filter */}
 //                     <div className="relative group w-full sm:w-40">
-//                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+//                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 group-focus-within:text-indigo-500 transition-colors">
 //                             <FiFilter className="text-sm" />
 //                         </div>
 //                         <select
-//                             className="w-full pl-10 pr-10 py-2 bg-[#0a0a0a] border border-[#374151] rounded-lg text-sm font-bold text-gray-300 appearance-none focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+//                             className="w-full pl-10 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold text-gray-700 appearance-none focus:ring-2 focus:ring-blue-500 transition-all outline-none"
 //                             value={experienceFilter}
 //                             onChange={(e) => setExperienceFilter(e.target.value)}
 //                         >
@@ -333,13 +333,13 @@
 //                             <option value="Mid">Mid Level</option>
 //                             <option value="Senior">Senior</option>
 //                         </select>
-//                         <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+//                         <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
 //                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
 //                         </div>
 //                         {experienceFilter && (
 //                             <button
 //                                 onClick={() => setExperienceFilter("")}
-//                                 className="absolute inset-y-0 right-8 pr-1 flex items-center text-gray-400 hover:text-rose-500 transition-colors"
+//                                 className="absolute inset-y-0 right-8 pr-1 flex items-center text-gray-500 hover:text-rose-500 transition-colors"
 //                             >
 //                                 <FiX className="text-sm" />
 //                             </button>
@@ -348,20 +348,20 @@
 
 //                     {/* Search Bar */}
 //                     <div className="relative group w-full sm:w-auto sm:min-w-[250px] md:min-w-[300px]">
-//                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+//                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 group-focus-within:text-indigo-500 transition-colors">
 //                             <FiSearch className="text-sm" />
 //                         </div>
 //                         <input
 //                             type="text"
 //                             placeholder="Search title or role..."
-//                             className="w-full pl-10 pr-10 py-2 bg-[#0a0a0a] border border-[#374151] rounded-lg text-sm font-medium text-gray-300 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+//                             className="w-full pl-10 pr-10 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
 //                             value={searchQuery}
 //                             onChange={(e) => setSearchQuery(e.target.value)}
 //                         />
 //                         {searchQuery && (
 //                             <button
 //                                 onClick={() => setSearchQuery("")}
-//                                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-rose-500 transition-colors"
+//                                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-rose-500 transition-colors"
 //                             >
 //                                 <FiX className="text-sm" />
 //                             </button>
@@ -373,7 +373,7 @@
 //                         {(searchQuery || roleFilter || experienceFilter || dateFilter) && (
 //                             <button
 //                                 onClick={resetFilters}
-//                                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-400 bg-[#111111] hover:bg-[#1f2937] hover:text-gray-200 rounded-lg transition-colors border border-[#1f2937]"
+//                                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-colors border border-gray-200"
 //                                 title="Reset all filters"
 //                             >
 //                                 <FiRefreshCw className="text-sm" />
@@ -382,7 +382,7 @@
 //                         )}
 //                         <button
 //                             onClick={() => window.location.href = "/add-bulk-quiz"}
-//                             className="px-4 py-2 bg-[#0a0a0a] border border-[#374151] text-gray-300 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-[#000000] transition-all shadow-sm"
+//                             className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-gray-50 transition-all shadow-sm"
 //                         >
 //                             Bulk Upload
 //                         </button>
@@ -397,14 +397,14 @@
 //             </div>
 
 //             {/* Quizzes Table */}
-//            <div className="p-0 mb-0 bg-[#0a0a0a] border shadow-lg rounded-2xl">
+//            <div className="p-0 mb-0 bg-white border shadow-lg rounded-2xl">
 //                 {loading ? (
 //                     <div className="flex flex-col items-center justify-center py-20 gap-4">
 //                         <div className="w-10 h-10 border-4 border-indigo-50 border-t-indigo-600 rounded-full animate-spin"></div>
-//                         <p className="text-xs font-bold text-gray-400 animate-pulse uppercase tracking-wider">Syncing assessments...</p>
+//                         <p className="text-xs font-bold text-gray-500 animate-pulse uppercase tracking-wider">Syncing assessments...</p>
 //                     </div>
 //                 ) : filteredQuizzes.length > 0 ? (
-//                     <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//                     <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //              <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                             <tr>
@@ -417,31 +417,31 @@
 //                         </thead>
 //                         <tbody>
 //                             {filteredQuizzes.map((quiz) => (
-//                                 <tr key={quiz._id} className="border-b hover:bg-[#000000] transition-colors">
+//                                 <tr key={quiz._id} className="border-b hover:bg-gray-50 transition-colors">
 //                                     <td className="px-2 py-2 font-medium text-center">
-//                                         <div className="text-gray-200 whitespace-nowrap">{quiz.title || quiz.name}</div>
-//                                         <div className="text-[10px] text-gray-400 truncate max-w-xs mx-auto">{quiz.description || "No description"}</div>
+//                                         <div className="text-gray-900 whitespace-nowrap">{quiz.title || quiz.name}</div>
+//                                         <div className="text-[10px] text-gray-500 truncate max-w-xs mx-auto">{quiz.description || "No description"}</div>
 //                                     </td>
 //                                     <td className="px-2 py-2 font-medium text-center">
 //                                         <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded text-[10px]  uppercase">
 //                                             {quiz.role || quiz.category || "General"}
 //                                         </span>
 //                                     </td>
-//                                     <td className="px-2 py-2 font-medium text-center text-gray-400">
+//                                     <td className="px-2 py-2 font-medium text-center text-gray-500">
 //                                         <div className="flex items-center justify-center gap-1">
 //                                             <FaLayerGroup className="text-indigo-400" />
 //                                             <span>{quiz.questionsCount || quiz.questions?.length || 0}</span>
 //                                         </div>
 //                                     </td>
 //                                     <td className="px-2 py-2 font-medium text-center">
-//                                         <div className="flex flex-col items-center gap-1 text-gray-400">
+//                                         <div className="flex flex-col items-center gap-1 text-gray-500">
 //                                             <div className="flex items-center gap-1">
 //                                                 <FaRegClock className="text-indigo-400" />
 //                                                 <span>{quiz.duration || 30}m</span>
 //                                             </div>
 //                                             <div className="flex items-center gap-1 mt-1">
 //                                                 <FaAward className="text-yellow-500 text-[10px]" />
-//                                                 <span className="text-[10px]  text-gray-400">
+//                                                 <span className="text-[10px]  text-gray-500">
 //                                                     100 Scaled Marks
 //                                                 </span>
 //                                             </div>
@@ -472,11 +472,11 @@
 //                     </div>
 //                 ) : (
 //                     <div className="p-20 text-center">
-//                         <div className="w-16 h-16 bg-[#000000] rounded-full flex items-center justify-center mx-auto mb-4">
-//                             <FaTasks className="text-2xl text-gray-200" />
+//                         <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+//                             <FaTasks className="text-2xl text-gray-900" />
 //                         </div>
-//                         <h2 className="text-lg font-bold text-gray-300">No assessments found</h2>
-//                         <p className="text-gray-400 text-xs">Start building your talent pipeline.</p>
+//                         <h2 className="text-lg font-bold text-gray-700">No assessments found</h2>
+//                         <p className="text-gray-500 text-xs">Start building your talent pipeline.</p>
 //                     </div>
 //                 )}
 //             </div>
@@ -484,11 +484,11 @@
 //             {/* Add/Edit Modal */}
 //             {modalOpen && (
 //                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
-//                     <div className="bg-[#0a0a0a] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-[#1f2937] flex flex-col max-h-[90vh]">
+//                     <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-200 flex flex-col max-h-[90vh]">
 //                         {/* Modal Header */}
 //                         <div className="px-8 pt-8 pb-4 flex items-center justify-between">
 //                             <div>
-//                                 <h2 className="text-xl text-gray-300">
+//                                 <h2 className="text-xl text-gray-700">
 //                                     {isEditing ? "Update Assessment" : "Build New Assessment"}
 //                                 </h2>
 //                                 <p className="text-[10px] font-bold uppercase tracking-widest mt-1">
@@ -497,7 +497,7 @@
 //                             </div>
 //                             <button
 //                                 onClick={() => setModalOpen(false)}
-//                                 className="p-2 text-gray-400 hover:text-gray-300 hover:bg-[#111111] rounded-xl transition-all"
+//                                 className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
 //                             >
 //                                 <FiX className="text-lg" />
 //                             </button>
@@ -518,27 +518,27 @@
 //                                 <div className="space-y-5">
 //                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 //                                         <div className="space-y-1.5">
-//                                             <label className="block mb-1 text-sm font-medium text-gray-300">Assessment Title</label>
+//                                             <label className="block mb-1 text-sm font-medium text-gray-700">Assessment Title</label>
 //                                             <input
 //                                                 type="text"
 //                                                 name="title"
 //                                                 value={formData.title}
 //                                                 onChange={handleFormChange}
 //                                                 required
-//                                                 className="w-full px-4 py-3.5 rounded-xl border border-[#1f2937] focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-300"
+//                                                 className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-700"
 //                                                 placeholder="e.g., Software Engineer - Logic & DSA"
 //                                             />
 //                                         </div>
 
 //                                         <div className="space-y-1.5">
-//                                             <label className="block mb-1 text-sm font-medium text-gray-300">Job Role</label>
+//                                             <label className="block mb-1 text-sm font-medium text-gray-700">Job Role</label>
 //                                             <div className="relative">
 //                                                 <select
 //                                                     name="role"
 //                                                     value={formData.role}
 //                                                     onChange={handleFormChange}
 //                                                     required
-//                                                     className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-[#1f2937] focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-300 bg-[#0a0a0a] appearance-none"
+//                                                     className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-700 bg-white appearance-none"
 //                                                 >
 //                                                     <option value="">Select Target Role</option>
 //                                                     {(roles || []).map(r => (
@@ -546,21 +546,21 @@
 //                                                     ))}
 //                                                     <option value="General">General / Other</option>
 //                                                 </select>
-//                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300">
+//                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-700">
 //                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
 //                                                 </div>
 //                                             </div>
 //                                         </div>
 
 //                                         <div className="space-y-1.5">
-//                                             <label className="block mb-1 text-sm font-medium text-gray-300">Experience Level</label>
+//                                             <label className="block mb-1 text-sm font-medium text-gray-700">Experience Level</label>
 //                                             <div className="relative">
 //                                                 <select
 //                                                     name="experienceLevel"
 //                                                     value={formData.experienceLevel}
 //                                                     onChange={handleFormChange}
 //                                                     required
-//                                                     className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-[#1f2937] focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-300 bg-[#0a0a0a] appearance-none"
+//                                                     className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-700 bg-white appearance-none"
 //                                                 >
 //                                                     <option value="Fresher">Fresher (0-1 yrs)</option>
 //                                                     <option value="Junior">Junior (2-3 yrs)</option>
@@ -568,16 +568,16 @@
 //                                                     <option value="Mid">Mid Level (4-5 yrs)</option>
 //                                                     <option value="Senior">Senior (5+ yrs)</option>
 //                                                 </select>
-//                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300">
+//                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-700">
 //                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
 //                                                 </div>
 //                                             </div>
 //                                         </div>
 
 //                                         <div className="space-y-1.5">
-//                                             <label className="block mb-1 text-sm font-medium text-gray-300">Duration (Minutes)</label>
+//                                             <label className="block mb-1 text-sm font-medium text-gray-700">Duration (Minutes)</label>
 //                                             <div className="relative">
-//                                                 <FaRegClock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 transition-colors" />
+//                                                 <FaRegClock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 transition-colors" />
 //                                                 <input
 //                                                     type="number"
 //                                                     name="duration"
@@ -586,21 +586,21 @@
 //                                                     required
 //                                                     min="5"
 //                                                     max="180"
-//                                                     className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#1f2937] focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-300"
+//                                                     className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-700"
 //                                                 />
 //                                             </div>
 //                                         </div>
 //                                     </div>
 
 //                                     <div className="space-y-1.5">
-//                                         <label className="block mb-1 text-sm font-medium text-gray-300">Summary / Instructions</label>
+//                                         <label className="block mb-1 text-sm font-medium text-gray-700">Summary / Instructions</label>
 //                                         <div className="relative group">
 //                                             <textarea
 //                                                 name="description"
 //                                                 value={formData.description}
 //                                                 onChange={handleFormChange}
 //                                                 rows="2"
-//                                                 className="w-full px-4 py-3.5 rounded-xl border border-[#1f2937] focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-300 placeholder:text-gray-300 resize-none"
+//                                                 className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-700 placeholder:text-gray-700 resize-none"
 //                                                 placeholder="Provide context or rules for the candidates..."
 //                                             ></textarea>
 //                                         </div>
@@ -610,7 +610,7 @@
 //                                 {/* Questions Section */}
 //                                 <div className="space-y-6">
 //                                     <div className="flex items-center justify-between">
-//                                         <h3 className="text-sm font-bold text-gray-300 flex items-center gap-2 uppercase tracking-tight">
+//                                         <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2 uppercase tracking-tight">
 //                                             Question Repository
 //                                         </h3>
 //                                         <button
@@ -624,7 +624,7 @@
 
 //                                     <div className="space-y-6">
 //                                         {(formData.questions || []).map((q, qIdx) => (
-//                                             <div key={qIdx} className="p-6 rounded-2xl bg-[#000000] border border-[#1f2937] relative group animate-in slide-in-from-bottom-2 duration-200">
+//                                             <div key={qIdx} className="p-6 rounded-2xl bg-gray-50 border border-gray-200 relative group animate-in slide-in-from-bottom-2 duration-200">
 //                                                 <div className="absolute -top-3 -left-3 w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold shadow-md text-xs">
 //                                                     {qIdx + 1}
 //                                                 </div>
@@ -633,7 +633,7 @@
 //                                                     <button
 //                                                         type="button"
 //                                                         onClick={() => removeQuestion(qIdx)}
-//                                                         className="absolute -top-2.5 -right-2.5 p-2 bg-[#0a0a0a] text-gray-400 hover:text-red-600 border border-[#1f2937] rounded-lg transition-all shadow-sm"
+//                                                         className="absolute -top-2.5 -right-2.5 p-2 bg-white text-gray-500 hover:text-red-600 border border-gray-200 rounded-lg transition-all shadow-sm"
 
 //                                                     >
 //                                                         <FaTimes className="text-[10px]" />
@@ -650,7 +650,7 @@
 //                                                             value={q.questionText}
 //                                                             onChange={(e) => handleQuestionChange(qIdx, "questionText", e.target.value)}
 //                                                             required
-//                                                             className="w-full px-4 py-3 rounded-xl border border-[#1f2937] bg-[#0a0a0a] focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-300"
+//                                                             className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-700"
 //                                                             placeholder="State the problem clearly..."
 //                                                         />
 //                                                     </div>
@@ -659,7 +659,7 @@
 //                                                         {(q.options || ["", "", "", "", ""]).map((opt, oIdx) => (
 //                                                             <div key={oIdx} className="space-y-1.5">
 //                                                                 <div className="flex justify-between items-center px-1">
-//                                                                     <label className="text-[9px] font-bold uppercase tracking-wide text-gray-400">Option {String.fromCharCode(65 + oIdx)}</label>
+//                                                                     <label className="text-[9px] font-bold uppercase tracking-wide text-gray-500">Option {String.fromCharCode(65 + oIdx)}</label>
 //                                                                     <label className="flex items-center gap-1.5 cursor-pointer">
 //                                                                         <input
 //                                                                             type="radio"
@@ -672,7 +672,7 @@
 //                                                                             className={`w-5 h-5 rounded-full border-2 border-purple-600 flex items-center justify-center transition-all
 //     ${q.correctAnswer === opt && opt !== ""
 //                                                                                     ? "bg-emerald-500 shadow-sm"
-//                                                                                     : "bg-[#0a0a0a]"
+//                                                                                     : "bg-white"
 //                                                                                 }`}
 //                                                                         >
 //                                                                             {q.correctAnswer === opt && opt !== "" && (
@@ -680,7 +680,7 @@
 //                                                                             )}
 //                                                                         </div>
 
-//                                                                         <span className={`text-[9px] font-bold uppercase tracking-tight ${q.correctAnswer === opt && opt !== "" ? "text-emerald-600" : "text-gray-300"}`}>Correct</span>
+//                                                                         <span className={`text-[9px] font-bold uppercase tracking-tight ${q.correctAnswer === opt && opt !== "" ? "text-emerald-600" : "text-gray-700"}`}>Correct</span>
 //                                                                     </label>
 //                                                                 </div>
 //                                                                 <input
@@ -690,7 +690,7 @@
 //                                                                     required
 //                                                                     className={`w-full px-3 py-2.5 rounded-xl border transition-all outline-none text-xs font-medium ${q.correctAnswer === opt && opt !== ""
 //                                                                         ? "border-emerald-100 bg-emerald-50/50 text-emerald-800"
-//                                                                         : "border-[#1f2937] bg-[#0a0a0a] text-gray-300"
+//                                                                         : "border-gray-200 bg-white text-gray-700"
 //                                                                         }`}
 //                                                                     placeholder={`Choice ${String.fromCharCode(65 + oIdx)}...`}
 //                                                                 />
@@ -700,7 +700,7 @@
 
 //                                                     <div className="flex justify-end pt-2">
 //                                                         <div className="w-24 space-y-1.5">
-//                                                             <label className="text-[9px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1.5 justify-end">
+//                                                             <label className="text-[9px] font-bold uppercase tracking-widest text-gray-500 flex items-center gap-1.5 justify-end">
 //                                                                 Points
 //                                                             </label>
 //                                                             <input
@@ -709,7 +709,7 @@
 //                                                                 onChange={(e) => handleQuestionChange(qIdx, "marks", e.target.value)}
 //                                                                 required
 //                                                                 min="1"
-//                                                                 className="w-full px-3 py-2 rounded-xl border border-[#1f2937] bg-[#0a0a0a] text-xs font-bold text-gray-300 text-center"
+//                                                                 className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 text-center"
 //                                                             />
 //                                                         </div>
 //                                                     </div>
@@ -728,11 +728,11 @@
 //                                 </button>
 
 //                                 {/* Modal Footer */}
-//                                 <div className="pt-6 border-t border-gray-50 flex gap-4 sticky bottom-0 bg-[#0a0a0a] pb-2">
+//                                 <div className="pt-6 border-t border-gray-50 flex gap-4 sticky bottom-0 bg-white pb-2">
 //                                     <button
 //                                         type="button"
 //                                         onClick={() => setModalOpen(false)}
-//                                         className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-400 hover:text-gray-300 hover:bg-[#000000] transition-all border border-transparent"
+//                                         className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-all border border-transparent"
 //                                     >
 //                                         Discard
 //                                     </button>
@@ -1057,7 +1057,7 @@ const AssessmentManager = () => {
     };
 
     if (loading) return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
             <div className="flex flex-col items-center gap-4">
                 <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
                 <p className="text-gray-500 font-bold animate-pulse">Syncing assessments...</p>
@@ -1066,20 +1066,20 @@ const AssessmentManager = () => {
     );
 
     return (
-        <div className="w-full min-h-screen bg-gradient-to-br from-[#000000] to-[#0a0a0a] p-4 md:p-6 lg:p-8">
+        <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-6 lg:p-8">
             {/* Filters Section */}
-            <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
+            <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
                 <div className="flex flex-wrap items-center gap-2">
 
                     {/* Search Bar */}
                     <div className="relative flex-1 min-w-[180px]">
-                        <FiSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
+                        <FiSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm" />
                         <input
                             type="text"
                             placeholder="Search title or role..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                         />
                     </div>
 
@@ -1090,7 +1090,7 @@ const AssessmentManager = () => {
                             className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                                 roleFilter 
                                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                             }`}
                         >
                             <FiBriefcase className="text-xs" /> Role {roleFilter && `: ${roleFilter}`}
@@ -1098,13 +1098,13 @@ const AssessmentManager = () => {
                         
                         {/* Role Filter Dropdown */}
                         {isRoleDropdownOpen && (
-                            <div className="absolute z-50 mt-1 w-48 bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                <div className="p-2 border-b border-[#1f2937] bg-[#000000]">
+                            <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                <div className="p-2 border-b border-gray-200 bg-gray-50">
                                     <div className="relative">
-                                        <FiSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
+                                        <FiSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs" />
                                         <input
                                             type="text"
-                                            className="w-full py-1 pl-7 pr-2 text-xs bg-[#0a0a0a] border border-[#1f2937] rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                            className="w-full py-1 pl-7 pr-2 text-xs bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                                             placeholder="Search roles..."
                                             value={roleSearchQuery}
                                             onChange={(e) => setRoleSearchQuery(e.target.value)}
@@ -1119,8 +1119,8 @@ const AssessmentManager = () => {
                                         setIsRoleDropdownOpen(false);
                                         setRoleSearchQuery('');
                                     }}
-                                    className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-[#1f2937] font-medium ${
-                                        !roleFilter ? 'bg-blue-50 text-blue-700' : 'text-gray-300'
+                                    className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-gray-200 font-medium ${
+                                        !roleFilter ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
                                     }`}
                                 >
                                     All Roles
@@ -1136,14 +1136,14 @@ const AssessmentManager = () => {
                                                 setRoleSearchQuery('');
                                             }}
                                             className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                                                roleFilter === r.name ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-300'
+                                                roleFilter === r.name ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
                                             }`}
                                         >
                                             {r.name}
                                         </div>
                                     ))}
                                 {roles.filter(r => r.name.toLowerCase().includes(roleSearchQuery.toLowerCase())).length === 0 && (
-                                    <div className="px-3 py-2 text-xs text-gray-400 text-center">
+                                    <div className="px-3 py-2 text-xs text-gray-500 text-center">
                                         No roles found
                                     </div>
                                 )}
@@ -1154,7 +1154,7 @@ const AssessmentManager = () => {
                     {/* Experience Filter */}
                     <div className="relative w-[130px]">
                         <select
-                            className="w-full pl-2 pr-6 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent appearance-none"
+                            className="w-full pl-2 pr-6 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent appearance-none"
                             value={experienceFilter}
                             onChange={(e) => setExperienceFilter(e.target.value)}
                         >
@@ -1165,7 +1165,7 @@ const AssessmentManager = () => {
                             <option value="Senior">Senior</option>
                         </select>
                         <div className="absolute inset-y-0 right-0 flex items-center pr-1 pointer-events-none">
-                            <FiFilter className="text-[8px] text-gray-400" />
+                            <FiFilter className="text-[8px] text-gray-500" />
                         </div>
                     </div>
 
@@ -1179,7 +1179,7 @@ const AssessmentManager = () => {
                             value={dateFilter}
                             onChange={(e) => setDateFilter(e.target.value)}
                             onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                            className="w-full pl-12 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                         />
                     </div>
 
@@ -1188,7 +1188,7 @@ const AssessmentManager = () => {
                         {/* Bulk Upload Button */}
                         <button
                             onClick={() => window.location.href = "/add-bulk-quiz"}
-                            className="h-8 px-3 text-xs font-medium text-gray-400 bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937] transition"
+                            className="h-8 px-3 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition"
                         >
                             Bulk Upload
                         </button>
@@ -1206,7 +1206,7 @@ const AssessmentManager = () => {
                         {(searchQuery || roleFilter || experienceFilter || dateFilter) && (
                             <button
                                 onClick={resetFilters}
-                                className="h-8 px-3 text-xs font-medium text-gray-400 bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937] transition"
+                                className="h-8 px-3 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition"
                             >
                                 Clear
                             </button>
@@ -1216,9 +1216,9 @@ const AssessmentManager = () => {
             </div>
 
             {/* Quizzes Table */}
-            <div className="p-0 mb-0 bg-[#0a0a0a] border shadow-lg rounded-2xl">
+            <div className="p-0 mb-0 bg-white border shadow-lg rounded-2xl">
                 {filteredQuizzes.length > 0 ? (
-                    <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+                    <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
                         <table className="min-w-full">
                             <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
                                 <tr>
@@ -1231,31 +1231,31 @@ const AssessmentManager = () => {
                             </thead>
                             <tbody>
                                 {currentItems.map((quiz) => (
-                                    <tr key={quiz._id} className="border-b hover:bg-[#000000] transition-colors">
+                                    <tr key={quiz._id} className="border-b hover:bg-gray-50 transition-colors">
                                         <td className="px-2 py-2 font-medium text-center">
-                                            <div className="text-gray-200 whitespace-nowrap">{quiz.title || quiz.name}</div>
-                                            <div className="text-[10px] text-gray-400 truncate max-w-xs mx-auto">{quiz.description || "No description"}</div>
+                                            <div className="text-gray-900 whitespace-nowrap">{quiz.title || quiz.name}</div>
+                                            <div className="text-[10px] text-gray-500 truncate max-w-xs mx-auto">{quiz.description || "No description"}</div>
                                         </td>
                                         <td className="px-2 py-2 font-medium text-center">
                                             <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded text-[10px] uppercase">
                                                 {quiz.role || quiz.category || "General"}
                                             </span>
                                         </td>
-                                        <td className="px-2 py-2 font-medium text-center text-gray-400">
+                                        <td className="px-2 py-2 font-medium text-center text-gray-500">
                                             <div className="flex items-center justify-center gap-1">
                                                 <FaLayerGroup className="text-indigo-400" />
                                                 <span>{quiz.questionsCount || quiz.questions?.length || 0}</span>
                                             </div>
                                         </td>
                                         <td className="px-2 py-2 font-medium text-center">
-                                            <div className="flex flex-col items-center gap-1 text-gray-400">
+                                            <div className="flex flex-col items-center gap-1 text-gray-500">
                                                 <div className="flex items-center gap-1">
                                                     <FaRegClock className="text-indigo-400" />
                                                     <span>{quiz.duration || 30}m</span>
                                                 </div>
                                                 <div className="flex items-center gap-1 mt-1">
                                                     <FaAward className="text-yellow-500 text-[10px]" />
-                                                    <span className="text-[10px] text-gray-400">
+                                                    <span className="text-[10px] text-gray-500">
                                                         100 Scaled Marks
                                                     </span>
                                                 </div>
@@ -1286,8 +1286,8 @@ const AssessmentManager = () => {
                         
                         {/* Pagination */}
                         {filteredQuizzes.length > 0 && (
-                            <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-[#1f2937] bg-[#000000] sm:flex-row">
-                                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-300">
+                            <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
+                                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
                                     <span>Showing</span>
                                     <span className="font-medium">
                                         {indexOfFirstItem + 1}
@@ -1323,8 +1323,8 @@ const AssessmentManager = () => {
                                         disabled={pagination.currentPage === 1}
                                         className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                                             pagination.currentPage === 1
-                                                ? "bg-[#111111] text-gray-400 cursor-not-allowed"
-                                                : "bg-[#0a0a0a] text-gray-300 border-[#374151] hover:bg-[#000000]"
+                                                ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                                         }`}
                                     >
                                         Previous
@@ -1341,7 +1341,7 @@ const AssessmentManager = () => {
                                                         ? "text-gray-500 cursor-default"
                                                         : pagination.currentPage === page
                                                         ? "bg-blue-600 text-white"
-                                                        : "bg-[#0a0a0a] text-gray-300 border border-[#374151] hover:bg-[#000000]"
+                                                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                                                 }`}
                                             >
                                                 {page}
@@ -1354,8 +1354,8 @@ const AssessmentManager = () => {
                                         disabled={pagination.currentPage === pagination.totalPages}
                                         className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                                             pagination.currentPage === pagination.totalPages
-                                                ? "bg-[#111111] text-gray-400 cursor-not-allowed"
-                                                : "bg-[#0a0a0a] text-gray-300 border-[#374151] hover:bg-[#000000]"
+                                                ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                                         }`}
                                     >
                                         Next
@@ -1366,11 +1366,11 @@ const AssessmentManager = () => {
                     </div>
                 ) : (
                     <div className="p-20 text-center">
-                        <div className="w-16 h-16 bg-[#000000] rounded-full flex items-center justify-center mx-auto mb-4">
-                            <FaTasks className="text-2xl text-gray-200" />
+                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <FaTasks className="text-2xl text-gray-900" />
                         </div>
-                        <h2 className="text-lg font-bold text-gray-300">No assessments found</h2>
-                        <p className="text-gray-400 text-xs">Start building your talent pipeline.</p>
+                        <h2 className="text-lg font-bold text-gray-700">No assessments found</h2>
+                        <p className="text-gray-500 text-xs">Start building your talent pipeline.</p>
                     </div>
                 )}
             </div>
@@ -1378,11 +1378,11 @@ const AssessmentManager = () => {
             {/* Add/Edit Modal */}
             {modalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
-                    <div className="bg-[#0a0a0a] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-[#1f2937] flex flex-col max-h-[90vh]">
+                    <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-200 flex flex-col max-h-[90vh]">
                         {/* Modal Header */}
                         <div className="px-8 pt-8 pb-4 flex items-center justify-between">
                             <div>
-                                <h2 className="text-xl text-gray-300">
+                                <h2 className="text-xl text-gray-700">
                                     {isEditing ? "Update Assessment" : "Build New Assessment"}
                                 </h2>
                                 <p className="text-[10px] font-bold uppercase tracking-widest mt-1">
@@ -1391,7 +1391,7 @@ const AssessmentManager = () => {
                             </div>
                             <button
                                 onClick={() => setModalOpen(false)}
-                                className="p-2 text-gray-400 hover:text-gray-300 hover:bg-[#111111] rounded-xl transition-all"
+                                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
                             >
                                 <FiX className="text-lg" />
                             </button>
@@ -1412,27 +1412,27 @@ const AssessmentManager = () => {
                                 <div className="space-y-5">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div className="space-y-1.5">
-                                            <label className="block mb-1 text-sm font-medium text-gray-300">Assessment Title</label>
+                                            <label className="block mb-1 text-sm font-medium text-gray-700">Assessment Title</label>
                                             <input
                                                 type="text"
                                                 name="title"
                                                 value={formData.title}
                                                 onChange={handleFormChange}
                                                 required
-                                                className="w-full px-4 py-3.5 rounded-xl border border-[#1f2937] focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-300"
+                                                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-700"
                                                 placeholder="e.g., Software Engineer - Logic & DSA"
                                             />
                                         </div>
 
                                         <div className="space-y-1.5">
-                                            <label className="block mb-1 text-sm font-medium text-gray-300">Job Role</label>
+                                            <label className="block mb-1 text-sm font-medium text-gray-700">Job Role</label>
                                             <div className="relative">
                                                 <select
                                                     name="role"
                                                     value={formData.role}
                                                     onChange={handleFormChange}
                                                     required
-                                                    className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-[#1f2937] focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-300 bg-[#0a0a0a] appearance-none"
+                                                    className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-700 bg-white appearance-none"
                                                 >
                                                     <option value="">Select Target Role</option>
                                                     {(roles || []).map(r => (
@@ -1440,37 +1440,37 @@ const AssessmentManager = () => {
                                                     ))}
                                                     <option value="General">General / Other</option>
                                                 </select>
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300">
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-700">
                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="space-y-1.5">
-                                            <label className="block mb-1 text-sm font-medium text-gray-300">Experience Level</label>
+                                            <label className="block mb-1 text-sm font-medium text-gray-700">Experience Level</label>
                                             <div className="relative">
                                                 <select
                                                     name="experienceLevel"
                                                     value={formData.experienceLevel}
                                                     onChange={handleFormChange}
                                                     required
-                                                    className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-[#1f2937] focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-300 bg-[#0a0a0a] appearance-none"
+                                                    className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-700 bg-white appearance-none"
                                                 >
                                                     <option value="Fresher">Fresher (0-1 yrs)</option>
                                                     <option value="Junior">Junior (2-3 yrs)</option>
                                                     <option value="Mid">Mid Level (4-5 yrs)</option>
                                                     <option value="Senior">Senior (5+ yrs)</option>
                                                 </select>
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300">
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-700">
                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="space-y-1.5">
-                                            <label className="block mb-1 text-sm font-medium text-gray-300">Duration (Minutes)</label>
+                                            <label className="block mb-1 text-sm font-medium text-gray-700">Duration (Minutes)</label>
                                             <div className="relative">
-                                                <FaRegClock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 transition-colors" />
+                                                <FaRegClock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 transition-colors" />
                                                 <input
                                                     type="number"
                                                     name="duration"
@@ -1479,21 +1479,21 @@ const AssessmentManager = () => {
                                                     required
                                                     min="5"
                                                     max="180"
-                                                    className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#1f2937] focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-300"
+                                                    className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-700"
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="block mb-1 text-sm font-medium text-gray-300">Summary / Instructions</label>
+                                        <label className="block mb-1 text-sm font-medium text-gray-700">Summary / Instructions</label>
                                         <div className="relative group">
                                             <textarea
                                                 name="description"
                                                 value={formData.description}
                                                 onChange={handleFormChange}
                                                 rows="2"
-                                                className="w-full px-4 py-3.5 rounded-xl border border-[#1f2937] focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-300 placeholder:text-gray-300 resize-none"
+                                                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-700 placeholder:text-gray-700 resize-none"
                                                 placeholder="Provide context or rules for the candidates..."
                                             ></textarea>
                                         </div>
@@ -1503,7 +1503,7 @@ const AssessmentManager = () => {
                                 {/* Questions Section */}
                                 <div className="space-y-6">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-bold text-gray-300 flex items-center gap-2 uppercase tracking-tight">
+                                        <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2 uppercase tracking-tight">
                                             Question Repository
                                         </h3>
                                         <button
@@ -1517,7 +1517,7 @@ const AssessmentManager = () => {
 
                                     <div className="space-y-6">
                                         {(formData.questions || []).map((q, qIdx) => (
-                                            <div key={qIdx} className="p-6 rounded-2xl bg-[#000000] border border-[#1f2937] relative group animate-in slide-in-from-bottom-2 duration-200">
+                                            <div key={qIdx} className="p-6 rounded-2xl bg-gray-50 border border-gray-200 relative group animate-in slide-in-from-bottom-2 duration-200">
                                                 <div className="absolute -top-3 -left-3 w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold shadow-md text-xs">
                                                     {qIdx + 1}
                                                 </div>
@@ -1526,7 +1526,7 @@ const AssessmentManager = () => {
                                                     <button
                                                         type="button"
                                                         onClick={() => removeQuestion(qIdx)}
-                                                        className="absolute -top-2.5 -right-2.5 p-2 bg-[#0a0a0a] text-gray-400 hover:text-red-600 border border-[#1f2937] rounded-lg transition-all shadow-sm"
+                                                        className="absolute -top-2.5 -right-2.5 p-2 bg-white text-gray-500 hover:text-red-600 border border-gray-200 rounded-lg transition-all shadow-sm"
                                                     >
                                                         <FaTimes className="text-[10px]" />
                                                     </button>
@@ -1542,7 +1542,7 @@ const AssessmentManager = () => {
                                                             value={q.questionText}
                                                             onChange={(e) => handleQuestionChange(qIdx, "questionText", e.target.value)}
                                                             required
-                                                            className="w-full px-4 py-3 rounded-xl border border-[#1f2937] bg-[#0a0a0a] focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-300"
+                                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none text-sm text-gray-700"
                                                             placeholder="State the problem clearly..."
                                                         />
                                                     </div>
@@ -1551,7 +1551,7 @@ const AssessmentManager = () => {
                                                         {(q.options || ["", "", "", "", ""]).map((opt, oIdx) => (
                                                             <div key={oIdx} className="space-y-1.5">
                                                                 <div className="flex justify-between items-center px-1">
-                                                                    <label className="text-[9px] font-bold uppercase tracking-wide text-gray-400">Option {String.fromCharCode(65 + oIdx)}</label>
+                                                                    <label className="text-[9px] font-bold uppercase tracking-wide text-gray-500">Option {String.fromCharCode(65 + oIdx)}</label>
                                                                     <label className="flex items-center gap-1.5 cursor-pointer">
                                                                         <input
                                                                             type="radio"
@@ -1564,14 +1564,14 @@ const AssessmentManager = () => {
                                                                             className={`w-5 h-5 rounded-full border-2 border-purple-600 flex items-center justify-center transition-all
                                                                                 ${q.correctAnswer === opt && opt !== ""
                                                                                     ? "bg-emerald-500 shadow-sm"
-                                                                                    : "bg-[#0a0a0a]"
+                                                                                    : "bg-white"
                                                                                 }`}
                                                                         >
                                                                             {q.correctAnswer === opt && opt !== "" && (
                                                                                 <FiCheck className="text-white text-xs font-bold" />
                                                                             )}
                                                                         </div>
-                                                                        <span className={`text-[9px] font-bold uppercase tracking-tight ${q.correctAnswer === opt && opt !== "" ? "text-emerald-600" : "text-gray-300"}`}>Correct</span>
+                                                                        <span className={`text-[9px] font-bold uppercase tracking-tight ${q.correctAnswer === opt && opt !== "" ? "text-emerald-600" : "text-gray-700"}`}>Correct</span>
                                                                     </label>
                                                                 </div>
                                                                 <input
@@ -1581,7 +1581,7 @@ const AssessmentManager = () => {
                                                                     required
                                                                     className={`w-full px-3 py-2.5 rounded-xl border transition-all outline-none text-xs font-medium ${q.correctAnswer === opt && opt !== ""
                                                                         ? "border-emerald-100 bg-emerald-50/50 text-emerald-800"
-                                                                        : "border-[#1f2937] bg-[#0a0a0a] text-gray-300"
+                                                                        : "border-gray-200 bg-white text-gray-700"
                                                                         }`}
                                                                     placeholder={`Choice ${String.fromCharCode(65 + oIdx)}...`}
                                                                 />
@@ -1591,7 +1591,7 @@ const AssessmentManager = () => {
 
                                                     <div className="flex justify-end pt-2">
                                                         <div className="w-24 space-y-1.5">
-                                                            <label className="text-[9px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1.5 justify-end">
+                                                            <label className="text-[9px] font-bold uppercase tracking-widest text-gray-500 flex items-center gap-1.5 justify-end">
                                                                 Points
                                                             </label>
                                                             <input
@@ -1600,7 +1600,7 @@ const AssessmentManager = () => {
                                                                 onChange={(e) => handleQuestionChange(qIdx, "marks", e.target.value)}
                                                                 required
                                                                 min="1"
-                                                                className="w-full px-3 py-2 rounded-xl border border-[#1f2937] bg-[#0a0a0a] text-xs font-bold text-gray-300 text-center"
+                                                                className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 text-center"
                                                             />
                                                         </div>
                                                     </div>
@@ -1619,11 +1619,11 @@ const AssessmentManager = () => {
                                 </button>
 
                                 {/* Modal Footer */}
-                                <div className="pt-6 border-t border-gray-50 flex gap-4 sticky bottom-0 bg-[#0a0a0a] pb-2">
+                                <div className="pt-6 border-t border-gray-50 flex gap-4 sticky bottom-0 bg-white pb-2">
                                     <button
                                         type="button"
                                         onClick={() => setModalOpen(false)}
-                                        className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-400 hover:text-gray-300 hover:bg-[#000000] transition-all border border-transparent"
+                                        className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-all border border-transparent"
                                     >
                                         Discard
                                     </button>

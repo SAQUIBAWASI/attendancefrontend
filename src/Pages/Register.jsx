@@ -54,7 +54,7 @@
 
 //     return (
 //         <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-gradient-to-br from-blue-100 to-purple-200">
-//             <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden shadow-xl bg-[#0a0a0a]/80 backdrop-blur-md rounded-2xl md:grid-cols-2">
+//             <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden shadow-xl bg-black/80 backdrop-blur-md rounded-2xl md:grid-cols-2">
 
 //                 {/* Left Side - Register Form */}
 //                 <div className="flex flex-col justify-center p-8 md:p-12">
@@ -62,7 +62,7 @@
 //                         <h1 className="text-3xl font-extrabold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
 //                             CLIENT REGISTRATION
 //                         </h1>
-//                         <p className="mt-1 text-sm text-gray-400">Join us today</p>
+//                         <p className="mt-1 text-sm text-gray-500">Join us today</p>
 //                     </div>
 
 //                     {error && (
@@ -79,39 +79,39 @@
 //                     <form onSubmit={handleSubmit} className="space-y-4">
 //                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Client Name</label>
-//                                 <input type="text" name="clientName" value={formData.clientName} onChange={handleChange} required className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+//                                 <label className="block text-sm font-medium text-gray-700">Client Name</label>
+//                                 <input type="text" name="clientName" value={formData.clientName} onChange={handleChange} required className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
 //                             </div>
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Company Name</label>
-//                                 <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} required className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-//                             </div>
-//                         </div>
-
-//                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-//                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Email</label>
-//                                 <input type="email" name="email" value={formData.email} onChange={handleChange} required className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-//                             </div>
-//                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Phone</label>
-//                                 <input type="text" name="phone" value={formData.phone} onChange={handleChange} required className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+//                                 <label className="block text-sm font-medium text-gray-700">Company Name</label>
+//                                 <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} required className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
 //                             </div>
 //                         </div>
 
 //                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Country</label>
-//                                 <input type="text" name="country" value={formData.country} onChange={handleChange} required className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+//                                 <label className="block text-sm font-medium text-gray-700">Email</label>
+//                                 <input type="email" name="email" value={formData.email} onChange={handleChange} required className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
 //                             </div>
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Address</label>
-//                                 <input type="text" name="address" value={formData.address} onChange={handleChange} required className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+//                                 <label className="block text-sm font-medium text-gray-700">Phone</label>
+//                                 <input type="text" name="phone" value={formData.phone} onChange={handleChange} required className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+//                             </div>
+//                         </div>
+
+//                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+//                             <div>
+//                                 <label className="block text-sm font-medium text-gray-700">Country</label>
+//                                 <input type="text" name="country" value={formData.country} onChange={handleChange} required className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+//                             </div>
+//                             <div>
+//                                 <label className="block text-sm font-medium text-gray-700">Address</label>
+//                                 <input type="text" name="address" value={formData.address} onChange={handleChange} required className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
 //                             </div>
 //                         </div>
 
 //                         <div>
-//                             <label className="block text-sm font-medium text-gray-300">Password</label>
+//                             <label className="block text-sm font-medium text-gray-700">Password</label>
 //                             <div className="relative mt-1">
 //                                 <input
 //                                     type={showPassword ? "text" : "password"}
@@ -119,7 +119,7 @@
 //                                     value={formData.password}
 //                                     onChange={handleChange}
 //                                     required
-//                                     className="w-full px-4 py-2 pr-10 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                     className="w-full px-4 py-2 pr-10 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                                 />
 //                                 <button
 //                                     type="button"
@@ -140,13 +140,13 @@
 //                         </button>
 
 //                         <div className="mt-4 text-center">
-//                             <p className="text-sm text-gray-400">Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login here</Link></p>
+//                             <p className="text-sm text-gray-500">Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login here</Link></p>
 //                         </div>
 //                     </form>
 //                 </div>
 
 //                 {/* Right Side - Image */}
-//                 <div className="flex items-center justify-center p-6 bg-[#0a0a0a]/70 md:p-12">
+//                 <div className="flex items-center justify-center p-6 bg-black/70 md:p-12">
 //                     <img
 //                         src="https://img.freepik.com/free-vector/sign-up-concept-illustration_114360-7885.jpg"
 //                         alt="Registration Illustration"
@@ -215,7 +215,7 @@
 
 //     return (
 //         <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-gradient-to-br from-blue-100 to-purple-200">
-//             <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden shadow-xl bg-[#0a0a0a]/80 backdrop-blur-md rounded-2xl md:grid-cols-2">
+//             <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden shadow-xl bg-black/80 backdrop-blur-md rounded-2xl md:grid-cols-2">
 
 //                 {/* Left Side - Register Form */}
 //                 <div className="flex flex-col justify-center p-8 md:p-12">
@@ -223,7 +223,7 @@
 //                         <h1 className="text-3xl font-extrabold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
 //                             CLIENT REGISTRATION
 //                         </h1>
-//                         <p className="mt-1 text-sm text-gray-400">Join us today</p>
+//                         <p className="mt-1 text-sm text-gray-500">Join us today</p>
 //                     </div>
 
 //                     {error && (
@@ -240,63 +240,63 @@
 //                     <form onSubmit={handleSubmit} className="space-y-4">
 //                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Full Name *</label>
+//                                 <label className="block text-sm font-medium text-gray-700">Full Name *</label>
 //                                 <input
 //                                     type="text"
 //                                     name="fullName"
 //                                     value={formData.fullName}
 //                                     onChange={handleChange}
 //                                     required
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                                 />
 //                             </div>
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Email *</label>
+//                                 <label className="block text-sm font-medium text-gray-700">Email *</label>
 //                                 <input
 //                                     type="email"
 //                                     name="email"
 //                                     value={formData.email}
 //                                     onChange={handleChange}
 //                                     required
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                                 />
 //                             </div>
 //                         </div>
 
 //                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Mobile Number *</label>
+//                                 <label className="block text-sm font-medium text-gray-700">Mobile Number *</label>
 //                                 <input
 //                                     type="text"
 //                                     name="mobileNumber"
 //                                     value={formData.mobileNumber}
 //                                     onChange={handleChange}
 //                                     required
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                                 />
 //                             </div>
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Company Name *</label>
+//                                 <label className="block text-sm font-medium text-gray-700">Company Name *</label>
 //                                 <input
 //                                     type="text"
 //                                     name="companyName"
 //                                     value={formData.companyName}
 //                                     onChange={handleChange}
 //                                     required
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                                 />
 //                             </div>
 //                         </div>
 
 //                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Number of Employees *</label>
+//                                 <label className="block text-sm font-medium text-gray-700">Number of Employees *</label>
 //                                 <select
 //                                     name="numberOfEmployees"
 //                                     value={formData.numberOfEmployees}
 //                                     onChange={handleChange}
 //                                     required
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                                 >
 //                                     <option value="">Select</option>
 //                                     <option value="1-10">1-10</option>
@@ -308,27 +308,27 @@
 //                                 </select>
 //                             </div>
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Country *</label>
+//                                 <label className="block text-sm font-medium text-gray-700">Country *</label>
 //                                 <input
 //                                     type="text"
 //                                     name="country"
 //                                     value={formData.country}
 //                                     onChange={handleChange}
 //                                     required
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                                 />
 //                             </div>
 //                         </div>
 
 //                         <div>
-//                             <label className="block text-sm font-medium text-gray-300">Address *</label>
+//                             <label className="block text-sm font-medium text-gray-700">Address *</label>
 //                             <input
 //                                 type="text"
 //                                 name="address"
 //                                 value={formData.address}
 //                                 onChange={handleChange}
 //                                 required
-//                                 className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                 className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                             />
 //                         </div>
 
@@ -341,13 +341,13 @@
 //                         </button>
 
 //                         <div className="mt-4 text-center">
-//                             <p className="text-sm text-gray-400">Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login here</Link></p>
+//                             <p className="text-sm text-gray-500">Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login here</Link></p>
 //                         </div>
 //                     </form>
 //                 </div>
 
 //                 {/* Right Side - Image */}
-//                 <div className="flex items-center justify-center p-6 bg-[#0a0a0a]/70 md:p-12">
+//                 <div className="flex items-center justify-center p-6 bg-black/70 md:p-12">
 //                     <img
 //                         src="https://img.freepik.com/free-vector/sign-up-concept-illustration_114360-7885.jpg"
 //                         alt="Registration Illustration"
@@ -492,14 +492,14 @@
 
 //     return (
 //         <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-gradient-to-br from-blue-100 to-purple-200">
-//             <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden shadow-xl bg-[#0a0a0a]/80 backdrop-blur-md rounded-2xl md:grid-cols-2">
+//             <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden shadow-xl bg-black/80 backdrop-blur-md rounded-2xl md:grid-cols-2">
 //                 {/* Left Side - Register Form */}
 //                 <div className="flex flex-col justify-center p-8 md:p-12">
 //                     <div className="mb-6 text-center">
 //                         <h1 className="text-3xl font-extrabold text-transparent bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text">
 //                             CLIENT REGISTRATION
 //                         </h1>
-//                         <p className="mt-1 text-sm text-gray-400">Join us today</p>
+//                         <p className="mt-1 text-sm text-gray-500">Join us today</p>
 //                     </div>
 
 //                     {error && (
@@ -516,63 +516,63 @@
 //                     <form onSubmit={handleSubmit} className="space-y-4">
 //                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Full Name *</label>
+//                                 <label className="block text-sm font-medium text-gray-700">Full Name *</label>
 //                                 <input
 //                                     type="text"
 //                                     name="fullName"
 //                                     value={formData.fullName}
 //                                     onChange={handleChange}
 //                                     required
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                                 />
 //                             </div>
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Email *</label>
+//                                 <label className="block text-sm font-medium text-gray-700">Email *</label>
 //                                 <input
 //                                     type="email"
 //                                     name="email"
 //                                     value={formData.email}
 //                                     onChange={handleChange}
 //                                     required
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                                 />
 //                             </div>
 //                         </div>
 
 //                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Mobile Number *</label>
+//                                 <label className="block text-sm font-medium text-gray-700">Mobile Number *</label>
 //                                 <input
 //                                     type="text"
 //                                     name="mobileNumber"
 //                                     value={formData.mobileNumber}
 //                                     onChange={handleChange}
 //                                     required
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                                 />
 //                             </div>
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Company Name *</label>
+//                                 <label className="block text-sm font-medium text-gray-700">Company Name *</label>
 //                                 <input
 //                                     type="text"
 //                                     name="companyName"
 //                                     value={formData.companyName}
 //                                     onChange={handleChange}
 //                                     required
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                                 />
 //                             </div>
 //                         </div>
 
 //                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Number of Employees *</label>
+//                                 <label className="block text-sm font-medium text-gray-700">Number of Employees *</label>
 //                                 <select
 //                                     name="numberOfEmployees"
 //                                     value={formData.numberOfEmployees}
 //                                     onChange={handleChange}
 //                                     required
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                                 >
 //                                     <option value="">Select</option>
 //                                     <option value="1-10">1-10</option>
@@ -584,7 +584,7 @@
 //                                 </select>
 //                             </div>
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Country *</label>
+//                                 <label className="block text-sm font-medium text-gray-700">Country *</label>
 //                                 <Select
 //                                     options={countryOptions}
 //                                     value={formData.country}
@@ -605,7 +605,7 @@
 //                         </div>
 
 //                         <div>
-//                             <label className="block text-sm font-medium text-gray-300">Address *</label>
+//                             <label className="block text-sm font-medium text-gray-700">Address *</label>
 //                             <input
 //                                 type="text"
 //                                 name="address"
@@ -613,13 +613,13 @@
 //                                 onChange={handleChange}
 //                                 required
 //                                 placeholder="Street address"
-//                                 className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                 className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                             />
 //                         </div>
 
 //                         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">Pincode *</label>
+//                                 <label className="block text-sm font-medium text-gray-700">Pincode *</label>
 //                                 <input
 //                                     type="text"
 //                                     name="pincode"
@@ -628,14 +628,14 @@
 //                                     required
 //                                     maxLength="6"
 //                                     placeholder="Enter 6-digit pincode"
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 //                                 />
 //                                 {isPincodeLoading && (
 //                                     <p className="mt-1 text-xs text-gray-500">Fetching location...</p>
 //                                 )}
 //                             </div>
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">City *</label>
+//                                 <label className="block text-sm font-medium text-gray-700">City *</label>
 //                                 <input
 //                                     type="text"
 //                                     name="city"
@@ -643,11 +643,11 @@
 //                                     onChange={handleChange}
 //                                     required
 //                                     readOnly
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md bg-[#000000] focus:outline-none"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md bg-gray-50 focus:outline-none"
 //                                 />
 //                             </div>
 //                             <div>
-//                                 <label className="block text-sm font-medium text-gray-300">State *</label>
+//                                 <label className="block text-sm font-medium text-gray-700">State *</label>
 //                                 <input
 //                                     type="text"
 //                                     name="state"
@@ -655,7 +655,7 @@
 //                                     onChange={handleChange}
 //                                     required
 //                                     readOnly
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-[#374151] rounded-md bg-[#000000] focus:outline-none"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md bg-gray-50 focus:outline-none"
 //                                 />
 //                             </div>
 //                         </div>
@@ -669,13 +669,13 @@
 //                         </button>
 
 //                         <div className="mt-4 text-center">
-//                             <p className="text-sm text-gray-400">Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login here</Link></p>
+//                             <p className="text-sm text-gray-500">Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login here</Link></p>
 //                         </div>
 //                     </form>
 //                 </div>
 
 //                 {/* Right Side - Image */}
-//                 <div className="flex items-center justify-center p-6 bg-[#0a0a0a]/70 md:p-12">
+//                 <div className="flex items-center justify-center p-6 bg-black/70 md:p-12">
 //                     <img
 //                         src="https://img.freepik.com/free-vector/sign-up-concept-illustration_114360-7885.jpg"
 //                         alt="Registration Illustration"
@@ -1192,13 +1192,13 @@
 //             transition={{ duration: 0.5 }}
 //             className="flex items-center justify-center min-h-screen px-4 py-12 bg-gradient-to-br from-green-50 via-blue-50 to-purple-50"
 //         >
-//             <div className="max-w-2xl w-full bg-[#0a0a0a] rounded-3xl shadow-2xl overflow-hidden">
+//             <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden">
 //                 <div className="relative bg-gradient-to-r from-green-500 via-blue-500 to-purple-600 p-8 text-center">
 //                     <motion.div 
 //                         initial={{ scale: 0 }}
 //                         animate={{ scale: 1 }}
 //                         transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-//                         className="inline-flex items-center justify-center w-24 h-24 bg-[#0a0a0a] rounded-full mb-4 shadow-lg"
+//                         className="inline-flex items-center justify-center w-24 h-24 bg-white rounded-full mb-4 shadow-lg"
 //                     >
 //                         <CheckCircle className="w-12 h-12 text-green-500" />
 //                     </motion.div>
@@ -1218,8 +1218,8 @@
 //                     >
 //                         Welcome to our platform
 //                     </motion.p>
-//                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#0a0a0a]/10 rounded-full -mr-16 -mt-16"></div>
-//                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#0a0a0a]/10 rounded-full -ml-16 -mb-16"></div>
+//                     <div className="absolute top-0 right-0 w-32 h-32 bg-black/10 rounded-full -mr-16 -mt-16"></div>
+//                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full -ml-16 -mb-16"></div>
 //                 </div>
                 
 //                 <div className="p-8">
@@ -1229,8 +1229,8 @@
 //                         transition={{ delay: 0.5 }}
 //                         className="mb-6"
 //                     >
-//                         <h2 className="text-2xl font-bold text-gray-300 mb-2">Registration Successful!</h2>
-//                         <p className="text-gray-400">
+//                         <h2 className="text-2xl font-bold text-gray-700 mb-2">Registration Successful!</h2>
+//                         <p className="text-gray-500">
 //                             Thank you for registering with us. Your account has been created successfully.
 //                         </p>
 //                     </motion.div>
@@ -1258,7 +1258,7 @@
 //                         initial={{ x: -20, opacity: 0 }}
 //                         animate={{ x: 0, opacity: 1 }}
 //                         transition={{ delay: 0.7 }}
-//                         className="bg-gradient-to-r from-[#000000] to-indigo-50 rounded-xl p-5 mb-6"
+//                         className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 mb-6"
 //                     >
 //                         <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
 //                             <Sparkles className="w-5 h-5" />
@@ -1287,36 +1287,36 @@
 //                         initial={{ y: 20, opacity: 0 }}
 //                         animate={{ y: 0, opacity: 1 }}
 //                         transition={{ delay: 0.8 }}
-//                         className="bg-[#000000] rounded-xl p-5 mb-6"
+//                         className="bg-gray-50 rounded-xl p-5 mb-6"
 //                     >
-//                         <h3 className="font-bold text-gray-200 mb-3 flex items-center gap-2">
+//                         <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
 //                             <FileCheck className="w-5 h-5" />
 //                             Registration Details:
 //                         </h3>
 //                         <div className="space-y-2 text-sm">
-//                             <div className="flex justify-between py-1 border-b border-[#1f2937]">
-//                                 <span className="font-medium text-gray-400">Client ID:</span>
-//                                 <span className="text-gray-300 font-mono">{registrationData?.clientId || 'Pending'}</span>
+//                             <div className="flex justify-between py-1 border-b border-gray-200">
+//                                 <span className="font-medium text-gray-500">Client ID:</span>
+//                                 <span className="text-gray-700 font-mono">{registrationData?.clientId || 'Pending'}</span>
 //                             </div>
-//                             <div className="flex justify-between py-1 border-b border-[#1f2937]">
-//                                 <span className="font-medium text-gray-400">Name:</span>
-//                                 <span className="text-gray-300">{formData.fullName}</span>
+//                             <div className="flex justify-between py-1 border-b border-gray-200">
+//                                 <span className="font-medium text-gray-500">Name:</span>
+//                                 <span className="text-gray-700">{formData.fullName}</span>
 //                             </div>
-//                             <div className="flex justify-between py-1 border-b border-[#1f2937]">
-//                                 <span className="font-medium text-gray-400">Email:</span>
-//                                 <span className="text-gray-300">{formData.email}</span>
+//                             <div className="flex justify-between py-1 border-b border-gray-200">
+//                                 <span className="font-medium text-gray-500">Email:</span>
+//                                 <span className="text-gray-700">{formData.email}</span>
 //                             </div>
-//                             <div className="flex justify-between py-1 border-b border-[#1f2937]">
-//                                 <span className="font-medium text-gray-400">Mobile:</span>
-//                                 <span className="text-gray-300">{formData.mobileNumber}</span>
+//                             <div className="flex justify-between py-1 border-b border-gray-200">
+//                                 <span className="font-medium text-gray-500">Mobile:</span>
+//                                 <span className="text-gray-700">{formData.mobileNumber}</span>
 //                             </div>
-//                             <div className="flex justify-between py-1 border-b border-[#1f2937]">
-//                                 <span className="font-medium text-gray-400">Company:</span>
-//                                 <span className="text-gray-300">{formData.companyName}</span>
+//                             <div className="flex justify-between py-1 border-b border-gray-200">
+//                                 <span className="font-medium text-gray-500">Company:</span>
+//                                 <span className="text-gray-700">{formData.companyName}</span>
 //                             </div>
-//                             <div className="flex justify-between py-1 border-b border-[#1f2937]">
-//                                 <span className="font-medium text-gray-400">Selected Products:</span>
-//                                 <span className="text-gray-300 text-right max-w-[200px]">{selectedProducts.map(p => p.name).join(', ')}</span>
+//                             <div className="flex justify-between py-1 border-b border-gray-200">
+//                                 <span className="font-medium text-gray-500">Selected Products:</span>
+//                                 <span className="text-gray-700 text-right max-w-[200px]">{selectedProducts.map(p => p.name).join(', ')}</span>
 //                             </div>
 //                             {registrationData?.totalPaidAmount > 0 && (
 //                                 <div className="flex justify-between py-1">
@@ -1341,7 +1341,7 @@
 //                         </button>
 //                         <button
 //                             onClick={() => window.location.reload()}
-//                             className="flex-1 py-3 border-2 border-[#374151] text-gray-300 font-semibold rounded-xl hover:bg-[#000000] transition-all duration-300"
+//                             className="flex-1 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300"
 //                         >
 //                             Register Another Account
 //                         </button>
@@ -1363,7 +1363,7 @@
 
 //     // Render registration form
 //     return (
-//         <div className="min-h-screen bg-gradient-to-br from-[#000000] via-indigo-50 to-purple-50">
+//         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
 //             {/* Animated Background */}
 //             <div className="fixed inset-0 overflow-hidden pointer-events-none">
 //                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
@@ -1376,14 +1376,14 @@
 //                     initial={{ opacity: 0, y: -20 }}
 //                     animate={{ opacity: 1, y: 0 }}
 //                     transition={{ duration: 0.5 }}
-//                     className="max-w-6xl mx-auto bg-[#0a0a0a]/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden"
+//                     className="max-w-6xl mx-auto bg-black/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden"
 //                 >
 //                     {/* Header with Progress Steps */}
 //                     <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
 //                         <div className="flex items-center justify-between max-w-3xl mx-auto">
 //                             <div className="flex-1 text-center">
 //                                 <div className={`relative flex items-center justify-center w-12 h-12 mx-auto rounded-full transition-all duration-500 ${
-//                                     currentStep >= 1 ? 'bg-[#0a0a0a] text-blue-600 shadow-lg transform scale-110' : 'bg-[#0a0a0a]/30 text-white'
+//                                     currentStep >= 1 ? 'bg-white text-blue-600 shadow-lg transform scale-110' : 'bg-black/30 text-white'
 //                                 }`}>
 //                                     <span className="text-xl font-bold">1</span>
 //                                     {currentStep >= 1 && (
@@ -1400,10 +1400,10 @@
 //                                     Personal Details
 //                                 </p>
 //                             </div>
-//                             <div className={`flex-1 h-0.5 ${currentStep >= 2 ? 'bg-[#0a0a0a]' : 'bg-[#0a0a0a]/30'}`}></div>
+//                             <div className={`flex-1 h-0.5 ${currentStep >= 2 ? 'bg-white' : 'bg-black/30'}`}></div>
 //                             <div className="flex-1 text-center">
 //                                 <div className={`relative flex items-center justify-center w-12 h-12 mx-auto rounded-full transition-all duration-500 ${
-//                                     currentStep >= 2 ? 'bg-[#0a0a0a] text-purple-600 shadow-lg transform scale-110' : 'bg-[#0a0a0a]/30 text-white'
+//                                     currentStep >= 2 ? 'bg-white text-purple-600 shadow-lg transform scale-110' : 'bg-black/30 text-white'
 //                                 }`}>
 //                                     <span className="text-xl font-bold">2</span>
 //                                     {currentStep >= 2 && (
@@ -1466,46 +1466,46 @@
 //                                         className="space-y-6"
 //                                     >
 //                                         {/* Personal Information Section */}
-//                                         <div className="bg-gradient-to-r from-[#000000] to-purple-50 rounded-2xl p-6">
-//                                             <h3 className="text-lg font-bold text-gray-300 mb-4 flex items-center gap-2">
+//                                         <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6">
+//                                             <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
 //                                                 <User className="w-5 h-5 text-blue-600" />
 //                                                 Personal Information
 //                                             </h3>
 //                                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //                                                 <div>
-//                                                     <label className="block text-sm font-medium text-gray-300 mb-2">Full Name *</label>
+//                                                     <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
 //                                                     <div className="relative">
-//                                                         <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+//                                                         <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
 //                                                         <input
 //                                                             type="text"
 //                                                             name="fullName"
 //                                                             value={formData.fullName}
 //                                                             onChange={handleChange}
 //                                                             required
-//                                                             className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+//                                                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                                                             placeholder="Enter your full name"
 //                                                         />
 //                                                     </div>
 //                                                 </div>
 //                                                 <div>
-//                                                     <label className="block text-sm font-medium text-gray-300 mb-2">Email *</label>
+//                                                     <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
 //                                                     <div className="relative">
-//                                                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+//                                                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
 //                                                         <input
 //                                                             type="email"
 //                                                             name="email"
 //                                                             value={formData.email}
 //                                                             onChange={handleChange}
 //                                                             required
-//                                                             className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+//                                                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                                                             placeholder="Enter your email"
 //                                                         />
 //                                                     </div>
 //                                                 </div>
 //                                                 <div>
-//                                                     <label className="block text-sm font-medium text-gray-300 mb-2">Mobile Number *</label>
+//                                                     <label className="block text-sm font-medium text-gray-700 mb-2">Mobile Number *</label>
 //                                                     <div className="relative">
-//                                                         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+//                                                         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
 //                                                         <input
 //                                                             type="tel"
 //                                                             name="mobileNumber"
@@ -1513,7 +1513,7 @@
 //                                                             onChange={handleChange}
 //                                                             required
 //                                                             maxLength="10"
-//                                                             className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+//                                                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
 //                                                             placeholder="Enter 10-digit mobile number"
 //                                                         />
 //                                                     </div>
@@ -1526,36 +1526,36 @@
 
 //                                         {/* Company Information Section */}
 //                                         <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-2xl p-6">
-//                                             <h3 className="text-lg font-bold text-gray-300 mb-4 flex items-center gap-2">
+//                                             <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
 //                                                 <Building className="w-5 h-5 text-green-600" />
 //                                                 Company Information
 //                                             </h3>
 //                                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //                                                 <div>
-//                                                     <label className="block text-sm font-medium text-gray-300 mb-2">Company Name *</label>
+//                                                     <label className="block text-sm font-medium text-gray-700 mb-2">Company Name *</label>
 //                                                     <div className="relative">
-//                                                         <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+//                                                         <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
 //                                                         <input
 //                                                             type="text"
 //                                                             name="companyName"
 //                                                             value={formData.companyName}
 //                                                             onChange={handleChange}
 //                                                             required
-//                                                             className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+//                                                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
 //                                                             placeholder="Enter company name"
 //                                                         />
 //                                                     </div>
 //                                                 </div>
 //                                                 <div>
-//                                                     <label className="block text-sm font-medium text-gray-300 mb-2">Number of Employees *</label>
+//                                                     <label className="block text-sm font-medium text-gray-700 mb-2">Number of Employees *</label>
 //                                                     <div className="relative">
-//                                                         <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+//                                                         <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
 //                                                         <select
 //                                                             name="numberOfEmployees"
 //                                                             value={formData.numberOfEmployees}
 //                                                             onChange={handleChange}
 //                                                             required
-//                                                             className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition appearance-none"
+//                                                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition appearance-none"
 //                                                         >
 //                                                             <option value="">Select range</option>
 //                                                             <option value="1-10">1-10 employees</option>
@@ -1572,15 +1572,15 @@
 
 //                                         {/* Security Section */}
 //                                         <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6">
-//                                             <h3 className="text-lg font-bold text-gray-300 mb-4 flex items-center gap-2">
+//                                             <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
 //                                                 <Lock className="w-5 h-5 text-purple-600" />
 //                                                 Security
 //                                             </h3>
 //                                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //                                                 <div>
-//                                                     <label className="block text-sm font-medium text-gray-300 mb-2">Password *</label>
+//                                                     <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
 //                                                     <div className="relative">
-//                                                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+//                                                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
 //                                                         <input
 //                                                             type="password"
 //                                                             name="password"
@@ -1588,22 +1588,22 @@
 //                                                             onChange={handleChange}
 //                                                             required
 //                                                             minLength="6"
-//                                                             className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+//                                                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
 //                                                             placeholder="Create password (min 6 characters)"
 //                                                         />
 //                                                     </div>
 //                                                 </div>
 //                                                 <div>
-//                                                     <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password *</label>
+//                                                     <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password *</label>
 //                                                     <div className="relative">
-//                                                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+//                                                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
 //                                                         <input
 //                                                             type="password"
 //                                                             name="confirmPassword"
 //                                                             value={formData.confirmPassword}
 //                                                             onChange={handleChange}
 //                                                             required
-//                                                             className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+//                                                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
 //                                                             placeholder="Confirm password"
 //                                                         />
 //                                                     </div>
@@ -1613,31 +1613,31 @@
 
 //                                         {/* Address Section */}
 //                                         <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-6">
-//                                             <h3 className="text-lg font-bold text-gray-300 mb-4 flex items-center gap-2">
+//                                             <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
 //                                                 <MapPin className="w-5 h-5 text-orange-600" />
 //                                                 Address Information
 //                                             </h3>
 //                                             <div className="grid grid-cols-1 gap-4">
 //                                                 <div>
-//                                                     <label className="block text-sm font-medium text-gray-300 mb-2">Address *</label>
+//                                                     <label className="block text-sm font-medium text-gray-700 mb-2">Address *</label>
 //                                                     <div className="relative">
-//                                                         <Home className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+//                                                         <Home className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
 //                                                         <input
 //                                                             type="text"
 //                                                             name="address"
 //                                                             value={formData.address}
 //                                                             onChange={handleChange}
 //                                                             required
-//                                                             className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+//                                                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
 //                                                             placeholder="Street address"
 //                                                         />
 //                                                     </div>
 //                                                 </div>
 //                                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //                                                     <div>
-//                                                         <label className="block text-sm font-medium text-gray-300 mb-2">Pincode *</label>
+//                                                         <label className="block text-sm font-medium text-gray-700 mb-2">Pincode *</label>
 //                                                         <div className="relative">
-//                                                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+//                                                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
 //                                                             <input
 //                                                                 type="text"
 //                                                                 name="pincode"
@@ -1646,7 +1646,7 @@
 //                                                                 required
 //                                                                 maxLength="6"
 //                                                                 pattern="[0-9]{6}"
-//                                                                 className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+//                                                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
 //                                                                 placeholder="Enter 6-digit pincode"
 //                                                             />
 //                                                         </div>
@@ -1655,7 +1655,7 @@
 //                                                         )}
 //                                                     </div>
 //                                                     <div>
-//                                                         <label className="block text-sm font-medium text-gray-300 mb-2">City *</label>
+//                                                         <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
 //                                                         <input
 //                                                             type="text"
 //                                                             name="city"
@@ -1663,12 +1663,12 @@
 //                                                             onChange={handleChange}
 //                                                             required
 //                                                             readOnly
-//                                                             className="w-full px-4 py-2 border border-[#374151] rounded-xl bg-[#000000] focus:outline-none"
+//                                                             className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none"
 //                                                             placeholder="Auto-filled"
 //                                                         />
 //                                                     </div>
 //                                                     <div>
-//                                                         <label className="block text-sm font-medium text-gray-300 mb-2">State *</label>
+//                                                         <label className="block text-sm font-medium text-gray-700 mb-2">State *</label>
 //                                                         <input
 //                                                             type="text"
 //                                                             name="state"
@@ -1676,13 +1676,13 @@
 //                                                             onChange={handleChange}
 //                                                             required
 //                                                             readOnly
-//                                                             className="w-full px-4 py-2 border border-[#374151] rounded-xl bg-[#000000] focus:outline-none"
+//                                                             className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none"
 //                                                             placeholder="Auto-filled"
 //                                                         />
 //                                                     </div>
 //                                                 </div>
 //                                                 <div>
-//                                                     <label className="block text-sm font-medium text-gray-300 mb-2">Country *</label>
+//                                                     <label className="block text-sm font-medium text-gray-700 mb-2">Country *</label>
 //                                                     <Select
 //                                                         options={countryOptions}
 //                                                         value={formData.country}
@@ -1708,13 +1708,13 @@
 
 //                                         {/* Document Upload Section */}
 //                                         <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl p-6">
-//                                             <h3 className="text-lg font-bold text-gray-300 mb-4 flex items-center gap-2">
+//                                             <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
 //                                                 <FileText className="w-5 h-5 text-cyan-600" />
 //                                                 Required Documents
 //                                             </h3>
 //                                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 //                                                 <div>
-//                                                     <label className="block text-sm font-medium text-gray-300 mb-2">Aadhaar Card *</label>
+//                                                     <label className="block text-sm font-medium text-gray-700 mb-2">Aadhaar Card *</label>
 //                                                     <div className="relative">
 //                                                         <input
 //                                                             type="file"
@@ -1722,11 +1722,11 @@
 //                                                             onChange={handleFileChange}
 //                                                             required
 //                                                             accept=".jpg,.jpeg,.png,.pdf"
-//                                                             className="w-full px-4 py-2 border-2 border-dashed border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
+//                                                             className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
 //                                                         />
 //                                                         {uploadProgress.aadhaarCard > 0 && uploadProgress.aadhaarCard < 100 && (
 //                                                             <div className="mt-2">
-//                                                                 <div className="h-1 bg-[#1f2937] rounded-full overflow-hidden">
+//                                                                 <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
 //                                                                     <motion.div 
 //                                                                         initial={{ width: 0 }}
 //                                                                         animate={{ width: `${uploadProgress.aadhaarCard}%` }}
@@ -1746,7 +1746,7 @@
 //                                                     <p className="mt-1 text-xs text-gray-500">Upload JPG, PNG, or PDF (Max 5MB)</p>
 //                                                 </div>
 //                                                 <div>
-//                                                     <label className="block text-sm font-medium text-gray-300 mb-2">PAN Card *</label>
+//                                                     <label className="block text-sm font-medium text-gray-700 mb-2">PAN Card *</label>
 //                                                     <div className="relative">
 //                                                         <input
 //                                                             type="file"
@@ -1754,11 +1754,11 @@
 //                                                             onChange={handleFileChange}
 //                                                             required
 //                                                             accept=".jpg,.jpeg,.png,.pdf"
-//                                                             className="w-full px-4 py-2 border-2 border-dashed border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
+//                                                             className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
 //                                                         />
 //                                                         {uploadProgress.panCard > 0 && uploadProgress.panCard < 100 && (
 //                                                             <div className="mt-2">
-//                                                                 <div className="h-1 bg-[#1f2937] rounded-full overflow-hidden">
+//                                                                 <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
 //                                                                     <motion.div 
 //                                                                         initial={{ width: 0 }}
 //                                                                         animate={{ width: `${uploadProgress.panCard}%` }}
@@ -1799,7 +1799,7 @@
 //                                             >
 //                                                 Choose Your Products
 //                                             </motion.h2>
-//                                             <p className="text-gray-400 mt-2">Select the products and services you want to access</p>
+//                                             <p className="text-gray-500 mt-2">Select the products and services you want to access</p>
 //                                             {selectedProducts.length > 0 && (
 //                                                 <motion.p 
 //                                                     initial={{ scale: 0 }}
@@ -1838,18 +1838,18 @@
 //                                                             className={`cursor-pointer rounded-2xl p-6 transition-all duration-300 ${
 //                                                                 selectedProducts.find(p => p._id === product._id)
 //                                                                     ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-2xl transform scale-105'
-//                                                                     : 'bg-[#0a0a0a] border-2 border-[#1f2937] hover:border-blue-300 hover:shadow-xl'
+//                                                                     : 'bg-white border-2 border-gray-200 hover:border-blue-300 hover:shadow-xl'
 //                                                             }`}
 //                                                         >
 //                                                             <div className="flex justify-between items-start mb-4">
-//                                                                 <h3 className={`text-xl font-bold ${selectedProducts.find(p => p._id === product._id) ? 'text-white' : 'text-gray-300'}`}>
+//                                                                 <h3 className={`text-xl font-bold ${selectedProducts.find(p => p._id === product._id) ? 'text-white' : 'text-gray-700'}`}>
 //                                                                     {product.name}
 //                                                                 </h3>
 //                                                                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
 //                                                                     product.price === 0 
 //                                                                         ? 'bg-green-500 text-white' 
 //                                                                         : selectedProducts.find(p => p._id === product._id)
-//                                                                             ? 'bg-[#0a0a0a] text-purple-600'
+//                                                                             ? 'bg-white text-purple-600'
 //                                                                             : 'bg-blue-100 text-blue-600'
 //                                                                 }`}>
 //                                                                     {formatPrice(product.price)}
@@ -1862,7 +1862,7 @@
 //                                                                 </p>
 //                                                             )}
                                                             
-//                                                             <p className={`text-sm mb-3 ${selectedProducts.find(p => p._id === product._id) ? 'text-white/90' : 'text-gray-400'}`}>
+//                                                             <p className={`text-sm mb-3 ${selectedProducts.find(p => p._id === product._id) ? 'text-white/90' : 'text-gray-500'}`}>
 //                                                                 {product.description}
 //                                                             </p>
                                                             
@@ -1878,8 +1878,8 @@
 //                                                             <div className="mt-4 flex justify-end">
 //                                                                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
 //                                                                     selectedProducts.find(p => p._id === product._id)
-//                                                                         ? 'border-white bg-[#0a0a0a]'
-//                                                                         : 'border-[#374151]'
+//                                                                         ? 'border-white bg-white'
+//                                                                         : 'border-gray-300'
 //                                                                 }`}>
 //                                                                     {selectedProducts.find(p => p._id === product._id) && (
 //                                                                         <CheckCircle className="w-4 h-4 text-purple-600" />
@@ -1892,7 +1892,7 @@
                                                 
 //                                                 {products.length === 0 && !isProductsLoading && (
 //                                                     <div className="text-center py-12">
-//                                                         <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+//                                                         <ShoppingBag className="w-16 h-16 text-gray-500 mx-auto mb-4" />
 //                                                         <p className="text-gray-500">No products available at the moment.</p>
 //                                                     </div>
 //                                                 )}
@@ -1902,7 +1902,7 @@
 //                                         <motion.div 
 //                                             initial={{ opacity: 0 }}
 //                                             animate={{ opacity: 1 }}
-//                                             className="mt-8 p-5 bg-gradient-to-r from-[#000000] to-purple-50 rounded-xl"
+//                                             className="mt-8 p-5 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl"
 //                                         >
 //                                             <p className="text-sm text-blue-800 text-center flex items-center justify-center gap-2">
 //                                                 <Shield className="w-4 h-4" />
@@ -1920,7 +1920,7 @@
 //                                         whileTap={{ scale: 0.95 }}
 //                                         type="button"
 //                                         onClick={prevStep}
-//                                         className="px-6 py-3 text-gray-300 bg-[#111111] rounded-xl hover:bg-[#1f2937] transition-all duration-300 flex items-center gap-2 font-medium"
+//                                         className="px-6 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all duration-300 flex items-center gap-2 font-medium"
 //                                     >
 //                                         <ArrowLeft className="w-4 h-4" />
 //                                         Back
@@ -1967,7 +1967,7 @@
 //                         </form>
 
 //                         <div className="mt-8 text-center">
-//                             <p className="text-sm text-gray-400">
+//                             <p className="text-sm text-gray-500">
 //                                 Already have an account?{' '}
 //                                 <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold hover:underline transition">
 //                                     Login here
@@ -2547,13 +2547,13 @@ const RegisterPage = () => {
             transition={{ duration: 0.5 }}
             className="flex items-center justify-center min-h-screen px-4 py-12 bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50"
         >
-            <div className="max-w-2xl w-full bg-[#0a0a0a] rounded-3xl shadow-2xl overflow-hidden">
+            <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden">
                 <div className="relative bg-gradient-to-r from-green-500 via-emerald-500 to-blue-600 p-8 text-center">
                     <motion.div 
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                        className="inline-flex items-center justify-center w-24 h-24 bg-[#0a0a0a] rounded-full mb-4 shadow-lg"
+                        className="inline-flex items-center justify-center w-24 h-24 bg-white rounded-full mb-4 shadow-lg"
                     >
                         <Crown className="w-12 h-12 text-green-500" />
                     </motion.div>
@@ -2573,8 +2573,8 @@ const RegisterPage = () => {
                     >
                         Welcome to the family — let's grow together!
                     </motion.p>
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#0a0a0a]/10 rounded-full -mr-16 -mt-16"></div>
-                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#0a0a0a]/10 rounded-full -ml-16 -mb-16"></div>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-black/10 rounded-full -mr-16 -mt-16"></div>
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full -ml-16 -mb-16"></div>
                 </div>
                 
                 <div className="p-8">
@@ -2585,7 +2585,7 @@ const RegisterPage = () => {
                         className="mb-6 text-center"
                     >
                         <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">Registration Successful!</h2>
-                        <p className="text-gray-400">
+                        <p className="text-gray-500">
                             Thank you for choosing us. Your account has been created successfully.
                         </p>
                     </motion.div>
@@ -2615,11 +2615,11 @@ const RegisterPage = () => {
                         transition={{ delay: 0.7 }}
                         className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-5 mb-6"
                     >
-                        <h3 className="font-bold text-gray-300 mb-3 flex items-center gap-2">
+                        <h3 className="font-bold text-gray-700 mb-3 flex items-center gap-2">
                             <Rocket className="w-5 h-5 text-green-600" />
                             Your Journey Ahead:
                         </h3>
-                        <ul className="space-y-3 text-sm text-gray-300">
+                        <ul className="space-y-3 text-sm text-gray-700">
                             {[
                                 "🔍 Our admin team will review your documents and registration details",
                                 "📧 You will receive an email confirmation once your account is activated",
@@ -2642,36 +2642,36 @@ const RegisterPage = () => {
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.8 }}
-                        className="bg-[#000000] rounded-xl p-5 mb-6"
+                        className="bg-gray-50 rounded-xl p-5 mb-6"
                     >
-                        <h3 className="font-bold text-gray-200 mb-3 flex items-center gap-2">
+                        <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
                             <FileCheck className="w-5 h-5 text-green-600" />
                             Registration Details:
                         </h3>
                         <div className="space-y-2 text-sm">
-                            <div className="flex justify-between py-1 border-b border-[#1f2937]">
-                                <span className="font-medium text-gray-400">Client ID:</span>
-                                <span className="text-gray-300 font-mono">{registrationData?.clientId || 'Pending'}</span>
+                            <div className="flex justify-between py-1 border-b border-gray-200">
+                                <span className="font-medium text-gray-500">Client ID:</span>
+                                <span className="text-gray-700 font-mono">{registrationData?.clientId || 'Pending'}</span>
                             </div>
-                            <div className="flex justify-between py-1 border-b border-[#1f2937]">
-                                <span className="font-medium text-gray-400">Name:</span>
-                                <span className="text-gray-300">{formData.fullName}</span>
+                            <div className="flex justify-between py-1 border-b border-gray-200">
+                                <span className="font-medium text-gray-500">Name:</span>
+                                <span className="text-gray-700">{formData.fullName}</span>
                             </div>
-                            <div className="flex justify-between py-1 border-b border-[#1f2937]">
-                                <span className="font-medium text-gray-400">Email:</span>
-                                <span className="text-gray-300">{formData.email}</span>
+                            <div className="flex justify-between py-1 border-b border-gray-200">
+                                <span className="font-medium text-gray-500">Email:</span>
+                                <span className="text-gray-700">{formData.email}</span>
                             </div>
-                            <div className="flex justify-between py-1 border-b border-[#1f2937]">
-                                <span className="font-medium text-gray-400">Mobile:</span>
-                                <span className="text-gray-300">{formData.mobileNumber}</span>
+                            <div className="flex justify-between py-1 border-b border-gray-200">
+                                <span className="font-medium text-gray-500">Mobile:</span>
+                                <span className="text-gray-700">{formData.mobileNumber}</span>
                             </div>
-                            <div className="flex justify-between py-1 border-b border-[#1f2937]">
-                                <span className="font-medium text-gray-400">Company:</span>
-                                <span className="text-gray-300">{formData.companyName}</span>
+                            <div className="flex justify-between py-1 border-b border-gray-200">
+                                <span className="font-medium text-gray-500">Company:</span>
+                                <span className="text-gray-700">{formData.companyName}</span>
                             </div>
-                            <div className="flex justify-between py-1 border-b border-[#1f2937]">
-                                <span className="font-medium text-gray-400">Selected Products:</span>
-                                <span className="text-gray-300 text-right max-w-[200px]">{selectedProducts.map(p => p.name).join(', ')}</span>
+                            <div className="flex justify-between py-1 border-b border-gray-200">
+                                <span className="font-medium text-gray-500">Selected Products:</span>
+                                <span className="text-gray-700 text-right max-w-[200px]">{selectedProducts.map(p => p.name).join(', ')}</span>
                             </div>
                             {registrationData?.totalPaidAmount > 0 && (
                                 <div className="flex justify-between py-1">
@@ -2739,7 +2739,7 @@ const RegisterPage = () => {
                                 <Star className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <p className="text-sm font-semibold text-gray-300">Why join us?</p>
+                                <p className="text-sm font-semibold text-gray-700">Why join us?</p>
                                 <p className="text-xs text-gray-500">Trusted by 10,000+ businesses • 24/7 support • 100% secure</p>
                             </div>
                         </div>
@@ -2757,14 +2757,14 @@ const RegisterPage = () => {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="max-w-6xl mx-auto bg-[#0a0a0a]/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/50"
+                    className="max-w-6xl mx-auto bg-black/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/50"
                 >
                     {/* Header with Progress Steps - Updated Colors */}
                     <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-blue-600 p-6">
                         <div className="flex items-center justify-between max-w-3xl mx-auto">
                             <div className="flex-1 text-center">
                                 <div className={`relative flex items-center justify-center w-12 h-12 mx-auto rounded-full transition-all duration-500 ${
-                                    currentStep >= 1 ? 'bg-[#0a0a0a] text-green-600 shadow-lg transform scale-110' : 'bg-[#0a0a0a]/30 text-white'
+                                    currentStep >= 1 ? 'bg-white text-green-600 shadow-lg transform scale-110' : 'bg-black/30 text-white'
                                 }`}>
                                     <span className="text-xl font-bold">1</span>
                                     {currentStep >= 1 && (
@@ -2781,10 +2781,10 @@ const RegisterPage = () => {
                                     Personal Details
                                 </p>
                             </div>
-                            <div className={`flex-1 h-0.5 ${currentStep >= 2 ? 'bg-[#0a0a0a]' : 'bg-[#0a0a0a]/30'}`}></div>
+                            <div className={`flex-1 h-0.5 ${currentStep >= 2 ? 'bg-white' : 'bg-black/30'}`}></div>
                             <div className="flex-1 text-center">
                                 <div className={`relative flex items-center justify-center w-12 h-12 mx-auto rounded-full transition-all duration-500 ${
-                                    currentStep >= 2 ? 'bg-[#0a0a0a] text-blue-600 shadow-lg transform scale-110' : 'bg-[#0a0a0a]/30 text-white'
+                                    currentStep >= 2 ? 'bg-white text-blue-600 shadow-lg transform scale-110' : 'bg-black/30 text-white'
                                 }`}>
                                     <span className="text-xl font-bold">2</span>
                                     {currentStep >= 2 && (
@@ -2848,45 +2848,45 @@ const RegisterPage = () => {
                                     >
                                         {/* Personal Information Section - Updated Colors */}
                                         <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 shadow-sm">
-                                            <h3 className="text-lg font-bold text-gray-300 mb-4 flex items-center gap-2">
+                                            <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
                                                 <User className="w-5 h-5 text-green-600" />
                                                 Personal Information
                                             </h3>
                                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-300 mb-2">Full Name *</label>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
                                                     <div className="relative">
-                                                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
                                                         <input
                                                             type="text"
                                                             name="fullName"
                                                             value={formData.fullName}
                                                             onChange={handleChange}
                                                             required
-                                                            className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition input-focus-effect"
+                                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition input-focus-effect"
                                                             placeholder="Enter your full name"
                                                         />
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-300 mb-2">Email *</label>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
                                                     <div className="relative">
-                                                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
                                                         <input
                                                             type="email"
                                                             name="email"
                                                             value={formData.email}
                                                             onChange={handleChange}
                                                             required
-                                                            className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition input-focus-effect"
+                                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition input-focus-effect"
                                                             placeholder="Enter your email"
                                                         />
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-300 mb-2">Mobile Number *</label>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Mobile Number *</label>
                                                     <div className="relative">
-                                                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
                                                         <input
                                                             type="tel"
                                                             name="mobileNumber"
@@ -2894,7 +2894,7 @@ const RegisterPage = () => {
                                                             onChange={handleChange}
                                                             required
                                                             maxLength="10"
-                                                            className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition input-focus-effect"
+                                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition input-focus-effect"
                                                             placeholder="Enter 10-digit mobile number"
                                                         />
                                                     </div>
@@ -2906,37 +2906,37 @@ const RegisterPage = () => {
                                         </div>
 
                                         {/* Company Information Section - Updated Colors */}
-                                        <div className="bg-gradient-to-r from-[#000000] to-cyan-50 rounded-2xl p-6 shadow-sm">
-                                            <h3 className="text-lg font-bold text-gray-300 mb-4 flex items-center gap-2">
+                                        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 shadow-sm">
+                                            <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
                                                 <Building className="w-5 h-5 text-blue-600" />
                                                 Company Information
                                             </h3>
                                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-300 mb-2">Company Name *</label>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Company Name *</label>
                                                     <div className="relative">
-                                                        <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                        <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
                                                         <input
                                                             type="text"
                                                             name="companyName"
                                                             value={formData.companyName}
                                                             onChange={handleChange}
                                                             required
-                                                            className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition input-focus-effect"
+                                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition input-focus-effect"
                                                             placeholder="Enter company name"
                                                         />
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-300 mb-2">Number of Employees *</label>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Number of Employees *</label>
                                                     <div className="relative">
-                                                        <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                        <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
                                                         <select
                                                             name="numberOfEmployees"
                                                             value={formData.numberOfEmployees}
                                                             onChange={handleChange}
                                                             required
-                                                            className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none input-focus-effect"
+                                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none input-focus-effect"
                                                         >
                                                             <option value="">Select range</option>
                                                             <option value="1-10">1-10 employees</option>
@@ -2953,15 +2953,15 @@ const RegisterPage = () => {
 
                                         {/* Security Section - Updated Colors */}
                                         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 shadow-sm">
-                                            <h3 className="text-lg font-bold text-gray-300 mb-4 flex items-center gap-2">
+                                            <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
                                                 <Lock className="w-5 h-5 text-indigo-600" />
                                                 Security
                                             </h3>
                                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-300 mb-2">Password *</label>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
                                                     <div className="relative">
-                                                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
                                                         <input
                                                             type="password"
                                                             name="password"
@@ -2969,22 +2969,22 @@ const RegisterPage = () => {
                                                             onChange={handleChange}
                                                             required
                                                             minLength="6"
-                                                            className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition input-focus-effect"
+                                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition input-focus-effect"
                                                             placeholder="Create password (min 6 characters)"
                                                         />
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password *</label>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password *</label>
                                                     <div className="relative">
-                                                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
                                                         <input
                                                             type="password"
                                                             name="confirmPassword"
                                                             value={formData.confirmPassword}
                                                             onChange={handleChange}
                                                             required
-                                                            className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition input-focus-effect"
+                                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition input-focus-effect"
                                                             placeholder="Confirm password"
                                                         />
                                                     </div>
@@ -2994,31 +2994,31 @@ const RegisterPage = () => {
 
                                         {/* Address Section - Updated Colors */}
                                         <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-6 shadow-sm">
-                                            <h3 className="text-lg font-bold text-gray-300 mb-4 flex items-center gap-2">
+                                            <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
                                                 <MapPin className="w-5 h-5 text-orange-600" />
                                                 Address Information
                                             </h3>
                                             <div className="grid grid-cols-1 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-300 mb-2">Address *</label>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Address *</label>
                                                     <div className="relative">
-                                                        <Home className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                                                        <Home className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
                                                         <input
                                                             type="text"
                                                             name="address"
                                                             value={formData.address}
                                                             onChange={handleChange}
                                                             required
-                                                            className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition input-focus-effect"
+                                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition input-focus-effect"
                                                             placeholder="Street address"
                                                         />
                                                     </div>
                                                 </div>
                                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-300 mb-2">Pincode *</label>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">Pincode *</label>
                                                         <div className="relative">
-                                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
                                                             <input
                                                                 type="text"
                                                                 name="pincode"
@@ -3027,7 +3027,7 @@ const RegisterPage = () => {
                                                                 required
                                                                 maxLength="6"
                                                                 pattern="[0-9]{6}"
-                                                                className="w-full pl-10 pr-4 py-2 border border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition input-focus-effect"
+                                                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition input-focus-effect"
                                                                 placeholder="Enter 6-digit pincode"
                                                             />
                                                         </div>
@@ -3036,7 +3036,7 @@ const RegisterPage = () => {
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-300 mb-2">City *</label>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
                                                         <input
                                                             type="text"
                                                             name="city"
@@ -3044,12 +3044,12 @@ const RegisterPage = () => {
                                                             onChange={handleChange}
                                                             required
                                                             readOnly
-                                                            className="w-full px-4 py-2 border border-[#374151] rounded-xl bg-[#000000] focus:outline-none"
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none"
                                                             placeholder="Auto-filled"
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-300 mb-2">State *</label>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">State *</label>
                                                         <input
                                                             type="text"
                                                             name="state"
@@ -3057,13 +3057,13 @@ const RegisterPage = () => {
                                                             onChange={handleChange}
                                                             required
                                                             readOnly
-                                                            className="w-full px-4 py-2 border border-[#374151] rounded-xl bg-[#000000] focus:outline-none"
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none"
                                                             placeholder="Auto-filled"
                                                         />
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-300 mb-2">Country *</label>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Country *</label>
                                                     <Select
                                                         options={countryOptions}
                                                         value={formData.country}
@@ -3089,13 +3089,13 @@ const RegisterPage = () => {
 
                                         {/* Document Upload Section - Updated Colors */}
                                         <div className="bg-gradient-to-r from-teal-50 to-green-50 rounded-2xl p-6 shadow-sm">
-                                            <h3 className="text-lg font-bold text-gray-300 mb-4 flex items-center gap-2">
+                                            <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
                                                 <FileText className="w-5 h-5 text-teal-600" />
                                                 Required Documents
                                             </h3>
                                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-300 mb-2">Aadhaar Card *</label>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Aadhaar Card *</label>
                                                     <div className="relative">
                                                         <input
                                                             type="file"
@@ -3103,11 +3103,11 @@ const RegisterPage = () => {
                                                             onChange={handleFileChange}
                                                             required
                                                             accept=".jpg,.jpeg,.png,.pdf"
-                                                            className="w-full px-4 py-2 border-2 border-dashed border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
+                                                            className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
                                                         />
                                                         {uploadProgress.aadhaarCard > 0 && uploadProgress.aadhaarCard < 100 && (
                                                             <div className="mt-2">
-                                                                <div className="h-1 bg-[#1f2937] rounded-full overflow-hidden">
+                                                                <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
                                                                     <motion.div 
                                                                         initial={{ width: 0 }}
                                                                         animate={{ width: `${uploadProgress.aadhaarCard}%` }}
@@ -3127,7 +3127,7 @@ const RegisterPage = () => {
                                                     <p className="mt-1 text-xs text-gray-500">Upload JPG, PNG, or PDF (Max 5MB)</p>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-300 mb-2">PAN Card *</label>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">PAN Card *</label>
                                                     <div className="relative">
                                                         <input
                                                             type="file"
@@ -3135,11 +3135,11 @@ const RegisterPage = () => {
                                                             onChange={handleFileChange}
                                                             required
                                                             accept=".jpg,.jpeg,.png,.pdf"
-                                                            className="w-full px-4 py-2 border-2 border-dashed border-[#374151] rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
+                                                            className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
                                                         />
                                                         {uploadProgress.panCard > 0 && uploadProgress.panCard < 100 && (
                                                             <div className="mt-2">
-                                                                <div className="h-1 bg-[#1f2937] rounded-full overflow-hidden">
+                                                                <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
                                                                     <motion.div 
                                                                         initial={{ width: 0 }}
                                                                         animate={{ width: `${uploadProgress.panCard}%` }}
@@ -3180,7 +3180,7 @@ const RegisterPage = () => {
                                             >
                                                 Choose Your Products
                                             </motion.h2>
-                                            <p className="text-gray-400 mt-2">Select the products and services you want to access</p>
+                                            <p className="text-gray-500 mt-2">Select the products and services you want to access</p>
                                             {selectedProducts.length > 0 && (
                                                 <motion.p 
                                                     initial={{ scale: 0 }}
@@ -3219,18 +3219,18 @@ const RegisterPage = () => {
                                                             className={`cursor-pointer rounded-2xl p-6 transition-all duration-300 card-hover ${
                                                                 selectedProducts.find(p => p._id === product._id)
                                                                     ? 'bg-gradient-to-br from-green-500 to-blue-600 text-white shadow-2xl transform scale-105'
-                                                                    : 'bg-[#0a0a0a] border-2 border-[#1f2937] hover:border-green-300 hover:shadow-xl'
+                                                                    : 'bg-white border-2 border-gray-200 hover:border-green-300 hover:shadow-xl'
                                                             }`}
                                                         >
                                                             <div className="flex justify-between items-start mb-4">
-                                                                <h3 className={`text-xl font-bold ${selectedProducts.find(p => p._id === product._id) ? 'text-white' : 'text-gray-300'}`}>
+                                                                <h3 className={`text-xl font-bold ${selectedProducts.find(p => p._id === product._id) ? 'text-white' : 'text-gray-700'}`}>
                                                                     {product.name}
                                                                 </h3>
                                                                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                                                                     product.price === 0 
                                                                         ? 'bg-green-500 text-white' 
                                                                         : selectedProducts.find(p => p._id === product._id)
-                                                                            ? 'bg-[#0a0a0a] text-green-600'
+                                                                            ? 'bg-white text-green-600'
                                                                             : 'bg-green-100 text-green-700'
                                                                 }`}>
                                                                     {formatPrice(product.price)}
@@ -3243,7 +3243,7 @@ const RegisterPage = () => {
                                                                 </p>
                                                             )}
                                                             
-                                                            <p className={`text-sm mb-3 ${selectedProducts.find(p => p._id === product._id) ? 'text-white/90' : 'text-gray-400'}`}>
+                                                            <p className={`text-sm mb-3 ${selectedProducts.find(p => p._id === product._id) ? 'text-white/90' : 'text-gray-500'}`}>
                                                                 {product.description}
                                                             </p>
                                                             
@@ -3259,8 +3259,8 @@ const RegisterPage = () => {
                                                             <div className="mt-4 flex justify-end">
                                                                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                                                                     selectedProducts.find(p => p._id === product._id)
-                                                                        ? 'border-white bg-[#0a0a0a]'
-                                                                        : 'border-[#374151]'
+                                                                        ? 'border-white bg-white'
+                                                                        : 'border-gray-300'
                                                                 }`}>
                                                                     {selectedProducts.find(p => p._id === product._id) && (
                                                                         <CheckCircle className="w-4 h-4 text-green-600" />
@@ -3273,7 +3273,7 @@ const RegisterPage = () => {
                                                 
                                                 {products.length === 0 && !isProductsLoading && (
                                                     <div className="text-center py-12">
-                                                        <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                                                        <ShoppingBag className="w-16 h-16 text-gray-500 mx-auto mb-4" />
                                                         <p className="text-gray-500">No products available at the moment.</p>
                                                     </div>
                                                 )}
@@ -3301,7 +3301,7 @@ const RegisterPage = () => {
                                         whileTap={{ scale: 0.98 }}
                                         type="button"
                                         onClick={prevStep}
-                                        className="px-6 py-3 text-gray-300 bg-[#111111] rounded-xl hover:bg-[#1f2937] transition-all duration-300 flex items-center gap-2 font-medium btn-perfect"
+                                        className="px-6 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all duration-300 flex items-center gap-2 font-medium btn-perfect"
                                     >
                                         <ArrowLeft className="w-4 h-4" />
                                         Back
@@ -3348,7 +3348,7 @@ const RegisterPage = () => {
                         </form>
 
                         <div className="mt-8 text-center">
-                            <p className="text-sm text-gray-400">
+                            <p className="text-sm text-gray-500">
                                 Already have an account?{' '}
                                 <Link to="/login" className="text-green-600 hover:text-green-700 font-semibold hover:underline transition">
                                     Login here

@@ -189,7 +189,7 @@ const handleRemove = (name) => {
   };
 
   return (
-    <div className="p-6 bg-[#0a0a0a] rounded shadow">
+    <div className="p-6 bg-white rounded shadow">
       <h3 className="text-lg font-bold mb-4">Company Details</h3>
       <form onSubmit={handleSubmit}>
         <div className="flex gap-4 mb-4">
@@ -336,7 +336,7 @@ const handleRemove = (name) => {
       
         {/* Trigger Dropdown */}
         <div
-          className="p-2 border rounded bg-[#0a0a0a] cursor-pointer"
+          className="p-2 border rounded bg-white cursor-pointer"
           onClick={() => setShowDropdown(!showDropdown)}
         >
           --Select--
@@ -344,12 +344,12 @@ const handleRemove = (name) => {
       
         {/* Dropdown Menu - opens upward */}
         {showDropdown && (
-          <div className="absolute z-10 bg-[#0a0a0a] border rounded shadow max-h-40 overflow-y-auto w-full top-0 translate-y-[-100%]">
+          <div className="absolute z-10 bg-white border rounded shadow max-h-40 overflow-y-auto w-full top-0 translate-y-[-100%]">
             {diagnosticsList.map((item) => (
               <div
                 key={item._id}
                 onClick={() => handleDiagnosticClick(item.name)}
-                className="px-2 py-1 hover:bg-[#111111] cursor-pointer"
+                className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
               >
                 {item.name}
               </div>

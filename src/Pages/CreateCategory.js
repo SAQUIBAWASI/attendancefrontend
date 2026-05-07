@@ -31,7 +31,7 @@ const CreateCategory = ({ onCategoryCreated }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-4 bg-[#0a0a0a] rounded shadow-sm">
+    <div className="max-w-md mx-auto p-4 bg-white rounded shadow-sm">
       <h2 className="text-lg font-semibold mb-4 text-center text-blue-900">
         Create New Category
       </h2>

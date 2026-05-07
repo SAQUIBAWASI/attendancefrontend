@@ -1,11 +1,11 @@
 import axios from "axios";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    FaBuilding,
-    FaCalendarAlt,
-    FaSearch,
-    FaTimes,
-    FaUserTag
+  FaBuilding,
+  FaCalendarAlt,
+  FaSearch,
+  FaTimes,
+  FaUserTag
 } from "react-icons/fa";
 
 import { useNavigate } from "react-router-dom";
@@ -1368,36 +1368,36 @@ const PayRoll = () => {
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-[#0a0a0a] rounded-lg w-full max-w-7xl mx-4 max-h-[85vh] flex flex-col">
-          <div className="flex items-center justify-between p-3 border-b sticky top-0 bg-[#0a0a0a] rounded-t-lg">
+        <div className="bg-white rounded-lg w-full max-w-7xl mx-4 max-h-[85vh] flex flex-col">
+          <div className="flex items-center justify-between p-3 border-b sticky top-0 bg-white rounded-t-lg">
             <div>
-              <h2 className="text-lg font-bold text-gray-300">Attendance Records - {selectedEmployee?.name}</h2>
+              <h2 className="text-lg font-bold text-gray-700">Attendance Records - {selectedEmployee?.name}</h2>
               <p className="text-xs text-gray-500">ID: {selectedEmployee?.employeeId} | Shift: {shiftHours} hrs/day</p>
             </div>
-            <button onClick={() => setShowAttendancePopup(false)} className="text-gray-500 hover:text-gray-300">
+            <button onClick={() => setShowAttendancePopup(false)} className="text-gray-500 hover:text-gray-700">
               <FaTimes className="w-5 h-5" />
             </button>
           </div>
           
-          <div className="flex items-center justify-between px-4 py-2 bg-[#000000] border-b">
+          <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b">
             <div className="flex gap-4 text-xs">
               <span className="font-medium">Total Days: <strong>{monthDates.length}</strong></span>
               <span className="text-orange-600">Week Off: <strong>{weekOffCount}</strong></span>
               <span className="text-red-600">Leaves: <strong>{leaveCount}</strong></span>
-              <span className="text-gray-400">Absent: <strong>{absentCount}</strong></span>
+              <span className="text-gray-500">Absent: <strong>{absentCount}</strong></span>
               <span className="text-green-600">Present: <strong>{presentCount}</strong></span>
             </div>
             <div className="flex gap-3 text-xs">
               <div className="flex items-center gap-1"><div className="w-3 h-3 bg-orange-100 border border-orange-300 rounded"></div><span>Week Off</span></div>
               <div className="flex items-center gap-1"><div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div><span>Leave</span></div>
-              <div className="flex items-center gap-1"><div className="w-3 h-3 bg-[#111111] border border-[#374151] rounded"></div><span>Absent</span></div>
+              <div className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div><span>Absent</span></div>
               <div className="flex items-center gap-1"><div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div><span>Present</span></div>
             </div>
           </div>
           
           <div className="flex-1 overflow-y-auto p-2">
             {attendanceLoading ? (
-              <div className="flex items-center justify-center py-8"><div className="text-center"><div className="w-8 h-8 mx-auto mb-2 border-b-2 border-blue-600 rounded-full animate-spin"></div><p className="text-sm text-gray-400">Loading...</p></div></div>
+              <div className="flex items-center justify-center py-8"><div className="text-center"><div className="w-8 h-8 mx-auto mb-2 border-b-2 border-blue-600 rounded-full animate-spin"></div><p className="text-sm text-gray-500">Loading...</p></div></div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
@@ -1412,7 +1412,7 @@ const PayRoll = () => {
                       <th className="px-2 py-1.5 text-center text-xs font-medium">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#1f2937]">
+                  <tbody className="divide-y divide-gray-200">
                     {monthDates.map((date) => {
                       const dateKey = date.toLocaleDateString('en-CA');
                       const record = attendanceMap.get(dateKey);
@@ -1438,11 +1438,11 @@ const PayRoll = () => {
                         dayType = 'Leave';
                         statusText = 'On Leave';
                       } else if (!hasAttendance) {
-                        bgColor = 'bg-[#000000]';
+                        bgColor = 'bg-gray-50';
                         dayType = 'Absent';
                         statusText = 'Absent';
                       } else {
-                        bgColor = 'bg-[#0a0a0a]';
+                        bgColor = 'bg-white';
                         const hoursNum = parseFloat(workHours);
                         if (hoursNum >= shiftHours * 0.9) dayType = 'Full Day';
                         else if (hoursNum >= shiftHours * 0.5) dayType = 'Half Day';
@@ -1466,10 +1466,10 @@ const PayRoll = () => {
                             <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full ${
                               isWeekOff ? 'bg-orange-100 text-orange-700' :
                               isLeave ? 'bg-red-100 text-red-700' :
-                              !hasAttendance ? 'bg-[#111111] text-gray-400' :
+                              !hasAttendance ? 'bg-gray-100 text-gray-500' :
                               dayType === 'Full Day' ? 'bg-green-100 text-green-700' :
                               dayType === 'Half Day' ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-[#111111] text-gray-400'
+                              'bg-gray-100 text-gray-500'
                             }`}>{dayType}</span>
                           </td>
                           <td className="px-2 py-1 text-center text-xs">{statusText}</td>
@@ -1482,7 +1482,7 @@ const PayRoll = () => {
             )}
           </div>
           
-          <div className="flex justify-end p-3 border-t bg-[#000000] rounded-b-lg">
+          <div className="flex justify-end p-3 border-t bg-gray-50 rounded-b-lg">
             <button onClick={() => setShowAttendancePopup(false)} className="px-4 py-1.5 text-sm text-white transition duration-200 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg hover:from-green-600 hover:to-blue-700">Close</button>
           </div>
         </div>
@@ -1510,7 +1510,7 @@ const PayRoll = () => {
   }
 
   return (
-    <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="mx-auto max-w-9xl">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard title="Active Employees" value={filteredRecords.length} icon={FaUserTag} color="border-blue-500" />
@@ -1519,20 +1519,20 @@ const PayRoll = () => {
           <StatCard title="On Leave" value={filteredRecords.filter(emp => (employeeLeaves[emp.employeeId]?.CL > 0 || employeeLeaves[emp.employeeId]?.EL > 0)).length} icon={FaSearch} color="border-red-500" />
         </div>
 
-        <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
+        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[180px]">
-              <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
-              <input type="text" placeholder="Search by ID or Name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent" />
+              <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
+              <input type="text" placeholder="Search by ID or Name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent" />
             </div>
 
             <div className="relative" ref={departmentFilterRef}>
-              <button onClick={() => setShowDepartmentFilter(!showDepartmentFilter)} className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'}`}>
+              <button onClick={() => setShowDepartmentFilter(!showDepartmentFilter)} className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'}`}>
                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
               </button>
               {showDepartmentFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
-                  <div onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); }} className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50">All Departments</div>
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                  <div onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); }} className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50">All Departments</div>
                   {uniqueDepartments.map(dept => (
                     <div key={dept} onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }} className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''}`}>{dept}</div>
                   ))}
@@ -1541,12 +1541,12 @@ const PayRoll = () => {
             </div>
 
             <div className="relative" ref={designationFilterRef}>
-              <button onClick={() => setShowDesignationFilter(!showDesignationFilter)} className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'}`}>
+              <button onClick={() => setShowDesignationFilter(!showDesignationFilter)} className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'}`}>
                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
               </button>
               {showDesignationFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
-                  <div onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); }} className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50">All Designations</div>
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                  <div onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); }} className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50">All Designations</div>
                   {uniqueDesignations.map(des => (
                     <div key={des} onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }} className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''}`}>{des}</div>
                   ))}
@@ -1556,26 +1556,26 @@ const PayRoll = () => {
 
             <div className="relative w-[130px]">
               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">From:</span>
-              <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); if (e.target.value && toDate) handleDateRangeFilter(); }} className="w-full pl-12 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent" />
+              <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); if (e.target.value && toDate) handleDateRangeFilter(); }} className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent" />
             </div>
 
             <div className="relative w-[130px]">
               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">To:</span>
-              <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); if (fromDate && e.target.value) handleDateRangeFilter(); }} className="w-full pl-10 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent" />
+              <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); if (fromDate && e.target.value) handleDateRangeFilter(); }} className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent" />
             </div>
 
             <div className="relative w-[130px]">
               <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
-              <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent" />
+              <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent" />
             </div>
 
             <button onClick={handleDateRangeFilter} disabled={!fromDate || !toDate} className="h-8 px-3 text-xs font-medium text-white transition bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50">Apply</button>
-            <button onClick={() => setShowTemplateModal(true)} className="h-8 px-3 text-xs font-medium text-gray-300 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]">⚙️ Template</button>
-            <button onClick={() => { const currentMonth = new Date().toISOString().slice(0, 7); setSelectedMonth(currentMonth); fetchData(currentMonth); }} className="h-8 px-3 text-xs font-medium text-gray-300 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]">Current</button>
+            <button onClick={() => setShowTemplateModal(true)} className="h-8 px-3 text-xs font-medium text-gray-700 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">⚙️ Template</button>
+            <button onClick={() => { const currentMonth = new Date().toISOString().slice(0, 7); setSelectedMonth(currentMonth); fetchData(currentMonth); }} className="h-8 px-3 text-xs font-medium text-gray-700 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">Current</button>
             <button onClick={() => fetchData(selectedMonth)} disabled={isLoadingMonth} className="h-8 px-3 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">{isLoadingMonth ? "⟳" : "⟳ Refresh"}</button>
             <button onClick={() => navigate("/bank-reports")} className="h-8 px-3 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700">Bank Reports</button>
             {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
-              <button onClick={clearFilters} className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]">Clear</button>
+              <button onClick={clearFilters} className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">Clear</button>
             )}
           </div>
         </div>
@@ -1603,7 +1603,7 @@ const PayRoll = () => {
           </div>
         )}
 
-        <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
+        <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
@@ -1621,11 +1621,11 @@ const PayRoll = () => {
                   <th className="py-2 text-center text-xs">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1f2937]">
+              <tbody className="divide-y divide-gray-200">
                 {currentRecords.map((item, index) => (
-                  <tr key={item.employeeId} onClick={() => handleRowClick(item)} className={`hover:bg-[#000000] cursor-pointer transition-colors ${index % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#000000]'}`}>
-                    <td className="px-2 py-1.5 text-center text-xs">{item.employeeId}</td>
-                    <td className="px-2 py-1.5 text-center text-xs font-medium">{item.name}</td>
+                  <tr key={item.employeeId} onClick={() => handleRowClick(item)} className={`hover:bg-gray-50 cursor-pointer transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                    <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{item.employeeId}</td>
+                    <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{item.name}</td>
                     <td className="px-2 py-1.5 text-center text-xs">{item.department}</td>
                     <td className="px-2 py-1.5 text-center text-xs">{item.designation}</td>
                     <td className="px-2 py-1.5 text-center text-xs"><span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">{item.totalWorkingDays || 0}</span></td>
@@ -1635,7 +1635,7 @@ const PayRoll = () => {
                     <td className="px-2 py-1.5 text-center text-xs">
                       <div className="font-medium text-blue-600">₹{(item.salaryPerMonth || 0).toLocaleString()}</div>
                       {item.currentSalary && item.currentSalary !== item.salaryPerMonth && (
-                        <div className="text-[9px] text-gray-400 line-through">₹{item.currentSalary.toLocaleString()}</div>
+                        <div className="text-[9px] text-gray-500 line-through">₹{item.currentSalary.toLocaleString()}</div>
                       )}
                       {item.historicalEffectiveFrom && item.historicalEffectiveFrom !== item.joinDate && (
                         <div className="text-[8px] text-green-500">w.e.f {new Date(item.historicalEffectiveFrom).toLocaleDateString()}</div>
@@ -1646,7 +1646,7 @@ const PayRoll = () => {
                       <div className="flex justify-center gap-1">
                         <button onClick={(e) => { e.stopPropagation(); handleView(item); }} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="View"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
                         <button onClick={(e) => { e.stopPropagation(); handleEdit(item); }} className="p-1 text-green-600 hover:bg-green-50 rounded" title="Edit"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
-                        <button onClick={(e) => { e.stopPropagation(); downloadInvoice(item); }} disabled={!isPayslipDownloadAllowed(item.month || selectedMonth)} className={`p-1 rounded ${isPayslipDownloadAllowed(item.month || selectedMonth) ? 'text-purple-600 hover:bg-purple-50' : 'text-gray-400 cursor-not-allowed'}`} title="Download"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg></button>
+                        <button onClick={(e) => { e.stopPropagation(); downloadInvoice(item); }} disabled={!isPayslipDownloadAllowed(item.month || selectedMonth)} className={`p-1 rounded ${isPayslipDownloadAllowed(item.month || selectedMonth) ? 'text-purple-600 hover:bg-purple-50' : 'text-gray-500 cursor-not-allowed'}`} title="Download"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg></button>
                       </div>
                     </td>
                   </tr>
@@ -1658,17 +1658,17 @@ const PayRoll = () => {
           {filteredRecords.length > 0 && (
             <div className="flex flex-col items-center justify-between gap-2 px-3 py-2 border-t sm:flex-row">
               <div className="flex items-center gap-2">
-                <label className="text-xs text-gray-300">Show:</label>
+                <label className="text-xs text-gray-700">Show:</label>
                 <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-1 text-xs border rounded">
                   <option value={5}>5</option><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option>
                 </select>
               </div>
               <div className="flex items-center gap-1">
-                <button onClick={handlePrevious} disabled={currentPage === 1} className={`px-3 py-0.5 text-xs border rounded ${currentPage === 1 ? 'text-gray-400 bg-[#111111]' : 'text-blue-600 bg-[#0a0a0a] hover:bg-blue-50'}`}>Prev</button>
+                <button onClick={handlePrevious} disabled={currentPage === 1} className={`px-3 py-0.5 text-xs border rounded ${currentPage === 1 ? 'text-gray-500 bg-gray-100' : 'text-blue-600 bg-white hover:bg-blue-50'}`}>Prev</button>
                 {getPageNumbers().map((page, idx) => (
-                  <button key={idx} onClick={() => typeof page === 'number' && handlePageClick(page)} disabled={page === "..."} className={`px-3 py-0.5 text-xs border rounded ${page === "..." ? 'text-gray-500 bg-[#000000]' : currentPage === page ? 'text-white bg-blue-600' : 'text-blue-600 bg-[#0a0a0a] hover:bg-blue-50'}`}>{page}</button>
+                  <button key={idx} onClick={() => typeof page === 'number' && handlePageClick(page)} disabled={page === "..."} className={`px-3 py-0.5 text-xs border rounded ${page === "..." ? 'text-gray-500 bg-gray-50' : currentPage === page ? 'text-white bg-blue-600' : 'text-blue-600 bg-white hover:bg-blue-50'}`}>{page}</button>
                 ))}
-                <button onClick={handleNext} disabled={currentPage === totalPages} className={`px-3 py-0.5 text-xs border rounded ${currentPage === totalPages ? 'text-gray-400 bg-[#111111]' : 'text-blue-600 bg-[#0a0a0a] hover:bg-blue-50'}`}>Next</button>
+                <button onClick={handleNext} disabled={currentPage === totalPages} className={`px-3 py-0.5 text-xs border rounded ${currentPage === totalPages ? 'text-gray-500 bg-gray-100' : 'text-blue-600 bg-white hover:bg-blue-50'}`}>Next</button>
               </div>
             </div>
           )}
@@ -1677,42 +1677,42 @@ const PayRoll = () => {
 
       {showViewModal && selectedEmployee && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-[#0a0a0a] rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
-            <div className="sticky top-0 z-10 flex items-center justify-between mb-4 bg-[#0a0a0a]">
-              <h2 className="text-xl font-bold text-gray-300">Employee Details</h2>
-              <button onClick={() => setShowViewModal(false)} className="text-gray-500 hover:text-gray-300"><FaTimes size={20} /></button>
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
+            <div className="sticky top-0 z-10 flex items-center justify-between mb-4 bg-white">
+              <h2 className="text-xl font-bold text-gray-700">Employee Details</h2>
+              <button onClick={() => setShowViewModal(false)} className="text-gray-500 hover:text-gray-700"><FaTimes size={20} /></button>
             </div>
             <div className="flex items-start space-x-4">
               <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full shrink-0"><span className="text-lg font-semibold text-blue-800">{selectedEmployee.name?.charAt(0) || 'E'}</span></div>
               <div className="flex flex-col flex-1 space-y-1">
-                <h3 className="text-lg font-semibold text-gray-300">{selectedEmployee.name}</h3>
-                <div className="grid grid-cols-2 text-sm text-gray-400 gap-x-6 gap-y-1">
-                  <p><span className="font-medium text-gray-300">ID:</span> {selectedEmployee.employeeId}</p>
-                  <p><span className="font-medium text-gray-300">Department:</span> {selectedEmployee.department || 'N/A'}</p>
-                  <p><span className="font-medium text-gray-300">Designation:</span> {selectedEmployee.designation || 'N/A'}</p>
-                  <p><span className="font-medium text-gray-300">Month:</span> {selectedEmployee.month || selectedMonth} ({selectedEmployee.monthDays || monthDays} days)</p>
+                <h3 className="text-lg font-semibold text-gray-700">{selectedEmployee.name}</h3>
+                <div className="grid grid-cols-2 text-sm text-gray-500 gap-x-6 gap-y-1">
+                  <p><span className="font-medium text-gray-700">ID:</span> {selectedEmployee.employeeId}</p>
+                  <p><span className="font-medium text-gray-700">Department:</span> {selectedEmployee.department || 'N/A'}</p>
+                  <p><span className="font-medium text-gray-700">Designation:</span> {selectedEmployee.designation || 'N/A'}</p>
+                  <p><span className="font-medium text-gray-700">Month:</span> {selectedEmployee.month || selectedMonth} ({selectedEmployee.monthDays || monthDays} days)</p>
                 </div>
               </div>
             </div>
             <div className="grid grid-cols-1 mt-4 mb-4 text-sm sm:grid-cols-2 gap-x-10 gap-y-2">
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-400">Present Days</span><span className="font-semibold text-green-600">{selectedEmployee.presentDays || 0}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-400">Working Days</span><span className="font-semibold text-blue-600">{selectedEmployee.totalWorkingDays || 0}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-400">Half Days</span><span className="font-semibold text-yellow-600">{selectedEmployee.halfDayWorking || 0}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-400">WeekOff Days</span><span className="font-semibold text-purple-600">{getWeekOffDaysForDisplay(selectedEmployee)}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-400">Month Days</span><span className="font-semibold text-gray-300">{selectedEmployee.monthDays || monthDays}</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Present Days</span><span className="font-semibold text-green-600">{selectedEmployee.presentDays || 0}</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Working Days</span><span className="font-semibold text-blue-600">{selectedEmployee.totalWorkingDays || 0}</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Half Days</span><span className="font-semibold text-yellow-600">{selectedEmployee.halfDayWorking || 0}</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">WeekOff Days</span><span className="font-semibold text-purple-600">{getWeekOffDaysForDisplay(selectedEmployee)}</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Month Days</span><span className="font-semibold text-gray-700">{selectedEmployee.monthDays || monthDays}</span></div>
               <div className="flex justify-between pb-1 border-b">
-                <span className="text-gray-400">Monthly Salary</span>
+                <span className="text-gray-500">Monthly Salary</span>
                 <div className="text-right">
                   <span className="font-semibold text-blue-600">₹{selectedEmployee.salaryPerMonth || 0}</span>
                   {selectedEmployee.currentSalary && selectedEmployee.currentSalary !== selectedEmployee.salaryPerMonth && (
-                    <div className="text-[9px] text-gray-400 line-through">₹{selectedEmployee.currentSalary.toLocaleString()}</div>
+                    <div className="text-[9px] text-gray-500 line-through">₹{selectedEmployee.currentSalary.toLocaleString()}</div>
                   )}
                 </div>
               </div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-400">Daily Rate</span><span className="font-semibold text-gray-300">₹{calculateDailyRate(selectedEmployee)}/day</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-400">Calculated Salary</span><span className="font-semibold text-green-600">₹{Math.round(selectedEmployee.calculatedSalary || 0)}</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Daily Rate</span><span className="font-semibold text-gray-700">₹{calculateDailyRate(selectedEmployee)}/day</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Calculated Salary</span><span className="font-semibold text-green-600">₹{Math.round(selectedEmployee.calculatedSalary || 0)}</span></div>
               <div className="flex flex-col pb-2 border-b sm:col-span-2">
-                <div className="flex justify-between mb-2"><span className="font-medium text-gray-400">Approved Leaves</span><span className="font-semibold text-red-600">{getLeaveTypes(selectedEmployee) || "0"}</span></div>
+                <div className="flex justify-between mb-2"><span className="font-medium text-gray-500">Approved Leaves</span><span className="font-semibold text-red-600">{getLeaveTypes(selectedEmployee) || "0"}</span></div>
               </div>
             </div>
             <div className="flex justify-end space-x-3">
@@ -1725,7 +1725,7 @@ const PayRoll = () => {
 
       {showEditModal && selectedEmployee && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-[#0a0a0a] rounded-lg p-4 w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-4 w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-3"><h2 className="text-lg font-bold">Edit Salary - {selectedEmployee.name}</h2><button onClick={() => setShowEditModal(false)} className="text-gray-500"><FaTimes /></button></div>
             <form onSubmit={handleEditSubmit} className="space-y-3">
               <div><label className="block text-xs">Present Days</label><input type="number" name="presentDays" value={editFormData.presentDays || 0} onChange={handleInputChange} className="w-full p-2 border rounded text-sm" /></div>
@@ -1742,7 +1742,7 @@ const PayRoll = () => {
 
       {showTemplateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-[#0a0a0a] rounded-lg p-4 w-full max-w-md">
+          <div className="bg-white rounded-lg p-4 w-full max-w-md">
             <div className="flex justify-between items-center mb-3"><h2 className="text-lg font-bold">Edit Template</h2><button onClick={() => setShowTemplateModal(false)}><FaTimes /></button></div>
             <div className="space-y-3">
               <div><label className="block text-xs">Company Name</label><input type="text" value={templateConfig.companyName} onChange={(e) => setTemplateConfig({...templateConfig, companyName: e.target.value})} className="w-full p-2 border rounded text-sm" /></div>

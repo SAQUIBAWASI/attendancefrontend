@@ -68,7 +68,7 @@ const AllQuizzesTable = () => {
   };
 
   return (
-    <div className="p-6 bg-[#0a0a0a] rounded shadow-md max-w-6xl mx-auto">
+    <div className="p-6 bg-white rounded shadow-md max-w-6xl mx-auto">
       <h1 className="text-xl font-semibold mb-4 text-blue-800">All Quizzes</h1>
 
       <div className="flex justify-between mb-4">
@@ -92,10 +92,10 @@ const AllQuizzesTable = () => {
             <option>100</option>
             <option>500</option>
           </select>
-          <button onClick={() => exportData('csv')} className="bg-[#1f2937] px-3 py-1 rounded">
+          <button onClick={() => exportData('csv')} className="bg-gray-200 px-3 py-1 rounded">
             CSV
           </button>
-          <button onClick={() => exportData('xlsx')} className="bg-[#1f2937] px-3 py-1 rounded">
+          <button onClick={() => exportData('xlsx')} className="bg-gray-200 px-3 py-1 rounded">
             Excel
           </button>
         </div>
@@ -108,7 +108,7 @@ const AllQuizzesTable = () => {
       ) : (
         <>
           <table className="w-full border-collapse border text-sm mb-4">
-            <thead className="bg-[#1f2937]">
+            <thead className="bg-gray-200">
               <tr>
                 <th className="border p-2">#</th>
                 <th className="border p-2">Topic</th>
@@ -126,7 +126,7 @@ const AllQuizzesTable = () => {
                 </tr>
               ) : (
                 pageItems.map((q, idx) => (
-                  <tr key={q._id} className="odd:bg-[#0a0a0a] even:bg-[#111111]">
+                  <tr key={q._id} className="odd:bg-white even:bg-gray-100">
                     <td className="border p-2">{start + idx + 1}</td>
                     <td className="border p-2">{q.topic}</td>
                     <td className="border p-2">{q.question}</td>
@@ -158,7 +158,7 @@ const AllQuizzesTable = () => {
               <button
                 key={i}
                 onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-[#1f2937]'
+                className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'
                   }`}
               >
                 {i + 1}

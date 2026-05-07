@@ -108,8 +108,8 @@ const CouponsTable = () => {
   };
 
   return (
-    <div className="p-6 bg-[#0a0a0a] shadow rounded">
-      <h1 className="text-2xl font-semibold text-center mb-6 text-gray-300">Coupons List</h1>
+    <div className="p-6 bg-white shadow rounded">
+      <h1 className="text-2xl font-semibold text-center mb-6 text-gray-700">Coupons List</h1>
 
       {/* Filters and Export Controls */}
       <div className="mb-6 flex flex-wrap justify-between items-center gap-4">
@@ -120,7 +120,7 @@ const CouponsTable = () => {
               setSelectedCategory(e.target.value);
               setCurrentPage(1); // Reset page on filter change
             }}
-            className="border px-4 py-2 rounded bg-[#111111] text-gray-300"
+            className="border px-4 py-2 rounded bg-gray-100 text-gray-700"
           >
             {categories.map((cat) => (
               <option key={cat} value={cat}>{cat}</option>
@@ -133,7 +133,7 @@ const CouponsTable = () => {
               setSelectedStatus(e.target.value);
               setCurrentPage(1); // Reset page on filter change
             }}
-            className="border px-4 py-2 rounded bg-[#111111] text-gray-300"
+            className="border px-4 py-2 rounded bg-gray-100 text-gray-700"
           >
             {statuses.map((status) => (
               <option key={status} value={status}>
@@ -150,7 +150,7 @@ const CouponsTable = () => {
               setDownloadLimit(Number(e.target.value));
               setCurrentPage(1); // Reset page on limit change
             }}
-            className="p-2 border rounded text-gray-300"
+            className="p-2 border rounded text-gray-700"
           >
             <option value={10}>10</option>
             <option value={50}>50</option>
@@ -158,13 +158,13 @@ const CouponsTable = () => {
             <option value={200}>200</option>
           </select>
           <button
-            className="bg-[#1f2937] px-4 py-2 rounded text-sm"
+            className="bg-gray-200 px-4 py-2 rounded text-sm"
             onClick={() => exportData("csv")}
           >
             Export CSV
           </button>
           <button
-            className="bg-[#1f2937] px-4 py-2 rounded text-sm"
+            className="bg-gray-200 px-4 py-2 rounded text-sm"
             onClick={() => exportData("xlsx")}
           >
             Export Excel
@@ -174,7 +174,7 @@ const CouponsTable = () => {
 
       {/* Coupon Table */}
       <div className="overflow-x-auto">
-        <table className="w-full border border-[#374151]">
+        <table className="w-full border border-gray-300">
           <thead className="bg-blue-600 text-white">
             <tr>
               <th className="p-2 border">ID</th>
@@ -259,7 +259,7 @@ const CouponsTable = () => {
         <button
           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
-          className="bg-[#1f2937] px-4 py-2 rounded disabled:opacity-50"
+          className="bg-gray-200 px-4 py-2 rounded disabled:opacity-50"
         >
           Previous
         </button>
@@ -268,7 +268,7 @@ const CouponsTable = () => {
             key={idx}
             onClick={() => setCurrentPage(idx + 1)}
             className={`px-4 py-2 rounded ${
-              currentPage === idx + 1 ? "bg-blue-500 text-white" : "bg-[#111111]"
+              currentPage === idx + 1 ? "bg-blue-500 text-white" : "bg-gray-100"
             }`}
           >
             {idx + 1}
@@ -277,7 +277,7 @@ const CouponsTable = () => {
         <button
           onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
           disabled={currentPage === totalPages}
-          className="bg-[#1f2937] px-4 py-2 rounded disabled:opacity-50"
+          className="bg-gray-200 px-4 py-2 rounded disabled:opacity-50"
         >
           Next
         </button>

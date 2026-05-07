@@ -11,12 +11,12 @@ const data = [
 
 export default function SetupRulesTable() {
   return (
-    <div className="p-6 shadow-lg bg-[#0a0a0a] rounded-lg">
+    <div className="p-6 shadow-lg bg-white rounded-lg">
       <h2 className="text-xl font-semibold mb-4">Setup Rules</h2>
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937]">
+        <table className="min-w-full bg-white border border-gray-200">
           <thead>
-            <tr className="bg-[#111111] border-b">
+            <tr className="bg-gray-100 border-b">
               <th className="p-3 text-left">Sl</th>
               <th className="p-3 text-left">Name</th>
               <th className="p-3 text-left">Type</th>
@@ -29,7 +29,7 @@ export default function SetupRulesTable() {
           </thead>
           <tbody>
             {data.map((item, index) => (
-              <tr key={item.id} className="border-b hover:bg-[#000000]">
+              <tr key={item.id} className="border-b hover:bg-gray-50">
                 <td className="p-3">{index + 1}</td>
                 <td className="p-3">{item.name}</td>
                 <td className="p-3">{item.type}</td>
@@ -52,7 +52,7 @@ export default function SetupRulesTable() {
                     <button className="p-2 bg-blue-500 text-white rounded hover:scale-110 transition">
                       <Pencil size={16} />
                     </button>
-                    <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-black text-white text-xs px-2 py-1 rounded">
+                    <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-white text-white text-xs px-2 py-1 rounded">
                       Edit
                     </span>
                   </div>
@@ -60,7 +60,7 @@ export default function SetupRulesTable() {
                     <button className="p-2 bg-red-500 text-white rounded hover:scale-110 transition">
                       <Trash size={16} />
                     </button>
-                    <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-black text-white text-xs px-2 py-1 rounded">
+                    <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-white text-white text-xs px-2 py-1 rounded">
                       Delete
                     </span>
                   </div>

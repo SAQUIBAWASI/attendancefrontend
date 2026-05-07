@@ -119,22 +119,22 @@ const MedicalCertificate = () => {
 
   return (
     
-      <div className="p-6 bg-[#000000] min-h-screen">
+      <div className="p-6 bg-gray-50 min-h-screen">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-[#0a0a0a] rounded-2xl shadow-sm border border-[#1f2937] p-8 mb-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
                 <FaFileMedical size={24} />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-300">Medical Certificate</h1>
+                <h1 className="text-2xl font-bold text-gray-700">Medical Certificate</h1>
                 <p className="text-sm text-gray-500">Upload and manage your medical records</p>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   <FaCalendarAlt className="text-blue-500" /> Registration Date
                 </label>
                 <input
@@ -142,13 +142,13 @@ const MedicalCertificate = () => {
                   name="registrationDate"
                   value={formData.registrationDate}
                   onChange={handleInputChange}
-                  className="w-full p-3 rounded-xl border border-[#1f2937] focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 transition-all"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   <FaCalendarAlt className="text-red-500" /> Expiry Date
                 </label>
                 <input
@@ -156,13 +156,13 @@ const MedicalCertificate = () => {
                   name="expiryDate"
                   value={formData.expiryDate}
                   onChange={handleInputChange}
-                  className="w-full p-3 rounded-xl border border-[#1f2937] focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 transition-all"
                   required
                 />
               </div>
 
               <div className="md:col-span-2 space-y-2">
-                <label className="text-sm font-semibold text-gray-300">Upload Certificate (PDF/Image)</label>
+                <label className="text-sm font-semibold text-gray-700">Upload Certificate (PDF/Image)</label>
                 <div className="relative group">
                   <input
                     type="file"
@@ -173,10 +173,10 @@ const MedicalCertificate = () => {
                   />
                   <label
                     htmlFor="doc-upload"
-                    className="flex flex-col items-center justify-center border-2 border-dashed border-[#1f2937] rounded-2xl p-8 hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer"
+                    className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl p-8 hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer"
                   >
-                    <FaUpload className="text-3xl text-gray-400 group-hover:text-blue-500 mb-2" />
-                    <span className="text-sm text-gray-400">
+                    <FaUpload className="text-3xl text-gray-500 group-hover:text-blue-500 mb-2" />
+                    <span className="text-sm text-gray-500">
                       {formData.document ? formData.document.name : "Click to select file"}
                     </span>
                   </label>
@@ -200,28 +200,28 @@ const MedicalCertificate = () => {
             {error && <p className="mt-4 p-3 bg-red-50 text-red-600 rounded-lg text-center text-sm font-medium">{error}</p>}
           </div>
 
-          <div className="bg-[#0a0a0a] rounded-2xl shadow-sm border border-[#1f2937] p-8">
-            <h2 className="text-xl font-bold text-gray-300 mb-6">Uploaded Certificates</h2>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+            <h2 className="text-xl font-bold text-gray-700 mb-6">Uploaded Certificates</h2>
             {loading ? (
               <p className="text-center text-gray-500">Loading records...</p>
             ) : certificates.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="bg-[#000000]">
-                      <th className="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Reg. Date</th>
-                      <th className="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Exp. Date</th>
-                      <th className="p-4 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                      <th className="p-4 text-center text-xs font-bold text-gray-400 uppercase tracking-widest">Action</th>
+                    <tr className="bg-gray-50">
+                      <th className="p-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Reg. Date</th>
+                      <th className="p-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Exp. Date</th>
+                      <th className="p-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                      <th className="p-4 text-center text-xs font-bold text-gray-500 uppercase tracking-widest">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {certificates.map((cert) => {
                       const idExpired = new Date(cert.expiryDate) < new Date();
                       return (
-                        <tr key={cert._id} className="border-b border-gray-50 hover:bg-[#000000] transition-colors">
-                          <td className="p-4 text-sm text-gray-300">{new Date(cert.registrationDate).toLocaleDateString()}</td>
-                          <td className="p-4 text-sm text-gray-300">{new Date(cert.expiryDate).toLocaleDateString()}</td>
+                        <tr key={cert._id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                          <td className="p-4 text-sm text-gray-700">{new Date(cert.registrationDate).toLocaleDateString()}</td>
+                          <td className="p-4 text-sm text-gray-700">{new Date(cert.expiryDate).toLocaleDateString()}</td>
                           <td className="p-4">
                             <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${idExpired ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"}`}>
                               {idExpired ? "Expired" : "Active"}
@@ -245,7 +245,7 @@ const MedicalCertificate = () => {
               </div>
             ) : (
               <div className="text-center py-10">
-                <p className="text-gray-400 italic">No certificates uploaded yet.</p>
+                <p className="text-gray-500 italic">No certificates uploaded yet.</p>
               </div>
             )}
           </div>

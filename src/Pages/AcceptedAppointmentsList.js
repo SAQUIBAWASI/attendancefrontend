@@ -55,7 +55,7 @@ const AcceptedAppointmentsList = () => {
 
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-gray-500 bg-opacity-50">
-        <div className="bg-[#0a0a0a] p-6 rounded shadow-md w-96">
+        <div className="bg-white p-6 rounded shadow-md w-96">
           <h3 className="text-lg font-semibold mb-4">Upload Prescription for {selectedAppointment.patient_name}</h3>
           <div className="mb-4">
             <input
@@ -85,7 +85,7 @@ const AcceptedAppointmentsList = () => {
   };
 
   return (
-    <div className="p-4 bg-[#0a0a0a] rounded shadow">
+    <div className="p-4 bg-white rounded shadow">
       <h2 className="text-xl font-semibold mb-4">Accepted Appointments</h2>
       <div className="overflow-x-auto">
         <table className="w-full border rounded text-sm">
@@ -104,7 +104,7 @@ const AcceptedAppointmentsList = () => {
           </thead>
           <tbody>
             {appointments.map((appt) => (
-              <tr key={appt.appointmentId} className="hover:bg-[#000000] border-b">
+              <tr key={appt.appointmentId} className="hover:bg-gray-50 border-b">
                 <td className="p-2 border flex items-center gap-2">
                   <img
                     src={appt.doctor_image}

@@ -24,16 +24,16 @@ const GetContactUsPage = () => {
   }, []);
 
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-[#0a0a0a] shadow-lg rounded-lg">
+    <div className="p-6 max-w-4xl mx-auto bg-white shadow-lg rounded-lg">
       <h2 className="text-2xl font-semibold text-blue-900 mb-6">Contact Us - Message</h2>
 
       {/* Display Contact Us Data */}
       {contactUsData ? (
         <div>
-          <h3 className="text-xl font-bold text-gray-300 mb-4">Message from {contactUsData.name}</h3>
+          <h3 className="text-xl font-bold text-gray-700 mb-4">Message from {contactUsData.name}</h3>
           <p className="text-sm text-gray-500 mb-2">Email: {contactUsData.email}</p>
           <p className="text-sm text-gray-500 mb-2">Subject: {contactUsData.subject}</p>
-          <p className="text-gray-300 mb-4">{contactUsData.message}</p>
+          <p className="text-gray-700 mb-4">{contactUsData.message}</p>
           <p className="text-sm text-gray-500">Submitted on: {contactUsData.submittedDate}</p>
         </div>
       ) : (

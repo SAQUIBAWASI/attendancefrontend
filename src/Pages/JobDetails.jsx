@@ -86,11 +86,11 @@ function JobDetails() {
     if (error || !job) {
         return (
             <div className="min-h-screen flex items-center justify-center p-6" style={{ background: "#f8fafc" }}>
-                <div className="max-w-md w-full bg-[#0a0a0a] rounded-3xl shadow-xl p-12 text-center border border-red-50">
+                <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-12 text-center border border-red-50">
                     <div className="w-20 h-20 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
                         <Icon d={icons.warn} color="#ef4444" size={32} />
                     </div>
-                    <h2 className="text-2xl font-black text-gray-200 mb-3">Job Not Found</h2>
+                    <h2 className="text-2xl font-black text-gray-900 mb-3">Job Not Found</h2>
                     <p className="text-gray-500 text-sm mb-8">{error || "This post may have been archived."}</p>
                     <button onClick={() => navigate(-1)}
                         style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "#fff" }}
@@ -112,7 +112,7 @@ function JobDetails() {
         : [];
 
     return (
-        <div className="font-sans text-slate-300" style={{ minHeight: "100vh", background: "#f1f5f9" }}>
+        <div className="font-sans text-slate-700" style={{ minHeight: "100vh", background: "#f1f5f9" }}>
 
             {/* ── HERO ─────────────────────────────────────────────── */}
             <div style={{

@@ -97,9 +97,9 @@ export default function ProjectTasksTable() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-lg">
+        <table className="min-w-full bg-white border border-gray-200 shadow-md rounded-lg">
           <thead>
-            <tr className="bg-[#111111] text-center">
+            <tr className="bg-gray-100 text-center">
               <th className="p-3 border">Sl</th>
               <th className="p-3 border">Summary</th>
               <th className="p-3 border">Sprint Name</th>
@@ -115,7 +115,7 @@ export default function ProjectTasksTable() {
           </thead>
           <tbody>
             {displayedTasks.map((task) => (
-              <tr key={task.id} className="cursor-pointer hover:bg-[#000000] text-center">
+              <tr key={task.id} className="cursor-pointer hover:bg-gray-50 text-center">
                 <td className="p-3 border">{task.id}</td>
                 <td className="p-3 border">{task.summary}</td>
                 <td className="p-3 border">{task.sprintName}</td>
@@ -147,7 +147,7 @@ export default function ProjectTasksTable() {
       {/* New Task Modal */}
       {showNewTaskModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-[#0a0a0a] p-6 rounded-lg shadow-lg w-96">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-sm font-bold mb-4 text-purple-600">Create Task</h2>
             <input
               type="text"

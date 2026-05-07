@@ -76,9 +76,9 @@ export default function ClientsTable() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-lg">
+        <table className="min-w-full bg-white border border-gray-200 shadow-md rounded-lg">
           <thead>
-            <tr className="bg-[#111111] text-center">
+            <tr className="bg-gray-100 text-center">
               <th className="p-3 border">Sl</th>
               <th className="p-3 border">Client Name</th>
               <th className="p-3 border">Company Name</th>
@@ -89,7 +89,7 @@ export default function ClientsTable() {
           </thead>
           <tbody>
             {displayedClients.map((client) => (
-              <tr key={client.id} className="cursor-pointer hover:bg-[#000000] text-center">
+              <tr key={client.id} className="cursor-pointer hover:bg-gray-50 text-center">
                 <td className="p-3 border">{client.id}</td>
                 <td className="p-3 border">{client.clientName}</td>
                 <td className="p-3 border">{client.companyName}</td>
@@ -116,7 +116,7 @@ export default function ClientsTable() {
       {/* New Client Modal */}
       {showNewClientModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-[#0a0a0a] p-6 rounded-lg shadow-lg w-96">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-sm font-bold mb-4 text-purple-600">New Client</h2>
             <input
               type="text"

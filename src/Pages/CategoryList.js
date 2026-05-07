@@ -106,7 +106,7 @@ export default function CategoryList() {
   };
 
   return (
-    <div className="p-4 border rounded-lg shadow-lg bg-[#0a0a0a]">
+    <div className="p-4 border rounded-lg shadow-lg bg-white">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-blue-900">All Categories</h2>
       </div>
@@ -120,7 +120,7 @@ export default function CategoryList() {
         />
         <div className="flex gap-2 items-center">
           <select
-            className="border border-[#374151] p-2 rounded"
+            className="border border-gray-300 p-2 rounded"
             value={exportLimit}
             onChange={(e) => setExportLimit(parseInt(e.target.value, 10))}
           >
@@ -130,13 +130,13 @@ export default function CategoryList() {
             <option value={1000}>1000</option>
           </select>
           <button
-            className="bg-[#1f2937] px-4 py-2 rounded"
+            className="bg-gray-200 px-4 py-2 rounded"
             onClick={() => exportData('csv')}
           >
             CSV
           </button>
           <button
-            className="bg-[#1f2937] px-4 py-2 rounded"
+            className="bg-gray-200 px-4 py-2 rounded"
             onClick={() => exportData('xlsx')}
           >
             Excel
@@ -151,7 +151,7 @@ export default function CategoryList() {
       ) : (
         <>
           <div className="overflow-x-auto mb-4">
-            <table className="w-full border-collapse border border-[#374151]">
+            <table className="w-full border-collapse border border-gray-300">
               <thead>
                 <tr className="bg-blue-600 text-white">
                   <th className="p-2 border">Sl</th>
@@ -209,7 +209,7 @@ export default function CategoryList() {
                 key={index}
                 onClick={() => setCurrentPage(index + 1)}
                 className={`px-4 py-2 rounded ${
-                  currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-[#1f2937]'
+                  currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'
                 }`}
               >
                 {index + 1}
@@ -229,7 +229,7 @@ export default function CategoryList() {
       {/* Edit Category Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-[#0a0a0a] p-6 rounded-lg shadow-lg w-1/3">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
             <h3 className="text-xl font-semibold mb-4">Edit Category</h3>
             <input
               type="text"

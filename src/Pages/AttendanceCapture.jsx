@@ -217,7 +217,7 @@
 //   };
 
 //   return (
-//     <div className="flex flex-col min-h-screen bg-[#111111] sm:flex-row">
+//     <div className="flex flex-col min-h-screen bg-gray-100 sm:flex-row">
 //       {/* Sidebar */}
 //       <div className="hidden sm:block">
 //         <EmployeeSidebar />
@@ -227,31 +227,31 @@
 //         <Navbar />
 
 //         <div className="flex flex-col items-center justify-center flex-1 p-4 sm:p-6">
-//           <div className="w-full max-w-lg p-6 text-center bg-[#0a0a0a] shadow-lg rounded-2xl sm:p-8">
-//             <h2 className="mb-6 text-2xl font-semibold text-gray-300 sm:text-3xl">
+//           <div className="w-full max-w-lg p-6 text-center bg-white shadow-lg rounded-2xl sm:p-8">
+//             <h2 className="mb-6 text-2xl font-semibold text-gray-700 sm:text-3xl">
 //               Attendance Capture
 //             </h2>
 
 //             {/* Back Button */}
 //             <button
 //               onClick={() => navigate("/employeedashboard")}
-//               className="w-full px-5 py-2 mb-5 text-white transition-all bg-blue-600 rounded-lg sm:w-auto hover:bg-blue-700"
+//               className="w-full px-5 py-2 mb-5 text-gray-900 transition-all bg-blue-600 rounded-lg sm:w-auto hover:bg-blue-700"
 //             >
 //               ← Back to Dashboard
 //             </button>
 
-//             <div className="p-4 mb-6 rounded-lg shadow-sm bg-[#000000]">
-//               <h3 className="mb-2 text-lg font-medium text-gray-300">Your Location</h3>
+//             <div className="p-4 mb-6 rounded-lg shadow-sm bg-gray-50">
+//               <h3 className="mb-2 text-lg font-medium text-gray-700">Your Location</h3>
 //               <button
 //                 onClick={fetchLocation}
-//                 className="w-full px-5 py-2 text-white bg-green-600 rounded-lg sm:w-auto hover:bg-green-700"
+//                 className="w-full px-5 py-2 text-gray-900 bg-green-600 rounded-lg sm:w-auto hover:bg-green-700"
 //                 disabled={locStatus === "fetching"}
 //               >
 //                 {locStatus === "fetching" ? "Fetching..." : "Get Current Location"}
 //               </button>
 
 //               {position && (
-//                 <div className="mt-3 text-sm text-gray-300 sm:text-base">
+//                 <div className="mt-3 text-sm text-gray-700 sm:text-base">
 //                   <p>Lat: {position.lat.toFixed(6)}</p>
 //                   <p>Lng: {position.lng.toFixed(6)}</p>
 //                   <p>
@@ -274,7 +274,7 @@
 //               <button
 //                 onClick={handleCheckIn}
 //                 disabled={submitting}
-//                 className="w-full py-3 text-lg font-semibold text-white bg-green-700 rounded-lg hover:bg-green-800"
+//                 className="w-full py-3 text-lg font-semibold text-gray-900 bg-green-700 rounded-lg hover:bg-green-800"
 //               >
 //                 {submitting ? "Checking In..." : "Check In"}
 //               </button>
@@ -282,7 +282,7 @@
 //               <button
 //                 onClick={handleCheckOut}
 //                 disabled={submitting}
-//                 className="w-full py-3 text-lg font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700"
+//                 className="w-full py-3 text-lg font-semibold text-gray-900 bg-red-600 rounded-lg hover:bg-red-700"
 //               >
 //                 {submitting ? "Checking Out..." : "Check Out"}
 //               </button>
@@ -509,7 +509,7 @@
 //   };
 
 //   return (
-//     <div className="flex flex-col min-h-screen bg-[#111111] sm:flex-row">
+//     <div className="flex flex-col min-h-screen bg-gray-100 sm:flex-row">
 //       {/* Sidebar hidden on small screens */}
 //       <div className="hidden sm:block">
 //         <EmployeeSidebar />
@@ -518,27 +518,27 @@
 //       <div className="flex flex-col flex-1">
 //         <Navbar />
 //         <div className="flex flex-col items-center justify-center flex-1 p-4 sm:p-6">
-//           <div className="w-full max-w-lg p-6 text-center bg-[#0a0a0a] shadow-lg rounded-2xl sm:p-8">
-//             <h2 className="mb-6 text-2xl font-semibold text-gray-300 sm:text-3xl">
+//           <div className="w-full max-w-lg p-6 text-center bg-white shadow-lg rounded-2xl sm:p-8">
+//             <h2 className="mb-6 text-2xl font-semibold text-gray-700 sm:text-3xl">
 //               Attendance Capture
 //             </h2>
 
 //             {/* Back Button */}
 //             <button
 //               onClick={() => navigate("/employeedashboard")}
-//               className="w-full px-5 py-2 mb-5 text-white transition-all bg-blue-600 rounded-lg sm:w-auto hover:bg-blue-700"
+//               className="w-full px-5 py-2 mb-5 text-gray-900 transition-all bg-blue-600 rounded-lg sm:w-auto hover:bg-blue-700"
 //             >
 //               ← Back to Dashboard
 //             </button>
 
-//             <div className="p-4 mb-6 rounded-lg shadow-sm bg-[#000000]">
-//               <h3 className="mb-2 text-lg font-medium text-gray-300">
+//             <div className="p-4 mb-6 rounded-lg shadow-sm bg-gray-50">
+//               <h3 className="mb-2 text-lg font-medium text-gray-700">
 //                 Your Location
 //               </h3>
 
 //               <button
 //                 onClick={fetchLocation}
-//                 className="w-full px-5 py-2 text-white bg-green-600 rounded-lg sm:w-auto hover:bg-green-700"
+//                 className="w-full px-5 py-2 text-gray-900 bg-green-600 rounded-lg sm:w-auto hover:bg-green-700"
 //                 disabled={locStatus === "fetching"}
 //               >
 //                 {locStatus === "fetching"
@@ -547,7 +547,7 @@
 //               </button>
 
 //               {position && (
-//                 <div className="mt-3 text-sm text-gray-300 sm:text-base">
+//                 <div className="mt-3 text-sm text-gray-700 sm:text-base">
 //                   <p>Lat: {position.lat.toFixed(6)}</p>
 //                   <p>Lng: {position.lng.toFixed(6)}</p>
 //                   <p>
@@ -570,7 +570,7 @@
 //               <button
 //                 onClick={handleCheckIn}
 //                 disabled={submitting}
-//                 className="w-full py-3 text-lg font-semibold text-white bg-green-700 rounded-lg hover:bg-green-800"
+//                 className="w-full py-3 text-lg font-semibold text-gray-900 bg-green-700 rounded-lg hover:bg-green-800"
 //               >
 //                 {submitting ? "Checking In..." : "Check In"}
 //               </button>
@@ -578,7 +578,7 @@
 //               <button
 //                 onClick={handleCheckOut}
 //                 disabled={submitting}
-//                 className="w-full py-3 text-lg font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700"
+//                 className="w-full py-3 text-lg font-semibold text-gray-900 bg-red-600 rounded-lg hover:bg-red-700"
 //               >
 //                 {submitting ? "Checking Out..." : "Check Out"}
 //               </button>
@@ -752,7 +752,7 @@
 //   };
 
 //   return (
-//     <div className="flex min-h-screen bg-[#111111]">
+//     <div className="flex min-h-screen bg-gray-100">
 //       {/* Sidebar */}
 //       <EmployeeSidebar />
 
@@ -765,18 +765,18 @@
 //         <div className="max-w-lg p-6 mx-auto text-center">
 //           <h2 className="mb-6 text-2xl font-semibold">Attendance Capture</h2>
 
-//           <div className="p-4 mb-6 bg-[#0a0a0a] rounded-lg shadow-md">
+//           <div className="p-4 mb-6 bg-white rounded-lg shadow-md">
 //             <h3 className="mb-2 text-lg font-medium">Your Location</h3>
 //             <button
 //               onClick={fetchLocation}
-//               className="px-4 py-2 text-white bg-green-600 rounded"
+//               className="px-4 py-2 text-gray-900 bg-green-600 rounded"
 //               disabled={locStatus === "fetching"}
 //             >
 //               {locStatus === "fetching" ? "Fetching..." : "Get Current Location"}
 //             </button>
 
 //             {position && (
-//               <div className="mt-3 text-gray-300">
+//               <div className="mt-3 text-gray-700">
 //                 <p>Lat: {position.lat.toFixed(6)}</p>
 //                 <p>Lng: {position.lng.toFixed(6)}</p>
 //                 <p>
@@ -793,7 +793,7 @@
 //             <button
 //               onClick={handleCheckIn}
 //               disabled={submitting}
-//               className="w-full py-3 text-lg font-semibold text-white bg-green-700 rounded-lg"
+//               className="w-full py-3 text-lg font-semibold text-gray-900 bg-green-700 rounded-lg"
 //             >
 //               {submitting ? "Checking In..." : "Check In"}
 //             </button>
@@ -801,7 +801,7 @@
 //             <button
 //               onClick={handleCheckOut}
 //               disabled={submitting}
-//               className="w-full py-3 text-lg font-semibold text-white bg-red-600 rounded-lg"
+//               className="w-full py-3 text-lg font-semibold text-gray-900 bg-red-600 rounded-lg"
 //             >
 //               {submitting ? "Checking Out..." : "Check Out"}
 //             </button>
@@ -975,27 +975,27 @@
 //   };
 
 //   return (
-//     <div className="flex flex-col items-center min-h-screen p-4 bg-[#111111]">
+//     <div className="flex flex-col items-center min-h-screen p-4 bg-gray-100">
 //       <button
 //         onClick={() => navigate("/employeedashboard")}
-//         className="self-start mb-4 font-medium text-gray-300 hover:text-gray-200"
+//         className="self-start mb-4 font-medium text-gray-700 hover:text-gray-900"
 //       >
 //         ← Back
 //       </button>
 
-//       <div className="flex flex-col w-full max-w-md gap-4 p-6 bg-[#0a0a0a] shadow-lg rounded-xl">
+//       <div className="flex flex-col w-full max-w-md gap-4 p-6 bg-white shadow-lg rounded-xl">
 //         <h2 className="text-2xl font-semibold text-center">Attendance Capture</h2>
 
-//         <div className="flex flex-col gap-3 p-4 rounded-md bg-[#000000]">
+//         <div className="flex flex-col gap-3 p-4 rounded-md bg-gray-50">
 //           <button
 //             onClick={fetchLocation}
-//             className="px-4 py-2 text-white transition bg-green-600 rounded hover:bg-green-700"
+//             className="px-4 py-2 text-gray-900 transition bg-green-600 rounded hover:bg-green-700"
 //           >
 //             Get Current Location
 //           </button>
 
 //           {position && (
-//             <div className="text-gray-300">
+//             <div className="text-gray-700">
 //               <p>Lat: {position.lat.toFixed(6)}</p>
 //               <p>Lng: {position.lng.toFixed(6)}</p>
 //               <p>
@@ -1010,7 +1010,7 @@
 //           <button
 //             onClick={handleCheckIn}
 //             disabled={submitting || !position || !employeeId}
-//             className="w-full py-3 text-lg font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="w-full py-3 text-lg font-semibold text-gray-900 transition bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             {submitting ? "Checking In..." : "Check In"}
 //           </button>
@@ -1018,7 +1018,7 @@
 //           <button
 //             onClick={handleCheckOut}
 //             disabled={submitting || !position || !employeeId}
-//             className="w-full py-3 text-lg font-semibold text-white transition bg-red-600 rounded-lg hover:bg-red-700"
+//             className="w-full py-3 text-lg font-semibold text-gray-900 transition bg-red-600 rounded-lg hover:bg-red-700"
 //           >
 //             {submitting ? "Checking Out..." : "Check Out"}
 //           </button>
@@ -1192,27 +1192,27 @@
 //   };
 
 //   return (
-//     <div className="flex flex-col items-center min-h-screen p-4 bg-[#111111]">
+//     <div className="flex flex-col items-center min-h-screen p-4 bg-gray-100">
 //       <button
 //         onClick={() => navigate("/employeedashboard")}
-//         className="self-start mb-4 font-medium text-gray-300 hover:text-gray-200"
+//         className="self-start mb-4 font-medium text-gray-700 hover:text-gray-900"
 //       >
 //         ← Back
 //       </button>
 
-//       <div className="flex flex-col w-full max-w-md gap-4 p-6 bg-[#0a0a0a] shadow-lg rounded-xl">
+//       <div className="flex flex-col w-full max-w-md gap-4 p-6 bg-white shadow-lg rounded-xl">
 //         <h2 className="text-2xl font-semibold text-center">Attendance Capture</h2>
 
-//         <div className="flex flex-col gap-3 p-4 rounded-md bg-[#000000]">
+//         <div className="flex flex-col gap-3 p-4 rounded-md bg-gray-50">
 //           <button
 //             onClick={fetchLocation}
-//             className="px-4 py-2 text-white transition bg-green-600 rounded hover:bg-green-700"
+//             className="px-4 py-2 text-gray-900 transition bg-green-600 rounded hover:bg-green-700"
 //           >
 //             Get Current Location
 //           </button>
 
 //           {position && (
-//             <div className="text-gray-300">
+//             <div className="text-gray-700">
 //               <p>Lat: {position.lat.toFixed(6)}</p>
 //               <p>Lng: {position.lng.toFixed(6)}</p>
 //               <p>
@@ -1227,7 +1227,7 @@
 //           <button
 //             onClick={handleCheckIn}
 //             disabled={submitting || !position || !employeeId}
-//             className="w-full py-3 text-lg font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="w-full py-3 text-lg font-semibold text-gray-900 transition bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             {submitting ? "Checking In..." : "Check In"}
 //           </button>
@@ -1235,7 +1235,7 @@
 //           <button
 //             onClick={handleCheckOut}
 //             disabled={submitting || !position || !employeeId}
-//             className="w-full py-3 text-lg font-semibold text-white transition bg-red-600 rounded-lg hover:bg-red-700"
+//             className="w-full py-3 text-lg font-semibold text-gray-900 transition bg-red-600 rounded-lg hover:bg-red-700"
 //           >
 //             {submitting ? "Checking Out..." : "Check Out"}
 //           </button>
@@ -1424,15 +1424,15 @@
 //   };
 
 //   return (
-//     <div className="flex flex-col items-center min-h-screen p-4 bg-[#111111]">
+//     <div className="flex flex-col items-center min-h-screen p-4 bg-gray-100">
 //       {/* <button
 //         onClick={() => navigate("/employeedashboard")}
-//         className="self-start mb-4 font-medium text-gray-300 hover:text-gray-200"
+//         className="self-start mb-4 font-medium text-gray-700 hover:text-gray-900"
 //       >
 //         ← Back
 //       </button> */}
 
-//       <div className="flex flex-col w-full max-w-md gap-6 p-6 bg-[#0a0a0a] shadow-lg rounded-xl">
+//       <div className="flex flex-col w-full max-w-md gap-6 p-6 bg-white shadow-lg rounded-xl">
 //         <h2 className="text-2xl font-semibold text-center">Attendance Capture</h2>
 
 //         {employeeId && (
@@ -1456,10 +1456,10 @@
 //           <p className="text-red-600">{error}</p>
 //         )}
 
-//         <div className="p-4 rounded-md bg-[#000000]">
+//         <div className="p-4 rounded-md bg-gray-50">
 //           <button
 //             onClick={fetchLocation}
-//             className="px-4 py-2 text-white transition bg-green-600 rounded hover:bg-green-700"
+//             className="px-4 py-2 text-gray-900 transition bg-green-600 rounded hover:bg-green-700"
 //           >
 //             Get My Current Location
 //           </button>
@@ -1493,7 +1493,7 @@
 //         {/* Reason Dropdown */}
 //         {distance > ONSITE_RADIUS_M && (
 //           <div className="flex flex-col">
-//             <label className="mb-1 font-medium text-gray-300">
+//             <label className="mb-1 font-medium text-gray-700">
 //               Reason (required since you’re outside the assigned area):
 //             </label>
 //             <select
@@ -1512,7 +1512,7 @@
 //           <button
 //             onClick={handleCheckIn}
 //             disabled={submitting || !position || !employeeId}
-//             className={`w-full py-3 text-white rounded-lg text-lg font-semibold transition ${
+//             className={`w-full py-3 text-gray-900 rounded-lg text-lg font-semibold transition ${
 //               submitting || !position || !employeeId
 //                 ? "bg-gray-400 cursor-not-allowed"
 //                 : "bg-blue-600 hover:bg-blue-700"
@@ -1524,7 +1524,7 @@
 //           <button
 //             onClick={handleCheckOut}
 //             disabled={submitting || !position || !employeeId}
-//             className={`w-full py-3 text-white rounded-lg text-lg font-semibold transition ${
+//             className={`w-full py-3 text-gray-900 rounded-lg text-lg font-semibold transition ${
 //               submitting || !position || !employeeId
 //                 ? "bg-gray-400 cursor-not-allowed"
 //                 : "bg-red-600 hover:bg-red-700"
@@ -1787,8 +1787,8 @@
 //   };
 
 //   return (
-//     <div className="flex flex-col items-center min-h-screen p-2 bg-[#111111]">
-//       <div className="flex flex-col w-full max-w-md gap-2 p-2 bg-[#0a0a0a] shadow-lg rounded-xl">
+//     <div className="flex flex-col items-center min-h-screen p-2 bg-gray-100">
+//       <div className="flex flex-col w-full max-w-md gap-2 p-2 bg-white shadow-lg rounded-xl">
 //         <h2 className="text-3xl font-bold text-center">Attendance Capture</h2>
 
 //         {employeeId && (
@@ -1819,16 +1819,16 @@
 //         ) : (
 //           <div className="p-0 rounded-md bg-red-50">
 //             <p className="font-medium text-red-600">{error || "Location not found"}</p>
-//             <p className="mt-1 text-sm text-gray-400">
+//             <p className="mt-1 text-sm text-gray-500">
 //               Please contact admin to assign a location for your employee account.
 //             </p>
 //           </div>
 //         )}
 
-//         <div className="p-4 rounded-md bg-[#000000]">
+//         <div className="p-4 rounded-md bg-gray-50">
 //           <button
 //             onClick={fetchLocation}
-//             className={`bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition ${
+//             className={`bg-green-600 text-gray-900 px-4 py-2 rounded hover:bg-green-700 transition ${
 //               !assignedLocation ? "opacity-50 cursor-not-allowed" : ""
 //             }`}
 //             disabled={!assignedLocation}
@@ -1871,7 +1871,7 @@
 
 //         {distance > ONSITE_RADIUS_M && (
 //           <div className="flex flex-col">
-//             <label className="mb-1 font-medium text-gray-300">
+//             <label className="mb-1 font-medium text-gray-700">
 //               Reason (required since you're outside the assigned area):
 //             </label>
 //             <select
@@ -1890,7 +1890,7 @@
 //           <button
 //             onClick={handleCheckIn}
 //             disabled={submitting || !position || !employeeId || !assignedLocation}
-//             className={`w-full py-3 text-white rounded-lg text-lg font-semibold transition ${
+//             className={`w-full py-3 text-gray-900 rounded-lg text-lg font-semibold transition ${
 //               submitting || !position || !employeeId || !assignedLocation
 //                 ? "bg-gray-400 cursor-not-allowed"
 //                 : "bg-blue-600 hover:bg-blue-700"
@@ -1902,7 +1902,7 @@
 //           <button
 //             onClick={handleCheckOut}
 //             disabled={submitting || !position || !employeeId || !assignedLocation}
-//             className={`w-full py-3 text-white rounded-lg text-lg font-semibold transition ${
+//             className={`w-full py-3 text-gray-900 rounded-lg text-lg font-semibold transition ${
 //               submitting || !position || !employeeId || !assignedLocation
 //                 ? "bg-gray-400 cursor-not-allowed"
 //                 : "bg-red-600 hover:bg-red-700"
@@ -2344,9 +2344,9 @@
 //   return (
 //     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-0">
 //       {/* Header */}
-//       <div className="flex justify-between items-center p-2 bg-[#0a0a0a] shadow-sm">
+//       <div className="flex justify-between items-center p-2 bg-white shadow-sm">
 //         <div>
-//           <h1 className="text-xl font-bold text-gray-200">Attendance</h1>
+//           <h1 className="text-xl font-bold text-gray-900">Attendance</h1>
 //         </div>
 //         <div className="text-right">
 //           <div className="text-2xl font-bold text-blue-600">{currentTime}</div>
@@ -2358,19 +2358,19 @@
 //       <div className="p-3 max-w-md mx-auto">
 
 //         {/* Employee Info Card - Compact */}
-//         <div className="bg-[#0a0a0a] rounded-xl shadow-sm p-3 mb-2">
+//         <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
 //           <div className="flex items-center space-x-3">
 //             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-//               <span className="text-white font-bold">
+//               <span className="text-gray-900 font-bold">
 //                 {employeeName ? employeeName.charAt(0).toUpperCase() : "U"}
 //               </span>
 //             </div>
 //             <div className="flex-1 min-w-0">
 //               {employeeName && (
-//                 <h2 className="text-base font-bold text-gray-200 truncate">{employeeName}</h2>
+//                 <h2 className="text-base font-bold text-gray-900 truncate">{employeeName}</h2>
 //               )}
 //               {employeeId && (
-//                 <p className="text-xs text-gray-400">ID: {employeeId}</p>
+//                 <p className="text-xs text-gray-500">ID: {employeeId}</p>
 //               )}
 //               {employeeEmail && (
 //                 <p className="text-xs text-gray-500 truncate">{employeeEmail}</p>
@@ -2380,16 +2380,16 @@
 //         </div>
 
 //         {/* Location Card - Compact */}
-//         <div className="bg-[#0a0a0a] rounded-xl shadow-sm p-3 mb-2">
+//         <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
 //           <div className="flex justify-between items-center mb-2">
-//             <h3 className="text-sm font-semibold text-gray-200">Location Status</h3>
+//             <h3 className="text-sm font-semibold text-gray-900">Location Status</h3>
 //             <button
 //               onClick={() => setIsLocationModalOpen(true)}
 //               className="text-xs text-blue-600 hover:text-blue-800 font-medium"
 //             >
 //               Select Location
 //             </button>
-//             <div className={`px-2 py-1 rounded-full text-xs font-medium ${position ? 'bg-green-100 text-green-800' : 'bg-[#111111] text-gray-300'
+//             <div className={`px-2 py-1 rounded-full text-xs font-medium ${position ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'
 //               }`}>
 //               {position ? 'Captured ✓' : 'Required'}
 //             </div>
@@ -2397,8 +2397,8 @@
 
 //           {loadingLocation ? (
 //             <div className="animate-pulse">
-//               <div className="h-3 bg-[#1f2937] rounded w-3/4 mb-1"></div>
-//               <div className="h-3 bg-[#1f2937] rounded w-1/2"></div>
+//               <div className="h-3 bg-gray-200 rounded w-3/4 mb-1"></div>
+//               <div className="h-3 bg-gray-200 rounded w-1/2"></div>
 //             </div>
 //           ) : assignedLocation ? (
 //             <div>
@@ -2410,21 +2410,21 @@
 //                   </svg>
 //                 </div>
 //                 <div className="min-w-0">
-//                   <h4 className="text-sm font-medium text-gray-200 truncate">{assignedLocation.name}</h4>
-//                   <p className="text-xs text-gray-400">Assigned Location • Radius: {ONSITE_RADIUS_M}m</p>
+//                   <h4 className="text-sm font-medium text-gray-900 truncate">{assignedLocation.name}</h4>
+//                   <p className="text-xs text-gray-500">Assigned Location • Radius: {ONSITE_RADIUS_M}m</p>
 //                 </div>
 //               </div>
 
 //               {position && distance != null && (
-//                 <div className="mt-2 p-2 bg-[#000000] rounded-lg">
+//                 <div className="mt-2 p-2 bg-gray-50 rounded-lg">
 //                   <div className="flex justify-between items-center mb-1">
-//                     <span className="text-xs text-gray-300">Distance:</span>
+//                     <span className="text-xs text-gray-700">Distance:</span>
 //                     <span className={`text-sm font-bold ${distance <= ONSITE_RADIUS_M ? 'text-green-600' : 'text-red-600'
 //                       }`}>
 //                       {distance}m
 //                     </span>
 //                   </div>
-//                   <div className="h-1 bg-[#1f2937] rounded-full overflow-hidden">
+//                   <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
 //                     <div
 //                       className={`h-full ${distance <= ONSITE_RADIUS_M ? 'bg-green-500' : 'bg-red-500'
 //                         }`}
@@ -2441,10 +2441,10 @@
 //               <button
 //                 onClick={fetchLocation}
 //                 className={`w-full mt-2 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center space-x-1 transition ${!assignedLocation
-//                   ? 'bg-[#1f2937] text-gray-500 cursor-not-allowed'
+//                   ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
 //                   : position
-//                     ? 'bg-amber-500 hover:bg-amber-600 text-white'
-//                     : 'bg-blue-600 hover:bg-blue-700 text-white'
+//                     ? 'bg-amber-500 hover:bg-amber-600 text-gray-900'
+//                     : 'bg-blue-600 hover:bg-blue-700 text-gray-900'
 //                   }`}
 //                 disabled={!assignedLocation}
 //               >
@@ -2462,7 +2462,7 @@
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
 //                 </svg>
 //               </div>
-//               <p className="text-xs text-gray-300 mb-0.5">No location assigned</p>
+//               <p className="text-xs text-gray-700 mb-0.5">No location assigned</p>
 //               <p className="text-xs text-gray-500">Please contact admin</p>
 //             </div>
 //           )}
@@ -2470,12 +2470,12 @@
 
 //         {/* Reason Selection (if outside radius) - Compact */}
 //         {distance > ONSITE_RADIUS_M && (
-//           <div className="bg-[#0a0a0a] rounded-xl shadow-sm p-3 mb-2">
-//             <h3 className="text-sm font-semibold text-gray-200 mb-2">Reason Required</h3>
+//           <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
+//             <h3 className="text-sm font-semibold text-gray-900 mb-2">Reason Required</h3>
 //             <select
 //               value={reason}
 //               onChange={(e) => setReason(e.target.value)}
-//               className="w-full p-2 text-sm border border-[#374151] rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200 outline-none"
+//               className="w-full p-2 text-sm border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200 outline-none"
 //             >
 //               <option value="">-- Select Reason --</option>
 //               <option value="Field Work">Field Work</option>
@@ -2488,12 +2488,12 @@
 //         )}
 
 //         {/* Attendance Card - Compact */}
-//         <div className="bg-[#0a0a0a] rounded-xl shadow-sm p-3">
+//         <div className="bg-white rounded-xl shadow-sm p-3">
 //           {/* Status Header */}
 //           <div className="flex items-center justify-between mb-3">
 //             <div>
-//               <h3 className="text-sm font-semibold text-gray-200">Today's Attendance</h3>
-//               <p className="text-xs text-gray-400">
+//               <h3 className="text-sm font-semibold text-gray-900">Today's Attendance</h3>
+//               <p className="text-xs text-gray-500">
 //                 {checkedIn ? 'You are currently checked in' : 'Ready to check in'}
 //               </p>
 //             </div>
@@ -2505,7 +2505,7 @@
 
 //           {/* Swipe Instructions */}
 //           <div className="text-center mb-3">
-//             <p className="text-sm text-gray-300 font-medium">
+//             <p className="text-sm text-gray-700 font-medium">
 //               {!checkedIn
 //                 ? "Swipe right → to check in"
 //                 : "Swipe left ← to check out"
@@ -2535,14 +2535,14 @@
 
 //                   {/* Content */}
 //                   <div className="absolute inset-0 flex items-center justify-between px-3">
-//                     <div className="flex items-center gap-1 text-white">
+//                     <div className="flex items-center gap-1 text-gray-900">
 //                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
 //                       </svg>
 //                       <span className="text-sm font-bold">CHECK IN</span>
 //                     </div>
 
-//                     <div className="flex items-center gap-1 text-white">
+//                     <div className="flex items-center gap-1 text-gray-900">
 //                       <span className="text-xs">Swipe →</span>
 //                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
@@ -2564,14 +2564,14 @@
 
 //                   {/* Content */}
 //                   <div className="absolute inset-0 flex items-center justify-between px-3">
-//                     <div className="flex items-center gap-1 text-white">
+//                     <div className="flex items-center gap-1 text-gray-900">
 //                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
 //                       </svg>
 //                       <span className="text-xs">← Swipe</span>
 //                     </div>
 
-//                     <div className="flex items-center gap-1 text-white">
+//                     <div className="flex items-center gap-1 text-gray-900">
 //                       <span className="text-sm font-bold">CHECK OUT</span>
 //                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
@@ -2593,7 +2593,7 @@
 //             <div className="text-center py-2 mb-2">
 //               <div className="inline-flex items-center justify-center gap-1">
 //                 <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-//                 <span className="text-xs text-gray-300">
+//                 <span className="text-xs text-gray-700">
 //                   {!checkedIn ? "Processing Check In..." : "Processing Check Out..."}
 //                 </span>
 //               </div>
@@ -2602,7 +2602,7 @@
 
 //           {/* Status Message - Only when checked in and not submitting */}
 //           {checkedIn && !submitting && (
-//             <div className="text-center py-2 border-t border-[#1f2937]">
+//             <div className="text-center py-2 border-t border-gray-200">
 //               <div className="inline-flex flex-col items-center gap-0">
 //                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
 //                   <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
@@ -2618,13 +2618,13 @@
 //           )}
 
 //           {/* Simple Footer */}
-//           {/* <div className="text-center text-gray-500 text-xs mt-2 pt-2 border-t border-[#1f2937]">
+//           {/* <div className="text-center text-gray-500 text-xs mt-2 pt-2 border-t border-gray-200">
 //             <p>Swipe right to check in • Swipe left to check out</p>
 //           </div> */}
 //         </div>
 
 //         {/* Global Footer */}
-//         <div className="text-center text-gray-400 text-xs mt-2 pt-2 border-t border-[#1f2937]">
+//         <div className="text-center text-gray-500 text-xs mt-2 pt-2 border-t border-gray-200">
 //           <p>Make sure location is captured before checking in/out</p>
 //         </div>
 
@@ -2633,12 +2633,12 @@
 //       {/* Location Selection Modal */}
 //       {isLocationModalOpen && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-//           <div className="bg-[#0a0a0a] rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col animate-fade-in-up">
-//             <div className="p-4 border-b flex justify-between items-center bg-[#000000] rounded-t-2xl">
-//               <h3 className="text-lg font-bold text-gray-200">Select Site Location</h3>
+//           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col animate-fade-in-up">
+//             <div className="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+//               <h3 className="text-lg font-bold text-gray-900">Select Site Location</h3>
 //               <button
 //                 onClick={() => setIsLocationModalOpen(false)}
-//                 className="text-gray-400 hover:text-gray-400 p-1"
+//                 className="text-gray-500 hover:text-gray-500 p-1"
 //               >
 //                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -2646,17 +2646,17 @@
 //               </button>
 //             </div>
 
-//             <div className="p-4 bg-[#0a0a0a]">
+//             <div className="p-4 bg-white">
 //               <div className="relative mb-4">
 //                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-//                   <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+//                   <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 //                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 //                   </svg>
 //                 </span>
 //                 <input
 //                   type="text"
 //                   placeholder="Search site or address..."
-//                   className="block w-full pl-10 pr-3 py-2 border border-[#374151] rounded-xl leading-5 bg-[#0a0a0a] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all"
+//                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all"
 //                   value={searchQuery}
 //                   onChange={(e) => setSearchQuery(e.target.value)}
 //                   autoFocus
@@ -2669,20 +2669,20 @@
 //                     <div
 //                       key={loc._id}
 //                       onClick={() => handleSelectLocation(loc)}
-//                       className="p-3 border border-[#1f2937] rounded-xl hover:bg-blue-50 hover:border-blue-200 cursor-pointer transition-all flex items-start space-x-3 group"
+//                       className="p-3 border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 cursor-pointer transition-all flex items-start space-x-3 group"
 //                     >
-//                       <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors text-blue-600">
+//                       <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 group-hover:text-gray-900 transition-colors text-blue-600">
 //                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
 //                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
 //                         </svg>
 //                       </div>
 //                       <div className="flex-1 min-w-0">
-//                         <h4 className="text-sm font-bold text-gray-200 group-hover:text-blue-700 transition-colors truncate">{loc.name}</h4>
+//                         <h4 className="text-sm font-bold text-gray-900 group-hover:text-blue-700 transition-colors truncate">{loc.name}</h4>
 //                         <p className="text-xs text-gray-500 truncate mt-0.5">{loc.fullAddress || "No address provided"}</p>
 //                       </div>
 //                       <div className="flex-shrink-0 self-center">
-//                         <svg className="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                         <svg className="w-5 h-5 text-gray-700 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
 //                         </svg>
 //                       </div>
@@ -2696,7 +2696,7 @@
 //               </div>
 //             </div>
 
-//             <div className="p-4 bg-[#000000] border-t rounded-b-2xl">
+//             <div className="p-4 bg-gray-50 border-t rounded-b-2xl">
 //               <p className="text-xs text-gray-500 text-center">
 //                 Select a site to update your capture radius
 //               </p>
@@ -3344,9 +3344,9 @@ export default function AttendanceCapture() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-0">
       {/* Header */}
-      <div className="flex justify-between items-center p-2 bg-[#0a0a0a] shadow-sm">
+      <div className="flex justify-between items-center p-2 bg-white shadow-sm">
         <div>
-          <h1 className="text-xl font-bold text-gray-200">Attendance</h1>
+          <h1 className="text-xl font-bold text-gray-900">Attendance</h1>
         </div>
         <div className="text-right">
           <div className="text-2xl font-bold text-blue-600">{currentTime}</div>
@@ -3358,22 +3358,22 @@ export default function AttendanceCapture() {
       <div className="p-3 max-w-md mx-auto">
 
         {/* Employee Info Card - Compact */}
-        <div className="bg-[#0a0a0a] rounded-xl shadow-sm p-3 mb-2">
+        <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold">
+              <span className="text-gray-900 font-bold">
                 {employeeName ? employeeName.charAt(0).toUpperCase() : "U"}
               </span>
             </div>
             <div className="flex-1 min-w-0">
               {employeeName && (
-                <h2 className="text-base font-bold text-gray-200 truncate">{employeeName}</h2>
+                <h2 className="text-base font-bold text-gray-900 truncate">{employeeName}</h2>
               )}
               {employeeDepartment && (
                 <p className="text-xs text-purple-600 font-medium">{employeeDepartment}</p>
               )}
               {employeeId && (
-                <p className="text-xs text-gray-400">ID: {employeeId}</p>
+                <p className="text-xs text-gray-500">ID: {employeeId}</p>
               )}
               {employeeEmail && (
                 <p className="text-xs text-gray-500 truncate">{employeeEmail}</p>
@@ -3383,16 +3383,16 @@ export default function AttendanceCapture() {
         </div>
 
         {/* Location Card - Compact */}
-        <div className="bg-[#0a0a0a] rounded-xl shadow-sm p-3 mb-2">
+        <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="text-sm font-semibold text-gray-200">Location Status</h3>
+            <h3 className="text-sm font-semibold text-gray-900">Location Status</h3>
             <button
               onClick={() => setIsLocationModalOpen(true)}
               className="text-xs text-blue-600 hover:text-blue-800 font-medium"
             >
               Select Location
             </button>
-            <div className={`px-2 py-1 rounded-full text-xs font-medium ${position ? 'bg-green-100 text-green-800' : 'bg-[#111111] text-gray-300'
+            <div className={`px-2 py-1 rounded-full text-xs font-medium ${position ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'
               }`}>
               {position ? 'Captured ✓' : 'Required'}
             </div>
@@ -3400,8 +3400,8 @@ export default function AttendanceCapture() {
 
           {loadingLocation ? (
             <div className="animate-pulse">
-              <div className="h-3 bg-[#1f2937] rounded w-3/4 mb-1"></div>
-              <div className="h-3 bg-[#1f2937] rounded w-1/2"></div>
+              <div className="h-3 bg-gray-200 rounded w-3/4 mb-1"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
             </div>
           ) : assignedLocation ? (
             <div>
@@ -3413,21 +3413,21 @@ export default function AttendanceCapture() {
                   </svg>
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-sm font-medium text-gray-200 truncate">{assignedLocation.name || 'Unnamed Location'}</h4>
-                  <p className="text-xs text-gray-400">Assigned Location • Radius: {ONSITE_RADIUS_M}m</p>
+                  <h4 className="text-sm font-medium text-gray-900 truncate">{assignedLocation.name || 'Unnamed Location'}</h4>
+                  <p className="text-xs text-gray-500">Assigned Location • Radius: {ONSITE_RADIUS_M}m</p>
                 </div>
               </div>
 
               {position && distance != null && (
-                <div className="mt-2 p-2 bg-[#000000] rounded-lg">
+                <div className="mt-2 p-2 bg-gray-50 rounded-lg">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs text-gray-300">Distance:</span>
+                    <span className="text-xs text-gray-700">Distance:</span>
                     <span className={`text-sm font-bold ${distance <= ONSITE_RADIUS_M ? 'text-green-600' : 'text-red-600'
                       }`}>
                       {distance}m
                     </span>
                   </div>
-                  <div className="h-1 bg-[#1f2937] rounded-full overflow-hidden">
+                  <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
                     <div
                       className={`h-full ${distance <= ONSITE_RADIUS_M ? 'bg-green-500' : 'bg-red-500'
                         }`}
@@ -3447,10 +3447,10 @@ export default function AttendanceCapture() {
               <button
                 onClick={fetchLocation}
                 className={`w-full mt-2 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center space-x-1 transition ${!assignedLocation
-                  ? 'bg-[#1f2937] text-gray-500 cursor-not-allowed'
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                   : position
-                    ? 'bg-amber-500 hover:bg-amber-600 text-white'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    ? 'bg-amber-500 hover:bg-amber-600 text-gray-900'
+                    : 'bg-blue-600 hover:bg-blue-700 text-gray-900'
                   }`}
                 disabled={!assignedLocation}
               >
@@ -3468,14 +3468,14 @@ export default function AttendanceCapture() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                 </svg>
               </div>
-              <p className="text-xs text-gray-300 mb-0.5">No location assigned</p>
+              <p className="text-xs text-gray-700 mb-0.5">No location assigned</p>
               <p className="text-xs text-gray-500">Please contact admin</p>
               {error && (
                 <div className="mt-2">
                   <p className="text-xs text-red-500">{error}</p>
                   <button
                     onClick={() => window.location.reload()}
-                    className="mt-2 text-xs bg-blue-500 text-white px-2 py-1 rounded"
+                    className="mt-2 text-xs bg-blue-500 text-gray-900 px-2 py-1 rounded"
                   >
                     Retry
                   </button>
@@ -3487,12 +3487,12 @@ export default function AttendanceCapture() {
 
         {/* Reason Selection - Only show for non-onsite-only departments AND when outside radius */}
         {!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && (
-          <div className="bg-[#0a0a0a] rounded-xl shadow-sm p-3 mb-2">
-            <h3 className="text-sm font-semibold text-gray-200 mb-2">Reason Required</h3>
+          <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Reason Required</h3>
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full p-2 text-sm border border-[#374151] rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200 outline-none"
+              className="w-full p-2 text-sm border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200 outline-none"
             >
               <option value="">-- Select Reason --</option>
               <option value="Field Work">Field Work</option>
@@ -3521,12 +3521,12 @@ export default function AttendanceCapture() {
         )}
 
         {/* Attendance Card - Compact */}
-        <div className="bg-[#0a0a0a] rounded-xl shadow-sm p-3">
+        <div className="bg-white rounded-xl shadow-sm p-3">
           {/* Status Header */}
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-sm font-semibold text-gray-200">Today's Attendance</h3>
-              <p className="text-xs text-gray-400">
+              <h3 className="text-sm font-semibold text-gray-900">Today's Attendance</h3>
+              <p className="text-xs text-gray-500">
                 {checkedIn ? 'You are currently checked in' : 'Ready to check in'}
               </p>
             </div>
@@ -3538,7 +3538,7 @@ export default function AttendanceCapture() {
 
           {/* Swipe Instructions */}
           <div className="text-center mb-3">
-            <p className="text-sm text-gray-300 font-medium">
+            <p className="text-sm text-gray-700 font-medium">
               {!checkedIn
                 ? "Swipe right → to check in"
                 : "Swipe left ← to check out"
@@ -3568,14 +3568,14 @@ export default function AttendanceCapture() {
 
                   {/* Content */}
                   <div className="absolute inset-0 flex items-center justify-between px-3">
-                    <div className="flex items-center gap-1 text-white">
+                    <div className="flex items-center gap-1 text-gray-900">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                       </svg>
                       <span className="text-sm font-bold">CHECK IN</span>
                     </div>
 
-                    <div className="flex items-center gap-1 text-white">
+                    <div className="flex items-center gap-1 text-gray-900">
                       <span className="text-xs">Swipe →</span>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
@@ -3597,14 +3597,14 @@ export default function AttendanceCapture() {
 
                   {/* Content */}
                   <div className="absolute inset-0 flex items-center justify-between px-3">
-                    <div className="flex items-center gap-1 text-white">
+                    <div className="flex items-center gap-1 text-gray-900">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                       </svg>
                       <span className="text-xs">← Swipe</span>
                     </div>
 
-                    <div className="flex items-center gap-1 text-white">
+                    <div className="flex items-center gap-1 text-gray-900">
                       <span className="text-sm font-bold">CHECK OUT</span>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
@@ -3626,7 +3626,7 @@ export default function AttendanceCapture() {
             <div className="text-center py-2 mb-2">
               <div className="inline-flex items-center justify-center gap-1">
                 <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-xs text-gray-300">
+                <span className="text-xs text-gray-700">
                   {!checkedIn ? "Processing Check In..." : "Processing Check Out..."}
                 </span>
               </div>
@@ -3635,7 +3635,7 @@ export default function AttendanceCapture() {
 
           {/* Status Message - Only when checked in and not submitting */}
           {checkedIn && !submitting && (
-            <div className="text-center py-2 border-t border-[#1f2937]">
+            <div className="text-center py-2 border-t border-gray-200">
               <div className="inline-flex flex-col items-center gap-0">
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                   <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
@@ -3652,7 +3652,7 @@ export default function AttendanceCapture() {
         </div>
 
         {/* Global Footer */}
-        <div className="text-center text-gray-400 text-xs mt-2 pt-2 border-t border-[#1f2937]">
+        <div className="text-center text-gray-500 text-xs mt-2 pt-2 border-t border-gray-200">
           <p>Make sure location is captured before checking in/out</p>
           {isOnsiteOnlyDepartment && (
             <p className="text-xs text-blue-600 mt-1">
@@ -3666,12 +3666,12 @@ export default function AttendanceCapture() {
       {/* Location Selection Modal */}
       {isLocationModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-[#0a0a0a] rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col animate-fade-in-up">
-            <div className="p-4 border-b flex justify-between items-center bg-[#000000] rounded-t-2xl">
-              <h3 className="text-lg font-bold text-gray-200">Select Site Location</h3>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col animate-fade-in-up">
+            <div className="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+              <h3 className="text-lg font-bold text-gray-900">Select Site Location</h3>
               <button
                 onClick={() => setIsLocationModalOpen(false)}
-                className="text-gray-400 hover:text-gray-400 p-1"
+                className="text-gray-500 hover:text-gray-500 p-1"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -3679,17 +3679,17 @@ export default function AttendanceCapture() {
               </button>
             </div>
 
-            <div className="p-4 bg-[#0a0a0a]">
+            <div className="p-4 bg-white">
               <div className="relative mb-4">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </span>
                 <input
                   type="text"
                   placeholder="Search site or address..."
-                  className="block w-full pl-10 pr-3 py-2 border border-[#374151] rounded-xl leading-5 bg-[#0a0a0a] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   autoFocus
@@ -3702,20 +3702,20 @@ export default function AttendanceCapture() {
                     <div
                       key={loc._id}
                       onClick={() => handleSelectLocation(loc)}
-                      className="p-3 border border-[#1f2937] rounded-xl hover:bg-blue-50 hover:border-blue-200 cursor-pointer transition-all flex items-start space-x-3 group"
+                      className="p-3 border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 cursor-pointer transition-all flex items-start space-x-3 group"
                     >
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors text-blue-600">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 group-hover:text-gray-900 transition-colors text-blue-600">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-bold text-gray-200 group-hover:text-blue-700 transition-colors truncate">{loc.name}</h4>
+                        <h4 className="text-sm font-bold text-gray-900 group-hover:text-blue-700 transition-colors truncate">{loc.name}</h4>
                         <p className="text-xs text-gray-500 truncate mt-0.5">{loc.fullAddress || "No address provided"}</p>
                       </div>
                       <div className="flex-shrink-0 self-center">
-                        <svg className="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-gray-700 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                         </svg>
                       </div>
@@ -3729,7 +3729,7 @@ export default function AttendanceCapture() {
               </div>
             </div>
 
-            <div className="p-4 bg-[#000000] border-t rounded-b-2xl">
+            <div className="p-4 bg-gray-50 border-t rounded-b-2xl">
               <p className="text-xs text-gray-500 text-center">
                 Select a site to update your capture radius
               </p>

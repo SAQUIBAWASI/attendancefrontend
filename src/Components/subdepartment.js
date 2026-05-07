@@ -73,7 +73,7 @@ const SubDepartmentList = () => {
   };
 
   return (
-    <div className="p-6 bg-[#111111] min-h-screen">
+    <div className="p-6 bg-gray-100 min-h-screen">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Sub Department List</h2>
         <button 
@@ -85,10 +85,10 @@ const SubDepartmentList = () => {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto bg-[#0a0a0a] p-4 rounded-lg shadow-md">
+      <div className="overflow-x-auto bg-white p-4 rounded-lg shadow-md">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-[#1f2937] text-left">
+            <tr className="bg-gray-200 text-left">
               <th className="p-2">Sl</th>
               <th className="p-2">Sub Department Name</th>
               <th className="p-2">Department Name</th>
@@ -124,7 +124,7 @@ const SubDepartmentList = () => {
       {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-[#0a0a0a] p-6 rounded-lg shadow-lg w-96">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-lg font-semibold mb-4">{isEditing ? "Edit" : "Add"} Sub Department</h2>
             <form onSubmit={handleSubmit}>
               <div className="mb-2">

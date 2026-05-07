@@ -14,7 +14,7 @@
 //   };
 
 //   return (
-//     <nav className="bg-[#000000] border-b border-[#1f2937] text-gray-200 sticky top-0 w-full h-16 px-4 flex items-center  z-50">
+//     <nav className="bg-blue-600 border-b border-gray-200 text-white sticky top-0 w-full h-16 px-4 flex items-center  z-50">
 //       {/* Sidebar Toggle Button */}
 //       <button onClick={handleToggle} className="text-2xl p-2 focus:outline-none">
 //         {isCollapsed ? (
@@ -39,7 +39,7 @@
 //           alt="Logo"
 //           className="w-[38px] h-auto rounded-full"
 //         />
-//         <span className="hidden sm:block text-gray-200 font-bold text-lg">
+//         <span className="hidden sm:block text-white font-bold text-lg">
 //           Attendance
 //         </span>
 //       </div>
@@ -105,22 +105,22 @@
 //   };
 
 //   return (
-//     <nav className="bg-[#000000] border-b border-[#1f2937] text-gray-200 sticky top-0 w-full h-14 px-4 flex items-center justify-between  z-40">
+//     <nav className="bg-blue-600 border-b border-gray-200 text-white sticky top-0 w-full h-14 px-4 flex items-center justify-between  z-40">
 //       <div className="flex items-center gap-4">
 //         {/* Menu Button */}
 //         <button
 //           onClick={handleMenuClick}
-//           className="text-2xl p-2 rounded-md hover:bg-[#111111] border border-[#1f2937] text-emerald-400 transition"
+//           className="text-2xl p-2 rounded-md hover:bg-blue-500 border border-gray-200 text-white transition"
 //         >
 //           {isCollapsed ? (
-//             <RiMenu2Line className="text-gray-200" />
+//             <RiMenu2Line className="text-white" />
 //           ) : (
-//             <RiMenu3Line className="text-gray-200" />
+//             <RiMenu3Line className="text-white" />
 //           )}
 //         </button>
 
 //         {/* Page Title */}
-//         <div className="bg-[#111111] border border-[#1f2937] text-emerald-400 px-3 py-1 rounded-md">
+//         <div className="bg-blue-500 border border-gray-200 text-white px-3 py-1 rounded-md">
 //           <span className="font-semibold text-sm md:text-base">
 //             {titles[location.pathname] || "Employee Dashboard"}
 //           </span>
@@ -136,11 +136,11 @@
 //             navigate("/emp-notifications");
 //             setUnreadCount(0);
 //           }}
-//           className="relative p-2 transition rounded-full hover:bg-[#111111] border border-[#1f2937] text-emerald-400"
+//           className="relative p-2 transition rounded-full hover:bg-blue-500 border border-gray-200 text-white"
 //         >
-//           <MdNotificationsNone className="text-2xl text-gray-200" />
+//           <MdNotificationsNone className="text-2xl text-white" />
 //           {unreadCount > 0 && (
-//             <span className="absolute flex items-center justify-center w-4 h-4 text-xs font-bold text-gray-200 bg-red-500 rounded-full -top-1 -right-1">
+//             <span className="absolute flex items-center justify-center w-4 h-4 text-xs font-bold text-white bg-red-500 rounded-full -top-1 -right-1">
 //               {unreadCount}
 //             </span>
 //           )}
@@ -308,22 +308,22 @@
 //   };
 
 //   return (
-//     <nav className="bg-[#000000] border-b border-[#1f2937] text-gray-200 sticky top-0 w-full h-14 px-4 flex items-center justify-between  z-40">
+//     <nav className="bg-blue-600 border-b border-gray-200 text-white sticky top-0 w-full h-14 px-4 flex items-center justify-between  z-40">
 //       <div className="flex items-center gap-4">
 //         {/* Menu Button */}
 //         <button
 //           onClick={handleMenuClick}
-//           className="text-2xl p-2 rounded-md hover:bg-[#111111] border border-[#1f2937] text-emerald-400 transition"
+//           className="text-2xl p-2 rounded-md hover:bg-blue-500 border border-gray-200 text-white transition"
 //         >
 //           {isCollapsed ? (
-//             <RiMenu2Line className="text-gray-200" />
+//             <RiMenu2Line className="text-white" />
 //           ) : (
-//             <RiMenu3Line className="text-gray-200" />
+//             <RiMenu3Line className="text-white" />
 //           )}
 //         </button>
 
 //         {/* Page Title */}
-//         <div className="bg-[#111111] border border-[#1f2937] text-emerald-400 px-3 py-1 rounded-md">
+//         <div className="bg-blue-500 border border-gray-200 text-white px-3 py-1 rounded-md">
 //           <span className="font-semibold text-sm md:text-base">
 //             {titles[location.pathname] || "Employee Dashboard"}
 //           </span>
@@ -335,20 +335,20 @@
 //         {/* 🔔 Notification Bell with real-time count */}
 //         <button
 //           onClick={handleNotificationClick}
-//           className="relative p-2 transition rounded-full hover:bg-[#111111] border border-[#1f2937] text-emerald-400"
+//           className="relative p-2 transition rounded-full hover:bg-blue-500 border border-gray-200 text-white"
 //           title="Notifications"
 //           disabled={isLoading}
 //         >
-//           <MdNotificationsNone className="text-2xl text-gray-200" />
+//           <MdNotificationsNone className="text-2xl text-white" />
 
 //           {!isLoading && unreadCount > 0 && (
-//             <span className="absolute flex items-center justify-center w-5 h-5 text-xs font-bold text-gray-200 bg-red-500 rounded-full -top-1 -right-1 animate-pulse">
+//             <span className="absolute flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full -top-1 -right-1 animate-pulse">
 //               {unreadCount > 99 ? "99+" : unreadCount}
 //             </span>
 //           )}
 
 //           {isLoading && (
-//             <span className="absolute flex items-center justify-center w-4 h-4 text-xs font-bold text-gray-200 bg-blue-500 rounded-full -top-1 -right-1">
+//             <span className="absolute flex items-center justify-center w-4 h-4 text-xs font-bold text-white bg-blue-500 rounded-full -top-1 -right-1">
 //               ...
 //             </span>
 //           )}
@@ -504,16 +504,16 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
   };
 
   return (
-    <nav className="bg-[#000000] border-b border-[#1f2937] text-gray-200 sticky top-0 w-full h-14 px-4 flex items-center justify-between  z-40">
+    <nav className="bg-blue-600 border-b border-gray-200 text-white sticky top-0 w-full h-14 px-4 flex items-center justify-between  z-40">
       <div className="flex items-center gap-4">
         <button
           onClick={handleMenuClick}
-          className="text-2xl p-2 rounded-md hover:bg-[#111111] border border-[#1f2937] text-emerald-400 transition"
+          className="text-2xl p-2 rounded-md hover:bg-blue-500 border border-gray-200 text-white transition"
         >
           {isCollapsed ? <RiMenu2Line /> : <RiMenu3Line />}
         </button>
 
-        <div className="bg-[#111111] border border-[#1f2937] text-emerald-400 px-3 py-1 rounded-md">
+        <div className="bg-blue-500 border border-gray-200 text-white px-3 py-1 rounded-md">
           <span className="font-semibold text-sm md:text-base">
             {getPageTitle()}
           </span>
@@ -523,12 +523,12 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
       <div className="flex items-center gap-4">
         <button
           onClick={handleNotificationClick}
-          className="relative p-2 transition rounded-full hover:bg-[#111111] border border-[#1f2937] text-emerald-400"
+          className="relative p-2 transition rounded-full hover:bg-blue-500 border border-gray-200 text-white"
           disabled={isLoading}
         >
-          <MdNotificationsNone className="text-2xl text-gray-200" />
+          <MdNotificationsNone className="text-2xl text-white" />
           {!isLoading && unreadCount > 0 && (
-            <span className="absolute flex items-center justify-center w-5 h-5 text-xs font-bold text-gray-200 bg-red-500 rounded-full -top-1 -right-1 animate-pulse">
+            <span className="absolute flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full -top-1 -right-1 animate-pulse">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}

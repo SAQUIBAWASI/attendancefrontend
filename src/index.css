@@ -7,24 +7,41 @@
 @layer base {
   html {
     @apply antialiased;
+    scroll-behavior: smooth;
   }
 
   body {
-    @apply text-sm font-sans overflow-x-hidden pt-0 m-0;
+    @apply text-sm font-sans overflow-x-hidden pt-0 m-0 text-gray-900 bg-slate-50;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
 
+  /* Global Sleek Table Styles */
+  table {
+    @apply w-full text-left border-collapse bg-white shadow-sm rounded-lg overflow-hidden;
+  }
+  
+  thead {
+    @apply bg-emerald-500 text-white;
+  }
+  
+  th {
+    @apply px-4 py-3 text-[13px] font-semibold tracking-wide uppercase border-b border-emerald-600 whitespace-nowrap;
+  }
+  
+  td {
+    @apply px-4 py-3 text-[13px] text-gray-700 border-b border-gray-100 whitespace-nowrap transition-colors;
+  }
+  
+  tbody tr {
+    @apply bg-white hover:bg-emerald-50/50 transition-colors;
+  }
 
   /* Button Base Styles */
   button {
     @apply text-sm font-medium transition-all duration-200;
   }
-}
-
-html {
-  scroll-behavior: smooth;
 }
 
 ::selection {
@@ -34,25 +51,17 @@ html {
 
 /* Custom scrollbar to match sleek design */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: black; 
+  background: #f1f5f9; 
 }
 ::-webkit-scrollbar-thumb {
-  background: #333; 
-  border-radius: 5px;
+  background: #cbd5e1; 
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #555; 
-}
-
-/* For beautiful large text highlights */
-.text-gradient {
-  background: linear-gradient(to right, #ffffff, #a1a1a6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  background: #94a3b8; 
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -64,99 +73,52 @@ html {
 }
 
 @layer components {
-  /* Primary Button - adjusted for dark background */
+  /* Primary Button */
   .btn-primary {
     @apply bg-blue-600 text-white hover:bg-blue-700 
-           focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black
-           disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed
+           focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+           disabled:bg-gray-300 disabled:cursor-not-allowed
            px-4 py-2 rounded-lg;
   }
   
-  /* Secondary Button - adjusted for dark background */
+  /* Secondary Button */
   .btn-secondary {
-    @apply bg-gray-800 text-gray-200 hover:bg-gray-700
-           focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-black
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300
+           focus:ring-2 focus:ring-gray-400
            px-4 py-2 rounded-lg;
   }
   
-  /* Outline Button - adjusted for dark background */
+  /* Outline Button */
   .btn-outline {
-    @apply border border-gray-700 bg-black text-gray-300 
-           hover:bg-gray-900 hover:border-gray-500 hover:text-white
-           focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-black
+    @apply border border-gray-300 bg-white text-gray-700 
+           hover:bg-gray-50 hover:border-gray-400
+           focus:ring-2 focus:ring-gray-500
            px-4 py-2 rounded-lg;
   }
   
-  /* Ghost Button - adjusted for dark background */
+  /* Ghost Button */
   .btn-ghost {
-    @apply text-gray-400 hover:text-white hover:bg-gray-800
-           focus:ring-2 focus:ring-gray-700 focus:ring-offset-2 focus:ring-offset-black
+    @apply text-gray-600 hover:text-gray-900 hover:bg-gray-100
+           focus:ring-2 focus:ring-gray-300
            px-3 py-2 rounded-lg;
   }
   
   /* Danger/Delete Button */
   .btn-danger {
-    @apply bg-red-600 text-white hover:bg-red-700
-           focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black
+    @apply bg-red-500 text-white hover:bg-red-600
+           focus:ring-2 focus:ring-red-500
            px-4 py-2 rounded-lg;
   }
   
   /* Icon Button */
   .btn-icon {
-    @apply p-2 text-gray-400 hover:text-white 
-           hover:bg-gray-800 rounded-full
-           focus:ring-2 focus:ring-gray-700 focus:ring-offset-2 focus:ring-offset-black;
+    @apply p-2 text-gray-600 hover:text-blue-600 
+           hover:bg-blue-50 rounded-full
+           focus:ring-2 focus:ring-blue-200;
   }
   
   /* Icon + Text Button */
   .btn-with-icon {
     @apply inline-flex items-center gap-2;
   }
-}
-
-/* ========================================================= */
-/* STRICT TABLE DARK THEME FOR DASHBOARD */
-/* ========================================================= */
-
-/* Force ALL tables to have a strictly dark theme without alternating white rows */
-table {
-  background-color: #0a0a0a !important;
-  color: #d1d5db !important;
-}
-table thead, table thead th {
-  background-image: none !important;
-  background-color: #1f2937 !important; /* Solid dark gray header */
-  color: #f3f4f6 !important;
-  border-bottom: 1px solid #374151 !important;
-}
-table tbody tr {
-  background-color: #000000 !important; /* Pure black rows */
-  color: #d1d5db !important;
-  border-bottom: 1px solid #1f2937 !important;
-}
-table tbody tr:nth-child(even) {
-  background-color: #0a0a0a !important; /* Very dark gray for alternate row, NO WHITE */
-}
-table tbody tr:hover {
-  background-color: #111827 !important; /* Dark hover effect */
-}
-table tbody td {
-  background-color: transparent !important;
-  color: inherit !important;
-}
-
-/* ========================================================= */
-/* FIX NATIVE DATE/TIME ICONS FOR DARK THEME */
-/* ========================================================= */
-input[type="date"],
-input[type="month"],
-input[type="time"],
-input[type="datetime-local"] {
-  color-scheme: dark;
-}
-
-/* Force webkit calendar indicator to be white */
-::-webkit-calendar-picker-indicator {
-  filter: invert(1) brightness(100) !important;
-  cursor: pointer;
 }

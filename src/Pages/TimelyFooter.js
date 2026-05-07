@@ -116,7 +116,7 @@ const TimelyFooter = () => {
           </div>
         </div>
 
-        <div className="pt-8 mt-8 text-center border-t border-gray-800">
+        <div className="pt-8 mt-8 text-center border-t border-gray-200">
           <p className="text-gray-500">
             © 2024 Timely Health. All rights reserved. | Trusted Healthcare, Just Around the Corner.
           </p>

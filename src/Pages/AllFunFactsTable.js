@@ -68,7 +68,7 @@ const AllFunFactsTable = () => {
   };
 
   return (
-    <div className="p-6 bg-[#0a0a0a] rounded shadow-md max-w-6xl mx-auto">
+    <div className="p-6 bg-white rounded shadow-md max-w-6xl mx-auto">
       <h1 className="text-xl font-semibold mb-4 text-purple-800">All Fun Facts</h1>
 
       <div className="flex justify-between mb-4">
@@ -92,10 +92,10 @@ const AllFunFactsTable = () => {
             <option>100</option>
             <option>500</option>
           </select>
-          <button onClick={() => exportData('csv')} className="bg-[#1f2937] px-3 py-1 rounded">
+          <button onClick={() => exportData('csv')} className="bg-gray-200 px-3 py-1 rounded">
             CSV
           </button>
-          <button onClick={() => exportData('xlsx')} className="bg-[#1f2937] px-3 py-1 rounded">
+          <button onClick={() => exportData('xlsx')} className="bg-gray-200 px-3 py-1 rounded">
             Excel
           </button>
         </div>
@@ -108,7 +108,7 @@ const AllFunFactsTable = () => {
       ) : (
         <>
           <table className="w-full border-collapse border text-sm mb-4">
-            <thead className="bg-[#1f2937]">
+            <thead className="bg-gray-200">
               <tr>
                 <th className="border p-2">#</th>
                 <th className="border p-2">Fact</th>
@@ -124,7 +124,7 @@ const AllFunFactsTable = () => {
                 </tr>
               ) : (
                 pageItems.map((f, idx) => (
-                  <tr key={f._id} className="odd:bg-[#0a0a0a] even:bg-[#111111]">
+                  <tr key={f._id} className="odd:bg-white even:bg-gray-100">
                     <td className="border p-2">{start + idx + 1}</td>
                     <td className="border p-2">{f.fact}</td>
                     <td className="border p-2">{f.source}</td>
@@ -157,7 +157,7 @@ const AllFunFactsTable = () => {
                 key={i}
                 onClick={() => setCurrentPage(i + 1)}
                 className={`px-3 py-1 rounded ${
-                  currentPage === i + 1 ? 'bg-purple-500 text-white' : 'bg-[#1f2937]'
+                  currentPage === i + 1 ? 'bg-purple-500 text-white' : 'bg-gray-200'
                 }`}
               >
                 {i + 1}

@@ -18,12 +18,12 @@
 //   }, []);
 
 //   return (
-//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-[#0a0a0a] rounded-lg shadow-md">
+//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-white rounded-lg shadow-md">
 //       <h1 className="mb-6 text-3xl font-bold text-center">Approved Leaves Report</h1>
 
 //       <div className="overflow-x-auto">
-//         <table className="min-w-full text-sm border border-[#374151]">
-//           <thead className="text-gray-300 bg-[#111111]">
+//         <table className="min-w-full text-sm border border-gray-300">
+//           <thead className="text-gray-700 bg-gray-100">
 //             <tr>
 //               <th className="px-4 py-2 border">Employee</th>
 //               <th className="px-4 py-2 border">Leave Type</th>
@@ -37,7 +37,7 @@
 //           <tbody>
 //             {approvedLeaves.length > 0 ? (
 //               approvedLeaves.map((l) => (
-//                 <tr key={l._id} className="border-b hover:bg-[#000000]">
+//                 <tr key={l._id} className="border-b hover:bg-gray-50">
 //                   <td className="px-4 py-2 font-medium">{l.employeeName}</td>
 //                   <td className="px-4 py-2 capitalize">{l.leaveType}</td>
 //                   <td className="px-4 py-2">
@@ -96,12 +96,12 @@
 //   }, []);
 
 //   return (
-//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-[#0a0a0a] rounded-lg shadow-md">
+//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-white rounded-lg shadow-md">
 //       <h1 className="mb-6 text-3xl font-bold text-center">Approved Leaves Report</h1>
 
 //       <div className="overflow-x-auto">
-//         <table className="min-w-full text-sm border border-[#374151]">
-//           <thead className="text-gray-300 bg-[#111111]">
+//         <table className="min-w-full text-sm border border-gray-300">
+//           <thead className="text-gray-700 bg-gray-100">
 //             <tr>
 //               <th className="px-4 py-2 border">Employee</th>
 //               <th className="px-4 py-2 border">Leave Type</th>
@@ -114,7 +114,7 @@
 //           <tbody>
 //             {approvedLeaves.length > 0 ? (
 //               approvedLeaves.map((l) => (
-//                 <tr key={l._id} className="border-b hover:bg-[#000000]">
+//                 <tr key={l._id} className="border-b hover:bg-gray-50">
 //                   <td className="px-4 py-2 font-medium">{l.employeeName}</td>
 //                   <td className="px-4 py-2 capitalize">{l.leaveType}</td>
 //                   <td className="px-4 py-2">{new Date(l.startDate).toLocaleDateString()}</td>
@@ -193,7 +193,7 @@
 //   };
 
 //   return (
-//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-[#0a0a0a] rounded-lg shadow-md">
+//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-white rounded-lg shadow-md">
 //       <div className="flex items-center justify-between mb-6">
 //         <h1 className="text-3xl font-bold">Approved Leave Requests</h1>
 //         <button
@@ -205,8 +205,8 @@
 //       </div>
 
 //       <div className="overflow-x-auto">
-//         <table className="min-w-full text-sm border border-[#374151]">
-//           <thead className="text-gray-300 bg-[#111111]">
+//         <table className="min-w-full text-sm border border-gray-300">
+//           <thead className="text-gray-700 bg-gray-100">
 //             <tr>
 //               <th className="px-4 py-2 border">Employee</th>
 //               <th className="px-4 py-2 border">Leave Type</th>
@@ -219,7 +219,7 @@
 //           <tbody>
 //             {approvedLeaves.length > 0 ? (
 //               approvedLeaves.map((l) => (
-//                 <tr key={l._id} className="border-b hover:bg-[#000000]">
+//                 <tr key={l._id} className="border-b hover:bg-gray-50">
 //                   <td className="px-4 py-2 font-medium">{l.employeeName}</td>
 //                   <td className="px-4 py-2 capitalize">{l.leaveType}</td>
 //                   <td className="px-4 py-2">
@@ -330,7 +330,7 @@
 //   };
 
 //   return (
-//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-[#0a0a0a] rounded-lg shadow-md">
+//     <div className="max-w-6xl p-6 mx-auto mt-6 bg-white rounded-lg shadow-md">
 //       {/* Header Section */}
 //       <div className="flex flex-col items-center justify-between gap-4 mb-6 md:flex-row">
 //         <h1 className="text-3xl font-bold">Approved Leave Requests</h1>
@@ -341,7 +341,7 @@
 //             type="month"
 //             value={selectedMonth}
 //             onChange={handleMonthChange}
-//             className="px-3 py-2 border border-[#374151] rounded focus:outline-none focus:ring focus:ring-green-200"
+//             className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-green-200"
 //           />
 //           <button
 //             onClick={downloadCSV}
@@ -353,7 +353,7 @@
 //       </div>
 
 //       {/* ✅ Total Leaves Info */}
-//       <div className="mb-4 text-lg font-semibold text-gray-300">
+//       <div className="mb-4 text-lg font-semibold text-gray-700">
 //         Total Approved Leaves:{" "}
 //         <span className="text-green-700">{filteredLeaves.length}</span>
 //         {selectedMonth && (
@@ -365,8 +365,8 @@
 
 //       {/* ✅ Table */}
 //       <div className="overflow-x-auto">
-//         <table className="min-w-full text-sm border border-[#374151]">
-//           <thead className="text-gray-300 bg-[#111111]">
+//         <table className="min-w-full text-sm border border-gray-300">
+//           <thead className="text-gray-700 bg-gray-100">
 //             <tr>
 //               <th className="px-4 py-2 border">Employee</th>
 //               <th className="px-4 py-2 border">Leave Type</th>
@@ -379,7 +379,7 @@
 //           <tbody>
 //             {filteredLeaves.length > 0 ? (
 //               filteredLeaves.map((l) => (
-//                 <tr key={l._id} className="border-b hover:bg-[#000000]">
+//                 <tr key={l._id} className="border-b hover:bg-gray-50">
 //                   <td className="px-4 py-2 font-medium">{l.employeeName}</td>
 //                   <td className="px-4 py-2 capitalize">{l.leaveType}</td>
 //                   <td className="px-4 py-2">
@@ -535,7 +535,7 @@
 //   }, [approvedLeaves]);
 
 //   return (
-//     <div className="p-6 mx-auto mt-6 bg-[#0a0a0a] rounded-lg shadow-md max-w-7xl">
+//     <div className="p-6 mx-auto mt-6 bg-white rounded-lg shadow-md max-w-7xl">
 
 //       <div className="grid grid-cols-3 gap-2 mb-4">
 
@@ -576,13 +576,13 @@
 //             type="month"
 //             value={selectedMonth}
 //             onChange={(e) => setSelectedMonth(e.target.value)}
-//             className="px-3 py-2 border border-[#374151] rounded focus:outline-none focus:ring focus:ring-green-200"
+//             className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-green-200"
 //           />
 
 //           <select
 //             value={selectedEmployee}
 //             onChange={(e) => setSelectedEmployee(e.target.value)}
-//             className="px-3 py-2 border border-[#374151] rounded"
+//             className="px-3 py-2 border border-gray-300 rounded"
 //           >
 //             <option value="">All Employees</option>
 //             {employees.map((name) => (
@@ -595,7 +595,7 @@
 //           <select
 //             value={selectedType}
 //             onChange={(e) => setSelectedType(e.target.value)}
-//             className="px-3 py-2 border border-[#374151] rounded"
+//             className="px-3 py-2 border border-gray-300 rounded"
 //           >
 //             <option value="">All Leave Types</option>
 //             {leaveTypes.map((t) => (
@@ -617,17 +617,17 @@
 //       {/* ✅ Stats Summary */}
 //       {/* <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-3">
 //         <div className="p-4 text-center rounded-lg shadow bg-green-50">
-//           <p className="text-sm text-gray-400">Total Approved Leaves</p>
+//           <p className="text-sm text-gray-500">Total Approved Leaves</p>
 //           <h2 className="text-2xl font-bold text-green-700">{filteredLeaves.length}</h2>
 //         </div>
 
 //         <div className="p-4 text-center rounded-lg shadow bg-blue-50">
-//           <p className="text-sm text-gray-400">Total Employees</p>
+//           <p className="text-sm text-gray-500">Total Employees</p>
 //           <h2 className="text-2xl font-bold text-blue-700">{employees.length}</h2>
 //         </div>
 
 //         <div className="p-4 text-center rounded-lg shadow bg-yellow-50">
-//           <p className="text-sm text-gray-400">Leave Types</p>
+//           <p className="text-sm text-gray-500">Leave Types</p>
 //           <h2 className="text-2xl font-bold text-yellow-700">{leaveTypes.length}</h2>
 //         </div>
 //       </div> */}
@@ -665,8 +665,8 @@
 
 
 //       {/* ✅ Bar Chart */}
-//       {/* <div className="p-4 mb-8 rounded-lg shadow bg-[#000000]">
-//         <h2 className="mb-4 text-xl font-semibold text-gray-300">
+//       {/* <div className="p-4 mb-8 rounded-lg shadow bg-gray-50">
+//         <h2 className="mb-4 text-xl font-semibold text-gray-700">
 //           📊 Who Took the Most Leaves
 //         </h2>
 //         {leaveCountData.length > 0 ? (
@@ -685,7 +685,7 @@
 //       </div> */}
 //       {/* <h1 className="text-3xl font-bold">Approved Leave Reports</h1> <br/> */}
 //       {/* ✅ Leave Table */}
-//       <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//       <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //         <table className="min-w-full">
 //           <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
 //             <tr>
@@ -700,7 +700,7 @@
 //           <tbody>
 //             {filteredLeaves.length > 0 ? (
 //               filteredLeaves.map((l) => (
-//                 <tr key={l._id} className="border-b hover:bg-[#000000]">
+//                 <tr key={l._id} className="border-b hover:bg-gray-50">
 //                   <td className="px-4 py-2 font-medium">{l.employeeName}</td>
 //                   <td className="px-4 py-2 capitalize">{l.leaveType}</td>
 //                   <td className="px-4 py-2">{new Date(l.startDate).toLocaleDateString()}</td>
@@ -720,8 +720,8 @@
 //         </table>
 //       </div>
 
-//       <div className="p-4 mb-8 rounded-lg shadow bg-[#000000]">
-//         <h2 className="mb-4 text-xl font-semibold text-gray-300">
+//       <div className="p-4 mb-8 rounded-lg shadow bg-gray-50">
+//         <h2 className="mb-4 text-xl font-semibold text-gray-700">
 //           📊 Who Took the Most Leaves
 //         </h2>
 //         {leaveCountData.length > 0 ? (
@@ -937,10 +937,10 @@
 //   // ✅ Stat Box
 //   const StatCard = ({ label, value, color }) => (
 //     <div
-//       className={`bg-[#0a0a0a] rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}
+//       className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}
 //     >
 //       <div className="text-lg font-bold">{value}</div>
-//       <div className="text-xs font-medium text-gray-300">{label}</div>
+//       <div className="text-xs font-medium text-gray-700">{label}</div>
 //     </div>
 //   );
 
@@ -950,7 +950,7 @@
 //       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
 //         <div className="text-center">
 //           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div>
-//           <p className="font-semibold text-gray-400">
+//           <p className="font-semibold text-gray-500">
 //             Loading leave reports...
 //           </p>
 //         </div>
@@ -984,31 +984,31 @@
 //           />
 //         </div>
 
-//         <div className="p-2 mb-2 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
+//         <div className="p-2 mb-2 bg-white border border-gray-200 shadow-md rounded-xl">
 //           {/* Filters – Single Row */}
 //           <div className="flex items-end gap-4 flex-nowrap">
 //             {/* Month Filter */}
 //             <div className="flex flex-col w-40">
-//               <label className="mb-1 text-xs font-semibold text-gray-400">
-//                 <FaCalendarAlt className="inline mr-1 text-white" /> Month
+//               <label className="mb-1 text-xs font-semibold text-gray-500">
+//                 <FaCalendarAlt className="inline mr-1 text-gray-500" /> Month
 //               </label>
 //               <input
 //                 type="month"
 //                 value={selectedMonth}
 //                 onChange={(e) => setSelectedMonth(e.target.value)}
-//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //               />
 //             </div>
 
 //             {/* Employee Filter */}
 //             <div className="flex flex-col w-48">
-//               <label className="mb-1 text-xs font-semibold text-gray-400">
+//               <label className="mb-1 text-xs font-semibold text-gray-500">
 //                 <FaSearch className="inline mr-1" /> Employee
 //               </label>
 //               <select
 //                 value={selectedEmployee}
 //                 onChange={(e) => setSelectedEmployee(e.target.value)}
-//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //               >
 //                 <option value="">All Employees</option>
 //                 {employees.map((name) => (
@@ -1021,13 +1021,13 @@
 
 //             {/* Leave Type Filter */}
 //             <div className="flex flex-col w-40">
-//               <label className="mb-1 text-xs font-semibold text-gray-400">
+//               <label className="mb-1 text-xs font-semibold text-gray-500">
 //                 Leave Type
 //               </label>
 //               <select
 //                 value={selectedType}
 //                 onChange={(e) => setSelectedType(e.target.value)}
-//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //               >
 //                 <option value="">All Types</option>
 //                 {leaveTypes.map((t) => (
@@ -1065,8 +1065,8 @@
 //         </div>
 
 //         {/* ✅ Bar Chart */}
-//         <div className="p-4 mb-4 bg-[#0a0a0a] rounded-lg shadow-lg">
-//           <h2 className="mb-4 text-lg font-semibold text-gray-300">
+//         <div className="p-4 mb-4 bg-white rounded-lg shadow-lg">
+//           <h2 className="mb-4 text-lg font-semibold text-gray-700">
 //             📊 Who Took the Most Leaves
 //           </h2>
 //           {leaveCountData.length > 0 ? (
@@ -1085,8 +1085,8 @@
 //         </div>
 
 //         {/* ✅ Table */}
-//         <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
-//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
@@ -1103,21 +1103,21 @@
 //                   currentItems.map((l) => (
 //                     <tr
 //                       key={l._id}
-//                       className="transition border-b hover:bg-[#000000]"
+//                       className="transition border-b hover:bg-gray-50"
 //                     >
-//                       <td className="px-4 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                       <td className="px-4 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                         <div className="font-semibold">{l.employeeName}</div>
 //                       </td>
-//                       <td className="px-4 py-2 text-sm font-medium text-center text-gray-200 capitalize whitespace-nowrap">
+//                       <td className="px-4 py-2 text-sm font-medium text-center text-gray-900 capitalize whitespace-nowrap">
 //                         {l.leaveType}
 //                       </td>
-//                       <td className="px-4 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                       <td className="px-4 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                         {new Date(l.startDate).toLocaleDateString()}
 //                       </td>
-//                       <td className="px-4 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                       <td className="px-4 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                         {new Date(l.endDate).toLocaleDateString()}
 //                       </td>
-//                       <td className="px-4 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                       <td className="px-4 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                         <span className="px-2 py-2 text-xs text-center text-green-700 bg-green-100 rounded-full">
 //                           {l.days} {l.days === 1 ? 'day' : 'days'}
 //                         </span>
@@ -1145,7 +1145,7 @@
 //             {/* Show entries dropdown */}
 //             <div className="flex flex-wrap items-center gap-4">
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-300">
+//                 <label className="text-sm font-medium text-gray-700">
 //                   Show:
 //                 </label>
 //                 <select
@@ -1158,7 +1158,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-400">entries</span>
+//                 <span className="text-sm text-gray-500">entries</span>
 //               </div>
 //             </div>
 
@@ -1169,8 +1169,8 @@
 //                 disabled={currentPage === 1}
 //                 className={`px-4 py-1 text-sm border rounded-lg ${
 //                   currentPage === 1
-//                     ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                     : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
+//                     ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                     : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
 //                 }`}
 //               >
 //                 Previous
@@ -1183,10 +1183,10 @@
 //                   disabled={page === "..."}
 //                   className={`px-4 py-1 text-sm border rounded-lg ${
 //                     page === "..."
-//                       ? "text-gray-500 bg-[#000000] cursor-default"
+//                       ? "text-gray-500 bg-gray-50 cursor-default"
 //                       : currentPage === page
 //                       ? "text-white bg-blue-600 border-blue-600"
-//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                   }`}
 //                 >
 //                   {page}
@@ -1198,8 +1198,8 @@
 //                 disabled={currentPage === totalPages}
 //                 className={`px-4 py-1 text-sm border rounded-lg ${
 //                   currentPage === totalPages
-//                     ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                     : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                     ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                     : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                 }`}
 //               >
 //                 Next
@@ -1500,10 +1500,10 @@ const LeaveReport = () => {
   // ✅ Stat Box
   const StatCard = ({ label, value, color }) => (
     <div
-      className={`bg-[#0a0a0a] rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}
+      className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}
     >
       <div className="text-lg font-bold">{value}</div>
-      <div className="text-xs font-medium text-gray-300">{label}</div>
+      <div className="text-xs font-medium text-gray-700">{label}</div>
     </div>
   );
 
@@ -1513,7 +1513,7 @@ const LeaveReport = () => {
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
         <div className="text-center">
           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div>
-          <p className="font-semibold text-gray-400">
+          <p className="font-semibold text-gray-500">
             Loading leave reports...
           </p>
         </div>
@@ -1548,7 +1548,7 @@ const LeaveReport = () => {
         </div>
 
         {/* Filters Section */}
-        <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
+        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
             
             {/* Month Filter */}
@@ -1559,7 +1559,7 @@ const LeaveReport = () => {
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Select Month"
               />
             </div>
@@ -1568,7 +1568,7 @@ const LeaveReport = () => {
             <select
               value={selectedEmployee}
               onChange={(e) => setSelectedEmployee(e.target.value)}
-              className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[150px]"
+              className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[150px]"
             >
               <option value="">All Employees</option>
               {employeesList.map((name) => (
@@ -1582,7 +1582,7 @@ const LeaveReport = () => {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[120px]"
+              className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[120px]"
             >
               <option value="">All Types</option>
               {leaveTypes.map((t) => (
@@ -1599,7 +1599,7 @@ const LeaveReport = () => {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDepartment 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
@@ -1607,13 +1607,13 @@ const LeaveReport = () => {
               
               {/* Department Filter Dropdown */}
               {showDepartmentFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
                   <div 
                     onClick={() => {
                       setFilterDepartment('');
                       setShowDepartmentFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
                   >
                     All Departments
                   </div>
@@ -1642,7 +1642,7 @@ const LeaveReport = () => {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDesignation 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
@@ -1650,13 +1650,13 @@ const LeaveReport = () => {
               
               {/* Designation Filter Dropdown */}
               {showDesignationFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
                   <div 
                     onClick={() => {
                       setFilterDesignation('');
                       setShowDesignationFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
                   >
                     All Designations
                   </div>
@@ -1682,7 +1682,7 @@ const LeaveReport = () => {
             {(selectedMonth || selectedEmployee || selectedType || filterDepartment || filterDesignation) && (
               <button
                 onClick={clearFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
+                className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
               >
                 Clear
               </button>
@@ -1707,8 +1707,8 @@ const LeaveReport = () => {
         </div>
 
         {/* ✅ Bar Chart */}
-        <div className="p-4 mb-4 bg-[#0a0a0a] rounded-lg shadow-lg">
-          <h2 className="mb-4 text-lg font-semibold text-gray-300">
+        <div className="p-4 mb-4 bg-white rounded-lg shadow-lg">
+          <h2 className="mb-4 text-lg font-semibold text-gray-700">
             📊 Who Took the Most Leaves
           </h2>
           {leaveCountData.length > 0 ? (
@@ -1727,8 +1727,8 @@ const LeaveReport = () => {
         </div>
 
         {/* ✅ Table */}
-        <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
-          <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+        <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
@@ -1750,30 +1750,30 @@ const LeaveReport = () => {
                     return (
                       <tr
                         key={l._id}
-                        className="transition border-b hover:bg-[#000000]"
+                        className="transition border-b hover:bg-gray-50"
                       >
-                        <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           {l.employeeId}
                         </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           <div className="font-medium">{l.employeeName}</div>
                         </td>
-                        <td className="px-2 py-2 text-center text-gray-400 ">
+                        <td className="px-2 py-2 text-center text-gray-500 ">
                           {empDetails.department}
                         </td>
-                        <td className="px-2 py-2 text-center text-gray-400 ">
+                        <td className="px-2 py-2 text-center text-gray-500 ">
                           {empDetails.designation}
                         </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-400 capitalize ">
+                        <td className="px-2 py-2 font-medium text-center text-gray-500 capitalize ">
                           {l.leaveType}
                         </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-400 ">
+                        <td className="px-2 py-2 font-medium text-center text-gray-500 ">
                           {new Date(l.startDate).toLocaleDateString()}
                         </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-400 ">
+                        <td className="px-2 py-2 font-medium text-center text-gray-500 ">
                           {new Date(l.endDate).toLocaleDateString()}
                         </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-400 ">
+                        <td className="px-2 py-2 font-medium text-center text-gray-500 ">
                           <span className="px-2 py-2 text-center text-green-700 bg-green-100 rounded-full">
                             {l.days} {l.days === 1 ? 'day' : 'days'}
                           </span>
@@ -1801,7 +1801,7 @@ const LeaveReport = () => {
           <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-300">
+                <label className="text-sm font-medium text-gray-700">
                   Show:
                 </label>
                 <select
@@ -1814,7 +1814,7 @@ const LeaveReport = () => {
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                 </select>
-                <span className="text-sm text-gray-400">entries</span>
+                <span className="text-sm text-gray-500">entries</span>
               </div>
             </div>
 
@@ -1824,8 +1824,8 @@ const LeaveReport = () => {
                 disabled={currentPage === 1}
                 className={`px-4 py-1 text-sm border rounded-lg ${
                   currentPage === 1
-                    ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-                    : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
+                    ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+                    : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
                 }`}
               >
                 Previous
@@ -1838,10 +1838,10 @@ const LeaveReport = () => {
                   disabled={page === "..."}
                   className={`px-4 py-1 text-sm border rounded-lg ${
                     page === "..."
-                      ? "text-gray-500 bg-[#000000] cursor-default"
+                      ? "text-gray-500 bg-gray-50 cursor-default"
                       : currentPage === page
                       ? "text-white bg-blue-600 border-blue-600"
-                      : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+                      : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                   }`}
                 >
                   {page}
@@ -1853,8 +1853,8 @@ const LeaveReport = () => {
                 disabled={currentPage === totalPages}
                 className={`px-4 py-1 text-sm border rounded-lg ${
                   currentPage === totalPages
-                    ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-                    : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+                    ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+                    : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                 }`}
               >
                 Next

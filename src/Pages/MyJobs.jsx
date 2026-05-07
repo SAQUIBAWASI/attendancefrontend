@@ -412,7 +412,7 @@ ${name}`;
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-          <p className="text-lg font-semibold text-gray-300">Loading your experiences...</p>
+          <p className="text-lg font-semibold text-gray-700">Loading your experiences...</p>
         </div>
       </div>
     );
@@ -425,7 +425,7 @@ ${name}`;
   const uniqueCompanies = new Set(experiences.map(exp => exp.companyName?.toLowerCase())).size;
 
   return (
-    <div className="min-h-screen px-2 py-2 bg-[#111111] font-sans sm:px-3 sm:py-3">
+    <div className="min-h-screen px-2 py-2 bg-gray-100 font-sans sm:px-3 sm:py-3">
       <div className="mx-auto max-w-9xl">
 
         {/* Stats Cards */}
@@ -457,18 +457,18 @@ ${name}`;
         </div>
 
         {/* Filters Section - Synced with UserActivity/EmployeeLetters style */}
-        <div className="p-2 mb-3 bg-[#0a0a0a] rounded-lg shadow-md border border-[#1f2937]">
+        <div className="p-2 mb-3 bg-white rounded-lg shadow-md border border-gray-200">
           <div className="flex flex-wrap items-center gap-2">
 
             {/* Search */}
             <div className="relative flex-1 min-w-[300px]">
-              <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="text"
                 placeholder="Search by company, role or location..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent transition-all"
               />
             </div>
 
@@ -480,7 +480,7 @@ ${name}`;
                 value={selectedDate}
                 onChange={handleDateChange}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -492,7 +492,7 @@ ${name}`;
                 value={selectedMonth}
                 onChange={handleMonthChange}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-8 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -518,7 +518,7 @@ ${name}`;
             {(searchTerm || selectedDate || selectedMonth) && (
               <button
                 onClick={clearFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
+                className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
               >
                 Clear
               </button>
@@ -526,7 +526,7 @@ ${name}`;
           </div>
 
           {/* Results Count */}
-          <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
+          <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
             <span>
               Showing <strong>{filteredExperiences.length}</strong> of <strong>{experiences.length}</strong> records
             </span>
@@ -539,11 +539,11 @@ ${name}`;
         </div>
 
         {/* Table Section */}
-        <div className="overflow-hidden bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
+        <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
           {filteredExperiences.length === 0 ? (
             <div className="py-16 text-center">
               <div className="mb-4 text-6xl">🏢</div>
-              <p className="mb-4 text-lg font-semibold text-gray-400">
+              <p className="mb-4 text-lg font-semibold text-gray-500">
                 {experiences.length === 0 ? "No experience records found." : "No records match your filters."}
               </p>
               {experiences.length > 0 ? (
@@ -575,7 +575,7 @@ ${name}`;
                       <th className="py-2.5 px-6">DOCUMENTS</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#1f2937]">
+                  <tbody className="divide-y divide-gray-200">
                     {/* ── Pinned Current Job Row (Employee view) ── */}
                     {currentJobData && (
                       <tr className="bg-green-50 border-l-4 border-green-500 hover:bg-green-100 transition duration-150">
@@ -586,7 +586,7 @@ ${name}`;
                               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
                             </span>
                             <div>
-                              <span className="block font-bold text-gray-300 text-xs sm:text-sm">
+                              <span className="block font-bold text-gray-700 text-xs sm:text-sm">
                                 {currentJobData.role}
                               </span>
                               <span className="block text-xs text-green-700 font-semibold">
@@ -595,14 +595,14 @@ ${name}`;
                             </div>
                           </div>
                         </td>
-                        <td className="px-2 py-2 text-center text-xs sm:text-sm text-gray-400">
+                        <td className="px-2 py-2 text-center text-xs sm:text-sm text-gray-500">
                           {currentJobData.location}
                         </td>
                         <td className="px-2 py-2 text-center text-xs sm:text-sm whitespace-nowrap">
                           {formatDate(currentJobData.startDate)}
                           {" – "}
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-white bg-green-500 rounded-full">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#0a0a0a] animate-pulse"></span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                             Current
                           </span>
                         </td>
@@ -620,10 +620,10 @@ ${name}`;
                     {currentRecords.map((exp, index) => (
                       <tr
                         key={exp._id || index}
-                        className={`${index % 2 === 0 ? "bg-[#0a0a0a]" : "bg-[#000000]"} hover:bg-blue-50 transition duration-150`}
+                        className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50 transition duration-150`}
                       >
                         <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                          <span className="block font-semibold text-gray-300 text-xs sm:text-sm">
+                          <span className="block font-semibold text-gray-700 text-xs sm:text-sm">
                             {exp.role}
                           </span>
                           <span className="block text-xs text-gray-500">
@@ -666,7 +666,7 @@ ${name}`;
                               </a>
                             )}
                             {!exp.offerLetter && !exp.payslip && (
-                              <span className="text-[10px] text-gray-400 italic">N/A</span>
+                              <span className="text-[10px] text-gray-500 italic">N/A</span>
                             )}
                           </div>
                         </td>
@@ -678,10 +678,10 @@ ${name}`;
 
               {/* Pagination */}
               {filteredExperiences.length > 0 && (
-                <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-[#1f2937] sm:flex-row">
+                <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-gray-200 sm:flex-row">
                   <div className="flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-2">
-                      <label className="text-xs font-medium text-gray-300">
+                      <label className="text-xs font-medium text-gray-700">
                         Show:
                       </label>
                       <select
@@ -694,9 +694,9 @@ ${name}`;
                         <option value={20}>20</option>
                         <option value={50}>50</option>
                       </select>
-                      <span className="text-xs text-gray-400">entries</span>
+                      <span className="text-xs text-gray-500">entries</span>
                     </div>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-gray-500">
                       Showing <strong>{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredExperiences.length)}</strong> of{" "}
                       <strong>{filteredExperiences.length}</strong> records
                     </div>
@@ -720,10 +720,10 @@ ${name}`;
                         onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                         disabled={page === "..."}
                         className={`px-3 py-1 text-xs font-semibold rounded-lg transition min-w-[28px] ${page === "..."
-                          ? "bg-[#1f2937] text-gray-500 cursor-default"
+                          ? "bg-gray-200 text-gray-500 cursor-default"
                           : currentPage === page
                             ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                            : "bg-[#1f2937] text-gray-300 hover:bg-gray-300"
+                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                           }`}
                       >
                         {page}
@@ -751,10 +751,10 @@ ${name}`;
       {/* Add Experience Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="w-full max-w-md p-4 bg-[#0a0a0a] rounded-lg shadow-xl sm:p-6">
+          <div className="w-full max-w-md p-4 bg-white rounded-lg shadow-xl sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-300 sm:text-xl">Add Working Experience</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-300">
+              <h3 className="text-lg font-bold text-gray-700 sm:text-xl">Add Working Experience</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-700">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -770,25 +770,25 @@ ${name}`;
             <form onSubmit={handleSubmit} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block mb-1 text-xs font-medium text-gray-300">Company Name *</label>
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Company Name *</label>
                   <input
                     name="companyName"
                     value={formData.companyName}
                     onChange={handleInputChange}
                     type="text"
-                    className="w-full p-2 text-sm border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     required
                     placeholder="E.g. TechCorp"
                   />
                 </div>
                 <div>
-                  <label className="block mb-1 text-xs font-medium text-gray-300">Role / Job Title *</label>
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Role / Job Title *</label>
                   <input
                     name="role"
                     value={formData.role}
                     onChange={handleInputChange}
                     type="text"
-                    className="w-full p-2 text-sm border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     required
                     placeholder="E.g. Software Engineer"
                   />
@@ -797,25 +797,25 @@ ${name}`;
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block mb-1 text-xs font-medium text-gray-300">Location *</label>
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Location *</label>
                   <input
                     name="location"
                     value={formData.location}
                     onChange={handleInputChange}
                     type="text"
-                    className="w-full p-2 text-sm border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     required
                     placeholder="City, Country"
                   />
                 </div>
                 <div>
-                  <label className="block mb-1 text-xs font-medium text-gray-300">Salary (CTC) *</label>
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Salary (CTC) *</label>
                   <input
                     name="salary"
                     value={formData.salary}
                     onChange={handleInputChange}
                     type="text"
-                    className="w-full p-2 text-sm border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     required
                     placeholder="E.g. $80k/yr"
                   />
@@ -824,46 +824,46 @@ ${name}`;
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block mb-1 text-xs font-medium text-gray-300">Start Date *</label>
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Start Date *</label>
                   <input
                     name="startDate"
                     type="date"
                     value={formData.startDate}
                     onChange={handleInputChange}
-                    className="w-full p-2 text-sm border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block mb-1 text-xs font-medium text-gray-300">End Date (Blank = Current)</label>
+                  <label className="block mb-1 text-xs font-medium text-gray-700">End Date (Blank = Current)</label>
                   <input
                     name="endDate"
                     type="date"
                     value={formData.endDate}
                     onChange={handleInputChange}
-                    className="w-full p-2 text-sm border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block mb-1 text-xs font-medium text-gray-300">Offer Letter</label>
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Offer Letter</label>
                   <input
                     name="offerLetter"
                     type="file"
                     onChange={handleFileChange}
-                    className="w-full p-1.5 text-xs border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-1.5 text-xs border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     accept=".pdf,.png,.jpg,.jpeg"
                   />
                 </div>
                 <div>
-                  <label className="block mb-1 text-xs font-medium text-gray-300">Payslip</label>
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Payslip</label>
                   <input
                     name="payslip"
                     type="file"
                     onChange={handleFileChange}
-                    className="w-full p-1.5 text-xs border border-[#374151] rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-1.5 text-xs border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     accept=".pdf,.png,.jpg,.jpeg"
                   />
                 </div>
@@ -873,7 +873,7 @@ ${name}`;
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-2 text-sm text-gray-300 bg-[#111111] rounded-lg hover:bg-[#1f2937]"
+                  className="flex-1 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
                   disabled={isSubmitting}
                 >
                   Cancel
@@ -894,12 +894,12 @@ ${name}`;
       {/* Resignation Modal */}
       {isResignationModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-lg p-6 bg-[#0a0a0a] rounded-2xl shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
+          <div className="w-full max-w-lg p-6 bg-white rounded-2xl shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-300">Submit Resignation</h3>
+              <h3 className="text-xl font-bold text-gray-700">Submit Resignation</h3>
               <button 
                 onClick={() => setIsResignationModalOpen(false)} 
-                className="p-2 text-gray-400 hover:text-gray-400 hover:bg-[#111111] rounded-full transition-all"
+                className="p-2 text-gray-500 hover:text-gray-500 hover:bg-gray-100 rounded-full transition-all"
               >
                 <FaTimes size={20} />
               </button>
@@ -907,7 +907,7 @@ ${name}`;
 
             <form onSubmit={handleResignationSubmit} className="space-y-5">
               <div>
-                <label className="block mb-2 text-sm font-semibold text-gray-300">Last Working Day *</label>
+                <label className="block mb-2 text-sm font-semibold text-gray-700">Last Working Day *</label>
                 <div className="relative">
                   <FaCalendarAlt className="absolute text-white transform -translate-y-1/2 left-3 top-1/2" />
                   <input
@@ -915,19 +915,19 @@ ${name}`;
                     required
                     value={resignationData.lastWorkingDay}
                     onChange={(e) => setResignationData({ ...resignationData, lastWorkingDay: e.target.value })}
-                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-[#374151] rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block mb-2 text-sm font-semibold text-gray-300">Resignation Letter *</label>
+                <label className="block mb-2 text-sm font-semibold text-gray-700">Resignation Letter *</label>
                 <textarea
                   required
                   rows={10}
                   value={resignationData.letter}
                   onChange={(e) => setResignationData({ ...resignationData, letter: e.target.value })}
-                  className="w-full p-4 text-sm border border-[#374151] rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all resize-none font-sans leading-relaxed"
+                  className="w-full p-4 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all resize-none font-sans leading-relaxed"
                   placeholder="Draft your resignation letter here..."
                 ></textarea>
               </div>
@@ -936,7 +936,7 @@ ${name}`;
                 <button
                   type="button"
                   onClick={() => setIsResignationModalOpen(false)}
-                  className="flex-1 py-3 text-sm font-bold text-gray-400 bg-[#111111] rounded-xl hover:bg-[#1f2937] transition-all"
+                  className="flex-1 py-3 text-sm font-bold text-gray-500 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all"
                   disabled={isResigning}
                 >
                   Cancel

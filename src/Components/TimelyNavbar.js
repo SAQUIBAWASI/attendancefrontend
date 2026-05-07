@@ -72,7 +72,7 @@ const TimelyNavbar = () => {
                             <button
                                     style={{ backgroundColor: "#007a52" }}
                                     onClick={handleLogin}
-                                    className="flex items-center gap-2 justify-center px-4 h-10 text-white rounded-full border border-gray-400 shadow hover:bg-gray-800 transition"
+                                    className="flex items-center gap-2 justify-center px-4 h-10 text-white rounded-full border border-gray-400 shadow hover:bg-gray-100 transition"
                                 >
                                     <User size={18} />
                                     Login
@@ -128,7 +128,7 @@ const TimelyNavbar = () => {
                                 <button
                                     style={{ backgroundColor: "black" }}
                                     onClick={{}}
-                                    className="flex items-center gap-2 justify-center px-4 h-10 text-white rounded-full shadow hover:bg-gray-800 transition"
+                                    className="flex items-center gap-2 justify-center px-4 h-10 text-white rounded-full shadow hover:bg-gray-100 transition"
                                 >
                                     <User size={18} />
                                     Login
@@ -156,7 +156,7 @@ const TimelyNavbar = () => {
                                 <button
                                     style={{ backgroundColor: "#007a52" }}
                                     onClick={handleLogin}
-                                    className="flex items-center gap-2 justify-center px-4 h-10 text-white rounded-full border border-gray-400 shadow hover:bg-gray-800 transition"
+                                    className="flex items-center gap-2 justify-center px-4 h-10 text-white rounded-full border border-gray-400 shadow hover:bg-gray-100 transition"
                                 >
                                     <User size={18} />
                                     Login

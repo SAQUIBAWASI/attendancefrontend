@@ -55,7 +55,7 @@ const CreateBusinessCard = () => {
   };
 
   return (
-    <div className="container p-6 max-w-4xl mx-auto bg-[#0a0a0a] shadow-lg rounded-lg">
+    <div className="container p-6 max-w-4xl mx-auto bg-white shadow-lg rounded-lg">
       <h2 className="text-xl font-semibold mb-6 text-center text-blue-900">Create New Business Card</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">

@@ -130,7 +130,7 @@
 //   };
 
 //   return (
-//     <div className="min-h-screen bg-[#111111] transition-all duration-300">
+//     <div className="min-h-screen bg-gray-100 transition-all duration-300">
 //       {/* Main Section */}
 //       <div className="flex flex-col flex-1">
 
@@ -142,7 +142,7 @@
 //                 <h2 className="text-2xl font-extrabold text-transparent sm:text-3xl bg-clip-text bg-gradient-to-r from-green-600 to-teal-600">
 //                   📅 My Attendance Records
 //                 </h2>
-//                 <p className="mt-1 text-gray-400">View and manage your attendance history</p>
+//                 <p className="mt-1 text-gray-500">View and manage your attendance history</p>
 //               </div>
 
 //               <div className="flex flex-col w-full gap-3 sm:flex-row lg:w-auto">
@@ -234,7 +234,7 @@
 //             {loading ? (
 //               <div className="py-12 text-center">
 //                 <div className="w-12 h-12 mx-auto border-b-2 border-green-600 rounded-full animate-spin"></div>
-//                 <p className="mt-4 text-lg text-gray-400">Loading your attendance records...</p>
+//                 <p className="mt-4 text-lg text-gray-500">Loading your attendance records...</p>
 //               </div>
 //             ) : error ? (
 //               <div className="py-8 text-center border border-red-200 rounded-lg bg-red-50">
@@ -263,7 +263,7 @@
 //             ) : (
 //               <>
 //                 {/* Table */}
-//                 <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//                 <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //                   <table className="min-w-full">
 //                     <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
 //                       <tr>
@@ -281,10 +281,10 @@
 //                       {currentRecords.map((rec, idx) => (
 //                         <tr
 //                           key={rec._id || idx}
-//                           className={`border-t transition-all duration-200 ${idx % 2 === 0 ? "bg-[#000000]" : "bg-[#0a0a0a]"
+//                           className={`border-t transition-all duration-200 ${idx % 2 === 0 ? "bg-gray-50" : "bg-white"
 //                             } hover:bg-green-50 hover:shadow-sm`}
 //                         >
-//                           <td className="px-4 py-2 font-medium text-gray-200">
+//                           <td className="px-4 py-2 font-medium text-gray-900">
 //                             {formatDate(rec.checkInTime || rec.createdAt)}
 //                           </td>
 //                           <td className="px-4 py-2">
@@ -307,7 +307,7 @@
 //                             </span>
 //                           </td>
 //                           <td className="px-4 py-2">
-//                             <span className="font-mono text-gray-300">
+//                             <span className="font-mono text-gray-700">
 //                               {rec.distance?.toFixed(0) || "0"}m
 //                             </span>
 //                           </td>
@@ -322,7 +322,7 @@
 //                             </span>
 //                           </td>
 //                           <td className="px-4 py-2">
-//                             <span className="px-2 py-1 text-sm text-gray-300 bg-[#111111] rounded">
+//                             <span className="px-2 py-1 text-sm text-gray-700 bg-gray-100 rounded">
 //                               {rec.reason || "Not specified"}
 //                             </span>
 //                           </td>
@@ -345,7 +345,7 @@
 //                 {/* Pagination */}
 //                 {totalPages > 1 && (
 //                   <div className="flex flex-col items-center justify-between gap-2 mt-4 sm:flex-row">
-//                     <div className="text-sm text-gray-400">
+//                     <div className="text-sm text-gray-500">
 //                       Showing <strong>{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredRecords.length)}</strong> of{" "}
 //                       <strong>{filteredRecords.length}</strong> records
 //                     </div>
@@ -381,7 +381,7 @@
 //                               onClick={() => setCurrentPage(pageNum)}
 //                               className={`px-2 py-2 rounded-lg transition ${currentPage === pageNum
 //                                 ? "bg-green-600 text-white font-semibold"
-//                                 : "bg-[#1f2937] text-gray-300 hover:bg-gray-300"
+//                                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
 //                                 }`}
 //                             >
 //                               {pageNum}
@@ -629,7 +629,7 @@ export default function MyAttendance() {
             <span className="relative inline-flex w-2 h-2 bg-green-500 rounded-full"></span>
           </span>
           <span className="font-semibold text-green-600">{checkIn}</span>
-          <span className="text-xs text-gray-400">/ --:--</span>
+          <span className="text-xs text-gray-500">/ --:--</span>
         </div>
       );
     } else if (checkIn && checkOut) {
@@ -637,13 +637,13 @@ export default function MyAttendance() {
       return (
         <div className="flex items-center justify-center gap-1">
           <span className="inline-flex w-2 h-2 bg-red-500 rounded-full"></span>
-          <span className="font-semibold text-gray-300">{checkIn}</span>
-          <span className="text-xs text-gray-400">/</span>
+          <span className="font-semibold text-gray-700">{checkIn}</span>
+          <span className="text-xs text-gray-500">/</span>
           <span className="font-semibold text-red-600">{checkOut}</span>
         </div>
       );
     } else {
-      return <span className="text-gray-400">-</span>;
+      return <span className="text-gray-500">-</span>;
     }
   };
 
@@ -821,10 +821,10 @@ export default function MyAttendance() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-          <p className="text-lg font-semibold text-gray-300">Loading your attendance records...</p>
+          <p className="text-lg font-semibold text-gray-700">Loading your attendance records...</p>
         </div>
       </div>
     );
@@ -832,8 +832,8 @@ export default function MyAttendance() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
-        <div className="max-w-md p-8 text-center bg-[#0a0a0a] border border-red-200 shadow-lg rounded-2xl">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="max-w-md p-8 text-center bg-white border border-red-200 shadow-lg rounded-2xl">
           <div className="mb-4 text-4xl text-red-500">❌</div>
           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
           <button
@@ -853,8 +853,8 @@ export default function MyAttendance() {
 
         {/* Header Section */}
         {/* <div className="mb-2">
-          <h1 className="text-lg font-bold text-gray-300 sm:text-xl md:text-2xl">📅 My Attendance Records</h1>
-          <p className="text-xs text-gray-400 sm:text-sm">View and manage your attendance history</p>
+          <h1 className="text-lg font-bold text-gray-700 sm:text-xl md:text-2xl">📅 My Attendance Records</h1>
+          <p className="text-xs text-gray-500 sm:text-sm">View and manage your attendance history</p>
         </div> */}
 
         {/* Stats Cards - Dashboard Style */}
@@ -886,7 +886,7 @@ export default function MyAttendance() {
         </div>
 
         {/* Filters Section */}
-        <div className="p-2 mb-3 bg-[#0a0a0a] rounded-lg shadow-md sm:p-3">
+        <div className="p-2 mb-3 bg-white rounded-lg shadow-md sm:p-3">
           <div className="flex flex-wrap items-center gap-1 sm:gap-2">
 
             {/* Single Date Filter */}
@@ -898,7 +898,7 @@ export default function MyAttendance() {
                 onChange={handleSearchDateChange}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
                 placeholder="Date"
-                className="w-full pl-8 pr-1 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-1 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -911,7 +911,7 @@ export default function MyAttendance() {
                 onChange={handleDateFromChange}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
                 placeholder="From"
-                className="w-full pl-8 pr-1 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-1 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -924,7 +924,7 @@ export default function MyAttendance() {
                 onChange={handleDateToChange}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
                 placeholder="To"
-                className="w-full pl-8 pr-1 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-1 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -937,7 +937,7 @@ export default function MyAttendance() {
                 onChange={handleMonthChange}
                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
                 placeholder="Month"
-                className="w-full pl-8 pr-1 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-1 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -945,7 +945,7 @@ export default function MyAttendance() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-8 px-1 py-1 text-xs border border-[#374151] rounded-lg w-[90px] sm:w-[100px] focus:ring-1 focus:ring-blue-500"
+              className="h-8 px-1 py-1 text-xs border border-gray-300 rounded-lg w-[90px] sm:w-[100px] focus:ring-1 focus:ring-blue-500"
             >
               <option value="all">All Status</option>
               <option value="checked-in">Checked In</option>
@@ -956,7 +956,7 @@ export default function MyAttendance() {
             <select
               value={onsiteFilter}
               onChange={(e) => setOnsiteFilter(e.target.value)}
-              className="h-8 px-1 py-1 text-xs border border-[#374151] rounded-lg w-[90px] sm:w-[100px] focus:ring-1 focus:ring-blue-500"
+              className="h-8 px-1 py-1 text-xs border border-gray-300 rounded-lg w-[90px] sm:w-[100px] focus:ring-1 focus:ring-blue-500"
             >
               <option value="all">All Locations</option>
               <option value="yes">Onsite Only</option>
@@ -983,7 +983,7 @@ export default function MyAttendance() {
             {(searchDate || dateFrom || dateTo || selectedMonth || statusFilter !== "all" || onsiteFilter !== "all") && (
               <button
                 onClick={clearFilters}
-                className="h-8 px-2 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md sm:px-3 hover:bg-[#1f2937]"
+                className="h-8 px-2 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md sm:px-3 hover:bg-gray-200"
               >
                 Clear
               </button>
@@ -991,7 +991,7 @@ export default function MyAttendance() {
           </div>
 
           {/* Results Count */}
-          <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
+          <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
             <span>
               Showing <strong>{filteredRecords.length}</strong> of <strong>{records.length}</strong> records
             </span>
@@ -1004,11 +1004,11 @@ export default function MyAttendance() {
         </div>
 
         {/* Table Section */}
-        <div className="overflow-hidden bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
+        <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
           {filteredRecords.length === 0 ? (
             <div className="py-12 text-center sm:py-16">
               <div className="mb-3 text-5xl sm:text-6xl">📭</div>
-              <p className="mb-3 text-base font-semibold text-gray-400 sm:text-lg">
+              <p className="mb-3 text-base font-semibold text-gray-500 sm:text-lg">
                 {records.length === 0 ? "No attendance records found." : "No records match your filters."}
               </p>
               {records.length > 0 && (
@@ -1039,10 +1039,10 @@ export default function MyAttendance() {
                     {currentRecords.map((rec, idx) => (
                       <tr
                         key={rec._id || idx}
-                        className={`${idx % 2 === 0 ? "bg-[#000000]" : "bg-[#0a0a0a]"} hover:bg-blue-50 hover:shadow-sm transition-all duration-200 text-xs sm:text-sm`}
+                        className={`${idx % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-blue-50 hover:shadow-sm transition-all duration-200 text-xs sm:text-sm`}
                       >
                         {/* Date */}
-                        <td className="px-2 py-1.5 font-medium text-center text-gray-200 whitespace-nowrap sm:px-3 sm:py-2">
+                        <td className="px-2 py-1.5 font-medium text-center text-gray-900 whitespace-nowrap sm:px-3 sm:py-2">
                           {formatDate(rec.checkInTime || rec.createdAt)}
                         </td>
 
@@ -1062,7 +1062,7 @@ export default function MyAttendance() {
 
                         {/* Distance */}
                         <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                          <span className="px-1.5 py-0.5 font-mono text-gray-300 bg-[#111111] rounded sm:px-2 sm:py-1">
+                          <span className="px-1.5 py-0.5 font-mono text-gray-700 bg-gray-100 rounded sm:px-2 sm:py-1">
                             {rec.distance?.toFixed(0) || "0"}m
                           </span>
                         </td>
@@ -1081,7 +1081,7 @@ export default function MyAttendance() {
 
                         {/* Reason */}
                         <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                          <span className="text-gray-300 bg-[#111111] px-1.5 py-0.5 rounded max-w-[80px] truncate block sm:max-w-[100px]">
+                          <span className="text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded max-w-[80px] truncate block sm:max-w-[100px]">
                             {rec.reason || "-"}
                           </span>
                         </td>
@@ -1105,10 +1105,10 @@ export default function MyAttendance() {
 
               {/* Pagination Section */}
               {filteredRecords.length > 0 && (
-                <div className="flex flex-col items-center justify-between gap-3 p-3 border-t sm:flex-row sm:p-4 bg-[#000000]">
+                <div className="flex flex-col items-center justify-between gap-3 p-3 border-t sm:flex-row sm:p-4 bg-gray-50">
                   <div className="flex flex-wrap items-center gap-3">
                     <div className="flex items-center gap-1.5">
-                      <label className="text-xs font-medium text-gray-300">
+                      <label className="text-xs font-medium text-gray-700">
                         Show:
                       </label>
                       <select
@@ -1121,9 +1121,9 @@ export default function MyAttendance() {
                         <option value={20}>20</option>
                         <option value={50}>50</option>
                       </select>
-                      <span className="text-xs text-gray-400">entries</span>
+                      <span className="text-xs text-gray-500">entries</span>
                     </div>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-gray-500">
                       <span className="hidden sm:inline">Showing </span>
                       <strong>{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredRecords.length)}</strong> of{" "}
                       <strong>{filteredRecords.length}</strong>
@@ -1148,10 +1148,10 @@ export default function MyAttendance() {
                         onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                         disabled={page === "..."}
                         className={`px-2 py-1 text-xs font-semibold rounded-lg transition min-w-[24px] ${page === "..."
-                          ? "bg-[#1f2937] text-gray-500 cursor-default"
+                          ? "bg-gray-200 text-gray-500 cursor-default"
                           : currentPage === page
                             ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                            : "bg-[#1f2937] text-gray-300 hover:bg-gray-300"
+                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                           }`}
                       >
                         {page}
@@ -1179,13 +1179,13 @@ export default function MyAttendance() {
       {/* Attendance Edit Request Modal */}
       {showEditModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="w-full max-w-md bg-[#0a0a0a] shadow-2xl rounded-2xl animate-in fade-in zoom-in duration-200">
-            <div className="p-6 border-b border-[#1f2937]">
+          <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in duration-200">
+            <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-300">Request Record Edit</h2>
+                <h2 className="text-xl font-bold text-gray-700">Request Record Edit</h2>
                 <button 
                   onClick={() => setShowEditModal(false)}
-                  className="p-1 text-gray-400 transition hover:text-gray-400"
+                  className="p-1 text-gray-500 transition hover:text-gray-500"
                 >
                   ✕
                 </button>
@@ -1195,31 +1195,31 @@ export default function MyAttendance() {
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block mb-1 text-xs font-semibold text-gray-300 uppercase tracking-wider">Employee ID & Name</label>
+                <label className="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-wider">Employee ID & Name</label>
                 <div className="flex gap-2">
                   <input 
                     type="text" 
                     value={employeeData?.employeeId || ""} 
                     disabled 
-                    className="w-1/3 px-3 py-2 text-xs bg-[#000000] border border-[#1f2937] rounded-lg cursor-not-allowed"
+                    className="w-1/3 px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-lg cursor-not-allowed"
                   />
                   <input 
                     type="text" 
                     value={employeeData?.name || ""} 
                     disabled 
-                    className="w-2/3 px-3 py-2 text-xs bg-[#000000] border border-[#1f2937] rounded-lg cursor-not-allowed"
+                    className="w-2/3 px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-lg cursor-not-allowed"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block mb-1 text-xs font-semibold text-gray-300 uppercase tracking-wider">Select Dates</label>
+                <label className="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-wider">Select Dates</label>
                 <div className="flex gap-2">
                   <input
                     type="date"
                     value={requestDate}
                     onChange={(e) => setRequestDate(e.target.value)}
-                    className="flex-1 px-3 py-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
                   />
                   <button
                     type="button"
@@ -1248,19 +1248,19 @@ export default function MyAttendance() {
               </div>
 
               <div>
-                <label className="block mb-1 text-xs font-semibold text-gray-300 uppercase tracking-wider">Comment / Reason</label>
+                <label className="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-wider">Comment / Reason</label>
                 <textarea
                   value={requestComment}
                   onChange={(e) => setRequestComment(e.target.value)}
                   placeholder="Explain why you need to edit these records..."
-                  className="w-full h-24 px-3 py-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500"
+                  className="w-full h-24 px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
               <div className="flex gap-2 pt-2">
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 px-4 py-2 text-xs font-bold text-gray-400 transition bg-[#111111] rounded-lg hover:bg-[#1f2937]"
+                  className="flex-1 px-4 py-2 text-xs font-bold text-gray-500 transition bg-gray-100 rounded-lg hover:bg-gray-200"
                 >
                   Cancel
                 </button>

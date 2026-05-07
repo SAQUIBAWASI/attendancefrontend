@@ -110,7 +110,7 @@ export default function AllPayments() {
   };
 
   return (
-    <div className="p-4 border rounded-lg shadow-lg bg-[#0a0a0a]">
+    <div className="p-4 border rounded-lg shadow-lg bg-white">
       <h2 className="text-xl font-semibold text-blue-900 mb-4">All Payments</h2>
 
       <div className="flex justify-between items-center mb-4 gap-4 flex-wrap">
@@ -144,7 +144,7 @@ export default function AllPayments() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-[#374151]">
+        <table className="w-full border-collapse border border-gray-300">
           <thead>
             <tr className="bg-blue-600 text-white">
               <th className="p-2 border">Sl</th>
@@ -218,7 +218,7 @@ export default function AllPayments() {
             key={index}
             onClick={() => setCurrentPage(index + 1)}
             className={`px-4 py-2 rounded ${
-              currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-[#1f2937]"
+              currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
             }`}
           >
             {index + 1}
@@ -236,7 +236,7 @@ export default function AllPayments() {
       {/* Modal for editing status */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-[#0a0a0a] p-6 rounded-lg w-1/3">
+          <div className="bg-white p-6 rounded-lg w-1/3">
             <h3 className="text-lg font-semibold mb-4">Edit Payment Status</h3>
             <div className="mb-4">
               <label className="block text-sm font-medium mb-2">Select Status</label>

@@ -137,7 +137,7 @@
 //       case "annual leave":
 //         return "bg-green-100 text-green-800 border border-green-300";
 //       default:
-//         return "bg-[#111111] text-gray-300 border border-[#374151]";
+//         return "bg-gray-100 text-gray-700 border border-gray-300";
 //     }
 //   };
 
@@ -239,7 +239,7 @@
 //       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
 //         <div className="text-center">
 //           <div className="w-16 h-16 mx-auto mb-4 border-b-2 border-purple-600 rounded-full animate-spin"></div>
-//           <p className="text-lg font-semibold text-gray-300">Loading leave requests...</p>
+//           <p className="text-lg font-semibold text-gray-700">Loading leave requests...</p>
 //         </div>
 //       </div>
 //     );
@@ -253,30 +253,30 @@
 //           <h1 className="mb-3 text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
 //             📋 Leave Requests Management
 //           </h1>
-//           <p className="text-lg text-gray-400">
+//           <p className="text-lg text-gray-500">
 //             Review and manage employee leave applications
 //           </p>
 //         </div>
 
 //         {/* Stats Cards */}
 //         <div className="grid grid-cols-1 gap-4 mb-8 md:grid-cols-4">
-//           <div className="p-6 text-center bg-[#0a0a0a] border border-purple-200 shadow-lg rounded-2xl">
+//           <div className="p-6 text-center bg-white border border-purple-200 shadow-lg rounded-2xl">
 //             <div className="text-3xl font-bold text-purple-600">{leaves.length}</div>
 //             <div className="font-semibold text-purple-800">Total Requests</div>
 //           </div>
-//           <div className="p-6 text-center bg-[#0a0a0a] border border-yellow-200 shadow-lg rounded-2xl">
+//           <div className="p-6 text-center bg-white border border-yellow-200 shadow-lg rounded-2xl">
 //             <div className="text-3xl font-bold text-yellow-600">
 //               {leaves.filter(l => l.status === 'pending').length}
 //             </div>
 //             <div className="font-semibold text-yellow-800">Pending</div>
 //           </div>
-//           <div className="p-6 text-center bg-[#0a0a0a] border border-green-200 shadow-lg rounded-2xl">
+//           <div className="p-6 text-center bg-white border border-green-200 shadow-lg rounded-2xl">
 //             <div className="text-3xl font-bold text-green-600">
 //               {leaves.filter(l => l.status === 'approved').length}
 //             </div>
 //             <div className="font-semibold text-green-800">Approved</div>
 //           </div>
-//           <div className="p-6 text-center bg-[#0a0a0a] border border-red-200 shadow-lg rounded-2xl">
+//           <div className="p-6 text-center bg-white border border-red-200 shadow-lg rounded-2xl">
 //             <div className="text-3xl font-bold text-red-600">
 //               {leaves.filter(l => l.status === 'rejected').length}
 //             </div>
@@ -285,11 +285,11 @@
 //         </div>
 
 //         {/* Filters Section */}
-//         <div className="p-6 mb-8 bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
+//         <div className="p-6 mb-8 bg-white border border-gray-200 shadow-lg rounded-2xl">
 //           <div className="flex flex-col items-start justify-between gap-6 mb-4 lg:flex-row lg:items-center">
 //             <div>
-//               <h3 className="mb-2 text-xl font-semibold text-gray-300">🔍 Filter Leave Requests</h3>
-//               <p className="text-gray-400">Search and filter by various criteria</p>
+//               <h3 className="mb-2 text-xl font-semibold text-gray-700">🔍 Filter Leave Requests</h3>
+//               <p className="text-gray-500">Search and filter by various criteria</p>
 //             </div>
 
 //             <div className="flex flex-col gap-3 sm:flex-row">
@@ -376,11 +376,11 @@
 //         </div>
 
 //         {/* Table Section */}
-//         <div className="overflow-hidden bg-[#0a0a0a] border border-[#1f2937] shadow-lg rounded-2xl">
+//         <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
 //           {filteredLeaves.length === 0 ? (
 //             <div className="py-16 text-center">
 //               <div className="mb-4 text-6xl">📭</div>
-//               <p className="mb-4 text-lg font-semibold text-gray-400">
+//               <p className="mb-4 text-lg font-semibold text-gray-500">
 //                 {leaves.length === 0 ? "No leave requests found." : "No requests match your filters."}
 //               </p>
 //               {leaves.length > 0 && (
@@ -412,16 +412,16 @@
 //                       <tr
 //                         key={leave._id}
 //                         className={`border-t transition-all duration-200 ${
-//                           idx % 2 === 0 ? "bg-[#000000]" : "bg-[#0a0a0a]"
+//                           idx % 2 === 0 ? "bg-gray-50" : "bg-white"
 //                         } hover:bg-purple-50 hover:shadow-sm`}
 //                       >
 //                         <td className="px-6 py-4">
 //                           <div>
-//                             <div className="font-semibold text-gray-200">{leave.employeeName}</div>
+//                             <div className="font-semibold text-gray-900">{leave.employeeName}</div>
 //                             {leave.employeeId && (
 //                               <div className="text-xs text-gray-500">ID: {leave.employeeId}</div>
 //                             )}
-//                             <div className="text-xs text-gray-400">
+//                             <div className="text-xs text-gray-500">
 //                               {new Date(leave.createdAt || leave.startDate).toLocaleDateString()}
 //                             </div>
 //                           </div>
@@ -449,7 +449,7 @@
 //                         </td>
 //                         <td className="px-6 py-4">
 //                           <div className="max-w-[200px]">
-//                             <p className="text-gray-300 line-clamp-2">{leave.reason}</p>
+//                             <p className="text-gray-700 line-clamp-2">{leave.reason}</p>
 //                           </div>
 //                         </td>
 //                         <td className="px-6 py-4">
@@ -475,8 +475,8 @@
 
 //               {/* Pagination */}
 //               {totalPages > 1 && (
-//                 <div className="flex flex-col items-center justify-between gap-4 p-6 border-t sm:flex-row bg-[#000000]">
-//                   <div className="text-sm text-gray-400">
+//                 <div className="flex flex-col items-center justify-between gap-4 p-6 border-t sm:flex-row bg-gray-50">
+//                   <div className="text-sm text-gray-500">
 //                     Showing <strong>{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredLeaves.length)}</strong> of{" "}
 //                     <strong>{filteredLeaves.length}</strong> requests
 //                   </div>
@@ -504,7 +504,7 @@
 //                           className={`px-3 py-2 rounded-lg transition font-semibold ${
 //                             currentPage === pageNumber
 //                               ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg"
-//                               : "bg-[#1f2937] text-gray-300 hover:bg-gray-300"
+//                               : "bg-gray-200 text-gray-700 hover:bg-gray-300"
 //                           }`}
 //                         >
 //                           {pageNumber}
@@ -535,30 +535,30 @@
 //       {/* Edit Modal */}
 //       {editingRecord && (
 //         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-//           <div className="relative w-full max-w-md p-8 bg-[#0a0a0a] border border-purple-200 shadow-2xl rounded-2xl">
+//           <div className="relative w-full max-w-md p-8 bg-white border border-purple-200 shadow-2xl rounded-2xl">
 //             <button
 //               onClick={() => setEditingRecord(null)}
-//               className="absolute text-xl text-gray-400 transition top-4 right-4 hover:text-gray-400"
+//               className="absolute text-xl text-gray-500 transition top-4 right-4 hover:text-gray-500"
 //             >
 //               <FaTimes />
 //             </button>
 
 //             <div className="mb-6 text-center">
-//               <h2 className="mb-2 text-2xl font-bold text-gray-300">Update Leave Status</h2>
-//               <p className="text-gray-400">Change the status of this leave request</p>
+//               <h2 className="mb-2 text-2xl font-bold text-gray-700">Update Leave Status</h2>
+//               <p className="text-gray-500">Change the status of this leave request</p>
 //             </div>
 
 //             <div className="mb-6 space-y-4">
-//               <div className="p-4 bg-[#000000] rounded-xl">
-//                 <p className="font-semibold text-gray-300">{editingRecord.employeeName}</p>
+//               <div className="p-4 bg-gray-50 rounded-xl">
+//                 <p className="font-semibold text-gray-700">{editingRecord.employeeName}</p>
 //                 <p className="text-sm text-gray-500 capitalize">{editingRecord.leaveType}</p>
-//                 <p className="text-xs text-gray-400">
+//                 <p className="text-xs text-gray-500">
 //                   {new Date(editingRecord.startDate).toLocaleDateString()} - {new Date(editingRecord.endDate).toLocaleDateString()}
 //                 </p>
 //               </div>
 
 //               <div>
-//                 <label className="block mb-2 text-sm font-semibold text-gray-300">
+//                 <label className="block mb-2 text-sm font-semibold text-gray-700">
 //                   New Status
 //                 </label>
 //                 <select
@@ -687,9 +687,9 @@
 
 //   // ✅ Small Stat Boxes
 //   const StatCard = ({ label, value, color }) => (
-//     <div className={`bg-[#0a0a0a] rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}>
+//     <div className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}>
 //       <div className="text-lg font-bold">{value}</div>
-//       <div className="text-xs font-medium text-gray-300">{label}</div>
+//       <div className="text-xs font-medium text-gray-700">{label}</div>
 //     </div>
 //   );
 
@@ -700,7 +700,7 @@
 //       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
 //         <div className="text-center">
 //           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div>
-//           <p className="font-semibold text-gray-400">Loading leave requests...</p>
+//           <p className="font-semibold text-gray-500">Loading leave requests...</p>
 //         </div>
 //       </div>
 //     );
@@ -713,7 +713,7 @@
 //           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
 //             📋 Leave Requests
 //           </h1>
-//           <p className="text-sm text-gray-400">Manage and filter employee leave requests easily</p>
+//           <p className="text-sm text-gray-500">Manage and filter employee leave requests easily</p>
 //         </div>
 
 //         {/* ✅ Compact Stats */}
@@ -737,29 +737,29 @@
 //         </div>
 
 //         {/* ✅ Filters Section */}
-//         <div className="p-5 mb-6 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
+//         <div className="p-5 mb-6 bg-white border border-gray-200 shadow-md rounded-xl">
 //           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:grid-cols-5">
 //             {/* Search */}
 //             <div>
-//               <label className="block mb-1 text-xs font-semibold text-gray-400">
+//               <label className="block mb-1 text-xs font-semibold text-gray-500">
 //                 <FaSearch className="inline mr-1" /> Search
 //               </label>
 //               <input
 //                 type="text"
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="w-full p-2 text-sm border border-[#374151] rounded-md"
+//                 className="w-full p-2 text-sm border border-gray-300 rounded-md"
 //                 placeholder="Name / ID / Type / Reason"
 //               />
 //             </div>
 
 //             {/* Status Filter */}
 //             <div>
-//               <label className="block mb-1 text-xs font-semibold text-gray-400">Status</label>
+//               <label className="block mb-1 text-xs font-semibold text-gray-500">Status</label>
 //               <select
 //                 value={statusFilter}
 //                 onChange={(e) => setStatusFilter(e.target.value)}
-//                 className="w-full p-2 text-sm border border-[#374151] rounded-md"
+//                 className="w-full p-2 text-sm border border-gray-300 rounded-md"
 //               >
 //                 <option value="all">All</option>
 //                 <option value="pending">Pending</option>
@@ -770,11 +770,11 @@
 
 //             {/* Leave Type */}
 //             <div>
-//               <label className="block mb-1 text-xs font-semibold text-gray-400">Leave Type</label>
+//               <label className="block mb-1 text-xs font-semibold text-gray-500">Leave Type</label>
 //               <select
 //                 value={leaveTypeFilter}
 //                 onChange={(e) => setLeaveTypeFilter(e.target.value)}
-//                 className="w-full p-2 text-sm border border-[#374151] rounded-md"
+//                 className="w-full p-2 text-sm border border-gray-300 rounded-md"
 //               >
 //                 <option value="all">All</option>
 //                 {leaveTypes.map((t) => (
@@ -785,27 +785,27 @@
 
 //             {/* ✅ Start Date */}
 //             <div>
-//               <label className="block mb-1 text-xs font-semibold text-gray-400">
-//                 <FaCalendarAlt className="inline mr-1 text-white" /> From
+//               <label className="block mb-1 text-xs font-semibold text-gray-500">
+//                 <FaCalendarAlt className="inline mr-1 text-gray-500" /> From
 //               </label>
 //               <input
 //                 type="date"
 //                 value={startDateFilter}
 //                 onChange={(e) => setStartDateFilter(e.target.value)}
-//                 className="w-full p-2 text-sm border border-[#374151] rounded-md"
+//                 className="w-full p-2 text-sm border border-gray-300 rounded-md"
 //               />
 //             </div>
 
 //             {/* ✅ End Date */}
 //             <div>
-//               <label className="block mb-1 text-xs font-semibold text-gray-400">
-//                 <FaCalendarAlt className="inline mr-1 text-white" /> To
+//               <label className="block mb-1 text-xs font-semibold text-gray-500">
+//                 <FaCalendarAlt className="inline mr-1 text-gray-500" /> To
 //               </label>
 //               <input
 //                 type="date"
 //                 value={endDateFilter}
 //                 onChange={(e) => setEndDateFilter(e.target.value)}
-//                 className="w-full p-2 text-sm border border-[#374151] rounded-md"
+//                 className="w-full p-2 text-sm border border-gray-300 rounded-md"
 //               />
 //             </div>
 //           </div>
@@ -821,7 +821,7 @@
 //         </div>
 
 //         {/* ✅ Table (Your Existing Table Design Below) */}
-//         <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//         <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //           <table className="min-w-full">
 //             <thead className="text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
 //               <tr>
@@ -837,24 +837,24 @@
 //             <tbody>
 //               {filteredLeaves.length > 0 ? (
 //                 filteredLeaves.map((l) => (
-//                   <tr key={l._id} className="transition border-b hover:bg-[#000000]">
+//                   <tr key={l._id} className="transition border-b hover:bg-gray-50">
 //                     <td className="px-4 py-3">
 //                       <div className="font-semibold">{l.employeeName}</div>
 //                       <div className="text-xs text-gray-500">
 //                         ID: {l.employeeId}
 //                       </div>
-//                       <div className="text-xs text-gray-400">
+//                       <div className="text-xs text-gray-500">
 //                         {new Date(l.createdAt).toLocaleDateString()}
 //                       </div>
 //                     </td>
 //                     <td className="px-4 py-3">
-//                       <span className="px-3 py-1 text-xs text-gray-300 bg-[#111111] rounded-full">
+//                       <span className="px-3 py-1 text-xs text-gray-700 bg-gray-100 rounded-full">
 //                         {l.leaveType || "Enter Leave Type"}
 //                       </span>
 //                     </td>
-//                     <td className="px-4 py-3 text-sm text-gray-400">
+//                     <td className="px-4 py-3 text-sm text-gray-500">
 //                       {new Date(l.startDate).toLocaleDateString()} <br />
-//                       <span className="text-xs text-gray-400">to</span> <br />
+//                       <span className="text-xs text-gray-500">to</span> <br />
 //                       {new Date(l.endDate).toLocaleDateString()}
 //                     </td>
 //                     <td className="px-4 py-3">
@@ -862,7 +862,7 @@
 //                         {l.days} days
 //                       </span>
 //                     </td>
-//                     <td className="px-4 py-3 text-sm text-gray-300">{l.reason}</td>
+//                     <td className="px-4 py-3 text-sm text-gray-700">{l.reason}</td>
 //                     <td className="px-4 py-3">
 //                       {l.status === "approved" && (
 //                         <span className="px-3 py-1 text-xs text-green-700 bg-green-100 rounded-full">
@@ -1033,10 +1033,10 @@
 //   // ✅ Stat Box
 //   const StatCard = ({ label, value, color }) => (
 //     <div
-//       className={`bg-[#0a0a0a] rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}
+//       className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}
 //     >
 //       <div className="text-lg font-bold">{value}</div>
-//       <div className="text-xs font-medium text-gray-300">{label}</div>
+//       <div className="text-xs font-medium text-gray-700">{label}</div>
 //     </div>
 //   );
 
@@ -1049,7 +1049,7 @@
 //       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
 //         <div className="text-center">
 //           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div>
-//           <p className="font-semibold text-gray-400">
+//           <p className="font-semibold text-gray-500">
 //             Loading leave requests...
 //           </p>
 //         </div>
@@ -1066,7 +1066,7 @@
 //     <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
 //       📋 Leave Requests
 //     </h1>
-//     <p className="text-sm text-gray-400">
+//     <p className="text-sm text-gray-500">
 //       Manage and filter employee leave requests easily
 //     </p>
 //   </div> */}
@@ -1107,34 +1107,34 @@
 
 
 
-//         <div className="p-3 mb-3 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
+//         <div className="p-3 mb-3 bg-white border border-gray-200 shadow-md rounded-xl">
 
 //           {/* Filters – Single Row */}
 //           <div className="flex items-end gap-4 flex-nowrap">
 
 //             {/* Search */}
 //             <div className="flex flex-col w-64">
-//               <label className="mb-1 text-xs font-semibold text-gray-400">
+//               <label className="mb-1 text-xs font-semibold text-gray-500">
 //                 <FaSearch className="inline mr-1" /> Search
 //               </label>
 //               <input
 //                 type="text"
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //                 placeholder="Name / ID / Type / Reason"
 //               />
 //             </div>
 
 //             {/* Status */}
 //             <div className="flex flex-col w-40">
-//               <label className="mb-1 text-xs font-semibold text-gray-400">
+//               <label className="mb-1 text-xs font-semibold text-gray-500">
 //                 Status
 //               </label>
 //               <select
 //                 value={statusFilter}
 //                 onChange={(e) => setStatusFilter(e.target.value)}
-//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //               >
 //                 <option value="all">All</option>
 //                 <option value="pending">Pending</option>
@@ -1145,27 +1145,27 @@
 
 //             {/* From Date */}
 //             <div className="flex flex-col w-40">
-//               <label className="mb-1 text-xs font-semibold text-gray-400">
-//                 <FaCalendarAlt className="inline mr-1 text-white" /> From
+//               <label className="mb-1 text-xs font-semibold text-gray-500">
+//                 <FaCalendarAlt className="inline mr-1 text-gray-500" /> From
 //               </label>
 //               <input
 //                 type="date"
 //                 value={startDateFilter}
 //                 onChange={(e) => setStartDateFilter(e.target.value)}
-//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //               />
 //             </div>
 
 //             {/* To Date */}
 //             <div className="flex flex-col w-40">
-//               <label className="mb-1 text-xs font-semibold text-gray-400">
-//                 <FaCalendarAlt className="inline mr-1 text-white" /> To
+//               <label className="mb-1 text-xs font-semibold text-gray-500">
+//                 <FaCalendarAlt className="inline mr-1 text-gray-500" /> To
 //               </label>
 //               <input
 //                 type="date"
 //                 value={endDateFilter}
 //                 onChange={(e) => setEndDateFilter(e.target.value)}
-//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //               />
 //             </div>
 
@@ -1188,8 +1188,8 @@
 
 
 //         {/* ✅ Table */}
-//       <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
-//                 <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//       <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+//                 <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //                   <table className="min-w-full">
 //                     <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //               <tr>
@@ -1207,28 +1207,28 @@
 //                 filteredLeaves.map((l) => (
 //                   <tr
 //                     key={l._id}
-//                     className="transition border-b hover:bg-[#000000]"
+//                     className="transition border-b hover:bg-gray-50"
 //                   >
-//                     <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                     <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                       <div className="font-semibold">{l.employeeName}</div>
 //                       {/* <div className="text-xs text-gray-500">
 //                         ID: {l.employeeId}
 //                       </div> */}
-//                       {/* <div className="text-xs text-gray-400">
+//                       {/* <div className="text-xs text-gray-500">
 //                         {new Date(l.createdAt).toLocaleDateString()}
 //                       </div> */}
 //                     </td>
 //                     {/* <td className="px-4 py-2">
-//                       <span className="px-2 py-1 text-xs text-gray-300 bg-[#111111] rounded-full">
+//                       <span className="px-2 py-1 text-xs text-gray-700 bg-gray-100 rounded-full">
 //                         {l.leaveType || "Enter Leave Type"}
 //                       </span>
 //                     </td> */}
-//                     <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                     <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                       {new Date(l.startDate).toLocaleDateString()} <br />
-//                       <span className="text-xs text-gray-400">to</span> <br />
+//                       <span className="text-xs text-gray-500">to</span> <br />
 //                       {new Date(l.endDate).toLocaleDateString()}
 //                     </td>
-//                     <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                     <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                       <span className="px-2 py-2 text-xs text-center text-blue-700 bg-blue-100 rounded-full">
 //                         {l.days} days
 //                       </span>
@@ -1236,7 +1236,7 @@
 //                     <td className="px-2 py-2 text-sm font-medium text-center text-gray-500 whitespace-nowrap">
 //                       {l.reason}
 //                     </td>
-//                     <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                     <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                       {l.status === "approved" && (
 //                         <span className="px-2 py-2 text-xs text-center text-green-700 bg-green-100 rounded-full">
 //                           ✅ Approved
@@ -1255,7 +1255,7 @@
 //                     </td>
 
 //                     {/* ✅ Approve / Reject Buttons */}
-//                     <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                     <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                       {l.status === "pending" ? (
 //                         <div className="flex justify-end gap-2">
 //                           <button
@@ -1272,7 +1272,7 @@
 //                           </button>
 //                         </div>
 //                       ) : (
-//                         <span className="text-xs italic text-gray-400">
+//                         <span className="text-xs italic text-gray-500">
 //                           No actions
 //                         </span>
 //                       )}
@@ -1471,10 +1471,10 @@
 //   // ✅ Stat Box
 //   const StatCard = ({ label, value, color }) => (
 //     <div
-//       className={`bg-[#0a0a0a] rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}
+//       className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} text-center`}
 //     >
 //       <div className="text-lg font-bold">{value}</div>
-//       <div className="text-xs font-medium text-gray-300">{label}</div>
+//       <div className="text-xs font-medium text-gray-700">{label}</div>
 //     </div>
 //   );
 
@@ -1484,7 +1484,7 @@
 //       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
 //         <div className="text-center">
 //           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div>
-//           <p className="font-semibold text-gray-400">
+//           <p className="font-semibold text-gray-500">
 //             Loading leave requests...
 //           </p>
 //         </div>
@@ -1518,32 +1518,32 @@
 //           />
 //          </div>
 
-//         <div className="p-2 mb-2 bg-[#0a0a0a] border border-[#1f2937] shadow-md rounded-xl">
+//         <div className="p-2 mb-2 bg-white border border-gray-200 shadow-md rounded-xl">
 //           {/* Filters – Single Row */}
 //           <div className="flex items-end gap-4 flex-nowrap">
 //             {/* Search */}
 //             <div className="flex flex-col w-64">
-//               <label className="mb-1 text-xs font-semibold text-gray-400">
+//               <label className="mb-1 text-xs font-semibold text-gray-500">
 //                 <FaSearch className="inline mr-1" /> Search
 //               </label>
 //               <input
 //                 type="text"
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //                 placeholder="Name / ID / Type / Reason"
 //               />
 //             </div>
 
 //             {/* Status */}
 //             <div className="flex flex-col w-40">
-//               <label className="mb-1 text-xs font-semibold text-gray-400">
+//               <label className="mb-1 text-xs font-semibold text-gray-500">
 //                 Status
 //               </label>
 //               <select
 //                 value={statusFilter}
 //                 onChange={(e) => setStatusFilter(e.target.value)}
-//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //               >
 //                 <option value="all">All</option>
 //                 <option value="pending">Pending</option>
@@ -1554,27 +1554,27 @@
 
 //             {/* From Date */}
 //             <div className="flex flex-col w-40">
-//               <label className="mb-1 text-xs font-semibold text-gray-400">
-//                 <FaCalendarAlt className="inline mr-1 text-white" /> From
+//               <label className="mb-1 text-xs font-semibold text-gray-500">
+//                 <FaCalendarAlt className="inline mr-1 text-gray-500" /> From
 //               </label>
 //               <input
 //                 type="date"
 //                 value={startDateFilter}
 //                 onChange={(e) => setStartDateFilter(e.target.value)}
-//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //               />
 //             </div>
 
 //             {/* To Date */}
 //             <div className="flex flex-col w-40">
-//               <label className="mb-1 text-xs font-semibold text-gray-400">
-//                 <FaCalendarAlt className="inline mr-1 text-white" /> To
+//               <label className="mb-1 text-xs font-semibold text-gray-500">
+//                 <FaCalendarAlt className="inline mr-1 text-gray-500" /> To
 //               </label>
 //               <input
 //                 type="date"
 //                 value={endDateFilter}
 //                 onChange={(e) => setEndDateFilter(e.target.value)}
-//                 className="px-3 text-sm border border-[#374151] rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 className="px-3 text-sm border border-gray-300 rounded-md h-9 focus:outline-none focus:ring-1 focus:ring-blue-500"
 //               />
 //             </div>
 
@@ -1595,8 +1595,8 @@
 //         </div>
 
 //         {/* ✅ Table */}
-//         <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
-//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
@@ -1614,20 +1614,20 @@
 //                   currentItems.map((l) => (
 //                     <tr
 //                       key={l._id}
-//                       className="transition border-b hover:bg-[#000000]"
+//                       className="transition border-b hover:bg-gray-50"
 //                     >
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                         {l.employeeId || "N/A"}
 //                       </td>
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                         <div className="font-semibold">{l.employeeName}</div>
 //                       </td>
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                         {new Date(l.startDate).toLocaleDateString()} <br />
-//                         <span className="text-xs text-gray-400">to</span> <br />
+//                         <span className="text-xs text-gray-500">to</span> <br />
 //                         {new Date(l.endDate).toLocaleDateString()}
 //                       </td>
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                         <span className="px-2 py-2 text-xs text-center text-blue-700 bg-blue-100 rounded-full">
 //                           {l.days} {l.days === 1 ? 'day' : 'days'}
 //                         </span>
@@ -1635,7 +1635,7 @@
 //                       <td className="max-w-xs px-2 py-2 text-sm font-medium text-center text-gray-500 truncate whitespace-nowrap">
 //                         {l.reason}
 //                       </td>
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                         {l.status === "approved" && (
 //                           <span className="px-2 py-2 text-xs text-center text-green-700 bg-green-100 rounded-full">
 //                             ✅ Approved
@@ -1652,7 +1652,7 @@
 //                           </span>
 //                         )}
 //                       </td>
-//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                         {l.status === "pending" ? (
 //                           <div className="flex justify-center gap-2">
 //                             <button
@@ -1669,7 +1669,7 @@
 //                             </button>
 //                           </div>
 //                         ) : (
-//                           <span className="text-xs italic text-gray-400">
+//                           <span className="text-xs italic text-gray-500">
 //                             No actions
 //                           </span>
 //                         )}
@@ -1694,7 +1694,7 @@
 //             {/* Show entries dropdown */}
 //             <div className="flex flex-wrap items-center gap-4">
 //               <div className="flex items-center gap-2">
-//                 <label className="text-sm font-medium text-gray-300">
+//                 <label className="text-sm font-medium text-gray-700">
 //                   Show:
 //                 </label>
 //                 <select
@@ -1707,7 +1707,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-400">entries</span>
+//                 <span className="text-sm text-gray-500">entries</span>
 //               </div>
 //             </div>
 
@@ -1718,8 +1718,8 @@
 //                 disabled={currentPage === 1}
 //                 className={`px-4 py-1 text-sm border rounded-lg ${
 //                   currentPage === 1
-//                     ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                     : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
+//                     ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                     : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
 //                 }`}
 //               >
 //                 Previous
@@ -1732,10 +1732,10 @@
 //                   disabled={page === "..."}
 //                   className={`px-4 py-1 text-sm border rounded-lg ${
 //                     page === "..."
-//                       ? "text-gray-500 bg-[#000000] cursor-default"
+//                       ? "text-gray-500 bg-gray-50 cursor-default"
 //                       : currentPage === page
 //                       ? "text-white bg-blue-600 border-blue-600"
-//                       : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                   }`}
 //                 >
 //                   {page}
@@ -1747,8 +1747,8 @@
 //                 disabled={currentPage === totalPages}
 //                 className={`px-4 py-1 text-sm border rounded-lg ${
 //                   currentPage === totalPages
-//                     ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                     : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                     ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                     : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                 }`}
 //               >
 //                 Next
@@ -2027,12 +2027,12 @@
 
 //   // ✅ Stat Box - Matching the Dashboard design
 //   const StatCard = ({ icon: Icon, label, value, color }) => (
-//     <div className={`bg-[#0a0a0a] rounded-lg p-3 shadow-sm border-t-4 ${color} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
+//     <div className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
 //       <div className="flex items-center gap-2">
-//         <Icon className="text-gray-400 text-base flex-shrink-0" />
-//         <div className="text-sm font-medium text-gray-300">{label}</div>
+//         <Icon className="text-gray-500 text-base flex-shrink-0" />
+//         <div className="text-sm font-medium text-gray-700">{label}</div>
 //       </div>
-//       <div className="text-sm font-bold text-gray-300">
+//       <div className="text-sm font-bold text-gray-700">
 //         <CountUp end={value} duration={2} separator="," />
 //       </div>
 //     </div>
@@ -2044,7 +2044,7 @@
 //       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
 //         <div className="text-center">
 //           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div>
-//           <p className="font-semibold text-gray-400">
+//           <p className="font-semibold text-gray-500">
 //             Loading leave requests...
 //           </p>
 //         </div>
@@ -2084,18 +2084,18 @@
 
 
 //         {/* Filters Section */}
-//         <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
+//         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
 //           <div className="flex flex-wrap items-center gap-2">
 
 //             {/* ID/Name Search */}
 //             <div className="relative flex-1 min-w-[180px]">
-//               <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+//               <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
 //               <input
 //                 type="text"
 //                 placeholder="Search by ID or Name..."
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -2103,7 +2103,7 @@
 //             <select
 //               value={statusFilter}
 //               onChange={(e) => setStatusFilter(e.target.value)}
-//               className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
+//               className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
 //             >
 //               <option value="all">All Status</option>
 //               <option value="pending">Pending</option>
@@ -2115,7 +2115,7 @@
 //             <select
 //               value={leaveTypeFilter}
 //               onChange={(e) => setLeaveTypeFilter(e.target.value)}
-//               className="h-8 px-2 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
+//               className="h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 min-w-[100px]"
 //             >
 //               <option value="all">All Types</option>
 //               <option value="sick">Sick Leave</option>
@@ -2130,7 +2130,7 @@
 //                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment
 //                     ? 'bg-blue-600 text-white hover:bg-blue-700'
-//                     : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                   }`}
 //               >
 //                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
@@ -2138,13 +2138,13 @@
 
 //               {/* Department Filter Dropdown */}
 //               {showDepartmentFilter && (
-//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
 //                   <div
 //                     onClick={() => {
 //                       setFilterDepartment('');
 //                       setShowDepartmentFilter(false);
 //                     }}
-//                     className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
+//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
 //                   >
 //                     All Departments
 //                   </div>
@@ -2171,7 +2171,7 @@
 //                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation
 //                     ? 'bg-blue-600 text-white hover:bg-blue-700'
-//                     : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                   }`}
 //               >
 //                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
@@ -2179,13 +2179,13 @@
 
 //               {/* Designation Filter Dropdown */}
 //               {showDesignationFilter && (
-//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
 //                   <div
 //                     onClick={() => {
 //                       setFilterDesignation('');
 //                       setShowDesignationFilter(false);
 //                     }}
-//                     className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
+//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
 //                   >
 //                     All Designations
 //                   </div>
@@ -2216,7 +2216,7 @@
 //                 value={startDateFilter}
 //                 onChange={(e) => setStartDateFilter(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-12 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -2230,7 +2230,7 @@
 //                 value={endDateFilter}
 //                 onChange={(e) => setEndDateFilter(e.target.value)}
 //                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
-//                 className="w-full pl-10 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -2238,7 +2238,7 @@
 //             {(searchTerm || filterDepartment || filterDesignation || statusFilter !== "all" || leaveTypeFilter !== "all" || startDateFilter || endDateFilter) && (
 //               <button
 //                 onClick={clearFilters}
-//                 className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
+//                 className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
 //               >
 //                 Clear
 //               </button>
@@ -2255,8 +2255,8 @@
 //         </div>
 
 //         {/* ✅ Table */}
-//         <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
-//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
@@ -2278,26 +2278,26 @@
 //                     return (
 //                       <tr
 //                         key={l._id}
-//                         className="transition border-b hover:bg-[#000000]"
+//                         className="transition border-b hover:bg-gray-50"
 //                       >
-//                         <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
 //                           {l.employeeId || "N/A"}
 //                         </td>
-//                         <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
 //                           <div className="font-medium">{l.employeeName}</div>
 //                         </td>
-//                         <td className="px-2 py-2 text-center text-gray-400 ">
+//                         <td className="px-2 py-2 text-center text-gray-500 ">
 //                           {empDetails.department}
 //                         </td>
-//                         <td className="px-2 py-2 text-center text-gray-400 ">
+//                         <td className="px-2 py-2 text-center text-gray-500 ">
 //                           {empDetails.designation}
 //                         </td>
-//                         <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
 //                           {new Date(l.startDate).toLocaleDateString()} <br />
-//                           <span className="text-xs text-gray-400">to</span> <br />
+//                           <span className="text-xs text-gray-500">to</span> <br />
 //                           {new Date(l.endDate).toLocaleDateString()}
 //                         </td>
-//                         <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
 //                           <span className="px-2 py-2 text-xs text-center text-blue-700 bg-blue-100 rounded-full">
 //                             {l.days} {l.days === 1 ? 'day' : 'days'}
 //                           </span>
@@ -2305,7 +2305,7 @@
 //                         <td className="max-w-xs px-2 py-2 font-medium text-center text-gray-500 truncate whitespace-nowrap">
 //                           {l.reason}
 //                         </td>
-//                         <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
 //                           {l.status === "approved" && (
 //                             <span className="px-2 py-2 text-xs text-center text-green-700 bg-green-100 rounded-full">
 //                               ✅ Approved
@@ -2322,7 +2322,7 @@
 //                             </span>
 //                           )}
 //                         </td>
-//                         <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
 //                           {l.status === "pending" ? (
 //                             <div className="flex justify-center gap-2">
 //                               <button
@@ -2339,7 +2339,7 @@
 //                               </button>
 //                             </div>
 //                           ) : (
-//                             <span className="text-xs italic text-gray-400">
+//                             <span className="text-xs italic text-gray-500">
 //                               No actions
 //                             </span>
 //                           )}
@@ -2364,7 +2364,7 @@
 //           <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
 //             <div className="flex flex-wrap items-center gap-4">
 //               <div className="flex items-center gap-2">
-//                 <label className="font-medium text-gray-300 ">
+//                 <label className="font-medium text-gray-700 ">
 //                   Show:
 //                 </label>
 //                 <select
@@ -2377,7 +2377,7 @@
 //                   <option value={20}>20</option>
 //                   <option value={50}>50</option>
 //                 </select>
-//                 <span className="text-sm text-gray-400">entries</span>
+//                 <span className="text-sm text-gray-500">entries</span>
 //               </div>
 //             </div>
 
@@ -2386,8 +2386,8 @@
 //                 onClick={handlePrevPage}
 //                 disabled={currentPage === 1}
 //                 className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
-//                     ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                     : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
+//                     ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                     : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
 //                   }`}
 //               >
 //                 Previous
@@ -2399,10 +2399,10 @@
 //                   onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
 //                   disabled={page === "..."}
 //                   className={`px-4 py-1 text-sm border rounded-lg ${page === "..."
-//                       ? "text-gray-500 bg-[#000000] cursor-default"
+//                       ? "text-gray-500 bg-gray-50 cursor-default"
 //                       : currentPage === page
 //                         ? "text-white bg-blue-600 border-blue-600"
-//                         : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                     }`}
 //                 >
 //                   {page}
@@ -2413,8 +2413,8 @@
 //                 onClick={handleNextPage}
 //                 disabled={currentPage === totalPages}
 //                 className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
-//                     ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//                     : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                     ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//                     : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                   }`}
 //               >
 //                 Next
@@ -2438,7 +2438,6 @@ import { FiCheckCircle, FiClock, FiList, FiXCircle } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
-import StatCard from "../Components/StatCard";
 
 const LeavesList = () => {
   const [leaves, setLeaves] = useState([]);
@@ -2874,12 +2873,12 @@ const LeavesList = () => {
 
   // ✅ Stat Box - Matching the Dashboard design
   const StatCard = ({ icon: Icon, label, value, color, onClick }) => (
-    <div onClick={onClick} className={`bg-[#0a0a0a] rounded-lg p-3 shadow-sm border-t-4 ${color} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
+    <div onClick={onClick} className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
       <div className="flex items-center gap-2">
-        <Icon className="text-gray-400 text-base flex-shrink-0" />
-        <div className="text-sm font-medium text-gray-300">{label}</div>
+        <Icon className="text-gray-500 text-base flex-shrink-0" />
+        <div className="text-sm font-medium text-gray-700">{label}</div>
       </div>
-      <div className="text-sm font-bold text-gray-300">
+      <div className="text-sm font-bold text-gray-700">
         <CountUp end={value} duration={2} separator="," />
       </div>
     </div>
@@ -2887,7 +2886,7 @@ const LeavesList = () => {
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
-      <div className="text-center"><div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div><p className="font-semibold text-gray-400">Loading leave requests...</p></div>
+      <div className="text-center"><div className="w-12 h-12 mx-auto mb-3 border-b-2 border-purple-600 rounded-full animate-spin"></div><p className="font-semibold text-gray-500">Loading leave requests...</p></div>
     </div>
   );
 
@@ -2932,60 +2931,60 @@ const LeavesList = () => {
         </div>
 
         {/* Filters */}
-        <div className="p-3 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
+        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
-            <div className="relative flex-1 min-w-[180px]"><FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" /><input type="text" placeholder="Search by ID or Name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-8 pr-3 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500" /></div>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-8 px-2 text-xs border border-[#374151] rounded-lg min-w-[100px]"><option value="all">All Status</option><option value="pending">Pending</option><option value="manager_approved">Manager Approved</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
-            <select value={leaveTypeFilter} onChange={(e) => setLeaveTypeFilter(e.target.value)} className="h-8 px-2 text-xs border border-[#374151] rounded-lg min-w-[100px]"><option value="all">All Types</option><option value="sick">Sick Leave</option><option value="casual">Casual Leave</option><option value="earned">Earned Leave</option></select>
-            <div className="relative" ref={departmentFilterRef}><button onClick={() => setShowDepartmentFilter(!showDepartmentFilter)} className={`h-8 px-3 text-xs font-medium rounded-md flex items-center gap-1 ${filterDepartment ? 'bg-blue-600 text-white' : 'bg-[#111111] text-gray-300 border border-[#374151]'}`}><FaBuilding /> Dept{filterDepartment && `: ${filterDepartment}`}</button>{showDepartmentFilter && (<div className="absolute z-50 w-48 mt-1 bg-[#0a0a0a] border rounded-md shadow-lg max-h-60"><div onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); }} className="px-3 py-2 text-xs cursor-pointer hover:bg-blue-50">All Departments</div>{uniqueDepartments.map(dept => (<div key={dept} onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDepartment === dept ? 'bg-blue-50 text-blue-700' : ''}`}>{dept}</div>))}</div>)}</div>
-            <div className="relative" ref={designationFilterRef}><button onClick={() => setShowDesignationFilter(!showDesignationFilter)} className={`h-8 px-3 text-xs font-medium rounded-md flex items-center gap-1 ${filterDesignation ? 'bg-blue-600 text-white' : 'bg-[#111111] text-gray-300 border border-[#374151]'}`}><FaUserTag /> Desig{filterDesignation && `: ${filterDesignation}`}</button>{showDesignationFilter && (<div className="absolute z-50 w-48 mt-1 bg-[#0a0a0a] border rounded-md shadow-lg max-h-60"><div onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); }} className="px-3 py-2 text-xs cursor-pointer hover:bg-blue-50">All Designations</div>{uniqueDesignations.map(des => (<div key={des} onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDesignation === des ? 'bg-blue-50 text-blue-700' : ''}`}>{des}</div>))}</div>)}</div>
-            <div className="relative w-[130px]"><span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500">From:</span><input type="date" value={startDateFilter} onChange={(e) => setStartDateFilter(e.target.value)} className="w-full pl-12 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg" /></div>
-            <div className="relative w-[130px]"><span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500">To:</span><input type="date" value={endDateFilter} onChange={(e) => setEndDateFilter(e.target.value)} className="w-full pl-10 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg" /></div>
-            <button onClick={() => setShowCompOffRequests(!showCompOffRequests)} className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md ${showCompOffRequests ? 'bg-purple-600 text-white' : 'bg-[#111111] text-gray-300 border border-[#374151]'}`}><FaExchangeAlt /> {showCompOffRequests ? 'Hide Comp-off' : `Comp-off (${compOffRequests.length})`}</button>
-            {(searchTerm || filterDepartment || filterDesignation || statusFilter !== "all" || leaveTypeFilter !== "all" || startDateFilter || endDateFilter) && <button onClick={clearFilters} className="h-8 px-3 text-xs font-medium text-gray-400 bg-[#111111] border rounded-md hover:bg-[#1f2937]">Clear</button>}
+            <div className="relative flex-1 min-w-[180px]"><FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" /><input type="text" placeholder="Search by ID or Name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500" /></div>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-8 px-2 text-xs border border-gray-300 rounded-lg min-w-[100px]"><option value="all">All Status</option><option value="pending">Pending</option><option value="manager_approved">Manager Approved</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+            <select value={leaveTypeFilter} onChange={(e) => setLeaveTypeFilter(e.target.value)} className="h-8 px-2 text-xs border border-gray-300 rounded-lg min-w-[100px]"><option value="all">All Types</option><option value="sick">Sick Leave</option><option value="casual">Casual Leave</option><option value="earned">Earned Leave</option></select>
+            <div className="relative" ref={departmentFilterRef}><button onClick={() => setShowDepartmentFilter(!showDepartmentFilter)} className={`h-8 px-3 text-xs font-medium rounded-md flex items-center gap-1 ${filterDepartment ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 border border-gray-300'}`}><FaBuilding /> Dept{filterDepartment && `: ${filterDepartment}`}</button>{showDepartmentFilter && (<div className="absolute z-50 w-48 mt-1 bg-white border rounded-md shadow-lg max-h-60"><div onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); }} className="px-3 py-2 text-xs cursor-pointer hover:bg-blue-50">All Departments</div>{uniqueDepartments.map(dept => (<div key={dept} onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDepartment === dept ? 'bg-blue-50 text-blue-700' : ''}`}>{dept}</div>))}</div>)}</div>
+            <div className="relative" ref={designationFilterRef}><button onClick={() => setShowDesignationFilter(!showDesignationFilter)} className={`h-8 px-3 text-xs font-medium rounded-md flex items-center gap-1 ${filterDesignation ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 border border-gray-300'}`}><FaUserTag /> Desig{filterDesignation && `: ${filterDesignation}`}</button>{showDesignationFilter && (<div className="absolute z-50 w-48 mt-1 bg-white border rounded-md shadow-lg max-h-60"><div onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); }} className="px-3 py-2 text-xs cursor-pointer hover:bg-blue-50">All Designations</div>{uniqueDesignations.map(des => (<div key={des} onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDesignation === des ? 'bg-blue-50 text-blue-700' : ''}`}>{des}</div>))}</div>)}</div>
+            <div className="relative w-[130px]"><span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500">From:</span><input type="date" value={startDateFilter} onChange={(e) => setStartDateFilter(e.target.value)} className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg" /></div>
+            <div className="relative w-[130px]"><span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500">To:</span><input type="date" value={endDateFilter} onChange={(e) => setEndDateFilter(e.target.value)} className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg" /></div>
+            <button onClick={() => setShowCompOffRequests(!showCompOffRequests)} className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md ${showCompOffRequests ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 border border-gray-300'}`}><FaExchangeAlt /> {showCompOffRequests ? 'Hide Comp-off' : `Comp-off (${compOffRequests.length})`}</button>
+            {(searchTerm || filterDepartment || filterDesignation || statusFilter !== "all" || leaveTypeFilter !== "all" || startDateFilter || endDateFilter) && <button onClick={clearFilters} className="h-8 px-3 text-xs font-medium text-gray-500 bg-gray-100 border rounded-md hover:bg-gray-200">Clear</button>}
             <button onClick={() => navigate("/leaves-report")} className="h-8 px-3 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">📊 Report</button>
           </div>
         </div>
 
         {/* Comp-off Requests Section */}
         {showCompOffRequests && (
-          <div className="mb-6 overflow-hidden bg-[#0a0a0a] border-2 border-purple-200 rounded-lg shadow-lg">
-            <div className="flex items-center justify-between px-4 py-2 text-white bg-gradient-to-r from-purple-500 to-purple-700"><h3 className="flex items-center gap-2 font-semibold"><FaExchangeAlt /> Comp-off Requests ({compOffRequests.length})</h3><button onClick={fetchCompOffRequests} className="px-2 py-1 text-xs text-purple-700 bg-[#0a0a0a] rounded hover:bg-purple-100">🔄 Refresh</button></div>
-            {loadingRequests ? (<div className="p-8 text-center"><div className="w-8 h-8 mx-auto border-b-2 border-purple-600 rounded-full animate-spin"></div><p className="mt-2 text-sm text-gray-400">Loading requests...</p></div>) : compOffRequests.length === 0 ? (<div className="p-8 text-center text-gray-500"><p>No pending comp-off requests</p></div>) : (
-              <div className="overflow-x-auto"><table className="min-w-full"><thead className="text-xs text-purple-800 bg-purple-100"><tr><th className="px-3 py-2 text-center">Employee</th><th className="px-3 py-2 text-center">Work Date</th><th className="px-3 py-2 text-center">Days</th><th className="px-3 py-2 text-center">Reason</th><th className="px-3 py-2 text-center">Actions</th></tr></thead><tbody>{compOffRequests.map(req => (<tr key={req._id} className="border-b hover:bg-purple-50"><td className="px-3 py-2 text-center"><div className="font-medium">{req.employeeName}</div><div className="text-xs text-gray-500">{req.employeeId}</div></td><td className="px-3 py-2 text-center">{formatDate(req.workDate)}</td><td className="px-3 py-2 text-center"><span className="px-2 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded-full">{req.count || 1} day(s)</span></td><td className="max-w-xs px-3 py-2 text-center"><span className="block text-xs text-gray-300 truncate">{req.reason || 'No reason provided'}</span></td><td className="px-3 py-2 text-center"><button onClick={() => { setSelectedCompOffRequest(req); setShowCompOffPopup(true); }} className="px-2 py-1 text-xs text-white bg-purple-500 rounded-md hover:bg-purple-600">Review</button></td></tr>))}</tbody></table></div>
+          <div className="mb-6 overflow-hidden bg-white border-2 border-purple-200 rounded-lg shadow-lg">
+            <div className="flex items-center justify-between px-4 py-2 text-white bg-gradient-to-r from-purple-500 to-purple-700"><h3 className="flex items-center gap-2 font-semibold"><FaExchangeAlt /> Comp-off Requests ({compOffRequests.length})</h3><button onClick={fetchCompOffRequests} className="px-2 py-1 text-xs text-purple-700 bg-white rounded hover:bg-purple-100">🔄 Refresh</button></div>
+            {loadingRequests ? (<div className="p-8 text-center"><div className="w-8 h-8 mx-auto border-b-2 border-purple-600 rounded-full animate-spin"></div><p className="mt-2 text-sm text-gray-500">Loading requests...</p></div>) : compOffRequests.length === 0 ? (<div className="p-8 text-center text-gray-500"><p>No pending comp-off requests</p></div>) : (
+              <div className="overflow-x-auto"><table className="min-w-full"><thead className="text-xs text-purple-800 bg-purple-100"><tr><th className="px-3 py-2 text-center">Employee</th><th className="px-3 py-2 text-center">Work Date</th><th className="px-3 py-2 text-center">Days</th><th className="px-3 py-2 text-center">Reason</th><th className="px-3 py-2 text-center">Actions</th></tr></thead><tbody>{compOffRequests.map(req => (<tr key={req._id} className="border-b hover:bg-purple-50"><td className="px-3 py-2 text-center"><div className="font-medium">{req.employeeName}</div><div className="text-xs text-gray-500">{req.employeeId}</div></td><td className="px-3 py-2 text-center">{formatDate(req.workDate)}</td><td className="px-3 py-2 text-center"><span className="px-2 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded-full">{req.count || 1} day(s)</span></td><td className="max-w-xs px-3 py-2 text-center"><span className="block text-xs text-gray-700 truncate">{req.reason || 'No reason provided'}</span></td><td className="px-3 py-2 text-center"><button onClick={() => { setSelectedCompOffRequest(req); setShowCompOffPopup(true); }} className="px-2 py-1 text-xs text-white bg-purple-500 rounded-md hover:bg-purple-600">Review</button></td></tr>))}</tbody></table></div>
             )}
           </div>
         )}
 
         {/* Comp-off Review Popup */}
         {showCompOffPopup && selectedCompOffRequest && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"><div ref={compOffPopupRef} className="w-full max-w-md p-6 bg-[#0a0a0a] rounded-lg shadow-xl"><h2 className="mb-4 text-xl font-bold text-purple-800">Review Comp-off Request</h2><div className="space-y-4"><div className="p-3 rounded-lg bg-purple-50"><p className="text-sm text-gray-400">Employee</p><p className="font-medium">{selectedCompOffRequest.employeeName}</p><p className="text-xs text-gray-500">{selectedCompOffRequest.employeeId}</p></div><div><label className="block mb-1 text-sm font-medium text-gray-300">Work Date</label><div className="p-2 rounded-lg bg-[#000000]">{formatDate(selectedCompOffRequest.workDate)}</div></div><div><label className="block mb-1 text-sm font-medium text-gray-300">Days Requested</label><div className="p-2 rounded-lg bg-[#000000]">{selectedCompOffRequest.count || 1} day(s)</div></div><div><label className="block mb-1 text-sm font-medium text-gray-300">Reason</label><div className="p-2 rounded-lg bg-[#000000]">{selectedCompOffRequest.reason || 'No reason provided'}</div></div><div className="flex gap-2 pt-4"><button onClick={() => { setShowCompOffPopup(false); setSelectedCompOffRequest(null); }} className="flex-1 px-4 py-2 text-gray-400 bg-[#111111] rounded-md hover:bg-[#1f2937]">Cancel</button><button onClick={rejectCompOffRequest} className="flex-1 px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600">Reject</button><button onClick={approveCompOffRequest} className="flex-1 px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600">Approve</button></div></div></div></div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"><div ref={compOffPopupRef} className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl"><h2 className="mb-4 text-xl font-bold text-purple-800">Review Comp-off Request</h2><div className="space-y-4"><div className="p-3 rounded-lg bg-purple-50"><p className="text-sm text-gray-500">Employee</p><p className="font-medium">{selectedCompOffRequest.employeeName}</p><p className="text-xs text-gray-500">{selectedCompOffRequest.employeeId}</p></div><div><label className="block mb-1 text-sm font-medium text-gray-700">Work Date</label><div className="p-2 rounded-lg bg-gray-50">{formatDate(selectedCompOffRequest.workDate)}</div></div><div><label className="block mb-1 text-sm font-medium text-gray-700">Days Requested</label><div className="p-2 rounded-lg bg-gray-50">{selectedCompOffRequest.count || 1} day(s)</div></div><div><label className="block mb-1 text-sm font-medium text-gray-700">Reason</label><div className="p-2 rounded-lg bg-gray-50">{selectedCompOffRequest.reason || 'No reason provided'}</div></div><div className="flex gap-2 pt-4"><button onClick={() => { setShowCompOffPopup(false); setSelectedCompOffRequest(null); }} className="flex-1 px-4 py-2 text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200">Cancel</button><button onClick={rejectCompOffRequest} className="flex-1 px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600">Reject</button><button onClick={approveCompOffRequest} className="flex-1 px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600">Approve</button></div></div></div></div>
         )}
 
         {/* Edit Comp-off Popup */}
         {showEditCompOffPopup && selectedCompOffForEdit && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"><div ref={editCompOffPopupRef} className="w-full max-w-sm p-4 bg-[#0a0a0a] rounded-md shadow-lg"><h2 className="mb-3 text-lg font-semibold text-green-700">Edit Comp-off</h2><div className="space-y-3 text-sm"><div className="p-2 rounded bg-green-50"><p className="text-xs text-gray-500">Employee</p><p className="font-medium">{selectedCompOffForEdit.employeeName}</p><p className="text-[11px] text-gray-400">{selectedCompOffForEdit.employeeId}</p></div><div><label className="block mb-0.5 text-xs font-medium text-gray-400">Work Date</label><div className="p-1.5 rounded bg-[#000000] text-xs">{formatDate(selectedCompOffForEdit.workDate)}</div></div><div><label className="block mb-0.5 text-xs font-medium text-gray-400">Comp-off Days</label><input type="number" min="0.5" step="0.5" value={editCompOffData.count} onChange={(e) => setEditCompOffData({ ...editCompOffData, count: parseFloat(e.target.value) })} className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-green-500" /></div><div><label className="block mb-0.5 text-xs font-medium text-gray-400">Reason</label><textarea rows="2" value={editCompOffData.reason} onChange={(e) => setEditCompOffData({ ...editCompOffData, reason: e.target.value })} className="w-full px-2 py-1.5 text-xs border border-[#374151] rounded focus:ring-1 focus:ring-green-500" /></div><div className="flex gap-2 pt-2"><button onClick={() => { setShowEditCompOffPopup(false); setSelectedCompOffForEdit(null); }} className="flex-1 px-2 py-1.5 text-xs text-gray-400 bg-[#111111] rounded hover:bg-[#1f2937]">Cancel</button><button onClick={rejectApprovedCompOff} className="flex-1 px-2 py-1.5 text-xs text-white bg-red-500 rounded hover:bg-red-600">Reject</button><button onClick={saveEditedCompOff} className="flex-1 px-2 py-1.5 text-xs text-white bg-green-500 rounded hover:bg-green-600">Save</button></div></div></div></div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"><div ref={editCompOffPopupRef} className="w-full max-w-sm p-4 bg-white rounded-md shadow-lg"><h2 className="mb-3 text-lg font-semibold text-green-700">Edit Comp-off</h2><div className="space-y-3 text-sm"><div className="p-2 rounded bg-green-50"><p className="text-xs text-gray-500">Employee</p><p className="font-medium">{selectedCompOffForEdit.employeeName}</p><p className="text-[11px] text-gray-500">{selectedCompOffForEdit.employeeId}</p></div><div><label className="block mb-0.5 text-xs font-medium text-gray-500">Work Date</label><div className="p-1.5 rounded bg-gray-50 text-xs">{formatDate(selectedCompOffForEdit.workDate)}</div></div><div><label className="block mb-0.5 text-xs font-medium text-gray-500">Comp-off Days</label><input type="number" min="0.5" step="0.5" value={editCompOffData.count} onChange={(e) => setEditCompOffData({ ...editCompOffData, count: parseFloat(e.target.value) })} className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500" /></div><div><label className="block mb-0.5 text-xs font-medium text-gray-500">Reason</label><textarea rows="2" value={editCompOffData.reason} onChange={(e) => setEditCompOffData({ ...editCompOffData, reason: e.target.value })} className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500" /></div><div className="flex gap-2 pt-2"><button onClick={() => { setShowEditCompOffPopup(false); setSelectedCompOffForEdit(null); }} className="flex-1 px-2 py-1.5 text-xs text-gray-500 bg-gray-100 rounded hover:bg-gray-200">Cancel</button><button onClick={rejectApprovedCompOff} className="flex-1 px-2 py-1.5 text-xs text-white bg-red-500 rounded hover:bg-red-600">Reject</button><button onClick={saveEditedCompOff} className="flex-1 px-2 py-1.5 text-xs text-white bg-green-500 rounded hover:bg-green-600">Save</button></div></div></div></div>
         )}
 
         {/* View Balances Popup */}
         {showBalancePopup && selectedEmpBalance && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div ref={balancePopupRef} className="w-full max-w-sm p-6 bg-[#0a0a0a] rounded-lg shadow-xl">
+            <div ref={balancePopupRef} className="w-full max-w-sm p-6 bg-white rounded-lg shadow-xl">
               <h2 className="mb-4 text-xl font-bold text-blue-800">Leave Balances</h2>
               <div className="p-3 mb-4 rounded-lg bg-blue-50">
                 <p className="font-medium text-blue-900">{selectedEmpBalance.employeeName}</p>
                 <p className="text-xs text-blue-600">{selectedEmpBalance.employeeId}</p>
               </div>
               <div className="space-y-2">
-                <div className="flex justify-between p-2 rounded bg-[#000000]">
+                <div className="flex justify-between p-2 rounded bg-gray-50">
                   <span className="font-medium">Casual Leave (CL)</span>
                   <span>{selectedEmpBalance.balances.CL.available} Left / {selectedEmpBalance.balances.CL.used} Used</span>
                 </div>
-                <div className="flex justify-between p-2 rounded bg-[#000000]">
+                <div className="flex justify-between p-2 rounded bg-gray-50">
                   <span className="font-medium">Sick Leave (SL)</span>
                   <span>{selectedEmpBalance.balances.SL.available} Left / {selectedEmpBalance.balances.SL.used} Used</span>
                 </div>
-                <div className="flex justify-between p-2 rounded bg-[#000000]">
+                <div className="flex justify-between p-2 rounded bg-gray-50">
                   <span className="font-medium">Earned Leave (EL)</span>
                   <span>{selectedEmpBalance.balances.EL.available} Left / {selectedEmpBalance.balances.EL.used} Used</span>
                 </div>
@@ -2998,13 +2997,13 @@ const LeavesList = () => {
         )}
 
         {/* Main Table */}
-        <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
-          <div className="overflow-x-auto"><table className="min-w-full"><thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600"><tr><th className="py-2 text-center">Employee ID</th><th className="py-2 text-center">Name</th><th className="py-2 text-center">Department</th><th className="py-2 text-center">Designation</th><th className="py-2 text-center">Dates</th><th className="py-2 text-center">Days</th><th className="py-2 text-center">Reason</th><th className="py-2 text-center">Status</th><th className="py-2 text-center">Approved By</th><th className="py-2 text-center">Actions</th></tr></thead><tbody>{currentItems.length > 0 ? currentItems.map((l) => { const empDetails = getEmployeeDetails(l.employeeId); const compOffInfo = l.compOffStatus; const userRole = localStorage.getItem("userRole"); const isManager = userRole === "employee" && JSON.parse(localStorage.getItem("employeePermissions") || "[]").includes("leave_approve"); const canApprove = (userRole === "admin" && (l.status === "pending" || l.status === "manager_approved")) || (isManager && l.status === "pending"); return (<tr key={l._id} className={`border-b hover:bg-[#000000] ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-50' : ''}`}><td className="px-2 py-2 text-center">{l.employeeId || "N/A"}</td><td className="px-2 py-2 text-center"><div className="font-medium">{l.employeeName}</div></td><td className="px-2 py-2 text-center">{empDetails.department}</td><td className="px-2 py-2 text-center">{empDetails.designation}</td><td className="px-2 py-2 text-center">{new Date(l.startDate).toLocaleDateString()} <br /><span className="text-xs text-gray-400">to</span> <br />{new Date(l.endDate).toLocaleDateString()}</td><td className="px-2 py-2 text-center"><span className={`px-2 py-1 text-xs rounded-full ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>{l.days} {l.days === 1 ? 'day' : 'days'}</span></td><td className="max-w-xs px-2 py-2 text-center truncate">{l.reason}</td><td className="px-2 py-2 text-center">{l.status === "approved" && !compOffInfo?.exists && <span className="px-2 py-1 text-xs text-green-700 bg-green-100 rounded-full">✅ Approved</span>}{l.status === "approved" && compOffInfo?.exists && compOffInfo.status === "approved" && <span className="px-2 py-1 text-xs text-purple-700 bg-purple-100 rounded-full">🔄 Converted</span>}{l.status === "approved" && compOffInfo?.exists && compOffInfo.status === "rejected" && <span className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded-full">❌ Comp-off Rejected</span>}{l.status === "manager_approved" && <span className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded-full">👍 Manager Approved</span>}{l.status === "pending" && <span className="px-2 py-1 text-xs text-yellow-700 bg-yellow-100 rounded-full">⏳ Pending</span>}{l.status === "rejected" && <span className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded-full">❌ Rejected</span>}</td><td className="px-2 py-2 text-center">{l.approvedBy ? (<div className="text-xs"><span className="font-semibold">{l.approvedBy}</span><span className="block text-gray-500 text-[10px]">({l.approvedByRole || 'Admin'})</span></div>) : (<span className="text-gray-400">-</span>)}</td><td className="px-2 py-2 text-center"><div className="flex flex-col gap-1 items-center justify-center"><button onClick={() => viewEmployeeBalances(l.employeeId, l.employeeName)} className="px-2 py-1 text-xs text-white bg-blue-500 rounded hover:bg-blue-600 w-full">👁️ View</button>{canApprove ? (<div className="flex justify-center gap-1 w-full"><button onClick={() => updateLeaveStatus(l._id, l.status === "pending" && userRole === "employee" ? "manager_approved" : "approved")} className="px-2 py-1 text-xs text-white bg-green-500 rounded hover:bg-green-600 flex-1">Approve</button><button onClick={() => updateLeaveStatus(l._id, "rejected")} className="px-2 py-1 text-xs text-white bg-red-500 rounded hover:bg-red-600 flex-1">Reject</button></div>) : l.status === "approved" && compOffInfo?.exists && compOffInfo.status === "approved" ? (<div className="flex justify-center gap-1 w-full"><button onClick={() => editApprovedCompOff(approvedCompOffs.find(co => co._id === compOffInfo.compOffId))} className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded hover:bg-blue-200 flex-1">✏️ Edit</button><button onClick={() => deleteApprovedCompOff(compOffInfo.compOffId)} className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded hover:bg-red-200 flex-1">🗑️ Delete</button></div>) : (l.status === "approved" || l.status === "manager_approved") && !compOffInfo?.exists ? (<span className="text-xs text-purple-600">Comp-off available</span>) : (<span className="text-xs italic text-gray-400">No actions</span>)}</div></td></tr>); }) : <tr><td colSpan="10" className="py-6 text-center text-gray-500">No leave records found.</td></tr>}</tbody></table></div>
+        <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+          <div className="overflow-x-auto"><table className="min-w-full"><thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600"><tr><th className="py-2 text-center">Employee ID</th><th className="py-2 text-center">Name</th><th className="py-2 text-center">Department</th><th className="py-2 text-center">Designation</th><th className="py-2 text-center">Dates</th><th className="py-2 text-center">Days</th><th className="py-2 text-center">Reason</th><th className="py-2 text-center">Status</th><th className="py-2 text-center">Approved By</th><th className="py-2 text-center">Actions</th></tr></thead><tbody>{currentItems.length > 0 ? currentItems.map((l) => { const empDetails = getEmployeeDetails(l.employeeId); const compOffInfo = l.compOffStatus; const userRole = localStorage.getItem("userRole"); const isManager = userRole === "employee" && JSON.parse(localStorage.getItem("employeePermissions") || "[]").includes("leave_approve"); const canApprove = (userRole === "admin" && (l.status === "pending" || l.status === "manager_approved")) || (isManager && l.status === "pending"); return (<tr key={l._id} className={`border-b hover:bg-gray-50 ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-50' : ''}`}><td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{l.employeeId || "N/A"}</td><td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap"><div className="font-medium">{l.employeeName}</div></td><td className="px-2 py-2 text-center">{empDetails.department}</td><td className="px-2 py-2 text-center">{empDetails.designation}</td><td className="px-2 py-2 text-center">{new Date(l.startDate).toLocaleDateString()} <br /><span className="text-xs text-gray-500">to</span> <br />{new Date(l.endDate).toLocaleDateString()}</td><td className="px-2 py-2 text-center"><span className={`px-2 py-1 text-xs rounded-full ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>{l.days} {l.days === 1 ? 'day' : 'days'}</span></td><td className="max-w-xs px-2 py-2 text-center truncate">{l.reason}</td><td className="px-2 py-2 text-center">{l.status === "approved" && !compOffInfo?.exists && <span className="px-2 py-1 text-xs text-green-700 bg-green-100 rounded-full">✅ Approved</span>}{l.status === "approved" && compOffInfo?.exists && compOffInfo.status === "approved" && <span className="px-2 py-1 text-xs text-purple-700 bg-purple-100 rounded-full">🔄 Converted</span>}{l.status === "approved" && compOffInfo?.exists && compOffInfo.status === "rejected" && <span className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded-full">❌ Comp-off Rejected</span>}{l.status === "manager_approved" && <span className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded-full">👍 Manager Approved</span>}{l.status === "pending" && <span className="px-2 py-1 text-xs text-yellow-700 bg-yellow-100 rounded-full">⏳ Pending</span>}{l.status === "rejected" && <span className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded-full">❌ Rejected</span>}</td><td className="px-2 py-2 text-center">{l.approvedBy ? (<div className="text-xs"><span className="font-semibold">{l.approvedBy}</span><span className="block text-gray-500 text-[10px]">({l.approvedByRole || 'Admin'})</span></div>) : (<span className="text-gray-500">-</span>)}</td><td className="px-2 py-2 text-center"><div className="flex flex-col gap-1 items-center justify-center"><button onClick={() => viewEmployeeBalances(l.employeeId, l.employeeName)} className="px-2 py-1 text-xs text-white bg-blue-500 rounded hover:bg-blue-600 w-full">👁️ View</button>{canApprove ? (<div className="flex justify-center gap-1 w-full"><button onClick={() => updateLeaveStatus(l._id, l.status === "pending" && userRole === "employee" ? "manager_approved" : "approved")} className="px-2 py-1 text-xs text-white bg-green-500 rounded hover:bg-green-600 flex-1">Approve</button><button onClick={() => updateLeaveStatus(l._id, "rejected")} className="px-2 py-1 text-xs text-white bg-red-500 rounded hover:bg-red-600 flex-1">Reject</button></div>) : l.status === "approved" && compOffInfo?.exists && compOffInfo.status === "approved" ? (<div className="flex justify-center gap-1 w-full"><button onClick={() => editApprovedCompOff(approvedCompOffs.find(co => co._id === compOffInfo.compOffId))} className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded hover:bg-blue-200 flex-1">✏️ Edit</button><button onClick={() => deleteApprovedCompOff(compOffInfo.compOffId)} className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded hover:bg-red-200 flex-1">🗑️ Delete</button></div>) : (l.status === "approved" || l.status === "manager_approved") && !compOffInfo?.exists ? (<span className="text-xs text-purple-600">Comp-off available</span>) : (<span className="text-xs italic text-gray-500">No actions</span>)}</div></td></tr>); }) : <tr><td colSpan="10" className="py-6 text-center text-gray-500">No leave records found.</td></tr>}</tbody></table></div>
         </div>
 
         {/* Pagination */}
         {filteredLeaves.length > 0 && (
-          <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row"><div className="flex flex-wrap items-center gap-4"><div className="flex items-center gap-2"><label className="font-medium text-gray-300">Show:</label><select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-2 border rounded-lg"><option value={5}>5</option><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option></select><span className="text-sm text-gray-400">entries</span></div></div><div className="flex items-center gap-2"><button onClick={handlePrevPage} disabled={currentPage === 1} className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1 ? "text-gray-400 bg-[#111111] cursor-not-allowed" : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50"}`}>Previous</button>{getPageNumbers().map((page, index) => (<button key={index} onClick={() => typeof page === 'number' ? handlePageClick(page) : null} disabled={page === "..."} className={`px-4 py-1 text-sm border rounded-lg ${page === "..." ? "text-gray-500 bg-[#000000] cursor-default" : currentPage === page ? "text-white bg-blue-600" : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50"}`}>{page}</button>))}<button onClick={handleNextPage} disabled={currentPage === totalPages} className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages ? "text-gray-400 bg-[#111111] cursor-not-allowed" : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50"}`}>Next</button></div></div>
+          <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row"><div className="flex flex-wrap items-center gap-4"><div className="flex items-center gap-2"><label className="font-medium text-gray-700">Show:</label><select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-2 border rounded-lg"><option value={5}>5</option><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option></select><span className="text-sm text-gray-500">entries</span></div></div><div className="flex items-center gap-2"><button onClick={handlePrevPage} disabled={currentPage === 1} className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1 ? "text-gray-500 bg-gray-100 cursor-not-allowed" : "text-blue-600 bg-white hover:bg-blue-50"}`}>Previous</button>{getPageNumbers().map((page, index) => (<button key={index} onClick={() => typeof page === 'number' ? handlePageClick(page) : null} disabled={page === "..."} className={`px-4 py-1 text-sm border rounded-lg ${page === "..." ? "text-gray-500 bg-gray-50 cursor-default" : currentPage === page ? "text-white bg-blue-600" : "text-blue-600 bg-white hover:bg-blue-50"}`}>{page}</button>))}<button onClick={handleNextPage} disabled={currentPage === totalPages} className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages ? "text-gray-500 bg-gray-100 cursor-not-allowed" : "text-blue-600 bg-white hover:bg-blue-50"}`}>Next</button></div></div>
         )}
       </div>
     </div>

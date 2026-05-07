@@ -62,7 +62,7 @@ export default function VendorDocumentList() {
   if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
   return (
-    <div className="p-4 bg-[#0a0a0a] rounded shadow overflow-x-auto">
+    <div className="p-4 bg-white rounded shadow overflow-x-auto">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">Vendor Documents</h2>
         <button
@@ -85,7 +85,7 @@ export default function VendorDocumentList() {
       </div>
 
       <table className="min-w-full text-sm border-collapse border">
-        <thead className="bg-[#111111]">
+        <thead className="bg-gray-100">
           <tr>
             <th className="p-2 border">#</th>
             <th className="p-2 border">Vendor Name</th>
@@ -94,7 +94,7 @@ export default function VendorDocumentList() {
         </thead>
         <tbody>
           {current.map((vendor, idx) => (
-            <tr key={vendor._id} className="hover:bg-[#000000]">
+            <tr key={vendor._id} className="hover:bg-gray-50">
               <td className="p-2 border">{start + idx + 1}</td>
               <td className="p-2 border">{vendor.name}</td>
               <td className="p-2 border">
@@ -122,7 +122,7 @@ export default function VendorDocumentList() {
         <button
           onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
           disabled={currentPage === 1}
-          className="bg-[#1f2937] px-3 py-1 rounded disabled:opacity-50"
+          className="bg-gray-200 px-3 py-1 rounded disabled:opacity-50"
         >
           Prev
         </button>
@@ -133,7 +133,7 @@ export default function VendorDocumentList() {
             className={`px-3 py-1 rounded ${
               i + 1 === currentPage
                 ? "bg-blue-600 text-white"
-                : "bg-[#1f2937]"
+                : "bg-gray-200"
             }`}
           >
             {i + 1}
@@ -142,7 +142,7 @@ export default function VendorDocumentList() {
         <button
           onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
           disabled={currentPage === totalPages}
-          className="bg-[#1f2937] px-3 py-1 rounded disabled:opacity-50"
+          className="bg-gray-200 px-3 py-1 rounded disabled:opacity-50"
         >
           Next
         </button>
@@ -151,7 +151,7 @@ export default function VendorDocumentList() {
       {/* View Modal */}
       {viewUrl && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-[#0a0a0a] p-6 rounded-lg w-[90%] max-w-2xl relative">
+          <div className="bg-white p-6 rounded-lg w-[90%] max-w-2xl relative">
             <h3 className="text-lg font-semibold mb-4">Document Preview</h3>
             <iframe
               src={viewUrl}

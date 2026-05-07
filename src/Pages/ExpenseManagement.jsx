@@ -143,10 +143,10 @@ const ExpenseManagement = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#111111] font-sans">
+    <div className="flex flex-col min-h-screen bg-gray-100 font-sans">
       {/* Page content */}
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
-        <div className="w-full p-6 bg-[#0a0a0a] rounded-lg shadow-md">
+        <div className="w-full p-6 bg-white rounded-lg shadow-md">
           <div className="flex flex-col gap-4 mb-6 md:flex-row md:justify-between md:items-center">
             <div className="flex items-center gap-4">
               <h2 className="text-2xl font-bold text-blue-900">
@@ -161,7 +161,7 @@ const ExpenseManagement = () => {
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="px-3 py-1.5 bg-[#000000] border rounded-lg flex items-center gap-2">
+              <div className="px-3 py-1.5 bg-gray-50 border rounded-lg flex items-center gap-2">
                 <span className="text-xs font-medium text-gray-500">Rate:</span>
                 <span className="text-sm font-bold text-blue-600">₹{kmRate}/KM</span>
               </div>
@@ -172,7 +172,7 @@ const ExpenseManagement = () => {
           {expenses.length === 0 && !loading ? (
             <p className="text-gray-500">No expense records found.</p>
           ) : (
-            <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+            <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
               <table className="min-w-full">
                 <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
                   <tr>
@@ -185,24 +185,24 @@ const ExpenseManagement = () => {
                 </thead>
                 <tbody>
                   {expenses.map((expense, idx) => (
-                    <tr key={idx} className="border-b hover:bg-[#000000]">
+                    <tr key={idx} className="border-b hover:bg-gray-50">
                       <td className="px-4 py-4">
                         <div className="flex flex-col">
-                          <span className="font-bold text-gray-300">{expense.purpose}</span>
-                          <span className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                          <span className="font-bold text-gray-700">{expense.purpose}</span>
+                          <span className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
                             <FaCalendarAlt className="text-[10px]" /> {new Date(expense.date).toLocaleDateString()}
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-center font-medium text-gray-400">
+                      <td className="px-4 py-4 text-center font-medium text-gray-500">
                         {expense.km} KM
                       </td>
                       <td className="px-4 py-4 text-center">
                         <div className="flex flex-col items-center">
-                          <span className="text-[10px] font-bold text-gray-500 bg-[#111111] px-2 py-0.5 rounded-full mb-1">
+                          <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full mb-1">
                             {expense.stops && expense.stops.length > 0 ? `${expense.stops.length} Stops` : 'Single Stop'}
                           </span>
-                          <span className="text-xs font-semibold text-gray-300 max-w-[120px] truncate" title={expense.outcome || (expense.stops?.length ? expense.stops[0]?.outcome : '-')}>
+                          <span className="text-xs font-semibold text-gray-700 max-w-[120px] truncate" title={expense.outcome || (expense.stops?.length ? expense.stops[0]?.outcome : '-')}>
                             {expense.outcome || (expense.stops?.length ? expense.stops[0]?.outcome : '-')}
                           </span>
                             {expense.stops && expense.stops.some(s => s.km > 0) && (
@@ -214,8 +214,8 @@ const ExpenseManagement = () => {
                       </td>
                       <td className="px-4 py-4 text-right">
                         <div className="flex flex-col items-end">
-                          <span className="font-bold text-gray-200">₹{expense.totalAmount}</span>
-                          <span className="text-[9px] text-gray-300">@{expense.rateApplied}/km</span>
+                          <span className="font-bold text-gray-900">₹{expense.totalAmount}</span>
+                          <span className="text-[9px] text-gray-700">@{expense.rateApplied}/km</span>
                         </div>
                       </td>
                       <td className="px-4 py-4 text-center font-medium">
@@ -246,28 +246,28 @@ const ExpenseManagement = () => {
       {/* Record Expense Modal - EXACT Match with Leave Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="w-full max-w-3xl p-6 bg-[#0a0a0a] rounded-xl shadow-2xl animate-in zoom-in-95 duration-200 text-sm">
+          <div className="w-full max-w-3xl p-6 bg-white rounded-xl shadow-2xl animate-in zoom-in-95 duration-200 text-sm">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-300">Record Expense</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-300">✕</button>
+              <h3 className="text-xl font-bold text-gray-700">Record Expense</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2 text-left">
-                  <label className="block mb-1 text-sm font-medium text-gray-300">Purpose of Travel</label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Purpose of Travel</label>
                   <input
                     name="purpose"
                     value={formData.purpose}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-[#0a0a0a]"
+                    className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                     placeholder="e.g., Client meeting"
                     required
                   />
                 </div>
 
                 <div className="text-left">
-                  <label className="block mb-1 text-sm font-medium text-gray-300">Date</label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Date</label>
                   <input
                     type="date"
                     name="date"
@@ -278,23 +278,23 @@ const ExpenseManagement = () => {
                   />
                 </div>
                 <div className="text-left">
-                  <label className="block mb-1 text-sm font-medium text-gray-300">Total KM Traveled</label>
-                  <div className="w-full p-2 bg-[#000000] border rounded-lg text-gray-400 font-medium tabular-nums flex items-center justify-between">
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Total KM Traveled</label>
+                  <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-500 font-medium tabular-nums flex items-center justify-between">
                     <span>{totalKm} KM</span>
                     {stopsKm > 0 && <span className="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-0.5 rounded">Calculated from stops</span>}
                   </div>
                 </div>
               </div>
 
-              <div className="p-3 bg-[#000000] border rounded-lg flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-400">Estimated Cost:</span>
+              <div className="p-3 bg-gray-50 border rounded-lg flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-500">Estimated Cost:</span>
                 <span className="text-lg font-bold text-blue-600 tabular-nums">₹{calculatedCost}</span>
               </div>
 
               {/* Dynamic Stops Section */}
-              <div className="pt-2 border-t border-[#1f2937]">
+              <div className="pt-2 border-t border-gray-200">
                 <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-bold text-gray-300 flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-gray-700 flex items-center gap-2">
                         <FaRoute className="text-blue-500" /> Stops / Samples
                     </h4>
                     <button
@@ -308,7 +308,7 @@ const ExpenseManagement = () => {
 
                 <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-1 custom-scrollbar">
                     {stops.map((stop, index) => (
-                        <div key={index} className="p-4 bg-[#000000] border border-[#1f2937] rounded-xl relative group">
+                        <div key={index} className="p-4 bg-gray-50 border border-gray-200 rounded-xl relative group">
                             {stops.length > 1 && (
                                 <button
                                     type="button"
@@ -322,7 +322,7 @@ const ExpenseManagement = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="text-left">
-                                    <label className="block mb-1 text-[11px] font-bold text-gray-400 uppercase tracking-wide flex items-center gap-1">
+                                    <label className="block mb-1 text-[11px] font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1">
                                         <span className="w-4 h-4 rounded-full bg-blue-200 text-blue-700 flex items-center justify-center text-[9px] mr-1">{index + 1}</span>
                                         Location / Sample Name <span className="text-red-500">*</span>
                                     </label>
@@ -330,7 +330,7 @@ const ExpenseManagement = () => {
                                         type="text"
                                         value={stop.locationName}
                                         onChange={(e) => handleStopChange(index, 'locationName', e.target.value)}
-                                        className="w-full px-2 py-1.5 text-xs text-gray-300 border rounded-lg focus:ring-1 focus:ring-blue-500 placeholder:text-gray-400 font-medium"
+                                        className="w-full px-2 py-1.5 text-xs text-gray-700 border rounded-lg focus:ring-1 focus:ring-blue-500 placeholder:text-gray-500 font-medium"
                                         placeholder="e.g., KPHB Branch"
                                         required
                                     />
@@ -342,7 +342,7 @@ const ExpenseManagement = () => {
                                         type="text"
                                         value={stop.outcome}
                                         onChange={(e) => handleStopChange(index, 'outcome', e.target.value)}
-                                        className="w-full px-2 py-1.5 text-xs border rounded-lg focus:ring-1 focus:ring-blue-500 placeholder:text-gray-400"
+                                        className="w-full px-2 py-1.5 text-xs border rounded-lg focus:ring-1 focus:ring-blue-500 placeholder:text-gray-500"
                                         placeholder="Discussed requirements"
                                     />
                                 </div>
@@ -390,7 +390,7 @@ const ExpenseManagement = () => {
               </div>
 
               <div>
-                <label className="block mb-1 text-sm font-medium text-gray-300 text-left">Remark</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700 text-left">Remark</label>
                 <textarea
                   name="remark"
                   value={formData.remark}
@@ -405,7 +405,7 @@ const ExpenseManagement = () => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-2 text-gray-300 bg-[#111111] rounded-lg hover:bg-[#1f2937] transition-colors font-medium"
+                  className="flex-1 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                 >
                   Cancel
                 </button>
@@ -425,29 +425,29 @@ const ExpenseManagement = () => {
       {/* Expense Details Modal - Match Sleek Record Modal UI */}
       {selectedExpense && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="w-full max-w-3xl p-6 bg-[#0a0a0a] rounded-xl shadow-2xl animate-in zoom-in-95 duration-200 text-sm">
+          <div className="w-full max-w-3xl p-6 bg-white rounded-xl shadow-2xl animate-in zoom-in-95 duration-200 text-sm">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-300">Expense Details</h3>
-              <button onClick={() => setSelectedExpense(null)} className="text-gray-500 hover:text-gray-300">✕</button>
+              <h3 className="text-xl font-bold text-gray-700">Expense Details</h3>
+              <button onClick={() => setSelectedExpense(null)} className="text-gray-500 hover:text-gray-700">✕</button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2 text-left">
                 <label className="block mb-1 text-sm font-medium text-gray-500">Purpose of Travel</label>
-                <div className="w-full p-2 bg-[#000000] border rounded-lg text-gray-300 font-bold">
+                <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-700 font-bold">
                   {selectedExpense.purpose}
                 </div>
               </div>
 
               <div className="text-left">
                 <label className="block mb-1 text-sm font-medium text-gray-500">Date</label>
-                <div className="w-full p-2 bg-[#000000] border rounded-lg text-gray-300 font-medium">
+                <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-700 font-medium">
                   {new Date(selectedExpense.date).toLocaleDateString()}
                 </div>
               </div>
               <div className="text-left">
                 <label className="block mb-1 text-sm font-medium text-gray-500">KM Traveled</label>
-                <div className="w-full p-2 bg-[#000000] border rounded-lg text-gray-300 font-medium tabular-nums">
+                <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-700 font-medium tabular-nums">
                   {selectedExpense.km} KM
                 </div>
               </div>
@@ -471,7 +471,7 @@ const ExpenseManagement = () => {
               </div>
 
               <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-400">Total Amount:</span>
+                <span className="text-sm font-medium text-gray-500">Total Amount:</span>
                 <div className="text-right">
                   <span className="text-xl font-black text-blue-700 tabular-nums block">₹{selectedExpense.totalAmount}</span>
                   <span className="text-[10px] text-blue-300 uppercase font-bold tracking-wider">@{selectedExpense.rateApplied}/km</span>
@@ -483,17 +483,17 @@ const ExpenseManagement = () => {
                 <div className="space-y-3 max-h-[25vh] overflow-y-auto pr-1">
                     {selectedExpense.stops && selectedExpense.stops.length > 0 ? (
                         selectedExpense.stops.map((stop, index) => (
-                            <div key={index} className="bg-[#0a0a0a] border hover:border-blue-300 rounded-xl p-3 shadow-sm transition-all relative overflow-hidden">
+                            <div key={index} className="bg-white border hover:border-blue-300 rounded-xl p-3 shadow-sm transition-all relative overflow-hidden">
                                 <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                                 <div className="flex items-start justify-between mb-2 pl-2">
                                     <div className="flex-1">
-                                        <h5 className="text-[13px] font-bold text-gray-300 flex items-center gap-1.5">
+                                        <h5 className="text-[13px] font-bold text-gray-700 flex items-center gap-1.5">
                                             <span className="w-4 h-4 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[9px] font-black">{index + 1}</span>
                                             {stop.locationName}
                                         </h5>
                                     </div>
                                 </div>
-                                <p className="text-xs text-gray-500 mb-2 pl-2 tabular-nums">Outcome: <span className="font-medium text-gray-300">{stop.outcome || '-'}</span></p>
+                                <p className="text-xs text-gray-500 mb-2 pl-2 tabular-nums">Outcome: <span className="font-medium text-gray-700">{stop.outcome || '-'}</span></p>
                                 <div className="grid grid-cols-3 gap-2 pl-2">
                                     <div className="bg-blue-50 rounded px-2 py-1 border border-blue-100 flex justify-between items-center">
                                         <span className="text-[9px] font-bold text-blue-600 uppercase">Distance</span>
@@ -511,7 +511,7 @@ const ExpenseManagement = () => {
                             </div>
                         ))
                     ) : (
-                        <div className="text-center p-4 border border-dashed rounded-lg bg-[#000000]">
+                        <div className="text-center p-4 border border-dashed rounded-lg bg-gray-50">
                             <p className="text-xs text-gray-500">No detailed stops recorded for this expense.</p>
                             
                             {/* Fallback to old data format if no stops array exist */}
@@ -519,7 +519,7 @@ const ExpenseManagement = () => {
                                 <div className="mt-4 text-left text-[11px] space-y-2 max-w-xs mx-auto">
                                     <div className="flex justify-between border-b pb-1">
                                         <span className="text-gray-500">Outcome:</span>
-                                        <span className="font-semibold text-gray-300">{selectedExpense.outcome || '-'}</span>
+                                        <span className="font-semibold text-gray-700">{selectedExpense.outcome || '-'}</span>
                                     </div>
                                     <div className="flex justify-between border-b pb-1 text-emerald-700">
                                         <span className="font-semibold opacity-80">Order:</span>
@@ -538,7 +538,7 @@ const ExpenseManagement = () => {
 
               <div>
                 <label className="block mb-1 text-sm font-medium text-gray-500 text-left">Remark</label>
-                <div className="w-full p-2 bg-[#000000] border rounded-lg text-gray-300 text-xs min-h-[60px] text-left">
+                <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-700 text-xs min-h-[60px] text-left">
                   {selectedExpense.remark || '-'}
                 </div>
               </div>
@@ -546,7 +546,7 @@ const ExpenseManagement = () => {
               <div className="pt-2">
                 <button
                   onClick={() => setSelectedExpense(null)}
-                  className="w-full py-2 bg-gray-900 text-white rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-gray-800 transition-all active:scale-[0.98]"
+                  className="w-full py-2 bg-gray-900 text-white rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-gray-100 transition-all active:scale-[0.98]"
                 >
                   Close Details
                 </button>

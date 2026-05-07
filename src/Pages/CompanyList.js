@@ -155,7 +155,7 @@ const CompanyList = () => {
   };
 
   return (
-    <div className="p-4 bg-[#0a0a0a] rounded shadow text-sm">
+    <div className="p-4 bg-white rounded shadow text-sm">
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-lg font-semibold">Company List</h2>
       </div>
@@ -199,7 +199,7 @@ const CompanyList = () => {
       <div className="overflow-x-auto">
         <div className="max-h-[400px] overflow-y-auto border rounded">
           <table className="min-w-[1000px] border-collapse text-xs">
-            <thead className="bg-[#111111] sticky top-0 z-10">
+            <thead className="bg-gray-100 sticky top-0 z-10">
               <tr>
                 {headers.map((header, idx) => (
                   <th key={idx} className="p-2 border">{header.label}</th>
@@ -213,7 +213,7 @@ const CompanyList = () => {
             </thead>
             <tbody>
               {currentCompanies.map((company, idx) => (
-                <tr key={idx} className="hover:bg-[#000000]">
+                <tr key={idx} className="hover:bg-gray-50">
                   <td className="p-2 border">{company.name}</td>
                   <td className="p-2 border">{company.companyType}</td>
                   <td className="p-2 border">{company.assignedBy}</td>
@@ -271,19 +271,19 @@ const CompanyList = () => {
 
       {/* Pagination Controls */}
       <div className="mt-4 flex justify-center items-center gap-2 text-sm">
-        <button onClick={prevPage} disabled={currentPage === 1} className="px-2 py-1 bg-[#1f2937] rounded disabled:opacity-50">
+        <button onClick={prevPage} disabled={currentPage === 1} className="px-2 py-1 bg-gray-200 rounded disabled:opacity-50">
           Previous
         </button>
         {[...Array(totalPages)].map((_, idx) => (
           <button
             key={idx}
             onClick={() => paginate(idx + 1)}
-            className={`px-3 py-1 rounded ${currentPage === idx + 1 ? "bg-blue-500 text-white" : "bg-[#1f2937]"}`}
+            className={`px-3 py-1 rounded ${currentPage === idx + 1 ? "bg-blue-500 text-white" : "bg-gray-200"}`}
           >
             {idx + 1}
           </button>
         ))}
-        <button onClick={nextPage} disabled={currentPage === totalPages} className="px-2 py-1 bg-[#1f2937] rounded disabled:opacity-50">
+        <button onClick={nextPage} disabled={currentPage === totalPages} className="px-2 py-1 bg-gray-200 rounded disabled:opacity-50">
           Next
         </button>
       </div>
@@ -291,7 +291,7 @@ const CompanyList = () => {
       {/* Edit Company Modal */}
       {isEditingCompanyModalOpen && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-[#0a0a0a] rounded-lg p-6 w-[90%] max-w-4xl max-h-[90vh] overflow-y-auto shadow-xl relative">
+          <div className="bg-white rounded-lg p-6 w-[90%] max-w-4xl max-h-[90vh] overflow-y-auto shadow-xl relative">
             <button className="absolute top-2 right-3 text-gray-500 hover:text-red-500 text-xl font-bold" onClick={closeCompanyEditModal}>×</button>
             <h3 className="text-xl mb-4">Edit Company</h3>
             <form onSubmit={handleSubmitEdit}>
@@ -325,7 +325,7 @@ const CompanyList = () => {
       {/* Add Beneficiary Modal */}
       {isAddingBeneficiaryModalOpen && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-[#0a0a0a] rounded-lg p-6 w-[90%] max-w-4xl max-h-[90vh] overflow-y-auto shadow-xl relative">
+          <div className="bg-white rounded-lg p-6 w-[90%] max-w-4xl max-h-[90vh] overflow-y-auto shadow-xl relative">
             <button className="absolute top-2 right-3 text-gray-500 hover:text-red-500 text-xl font-bold" onClick={closeBeneficiaryModal}>×</button>
             <StaffDetailsForm companyId={selectedCompanyId} closeModal={closeBeneficiaryModal} />
           </div>

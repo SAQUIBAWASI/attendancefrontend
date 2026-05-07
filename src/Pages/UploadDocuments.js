@@ -54,8 +54,8 @@ const UploadDocuments = ({ closeModal }) => {
   };
 
   const renderUploadField = (label, name) => (
-    <div className="flex flex-col items-center gap-4 p-6 bg-[#000000] rounded-xl shadow-md border border-[#1f2937]">
-      <label className="text-gray-300 font-medium text-center">{label}</label>
+    <div className="flex flex-col items-center gap-4 p-6 bg-gray-50 rounded-xl shadow-md border border-gray-200">
+      <label className="text-gray-700 font-medium text-center">{label}</label>
       <label
         htmlFor={name}
         className="flex items-center justify-center gap-1 px-4 py-2 bg-blue-600 text-white text-xs rounded-lg cursor-pointer hover:bg-blue-700 transition"
@@ -82,9 +82,9 @@ const UploadDocuments = ({ closeModal }) => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-green-100">
       <form
         onSubmit={handleSubmit}
-        className="bg-[#0a0a0a] p-8 rounded-xl shadow-lg max-w-3xl w-full"
+        className="bg-white p-8 rounded-xl shadow-lg max-w-3xl w-full"
       >
-        <h1 className="text-2xl font-semibold text-center mb-6 text-gray-300">
+        <h1 className="text-2xl font-semibold text-center mb-6 text-gray-700">
           Upload Vendor Documents
         </h1>
 

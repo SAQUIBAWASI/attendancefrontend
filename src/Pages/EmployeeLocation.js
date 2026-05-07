@@ -52,12 +52,12 @@
 //   }, [employeeId]);
 
 //   return (
-//     <div className="flex min-h-screen bg-[#111111]">
+//     <div className="flex min-h-screen bg-gray-100">
 //       <div className="flex flex-col flex-1">
         
 
 //         <main className="p-4 sm:p-6 lg:p-8">
-//           <div className="max-w-5xl p-6 mx-auto bg-[#0a0a0a] rounded-lg shadow-md">
+//           <div className="max-w-5xl p-6 mx-auto bg-white rounded-lg shadow-md">
 //             {/* Header + Back Button */}
 //             <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:justify-between sm:items-center">
 //               <h2 className="text-2xl font-bold text-blue-900">My Office Assigned Location</h2>
@@ -71,7 +71,7 @@
 
 //             {/* Loading & Error States */}
 //             {loading ? (
-//               <p className="text-gray-400">Loading your location...</p>
+//               <p className="text-gray-500">Loading your location...</p>
 //             ) : error ? (
 //               <p className="text-red-600">{error}</p>
 //             ) : !locationData ? (
@@ -83,7 +83,7 @@
 //                 {/* Desktop Table */}
 //                 <div className="hidden overflow-x-auto sm:block">
 //                   <table className="w-full min-w-[500px] text-sm border">
-//                     <thead className="text-gray-300 bg-[#1f2937]">
+//                     <thead className="text-gray-700 bg-gray-200">
 //                       <tr>
 //                         <th className="p-2 border">Employee Name</th>
 //                         <th className="p-2 border">Employee ID</th>
@@ -94,7 +94,7 @@
 //                       </tr>
 //                     </thead>
 //                     <tbody>
-//                       <tr className="border-b hover:bg-[#000000]">
+//                       <tr className="border-b hover:bg-gray-50">
 //                         <td className="p-2 border">
 //                           {locationData?.employee?.name || "N/A"}
 //                         </td>
@@ -120,44 +120,44 @@
 
 //                 {/* Mobile View */}
 //                 <div className="flex flex-col gap-4 sm:hidden">
-//                   <div className="p-4 border rounded-lg shadow-sm bg-[#000000]">
+//                   <div className="p-4 border rounded-lg shadow-sm bg-gray-50">
 //                     <div className="flex items-center justify-between mb-2">
-//                       <span className="font-medium text-gray-300">
+//                       <span className="font-medium text-gray-700">
 //                         Employee
 //                       </span>
-//                       <span className="text-gray-200">
+//                       <span className="text-gray-900">
 //                         {locationData?.employee?.name || "N/A"}
 //                       </span>
 //                     </div>
 //                     <div className="flex items-center justify-between mb-2">
-//                       <span className="font-medium text-gray-300">
+//                       <span className="font-medium text-gray-700">
 //                         Employee ID
 //                       </span>
-//                       <span className="text-gray-200">
+//                       <span className="text-gray-900">
 //                         {locationData?.employee?.employeeId || "N/A"}
 //                       </span>
 //                     </div>
 //                     <div className="flex items-center justify-between mb-2">
-//                       <span className="font-medium text-gray-300">
+//                       <span className="font-medium text-gray-700">
 //                         Location
 //                       </span>
-//                       <span className="text-gray-200">
+//                       <span className="text-gray-900">
 //                         {locationData?.location?.name || "N/A"}
 //                       </span>
 //                     </div>
 //                     <div className="mb-2">
-//                       <span className="font-medium text-gray-300">
+//                       <span className="font-medium text-gray-700">
 //                         Address:
 //                       </span>
-//                       <p className="mt-1 text-sm text-gray-200">
+//                       <p className="mt-1 text-sm text-gray-900">
 //                         {locationData?.location?.fullAddress || "N/A"}
 //                       </p>
 //                     </div>
 //                     <div className="flex items-center justify-between">
-//                       <span className="font-medium text-gray-300">
+//                       <span className="font-medium text-gray-700">
 //                         Coordinates
 //                       </span>
-//                       <span className="text-xs text-gray-200">
+//                       <span className="text-xs text-gray-900">
 //                         {locationData?.location?.latitude ?? "N/A"},{" "}
 //                         {locationData?.location?.longitude ?? "N/A"}
 //                       </span>
@@ -232,9 +232,9 @@ const EmployeeLocation = () => {
   if (error) return <p className="p-4 text-red-600">{error}</p>;
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#111111]">
+    <div className="flex flex-col min-h-screen bg-gray-100">
       <main className="flex-1 p-0 sm:p-0 lg:p-8">
-        <div className="max-w-9xl p-0 mx-auto bg-[#0a0a0a] rounded-lg shadow-md">
+        <div className="max-w-9xl p-0 mx-auto bg-white rounded-lg shadow-md">
           <div className="mb-6">
             {/* <h2 className="text-2xl font-bold text-blue-900">
               My Assigned Locations
@@ -246,8 +246,8 @@ const EmployeeLocation = () => {
               No location assigned yet. Please contact admin.
             </p>
           ) : (
-            <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
-            <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+            <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+            <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
               <table className="min-w-full">
                 <thead className="text-left text-sm text-white bg-gradient-to-r from-green-500 to-blue-600">
                   <tr>
@@ -264,7 +264,7 @@ const EmployeeLocation = () => {
                   {locations.map((location, index) => (
                     <tr
                       key={location._id || index}
-                      className="border-b hover:bg-[#000000]"
+                      className="border-b hover:bg-gray-50"
                     >
                       <td className="hidden sm:table-cell p-2 border text-center">
                         {location?.employee?.employeeId || "N/A"}

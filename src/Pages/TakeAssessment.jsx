@@ -163,7 +163,7 @@ const TakeAssessment = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#000000] via-white to-blue-50 font-sans">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 font-sans">
             <div className="text-center space-y-6">
                 <div className="relative">
                     <div className="w-16 h-16 border-4 border-blue-100 rounded-2xl animate-pulse"></div>
@@ -175,12 +175,12 @@ const TakeAssessment = () => {
     );
 
     if (error) return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#000000] via-white to-blue-50 p-4 font-sans">
-            <div className="max-w-md w-full bg-[#0a0a0a] p-12 rounded-2xl shadow-2xl shadow-blue-950/10 border border-blue-50 text-center">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 p-4 font-sans">
+            <div className="max-w-md w-full bg-white p-12 rounded-2xl shadow-2xl shadow-blue-950/10 border border-blue-50 text-center">
                 <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-inner">
                     <FaExclamationTriangle className="text-3xl" />
                 </div>
-                <h2 className="text-2xl font-black text-gray-200 mb-4 tracking-tight">Access Denied</h2>
+                <h2 className="text-2xl font-black text-gray-900 mb-4 tracking-tight">Access Denied</h2>
                 <p className="text-gray-500 mb-10 font-medium leading-relaxed">{error}</p>
                 <button
                     onClick={() => navigate('/applied-jobs')}
@@ -204,12 +204,12 @@ const TakeAssessment = () => {
         const pendingAssessmentIds = assessmentIds.filter(id => !completedQuizIds.includes((id._id || id).toString()));
 
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#000000] via-white to-blue-50 p-4 font-sans text-slate-300">
-                <div className="max-w-xl w-full bg-[#0a0a0a] p-12 rounded-2xl shadow-2xl shadow-blue-900/10 border border-blue-50 text-center">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 p-4 font-sans text-slate-700">
+                <div className="max-w-xl w-full bg-white p-12 rounded-2xl shadow-2xl shadow-blue-900/10 border border-blue-50 text-center">
                     <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-emerald-900/5">
                         <FaCheckCircle className="text-4xl" />
                     </div>
-                    <h2 className="text-3xl font-black text-gray-200 mb-4 tracking-tight">Assessment Completed!</h2>
+                    <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">Assessment Completed!</h2>
                     <p className="text-gray-500 mb-10 font-bold leading-relaxed">
                         Thank you {application?.firstName || "Candidate"}. Your responses for "<strong>{quiz?.title}</strong>" have been recorded.
                     </p>
@@ -248,14 +248,14 @@ const TakeAssessment = () => {
 
 
     if (showInstructions) return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#000000] via-white to-blue-50 p-4 font-sans text-slate-300">
-            <div className="max-w-2xl w-full bg-[#0a0a0a] p-8 md:p-12 rounded-2xl shadow-2xl shadow-blue-900/10 border border-blue-50">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 p-4 font-sans text-slate-700">
+            <div className="max-w-2xl w-full bg-white p-8 md:p-12 rounded-2xl shadow-2xl shadow-blue-900/10 border border-blue-50">
                 <div className="flex items-center gap-5 mb-10">
                     <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-100">
                         <FaTasks className="text-2xl" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-black text-gray-200 tracking-tight">Assessment Instructions</h2>
+                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">Assessment Instructions</h2>
                         <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Read carefully before starting</p>
                     </div>
                 </div>
@@ -272,9 +272,9 @@ const TakeAssessment = () => {
                             { id: 3, text: "Click \"Next\" to proceed. You can revisit previous questions." },
                             { id: 4, text: "Click \"Finish\" once all questions are correctly answered." }
                         ].map(item => (
-                            <div key={item.id} className="flex gap-4 p-4 bg-[#000000] rounded-xl border border-[#1f2937]/50">
-                                <div className="w-6 h-6 rounded-lg bg-[#0a0a0a] text-blue-600 flex items-center justify-center font-black text-[10px] shadow-sm shrink-0">{item.id}</div>
-                                <p className="text-[11px] font-bold text-gray-400 leading-normal">{item.text}</p>
+                            <div key={item.id} className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200/50">
+                                <div className="w-6 h-6 rounded-lg bg-white text-blue-600 flex items-center justify-center font-black text-[10px] shadow-sm shrink-0">{item.id}</div>
+                                <p className="text-[11px] font-bold text-gray-500 leading-normal">{item.text}</p>
                             </div>
                         ))}
                     </div>
@@ -301,12 +301,12 @@ const TakeAssessment = () => {
     const currentQuestion = quiz.questions[currentQuestionIndex];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#000000] via-white to-blue-50 font-sans pb-12 text-gray-300">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 font-sans pb-12 text-gray-700">
             {/* Responsive Header - Optimized for Mobile/Tablet */}
             <div className="bg-gradient-to-r from-purple-500 to-blue-600 sticky top-0 z-50 px-4 py-3 md:py-4 shadow-lg">
                 <div className="max-w-5xl mx-auto flex flex-row items-center justify-between gap-3">
                     <div className="flex items-center gap-2 md:gap-4 min-w-0">
-                        <div className="w-8 h-8 md:w-10 md:h-10 shrink-0 bg-[#0a0a0a]/20 backdrop-blur-md text-white rounded-lg flex items-center justify-center border border-white/30">
+                        <div className="w-8 h-8 md:w-10 md:h-10 shrink-0 bg-black/20 backdrop-blur-md text-white rounded-lg flex items-center justify-center border border-white/30">
                             <FaTasks className="text-sm md:text-lg" />
                         </div>
                         <div className="truncate">
@@ -317,7 +317,7 @@ const TakeAssessment = () => {
                         </div>
                     </div>
 
-                    <div className={`shrink-0 px-3 py-1.5 md:px-5 md:py-2 rounded-lg border flex items-center gap-2 md:gap-3 transition-all duration-500 shadow-sm ${timeLeft < 60 ? "bg-red-500 border-red-400 text-white animate-pulse" : "bg-[#0a0a0a]/10 border-white/20 text-white"
+                    <div className={`shrink-0 px-3 py-1.5 md:px-5 md:py-2 rounded-lg border flex items-center gap-2 md:gap-3 transition-all duration-500 shadow-sm ${timeLeft < 60 ? "bg-red-500 border-red-400 text-white animate-pulse" : "bg-black/10 border-white/20 text-white"
                         }`}>
                         <FaClock className="text-xs md:text-sm" />
                         <span className="font-bold tabular-nums text-xs md:text-sm">{formatTime(timeLeft)}</span>
@@ -331,9 +331,9 @@ const TakeAssessment = () => {
                 <div className="mb-6 md:mb-8 space-y-2 md:space-y-3">
                     <div className="flex justify-between items-end">
                         <span className="text-[9px] md:text-[10px] font-bold text-blue-600 uppercase tracking-widest">Question {currentQuestionIndex + 1} / {quiz.questions.length}</span>
-                        <span className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest">{Math.round(((currentQuestionIndex + 1) / quiz.questions.length) * 100)}%</span>
+                        <span className="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">{Math.round(((currentQuestionIndex + 1) / quiz.questions.length) * 100)}%</span>
                     </div>
-                    <div className="h-2 bg-[#0a0a0a] rounded-full overflow-hidden p-0.5 border border-[#1f2937] shadow-sm">
+                    <div className="h-2 bg-white rounded-full overflow-hidden p-0.5 border border-gray-200 shadow-sm">
                         <div
                             className="h-full bg-gradient-to-r from-purple-500 to-blue-600 rounded-full transition-all duration-1000"
                             style={{ width: `${((currentQuestionIndex + 1) / quiz.questions.length) * 100}%` }}
@@ -342,10 +342,10 @@ const TakeAssessment = () => {
                 </div>
 
                 {/* Question Card - Matches UserActivity sleekness */}
-                <div className="bg-[#0a0a0a] rounded-xl shadow-md border border-[#1f2937] p-5 md:p-8 overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
+                <div className="bg-white rounded-xl shadow-md border border-gray-200 p-5 md:p-8 overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
                     <div className="mb-5 md:mb-6">
                         <div className="text-[8px] md:text-[9px] font-bold text-blue-500 uppercase tracking-[0.2em] mb-1 md:mb-2">Current Question</div>
-                        <h2 className="text-base md:text-lg font-bold text-gray-300 leading-snug">
+                        <h2 className="text-base md:text-lg font-bold text-gray-700 leading-snug">
                             {currentQuestion.questionText}
                         </h2>
                     </div>
@@ -357,13 +357,13 @@ const TakeAssessment = () => {
                                 onClick={() => handleOptionSelect(option)}
                                 className={`w-full text-left px-4 py-3 md:px-5 md:py-3.5 rounded-lg border transition-all flex items-center justify-between group ${answers[currentQuestionIndex] === option
                                     ? "bg-blue-50 border-blue-500 text-blue-700 shadow-sm"
-                                    : "bg-[#0a0a0a] border-[#1f2937] text-gray-400 hover:border-blue-300 hover:bg-blue-50/20"
+                                    : "bg-white border-gray-200 text-gray-500 hover:border-blue-300 hover:bg-blue-50/20"
                                     }`}
                             >
                                 <span className="font-semibold text-[11px] md:text-xs leading-tight">{option}</span>
                                 <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ml-3 transition-all ${answers[currentQuestionIndex] === option
                                     ? "bg-blue-600 border-blue-600 text-white"
-                                    : "border-[#1f2937] group-hover:border-blue-300"
+                                    : "border-gray-200 group-hover:border-blue-300"
                                     }`}>
                                     {answers[currentQuestionIndex] === option && <FiCheckCircle className="text-[8px]" />}
                                 </div>
@@ -372,12 +372,12 @@ const TakeAssessment = () => {
                     </div>
 
                     {/* Responsive Navigation Buttons */}
-                    <div className="mt-4 border-t border-[#1f2937] flex flex-col sm:flex-row items-center gap-3 sm:gap-4 justify-between">
+                    <div className="mt-4 border-t border-gray-200 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 justify-between">
                         <div className="flex items-center gap-3 w-full sm:w-auto">
                             <button
                                 disabled={currentQuestionIndex === 0}
                                 onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
-                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-lg font-bold text-[10px] md:text-xs uppercase tracking-wider text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all disabled:opacity-0 active:scale-95 border border-transparent hover:border-blue-100"
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-lg font-bold text-[10px] md:text-xs uppercase tracking-wider text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all disabled:opacity-0 active:scale-95 border border-transparent hover:border-blue-100"
                             >
                                 <FaArrowLeft /> Back
                             </button>
@@ -388,7 +388,7 @@ const TakeAssessment = () => {
                                 <button
                                     onClick={handleSubmit}
                                     disabled={!answers[currentQuestionIndex]}
-                                    className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-3 md:py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg font-bold text-[11px] md:text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all transform active:scale-95 disabled:bg-[#1f2937] disabled:shadow-none"
+                                    className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-3 md:py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg font-bold text-[11px] md:text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all transform active:scale-95 disabled:bg-gray-200 disabled:shadow-none"
                                 >
                                     Finish Assessment <FaCheckCircle />
                                 </button>
@@ -396,7 +396,7 @@ const TakeAssessment = () => {
                                 <button
                                     disabled={!answers[currentQuestionIndex]}
                                     onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
-                                    className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-3 md:py-3.5 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-lg font-bold text-[11px] md:text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all transform active:scale-95 disabled:bg-[#1f2937] disabled:shadow-none"
+                                    className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-3 md:py-3.5 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-lg font-bold text-[11px] md:text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all transform active:scale-95 disabled:bg-gray-200 disabled:shadow-none"
                                 >
                                     Next Question <FaArrowRight />
                                 </button>
@@ -406,7 +406,7 @@ const TakeAssessment = () => {
                 </div>
 
                 {/* Security Alert */}
-                <div className="mt-8 flex items-center justify-center gap-2 text-[9px] font-black text-gray-300 uppercase tracking-widest">
+                <div className="mt-8 flex items-center justify-center gap-2 text-[9px] font-black text-gray-700 uppercase tracking-widest">
                     <FaExclamationTriangle className="text-amber-400" /> Secure SSL Environment Active - Do Not Close Browser
                 </div>
             </div>

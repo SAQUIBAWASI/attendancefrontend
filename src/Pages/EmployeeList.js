@@ -206,7 +206,7 @@
 //   };
 
 //   return (
-//     <div className="p-3 mx-auto bg-[#0a0a0a] rounded-lg shadow-md max-w-9xl">
+//     <div className="p-3 mx-auto bg-white rounded-lg shadow-md max-w-9xl">
 //       {/* Search + Export */}
 //       {/* <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
 //   <h2 className="text-xl font-semibold">Employee List</h2>
@@ -219,13 +219,13 @@
 //         <div className="relative w-full md:w-72">
 //           <input
 //             type="text"
-//             className="w-full py-2 pl-10 pr-4 text-sm text-gray-300 placeholder-gray-400 transition-all border border-[#374151] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//             className="w-full py-2 pl-10 pr-4 text-sm text-gray-700 placeholder-gray-400 transition-all border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 //             placeholder="Search employees..."
 //             value={search}
 //             onChange={(e) => setSearch(e.target.value)}
 //           />
 //           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-//             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//             <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 //             </svg>
 //           </div>
@@ -279,7 +279,7 @@
 //       {/* Table */}
 //       <div className="overflow-x-auto border rounded-lg">
 //         <table className="w-full text-sm min-w-[600px]">
-//           <thead className="bg-[#1f2937]">
+//           <thead className="bg-gray-200">
 //             <tr>
 //               <th className="p-2 border">Emp ID</th>
 //               <th className="p-2 border">Name</th>
@@ -299,7 +299,7 @@
 //           <tbody>
 //             {currentEmployees.length > 0 ? (
 //               currentEmployees.map((emp) => (
-//                 <tr key={emp._id} className="border-b hover:bg-[#000000]">
+//                 <tr key={emp._id} className="border-b hover:bg-gray-50">
 //                   <td className="p-2 border">{emp.employeeId}</td>
 //                   <td className="p-2 border">{emp.name}</td>
 //                   {/* <td className="p-2 border">{emp.email}</td> */}
@@ -330,7 +330,7 @@
 //                       {/* Status Toggle Button */}
 //                       <button
 //                         onClick={() => handleToggleStatus(emp)}
-//                         className={`px-2 py-0.5 text-xs font-bold rounded ${isEmployeeHidden(emp) ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937]'}`}
+//                         className={`px-2 py-0.5 text-xs font-bold rounded ${isEmployeeHidden(emp) ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
 //                         title={isEmployeeHidden(emp) ? "Make Active" : "Hide Employee"}
 //                       >
 //                         {isEmployeeHidden(emp) ? 'INACTIVE' : 'ACTIVE'}
@@ -365,7 +365,7 @@
 //       {/* VIEW MODAL */}
 //       {selectedEmployee && (
 //         <div className="fixed inset-0 flex items-center justify-center p-3 bg-black bg-opacity-50">
-//           <div className="relative w-full max-w-md p-5 bg-[#0a0a0a] rounded-lg">
+//           <div className="relative w-full max-w-md p-5 bg-white rounded-lg">
 //             <button className="absolute top-2 right-3" onClick={handleCloseModal}>X</button>
 //             <h3 className="mb-3 text-lg font-bold">Employee Details</h3>
 //             <p><b>Name:</b> {selectedEmployee.name}</p>
@@ -380,7 +380,7 @@
 //       {/* ASSIGN LOCATION MODAL */}
 //       {showLocationModal && (
 //         <div className="fixed inset-0 flex items-center justify-center p-3 bg-black bg-opacity-50">
-//           <div className="relative w-full max-w-md p-5 bg-[#0a0a0a] rounded-lg">
+//           <div className="relative w-full max-w-md p-5 bg-white rounded-lg">
 //             <button className="absolute top-2 right-3" onClick={handleCloseLocationModal}>
 //               X
 //             </button>
@@ -682,7 +682,7 @@
 //   };
 
 //   return (
-//     <div className="p-3 mx-auto bg-[#0a0a0a] rounded-lg shadow-md max-w-9xl">
+//     <div className="p-3 mx-auto bg-white rounded-lg shadow-md max-w-9xl">
 //       {/* Header Section: Search & Actions */}
 //       <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
 
@@ -690,13 +690,13 @@
 //         <div className="relative w-full md:w-72">
 //           <input
 //             type="text"
-//             className="w-full py-2 pl-10 pr-4 text-sm text-gray-300 placeholder-gray-400 transition-all border border-[#374151] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//             className="w-full py-2 pl-10 pr-4 text-sm text-gray-700 placeholder-gray-400 transition-all border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 //             placeholder="Search employees..."
 //             value={search}
 //             onChange={(e) => setSearch(e.target.value)}
 //           />
 //           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-//             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//             <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 //             </svg>
 //           </div>
@@ -746,7 +746,7 @@
 //       {/* Table */}
 //       <div className="overflow-x-auto border rounded-lg">
 //         <table className="w-full text-sm min-w-[600px]">
-//           <thead className="bg-[#1f2937]">
+//           <thead className="bg-gray-200">
 //             <tr>
 //               <th className="p-2 border">Emp ID</th>
 //               <th className="p-2 border">Name</th>
@@ -765,7 +765,7 @@
 //           <tbody>
 //             {currentEmployees.length > 0 ? (
 //               currentEmployees.map((emp) => (
-//                 <tr key={emp._id} className="border-b hover:bg-[#000000]">
+//                 <tr key={emp._id} className="border-b hover:bg-gray-50">
 //                   <td className="p-2 border">{emp.employeeId}</td>
 //                   <td className="p-2 border">{emp.name}</td>
 //                   <td className="p-2 border">{emp.phone}</td>
@@ -795,7 +795,7 @@
 //                       {/* Status Toggle Button */}
 //                       <button
 //                         onClick={() => handleToggleStatus(emp)}
-//                         className={`px-2 py-0.5 text-xs font-bold rounded ${isEmployeeHidden(emp) ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937]'}`}
+//                         className={`px-2 py-0.5 text-xs font-bold rounded ${isEmployeeHidden(emp) ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
 //                         title={isEmployeeHidden(emp) ? "Make Active" : "Hide Employee"}
 //                       >
 //                         {isEmployeeHidden(emp) ? 'INACTIVE' : 'ACTIVE'}
@@ -829,7 +829,7 @@
 //       {/* VIEW MODAL */}
 //       {selectedEmployee && (
 //         <div className="fixed inset-0 flex items-center justify-center p-3 bg-black bg-opacity-50">
-//           <div className="relative w-full max-w-md p-5 bg-[#0a0a0a] rounded-lg">
+//           <div className="relative w-full max-w-md p-5 bg-white rounded-lg">
 //             <button className="absolute top-2 right-3" onClick={handleCloseModal}>X</button>
 //             <h3 className="mb-3 text-lg font-bold">Employee Details</h3>
 //             <p><b>Name:</b> {selectedEmployee.name}</p>
@@ -847,7 +847,7 @@
 //       {/* ASSIGN LOCATION MODAL */}
 //       {showLocationModal && (
 //         <div className="fixed inset-0 flex items-center justify-center p-3 bg-black bg-opacity-50">
-//           <div className="relative w-full max-w-md p-5 bg-[#0a0a0a] rounded-lg">
+//           <div className="relative w-full max-w-md p-5 bg-white rounded-lg">
 //             <button className="absolute top-2 right-3" onClick={handleCloseLocationModal}>
 //               X
 //             </button>
@@ -1201,19 +1201,19 @@
 //   };
 
 //   return (
-//     <div className="p-3 mx-auto bg-[#0a0a0a] rounded-lg shadow-md max-w-9xl">
+//     <div className="p-3 mx-auto bg-white rounded-lg shadow-md max-w-9xl">
 //       {/* Header Section */}
 //       <div className="flex flex-col gap-4 mb-2 md:flex-row md:items-center md:justify-between">
 //         <div className="relative w-full md:w-72">
 //           <input
 //             type="text"
-//             className="w-full py-2 pl-10 pr-4 text-sm text-gray-300 placeholder-gray-400 transition-all border border-[#374151] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//             className="w-full py-2 pl-10 pr-4 text-sm text-gray-700 placeholder-gray-400 transition-all border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 //             placeholder="Search employees..."
 //             value={search}
 //             onChange={(e) => setSearch(e.target.value)}
 //           />
 //           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-//             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//             <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 //             </svg>
 //           </div>
@@ -1221,13 +1221,13 @@
 
 //         <div className="flex flex-wrap items-center gap-3">
 //           {/* Status Filter */}
-//           <div className="flex items-center gap-2 p-1 bg-[#111111] rounded-lg">
+//           <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-lg">
 //             <button
 //               onClick={() => {
 //                 setShowInactiveOnly(false);
 //                 setCurrentPage(1);
 //               }}
-//               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${!showInactiveOnly ? 'bg-[#0a0a0a] text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+//               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${!showInactiveOnly ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
 //             >
 //               Active ({activeEmployees.length})
 //             </button>
@@ -1236,7 +1236,7 @@
 //                 setShowInactiveOnly(true);
 //                 setCurrentPage(1);
 //               }}
-//               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${showInactiveOnly ? 'bg-[#0a0a0a] text-red-600 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+//               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${showInactiveOnly ? 'bg-white text-red-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
 //             >
 //               Inactive ({inactiveEmployees.length})
 //             </button>
@@ -1264,7 +1264,7 @@
 //       </div>
 
 //       {/* Table */}
-//       <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//       <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //         <table className="min-w-full">
 //           <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //             <tr>
@@ -1290,9 +1290,9 @@
 //                 return (
 //                   <tr 
 //                     key={emp._id} 
-//                     className={`border-b hover:bg-[#000000] ${isHidden ? 'bg-red-50 hover:bg-red-100' : ''}`}
+//                     className={`border-b hover:bg-gray-50 ${isHidden ? 'bg-red-50 hover:bg-red-100' : ''}`}
 //                   >
-//                     <td className="px-2 py-2 text-sm text-center text-gray-300">
+//                     <td className="px-2 py-2 text-sm text-center text-gray-700">
 //                       <div className="px-2 py-2 text-center">
 //                         <span>{emp.employeeId}</span>
 //                         {isHidden && (
@@ -1302,27 +1302,27 @@
 //                         )}
 //                       </div>
 //                     </td>
-//                     <td className="px-2 py-2 text-sm text-center text-gray-300">
+//                     <td className="px-2 py-2 text-sm text-center text-gray-700">
 //                       <div className="px-2 py-2 text-center">
 //                         {emp.name}
 //                       </div>
 //                     </td>
-//                     <td className="px-2 py-2 text-sm text-center text-gray-300">{emp.phone}</td>
-//                     <td className="px-2 py-2 text-sm text-center text-gray-300">{emp.department}</td>
-//                     <td className="px-2 py-2 text-sm text-center text-gray-300">{emp.role}</td>
-//                     <td className="px-2 py-2 text-sm text-center text-gray-300">
+//                     <td className="px-2 py-2 text-sm text-center text-gray-700">{emp.phone}</td>
+//                     <td className="px-2 py-2 text-sm text-center text-gray-700">{emp.department}</td>
+//                     <td className="px-2 py-2 text-sm text-center text-gray-700">{emp.role}</td>
+//                     <td className="px-2 py-2 text-sm text-center text-gray-700">
 //                       {emp.joinDate ? new Date(emp.joinDate).toLocaleDateString() : "-"}
 //                     </td>
-//                     <td className="px-2 py-2 text-sm text-center text-gray-300">₹{emp.salaryPerMonth || 0}</td>
-//                     <td className="px-2 py-2 text-sm text-center text-gray-300">{emp.shiftHours || 8}</td>
-//                     <td className="px-2 py-2 text-sm text-center text-gray-300">{emp.weekOffPerMonth || 0}</td>
-//                     <td className="px-2 py-2 text-sm text-center text-gray-300">{getLocationName(emp.location)}</td>
-//                     <td className="px-2 py-2 text-sm text-center text-gray-300">
+//                     <td className="px-2 py-2 text-sm text-center text-gray-700">₹{emp.salaryPerMonth || 0}</td>
+//                     <td className="px-2 py-2 text-sm text-center text-gray-700">{emp.shiftHours || 8}</td>
+//                     <td className="px-2 py-2 text-sm text-center text-gray-700">{emp.weekOffPerMonth || 0}</td>
+//                     <td className="px-2 py-2 text-sm text-center text-gray-700">{getLocationName(emp.location)}</td>
+//                     <td className="px-2 py-2 text-sm text-center text-gray-700">
 //                       <span className={`px-2 py-2 text-center text-xs font-medium rounded-full ${isHidden ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
 //                         {isHidden ? 'INACTIVE' : 'ACTIVE'}
 //                       </span>
 //                     </td>
-//                     <td className="px-2 py-2 text-sm font-medium text-center text-gray-200 whitespace-nowrap">
+//                     <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                       <div className="flex justify-center gap-2">
 //                         <button 
 //                           className="text-blue-500 hover:text-blue-700" 
@@ -1388,7 +1388,7 @@
 //     {/* Show entries dropdown */}
 //     <div className="flex flex-wrap items-center gap-4">
 //       <div className="flex items-center gap-2">
-//         <label className="text-sm font-medium text-gray-300">
+//         <label className="text-sm font-medium text-gray-700">
 //           Show:
 //         </label>
 //         <select
@@ -1401,7 +1401,7 @@
 //           <option value={20}>20</option>
 //           <option value={50}>50</option>
 //         </select>
-//         <span className="text-sm text-gray-400">entries</span>
+//         <span className="text-sm text-gray-500">entries</span>
 //       </div>
 //     </div>
 
@@ -1412,8 +1412,8 @@
 //         disabled={currentPage === 1}
 //         className={`px-4 py-1 text-sm border rounded-lg ${
 //           currentPage === 1
-//             ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//             : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-200"
+//             ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//             : "text-blue-600 bg-white hover:bg-blue-50 border-blue-200"
 //         }`}
 //       >
 //         Previous
@@ -1427,7 +1427,7 @@
 //             className={`px-4 py-1 text-sm border rounded-lg ${
 //               currentPage === page
 //                 ? "text-white bg-blue-600 border-blue-600"
-//                 : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//                 : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //             }`}
 //           >
 //             {page}
@@ -1440,8 +1440,8 @@
 //         disabled={currentPage === totalPages}
 //         className={`px-4 py-1 text-sm border rounded-lg ${
 //           currentPage === totalPages
-//             ? "text-gray-400 bg-[#111111] cursor-not-allowed"
-//             : "text-blue-600 bg-[#0a0a0a] hover:bg-blue-50 border-blue-300"
+//             ? "text-gray-500 bg-gray-100 cursor-not-allowed"
+//             : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //         }`}
 //       >
 //         Next
@@ -1453,7 +1453,7 @@
 //       {/* View Modal */}
 //       {selectedEmployee && (
 //         <div className="fixed inset-0 flex items-center justify-center p-3 bg-black bg-opacity-50">
-//           <div className="relative w-full max-w-md p-5 bg-[#0a0a0a] rounded-lg">
+//           <div className="relative w-full max-w-md p-5 bg-white rounded-lg">
 //             <button className="absolute top-2 right-3" onClick={handleCloseModal}>✕</button>
 //             <h3 className="mb-3 text-lg font-bold">Employee Details</h3>
 //             {isEmployeeHidden(selectedEmployee) && (
@@ -1484,12 +1484,12 @@
 //       {/* Location Modal */}
 //       {showLocationModal && selectedEmployeeForLocation && (
 //         <div className="fixed inset-0 flex items-center justify-center p-3 bg-black bg-opacity-50">
-//           <div className="relative w-full max-w-md p-5 bg-[#0a0a0a] rounded-lg">
+//           <div className="relative w-full max-w-md p-5 bg-white rounded-lg">
 //             <button className="absolute top-2 right-3" onClick={handleCloseLocationModal}>
 //               ✕
 //             </button>
 //             <h3 className="mb-4 text-lg font-bold">Assign Location</h3>
-//             <p className="mb-3 text-sm text-gray-400">Assigning location for: {selectedEmployeeForLocation.name}</p>
+//             <p className="mb-3 text-sm text-gray-500">Assigning location for: {selectedEmployeeForLocation.name}</p>
 
 //             <select
 //               value={selectedLocationId}
@@ -1507,7 +1507,7 @@
 //             <div className="flex gap-2 mt-4">
 //               <button
 //                 onClick={handleCloseLocationModal}
-//                 className="flex-1 py-2 text-gray-300 bg-[#111111] rounded hover:bg-[#1f2937]"
+//                 className="flex-1 py-2 text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
 //               >
 //                 Cancel
 //               </button>
@@ -1910,20 +1910,20 @@
 //   };
 
 //   return (
-//     <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+//     <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
 //       <div className="mx-auto max-w-9xl">
 //         {/* Filters - Single Row */}
-//         <div className="p-2 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
+//         <div className="p-2 mb-3 bg-white rounded-lg shadow-md">
 //           <div className="flex flex-wrap items-center gap-2">
 //             {/* ID/Name Search */}
 //             <div className="relative flex-1 min-w-[200px]">
-//               <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+//               <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
 //               <input
 //                 type="text"
 //                 placeholder="Search by ID, Name, Email, Phone..."
 //                 value={searchTerm}
 //                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="w-full pl-7 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               />
 //             </div>
 
@@ -1932,7 +1932,7 @@
 //               <select
 //                 value={deptSearchTerm}
 //                 onChange={(e) => setDeptSearchTerm(e.target.value)}
-//                 className="w-full px-2 py-2 text-xs bg-[#0a0a0a] border border-[#374151] rounded-lg appearance-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//                 className="w-full px-2 py-2 text-xs bg-white border border-gray-300 rounded-lg appearance-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
 //               >
 //                 <option value="">All Departments & Designations</option>
 //                 <option value="Laboratory Medicine">Laboratory Medicine</option>
@@ -1948,7 +1948,7 @@
 //             </div>
 
 //             {/* Status Filter Tabs */}
-//             <div className="flex items-center gap-1 p-0.5 bg-[#111111] rounded-lg">
+//             <div className="flex items-center gap-1 p-0.5 bg-gray-100 rounded-lg">
 //               <button
 //                 onClick={() => {
 //                   setShowInactiveOnly(false);
@@ -1956,8 +1956,8 @@
 //                 }}
 //                 className={`px-2 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
 //                   !showInactiveOnly 
-//                     ? 'bg-[#0a0a0a] text-blue-600 shadow-sm' 
-//                     : 'text-gray-400 hover:text-gray-300'
+//                     ? 'bg-white text-blue-600 shadow-sm' 
+//                     : 'text-gray-500 hover:text-gray-700'
 //                 }`}
 //               >
 //                 Active ({activeEmployees.length})
@@ -1969,8 +1969,8 @@
 //                 }}
 //                 className={`px-2 py-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
 //                   showInactiveOnly 
-//                     ? 'bg-[#0a0a0a] text-red-600 shadow-sm' 
-//                     : 'text-gray-400 hover:text-gray-300'
+//                     ? 'bg-white text-red-600 shadow-sm' 
+//                     : 'text-gray-500 hover:text-gray-700'
 //                 }`}
 //               >
 //                 Inactive ({inactiveEmployees.length})
@@ -2000,8 +2000,8 @@
 //         </div>
 
 //         {/* Table */}
-//         <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
-//           <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+//         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+//           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
 //               <thead className="text-xs text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
@@ -2020,31 +2020,31 @@
 //                 </tr>
 //               </thead>
 
-//               <tbody className="bg-[#0a0a0a] divide-y divide-[#1f2937]">
+//               <tbody className="bg-white divide-y divide-gray-200">
 //                 {currentEmployees.length > 0 ? (
 //                   currentEmployees.map((emp) => {
 //                     const isHidden = isEmployeeHidden(emp);
 //                     return (
 //                       <tr 
 //                         key={emp._id} 
-//                         className={`hover:bg-[#000000] transition-colors text-xs ${isHidden ? 'bg-red-50 hover:bg-red-100' : ''}`}
+//                         className={`hover:bg-gray-50 transition-colors text-xs ${isHidden ? 'bg-red-50 hover:bg-red-100' : ''}`}
 //                       >
-//                         <td className="px-2 py-2 font-semibold text-center text-gray-200 whitespace-nowrap">
+//                         <td className="px-2 py-2 font-semibold text-center text-gray-900 whitespace-nowrap">
 //                           {emp.employeeId}
 //                         </td>
-//                         <td className="px-2 py-2 font-semibold text-center text-gray-200 whitespace-nowrap">
+//                         <td className="px-2 py-2 font-semibold text-center text-gray-900 whitespace-nowrap">
 //                           {emp.name}
 //                         </td>
-//                         <td className="px-2 py-2 font-medium text-center text-gray-400 whitespace-nowrap">{emp.phone}</td>
-//                         <td className="px-2 py-2 font-medium text-center text-gray-400 whitespace-nowrap">{emp.department || "N/A"}</td>
-//                         <td className="px-2 py-2 font-medium text-center text-gray-400 whitespace-nowrap">{emp.role || emp.designation || "N/A"}</td>
-//                         <td className="px-2 py-2 font-medium text-center text-gray-400 whitespace-nowrap">
+//                         <td className="px-2 py-2 font-medium text-center text-gray-500 whitespace-nowrap">{emp.phone}</td>
+//                         <td className="px-2 py-2 font-medium text-center text-gray-500 whitespace-nowrap">{emp.department || "N/A"}</td>
+//                         <td className="px-2 py-2 font-medium text-center text-gray-500 whitespace-nowrap">{emp.role || emp.designation || "N/A"}</td>
+//                         <td className="px-2 py-2 font-medium text-center text-gray-500 whitespace-nowrap">
 //                           {emp.joinDate ? new Date(emp.joinDate).toLocaleDateString() : "-"}
 //                         </td>
-//                         <td className="px-2 py-2 font-medium text-center text-gray-400 whitespace-nowrap">₹{emp.salaryPerMonth || 0}</td>
-//                         <td className="px-2 py-2 font-medium text-center text-gray-400 whitespace-nowrap">{emp.shiftHours || 8}h</td>
-//                         <td className="px-2 py-2 font-medium text-center text-gray-400 whitespace-nowrap">{emp.weekOffPerMonth || 0}</td>
-//                         <td className="px-2 py-2 font-medium text-center text-gray-400 whitespace-nowrap">{getLocationName(emp.location)}</td>
+//                         <td className="px-2 py-2 font-medium text-center text-gray-500 whitespace-nowrap">₹{emp.salaryPerMonth || 0}</td>
+//                         <td className="px-2 py-2 font-medium text-center text-gray-500 whitespace-nowrap">{emp.shiftHours || 8}h</td>
+//                         <td className="px-2 py-2 font-medium text-center text-gray-500 whitespace-nowrap">{emp.weekOffPerMonth || 0}</td>
+//                         <td className="px-2 py-2 font-medium text-center text-gray-500 whitespace-nowrap">{getLocationName(emp.location)}</td>
 //                         <td className="px-2 py-2 font-medium text-center whitespace-nowrap ">
 //                           <span className={`px-2 py-2 text-xs font-semibold rounded-full ${
 //                             isHidden 
@@ -2119,9 +2119,9 @@
 
 //           {/* Pagination */}
 //           {filteredEmployees.length > 0 && (
-//             <div className="bg-[#000000] px-2 py-1.5 flex flex-wrap items-center justify-between gap-2 border-t border-[#1f2937]">
+//             <div className="bg-gray-50 px-2 py-1.5 flex flex-wrap items-center justify-between gap-2 border-t border-gray-200">
 //               {/* Left Side - Showing Info + Select */}
-//               <div className="flex flex-wrap items-center gap-1 text-xs text-gray-300">
+//               <div className="flex flex-wrap items-center gap-1 text-xs text-gray-700">
 //                 <span>Showing</span>
 //                 <span className="font-medium">{indexOfFirst + 1}</span>
 //                 <span>to</span>
@@ -2153,8 +2153,8 @@
 //                   disabled={pagination.currentPage === 1}
 //                   className={`px-2 py-2 border rounded-lg text-xs font-medium transition-colors ${
 //                     pagination.currentPage === 1
-//                       ? "bg-[#111111] text-gray-400 cursor-not-allowed"
-//                       : "bg-[#0a0a0a] text-gray-300 border-[#374151] hover:bg-[#000000]"
+//                       ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+//                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
 //                   }`}
 //                 >
 //                   Previous
@@ -2171,7 +2171,7 @@
 //                           ? "text-gray-500 cursor-default"
 //                           : pagination.currentPage === page
 //                           ? "bg-blue-600 text-white"
-//                           : "bg-[#0a0a0a] text-gray-300 border border-[#374151] hover:bg-[#000000]"
+//                           : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
 //                       }`}
 //                     >
 //                       {page}
@@ -2184,8 +2184,8 @@
 //                   disabled={pagination.currentPage === pagination.totalPages}
 //                   className={`px-2 py-2 border rounded-lg text-xs font-medium transition-colors ${
 //                     pagination.currentPage === pagination.totalPages
-//                       ? "bg-[#111111] text-gray-400 cursor-not-allowed"
-//                       : "bg-[#0a0a0a] text-gray-300 border-[#374151] hover:bg-[#000000]"
+//                       ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+//                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
 //                   }`}
 //                 >
 //                   Next
@@ -2198,8 +2198,8 @@
 //         {/* View Modal */}
 //         {selectedEmployee && (
 //           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black bg-opacity-50">
-//             <div className="relative w-full max-w-md p-4 bg-[#0a0a0a] rounded-lg">
-//               <button className="absolute text-sm text-gray-500 top-2 right-3 hover:text-gray-300" onClick={handleCloseModal}>✕</button>
+//             <div className="relative w-full max-w-md p-4 bg-white rounded-lg">
+//               <button className="absolute text-sm text-gray-500 top-2 right-3 hover:text-gray-700" onClick={handleCloseModal}>✕</button>
 //               <h3 className="mb-2 text-base font-bold">Employee Details</h3>
 //               {isEmployeeHidden(selectedEmployee) && (
 //                 <div className="p-1.5 mb-2 bg-red-100 border border-red-200 rounded">
@@ -2229,17 +2229,17 @@
 //         {/* Location Modal */}
 //         {showLocationModal && selectedEmployeeForLocation && (
 //           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black bg-opacity-50">
-//             <div className="relative w-full max-w-md p-4 bg-[#0a0a0a] rounded-lg">
-//               <button className="absolute text-sm text-gray-500 top-2 right-3 hover:text-gray-300" onClick={handleCloseLocationModal}>
+//             <div className="relative w-full max-w-md p-4 bg-white rounded-lg">
+//               <button className="absolute text-sm text-gray-500 top-2 right-3 hover:text-gray-700" onClick={handleCloseLocationModal}>
 //                 ✕
 //               </button>
 //               <h3 className="mb-3 text-base font-bold">Assign Location</h3>
-//               <p className="mb-2 text-xs text-gray-400">Assigning location for: {selectedEmployeeForLocation.name}</p>
+//               <p className="mb-2 text-xs text-gray-500">Assigning location for: {selectedEmployeeForLocation.name}</p>
 
 //               <select
 //                 value={selectedLocationId}
 //                 onChange={(e) => setSelectedLocationId(e.target.value)}
-//                 className="w-full p-2 text-xs border border-[#374151] rounded-lg"
+//                 className="w-full p-2 text-xs border border-gray-300 rounded-lg"
 //               >
 //                 <option value="">Select Location</option>
 //                 {locations.map((loc) => (
@@ -2252,7 +2252,7 @@
 //               <div className="flex gap-2 mt-3">
 //                 <button
 //                   onClick={handleCloseLocationModal}
-//                   className="flex-1 py-2 text-xs font-medium text-gray-300 transition-colors bg-[#111111] rounded-lg hover:bg-[#1f2937]"
+//                   className="flex-1 py-2 text-xs font-medium text-gray-700 transition-colors bg-gray-100 rounded-lg hover:bg-gray-200"
 //                 >
 //                   Cancel
 //                 </button>
@@ -2703,7 +2703,7 @@ const EmployeeList = () => {
         } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <span
-          className={`inline-block w-3 h-3 transform rounded-full bg-[#0a0a0a] transition-transform ${
+          className={`inline-block w-3 h-3 transform rounded-full bg-white transition-transform ${
             isActive ? 'translate-x-5' : 'translate-x-1'
           }`}
         />
@@ -2712,20 +2712,20 @@ const EmployeeList = () => {
   };
 
   return (
-    <div className="min-h-screen p-2 bg-gradient-to-br from-[#000000] to-[#0a0a0a]">
+    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="mx-auto max-w-9xl">
         {/* Filters - Single Row */}
-        <div className="p-2 mb-3 bg-[#0a0a0a] rounded-lg shadow-md">
+        <div className="p-2 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
             {/* ID/Name Search */}
             <div className="relative flex-1 min-w-[200px]">
-              <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="text"
                 placeholder="Search by ID, Name, Email, Phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-7 pr-2 py-1.5 text-xs border border-[#374151] rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -2736,7 +2736,7 @@ const EmployeeList = () => {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDepartment 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
@@ -2744,13 +2744,13 @@ const EmployeeList = () => {
               
               {/* Department Filter Dropdown */}
               {showDepartmentFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
                   <div 
                     onClick={() => {
                       setFilterDepartment('');
                       setShowDepartmentFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
                   >
                     All Departments
                   </div>
@@ -2779,7 +2779,7 @@ const EmployeeList = () => {
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDesignation 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-[#111111] text-gray-300 hover:bg-[#1f2937] border border-[#374151]'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
@@ -2787,13 +2787,13 @@ const EmployeeList = () => {
               
               {/* Designation Filter Dropdown */}
               {showDesignationFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-[#0a0a0a] border border-[#1f2937] rounded-md shadow-lg max-h-60">
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
                   <div 
                     onClick={() => {
                       setFilterDesignation('');
                       setShowDesignationFilter(false);
                     }}
-                    className="px-3 py-2 text-xs font-medium text-gray-300 border-b border-[#1f2937] cursor-pointer hover:bg-blue-50"
+                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
                   >
                     All Designations
                   </div>
@@ -2816,7 +2816,7 @@ const EmployeeList = () => {
             </div>
 
             {/* Status Filter Tabs */}
-            <div className="flex items-center gap-1 p-0.5 bg-[#111111] rounded-lg">
+            <div className="flex items-center gap-1 p-0.5 bg-gray-100 rounded-lg">
               <button
                 onClick={() => {
                   setShowInactiveOnly(false);
@@ -2824,8 +2824,8 @@ const EmployeeList = () => {
                 }}
                 className={`px-2 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
                   !showInactiveOnly 
-                    ? 'bg-[#0a0a0a] text-blue-600 shadow-sm' 
-                    : 'text-gray-400 hover:text-gray-300'
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 Active ({activeEmployees.length})
@@ -2837,8 +2837,8 @@ const EmployeeList = () => {
                 }}
                 className={`px-2 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
                   showInactiveOnly 
-                    ? 'bg-[#0a0a0a] text-red-600 shadow-sm' 
-                    : 'text-gray-400 hover:text-gray-300'
+                    ? 'bg-white text-red-600 shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 Inactive ({inactiveEmployees.length})
@@ -2873,7 +2873,7 @@ const EmployeeList = () => {
                   setFilterDesignation('');
                   setSearchTerm('');
                 }}
-                className="h-8 px-3 text-xs font-medium text-gray-400 transition bg-[#111111] border border-[#374151] rounded-md hover:bg-[#1f2937]"
+                className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
               >
                 Clear
               </button>
@@ -2882,8 +2882,8 @@ const EmployeeList = () => {
         </div>
 
         {/* Table */}
-        <div className="mb-6 overflow-hidden bg-[#0a0a0a] rounded-lg shadow-lg">
-          <div className="overflow-x-auto bg-[#0a0a0a] shadow-lg rounded-xl">
+        <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
               <thead className="text-xs text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
@@ -2902,31 +2902,31 @@ const EmployeeList = () => {
                 </tr>
               </thead>
 
-              <tbody className="bg-[#0a0a0a] divide-y divide-[#1f2937]">
+              <tbody className="bg-white divide-y divide-gray-200">
                 {currentEmployees.length > 0 ? (
                   currentEmployees.map((emp) => {
                     const isHidden = isEmployeeHidden(emp);
                     return (
                       <tr 
                         key={emp._id} 
-                        className={`hover:bg-[#000000] transition-colors text-xs ${isHidden ? 'bg-red-50 hover:bg-red-100' : ''}`}
+                        className={`hover:bg-gray-50 transition-colors text-xs ${isHidden ? 'bg-red-50 hover:bg-red-100' : ''}`}
                       >
-                        <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           {emp.employeeId}
                         </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-200 whitespace-nowrap">
+                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           {emp.name}
                         </td>
-                        <td className="px-2 py-2 text-center text-gray-400">{emp.phone}</td>
-                        <td className="px-2 py-2 text-center text-gray-400 ">{emp.department || "N/A"}</td>
-                        <td className="px-2 py-2 text-center text-gray-400 ">{emp.role || emp.designation || "N/A"}</td>
-                        <td className="px-2 py-2 text-center text-gray-400 ">
+                        <td className="px-2 py-2 text-center text-gray-500">{emp.phone}</td>
+                        <td className="px-2 py-2 text-center text-gray-500 ">{emp.department || "N/A"}</td>
+                        <td className="px-2 py-2 text-center text-gray-500 ">{emp.role || emp.designation || "N/A"}</td>
+                        <td className="px-2 py-2 text-center text-gray-500 ">
                           {emp.joinDate ? new Date(emp.joinDate).toLocaleDateString() : "-"}
                         </td>
-                        <td className="px-2 py-2 text-center text-gray-400 ">₹{emp.salaryPerMonth || 0}</td>
-                        <td className="px-2 py-2 text-center text-gray-400 ">{emp.shiftHours || 8}h</td>
-                        <td className="px-2 py-2 text-center text-gray-400 ">{emp.weekOffPerMonth || 0}</td>
-                        <td className="px-2 py-2 text-center text-gray-400 ">{getLocationName(emp.location)}</td>
+                        <td className="px-2 py-2 text-center text-gray-500 ">₹{emp.salaryPerMonth || 0}</td>
+                        <td className="px-2 py-2 text-center text-gray-500 ">{emp.shiftHours || 8}h</td>
+                        <td className="px-2 py-2 text-center text-gray-500 ">{emp.weekOffPerMonth || 0}</td>
+                        <td className="px-2 py-2 text-center text-gray-500 ">{getLocationName(emp.location)}</td>
                         <td className="px-2 py-2 text-center ">
                           <span className={`px-2 py-2 text-xs font-medium rounded-full ${
                             isHidden 
@@ -2999,9 +2999,9 @@ const EmployeeList = () => {
 
           {/* Pagination */}
           {filteredEmployees.length > 0 && (
-            <div className="bg-[#000000] px-2 py-1.5 flex flex-wrap items-center justify-between gap-2 border-t border-[#1f2937]">
+            <div className="bg-gray-50 px-2 py-1.5 flex flex-wrap items-center justify-between gap-2 border-t border-gray-200">
               {/* Left Side - Showing Info + Select */}
-              <div className="flex flex-wrap items-center gap-1 text-xs text-gray-300">
+              <div className="flex flex-wrap items-center gap-1 text-xs text-gray-700">
                 <span>Showing</span>
                 <span className="font-medium">{indexOfFirst + 1}</span>
                 <span>to</span>
@@ -3033,8 +3033,8 @@ const EmployeeList = () => {
                   disabled={pagination.currentPage === 1}
                   className={`px-2 py-2 border rounded-lg text-xs font-medium transition-colors ${
                     pagination.currentPage === 1
-                      ? "bg-[#111111] text-gray-400 cursor-not-allowed"
-                      : "bg-[#0a0a0a] text-gray-300 border-[#374151] hover:bg-[#000000]"
+                      ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                   }`}
                 >
                   Previous
@@ -3051,7 +3051,7 @@ const EmployeeList = () => {
                           ? "text-gray-500 cursor-default"
                           : pagination.currentPage === page
                           ? "bg-blue-600 text-white"
-                          : "bg-[#0a0a0a] text-gray-300 border border-[#374151] hover:bg-[#000000]"
+                          : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                       }`}
                     >
                       {page}
@@ -3064,8 +3064,8 @@ const EmployeeList = () => {
                   disabled={pagination.currentPage === pagination.totalPages}
                   className={`px-2 py-2 border rounded-lg text-xs font-medium transition-colors ${
                     pagination.currentPage === pagination.totalPages
-                      ? "bg-[#111111] text-gray-400 cursor-not-allowed"
-                      : "bg-[#0a0a0a] text-gray-300 border-[#374151] hover:bg-[#000000]"
+                      ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                   }`}
                 >
                   Next
@@ -3078,8 +3078,8 @@ const EmployeeList = () => {
         {/* View Modal */}
         {selectedEmployee && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black bg-opacity-50">
-            <div className="relative w-full max-w-md p-4 bg-[#0a0a0a] rounded-lg">
-              <button className="absolute text-sm text-gray-500 top-2 right-3 hover:text-gray-300" onClick={handleCloseModal}>✕</button>
+            <div className="relative w-full max-w-md p-4 bg-white rounded-lg">
+              <button className="absolute text-sm text-gray-500 top-2 right-3 hover:text-gray-700" onClick={handleCloseModal}>✕</button>
               <h3 className="mb-2 text-base font-bold">Employee Details</h3>
               {isEmployeeHidden(selectedEmployee) && (
                 <div className="p-1.5 mb-2 bg-red-100 border border-red-200 rounded">
@@ -3109,17 +3109,17 @@ const EmployeeList = () => {
         {/* Location Modal */}
         {showLocationModal && selectedEmployeeForLocation && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black bg-opacity-50">
-            <div className="relative w-full max-w-md p-4 bg-[#0a0a0a] rounded-lg">
-              <button className="absolute text-sm text-gray-500 top-2 right-3 hover:text-gray-300" onClick={handleCloseLocationModal}>
+            <div className="relative w-full max-w-md p-4 bg-white rounded-lg">
+              <button className="absolute text-sm text-gray-500 top-2 right-3 hover:text-gray-700" onClick={handleCloseLocationModal}>
                 ✕
               </button>
               <h3 className="mb-3 text-base font-bold">Assign Location</h3>
-              <p className="mb-2 text-xs text-gray-400">Assigning location for: {selectedEmployeeForLocation.name}</p>
+              <p className="mb-2 text-xs text-gray-500">Assigning location for: {selectedEmployeeForLocation.name}</p>
 
               <select
                 value={selectedLocationId}
                 onChange={(e) => setSelectedLocationId(e.target.value)}
-                className="w-full p-2 text-xs border border-[#374151] rounded-lg"
+                className="w-full p-2 text-xs border border-gray-300 rounded-lg"
               >
                 <option value="">Select Location</option>
                 {locations.map((loc) => (
@@ -3132,7 +3132,7 @@ const EmployeeList = () => {
               <div className="flex gap-2 mt-3">
                 <button
                   onClick={handleCloseLocationModal}
-                  className="flex-1 py-2 text-xs font-medium text-gray-300 transition-colors bg-[#111111] rounded-lg hover:bg-[#1f2937]"
+                  className="flex-1 py-2 text-xs font-medium text-gray-700 transition-colors bg-gray-100 rounded-lg hover:bg-gray-200"
                 >
                   Cancel
                 </button>
