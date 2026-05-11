@@ -168,7 +168,7 @@ const RedeemedCouponsList = () => {
           </select>
           <button
             onClick={handleDownload}
-            className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+            className="bg-blue-600 text-gray-900 px-3 py-1 rounded text-sm hover:bg-blue-700"
             disabled={redeemedCoupons.length === 0}
           >
             Download CSV
@@ -182,7 +182,7 @@ const RedeemedCouponsList = () => {
       {/* Table */}
       <div className="overflow-x-auto text-xs">
         <table className="w-full border border-gray-300">
-          <thead className="bg-blue-600 text-white">
+          <thead className="bg-blue-600 text-gray-900">
             <tr>
               <th className="p-1 border">SI No</th>
               <th className="p-1 border">Cust ID</th>
@@ -249,7 +249,7 @@ const RedeemedCouponsList = () => {
               key={i + 1}
               onClick={() => setCurrentPage(i + 1)}
               className={`px-2 py-1 rounded text-xs ${
-                currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-100'
+                currentPage === i + 1 ? 'bg-blue-600 text-gray-900' : 'bg-gray-100'
               }`}
             >
               {i + 1}

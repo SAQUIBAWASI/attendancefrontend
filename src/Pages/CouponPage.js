@@ -175,7 +175,7 @@ const CouponsTable = () => {
       {/* Coupon Table */}
       <div className="overflow-x-auto">
         <table className="w-full border border-gray-300">
-          <thead className="bg-blue-600 text-white">
+          <thead className="bg-blue-600 text-gray-900">
             <tr>
               <th className="p-2 border">ID</th>
               <th className="p-2 border">Name</th>
@@ -268,7 +268,7 @@ const CouponsTable = () => {
             key={idx}
             onClick={() => setCurrentPage(idx + 1)}
             className={`px-4 py-2 rounded ${
-              currentPage === idx + 1 ? "bg-blue-500 text-white" : "bg-gray-100"
+              currentPage === idx + 1 ? "bg-blue-600 text-gray-900" : "bg-gray-100"
             }`}
           >
             {idx + 1}

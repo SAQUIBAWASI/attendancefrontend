@@ -64,8 +64,8 @@ const Letters = () => {
   const getDocTypeBadge = (type) => {
     const t = (type || "Offer").toLowerCase();
     switch (t) {
-      case "offer": return "bg-blue-100 text-blue-800 border-blue-200";
-      case "appointment": return "bg-emerald-100 text-emerald-800 border-emerald-200";
+      case "offer": return "bg-blue-50 text-blue-700 border-blue-200";
+      case "appointment": return "bg-blue-100 text-emerald-800 border-emerald-200";
       case "experience": return "bg-purple-100 text-purple-800 border-purple-200";
       case "internship": return "bg-orange-100 text-orange-800 border-orange-200";
       case "relieving": return "bg-rose-100 text-rose-800 border-rose-200";
@@ -164,7 +164,7 @@ const Letters = () => {
                     }
                     setIsResignModalOpen(true);
                   }}
-                  className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-100 active:scale-95"
+                  className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-gray-900 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-100 active:scale-95"
                 >
                   <FaSignOutAlt /> File Resignation
                 </button>
@@ -176,7 +176,7 @@ const Letters = () => {
               <div className="relative w-full sm:w-auto">
                 <input
                   type="date"
-                  className="w-full bg-gray-50 py-2.5 px-4 pr-10 text-xs text-gray-700 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold shadow-sm sm:w-40 cursor-pointer transition-all"
+                  className="w-full bg-white py-2.5 px-4 pr-10 text-xs text-gray-700 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold shadow-sm sm:w-40 cursor-pointer transition-all"
                   value={dateFilter}
                   onChange={(e) => setDateFilter(e.target.value)}
                 />
@@ -185,7 +185,7 @@ const Letters = () => {
               {/* Document Type Dropdown */}
               <div className="relative w-full sm:w-52" ref={typeDropdownRef}>
                 <div
-                  className="w-full bg-gray-50 py-2.5 px-4 text-xs text-gray-700 border border-gray-200 rounded-xl font-bold cursor-pointer hover:bg-gray-100 shadow-sm transition-all flex items-center justify-between"
+                  className="w-full bg-white py-2.5 px-4 text-xs text-gray-700 border border-gray-200 rounded-xl font-bold cursor-pointer hover:bg-gray-100 shadow-sm transition-all flex items-center justify-between"
                   onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
                 >
                   <span className="truncate">{typeFilter || "Filter by Doc Type"}</span>
@@ -221,7 +221,7 @@ const Letters = () => {
                 </div>
                 <input
                   type="text"
-                  className="w-full py-2.5 pl-10 pr-4 bg-gray-50 text-xs text-gray-700 placeholder-gray-400 font-bold border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all"
+                  className="w-full py-2.5 pl-10 pr-4 bg-white text-xs text-gray-700 placeholder-gray-400 font-bold border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all"
                   placeholder="Search role, doc type..."
                   value={localSearchQuery}
                   onChange={(e) => setLocalSearchQuery(e.target.value)}
@@ -230,7 +230,7 @@ const Letters = () => {
 
               {/* Reset */}
               {hasFilters && (
-                <button onClick={resetFilters} className="p-2.5 text-gray-500 hover:text-rose-500 bg-gray-50 hover:bg-rose-50 border border-gray-200 rounded-xl transition-all shadow-sm" title="Reset Filters">
+                <button onClick={resetFilters} className="p-2.5 text-gray-500 hover:text-rose-500 bg-white hover:bg-rose-50 border border-gray-200 rounded-xl transition-all shadow-sm" title="Reset Filters">
                   <FaSync className="text-xs" />
                 </button>
               )}
@@ -248,7 +248,7 @@ const Letters = () => {
             <div className="overflow-x-auto">
               <table className="min-w-full">
                 <thead>
-                  <tr className="bg-gradient-to-r from-green-500 to-blue-600 text-white text-center uppercase tracking-wider text-[10px] font-bold">
+                  <tr className="bg-gradient-to-r from-green-500 to-blue-600 text-gray-900 text-center uppercase tracking-wider text-[10px] font-bold">
                     <th className="py-3 px-8">Position / Role</th>
                     <th className="py-3 px-6">Document Type</th>
                     <th className="py-3 px-6">Issued On</th>
@@ -277,12 +277,12 @@ const Letters = () => {
                       </td>
                       <td className="py-2 px-6 text-xs font-bold text-gray-500 uppercase tracking-tight">
                         <div className="flex items-center justify-center gap-2">
-                          <FaCalendarAlt className="text-blue-400" size={10} />
+                          <FaCalendarAlt className="text-blue-500" size={10} />
                           {new Date(app.offerSentAt || app.updatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                         </div>
                       </td>
                       <td className="py-2 px-6">
-                        <span className="font-bold text-[10px] text-gray-500 border border-gray-200 px-2 py-0.5 rounded bg-gray-50 uppercase tracking-widest">
+                        <span className="font-bold text-[10px] text-gray-500 border border-gray-200 px-2 py-0.5 rounded bg-white uppercase tracking-widest">
                           #{app._id.slice(-6).toUpperCase()}
                         </span>
                       </td>
@@ -294,7 +294,7 @@ const Letters = () => {
                               setActiveDocTab(app.documentType === "Resignation" ? "resignation" : "offer");
                               setIsModalOpen(true);
                             }}
-                            className="p-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-lg transition-all shadow-sm"
+                            className="p-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-gray-900 rounded-lg transition-all shadow-sm"
                             title="View Document"
                           >
                             <FaEye size={14} />
@@ -307,7 +307,7 @@ const Letters = () => {
                                 handleDownloadOffer(app);
                               }
                             }}
-                            className="p-2 bg-gray-900 text-white hover:bg-blue-600 rounded-lg transition-all shadow-sm"
+                            className="p-2 bg-gray-100 text-gray-900 hover:bg-blue-600 rounded-lg transition-all shadow-sm"
                             title="Download PDF"
                           >
                             <FaDownload size={12} />
@@ -321,7 +321,7 @@ const Letters = () => {
             </div>
           ) : (
             <div className="p-24 text-center">
-              <div className="w-20 h-20 bg-gray-50 rounded-[2.5rem] flex items-center justify-center text-gray-900 mx-auto mb-6 border-2 border-dashed border-gray-200">
+              <div className="w-20 h-20 bg-white rounded-[2.5rem] flex items-center justify-center text-gray-900 mx-auto mb-6 border-2 border-dashed border-gray-200">
                 <FaInbox size={32} />
               </div>
               <h3 className="text-lg font-bold text-gray-700 uppercase tracking-widest">No Letters Yet</h3>
@@ -335,9 +335,9 @@ const Letters = () => {
 
       {/* Resignation Modal */}
       {isResignModalOpen && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-gray-100/60 backdrop-blur-sm">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-8 py-5 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
+            <div className="px-8 py-5 border-b border-gray-200 flex justify-between items-center bg-white/50">
               <div className="flex items-center gap-3">
                 <div className="bg-rose-100 text-rose-600 p-2 rounded-xl">
                   <FaSignOutAlt size={16} />
@@ -359,7 +359,7 @@ const Letters = () => {
                   required
                   value={resignationLetter}
                   onChange={(e) => setResignationLetter(e.target.value)}
-                  className="w-full h-40 p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all text-sm font-medium text-gray-700 shadow-sm"
+                  className="w-full h-40 p-4 bg-white border border-gray-200 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all text-sm font-medium text-gray-700 shadow-sm"
                   placeholder="Please state your reason for resignation and your intended last working day..."
                 />
               </div>
@@ -368,14 +368,14 @@ const Letters = () => {
                 <button
                   type="button"
                   onClick={() => setIsResignModalOpen(false)}
-                  className="flex-1 px-6 py-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-500 transition-all text-xs uppercase tracking-widest border border-gray-200"
+                  className="flex-1 px-6 py-3 rounded-2xl font-bold text-gray-500 hover:bg-white hover:text-gray-500 transition-all text-xs uppercase tracking-widest border border-gray-200"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingResign}
-                  className="flex-2 bg-rose-500 hover:bg-rose-600 text-white px-8 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-rose-100 text-xs uppercase tracking-widest flex items-center justify-center min-w-[160px]"
+                  className="flex-2 bg-rose-500 hover:bg-rose-600 text-gray-900 px-8 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-rose-100 text-xs uppercase tracking-widest flex items-center justify-center min-w-[160px]"
                 >
                   {isSubmittingResign ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

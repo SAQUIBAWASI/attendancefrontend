@@ -9,11 +9,11 @@
 // navigate("/notifications");
 // };
 
-// return ( <nav className="sticky top-0 z-50 flex items-center justify-between w-full h-16 px-4 text-white bg-blue-600 border-b border-gray-200 ">
+// return ( <nav className="sticky top-0 z-50 flex items-center justify-between w-full h-16 px-4 text-white bg-[#1D4ED8] border-blue-800/50 border-blue-800/50 ">
 // {/* Sidebar toggle button (left) */}
 // <button
 // onClick={() => setIsCollapsed(!isCollapsed)}
-// className="p-2 text-2xl transition rounded-md hover:bg-blue-500 border border-gray-200 text-white"
+// className="p-2 text-2xl transition rounded-md hover:bg-[#1D4ED8] border border-blue-800/50 text-white"
 // >
 // {isCollapsed ? ( <RiMenu2Line className="text-[#AAAAAA]" />
 // ) : ( <RiMenu3Line className="text-[#AAAAAA]" />
@@ -26,11 +26,11 @@
 //   {/* <div className="relative flex items-center md:order-2">
 //     <button
 //       onClick={handleNotificationsClick}
-//       className="relative p-2 transition rounded-full hover:bg-blue-500 border border-gray-200 text-white"
+//       className="relative p-2 transition rounded-full hover:bg-[#1D4ED8] border border-blue-800/50 text-white"
 //     >
 //       <MdNotificationsNone className="text-2xl text-white" />
 //       {totalNotifications > 0 && (
-//         <span className="absolute flex items-center justify-center w-4 h-4 text-xs text-white bg-red-500 rounded-full -top-1 -right-1">
+//         <span className="absolute flex items-center justify-center w-4 h-4 text-xs text-white bg-[#1E3A8A] rounded-full -top-1 -right-1">
 //           {totalNotifications}
 //         </span>
 //       )}
@@ -102,14 +102,14 @@
 
 
 //   return (
-//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-blue-600 border-b border-gray-200 ">
+//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-[#1D4ED8] border-blue-800/50 border-blue-800/50 ">
 
 //       {/* Left Section - Menu Button & Page Title */}
 //       <div className="flex items-center gap-4">
 //         {/* Sidebar toggle button */}
 //         <button
 //           onClick={handleMenuClick}
-//           className="p-2 text-2xl transition rounded-md hover:bg-blue-500 border border-gray-200 text-white"
+//           className="p-2 text-2xl transition rounded-md hover:bg-[#1D4ED8] border border-blue-800/50 text-white"
 //         >
 //           {isCollapsed ? (
 //             <RiMenu2Line className="text-white" />
@@ -119,7 +119,7 @@
 //         </button>
 
 //         {/* Page Title - Show on all screens */}
-//         <div className="px-3 py-1 bg-blue-500 border border-gray-200 text-white rounded-md">
+//         <div className="px-3 py-1 bg-[#1D4ED8] border border-blue-800/50 text-white rounded-md">
 //           <span className="text-sm font-semibold md:text-base">
 //             {getPageTitle()}
 //           </span>
@@ -202,13 +202,13 @@
 //   );
 
 //  return (
-//   <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-blue-600 border-b border-gray-200 ">
+//   <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-[#1D4ED8] border-blue-800/50 border-blue-800/50 ">
 
 //     {/* LEFT SECTION */}
 //     <div className="flex items-center gap-4">
 //       <button
 //         onClick={handleMenuClick}
-//         className="p-2 text-2xl transition rounded-md hover:bg-blue-500 border border-gray-200 text-white"
+//         className="p-2 text-2xl transition rounded-md hover:bg-[#1D4ED8] border border-blue-800/50 text-white"
 //       >
 //         {isCollapsed ? (
 //           <RiMenu2Line />
@@ -217,7 +217,7 @@
 //         )}
 //       </button>
 
-//       <div className="px-3 py-1 bg-blue-500 border border-gray-200 text-white rounded-md">
+//       <div className="px-3 py-1 bg-[#1D4ED8] border border-blue-800/50 text-white rounded-md">
 //         <span className="text-sm font-semibold md:text-base">
 //           {getPageTitle()}
 //         </span>
@@ -245,7 +245,7 @@
 //             onClick={() => navigate(item.path)}
 //             className={`text-sm font-medium transition ${
 //               location.pathname === item.path
-//                 ? "border-b-2 border-white pb-1"
+//                 ? "border-blue-800/50 border-blue-800/50 pb-1"
 //                 : "hover:text-white"
 //             }`}
 //           >
@@ -344,18 +344,18 @@
 //   const isAttendanceModule = attendanceRoutes.includes(location.pathname);
 
 //   return (
-//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-blue-600 border-b border-gray-200 ">
+//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-[#1D4ED8] border-blue-800/50 border-blue-800/50 ">
 
 //       {/* LEFT SECTION */}
 //       <div className="flex items-center gap-4">
 //         <button
 //           onClick={handleMenuClick}
-//           className="p-2 text-2xl transition rounded-md hover:bg-blue-500 border border-gray-200 text-white"
+//           className="p-2 text-2xl transition rounded-md hover:bg-[#1D4ED8] border border-blue-800/50 text-white"
 //         >
 //           {isCollapsed ? <RiMenu2Line /> : <RiMenu3Line />}
 //         </button>
 
-//         <div className="px-3 py-1 bg-blue-500 border border-gray-200 text-white rounded-md">
+//         <div className="px-3 py-1 bg-[#1D4ED8] border border-blue-800/50 text-white rounded-md">
 //           <span className="text-sm font-semibold md:text-base">
 //             {getPageTitle()}
 //           </span>
@@ -363,7 +363,7 @@
 //       </div>
 
 //       {/* CENTER SECTION */}
-//       <div className="hidden md:flex items-center gap-2 bg-blue-500 border border-gray-200 text-white px-3 py-1 rounded-lg">
+//       <div className="hidden md:flex items-center gap-2 bg-[#1D4ED8] border border-blue-800/50 text-white px-3 py-1 rounded-lg">
 
 //         {/* JOB TABS */}
 //         {isJobModule &&
@@ -373,7 +373,7 @@
 //               <button
 //                 key={tab.path}
 //                 onClick={() => navigate(tab.path)}
-//                 className=" text-sm font-medium text-white rounded-md hover:bg-blue-600 transition-all duration-200"
+//                 className=" text-sm font-medium text-white rounded-md hover:bg-[#1D4ED8] transition-all duration-200"
 //               >
 //                 {tab.label}
 //               </button>
@@ -387,7 +387,7 @@
 //               <button
 //                 key={tab.path}
 //                 onClick={() => navigate(tab.path)}
-//                 className="px-4 py-1.5 text-sm font-medium text-white rounded-md hover:bg-blue-600 transition-all duration-200"
+//                 className="px-4 py-1.5 text-sm font-medium text-white rounded-md hover:bg-[#1D4ED8] transition-all duration-200"
 //               >
 //                 {tab.label}
 //               </button>
@@ -485,18 +485,18 @@
 //   );
 
 //   return (
-//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-blue-600 border-b border-gray-200 ">
+//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-[#1D4ED8] border-blue-800/50 border-blue-800/50 ">
 
 //       {/* LEFT */}
 //       <div className="flex items-center gap-4">
 //         <button
 //           onClick={handleMenuClick}
-//           className="p-2 text-2xl rounded-md hover:bg-blue-500 border border-gray-200 text-white transition"
+//           className="p-2 text-2xl rounded-md hover:bg-[#1D4ED8] border border-blue-800/50 text-white transition"
 //         >
 //           {isCollapsed ? <RiMenu2Line /> : <RiMenu3Line />}
 //         </button>
 
-//         <div className="px-3 py-1 bg-blue-500 border border-gray-200 text-white rounded-md">
+//         <div className="px-3 py-1 bg-[#1D4ED8] border border-blue-800/50 text-white rounded-md">
 //           <span className="text-sm font-semibold">
 //             {getPageTitle()}
 //           </span>
@@ -514,7 +514,7 @@
 //               <button
 //                 key={tab.path}
 //                 onClick={() => navigate(tab.path)}
-//                 className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-blue-500 border border-gray-200 text-white transition"
+//                 className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-[#1D4ED8] border border-blue-800/50 text-white transition"
 //               >
 //                 {tab.label}
 //               </button>
@@ -528,7 +528,7 @@
 //               <button
 //                 key={tab.path}
 //                 onClick={() => navigate(tab.path)}
-//                 className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-blue-500 border border-gray-200 text-white transition"
+//                 className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-[#1D4ED8] border border-blue-800/50 text-white transition"
 //               >
 //                 {tab.label}
 //               </button>
@@ -631,18 +631,18 @@
 //   const isDashboardModule = location.pathname === "/dashboard";
 
 //   return (
-//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-blue-600 border-b border-gray-200 ">
+//     <nav className="sticky top-0 z-40 flex items-center justify-between w-full h-14 px-4 text-white bg-[#1D4ED8] border-blue-800/50 border-blue-800/50 ">
 
 //       {/* LEFT */}
 //       <div className="flex items-center gap-4">
 //         <button
 //           onClick={handleMenuClick}
-//           className="p-2 text-2xl rounded-md hover:bg-blue-500 border border-gray-200 text-white transition"
+//           className="p-2 text-2xl rounded-md hover:bg-[#1D4ED8] border border-blue-800/50 text-white transition"
 //         >
 //           {isCollapsed ? <RiMenu2Line /> : <RiMenu3Line />}
 //         </button>
 
-//         <div className="px-3 py-1 bg-blue-500 border border-gray-200 text-white rounded-md">
+//         <div className="px-3 py-1 bg-[#1D4ED8] border border-blue-800/50 text-white rounded-md">
 //           <span className="text-sm font-semibold">
 //             {getPageTitle()}
 //           </span>
@@ -660,7 +660,7 @@
 //               <button
 //                 key={tab.path}
 //                 onClick={() => navigate(tab.path)}
-//                 className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-blue-500 border border-gray-200 text-white transition"
+//                 className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-[#1D4ED8] border border-blue-800/50 text-white transition"
 //               >
 //                 {tab.label}
 //               </button>
@@ -674,7 +674,7 @@
 //               <button
 //                 key={tab.path}
 //                 onClick={() => navigate(tab.path)}
-//                 className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-blue-500 border border-gray-200 text-white transition"
+//                 className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-[#1D4ED8] border border-blue-800/50 text-white transition"
 //               >
 //                 {tab.label}
 //               </button>
@@ -688,14 +688,14 @@
 //           <div className="flex items-center mr-2">
 //             <button
 //               onClick={() => navigate("/leavelist")}
-//               className="w-9 h-9 rounded-full bg-blue-600 hover:bg-emerald-500 text-white border-none flex items-center justify-center text-[11px] font-medium text-white transition  border border-blue-400"
+//               className="w-9 h-9 rounded-full bg-[#1D4ED8] hover:bg-[#1E3A8A] text-white border-blue-800/50 flex items-center justify-center text-[11px] font-medium text-white transition  border border-blue-800/50"
 //               title="Leave Requests"
 //             >
 //               Leave
 //             </button>
 //             <button
 //               onClick={() => navigate("/permissions")}
-//               className="w-8 h-8 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white border-none flex items-center justify-center text-[10px] font-medium text-white transition  border border-indigo-300 -ml-1"
+//               className="w-8 h-8 rounded-full bg-[#1E3A8A] hover:bg-[#1E3A8A] text-white border-blue-800/50 flex items-center justify-center text-[10px] font-medium text-white transition  border border-blue-800/50 -ml-1"
 //               title="Permissions"
 //             >
 //               Perm
@@ -809,18 +809,18 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
   };
 
   return (
-    <nav className="sticky top-0 z-40 flex items-center justify-between w-full min-h-14 px-4 py-2 text-white bg-blue-600 border-b border-gray-200  flex-wrap gap-2">
+    <nav className="sticky top-0 z-40 flex items-center justify-between w-full min-h-14 px-4 py-2 text-white bg-[#1D4ED8] border-blue-800/50 border-blue-800/50  flex-wrap gap-2">
 
       {/* LEFT */}
       <div className="flex items-center gap-3">
         <button
           onClick={handleMenuClick}
-          className="p-2 text-xl rounded-md hover:bg-blue-500 border border-gray-200 text-white transition"
+          className="p-2 text-xl rounded-md hover:bg-[#1D4ED8] border border-blue-800/50 text-white transition"
         >
           {isCollapsed ? <RiMenu2Line /> : <RiMenu3Line />}
         </button>
 
-        <div className="px-3 py-1.5 bg-blue-500 border border-gray-200 text-white rounded-md">
+        <div className="px-3 py-1.5 bg-[#1D4ED8] border border-blue-800/50 text-white rounded-md">
           <span className="text-sm font-semibold whitespace-nowrap">
             {getPageTitle()}
           </span>
@@ -839,7 +839,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
                 <button
                   key={tab.path}
                   onClick={() => navigate(tab.path)}
-                  className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-blue-500 border border-gray-200 text-white transition whitespace-nowrap"
+                  className="px-3 py-1.5 text-sm font-medium text-white rounded-md hover:bg-[#1D4ED8] border border-blue-800/50 text-white transition whitespace-nowrap"
                 >
                   {tab.label}
                 </button>
@@ -861,8 +861,8 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
                     onClick={() => navigate(tab.path)}
                     className={`px-3 py-1.5 text-sm font-medium rounded-md transition whitespace-nowrap ${
                       isCurrent
-                        ? "bg-blue-600 text-white shadow-[0_0_10px_rgba(5,150,105,0.4)] border-none"
-                        : "text-white hover:bg-blue-500 border border-gray-200 text-white"
+                        ? "bg-[#1D4ED8] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)] border-blue-800/50"
+                        : "text-white hover:bg-[#1D4ED8] border border-blue-800/50 text-white"
                     }`}
                   >
                     {tab.label}
@@ -879,14 +879,14 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
           <div className="flex items-center mr-2">
             <button
               onClick={() => navigate("/leavelist")}
-              className="w-9 h-9 rounded-full bg-blue-600 hover:bg-emerald-500 text-white border-none flex items-center justify-center text-[11px] font-medium text-white transition  border border-blue-400"
+              className="w-9 h-9 rounded-full bg-[#1D4ED8] hover:bg-[#1E3A8A] text-white border-blue-800/50 flex items-center justify-center text-[11px] font-medium text-white transition  border border-blue-800/50"
               title="Leave Requests"
             >
               Leave
             </button>
             <button
               onClick={() => navigate("/permissions")}
-              className="w-8 h-8 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white border-none flex items-center justify-center text-[10px] font-medium text-white transition  border border-indigo-300 -ml-1"
+              className="w-8 h-8 rounded-full bg-[#1E3A8A] hover:bg-[#1E3A8A] text-white border-blue-800/50 flex items-center justify-center text-[10px] font-medium text-white transition  border border-blue-800/50 -ml-1"
               title="Permissions"
             >
               Perm

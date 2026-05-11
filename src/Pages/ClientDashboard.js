@@ -73,7 +73,7 @@ const LoginPage = () => {
     // Other products
     hr: { icon: <Users size={24} />, color: "bg-pink-100 text-pink-600", name: "HR", section: "hr" },
     projects: { icon: <Briefcase size={24} />, color: "bg-orange-100 text-orange-600", name: "Projects", section: "projects" },
-    appointments: { icon: <CalendarDays size={24} />, color: "bg-green-100 text-green-600", name: "Appointments", section: "appointments" },
+    appointments: { icon: <CalendarDays size={24} />, color: "bg-blue-100 text-blue-700", name: "Appointments", section: "appointments" },
     support: { icon: <MessageCircle size={24} />, color: "bg-indigo-100 text-indigo-600", name: "Support", section: "support" },
     security: { icon: <ShieldCheck size={24} />, color: "bg-teal-100 text-teal-600", name: "Security", section: "security" },
     accounting: { icon: <FileText size={24} />, color: "bg-amber-100 text-amber-600", name: "Accounting", section: "accounting" },
@@ -84,13 +84,13 @@ const LoginPage = () => {
     subscriptions: { icon: <Coffee size={24} />, color: "bg-violet-100 text-violet-600", name: "Subscriptions", section: "subscriptions" },
     rental: { icon: <Home size={24} />, color: "bg-yellow-100 text-yellow-600", name: "Rental", section: "rental" },
     pos: { icon: <DollarSign size={24} />, color: "bg-orange-100 text-orange-600", name: "POS", section: "pos" },
-    discuss: { icon: <MessageCircle size={24} />, color: "bg-emerald-100 text-emerald-600", name: "Discuss", section: "discuss" },
+    discuss: { icon: <MessageCircle size={24} />, color: "bg-blue-100 text-blue-700", name: "Discuss", section: "discuss" },
     documents: { icon: <FileText size={24} />, color: "bg-sky-100 text-sky-600", name: "Documents", section: "documents" },
     project: { icon: <Briefcase size={24} />, color: "bg-indigo-100 text-indigo-600", name: "Project", section: "project" },
     timesheets: { icon: <Clock size={24} />, color: "bg-purple-100 text-purple-600", name: "Timesheets", section: "timesheets" },
     purchase: { icon: <ShoppingBag size={24} />, color: "bg-pink-100 text-pink-600", name: "Purchase", section: "purchase" },
     inventory: { icon: <Package size={24} />, color: "bg-blue-100 text-blue-600", name: "Inventory", section: "inventory" },
-    manufacturing: { icon: <Settings size={24} />, color: "bg-green-100 text-green-600", name: "Manufacturing", section: "manufacturing" },
+    manufacturing: { icon: <Settings size={24} />, color: "bg-blue-100 text-blue-700", name: "Manufacturing", section: "manufacturing" },
     sales: { icon: <TrendingUp size={24} />, color: "bg-red-100 text-red-600", name: "Sales", section: "sales" },
     dashboard: { icon: <Activity size={24} />, color: "bg-yellow-100 text-yellow-600", name: "Dashboard", section: "dashboard" }
   };
@@ -227,7 +227,7 @@ const LoginPage = () => {
             transition={{ duration: 0.5 }}
             className="mb-8 text-center"
           >
-            <div className="inline-flex items-center px-4 py-2 mb-4 rounded-full shadow-sm bg-black/80 backdrop-blur-sm">
+            <div className="inline-flex items-center px-4 py-2 mb-4 rounded-full shadow-sm bg-white/80 backdrop-blur-sm">
               <Sparkles className="w-4 h-4 mr-2 text-yellow-500" />
               <span className="text-sm text-gray-500">Welcome back, {clientData.name}!</span>
             </div>
@@ -243,7 +243,7 @@ const LoginPage = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="p-6 mb-8 border border-gray-200 shadow-lg bg-black/80 backdrop-blur-sm rounded-xl"
+            className="p-6 mb-8 border border-gray-200 shadow-lg bg-white/80 backdrop-blur-sm rounded-xl"
           >
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <div className="text-center">
@@ -384,7 +384,7 @@ const LoginPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative z-10 grid w-full max-w-4xl grid-cols-1 overflow-hidden shadow-2xl bg-black/90 backdrop-blur-md rounded-2xl md:grid-cols-2"
+        className="relative z-10 grid w-full max-w-4xl grid-cols-1 overflow-hidden shadow-2xl bg-white/90 backdrop-blur-md rounded-2xl md:grid-cols-2"
       >
         {/* Left Side - Login Form */}
         <div className="flex flex-col justify-center p-6 md:p-8">
@@ -592,7 +592,7 @@ const LoginPage = () => {
             <div className="space-y-2">
               <motion.div 
                 whileHover={{ scale: 1.02, x: 5 }}
-                className="flex items-center p-2 space-x-2 rounded-lg bg-black/20 backdrop-blur-sm"
+                className="flex items-center p-2 space-x-2 rounded-lg bg-white/20 backdrop-blur-sm"
               >
                 <Mail size={14} />
                 <p className="text-xs">Admin/Employee: Use email</p>
@@ -600,7 +600,7 @@ const LoginPage = () => {
               
               <motion.div 
                 whileHover={{ scale: 1.02, x: 5 }}
-                className="flex items-center p-2 space-x-2 rounded-lg bg-black/20 backdrop-blur-sm"
+                className="flex items-center p-2 space-x-2 rounded-lg bg-white/20 backdrop-blur-sm"
               >
                 <Key size={14} />
                 <p className="text-xs">Client: Email or Client ID</p>
@@ -608,7 +608,7 @@ const LoginPage = () => {
               
               <motion.div 
                 whileHover={{ scale: 1.02, x: 5 }}
-                className="flex items-center p-2 space-x-2 rounded-lg bg-black/20 backdrop-blur-sm"
+                className="flex items-center p-2 space-x-2 rounded-lg bg-white/20 backdrop-blur-sm"
               >
                 <Shield size={14} />
                 <p className="text-xs">Select product after login</p>
@@ -738,7 +738,7 @@ export default LoginPage;
 //     // Other products
 //     hr: { icon: <Users size={24} />, color: "bg-pink-100 text-pink-600", name: "HR" },
 //     projects: { icon: <Briefcase size={24} />, color: "bg-orange-100 text-orange-600", name: "Projects" },
-//     appointments: { icon: <CalendarDays size={24} />, color: "bg-green-100 text-green-600", name: "Appointments" },
+//     appointments: { icon: <CalendarDays size={24} />, color: "bg-blue-100 text-blue-700", name: "Appointments" },
 //     support: { icon: <MessageCircle size={24} />, color: "bg-indigo-100 text-indigo-600", name: "Support" },
 //     security: { icon: <ShieldCheck size={24} />, color: "bg-teal-100 text-teal-600", name: "Security" },
 //     accounting: { icon: <FileText size={24} />, color: "bg-amber-100 text-amber-600", name: "Accounting" },
@@ -749,13 +749,13 @@ export default LoginPage;
 //     subscriptions: { icon: <Coffee size={24} />, color: "bg-violet-100 text-violet-600", name: "Subscriptions" },
 //     rental: { icon: <Home size={24} />, color: "bg-yellow-100 text-yellow-600", name: "Rental" },
 //     pos: { icon: <DollarSign size={24} />, color: "bg-orange-100 text-orange-600", name: "POS" },
-//     discuss: { icon: <MessageCircle size={24} />, color: "bg-emerald-100 text-emerald-600", name: "Discuss" },
+//     discuss: { icon: <MessageCircle size={24} />, color: "bg-blue-100 text-blue-700", name: "Discuss" },
 //     documents: { icon: <FileText size={24} />, color: "bg-sky-100 text-sky-600", name: "Documents" },
 //     project: { icon: <Briefcase size={24} />, color: "bg-indigo-100 text-indigo-600", name: "Project" },
 //     timesheets: { icon: <Clock size={24} />, color: "bg-purple-100 text-purple-600", name: "Timesheets" },
 //     purchase: { icon: <ShoppingBag size={24} />, color: "bg-pink-100 text-pink-600", name: "Purchase" },
 //     inventory: { icon: <Package size={24} />, color: "bg-blue-100 text-blue-600", name: "Inventory" },
-//     manufacturing: { icon: <Settings size={24} />, color: "bg-green-100 text-green-600", name: "Manufacturing" },
+//     manufacturing: { icon: <Settings size={24} />, color: "bg-blue-100 text-blue-700", name: "Manufacturing" },
 //     sales: { icon: <TrendingUp size={24} />, color: "bg-red-100 text-red-600", name: "Sales" },
 //     dashboard: { icon: <Activity size={24} />, color: "bg-yellow-100 text-yellow-600", name: "Dashboard" }
 //   };
@@ -813,7 +813,7 @@ export default LoginPage;
 //           animate={{ opacity: 1, y: 0 }}
 //           className="mb-6 text-center sm:mb-8"
 //         >
-//           <div className="inline-flex items-center px-3 py-1 mb-3 rounded-full shadow-sm bg-black/80 backdrop-blur-sm sm:px-4 sm:py-2">
+//           <div className="inline-flex items-center px-3 py-1 mb-3 rounded-full shadow-sm bg-white/80 backdrop-blur-sm sm:px-4 sm:py-2">
 //             <Sparkles className="w-3 h-3 mr-1 text-yellow-500 sm:w-4 sm:h-4 sm:mr-2" />
 //             <span className="text-xs text-gray-500 sm:text-sm">
 //               Welcome back, {clientData?.name || 'test'}!
@@ -831,7 +831,7 @@ export default LoginPage;
 //           initial={{ opacity: 0, scale: 0.95 }}
 //           animate={{ opacity: 1, scale: 1 }}
 //           transition={{ delay: 0.1 }}
-//           className="p-4 mb-6 border border-gray-200 shadow-lg bg-black/80 backdrop-blur-sm rounded-xl sm:p-6 sm:mb-8"
+//           className="p-4 mb-6 border border-gray-200 shadow-lg bg-white/80 backdrop-blur-sm rounded-xl sm:p-6 sm:mb-8"
 //         >
 //           <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
 //             <div className="text-center">
@@ -1038,7 +1038,7 @@ export default LoginPage;
 //     // Other products
 //     hr: { icon: <Users size={24} />, color: "bg-pink-100 text-pink-600", name: "HR", section: "hr" },
 //     projects: { icon: <Briefcase size={24} />, color: "bg-orange-100 text-orange-600", name: "Projects", section: "projects" },
-//     appointments: { icon: <CalendarDays size={24} />, color: "bg-green-100 text-green-600", name: "Appointments", section: "appointments" },
+//     appointments: { icon: <CalendarDays size={24} />, color: "bg-blue-100 text-blue-700", name: "Appointments", section: "appointments" },
 //     support: { icon: <MessageCircle size={24} />, color: "bg-indigo-100 text-indigo-600", name: "Support", section: "support" },
 //     security: { icon: <ShieldCheck size={24} />, color: "bg-teal-100 text-teal-600", name: "Security", section: "security" },
 //     accounting: { icon: <FileText size={24} />, color: "bg-amber-100 text-amber-600", name: "Accounting", section: "accounting" },
@@ -1049,13 +1049,13 @@ export default LoginPage;
 //     subscriptions: { icon: <Coffee size={24} />, color: "bg-violet-100 text-violet-600", name: "Subscriptions", section: "subscriptions" },
 //     rental: { icon: <Home size={24} />, color: "bg-yellow-100 text-yellow-600", name: "Rental", section: "rental" },
 //     pos: { icon: <DollarSign size={24} />, color: "bg-orange-100 text-orange-600", name: "POS", section: "pos" },
-//     discuss: { icon: <MessageCircle size={24} />, color: "bg-emerald-100 text-emerald-600", name: "Discuss", section: "discuss" },
+//     discuss: { icon: <MessageCircle size={24} />, color: "bg-blue-100 text-blue-700", name: "Discuss", section: "discuss" },
 //     documents: { icon: <FileText size={24} />, color: "bg-sky-100 text-sky-600", name: "Documents", section: "documents" },
 //     project: { icon: <Briefcase size={24} />, color: "bg-indigo-100 text-indigo-600", name: "Project", section: "project" },
 //     timesheets: { icon: <Clock size={24} />, color: "bg-purple-100 text-purple-600", name: "Timesheets", section: "timesheets" },
 //     purchase: { icon: <ShoppingBag size={24} />, color: "bg-pink-100 text-pink-600", name: "Purchase", section: "purchase" },
 //     inventory: { icon: <Package size={24} />, color: "bg-blue-100 text-blue-600", name: "Inventory", section: "inventory" },
-//     manufacturing: { icon: <Settings size={24} />, color: "bg-green-100 text-green-600", name: "Manufacturing", section: "manufacturing" },
+//     manufacturing: { icon: <Settings size={24} />, color: "bg-blue-100 text-blue-700", name: "Manufacturing", section: "manufacturing" },
 //     sales: { icon: <TrendingUp size={24} />, color: "bg-red-100 text-red-600", name: "Sales", section: "sales" },
 //     dashboard: { icon: <Activity size={24} />, color: "bg-yellow-100 text-yellow-600", name: "Dashboard", section: "dashboard" }
 //   };
@@ -1216,7 +1216,7 @@ export default LoginPage;
 //             transition={{ duration: 0.5 }}
 //             className="mb-8 text-center"
 //           >
-//             <div className="inline-flex items-center px-4 py-2 mb-4 rounded-full shadow-sm bg-black/80 backdrop-blur-sm">
+//             <div className="inline-flex items-center px-4 py-2 mb-4 rounded-full shadow-sm bg-white/80 backdrop-blur-sm">
 //               <Sparkles className="w-4 h-4 mr-2 text-yellow-500" />
 //               <span className="text-sm text-gray-500">Welcome back, {clientData.name}!</span>
 //             </div>
@@ -1232,7 +1232,7 @@ export default LoginPage;
 //             initial={{ opacity: 0, scale: 0.95 }}
 //             animate={{ opacity: 1, scale: 1 }}
 //             transition={{ duration: 0.5, delay: 0.2 }}
-//             className="p-6 mb-8 border border-gray-200 shadow-lg bg-black/80 backdrop-blur-sm rounded-xl"
+//             className="p-6 mb-8 border border-gray-200 shadow-lg bg-white/80 backdrop-blur-sm rounded-xl"
 //           >
 //             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
 //               <div className="text-center">
@@ -1311,7 +1311,7 @@ export default LoginPage;
 //             <motion.div 
 //               initial={{ opacity: 0 }}
 //               animate={{ opacity: 1 }}
-//               className="p-8 text-center bg-black/80 backdrop-blur-sm rounded-xl"
+//               className="p-8 text-center bg-white/80 backdrop-blur-sm rounded-xl"
 //             >
 //               <p className="text-gray-500">No products available for this client.</p>
 //             </motion.div>
@@ -1384,7 +1384,7 @@ export default LoginPage;
 //         initial={{ opacity: 0, y: 20 }}
 //         animate={{ opacity: 1, y: 0 }}
 //         transition={{ duration: 0.5 }}
-//         className="relative z-10 grid w-full max-w-4xl grid-cols-1 overflow-hidden shadow-2xl bg-black/90 backdrop-blur-md rounded-2xl md:grid-cols-2"
+//         className="relative z-10 grid w-full max-w-4xl grid-cols-1 overflow-hidden shadow-2xl bg-white/90 backdrop-blur-md rounded-2xl md:grid-cols-2"
 //       >
 //         {/* Left Side - Login Form */}
 //         <div className="flex flex-col justify-center p-6 md:p-8">
@@ -1592,7 +1592,7 @@ export default LoginPage;
 //             <div className="space-y-2">
 //               <motion.div 
 //                 whileHover={{ scale: 1.02, x: 5 }}
-//                 className="flex items-center p-2 space-x-2 rounded-lg bg-black/20 backdrop-blur-sm"
+//                 className="flex items-center p-2 space-x-2 rounded-lg bg-white/20 backdrop-blur-sm"
 //               >
 //                 <Mail size={14} />
 //                 <p className="text-xs">Admin/Employee: Use email</p>
@@ -1600,7 +1600,7 @@ export default LoginPage;
               
 //               <motion.div 
 //                 whileHover={{ scale: 1.02, x: 5 }}
-//                 className="flex items-center p-2 space-x-2 rounded-lg bg-black/20 backdrop-blur-sm"
+//                 className="flex items-center p-2 space-x-2 rounded-lg bg-white/20 backdrop-blur-sm"
 //               >
 //                 <Key size={14} />
 //                 <p className="text-xs">Client: Email or Client ID</p>
@@ -1608,7 +1608,7 @@ export default LoginPage;
               
 //               <motion.div 
 //                 whileHover={{ scale: 1.02, x: 5 }}
-//                 className="flex items-center p-2 space-x-2 rounded-lg bg-black/20 backdrop-blur-sm"
+//                 className="flex items-center p-2 space-x-2 rounded-lg bg-white/20 backdrop-blur-sm"
 //               >
 //                 <Shield size={14} />
 //                 <p className="text-xs">Select product after login</p>

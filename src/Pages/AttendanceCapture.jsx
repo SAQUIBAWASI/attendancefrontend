@@ -240,11 +240,11 @@
 //               ← Back to Dashboard
 //             </button>
 
-//             <div className="p-4 mb-6 rounded-lg shadow-sm bg-gray-50">
+//             <div className="p-4 mb-6 rounded-lg shadow-sm bg-white">
 //               <h3 className="mb-2 text-lg font-medium text-gray-700">Your Location</h3>
 //               <button
 //                 onClick={fetchLocation}
-//                 className="w-full px-5 py-2 text-gray-900 bg-green-600 rounded-lg sm:w-auto hover:bg-green-700"
+//                 className="w-full px-5 py-2 text-gray-900 bg-blue-600 rounded-lg sm:w-auto hover:bg-blue-800"
 //                 disabled={locStatus === "fetching"}
 //               >
 //                 {locStatus === "fetching" ? "Fetching..." : "Get Current Location"}
@@ -259,7 +259,7 @@
 //                     <strong>
 //                       {distance} m (
 //                       {distance <= ONSITE_RADIUS_M ? (
-//                         <span className="text-green-600">Onsite</span>
+//                         <span className="text-blue-700">Onsite</span>
 //                       ) : (
 //                         <span className="text-red-600">Offsite</span>
 //                       )}
@@ -274,7 +274,7 @@
 //               <button
 //                 onClick={handleCheckIn}
 //                 disabled={submitting}
-//                 className="w-full py-3 text-lg font-semibold text-gray-900 bg-green-700 rounded-lg hover:bg-green-800"
+//                 className="w-full py-3 text-lg font-semibold text-gray-900 bg-blue-800 rounded-lg hover:bg-green-800"
 //               >
 //                 {submitting ? "Checking In..." : "Check In"}
 //               </button>
@@ -531,14 +531,14 @@
 //               ← Back to Dashboard
 //             </button>
 
-//             <div className="p-4 mb-6 rounded-lg shadow-sm bg-gray-50">
+//             <div className="p-4 mb-6 rounded-lg shadow-sm bg-white">
 //               <h3 className="mb-2 text-lg font-medium text-gray-700">
 //                 Your Location
 //               </h3>
 
 //               <button
 //                 onClick={fetchLocation}
-//                 className="w-full px-5 py-2 text-gray-900 bg-green-600 rounded-lg sm:w-auto hover:bg-green-700"
+//                 className="w-full px-5 py-2 text-gray-900 bg-blue-600 rounded-lg sm:w-auto hover:bg-blue-800"
 //                 disabled={locStatus === "fetching"}
 //               >
 //                 {locStatus === "fetching"
@@ -555,7 +555,7 @@
 //                     <strong>
 //                       {distance} m (
 //                       {distance <= ONSITE_RADIUS_M ? (
-//                         <span className="text-green-600">Onsite</span>
+//                         <span className="text-blue-700">Onsite</span>
 //                       ) : (
 //                         <span className="text-red-600">Outside</span>
 //                       )}
@@ -570,7 +570,7 @@
 //               <button
 //                 onClick={handleCheckIn}
 //                 disabled={submitting}
-//                 className="w-full py-3 text-lg font-semibold text-gray-900 bg-green-700 rounded-lg hover:bg-green-800"
+//                 className="w-full py-3 text-lg font-semibold text-gray-900 bg-blue-800 rounded-lg hover:bg-green-800"
 //               >
 //                 {submitting ? "Checking In..." : "Check In"}
 //               </button>
@@ -769,7 +769,7 @@
 //             <h3 className="mb-2 text-lg font-medium">Your Location</h3>
 //             <button
 //               onClick={fetchLocation}
-//               className="px-4 py-2 text-gray-900 bg-green-600 rounded"
+//               className="px-4 py-2 text-gray-900 bg-blue-600 rounded"
 //               disabled={locStatus === "fetching"}
 //             >
 //               {locStatus === "fetching" ? "Fetching..." : "Get Current Location"}
@@ -793,7 +793,7 @@
 //             <button
 //               onClick={handleCheckIn}
 //               disabled={submitting}
-//               className="w-full py-3 text-lg font-semibold text-gray-900 bg-green-700 rounded-lg"
+//               className="w-full py-3 text-lg font-semibold text-gray-900 bg-blue-800 rounded-lg"
 //             >
 //               {submitting ? "Checking In..." : "Check In"}
 //             </button>
@@ -986,10 +986,10 @@
 //       <div className="flex flex-col w-full max-w-md gap-4 p-6 bg-white shadow-lg rounded-xl">
 //         <h2 className="text-2xl font-semibold text-center">Attendance Capture</h2>
 
-//         <div className="flex flex-col gap-3 p-4 rounded-md bg-gray-50">
+//         <div className="flex flex-col gap-3 p-4 rounded-md bg-white">
 //           <button
 //             onClick={fetchLocation}
-//             className="px-4 py-2 text-gray-900 transition bg-green-600 rounded hover:bg-green-700"
+//             className="px-4 py-2 text-gray-900 transition bg-blue-600 rounded hover:bg-blue-800"
 //           >
 //             Get Current Location
 //           </button>
@@ -1203,10 +1203,10 @@
 //       <div className="flex flex-col w-full max-w-md gap-4 p-6 bg-white shadow-lg rounded-xl">
 //         <h2 className="text-2xl font-semibold text-center">Attendance Capture</h2>
 
-//         <div className="flex flex-col gap-3 p-4 rounded-md bg-gray-50">
+//         <div className="flex flex-col gap-3 p-4 rounded-md bg-white">
 //           <button
 //             onClick={fetchLocation}
-//             className="px-4 py-2 text-gray-900 transition bg-green-600 rounded hover:bg-green-700"
+//             className="px-4 py-2 text-gray-900 transition bg-blue-600 rounded hover:bg-blue-800"
 //           >
 //             Get Current Location
 //           </button>
@@ -1456,10 +1456,10 @@
 //           <p className="text-red-600">{error}</p>
 //         )}
 
-//         <div className="p-4 rounded-md bg-gray-50">
+//         <div className="p-4 rounded-md bg-white">
 //           <button
 //             onClick={fetchLocation}
-//             className="px-4 py-2 text-gray-900 transition bg-green-600 rounded hover:bg-green-700"
+//             className="px-4 py-2 text-gray-900 transition bg-blue-600 rounded hover:bg-blue-800"
 //           >
 //             Get My Current Location
 //           </button>
@@ -1476,7 +1476,7 @@
 //                   <span
 //                     className={
 //                       distance <= ONSITE_RADIUS_M
-//                         ? "text-green-600 font-semibold"
+//                         ? "text-blue-700 font-semibold"
 //                         : "text-red-600 font-semibold"
 //                     }
 //                   >
@@ -1793,14 +1793,14 @@
 
 //         {employeeId && (
 //           <div className="p-2 rounded-md bg-green-50">
-//             <p className="font-bold text-green-600">
+//             <p className="font-bold text-blue-700">
 //               Employee ID: {employeeId}
 //             </p>
 //              {employeeName && (
-//               <p className="mt-1 font-bold text-green-600">Name: {employeeName}</p>
+//               <p className="mt-1 font-bold text-blue-700">Name: {employeeName}</p>
 //             )}
 //             {employeeEmail && (
-//               <p className="mt-1 font-bold text-green-600">Email: {employeeEmail}</p>
+//               <p className="mt-1 font-bold text-blue-700">Email: {employeeEmail}</p>
 //             )}
 //           </div>
 //         )}
@@ -1825,10 +1825,10 @@
 //           </div>
 //         )}
 
-//         <div className="p-4 rounded-md bg-gray-50">
+//         <div className="p-4 rounded-md bg-white">
 //           <button
 //             onClick={fetchLocation}
-//             className={`bg-green-600 text-gray-900 px-4 py-2 rounded hover:bg-green-700 transition ${
+//             className={`bg-blue-600 text-gray-900 px-4 py-2 rounded hover:bg-blue-800 transition ${
 //               !assignedLocation ? "opacity-50 cursor-not-allowed" : ""
 //             }`}
 //             disabled={!assignedLocation}
@@ -1855,7 +1855,7 @@
 //                   <span
 //                     className={
 //                       distance <= ONSITE_RADIUS_M
-//                         ? "text-green-600 font-semibold"
+//                         ? "text-blue-700 font-semibold"
 //                         : "text-red-600 font-semibold"
 //                     }
 //                   >
@@ -2389,7 +2389,7 @@
 //             >
 //               Select Location
 //             </button>
-//             <div className={`px-2 py-1 rounded-full text-xs font-medium ${position ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'
+//             <div className={`px-2 py-1 rounded-full text-xs font-medium ${position ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-700'
 //               }`}>
 //               {position ? 'Captured ✓' : 'Required'}
 //             </div>
@@ -2416,22 +2416,22 @@
 //               </div>
 
 //               {position && distance != null && (
-//                 <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+//                 <div className="mt-2 p-2 bg-white rounded-lg">
 //                   <div className="flex justify-between items-center mb-1">
 //                     <span className="text-xs text-gray-700">Distance:</span>
-//                     <span className={`text-sm font-bold ${distance <= ONSITE_RADIUS_M ? 'text-green-600' : 'text-red-600'
+//                     <span className={`text-sm font-bold ${distance <= ONSITE_RADIUS_M ? 'text-blue-700' : 'text-red-600'
 //                       }`}>
 //                       {distance}m
 //                     </span>
 //                   </div>
 //                   <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
 //                     <div
-//                       className={`h-full ${distance <= ONSITE_RADIUS_M ? 'bg-green-500' : 'bg-red-500'
+//                       className={`h-full ${distance <= ONSITE_RADIUS_M ? 'bg-blue-600' : 'bg-red-500'
 //                         }`}
 //                       style={{ width: `${Math.min((distance / ONSITE_RADIUS_M) * 100, 100)}%` }}
 //                     ></div>
 //                   </div>
-//                   <p className={`text-xs mt-1 font-medium ${distance <= ONSITE_RADIUS_M ? 'text-green-600' : 'text-red-600'
+//                   <p className={`text-xs mt-1 font-medium ${distance <= ONSITE_RADIUS_M ? 'text-blue-700' : 'text-red-600'
 //                     }`}>
 //                     {distance <= ONSITE_RADIUS_M ? '✓ Within office radius' : '⚠ Outside office radius'}
 //                   </p>
@@ -2497,7 +2497,7 @@
 //                 {checkedIn ? 'You are currently checked in' : 'Ready to check in'}
 //               </p>
 //             </div>
-//             <div className={`px-2 py-1 rounded-full text-xs font-medium ${checkedIn ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+//             <div className={`px-2 py-1 rounded-full text-xs font-medium ${checkedIn ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'
 //               }`}>
 //               {checkedIn ? 'Checked In' : 'Not Checked In'}
 //             </div>
@@ -2604,14 +2604,14 @@
 //           {checkedIn && !submitting && (
 //             <div className="text-center py-2 border-t border-gray-200">
 //               <div className="inline-flex flex-col items-center gap-0">
-//                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-//                   <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+//                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+//                   <svg className="w-5 h-5 text-blue-700" fill="currentColor" viewBox="0 0 20 20">
 //                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
 //                   </svg>
 //                 </div>
 //                 <div>
 //                   <p className="text-sm font-bold text-green-800">You are checked in</p>
-//                   <p className="text-xs text-green-600">Remember to check out when leaving</p>
+//                   <p className="text-xs text-blue-700">Remember to check out when leaving</p>
 //                 </div>
 //               </div>
 //             </div>
@@ -2632,9 +2632,9 @@
 
 //       {/* Location Selection Modal */}
 //       {isLocationModalOpen && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white  backdrop-blur-sm">
 //           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col animate-fade-in-up">
-//             <div className="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+//             <div className="p-4 border-b flex justify-between items-center bg-white rounded-t-2xl">
 //               <h3 className="text-lg font-bold text-gray-900">Select Site Location</h3>
 //               <button
 //                 onClick={() => setIsLocationModalOpen(false)}
@@ -2682,7 +2682,7 @@
 //                         <p className="text-xs text-gray-500 truncate mt-0.5">{loc.fullAddress || "No address provided"}</p>
 //                       </div>
 //                       <div className="flex-shrink-0 self-center">
-//                         <svg className="w-5 h-5 text-gray-700 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                         <svg className="w-5 h-5 text-gray-700 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
 //                         </svg>
 //                       </div>
@@ -2696,7 +2696,7 @@
 //               </div>
 //             </div>
 
-//             <div className="p-4 bg-gray-50 border-t rounded-b-2xl">
+//             <div className="p-4 bg-white border-t rounded-b-2xl">
 //               <p className="text-xs text-gray-500 text-center">
 //                 Select a site to update your capture radius
 //               </p>
@@ -3392,7 +3392,7 @@ export default function AttendanceCapture() {
             >
               Select Location
             </button>
-            <div className={`px-2 py-1 rounded-full text-xs font-medium ${position ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'
+            <div className={`px-2 py-1 rounded-full text-xs font-medium ${position ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-700'
               }`}>
               {position ? 'Captured ✓' : 'Required'}
             </div>
@@ -3419,22 +3419,22 @@ export default function AttendanceCapture() {
               </div>
 
               {position && distance != null && (
-                <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+                <div className="mt-2 p-2 bg-white rounded-lg">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-xs text-gray-700">Distance:</span>
-                    <span className={`text-sm font-bold ${distance <= ONSITE_RADIUS_M ? 'text-green-600' : 'text-red-600'
+                    <span className={`text-sm font-bold ${distance <= ONSITE_RADIUS_M ? 'text-blue-700' : 'text-red-600'
                       }`}>
                       {distance}m
                     </span>
                   </div>
                   <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
                     <div
-                      className={`h-full ${distance <= ONSITE_RADIUS_M ? 'bg-green-500' : 'bg-red-500'
+                      className={`h-full ${distance <= ONSITE_RADIUS_M ? 'bg-blue-600' : 'bg-red-500'
                         }`}
                       style={{ width: `${Math.min((distance / ONSITE_RADIUS_M) * 100, 100)}%` }}
                     ></div>
                   </div>
-                  <p className={`text-xs mt-1 font-medium ${distance <= ONSITE_RADIUS_M ? 'text-green-600' : 'text-red-600'
+                  <p className={`text-xs mt-1 font-medium ${distance <= ONSITE_RADIUS_M ? 'text-blue-700' : 'text-red-600'
                     }`}>
                     {distance <= ONSITE_RADIUS_M ? '✓ Within office radius' : '⚠ Outside office radius'}
                     {isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && (
@@ -3475,7 +3475,7 @@ export default function AttendanceCapture() {
                   <p className="text-xs text-red-500">{error}</p>
                   <button
                     onClick={() => window.location.reload()}
-                    className="mt-2 text-xs bg-blue-500 text-gray-900 px-2 py-1 rounded"
+                    className="mt-2 text-xs bg-blue-600 text-gray-900 px-2 py-1 rounded"
                   >
                     Retry
                   </button>
@@ -3530,7 +3530,7 @@ export default function AttendanceCapture() {
                 {checkedIn ? 'You are currently checked in' : 'Ready to check in'}
               </p>
             </div>
-            <div className={`px-2 py-1 rounded-full text-xs font-medium ${checkedIn ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+            <div className={`px-2 py-1 rounded-full text-xs font-medium ${checkedIn ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'
               }`}>
               {checkedIn ? 'Checked In' : 'Not Checked In'}
             </div>
@@ -3637,14 +3637,14 @@ export default function AttendanceCapture() {
           {checkedIn && !submitting && (
             <div className="text-center py-2 border-t border-gray-200">
               <div className="inline-flex flex-col items-center gap-0">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-blue-700" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div>
                   <p className="text-sm font-bold text-green-800">You are checked in</p>
-                  <p className="text-xs text-green-600">Remember to check out when leaving</p>
+                  <p className="text-xs text-blue-700">Remember to check out when leaving</p>
                 </div>
               </div>
             </div>
@@ -3665,9 +3665,9 @@ export default function AttendanceCapture() {
 
       {/* Location Selection Modal */}
       {isLocationModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white  backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col animate-fade-in-up">
-            <div className="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+            <div className="p-4 border-b flex justify-between items-center bg-white rounded-t-2xl">
               <h3 className="text-lg font-bold text-gray-900">Select Site Location</h3>
               <button
                 onClick={() => setIsLocationModalOpen(false)}
@@ -3715,7 +3715,7 @@ export default function AttendanceCapture() {
                         <p className="text-xs text-gray-500 truncate mt-0.5">{loc.fullAddress || "No address provided"}</p>
                       </div>
                       <div className="flex-shrink-0 self-center">
-                        <svg className="w-5 h-5 text-gray-700 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-gray-700 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                         </svg>
                       </div>
@@ -3729,7 +3729,7 @@ export default function AttendanceCapture() {
               </div>
             </div>
 
-            <div className="p-4 bg-gray-50 border-t rounded-b-2xl">
+            <div className="p-4 bg-white border-t rounded-b-2xl">
               <p className="text-xs text-gray-500 text-center">
                 Select a site to update your capture radius
               </p>

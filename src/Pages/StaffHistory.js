@@ -131,7 +131,7 @@ const StaffHistory = () => {
  {/* Excel export button on the right */}
  <button
  onClick={exportToExcel}
- className="px-4 py-2 bg-purple-900 text-white rounded-md hover:bg-green-600 ml-auto flex items-center space-x-2"
+ className="px-4 py-2 bg-purple-900 text-gray-900 rounded-md hover:bg-blue-600 ml-auto flex items-center space-x-2"
 >
  {/* Download Icon */}
  <FaDownload />
@@ -184,7 +184,7 @@ const StaffHistory = () => {
                     onClick={() => setCurrentWalletPage(i + 1)}
                     className={`px-4 py-2 rounded-lg ${
                       currentWalletPage === i + 1
-                        ? "bg-blue-500 text-white"
+                        ? "bg-blue-600 text-gray-900"
                         : "bg-gray-300"
                     }`}
                   >
@@ -279,7 +279,7 @@ const StaffHistory = () => {
                 onClick={() => setCurrentDiagnosticPage(i + 1)}
                 className={`px-4 py-2 rounded-lg ${
                   currentDiagnosticPage === i + 1
-                    ? "bg-blue-500 text-white"
+                    ? "bg-blue-600 text-gray-900"
                     : "bg-gray-300"
                 }`}
               >

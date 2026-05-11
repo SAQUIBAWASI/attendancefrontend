@@ -16,7 +16,7 @@ const AboutPage = () => {
       description: "We believe in preventing health issues before they become serious problems."
     },
     {
-      icon: <Shield className="w-8 h-8 text-green-600" />,
+      icon: <Shield className="w-8 h-8 text-blue-700" />,
       title: "Verified Expertise",
       description: "All our healthcare providers are thoroughly verified and experienced professionals."
     },
@@ -45,7 +45,7 @@ const AboutPage = () => {
      {/* Hero Section */}
 {/* Hero Section */}
 <TimelyNavbar/>
-<section className="px-6 py-5 text-white bg-white lg:px-20 lg:py-5 bg-opacity-60">
+<section className="px-6 py-5 text-gray-900 bg-white lg:px-20 lg:py-5 ">
   
 
   {/* Image */}
@@ -59,16 +59,16 @@ const AboutPage = () => {
 
 {/* Text */}
   <div className="max-w-4xl mx-auto text-left">
-    <h1 className="mb-6 text-3xl font-bold md:text-5xl font-calibri text-black">
+    <h1 className="mb-6 text-3xl font-bold md:text-5xl font-calibri text-gray-900">
       Our Vision for a{" "}
       <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600 font-calibri">
         Healthier, Closer Future
       </span>
     </h1>
-    <p className="mb-8 font-sans text-lg text-black">
+    <p className="mb-8 font-sans text-lg text-gray-900">
       We're not just a healthcare platform — we're your neighborhood's health partner.
     </p>
-    <p className="mb-8 font-sans text-lg text-black">
+    <p className="mb-8 font-sans text-lg text-gray-900">
               We connect people to care that's personal, accessible, and built around community. 
               Our platform bridges the gap between traditional healthcare and modern convenience, 
               ensuring that quality medical care is always within reach.
@@ -123,7 +123,7 @@ const AboutPage = () => {
       </section>
 
       {/* Mission and Vision */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-white">
         <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
             {/* Mission */}
@@ -142,7 +142,7 @@ const AboutPage = () => {
             {/* Vision */}
             <div className="p-8 bg-white shadow-lg rounded-xl">
               <div className="flex items-center mb-6 space-x-4">
-                <Eye className="w-12 h-12 text-green-600" />
+                <Eye className="w-12 h-12 text-blue-700" />
                 <h2 className='font-calibri'>Our Vision</h2>
               </div>
               <p className='font-sans'>
@@ -167,7 +167,7 @@ const AboutPage = () => {
 
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {values.map((value, index) => (
-              <div key={index} className="p-6 transition-shadow bg-gray-50 rounded-xl hover:shadow-lg">
+              <div key={index} className="p-6 transition-shadow bg-white rounded-xl hover:shadow-lg">
                 <div className="flex items-center mb-4 space-x-4">
                   {value.icon}
                   <h3 className='font-calibri text-[#007a52]'>{value.title}</h3>
@@ -191,7 +191,7 @@ const AboutPage = () => {
           </p>
           <button
             onClick={handleWhatsApp}
-            className="px-8 py-4 font-sans text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
+            className="px-8 py-4 font-sans text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-800"
           >
             Start Your Health Journey With Us
           </button>

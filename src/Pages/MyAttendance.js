@@ -151,7 +151,7 @@
 //                 <CSVLink
 //                   data={csvData}
 //                   filename={`my_attendance_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`}
-//                   className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-center text-white transition bg-green-600 rounded-lg hover:bg-green-700"
+//                   className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-center text-gray-900 transition bg-blue-600 rounded-lg hover:bg-blue-800"
 //                 >
 //                   ⬇ Download CSV
 //                 </CSVLink>
@@ -210,7 +210,7 @@
 //                 <div className="flex items-end">
 //                   <button
 //                     onClick={clearFilters}
-//                     className="w-full px-4 py-2 text-sm font-semibold text-white transition bg-gray-600 rounded-lg hover:bg-gray-700"
+//                     className="w-full px-4 py-2 text-sm font-semibold text-gray-900 transition bg-gray-600 rounded-lg hover:bg-gray-700"
 //                   >
 //                     🗑️ Clear Filters
 //                   </button>
@@ -233,7 +233,7 @@
 //             {/* Loading / Error / No Data */}
 //             {loading ? (
 //               <div className="py-12 text-center">
-//                 <div className="w-12 h-12 mx-auto border-b-2 border-green-600 rounded-full animate-spin"></div>
+//                 <div className="w-12 h-12 mx-auto border-b-2 border-blue-700 rounded-full animate-spin"></div>
 //                 <p className="mt-4 text-lg text-gray-500">Loading your attendance records...</p>
 //               </div>
 //             ) : error ? (
@@ -241,7 +241,7 @@
 //                 <p className="text-lg font-semibold text-red-600">{error}</p>
 //                 <button
 //                   onClick={() => window.location.reload()}
-//                   className="px-6 py-2 mt-4 text-white transition bg-red-600 rounded-lg hover:bg-red-700"
+//                   className="px-6 py-2 mt-4 text-gray-900 transition bg-red-600 rounded-lg hover:bg-red-700"
 //                 >
 //                   🔄 Retry
 //                 </button>
@@ -254,7 +254,7 @@
 //                 {records.length > 0 && (
 //                   <button
 //                     onClick={clearFilters}
-//                     className="px-6 py-2 mt-4 text-white transition bg-yellow-600 rounded-lg hover:bg-yellow-700"
+//                     className="px-6 py-2 mt-4 text-gray-900 transition bg-yellow-600 rounded-lg hover:bg-yellow-700"
 //                   >
 //                     🔄 Clear Filters
 //                   </button>
@@ -265,7 +265,7 @@
 //                 {/* Table */}
 //                 <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //                   <table className="min-w-full">
-//                     <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
+//                     <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-purple-500 to-blue-600">
 //                       <tr>
 //                         <th className="px-4 py-2 font-semibold text-left">Date</th>
 //                         <th className="px-4 py-2 font-semibold text-left">Check-In Time</th>
@@ -281,15 +281,15 @@
 //                       {currentRecords.map((rec, idx) => (
 //                         <tr
 //                           key={rec._id || idx}
-//                           className={`border-t transition-all duration-200 ${idx % 2 === 0 ? "bg-gray-50" : "bg-white"
-//                             } hover:bg-green-50 hover:shadow-sm`}
+//                           className={`border-t transition-all duration-200 ${idx % 2 === 0 ? "bg-white" : "bg-white"
+//                             } hover:bg-blue-50 hover:shadow-sm`}
 //                         >
 //                           <td className="px-4 py-2 font-medium text-gray-900">
 //                             {formatDate(rec.checkInTime || rec.createdAt)}
 //                           </td>
 //                           <td className="px-4 py-2">
 //                             <div className="flex items-center gap-2">
-//                               <span className="text-green-600">🟢</span>
+//                               <span className="text-blue-700">🟢</span>
 //                               {formatTime(rec.checkInTime)}
 //                             </div>
 //                           </td>
@@ -300,7 +300,7 @@
 //                             </div>
 //                           </td>
 //                           <td className="px-4 py-2">
-//                             <span className={`font-semibold ${rec.totalHours >= 8 ? 'text-green-600' :
+//                             <span className={`font-semibold ${rec.totalHours >= 8 ? 'text-blue-700' :
 //                               rec.totalHours >= 4 ? 'text-orange-600' : 'text-red-600'
 //                               }`}>
 //                               {rec.totalHours ? rec.totalHours.toFixed(2) : "0.00"}h
@@ -356,7 +356,7 @@
 //                         disabled={currentPage === 1}
 //                         className={`px-2 py-1 rounded-lg transition ${currentPage === 1
 //                           ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-//                           : "bg-blue-600 text-white hover:bg-blue-700"
+//                           : "bg-blue-600 text-gray-900 hover:bg-blue-700"
 //                           }`}
 //                       >
 //                         ← Previous
@@ -380,7 +380,7 @@
 //                               key={pageNum}
 //                               onClick={() => setCurrentPage(pageNum)}
 //                               className={`px-2 py-2 rounded-lg transition ${currentPage === pageNum
-//                                 ? "bg-green-600 text-white font-semibold"
+//                                 ? "bg-blue-600 text-gray-900 font-semibold"
 //                                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
 //                                 }`}
 //                             >
@@ -395,7 +395,7 @@
 //                         disabled={currentPage === totalPages}
 //                         className={`px-2 py-1 rounded-lg transition ${currentPage === totalPages
 //                           ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-//                           : "bg-blue-600 text-white hover:bg-blue-700"
+//                           : "bg-blue-600 text-gray-900 hover:bg-blue-700"
 //                           }`}
 //                       >
 //                         Next →
@@ -411,7 +411,7 @@
 //                     <div className="text-sm text-blue-800">Total Records</div>
 //                   </div>
 //                   <div className="p-4 border border-green-200 rounded-lg bg-green-50">
-//                     <div className="text-2xl font-bold text-green-600">
+//                     <div className="text-2xl font-bold text-blue-700">
 //                       {records.filter(r => r.onsite).length}
 //                     </div>
 //                     <div className="text-sm text-green-800">Onsite Days</div>
@@ -625,10 +625,10 @@ export default function MyAttendance() {
       return (
         <div className="flex items-center justify-center gap-1">
           <span className="relative flex w-2 h-2">
-            <span className="absolute inline-flex w-full h-full bg-green-400 rounded-full opacity-75 animate-ping"></span>
-            <span className="relative inline-flex w-2 h-2 bg-green-500 rounded-full"></span>
+            <span className="absolute inline-flex w-full h-full bg-blue-500 rounded-full opacity-75 animate-ping"></span>
+            <span className="relative inline-flex w-2 h-2 bg-blue-600 rounded-full"></span>
           </span>
-          <span className="font-semibold text-green-600">{checkIn}</span>
+          <span className="font-semibold text-blue-700">{checkIn}</span>
           <span className="text-xs text-gray-500">/ --:--</span>
         </div>
       );
@@ -838,7 +838,7 @@ export default function MyAttendance() {
           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-2 font-semibold text-white transition bg-red-600 rounded-lg hover:bg-red-700"
+            className="px-6 py-2 font-semibold text-gray-900 transition bg-red-600 rounded-lg hover:bg-red-700"
           >
             🔄 Retry
           </button>
@@ -891,7 +891,7 @@ export default function MyAttendance() {
 
             {/* Single Date Filter */}
             <div className="relative w-[110px] sm:w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="date"
                 value={searchDate}
@@ -904,7 +904,7 @@ export default function MyAttendance() {
 
             {/* Date From */}
             <div className="relative w-[110px] sm:w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="date"
                 value={dateFrom}
@@ -917,7 +917,7 @@ export default function MyAttendance() {
 
             {/* Date To */}
             <div className="relative w-[110px] sm:w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="date"
                 value={dateTo}
@@ -930,7 +930,7 @@ export default function MyAttendance() {
 
             {/* Month Filter */}
             <div className="relative w-[110px] sm:w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="month"
                 value={selectedMonth}
@@ -966,7 +966,7 @@ export default function MyAttendance() {
             {/* CSV Button */}
             <button
               onClick={downloadCSV}
-              className="h-8 px-2 text-xs font-medium text-white transition bg-green-600 rounded-md sm:px-3 hover:bg-green-700"
+              className="h-8 px-2 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md sm:px-3 hover:bg-blue-800"
             >
               📥 CSV
             </button>
@@ -974,7 +974,7 @@ export default function MyAttendance() {
             {/* Request Edit Button */}
             {/* <button
               onClick={() => setShowEditModal(true)}
-              className="h-8 px-2 text-xs font-medium text-white transition bg-blue-600 rounded-md sm:px-3 hover:bg-blue-700"
+              className="h-8 px-2 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md sm:px-3 hover:bg-blue-700"
             >
               📝 Req to Edit
             </button> */}
@@ -1014,7 +1014,7 @@ export default function MyAttendance() {
               {records.length > 0 && (
                 <button
                   onClick={clearFilters}
-                  className="px-4 py-1.5 text-sm font-semibold text-white transition bg-blue-600 rounded-lg sm:px-6 sm:py-2 hover:bg-blue-700"
+                  className="px-4 py-1.5 text-sm font-semibold text-gray-900 transition bg-blue-600 rounded-lg sm:px-6 sm:py-2 hover:bg-blue-700"
                 >
                   🔄 Clear Filters
                 </button>
@@ -1024,7 +1024,7 @@ export default function MyAttendance() {
             <>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
-                  <thead className="text-xs text-left text-white sm:text-sm bg-gradient-to-r from-green-500 to-blue-600">
+                  <thead className="text-xs text-left text-gray-900 sm:text-sm bg-gradient-to-r from-green-500 to-blue-600">
                     <tr>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Date</th>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Check-In/Out</th>
@@ -1039,7 +1039,7 @@ export default function MyAttendance() {
                     {currentRecords.map((rec, idx) => (
                       <tr
                         key={rec._id || idx}
-                        className={`${idx % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-blue-50 hover:shadow-sm transition-all duration-200 text-xs sm:text-sm`}
+                        className={`${idx % 2 === 0 ? "bg-white" : "bg-white"} hover:bg-blue-50 hover:shadow-sm transition-all duration-200 text-xs sm:text-sm`}
                       >
                         {/* Date */}
                         <td className="px-2 py-1.5 font-medium text-center text-gray-900 whitespace-nowrap sm:px-3 sm:py-2">
@@ -1053,7 +1053,7 @@ export default function MyAttendance() {
 
                         {/* Hours */}
                         <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                          <span className={`font-semibold ${rec.totalHours >= 8 ? 'text-green-600' :
+                          <span className={`font-semibold ${rec.totalHours >= 8 ? 'text-blue-700' :
                             rec.totalHours >= 4 ? 'text-orange-600' : 'text-red-600'
                             }`}>
                             {rec.totalHours ? rec.totalHours.toFixed(1) : "0.0"}h
@@ -1071,8 +1071,8 @@ export default function MyAttendance() {
                         <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
                           <span
                             className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${rec.onsite
-                              ? "bg-green-100 text-green-800 border border-green-300"
-                              : "bg-red-100 text-red-800 border border-red-300"
+                              ? "bg-emerald-50 text-emerald-700 border border-green-300"
+                              : "bg-red-50 text-red-700 border border-red-300"
                               }`}
                           >
                             {rec.onsite ? "🏢 Yes" : "🏠 No"}
@@ -1090,7 +1090,7 @@ export default function MyAttendance() {
                         <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
                           <span
                             className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${rec.status === "checked-in"
-                              ? "bg-blue-100 text-blue-800 border border-blue-300 animate-pulse"
+                              ? "bg-blue-50 text-blue-700 border border-blue-300 animate-pulse"
                               : "bg-purple-100 text-purple-800 border border-purple-300"
                               }`}
                           >
@@ -1105,7 +1105,7 @@ export default function MyAttendance() {
 
               {/* Pagination Section */}
               {filteredRecords.length > 0 && (
-                <div className="flex flex-col items-center justify-between gap-3 p-3 border-t sm:flex-row sm:p-4 bg-gray-50">
+                <div className="flex flex-col items-center justify-between gap-3 p-3 border-t sm:flex-row sm:p-4 bg-white">
                   <div className="flex flex-wrap items-center gap-3">
                     <div className="flex items-center gap-1.5">
                       <label className="text-xs font-medium text-gray-700">
@@ -1136,7 +1136,7 @@ export default function MyAttendance() {
                       disabled={currentPage === 1}
                       className={`px-2 py-1 text-xs font-semibold rounded-lg transition ${currentPage === 1
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                        : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
                         }`}
                     >
                       ←
@@ -1150,7 +1150,7 @@ export default function MyAttendance() {
                         className={`px-2 py-1 text-xs font-semibold rounded-lg transition min-w-[24px] ${page === "..."
                           ? "bg-gray-200 text-gray-500 cursor-default"
                           : currentPage === page
-                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-gray-900 shadow-lg"
                             : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                           }`}
                       >
@@ -1163,7 +1163,7 @@ export default function MyAttendance() {
                       disabled={currentPage === totalPages}
                       className={`px-2 py-1 text-xs font-semibold rounded-lg transition ${currentPage === totalPages
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                        : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
                         }`}
                     >
                       →
@@ -1178,7 +1178,7 @@ export default function MyAttendance() {
 
       {/* Attendance Edit Request Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
           <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in duration-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
@@ -1201,13 +1201,13 @@ export default function MyAttendance() {
                     type="text" 
                     value={employeeData?.employeeId || ""} 
                     disabled 
-                    className="w-1/3 px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-lg cursor-not-allowed"
+                    className="w-1/3 px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg cursor-not-allowed"
                   />
                   <input 
                     type="text" 
                     value={employeeData?.name || ""} 
                     disabled 
-                    className="w-2/3 px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-lg cursor-not-allowed"
+                    className="w-2/3 px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -1224,7 +1224,7 @@ export default function MyAttendance() {
                   <button
                     type="button"
                     onClick={handleAddRequestDate}
-                    className="px-3 py-1 text-xs font-bold text-white transition bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                    className="px-3 py-1 text-xs font-bold text-gray-900 transition bg-indigo-600 rounded-lg hover:bg-indigo-700"
                   >
                     + Add
                   </button>
@@ -1237,7 +1237,7 @@ export default function MyAttendance() {
                         {date}
                         <button 
                           onClick={() => handleRemoveRequestDate(date)}
-                          className="text-blue-500 hover:text-blue-700"
+                          className="text-blue-600 hover:text-blue-700"
                         >
                           ×
                         </button>
@@ -1267,7 +1267,7 @@ export default function MyAttendance() {
                 <button
                   onClick={handleSubmitEditRequest}
                   disabled={submittingRequest}
-                  className={`flex-1 px-4 py-2 text-xs font-bold text-white transition rounded-lg shadow-lg ${
+                  className={`flex-1 px-4 py-2 text-xs font-bold text-gray-900 transition rounded-lg shadow-lg ${
                     submittingRequest ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   }`}
                 >

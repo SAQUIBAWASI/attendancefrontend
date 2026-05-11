@@ -325,7 +325,7 @@ const RejectedLeaves = () => {
               <button
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                   }`}
               >
@@ -366,7 +366,7 @@ const RejectedLeaves = () => {
               <button
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                   }`}
               >
@@ -444,7 +444,7 @@ const RejectedLeaves = () => {
             <button
               onClick={downloadExcel}
               disabled={filteredLeaves.length === 0}
-              className="flex items-center gap-1.5 h-8 px-3 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+              className="flex items-center gap-1.5 h-8 px-3 text-xs font-medium text-gray-900 bg-blue-600 rounded-md hover:bg-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
             >
               <FaDownload className="text-xs" />
               Download XL ({filteredLeaves.length})
@@ -456,7 +456,7 @@ const RejectedLeaves = () => {
         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
-              <thead className="text-sm text-left text-white bg-gradient-to-r from-red-500 to-rose-600">
+              <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-red-500 to-rose-600">
                 <tr>
                   <th className="py-2 text-center ">Employee ID</th>
                   <th className="py-2 text-center ">Name</th>
@@ -568,9 +568,9 @@ const RejectedLeaves = () => {
                   onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                   disabled={page === "..."}
                   className={`px-4 py-1 text-sm border rounded-lg ${page === "..."
-                      ? "text-gray-500 bg-gray-50 cursor-default"
+                      ? "text-gray-500 bg-white cursor-default"
                       : currentPage === page
-                        ? "text-white bg-blue-600 border-blue-600"
+                        ? "text-gray-900 bg-blue-600 border-blue-600"
                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                     }`}
                 >

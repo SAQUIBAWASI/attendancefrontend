@@ -105,7 +105,7 @@
 //               <h2 className="text-2xl font-bold text-blue-900">My Shift</h2>
 //               {/* <button
 //                 onClick={() => navigate("/employeedashboard")}
-//                 className="w-full px-5 py-2 font-medium text-white transition-all bg-blue-600 rounded-lg sm:w-auto hover:bg-blue-700"
+//                 className="w-full px-5 py-2 font-medium text-gray-900 transition-all bg-blue-600 rounded-lg sm:w-auto hover:bg-blue-700"
 //               >
 //                 ← Back to Dashboard
 //               </button> */}
@@ -133,7 +133,7 @@
 //                       </tr>
 //                     </thead>
 //                     <tbody>
-//                       <tr className="border-b hover:bg-gray-50">
+//                       <tr className="border-b hover:bg-white">
 //                         <td className="p-2 border">{shift.shiftType}</td>
 //                         <td className="p-2 border">{shift.startTime}</td>
 //                         <td className="p-2 border">{shift.endTime}</td>
@@ -157,7 +157,7 @@
 
 //                 {/* Mobile Cards */}
 //                 <div className="flex flex-col gap-4 sm:hidden">
-//                   <div className="p-4 border rounded-lg shadow-sm bg-gray-50">
+//                   <div className="p-4 border rounded-lg shadow-sm bg-white">
 //                     <div className="flex items-center justify-between mb-2">
 //                       <span className="font-medium text-gray-700">
 //                         Shift Type
@@ -358,7 +358,7 @@
 //                       </tr>
 //                     </thead>
 //                     <tbody>
-//                       <tr className="border-b hover:bg-gray-50">
+//                       <tr className="border-b hover:bg-white">
 //                         <td className="p-3 border">
 //                           <span className="font-medium text-blue-700">
 //                             {shift.shiftType}
@@ -374,9 +374,9 @@
 //                           <span
 //                             className={`px-3 py-1 rounded text-sm font-semibold ${
 //                               status === "Ongoing"
-//                                 ? "bg-green-100 text-green-800 border border-green-200"
+//                                 ? "bg-emerald-50 text-emerald-700 border border-green-200"
 //                                 : status === "Upcoming"
-//                                 ? "bg-blue-100 text-blue-800 border border-blue-200"
+//                                 ? "bg-blue-50 text-blue-700 border border-blue-200"
 //                                 : "bg-gray-100 text-gray-700 border border-gray-200"
 //                             }`}
 //                           >
@@ -396,9 +396,9 @@
 //                       <span
 //                         className={`px-3 py-1 rounded text-xs font-semibold ${
 //                           status === "Ongoing"
-//                             ? "bg-green-100 text-green-800"
+//                             ? "bg-emerald-50 text-emerald-700"
 //                             : status === "Upcoming"
-//                             ? "bg-blue-100 text-blue-800"
+//                             ? "bg-blue-50 text-blue-700"
 //                             : "bg-gray-100 text-gray-700"
 //                         }`}
 //                       >
@@ -584,7 +584,7 @@ const EmployeeShift = () => {
           ) : (
             <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
               <table className="min-w-full">
-                <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+                <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                   <tr>
                     <th className="px-4 py-2">Shift Type</th>
                     <th className="px-4 py-2">Shift Name</th>
@@ -599,7 +599,7 @@ const EmployeeShift = () => {
                   {shifts.map((shift, index) => (
                     <tr
                       key={shift._id || index}
-                      className="border-b hover:bg-gray-50"
+                      className="border-b hover:bg-white"
                     >
                       <td className="p-2 capitalize border">{shift.shiftType}</td>
                       <td className="p-2 border">{shift.shiftName}</td>

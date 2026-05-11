@@ -199,7 +199,7 @@ export default function VendorList() {
       <div className="overflow-x-auto mb-4">
         <table className="w-full border-collapse border border-gray-300">
           <thead>
-            <tr className="bg-blue-600 text-white">
+            <tr className="bg-blue-600 text-gray-900">
               <th className="p-2 border">Sl</th>
               <th className="p-2 border">Logo</th>
               <th className="p-2 border">Name</th>
@@ -236,7 +236,7 @@ export default function VendorList() {
                 <td className="p-2 border">{vendor.zipcode}</td>
                 <td className="p-2 border flex gap-2">
                   <button
-                    className="bg-green-500 text-white p-1 rounded"
+                    className="bg-blue-600 text-gray-900 p-1 rounded"
                     onClick={() => viewVendor(vendor)}
                     title="View Vendor"
                   >
@@ -244,7 +244,7 @@ export default function VendorList() {
                   </button>
 
                   <button
-                    className="bg-blue-500 text-white p-1 rounded"
+                    className="bg-blue-600 text-gray-900 p-1 rounded"
                     title="Edit Vendor"
                     onClick={() => {
                       setEditedVendor(vendor);
@@ -256,7 +256,7 @@ export default function VendorList() {
                   </button>
 
                   <button
-                    className="bg-red-500 text-white p-1 rounded"
+                    className="bg-red-500 text-gray-900 p-1 rounded"
                     title="Delete Vendor"
                     onClick={() => handleDelete(vendor._id)}
                     disabled={actionLoading}
@@ -292,7 +292,7 @@ export default function VendorList() {
             onClick={() => setCurrentPage(index + 1)}
             className={`px-4 py-2 rounded ${
               currentPage === index + 1
-                ? "bg-blue-500 text-white"
+                ? "bg-blue-600 text-gray-900"
                 : "bg-gray-200"
             }`}
           >
@@ -312,7 +312,7 @@ export default function VendorList() {
 
       {/* Edit Modal */}
       {editModal && editedVendor && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+        <div className="fixed inset-0 bg-white  flex justify-center items-center z-50 p-4">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg relative max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-semibold mb-4">
               Edit Vendor - {editedVendor.name}
@@ -373,7 +373,7 @@ export default function VendorList() {
               </button>
               <button
                 onClick={handleSave}
-                className="px-3 py-2 bg-green-600 text-white rounded"
+                className="px-3 py-2 bg-blue-600 text-gray-900 rounded"
                 disabled={actionLoading}
               >
                 {actionLoading ? "Saving..." : "Save"}

@@ -84,7 +84,7 @@ const OrdersList = () => {
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse border border-gray-300">
-            <thead className="bg-purple-600 text-white">
+            <thead className="bg-purple-600 text-gray-900">
               <tr>
                 <th className="p-2 border">Sl</th>
                 <th className="p-2 border">User Name</th>
@@ -99,7 +99,7 @@ const OrdersList = () => {
             </thead>
             <tbody>
               {ordersData.map((order, index) => (
-                <tr key={order._id} className="border-b hover:bg-gray-50">
+                <tr key={order._id} className="border-b hover:bg-white">
                   <td className="p-2 border">{index + 1}</td>
                   <td className="p-2 border">{order.user.name}</td>
                   <td className="p-2 border">{order.user.email}</td>
@@ -133,7 +133,7 @@ const OrdersList = () => {
 
       {/* Modal for Editing Status */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center">
+        <div className="fixed inset-0 bg-white0  flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg w-1/3">
             <h2 className="text-xl font-semibold">Edit Order Status</h2>
             <div className="my-4">
@@ -159,7 +159,7 @@ const OrdersList = () => {
               </button>
               <button
                 onClick={handleSaveStatus}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
+                className="px-4 py-2 bg-blue-600 text-gray-900 rounded"
               >
                 Save Changes
               </button>

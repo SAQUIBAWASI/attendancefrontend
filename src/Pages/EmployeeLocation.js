@@ -63,7 +63,7 @@
 //               <h2 className="text-2xl font-bold text-blue-900">My Office Assigned Location</h2>
 //               {/* <button
 //                 onClick={() => navigate("/employeedashboard")}
-//                 className="w-full px-5 py-2 font-medium text-white transition-all bg-blue-600 rounded-lg sm:w-auto hover:bg-blue-700"
+//                 className="w-full px-5 py-2 font-medium text-gray-900 transition-all bg-blue-600 rounded-lg sm:w-auto hover:bg-blue-700"
 //               >
 //                 ← Back to Dashboard
 //               </button> */}
@@ -94,7 +94,7 @@
 //                       </tr>
 //                     </thead>
 //                     <tbody>
-//                       <tr className="border-b hover:bg-gray-50">
+//                       <tr className="border-b hover:bg-white">
 //                         <td className="p-2 border">
 //                           {locationData?.employee?.name || "N/A"}
 //                         </td>
@@ -120,7 +120,7 @@
 
 //                 {/* Mobile View */}
 //                 <div className="flex flex-col gap-4 sm:hidden">
-//                   <div className="p-4 border rounded-lg shadow-sm bg-gray-50">
+//                   <div className="p-4 border rounded-lg shadow-sm bg-white">
 //                     <div className="flex items-center justify-between mb-2">
 //                       <span className="font-medium text-gray-700">
 //                         Employee
@@ -249,7 +249,7 @@ const EmployeeLocation = () => {
             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
             <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
               <table className="min-w-full">
-                <thead className="text-left text-sm text-white bg-gradient-to-r from-green-500 to-blue-600">
+                <thead className="text-left text-sm text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                   <tr>
                     <th className="hidden sm:table-cell py-2 text-center">Employee ID</th>
                     <th className="hidden sm:table-cell py-2 text-center"> Name</th>
@@ -264,7 +264,7 @@ const EmployeeLocation = () => {
                   {locations.map((location, index) => (
                     <tr
                       key={location._id || index}
-                      className="border-b hover:bg-gray-50"
+                      className="border-b hover:bg-white"
                     >
                       <td className="hidden sm:table-cell p-2 border text-center">
                         {location?.employee?.employeeId || "N/A"}

@@ -153,7 +153,7 @@ export default function CategoryList() {
           <div className="overflow-x-auto mb-4">
             <table className="w-full border-collapse border border-gray-300">
               <thead>
-                <tr className="bg-blue-600 text-white">
+                <tr className="bg-blue-600 text-gray-900">
                   <th className="p-2 border">Sl</th>
                   <th className="p-2 border">Category Name</th>
                   <th className="p-2 border">Created At</th>
@@ -177,13 +177,13 @@ export default function CategoryList() {
                       </td>
                       <td className="p-2 border flex gap-2">
                         <button
-                          className="bg-blue-500 text-white p-1 rounded"
+                          className="bg-blue-600 text-gray-900 p-1 rounded"
                           onClick={() => handleEditCategory(cat)}
                         >
                           <FaEdit />
                         </button>
                         <button
-                          className="bg-red-500 text-white p-1 rounded"
+                          className="bg-red-500 text-gray-900 p-1 rounded"
                           onClick={() => handleDeleteCategory(cat._id)}
                         >
                           <FaTrash />
@@ -209,7 +209,7 @@ export default function CategoryList() {
                 key={index}
                 onClick={() => setCurrentPage(index + 1)}
                 className={`px-4 py-2 rounded ${
-                  currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                  currentPage === index + 1 ? 'bg-blue-600 text-gray-900' : 'bg-gray-200'
                 }`}
               >
                 {index + 1}
@@ -228,7 +228,7 @@ export default function CategoryList() {
 
       {/* Edit Category Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-gray-600  flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
             <h3 className="text-xl font-semibold mb-4">Edit Category</h3>
             <input
@@ -248,7 +248,7 @@ export default function CategoryList() {
               </button>
               <button
                 onClick={handleSaveEditedCategory}
-                className="bg-blue-500 text-white px-4 py-2 rounded"
+                className="bg-blue-600 text-gray-900 px-4 py-2 rounded"
               >
                 Save
               </button>

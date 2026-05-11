@@ -67,7 +67,7 @@ export default function VendorDocumentList() {
         <h2 className="text-lg font-semibold">Vendor Documents</h2>
         <button
           onClick={exportExcel}
-          className="flex items-center text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+          className="flex items-center text-sm bg-blue-600 text-gray-900 px-3 py-1 rounded hover:bg-blue-600"
         >
           <FaFileExcel className="mr-2" />
           Export to Excel
@@ -94,7 +94,7 @@ export default function VendorDocumentList() {
         </thead>
         <tbody>
           {current.map((vendor, idx) => (
-            <tr key={vendor._id} className="hover:bg-gray-50">
+            <tr key={vendor._id} className="hover:bg-white">
               <td className="p-2 border">{start + idx + 1}</td>
               <td className="p-2 border">{vendor.name}</td>
               <td className="p-2 border">
@@ -132,7 +132,7 @@ export default function VendorDocumentList() {
             onClick={() => setCurrentPage(i + 1)}
             className={`px-3 py-1 rounded ${
               i + 1 === currentPage
-                ? "bg-blue-600 text-white"
+                ? "bg-blue-600 text-gray-900"
                 : "bg-gray-200"
             }`}
           >
@@ -150,7 +150,7 @@ export default function VendorDocumentList() {
 
       {/* View Modal */}
       {viewUrl && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-white  flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg w-[90%] max-w-2xl relative">
             <h3 className="text-lg font-semibold mb-4">Document Preview</h3>
             <iframe

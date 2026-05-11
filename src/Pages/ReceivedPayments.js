@@ -101,7 +101,7 @@ export default function ReceivedPayments() {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300">
           <thead>
-            <tr className="bg-blue-600 text-white">
+            <tr className="bg-blue-600 text-gray-900">
               <th className="p-2 border">Sl</th>
               <th className="p-2 border">Vendor Name</th>
               <th className="p-2 border">Amount ($)</th>
@@ -125,8 +125,8 @@ export default function ReceivedPayments() {
                   <span
                     className={`px-2 py-1 rounded text-sm ${
                       payment.status === "Paid"
-                        ? "bg-green-500 text-white"
-                        : "bg-yellow-400 text-white"
+                        ? "bg-blue-600 text-gray-900"
+                        : "bg-yellow-400 text-gray-900"
                     }`}
                   >
                     {payment.status}
@@ -134,7 +134,7 @@ export default function ReceivedPayments() {
                 </td>
                 <td className="p-2 border flex gap-2">
                   <button
-                    className="bg-blue-500 text-white px-4 py-1 rounded"
+                    className="bg-blue-600 text-gray-900 px-4 py-1 rounded"
                     onClick={() => handleDownloadInvoice(payment.id)}
                   >
                     Download Invoice

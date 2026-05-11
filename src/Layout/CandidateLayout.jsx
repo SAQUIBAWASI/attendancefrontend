@@ -398,7 +398,7 @@ const CandidateLayout = () => {
                                     </section>
                                     <section>
                                         <h3 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div> Professional Background
+                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div> Professional Background
                                         </h3>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {[
@@ -439,7 +439,7 @@ const CandidateLayout = () => {
                                     </section>
                                     <section>
                                         <h3 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div> Professional Experience
+                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div> Professional Experience
                                         </h3>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
                                             <div className="flex justify-between items-center py-1.5 border-b border-gray-50">

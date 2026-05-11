@@ -88,13 +88,13 @@ const DepartmentList = () => {
             <CSVLink
               data={departments}
               filename="departments.csv"
-              className="bg-blue-600 text-white px-3 py-1.5 text-sm rounded"
+              className="bg-blue-600 text-gray-900 px-3 py-1.5 text-sm rounded"
             >
               Download CSV
             </CSVLink>
             <button
               onClick={downloadExcel}
-              className="bg-blue-600 text-white px-3 py-1.5 text-sm rounded"
+              className="bg-blue-600 text-gray-900 px-3 py-1.5 text-sm rounded"
             >
               Download Excel
             </button>
@@ -103,7 +103,7 @@ const DepartmentList = () => {
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm text-left">
             <thead>
-              <tr className="bg-gray-800 text-white text-sm">
+              <tr className="bg-gray-200 text-gray-900 text-sm">
                 <th className="p-2 w-12">#</th>
                 <th className="p-2">Department Name</th>
                 <th className="p-2">Status</th>
@@ -140,8 +140,8 @@ const DepartmentList = () => {
                       <span
                         className={`px-2 py-1 text-xs rounded ${
                           dept.status === "Active"
-                            ? "bg-green-500 text-white"
-                            : "bg-red-500 text-white"
+                            ? "bg-blue-600 text-gray-900"
+                            : "bg-red-500 text-gray-900"
                         }`}
                       >
                         {dept.status}
@@ -152,7 +152,7 @@ const DepartmentList = () => {
                     {editId === dept.id ? (
                       <button
                         onClick={saveEdit}
-                        className="text-green-600 text-sm px-2 py-1 border rounded"
+                        className="text-blue-700 text-sm px-2 py-1 border rounded"
                       >
                         Save
                       </button>

@@ -68,7 +68,7 @@ I am a ${selectedAudience} looking for ${selectedNeed}. Please help me get start
       description: <p className="font-sans">Trusted expert inputs</p>
     },
     {
-      icon: <Home className="w-8 h-8 text-green-600" />,
+      icon: <Home className="w-8 h-8 text-blue-700" />,
       title: "Home Diagnostics",
       description: <p className="font-sans">Lab tests at home</p>
     },
@@ -141,13 +141,13 @@ I am a ${selectedAudience} looking for ${selectedNeed}. Please help me get start
               </button>
               <button
                 onClick={handleBookCamp}
-                className="flex items-center justify-center text-white transition-colors bg-blue-600 rounded-full w-14 h-14 hover:bg-blue-700"
+                className="flex items-center justify-center text-gray-900 transition-colors bg-blue-600 rounded-full w-14 h-14 hover:bg-blue-700"
               >
                 <Calendar size={22} />
               </button>
               <button
                 onClick={handleFindDoctor}
-                className="flex items-center justify-center text-white transition-colors bg-purple-600 rounded-full w-14 h-14 hover:bg-purple-700"
+                className="flex items-center justify-center text-gray-900 transition-colors bg-purple-600 rounded-full w-14 h-14 hover:bg-purple-700"
               >
                 <Search size={22} />
               </button>
@@ -161,12 +161,12 @@ I am a ${selectedAudience} looking for ${selectedNeed}. Please help me get start
                 says: 'Timely Health gave us peace of mind when we needed it
                 most.'"
               </blockquote>
-              <p className="mb-4 font-semibold text-gray-800">
+              <p className="mb-4 font-semibold text-gray-900">
                 You deserve that peace of mind too.
               </p>
               <button
                 onClick={handleStartConsultation}
-                className="px-6 py-3 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
+                className="px-6 py-3 text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
               >
                 → Start a Consultation
               </button>
@@ -184,7 +184,7 @@ I am a ${selectedAudience} looking for ${selectedNeed}. Please help me get start
         </div>
       </section>
 
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-white">
         <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <h2 className="mb-12 text-center font-calibri text-[#007a52]">Our Services Snapshot</h2>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -210,9 +210,9 @@ I am a ${selectedAudience} looking for ${selectedNeed}. Please help me get start
             {whyChooseUs.map((item, index) => (
               <div
                 key={index}
-                className="flex items-center w-full max-w-sm px-4 py-2 space-x-3 rounded-lg shadow-sm bg-gray-50"
+                className="flex items-center w-full max-w-sm px-4 py-2 space-x-3 rounded-lg shadow-sm bg-white"
               >
-                <CheckCircle className="flex-shrink-0 w-5 h-5 text-green-600" />
+                <CheckCircle className="flex-shrink-0 w-5 h-5 text-blue-700" />
                 <span className="font-sans text-gray-700">{item}</span>
               </div>
             ))}
@@ -222,7 +222,7 @@ I am a ${selectedAudience} looking for ${selectedNeed}. Please help me get start
       </section>
 
       {/* Interactive CTA */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-white">
         <div className="max-w-4xl px-4 mx-auto sm:px-6 lg:px-8">
           <div className="p-8 bg-white shadow-lg rounded-xl">
             <h2 className="mb-8 text-center font-calibri text-[#007a52]">What Do You Need?</h2>
@@ -295,7 +295,7 @@ I am a ${selectedAudience} looking for ${selectedNeed}. Please help me get start
               <button
                 onClick={handleInteractiveCTA}
                 disabled={!name || !whatsapp || !selectedAudience || !selectedNeed}
-                className="px-8 py-3 text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="px-8 py-3 text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 Start a Free Chat on WhatsApp
               </button>
@@ -308,7 +308,7 @@ I am a ${selectedAudience} looking for ${selectedNeed}. Please help me get start
       <section className="py-16 bg-white">
   <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
     {/* Testimonials Heading */}
-    <h2 className="mb-12 font-sans text-3xl font-bold text-center text-gray-800">
+    <h2 className="mb-12 font-sans text-3xl font-bold text-center text-gray-900">
       Real Testimonials
     </h2>
 
@@ -317,7 +317,7 @@ I am a ${selectedAudience} looking for ${selectedNeed}. Please help me get start
       {testimonials.map((testimonial, index) => (
         <div
           key={index}
-          className="p-6 transition shadow bg-gray-50 rounded-xl hover:shadow-md"
+          className="p-6 transition shadow bg-white rounded-xl hover:shadow-md"
         >
           {/* Star Rating */}
           <div className="flex items-center mb-4">
@@ -345,7 +345,7 @@ I am a ${selectedAudience} looking for ${selectedNeed}. Please help me get start
 </section>
 
 {/* Google Reviews CTA */}
-<div className="flex justify-center py-5 bg-gray-50">
+<div className="flex justify-center py-5 bg-white">
   <div className="w-full max-w-sm p-6 text-center bg-[#fff2ec] rounded-xl shadow-md">
     {/* Google Styled Heading */}
     <h2 className="mb-3 text-2xl font-bold">
@@ -366,7 +366,7 @@ I am a ${selectedAudience} looking for ${selectedNeed}. Please help me get start
       href="https://search.google.com/local/writereview?placeid=ChIJ89efNxeRyzsR5LXCKSPORfQ"
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-block px-5 py-2 text-lg font-medium text-[#0c7a56] border-2 border-[#0c7a56] rounded-lg hover:bg-[#0c7a56] hover:text-white transition"
+      className="inline-block px-5 py-2 text-lg font-medium text-[#0c7a56] border-2 border-[#0c7a56] rounded-lg hover:bg-[#0c7a56] hover:text-gray-900 transition"
     >
       👉 Give us a rating
     </a>
@@ -376,13 +376,13 @@ I am a ${selectedAudience} looking for ${selectedNeed}. Please help me get start
 
 
       {/* Brand Promise */}
-      <section className="py-20 pb-10 text-center text-white bg-gradient-to-r from-blue-500 to-green-500">
+      <section className="py-20 pb-10 text-center text-gray-900 bg-gradient-to-r from-blue-500 to-green-500">
         <div className="max-w-4xl px-4 mx-auto sm:px-6 lg:px-8">
-          <h2 className="mb-6 text-white font-calibri">"Care You Can Trust. Right Where You Are."</h2>
-          <p className="mb-8 font-sans text-white">We believe healthcare should be simple, local, and always within reach — for everyone.</p>
+          <h2 className="mb-6 text-gray-900 font-calibri">"Care You Can Trust. Right Where You Are."</h2>
+          <p className="mb-8 font-sans text-gray-900">We believe healthcare should be simple, local, and always within reach — for everyone.</p>
           <button
             onClick={handleWhatsApp}
-            className="px-8 py-4 font-semibold text-blue-600 transition-colors bg-white rounded-lg hover:bg-green-500 font-calibri"
+            className="px-8 py-4 font-semibold text-blue-600 transition-colors bg-white rounded-lg hover:bg-blue-600 font-calibri"
           >
             Get Started Today
           </button>

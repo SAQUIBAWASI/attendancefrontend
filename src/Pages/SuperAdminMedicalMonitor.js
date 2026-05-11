@@ -99,7 +99,7 @@ const SuperAdminDashboard = () => {
       {/* Mobile Overlay */}
       {isMobile && !isCollapsed && isSidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-50"
+          className="fixed inset-0 z-40 bg-white "
           onClick={() => setIsSidebarOpen(false)}
         ></div>
       )}
@@ -126,14 +126,14 @@ const SuperAdminDashboard = () => {
           <div className="grid grid-cols-1 gap-4 mt-8 sm:grid-cols-2 lg:grid-cols-3">
 
           <DashboardCard
-                        icon={<FiCamera className="text-3xl text-green-600" />}
+                        icon={<FiCamera className="text-3xl text-blue-700" />}
                         title="Mark Attendance"
                         subtitle="Capture photo & location"
                         onClick={() => navigate("/attendance-capture")}
                       />
 
             <DashboardCard
-              icon={<FiClock className="text-3xl text-green-600" />}
+              icon={<FiClock className="text-3xl text-blue-700" />}
               title="My Attendance"
               subtitle="View attendance records"
               onClick={() => navigate("/myattendance")}

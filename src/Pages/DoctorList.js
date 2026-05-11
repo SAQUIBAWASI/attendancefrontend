@@ -125,14 +125,14 @@ const DoctorList = () => {
           data={filteredDoctors}
           headers={headers}
           filename="doctor_list.csv"
-          className="px-4 py-2 bg-green-500 text-white rounded text-sm flex items-center gap-2"
+          className="px-4 py-2 bg-blue-600 text-gray-900 rounded text-sm flex items-center gap-2"
         >
           <FaFileCsv /> CSV
         </CSVLink>
 
         <label
           htmlFor="file-upload"
-          className="px-4 py-2 bg-purple-600 text-white rounded text-sm flex items-center gap-2 cursor-pointer"
+          className="px-4 py-2 bg-purple-600 text-gray-900 rounded text-sm flex items-center gap-2 cursor-pointer"
         >
           <FaUpload /> Bulk Import
           <input
@@ -184,7 +184,7 @@ const DoctorList = () => {
                 <td className="p-2 border flex gap-2 justify-center">
                   <button
                     onClick={() => handleEdit(doc._id)}
-                    className="text-blue-500 hover:text-blue-700"
+                    className="text-blue-600 hover:text-blue-700"
                   >
                     <FaEdit />
                   </button>
@@ -203,7 +203,7 @@ const DoctorList = () => {
 
 {/* Edit Doctor Modal */}
 {editingDoctor && (
-  <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center">
+  <div className="fixed inset-0 bg-white0  flex justify-center items-center">
     <div className="bg-white p-6 rounded shadow-md w-3/4 md:w-2/3 lg:w-1/3">
       <h3 className="text-xl font-semibold mb-4">Edit Doctor Details</h3>
       <form>
@@ -298,7 +298,7 @@ const DoctorList = () => {
           <button
             type="button"
             onClick={handleSave}
-            className="px-4 py-2 bg-blue-500 text-white rounded"
+            className="px-4 py-2 bg-blue-600 text-gray-900 rounded"
           >
             Save
           </button>

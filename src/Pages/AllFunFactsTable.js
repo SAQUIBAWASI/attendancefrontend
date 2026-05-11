@@ -132,7 +132,7 @@ const AllFunFactsTable = () => {
                     <td className="border p-2 text-center">
                       <button
                         onClick={() => handleDelete(f._id)}
-                        className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                        className="bg-red-500 text-gray-900 px-2 py-1 rounded hover:bg-red-600"
                       >
                         <FaTrash />
                       </button>
@@ -157,7 +157,7 @@ const AllFunFactsTable = () => {
                 key={i}
                 onClick={() => setCurrentPage(i + 1)}
                 className={`px-3 py-1 rounded ${
-                  currentPage === i + 1 ? 'bg-purple-500 text-white' : 'bg-gray-200'
+                  currentPage === i + 1 ? 'bg-purple-500 text-gray-900' : 'bg-gray-200'
                 }`}
               >
                 {i + 1}

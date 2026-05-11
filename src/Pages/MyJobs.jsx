@@ -474,7 +474,7 @@ ${name}`;
 
             {/* Date Filter */}
             <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="date"
                 value={selectedDate}
@@ -486,7 +486,7 @@ ${name}`;
 
             {/* Month Filter */}
             <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="month"
                 value={selectedMonth}
@@ -499,7 +499,7 @@ ${name}`;
             {/* Add Experience Button - Inside Filters */}
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white transition bg-green-600 rounded-md hover:bg-green-700"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-800"
             >
               <FaPlus className="text-xs" /> Add Experience
             </button>
@@ -508,7 +508,7 @@ ${name}`;
             {window.location.pathname.includes('/emp-') && (
               <button
                 onClick={openResignationModal}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white transition bg-red-600 rounded-md hover:bg-red-700"
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-900 transition bg-red-600 rounded-md hover:bg-red-700"
               >
                 <FaSignOutAlt className="text-xs" /> Resign
               </button>
@@ -549,14 +549,14 @@ ${name}`;
               {experiences.length > 0 ? (
                 <button
                   onClick={clearFilters}
-                  className="px-6 py-2 font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="px-6 py-2 font-semibold text-gray-900 transition bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
                   🔄 Clear Filters
                 </button>
               ) : (
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="px-6 py-2 font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="px-6 py-2 font-semibold text-gray-900 transition bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
                   ➕ Add Your First Role
                 </button>
@@ -566,7 +566,7 @@ ${name}`;
             <>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
-                  <thead className="text-sm text-center text-white bg-blue-600">
+                  <thead className="text-sm text-center text-gray-900 bg-blue-600">
                     <tr className="uppercase tracking-wider text-[11px] font-bold">
                       <th className="py-2.5 px-6">ROLE & COMPANY</th>
                       <th className="py-2.5 px-6">LOCATION</th>
@@ -578,12 +578,12 @@ ${name}`;
                   <tbody className="divide-y divide-gray-200">
                     {/* ── Pinned Current Job Row (Employee view) ── */}
                     {currentJobData && (
-                      <tr className="bg-green-50 border-l-4 border-green-500 hover:bg-green-100 transition duration-150">
+                      <tr className="bg-green-50 border-l-4 border-green-500 hover:bg-blue-100 transition duration-150">
                         <td className="px-2 py-2 text-center sm:px-3">
                           <div className="flex items-center justify-center gap-1.5">
                             <span className="relative flex h-2.5 w-2.5">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600"></span>
                             </span>
                             <div>
                               <span className="block font-bold text-gray-700 text-xs sm:text-sm">
@@ -601,18 +601,18 @@ ${name}`;
                         <td className="px-2 py-2 text-center text-xs sm:text-sm whitespace-nowrap">
                           {formatDate(currentJobData.startDate)}
                           {" – "}
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-white bg-green-500 rounded-full">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-gray-900 bg-blue-600 rounded-full">
                             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                             Current
                           </span>
                         </td>
                         <td className="px-2 py-2 text-center">
-                          <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">
+                          <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-blue-100 rounded-full">
                             {currentJobData.salary}
                           </span>
                         </td>
                         <td className="px-2 py-2 text-center">
-                          <span className="text-[10px] text-green-600 font-semibold italic">Active Employee</span>
+                          <span className="text-[10px] text-blue-700 font-semibold italic">Active Employee</span>
                         </td>
                       </tr>
                     )}
@@ -620,7 +620,7 @@ ${name}`;
                     {currentRecords.map((exp, index) => (
                       <tr
                         key={exp._id || index}
-                        className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50 transition duration-150`}
+                        className={`${index % 2 === 0 ? "bg-white" : "bg-white"} hover:bg-blue-50 transition duration-150`}
                       >
                         <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
                           <span className="block font-semibold text-gray-700 text-xs sm:text-sm">
@@ -648,7 +648,7 @@ ${name}`;
                                 href={getDocumentUrl(exp.offerLetter)}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-blue-500 hover:text-blue-700 transition"
+                                className="text-blue-600 hover:text-blue-700 transition"
                                 title="Offer Letter"
                               >
                                 <FaFilePdf size={16} />
@@ -659,7 +659,7 @@ ${name}`;
                                 href={getDocumentUrl(exp.payslip)}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-blue-500 hover:text-blue-700 transition"
+                                className="text-blue-600 hover:text-blue-700 transition"
                                 title="Payslip"
                               >
                                 <FaFilePdf size={16} />
@@ -708,7 +708,7 @@ ${name}`;
                       disabled={currentPage === 1}
                       className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentPage === 1
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                        : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
                         }`}
                     >
                       ← Prev
@@ -722,7 +722,7 @@ ${name}`;
                         className={`px-3 py-1 text-xs font-semibold rounded-lg transition min-w-[28px] ${page === "..."
                           ? "bg-gray-200 text-gray-500 cursor-default"
                           : currentPage === page
-                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-gray-900 shadow-lg"
                             : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                           }`}
                       >
@@ -735,7 +735,7 @@ ${name}`;
                       disabled={currentPage === totalPages}
                       className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentPage === totalPages
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                        : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
                         }`}
                     >
                       Next →
@@ -750,7 +750,7 @@ ${name}`;
 
       {/* Add Experience Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
           <div className="w-full max-w-md p-4 bg-white rounded-lg shadow-xl sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-700 sm:text-xl">Add Working Experience</h3>
@@ -881,7 +881,7 @@ ${name}`;
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
                   {isSubmitting ? "Saving..." : "Save Experience"}
                 </button>
@@ -893,7 +893,7 @@ ${name}`;
 
       {/* Resignation Modal */}
       {isResignationModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white  backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-lg p-6 bg-white rounded-2xl shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-700">Submit Resignation</h3>
@@ -909,7 +909,7 @@ ${name}`;
               <div>
                 <label className="block mb-2 text-sm font-semibold text-gray-700">Last Working Day *</label>
                 <div className="relative">
-                  <FaCalendarAlt className="absolute text-white transform -translate-y-1/2 left-3 top-1/2" />
+                  <FaCalendarAlt className="absolute text-gray-900 transform -translate-y-1/2 left-3 top-1/2" />
                   <input
                     type="date"
                     required
@@ -944,7 +944,7 @@ ${name}`;
                 <button
                   type="submit"
                   disabled={isResigning}
-                  className="flex-1 py-3 text-sm font-bold text-white bg-gradient-to-r from-red-600 to-rose-600 rounded-xl hover:from-red-700 hover:to-rose-700 shadow-lg shadow-red-100 disabled:opacity-50 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+                  className="flex-1 py-3 text-sm font-bold text-gray-900 bg-gradient-to-r from-red-600 to-rose-600 rounded-xl hover:from-red-700 hover:to-rose-700 shadow-lg shadow-red-100 disabled:opacity-50 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
                 >
                   {isResigning ? "Submitting..." : "Submit Resignation"}
                 </button>

@@ -35,7 +35,7 @@ const HRDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-gray-50">
+    <div className="min-h-screen p-6 bg-white">
       <div className="mb-4">
         <div className="bg-purple-600 text-gray-900 px-3 py-1 rounded-full text-xs font-bold inline-block">
           HR DASHBOARD
@@ -49,7 +49,7 @@ const HRDashboard = () => {
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-gray-500">Present Today</h3>
-          <p className="text-2xl font-bold text-green-600">{stats.presentToday}</p>
+          <p className="text-2xl font-bold text-blue-700">{stats.presentToday}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-gray-500">Pending Leaves</h3>
@@ -73,7 +73,7 @@ const HRDashboard = () => {
               <td className="py-2">EMP001</td>
               <td>John Doe</td>
               <td>Software Engineer</td>
-              <td><span className="text-green-600">Active</span></td>
+              <td><span className="text-blue-700">Active</span></td>
             </tr>
           </tbody>
         </table>

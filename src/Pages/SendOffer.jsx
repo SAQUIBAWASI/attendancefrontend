@@ -295,8 +295,8 @@ Timely Health Group
                     </div>
 
                     {candidate && (
-                        <div className="flex items-center gap-4 bg-gray-50 px-5 py-3 rounded-2xl border border-gray-200 shadow-sm">
-                            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center text-white text-lg font-black shadow-lg shadow-blue-100">
+                        <div className="flex items-center gap-4 bg-white px-5 py-3 rounded-2xl border border-gray-200 shadow-sm">
+                            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center text-gray-900 text-lg font-black shadow-lg shadow-blue-100">
                                 {candidate.firstName.charAt(0)}
                             </div>
                             <div className="flex flex-col">
@@ -313,13 +313,13 @@ Timely Health Group
                         {/* Checklist */}
                         {/* <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative">
                             <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-5 flex items-center gap-2">
-                                <FaShieldAlt className="text-emerald-500" /> Documents Verification
+                                <FaShieldAlt className="text-blue-600" /> Documents Verification
                             </h3>
                             <div className="space-y-2">
                                 {Object.keys(docsVerified).map((key) => (
-                                    <label key={key} className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${docsVerified[key] ? 'bg-emerald-50 border-emerald-100' : 'bg-gray-50 border-gray-200 hover:bg-white'}`}>
+                                    <label key={key} className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${docsVerified[key] ? 'bg-emerald-50 border-emerald-100' : 'bg-white border-gray-200 hover:bg-white'}`}>
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${docsVerified[key] ? 'bg-emerald-500 text-white' : 'bg-white text-gray-700 border border-gray-200'}`}>
+                                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${docsVerified[key] ? 'bg-blue-600 text-gray-900' : 'bg-white text-gray-700 border border-gray-200'}`}>
                                                 {docsVerified[key] ? <FaCheckCircle size={12} /> : <FaInfoCircle size={12} />}
                                             </div>
                                             <span className={`text-[10px] font-black uppercase tracking-widest ${docsVerified[key] ? 'text-emerald-700' : 'text-gray-500'}`}>
@@ -332,7 +332,7 @@ Timely Health Group
                                             checked={docsVerified[key]}
                                             onChange={() => handleVerifyChange(key)}
                                         />
-                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${docsVerified[key] ? 'border-emerald-500 bg-emerald-500' : 'border-gray-200'}`}>
+                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${docsVerified[key] ? 'border-blue-500 bg-blue-600' : 'border-gray-200'}`}>
                                             {docsVerified[key] && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
                                         </div>
                                     </label>
@@ -364,7 +364,7 @@ Timely Health Group
                                                 setOfferContent(getTemplate(type, data));
                                             }
                                         }}
-                                        className={`w-full text-left p-3 rounded-xl border transition-all text-[10px] font-black uppercase tracking-widest ${documentType === type ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-white hover:text-gray-500'}`}
+                                        className={`w-full text-left p-3 rounded-xl border transition-all text-[10px] font-black uppercase tracking-widest ${documentType === type ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-white border-gray-200 text-gray-500 hover:bg-white hover:text-gray-500'}`}
                                     >
                                         {type} Letter
                                     </button>
@@ -375,7 +375,7 @@ Timely Health Group
                         {/* Branding */}
                         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                             <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-5 flex items-center gap-2">
-                                <FaImage className="text-blue-500" /> Branding Reference
+                                <FaImage className="text-blue-600" /> Branding Reference
                             </h3>
                             <div className="space-y-4">
                                 <div className="flex flex-col gap-1.5">
@@ -384,10 +384,10 @@ Timely Health Group
                                         type="text"
                                         value={logoUrl}
                                         onChange={(e) => setLogoUrl(e.target.value)}
-                                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                                     />
                                 </div>
-                                <div className="h-28 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-center p-4">
+                                <div className="h-28 bg-white rounded-xl border border-gray-200 flex items-center justify-center p-4">
                                     <img src={logoUrl} alt="Preview" className="max-h-full max-w-full object-contain" onError={(e) => e.target.src = 'https://via.placeholder.com/150?text=Invalid+Logo'} />
                                 </div>
                             </div>
@@ -398,7 +398,7 @@ Timely Health Group
                     <div className="lg:col-span-8">
                         <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden flex flex-col min-h-[750px]">
                             {/* Tabs synchronized with JobApplicants detail style */}
-                            <div className="flex bg-gray-50/50 p-1.5 gap-1.5 border-b border-gray-200">
+                            <div className="flex bg-white/50 p-1.5 gap-1.5 border-b border-gray-200">
                                 <button
                                     onClick={() => setIsPreview(false)}
                                     className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${!isPreview ? 'bg-white text-purple-600 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-gray-500 hover:bg-gray-100'}`}
@@ -440,7 +440,7 @@ Timely Health Group
 
                                 ) : (
                                     <textarea
-                                        className="flex-1 w-full p-8 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-300 transition-all font-mono text-[11px] leading-relaxed resize-none bg-gray-50/50 text-gray-500 shadow-inner"
+                                        className="flex-1 w-full p-8 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-300 transition-all font-mono text-[11px] leading-relaxed resize-none bg-white/50 text-gray-500 shadow-inner"
                                         value={offerContent}
                                         onChange={(e) => setOfferContent(e.target.value)}
                                         placeholder="Draft the official offer content here..."
@@ -450,7 +450,7 @@ Timely Health Group
                                 <div className="mt-8 flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-gray-50">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-100">
-                                            <FaRocket size={16} className="text-white animate-pulse" />
+                                            <FaRocket size={16} className="text-gray-900 animate-pulse" />
                                         </div>
                                         <div>
                                             <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest">Validated Template</p>
@@ -459,7 +459,7 @@ Timely Health Group
                                     </div>
 
                                     <button
-                                        className={`w-full md:w-auto px-10 py-4 bg-blue-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-3 shadow-lg shadow-blue-100 disabled:opacity-50 disabled:pointer-events-none`}
+                                        className={`w-full md:w-auto px-10 py-4 bg-blue-600 text-gray-900 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-3 shadow-lg shadow-blue-100 disabled:opacity-50 disabled:pointer-events-none`}
                                         disabled={loading}
                                         onClick={handleSendOffer}
                                     >

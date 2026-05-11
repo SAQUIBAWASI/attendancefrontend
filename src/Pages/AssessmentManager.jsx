@@ -217,7 +217,7 @@
 //     };
 
 //     if (loading) return (
-//         <div className="flex items-center justify-center min-h-screen bg-gray-50">
+//         <div className="flex items-center justify-center min-h-screen bg-white">
 //             <div className="flex flex-col items-center gap-4">
 //                 <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
 //                 <p className="text-gray-500 font-bold animate-pulse">Syncing assessments...</p>
@@ -226,7 +226,7 @@
 //     );
 
 //     return (
-//         <div className="w-full min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8">
+//         <div className="w-full min-h-screen bg-white/50 p-4 md:p-6 lg:p-8">
 //             {/* Header Section */}
 //             <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-center xl:justify-between">
 //                 <div className="flex-shrink-0">
@@ -279,7 +279,7 @@
 
 //                         {isRoleDropdownOpen && (
 //                             <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-//                                 <div className="p-3 border-b border-gray-200 bg-gray-50/50">
+//                                 <div className="p-3 border-b border-gray-200 bg-white/50">
 //                                     <div className="relative">
 //                                         <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs" />
 //                                         <input
@@ -295,7 +295,7 @@
 //                                 </div>
 //                                 <div className="max-h-64 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-gray-200">
 //                                     <div
-//                                         className={`px-4 py-2.5 text-xs font-bold cursor-pointer hover:bg-gray-50 transition-colors ${!roleFilter ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-500'}`}
+//                                         className={`px-4 py-2.5 text-xs font-bold cursor-pointer hover:bg-white transition-colors ${!roleFilter ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-500'}`}
 //                                         onClick={() => { setRoleFilter(""); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
 //                                     >
 //                                         All Roles
@@ -305,7 +305,7 @@
 //                                         .map((r) => (
 //                                             <div
 //                                                 key={r._id}
-//                                                 className={`px-4 py-2.5 text-xs font-bold cursor-pointer hover:bg-gray-50 border-l-2 transition-all ${roleFilter === r.name ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-500 border-transparent'}`}
+//                                                 className={`px-4 py-2.5 text-xs font-bold cursor-pointer hover:bg-white border-l-2 transition-all ${roleFilter === r.name ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-500 border-transparent'}`}
 //                                                 onClick={() => { setRoleFilter(r.name); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
 //                                             >
 //                                                 {r.name}
@@ -382,13 +382,13 @@
 //                         )}
 //                         <button
 //                             onClick={() => window.location.href = "/add-bulk-quiz"}
-//                             className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-gray-50 transition-all shadow-sm"
+//                             className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white transition-all shadow-sm"
 //                         >
 //                             Bulk Upload
 //                         </button>
 //                         <button
 //                             onClick={openCreateModal}
-//                             className="px-5 py-2 bg-indigo-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-indigo-700 transition-all shadow-md flex items-center gap-2"
+//                             className="px-5 py-2 bg-indigo-600 text-gray-900 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-indigo-700 transition-all shadow-md flex items-center gap-2"
 //                         >
 //                             <FaPlus className="text-[10px]" /> New Assessment
 //                         </button>
@@ -406,7 +406,7 @@
 //                 ) : filteredQuizzes.length > 0 ? (
 //                     <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //              <table className="min-w-full">
-//               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//               <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                             <tr>
 //                                 <th className="py-2 text-center">Title</th>
 //                                 <th className="py-2 text-center">Role / Category</th>
@@ -417,7 +417,7 @@
 //                         </thead>
 //                         <tbody>
 //                             {filteredQuizzes.map((quiz) => (
-//                                 <tr key={quiz._id} className="border-b hover:bg-gray-50 transition-colors">
+//                                 <tr key={quiz._id} className="border-b hover:bg-white transition-colors">
 //                                     <td className="px-2 py-2 font-medium text-center">
 //                                         <div className="text-gray-900 whitespace-nowrap">{quiz.title || quiz.name}</div>
 //                                         <div className="text-[10px] text-gray-500 truncate max-w-xs mx-auto">{quiz.description || "No description"}</div>
@@ -472,7 +472,7 @@
 //                     </div>
 //                 ) : (
 //                     <div className="p-20 text-center">
-//                         <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+//                         <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
 //                             <FaTasks className="text-2xl text-gray-900" />
 //                         </div>
 //                         <h2 className="text-lg font-bold text-gray-700">No assessments found</h2>
@@ -483,7 +483,7 @@
 
 //             {/* Add/Edit Modal */}
 //             {modalOpen && (
-//                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+//                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-100/40 backdrop-blur-[2px] animate-in fade-in duration-200">
 //                     <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-200 flex flex-col max-h-[90vh]">
 //                         {/* Modal Header */}
 //                         <div className="px-8 pt-8 pb-4 flex items-center justify-between">
@@ -506,7 +506,7 @@
 //                         {/* Modal Body */}
 //                         <div className="flex-grow overflow-y-auto p-8 pt-4 no-scrollbar">
 //                             {message.text && (
-//                                 <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === "success" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"
+//                                 <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === "success" ? "bg-emerald-50 text-blue-700 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"
 //                                     }`}>
 //                                     {message.type === "success" ? <FiCheck className="text-lg shrink-0" /> : <FiInfo className="text-lg shrink-0" />}
 //                                     <span className="text-sm font-bold">{message.text}</span>
@@ -616,7 +616,7 @@
 //                                         <button
 //                                             type="button"
 //                                             onClick={addQuestion}
-//                                             className="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-blue-600 hover:text-white transition-all flex items-center gap-2"
+//                                             className="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-blue-600 hover:text-gray-900 transition-all flex items-center gap-2"
 //                                         >
 //                                             <FaPlusCircle /> Add Question
 //                                         </button>
@@ -624,8 +624,8 @@
 
 //                                     <div className="space-y-6">
 //                                         {(formData.questions || []).map((q, qIdx) => (
-//                                             <div key={qIdx} className="p-6 rounded-2xl bg-gray-50 border border-gray-200 relative group animate-in slide-in-from-bottom-2 duration-200">
-//                                                 <div className="absolute -top-3 -left-3 w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold shadow-md text-xs">
+//                                             <div key={qIdx} className="p-6 rounded-2xl bg-white border border-gray-200 relative group animate-in slide-in-from-bottom-2 duration-200">
+//                                                 <div className="absolute -top-3 -left-3 w-8 h-8 bg-blue-600 text-gray-900 rounded-lg flex items-center justify-center font-bold shadow-md text-xs">
 //                                                     {qIdx + 1}
 //                                                 </div>
 
@@ -671,16 +671,16 @@
 //                                                                         <div
 //                                                                             className={`w-5 h-5 rounded-full border-2 border-purple-600 flex items-center justify-center transition-all
 //     ${q.correctAnswer === opt && opt !== ""
-//                                                                                     ? "bg-emerald-500 shadow-sm"
+//                                                                                     ? "bg-blue-600 shadow-sm"
 //                                                                                     : "bg-white"
 //                                                                                 }`}
 //                                                                         >
 //                                                                             {q.correctAnswer === opt && opt !== "" && (
-//                                                                                 <FiCheck className="text-white text-xs font-bold" />
+//                                                                                 <FiCheck className="text-gray-900 text-xs font-bold" />
 //                                                                             )}
 //                                                                         </div>
 
-//                                                                         <span className={`text-[9px] font-bold uppercase tracking-tight ${q.correctAnswer === opt && opt !== "" ? "text-emerald-600" : "text-gray-700"}`}>Correct</span>
+//                                                                         <span className={`text-[9px] font-bold uppercase tracking-tight ${q.correctAnswer === opt && opt !== "" ? "text-blue-700" : "text-gray-700"}`}>Correct</span>
 //                                                                     </label>
 //                                                                 </div>
 //                                                                 <input
@@ -722,7 +722,7 @@
 //                                 <button
 //                                     type="button"
 //                                     onClick={addQuestion}
-//                                     className="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-blue-600 hover:text-white transition-all flex items-center gap-2"
+//                                     className="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-blue-600 hover:text-gray-900 transition-all flex items-center gap-2"
 //                                 >
 //                                     <FaPlusCircle /> Add Question
 //                                 </button>
@@ -732,14 +732,14 @@
 //                                     <button
 //                                         type="button"
 //                                         onClick={() => setModalOpen(false)}
-//                                         className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-all border border-transparent"
+//                                         className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-500 hover:text-gray-700 hover:bg-white transition-all border border-transparent"
 //                                     >
 //                                         Discard
 //                                     </button>
 //                                     <button
 //                                         type="submit"
 //                                         disabled={submitting}
-//                                         className={`flex-[1.5] py-3.5 px-8 rounded-xl font-bold text-white shadow-sm transition-all transform active:scale-95 ${submitting ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg shadow-indigo-100"
+//                                         className={`flex-[1.5] py-3.5 px-8 rounded-xl font-bold text-gray-900 shadow-sm transition-all transform active:scale-95 ${submitting ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg shadow-indigo-100"
 //                                             }`}
 //                                     >
 //                                         {submitting ? (
@@ -1089,7 +1089,7 @@ const AssessmentManager = () => {
                             onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
                             className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                                 roleFilter 
-                                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                             }`}
                         >
@@ -1099,7 +1099,7 @@ const AssessmentManager = () => {
                         {/* Role Filter Dropdown */}
                         {isRoleDropdownOpen && (
                             <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                <div className="p-2 border-b border-gray-200 bg-gray-50">
+                                <div className="p-2 border-b border-gray-200 bg-white">
                                     <div className="relative">
                                         <FiSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs" />
                                         <input
@@ -1196,7 +1196,7 @@ const AssessmentManager = () => {
                         {/* New Assessment Button */}
                         <button
                             onClick={openCreateModal}
-                            className="h-8 px-3 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition flex items-center gap-1"
+                            className="h-8 px-3 text-xs font-medium text-gray-900 bg-blue-600 rounded-md hover:bg-blue-700 transition flex items-center gap-1"
                         >
                             <FaPlus className="text-xs" />
                             <span>New Assessment</span>
@@ -1220,7 +1220,7 @@ const AssessmentManager = () => {
                 {filteredQuizzes.length > 0 ? (
                     <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
                         <table className="min-w-full">
-                            <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+                            <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                                 <tr>
                                     <th className="py-2 text-center">Title</th>
                                     <th className="py-2 text-center">Role / Category</th>
@@ -1231,7 +1231,7 @@ const AssessmentManager = () => {
                             </thead>
                             <tbody>
                                 {currentItems.map((quiz) => (
-                                    <tr key={quiz._id} className="border-b hover:bg-gray-50 transition-colors">
+                                    <tr key={quiz._id} className="border-b hover:bg-white transition-colors">
                                         <td className="px-2 py-2 font-medium text-center">
                                             <div className="text-gray-900 whitespace-nowrap">{quiz.title || quiz.name}</div>
                                             <div className="text-[10px] text-gray-500 truncate max-w-xs mx-auto">{quiz.description || "No description"}</div>
@@ -1286,7 +1286,7 @@ const AssessmentManager = () => {
                         
                         {/* Pagination */}
                         {filteredQuizzes.length > 0 && (
-                            <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
+                            <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-white sm:flex-row">
                                 <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
                                     <span>Showing</span>
                                     <span className="font-medium">
@@ -1324,7 +1324,7 @@ const AssessmentManager = () => {
                                         className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                                             pagination.currentPage === 1
                                                 ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                                : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                                         }`}
                                     >
                                         Previous
@@ -1340,8 +1340,8 @@ const AssessmentManager = () => {
                                                     page === "..."
                                                         ? "text-gray-500 cursor-default"
                                                         : pagination.currentPage === page
-                                                        ? "bg-blue-600 text-white"
-                                                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                                                        ? "bg-blue-600 text-gray-900"
+                                                        : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
                                                 }`}
                                             >
                                                 {page}
@@ -1355,7 +1355,7 @@ const AssessmentManager = () => {
                                         className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                                             pagination.currentPage === pagination.totalPages
                                                 ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                                : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                                         }`}
                                     >
                                         Next
@@ -1366,7 +1366,7 @@ const AssessmentManager = () => {
                     </div>
                 ) : (
                     <div className="p-20 text-center">
-                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
                             <FaTasks className="text-2xl text-gray-900" />
                         </div>
                         <h2 className="text-lg font-bold text-gray-700">No assessments found</h2>
@@ -1377,7 +1377,7 @@ const AssessmentManager = () => {
 
             {/* Add/Edit Modal */}
             {modalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-100/40 backdrop-blur-[2px] animate-in fade-in duration-200">
                     <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-200 flex flex-col max-h-[90vh]">
                         {/* Modal Header */}
                         <div className="px-8 pt-8 pb-4 flex items-center justify-between">
@@ -1400,7 +1400,7 @@ const AssessmentManager = () => {
                         {/* Modal Body */}
                         <div className="flex-grow overflow-y-auto p-8 pt-4 no-scrollbar">
                             {message.text && (
-                                <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === "success" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"
+                                <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === "success" ? "bg-emerald-50 text-blue-700 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"
                                     }`}>
                                     {message.type === "success" ? <FiCheck className="text-lg shrink-0" /> : <FiInfo className="text-lg shrink-0" />}
                                     <span className="text-sm font-bold">{message.text}</span>
@@ -1509,7 +1509,7 @@ const AssessmentManager = () => {
                                         <button
                                             type="button"
                                             onClick={addQuestion}
-                                            className="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-blue-600 hover:text-white transition-all flex items-center gap-2"
+                                            className="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-blue-600 hover:text-gray-900 transition-all flex items-center gap-2"
                                         >
                                             <FaPlusCircle /> Add Question
                                         </button>
@@ -1517,8 +1517,8 @@ const AssessmentManager = () => {
 
                                     <div className="space-y-6">
                                         {(formData.questions || []).map((q, qIdx) => (
-                                            <div key={qIdx} className="p-6 rounded-2xl bg-gray-50 border border-gray-200 relative group animate-in slide-in-from-bottom-2 duration-200">
-                                                <div className="absolute -top-3 -left-3 w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold shadow-md text-xs">
+                                            <div key={qIdx} className="p-6 rounded-2xl bg-white border border-gray-200 relative group animate-in slide-in-from-bottom-2 duration-200">
+                                                <div className="absolute -top-3 -left-3 w-8 h-8 bg-blue-600 text-gray-900 rounded-lg flex items-center justify-center font-bold shadow-md text-xs">
                                                     {qIdx + 1}
                                                 </div>
 
@@ -1563,15 +1563,15 @@ const AssessmentManager = () => {
                                                                         <div
                                                                             className={`w-5 h-5 rounded-full border-2 border-purple-600 flex items-center justify-center transition-all
                                                                                 ${q.correctAnswer === opt && opt !== ""
-                                                                                    ? "bg-emerald-500 shadow-sm"
+                                                                                    ? "bg-blue-600 shadow-sm"
                                                                                     : "bg-white"
                                                                                 }`}
                                                                         >
                                                                             {q.correctAnswer === opt && opt !== "" && (
-                                                                                <FiCheck className="text-white text-xs font-bold" />
+                                                                                <FiCheck className="text-gray-900 text-xs font-bold" />
                                                                             )}
                                                                         </div>
-                                                                        <span className={`text-[9px] font-bold uppercase tracking-tight ${q.correctAnswer === opt && opt !== "" ? "text-emerald-600" : "text-gray-700"}`}>Correct</span>
+                                                                        <span className={`text-[9px] font-bold uppercase tracking-tight ${q.correctAnswer === opt && opt !== "" ? "text-blue-700" : "text-gray-700"}`}>Correct</span>
                                                                     </label>
                                                                 </div>
                                                                 <input
@@ -1613,7 +1613,7 @@ const AssessmentManager = () => {
                                 <button
                                     type="button"
                                     onClick={addQuestion}
-                                    className="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-blue-600 hover:text-white transition-all flex items-center gap-2"
+                                    className="px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-blue-600 hover:text-gray-900 transition-all flex items-center gap-2"
                                 >
                                     <FaPlusCircle /> Add Question
                                 </button>
@@ -1623,14 +1623,14 @@ const AssessmentManager = () => {
                                     <button
                                         type="button"
                                         onClick={() => setModalOpen(false)}
-                                        className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-all border border-transparent"
+                                        className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-500 hover:text-gray-700 hover:bg-white transition-all border border-transparent"
                                     >
                                         Discard
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={submitting}
-                                        className={`flex-[1.5] py-3.5 px-8 rounded-xl font-bold text-white shadow-sm transition-all transform active:scale-95 ${submitting ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg shadow-indigo-100"
+                                        className={`flex-[1.5] py-3.5 px-8 rounded-xl font-bold text-gray-900 shadow-sm transition-all transform active:scale-95 ${submitting ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg shadow-indigo-100"
                                             }`}
                                     >
                                         {submitting ? (

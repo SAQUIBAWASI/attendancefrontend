@@ -33,7 +33,7 @@ const ScoreMini = ({ label, score }) => (
   <div>
     <p className="text-xs text-gray-500">{label}</p>
     <p className={`text-sm font-semibold ${score >= 80
-      ? "text-green-600"
+      ? "text-blue-700"
       : score >= 50
         ? "text-yellow-600"
         : "text-red-600"
@@ -276,7 +276,7 @@ const EmployeeResignation = () => {
       return (
         <div className="px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg shadow-xl">
           <p className="font-bold text-gray-700 mb-0.5 leading-none">{monthName} {d.name}, {y}</p>
-          <p className="leading-none text-green-600">Approved: {d.count}</p>
+          <p className="leading-none text-blue-700">Approved: {d.count}</p>
         </div>
       );
     }
@@ -382,7 +382,7 @@ const EmployeeResignation = () => {
               />
               <button
                 onClick={() => downloadChartCSV("approved")}
-                className="font-bold text-green-600 transition-colors text-xs hover:text-green-800 whitespace-nowrap flex items-center gap-1"
+                className="font-bold text-blue-700 transition-colors text-xs hover:text-green-800 whitespace-nowrap flex items-center gap-1"
                 title="Download CSV"
               >
                 <FaDownload className="text-[10px]" /> CSV
@@ -508,7 +508,7 @@ const EmployeeResignation = () => {
           <div className="relative w-full sm:w-auto">
             <input
               type="date"
-              className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm sm:w-40"
+              className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm sm:w-40"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
             />
@@ -529,7 +529,7 @@ const EmployeeResignation = () => {
               <FaBriefcase className="text-sm" />
             </div>
             <div
-              className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
+              className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
             >
               {roleFilter || "Select Role"}
@@ -548,7 +548,7 @@ const EmployeeResignation = () => {
 
             {isRoleDropdownOpen && (
               <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="p-2 border-b border-gray-200 bg-gray-50">
+                <div className="p-2 border-b border-gray-200 bg-white">
                   <div className="relative">
                     <FaUserTie className="absolute left-2.5 top-2.5 text-gray-500 text-xs" />
                     <input
@@ -625,7 +625,7 @@ const EmployeeResignation = () => {
           <div className="p-8 text-center text-gray-500">Loading Resignations...</div>
         ) : filteredData.length > 0 ? (
           <table className="min-w-full">
-            <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
+            <thead className="text-left text-sm text-gray-900 bg-gradient-to-r from-purple-500 to-blue-600">
               <tr>
                 <th className="py-3 px-4 text-center">Employee Name</th>
                 <th className="py-3 px-4 text-center">Designation</th>
@@ -638,7 +638,7 @@ const EmployeeResignation = () => {
             </thead>
             <tbody>
               {filteredData.map((app) => (
-                <tr key={app._id} className="border-b hover:bg-gray-50 transition-colors">
+                <tr key={app._id} className="border-b hover:bg-white transition-colors">
                   <td className="p-4 text-sm font-medium text-center">
                     <div className="font-bold text-gray-700">{app.firstName} {app.lastName}</div>
                     <div className="text-[10px] text-gray-500">{app.email}</div>
@@ -664,7 +664,7 @@ const EmployeeResignation = () => {
                     </div>
                   </td>
                   <td className="p-4 text-sm font-medium text-center">
-                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${app.resignationStatus === 'Approved' ? 'bg-green-100 text-green-700' :
+                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${app.resignationStatus === 'Approved' ? 'bg-blue-100 text-green-700' :
                       app.resignationStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
                         'bg-yellow-100 text-yellow-700'
                       }`}>
@@ -675,7 +675,7 @@ const EmployeeResignation = () => {
                     <div className="flex justify-center gap-3">
                       <button
                         onClick={() => { setSelectedResignation(app); setIsModalOpen(true); }}
-                        className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors group"
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
                         title="View Details"
                       >
                         <FaEye size={16} className="group-hover:scale-110 transition-transform" />
@@ -685,7 +685,7 @@ const EmployeeResignation = () => {
                         <>
                           <button
                             onClick={(e) => { e.stopPropagation(); handleStatusUpdate(app._id, "Approved"); }}
-                            className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors group"
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
                             title="Accept Resignation"
                           >
                             <FaCheckCircle size={16} className="group-hover:scale-110 transition-transform" />
@@ -723,7 +723,7 @@ const EmployeeResignation = () => {
 
       {/* ==================== DETAIL MODAL ==================== */}
       {isModalOpen && selectedResignation && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-100/40 backdrop-blur-[2px] animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl relative overflow-hidden animate-in slide-in-from-bottom-4 duration-300 border border-gray-200">
             {/* Modal Header */}
             <div className="px-8 pt-8 pb-4 flex items-center justify-between">
@@ -736,7 +736,7 @@ const EmployeeResignation = () => {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <span className={`px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-widest ${selectedResignation.resignationStatus === 'Approved' ? 'bg-green-100 text-green-700' :
+                <span className={`px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-widest ${selectedResignation.resignationStatus === 'Approved' ? 'bg-blue-100 text-green-700' :
                   selectedResignation.resignationStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
                     'bg-yellow-100 text-yellow-700'
                   }`}>
@@ -783,7 +783,7 @@ const EmployeeResignation = () => {
                   Last Day: {selectedResignation.lastWorkingDay ? new Date(selectedResignation.lastWorkingDay).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : "Not Specified"}
                 </div>
                 {selectedResignation.resignationStatus !== 'Pending' && (
-                  <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${selectedResignation.resignationStatus === 'Approved' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'
+                  <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${selectedResignation.resignationStatus === 'Approved' ? 'bg-green-50 text-blue-700 border-green-100' : 'bg-red-50 text-red-600 border-red-100'
                     }`}>
                     {selectedResignation.resignationStatus === 'Approved' ? <FaCheckCircle /> : <FaTimesCircle />}
                     Decision: {selectedResignation.resignationStatus}
@@ -796,7 +796,7 @@ const EmployeeResignation = () => {
                   <button
                     onClick={() => handleStatusUpdate(selectedResignation._id, "Approved")}
                     disabled={!!updatingId}
-                    className="flex-1 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs font-black uppercase tracking-[0.1em] rounded-2xl transition-all shadow-xl shadow-green-100 flex items-center justify-center gap-2 group transform hover:-translate-y-1"
+                    className="flex-1 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-gray-900 text-xs font-black uppercase tracking-[0.1em] rounded-2xl transition-all shadow-xl shadow-green-100 flex items-center justify-center gap-2 group transform hover:-translate-y-1"
                   >
                     <FaCheckCircle className="text-base group-hover:scale-110 transition-transform" />
                     Approve Request
@@ -804,7 +804,7 @@ const EmployeeResignation = () => {
                   <button
                     onClick={() => handleStatusUpdate(selectedResignation._id, "Rejected")}
                     disabled={!!updatingId}
-                    className="flex-1 py-4 bg-white border border-gray-200 hover:bg-slate-900 hover:text-white hover:border-slate-900 text-slate-900 text-xs font-black uppercase tracking-[0.1em] rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 group transform hover:-translate-y-1"
+                    className="flex-1 py-4 bg-white border border-gray-200 hover:bg-slate-900 hover:text-gray-900 hover:border-slate-900 text-slate-900 text-xs font-black uppercase tracking-[0.1em] rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 group transform hover:-translate-y-1"
                   >
                     <FaTimesCircle className="text-base group-hover:scale-110 transition-transform text-red-500" />
                     Reject Request
@@ -813,7 +813,7 @@ const EmployeeResignation = () => {
               )}
             </div>
 
-            <div className="px-8 py-6 border-t border-gray-50 flex justify-between items-center bg-gray-50/50">
+            <div className="px-8 py-6 border-t border-gray-50 flex justify-between items-center bg-white/50">
               <button
                 onClick={() => downloadResignationPDF(selectedResignation)}
                 className="text-[10px] font-black text-gray-500 hover:text-red-500 transition-colors uppercase tracking-[0.2em] flex items-center gap-2 group"
@@ -822,7 +822,7 @@ const EmployeeResignation = () => {
               </button>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-8 py-3 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-white transition-all shadow-lg shadow-gray-200"
+                className="px-8 py-3 bg-gray-100 text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-white transition-all shadow-lg shadow-gray-200"
               >
                 Dismiss
               </button>

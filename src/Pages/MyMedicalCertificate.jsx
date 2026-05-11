@@ -44,7 +44,7 @@ const MyMedicalCertificate = () => {
           ) : certificates.length > 0 ? (
             <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
               <table className="min-w-full">
-                <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+                <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                   <tr>
                     <th className="px-4 py-2 border">Reg. Date</th>
                     <th className="px-4 py-2 border">Exp. Date</th>
@@ -56,7 +56,7 @@ const MyMedicalCertificate = () => {
                   {certificates.map((cert) => {
                     const isExpired = new Date(cert.expiryDate) < new Date();
                     return (
-                      <tr key={cert._id} className="border-b hover:bg-gray-50">
+                      <tr key={cert._id} className="border-b hover:bg-white">
                         <td className="p-2 border">{new Date(cert.registrationDate).toLocaleDateString()}</td>
                         <td className="p-2 border">{new Date(cert.expiryDate).toLocaleDateString()}</td>
                         <td className="p-2 border">
@@ -75,7 +75,7 @@ const MyMedicalCertificate = () => {
                             href={`${API_DOMAIN}${cert.documentUrl}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center gap-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-4 py-1.5 rounded-lg font-bold text-xs transition-all shadow-sm border border-indigo-100"
+                            className="inline-flex items-center justify-center gap-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-gray-900 px-4 py-1.5 rounded-lg font-bold text-xs transition-all shadow-sm border border-indigo-100"
                           >
                             <FaEye /> View
                           </a>
@@ -88,7 +88,7 @@ const MyMedicalCertificate = () => {
             </div>
           ) : (
             <div className="p-20 text-center">
-              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-700">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-gray-700">
                 <FaFileMedical size={32} />
               </div>
               <p className="text-gray-500 italic">No medical certificates found.</p>

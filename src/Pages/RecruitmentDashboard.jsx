@@ -163,7 +163,7 @@ const RecruitmentDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen p-2 lg:p-6 bg-gray-50/50">
+    <div className="min-h-screen p-2 lg:p-6 bg-white/50">
       {/* Header Section */}
       {/* <div className="mb-6">
         <h1 className="text-2xl font-black text-gray-700">Recruitment Overview</h1>
@@ -295,7 +295,7 @@ const RecruitmentDashboard = () => {
               </select>
               <button
                 onClick={() => navigate("/job-applicants")}
-                className="font-bold text-emerald-600 transition-colors text-xs hover:text-emerald-800 whitespace-nowrap"
+                className="font-bold text-blue-700 transition-colors text-xs hover:text-emerald-800 whitespace-nowrap"
               >
                 View Details →
               </button>
@@ -388,7 +388,7 @@ const RecruitmentDashboard = () => {
           <div className="mt-4 pt-3 border-t border-gray-200">
             <div className="flex justify-between text-xs">
               <span className="text-gray-500">Interview to Selection Rate</span>
-              <span className="font-bold text-emerald-600">{interviewToSelectedRate}%</span>
+              <span className="font-bold text-blue-700">{interviewToSelectedRate}%</span>
             </div>
             <div className="flex justify-between text-xs mt-1">
               <span className="text-gray-500">Overall Rejection Rate</span>
@@ -569,7 +569,7 @@ const RecruitmentDashboard = () => {
 const StatCard = ({ icon: Icon, label, value, color, onClick, isPercentage }) => {
   const themes = {
     indigo: "border-indigo-500",
-    emerald: "border-emerald-500",
+    emerald: "border-blue-500",
     amber: "border-amber-500",
     rose: "border-rose-500",
     cyan: "border-cyan-500",
@@ -620,7 +620,7 @@ const QualityCard = ({ label, value, total, color }) => {
       <div className="w-full h-1 bg-white rounded-full mt-2 overflow-hidden">
         <div
           className={`h-full rounded-full ${color === 'amber' ? 'bg-amber-500' :
-            color === 'emerald' ? 'bg-emerald-500' :
+            color === 'emerald' ? 'bg-blue-600' :
               color === 'cyan' ? 'bg-cyan-500' :
                 color === 'purple' ? 'bg-purple-500' :
                   'bg-indigo-500'

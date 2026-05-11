@@ -51,7 +51,7 @@ export default function AdminEmployeeLocations() {
       </h2>
 
       {message && (
-        <div className="bg-green-100 text-green-800 p-2 mb-4 text-center rounded">
+        <div className="bg-emerald-50 text-emerald-700 p-2 mb-4 text-center rounded">
           {message}
         </div>
       )}
@@ -89,7 +89,7 @@ export default function AdminEmployeeLocations() {
                 <td className="py-2 px-4 border">
                   <button
                     onClick={() => setSelected(emp.employeeId)}
-                    className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                    className="bg-blue-600 text-gray-900 px-3 py-1 rounded hover:bg-blue-700"
                   >
                     Assign / Edit
                   </button>
@@ -132,13 +132,13 @@ export default function AdminEmployeeLocations() {
             <div className="flex gap-2">
               <button
                 onClick={() => handleAssign(selected)}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                className="bg-blue-600 text-gray-900 px-4 py-2 rounded hover:bg-blue-800"
               >
                 Save
               </button>
               <button
                 onClick={() => setSelected(null)}
-                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                className="bg-gray-400 text-gray-900 px-4 py-2 rounded hover:bg-white0"
               >
                 Cancel
               </button>

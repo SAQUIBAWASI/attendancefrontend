@@ -344,7 +344,7 @@ const Regularization = () => {
               <button
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                   }`}
               >
@@ -385,7 +385,7 @@ const Regularization = () => {
               <button
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                   }`}
               >
@@ -437,7 +437,7 @@ const Regularization = () => {
         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
-              <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+              <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
                   <th className="py-2 text-center ">Employee ID</th>
                   <th className="py-2 text-center ">Name</th>
@@ -454,7 +454,7 @@ const Regularization = () => {
                     return (
                       <tr
                         key={group.employeeId}
-                        className="transition border-b hover:bg-gray-50"
+                        className="transition border-b hover:bg-white"
                       >
                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           {group.employeeId || "N/A"}
@@ -485,7 +485,7 @@ const Regularization = () => {
                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                            <button 
                              onClick={() => handleViewDetails(group)}
-                             className="px-3 py-1 text-[10px] bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                             className="px-3 py-1 text-[10px] bg-blue-600 text-gray-900 rounded hover:bg-blue-700 transition"
                            >
                              View Details
                            </button>
@@ -507,12 +507,12 @@ const Regularization = () => {
 
         {/* ✅ Modal for Date-wise Details */}
         {showDetailsModal && selectedEmployeeData && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white  backdrop-blur-sm">
             <div className="w-full max-w-4xl max-h-[90vh] bg-white rounded-xl shadow-2xl overflow-hidden animate-fade-in flex flex-col">
               {/* Modal Header */}
-              <div className="flex items-center justify-between px-6 py-4 text-white bg-gradient-to-r from-blue-600 to-indigo-700">
+              <div className="flex items-center justify-between px-6 py-4 text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-700">
                 <div className="flex items-center gap-3">
-                   <div className="flex items-center justify-center w-10 h-10 bg-black bg-opacity-20 rounded-full">
+                   <div className="flex items-center justify-center w-10 h-10 bg-white  rounded-full">
                        <FaUserTag className="text-xl" />
                    </div>
                    <div>
@@ -522,14 +522,14 @@ const Regularization = () => {
                 </div>
                 <button 
                   onClick={() => setShowDetailsModal(false)}
-                  className="p-1 transition-colors rounded-full hover:bg-white hover:bg-opacity-10"
+                  className="p-1 transition-colors rounded-full hover:bg-white hover:"
                 >
                   <FiXCircle className="text-2xl" />
                 </button>
               </div>
 
               {/* Modal Body */}
-              <div className="flex-1 p-6 overflow-y-auto bg-gray-50">
+              <div className="flex-1 p-6 overflow-y-auto bg-white">
                 <div className="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
                   <table className="min-w-full">
                     <thead className="bg-gray-100 border-b border-gray-200">
@@ -548,8 +548,8 @@ const Regularization = () => {
                             {new Date(rec.checkInTime).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' })}
                           </td>
                           <td className="px-4 py-4 text-center">
-                            <div className="inline-flex flex-col gap-1 px-3 py-1 bg-gray-50 rounded-lg border border-gray-200 shadow-inner">
-                              <span className="text-[11px] font-bold text-green-600 flex items-center justify-center gap-1">
+                            <div className="inline-flex flex-col gap-1 px-3 py-1 bg-white rounded-lg border border-gray-200 shadow-inner">
+                              <span className="text-[11px] font-bold text-blue-700 flex items-center justify-center gap-1">
                                 <FiClock className="inline" /> {formatTime(rec.checkInTime)}
                               </span>
                               <span className="text-[11px] font-bold text-indigo-600 flex items-center justify-center gap-1">
@@ -566,7 +566,7 @@ const Regularization = () => {
                             {rec.comment || <span className="text-gray-700">No comment</span>}
                           </td>
                           <td className="px-4 py-4 text-center">
-                            <span className="px-3 py-1 text-[10px] font-bold text-white uppercase tracking-wider rounded-full bg-indigo-500 shadow-sm">
+                            <span className="px-3 py-1 text-[10px] font-bold text-gray-900 uppercase tracking-wider rounded-full bg-indigo-500 shadow-sm">
                               {rec.reason || "Edited"}
                             </span>
                           </td>
@@ -578,10 +578,10 @@ const Regularization = () => {
               </div>
 
               {/* Modal Footer */}
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+              <div className="px-6 py-4 bg-white border-t border-gray-200 flex justify-end">
                 <button 
                   onClick={() => setShowDetailsModal(false)}
-                  className="px-6 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-all focus:ring-2 focus:ring-blue-500"
+                  className="px-6 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-white transition-all focus:ring-2 focus:ring-blue-500"
                 >
                   Close
                 </button>
@@ -630,9 +630,9 @@ const Regularization = () => {
                   onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                   disabled={page === "..."}
                   className={`px-4 py-1 text-sm border rounded-lg ${page === "..."
-                      ? "text-gray-500 bg-gray-50 cursor-default"
+                      ? "text-gray-500 bg-white cursor-default"
                       : currentPage === page
-                        ? "text-white bg-blue-600 border-blue-600"
+                        ? "text-gray-900 bg-blue-600 border-blue-600"
                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                     }`}
                 >

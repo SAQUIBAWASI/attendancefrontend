@@ -109,19 +109,19 @@ Please get back to me within 24 hours as mentioned on your website.`
         />
 
         {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+        <div className="absolute inset-0 bg-white "></div>
 
         {/* Text Content */}
         <div className="relative z-10 flex flex-col items-center justify-center w-full h-full px-6 text-center lg:px-20">
-          <h1 className="mb-4 text-3xl font-bold text-white md:text-5xl font-calibri">
+          <h1 className="mb-4 text-3xl font-bold text-gray-900 md:text-5xl font-calibri">
             Talk to Timely Health
           </h1>
-          <p className="max-w-2xl mb-6 font-sans text-lg text-white md:text-xl">
+          <p className="max-w-2xl mb-6 font-sans text-lg text-gray-900 md:text-xl">
             Let's bring smarter healthcare to your home, workplace, or community.
           </p>
           <a
             href="#contact-form"
-            className="px-6 py-3 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
+            className="px-6 py-3 text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
           >
             Contact Us
           </a>
@@ -136,7 +136,7 @@ Please get back to me within 24 hours as mentioned on your website.`
               <div key={index} className="text-center">
                 <button
                   onClick={method.action}
-                  className="w-full p-6 transition-colors bg-gray-50 hover:bg-gray-100 rounded-xl group"
+                  className="w-full p-6 transition-colors bg-white hover:bg-gray-100 rounded-xl group"
                 >
                   <div className="flex justify-center mb-4">
                     {method.icon}
@@ -145,7 +145,7 @@ Please get back to me within 24 hours as mentioned on your website.`
                   <p className="mb-2 font-medium text-blue-600 group-hover:underline">
                     {method.info}
                   </p>
-                  <p className="font-sans text-sm text-gray-600">{method.description}</p>
+                  <p className="font-sans text-sm text-gray-500">{method.description}</p>
                 </button>
               </div>
             ))}
@@ -154,7 +154,7 @@ Please get back to me within 24 hours as mentioned on your website.`
       </section>
 
       {/* Contact Info & Form */}
-      <section id="contact-form" className="flex items-center justify-center py-16 bg-gray-50">
+      <section id="contact-form" className="flex items-center justify-center py-16 bg-white">
         <div className="w-full max-w-xl px-4">
           <div className="p-8 bg-white shadow-lg rounded-xl">
             <h2 className="mb-6 text-center font-calibri text-[#007a52]">Send Us a Message</h2>
@@ -233,14 +233,14 @@ Please get back to me within 24 hours as mentioned on your website.`
 
               <button
                 type="submit"
-                className="flex items-center justify-center w-full px-6 py-3 space-x-2 font-semibold text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
+                className="flex items-center justify-center w-full px-6 py-3 space-x-2 font-semibold text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
               >
                 <Send size={20} />
                 <span>Submit & We'll Get Back Within 24 Hours</span>
               </button>
             </form>
 
-            <p className="mt-4 text-sm text-center text-gray-600">
+            <p className="mt-4 text-sm text-center text-gray-500">
               * By submitting this form, your message will be sent via WhatsApp for faster response.
             </p>
           </div>

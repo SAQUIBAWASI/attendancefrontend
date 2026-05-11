@@ -122,14 +122,14 @@ const DiagnosticList = () => {
           data={filteredCenters}
           headers={headers}
           filename="diagnostic_centers.csv"
-          className="px-4 py-2 bg-green-500 text-white rounded text-sm flex items-center gap-2"
+          className="px-4 py-2 bg-blue-600 text-gray-900 rounded text-sm flex items-center gap-2"
         >
           <FaFileCsv /> CSV
         </CSVLink>
 
         <label
           htmlFor="file-upload"
-          className="px-4 py-2 bg-purple-600 text-white rounded text-sm flex items-center gap-2 cursor-pointer"
+          className="px-4 py-2 bg-purple-600 text-gray-900 rounded text-sm flex items-center gap-2 cursor-pointer"
         >
           <FaUpload /> Bulk Import
           <input
@@ -163,7 +163,7 @@ const DiagnosticList = () => {
                 <td className="p-2 border flex gap-2 justify-center">
                   <button
                     onClick={() => handleView(center._id)}
-                    className="text-blue-500 hover:text-blue-700"
+                    className="text-blue-600 hover:text-blue-700"
                   >
                     <FaEye /> {/* Eye icon for View */}
                   </button>

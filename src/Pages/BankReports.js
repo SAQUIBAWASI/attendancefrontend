@@ -253,7 +253,7 @@ const BankReports = () => {
             {/* CSV Export */}
             <button
               onClick={exportToCSV}
-              className="h-8 px-3 text-xs font-medium text-white transition bg-green-600 rounded-md hover:bg-green-700 flex items-center gap-1"
+              className="h-8 px-3 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-800 flex items-center gap-1"
             >
               <FaDownload className="text-[10px]" /> CSV
             </button>
@@ -274,7 +274,7 @@ const BankReports = () => {
         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
-              <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+              <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
                   <th className="px-2 py-2 text-center">#</th>
                   <th className="px-2 py-2 text-center">Name</th>
@@ -307,7 +307,7 @@ const BankReports = () => {
                       {hasActiveFilters && (
                         <button
                           onClick={resetFilters}
-                          className="mt-1 text-xs text-blue-500 underline"
+                          className="mt-1 text-xs text-blue-600 underline"
                         >
                           Clear filters
                         </button>
@@ -318,7 +318,7 @@ const BankReports = () => {
                   currentItems.map((row, idx) => (
                     <tr
                       key={row._id}
-                      className="transition-colors hover:bg-gray-50"
+                      className="transition-colors hover:bg-white"
                     >
                       {/* # */}
                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
@@ -371,7 +371,7 @@ const BankReports = () => {
 
           {/* Pagination */}
           {!loading && filteredData.length > 0 && (
-            <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-white">
               {/* Left: showing info + per page */}
               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
                 <span>Showing</span>
@@ -405,7 +405,7 @@ const BankReports = () => {
                     }))
                   }
                   disabled={pagination.currentPage === 1}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
@@ -430,8 +430,8 @@ const BankReports = () => {
                           }
                           className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
                             pagination.currentPage === page
-                              ? "bg-blue-600 text-white"
-                              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                              ? "bg-blue-600 text-gray-900"
+                              : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
                           }`}
                         >
                           {page}
@@ -459,7 +459,7 @@ const BankReports = () => {
                     }))
                   }
                   disabled={pagination.currentPage === pagination.totalPages}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>

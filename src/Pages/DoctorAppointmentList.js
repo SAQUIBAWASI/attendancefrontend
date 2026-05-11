@@ -115,7 +115,7 @@ const DoctorAppointmentList = () => {
         />
         <button
           onClick={exportToExcel}
-          className="px-4 py-2 bg-green-500 text-white rounded text-sm flex items-center gap-1"
+          className="px-4 py-2 bg-blue-600 text-gray-900 rounded text-sm flex items-center gap-1"
         >
           <FaFileExcel /> Excel
         </button>
@@ -138,7 +138,7 @@ const DoctorAppointmentList = () => {
           </thead>
           <tbody>
             {currentAppointments.map((appt) => (
-              <tr key={appt.appointmentId} className="hover:bg-gray-50 border-b">
+              <tr key={appt.appointmentId} className="hover:bg-white border-b">
                 <td className="p-2 border flex items-center gap-2">
                   <img
                     src={appt.doctor_image}
@@ -162,7 +162,7 @@ const DoctorAppointmentList = () => {
                       setEditAppointment(appt);
                       setNewStatus(appt.status);
                     }}
-                    className="text-blue-500 hover:text-blue-700"
+                    className="text-blue-600 hover:text-blue-700"
                   >
                     <FaEdit />
                   </button>
@@ -202,7 +202,7 @@ const DoctorAppointmentList = () => {
 
       {/* Status Update Modal */}
       {editAppointment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-white  flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded shadow-md w-96">
             <h3 className="text-lg font-semibold mb-4">Update Status</h3>
             <select
@@ -224,7 +224,7 @@ const DoctorAppointmentList = () => {
               </button>
               <button
                 onClick={handleStatusUpdate}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
+                className="px-4 py-2 bg-blue-600 text-gray-900 rounded"
               >
                 Update
               </button>

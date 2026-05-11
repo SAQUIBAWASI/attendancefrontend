@@ -264,7 +264,7 @@ const Occasions = () => {
           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
               {/* Sleek Gradient Header matching AllExpensives */}
-              <thead className="text-sm text-left text-white bg-gradient-to-r from-indigo-500 to-purple-600">
+              <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-indigo-500 to-purple-600">
                 <tr>
                   <th className="py-3 px-4 text-left">EMPLOYEE</th>
                   <th className="py-3 px-4 text-center">ROLE</th>
@@ -299,7 +299,7 @@ const Occasions = () => {
                   filteredRecords.map((occ) => (
                     <tr
                       key={occ.id}
-                      className={`transition-colors hover:bg-gray-50 group ${occ.isToday ? 'bg-orange-50/30' : ''}`}
+                      className={`transition-colors hover:bg-white group ${occ.isToday ? 'bg-orange-50/30' : ''}`}
                     >
                       <td className="px-4 py-3 text-left whitespace-nowrap">
                         <div className="flex items-center gap-3">
@@ -313,7 +313,7 @@ const Occasions = () => {
                             <div className="flex flex-col">
                                 <span className="font-bold text-gray-900 flex items-center gap-2">
                                     {occ.name}
-                                    {occ.isToday && <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-orange-500 text-white animate-pulse">TODAY</span>}
+                                    {occ.isToday && <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-orange-500 text-gray-900 animate-pulse">TODAY</span>}
                                 </span>
                                 <span className="text-[10px] text-gray-500 font-medium tracking-wide">
                                     ID: {occ.employeeId}

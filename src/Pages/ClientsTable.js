@@ -68,7 +68,7 @@ export default function ClientsTable() {
           />
         </div>
         <button
-          className="p-2 bg-purple-600 text-white rounded"
+          className="p-2 bg-purple-600 text-gray-900 rounded"
           onClick={() => setShowNewClientModal(true)}
         >
           + New Client
@@ -89,7 +89,7 @@ export default function ClientsTable() {
           </thead>
           <tbody>
             {displayedClients.map((client) => (
-              <tr key={client.id} className="cursor-pointer hover:bg-gray-50 text-center">
+              <tr key={client.id} className="cursor-pointer hover:bg-white text-center">
                 <td className="p-3 border">{client.id}</td>
                 <td className="p-3 border">{client.clientName}</td>
                 <td className="p-3 border">{client.companyName}</td>
@@ -97,7 +97,7 @@ export default function ClientsTable() {
                 <td className="p-3 border">{client.country}</td>
                 <td className="p-3 border">
                   <button
-                    className="text-blue-500 hover:underline mr-2"
+                    className="text-blue-600 hover:underline mr-2"
                   >
                     <FaEdit /> {/* Edit icon */}
                   </button>
@@ -115,7 +115,7 @@ export default function ClientsTable() {
 
       {/* New Client Modal */}
       {showNewClientModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-white ">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-sm font-bold mb-4 text-purple-600">New Client</h2>
             <input
@@ -154,13 +154,13 @@ export default function ClientsTable() {
             />
             <div className="mt-4">
               <button
-                className="mr-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+                className="mr-2 px-4 py-2 bg-purple-600 text-gray-900 rounded hover:bg-purple-700"
                 onClick={handleAddClient}
               >
                 Save
               </button>
               <button
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
+                className="px-4 py-2 bg-white0 text-gray-900 rounded hover:bg-gray-700"
                 onClick={() => setShowNewClientModal(false)}
               >
                 Close

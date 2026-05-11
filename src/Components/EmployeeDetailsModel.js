@@ -77,7 +77,7 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-white  flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* Modal Header */}
         <div className={`p-6 border-b ${type === 'department' ? 'bg-blue-50' : 'bg-green-50'}`}>
@@ -150,7 +150,7 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
               <p className="text-gray-500 mb-6">{error}</p>
               <button
                 onClick={fetchEmployees}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 bg-blue-600 text-gray-900 rounded-lg hover:bg-blue-700"
               >
                 Try Again
               </button>
@@ -160,14 +160,14 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
               {filteredEmployees.map((employee, index) => (
                 <div
                   key={employee._id || index}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
+                  className="border border-gray-200 rounded-lg p-4 hover:bg-white"
                 >
                   <div className="flex flex-col md:flex-row md:items-start gap-4">
                     {/* Left Section */}
                     <div className="flex-1">
                       <div className="flex items-start gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${type === 'department' ? 'bg-blue-100' : 'bg-green-100'}`}>
-                          <FaUser className={type === 'department' ? 'text-blue-600' : 'text-green-600'} />
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${type === 'department' ? 'bg-blue-100' : 'bg-blue-100'}`}>
+                          <FaUser className={type === 'department' ? 'text-blue-600' : 'text-blue-700'} />
                         </div>
                         <div>
                           <h4 className="font-semibold text-gray-700 text-lg">{employee.name || 'No Name'}</h4>
@@ -176,7 +176,7 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
                               <FaIdCard className="text-xs" /> {employee.employeeId || 'N/A'}
                             </span>
                             {employee.role && type !== 'role' && (
-                              <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs flex items-center gap-1">
+                              <span className="px-2 py-1 bg-blue-100 text-green-700 rounded text-xs flex items-center gap-1">
                                 <FaUserTie className="text-xs" /> {employee.role}
                               </span>
                             )}
@@ -255,7 +255,7 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
         </div>
 
         {/* Modal Footer */}
-        <div className="p-6 border-t bg-gray-50">
+        <div className="p-6 border-t bg-white">
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-500">
               Showing {filteredEmployees.length} of {employees.length} employees
@@ -270,7 +270,7 @@ const EmployeeDetailsModal = ({ type, id, name, onClose }) => {
               {filteredEmployees.length > 0 && (
                 <button
                   onClick={() => window.open('/employeelist', '_blank')}
-                  className={`px-4 py-2 ${type === 'department' ? 'bg-blue-600' : 'bg-green-600'} text-white rounded-lg hover:${type === 'department' ? 'bg-blue-700' : 'bg-green-700'}`}
+                  className={`px-4 py-2 ${type === 'department' ? 'bg-blue-600' : 'bg-blue-600'} text-gray-900 rounded-lg hover:${type === 'department' ? 'bg-blue-700' : 'bg-blue-800'}`}
                 >
                   View Full List
                 </button>

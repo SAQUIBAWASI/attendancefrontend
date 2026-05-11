@@ -20,7 +20,7 @@ const AppliedJobs = () => {
   const getStatusStyles = (status) => {
     switch (status) {
       case "Selected": case "Hired":
-        return "bg-emerald-100 text-emerald-800 border-emerald-200";
+        return "bg-blue-100 text-emerald-800 border-emerald-200";
       case "Rejected":
         return "bg-rose-100 text-rose-800 border-rose-200";
       case "Assessment Shared": case "Interview Scheduled":
@@ -94,7 +94,7 @@ const AppliedJobs = () => {
                 <FaBriefcase className="text-xs" />
               </div>
               <div
-                className="w-full bg-white py-2.5 pl-10 pr-10 text-xs text-gray-700 border border-gray-200 rounded-xl font-bold cursor-pointer hover:bg-gray-50 shadow-sm text-ellipsis whitespace-nowrap overflow-hidden"
+                className="w-full bg-white py-2.5 pl-10 pr-10 text-xs text-gray-700 border border-gray-200 rounded-xl font-bold cursor-pointer hover:bg-white shadow-sm text-ellipsis whitespace-nowrap overflow-hidden"
                 onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
               >
                 {statusFilter || "Filter by Status"}
@@ -158,14 +158,14 @@ const AppliedJobs = () => {
             {hasFilters && (
               <button
                 onClick={resetFilters}
-                className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-gray-500 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-all shadow-sm uppercase tracking-widest"
+                className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-gray-500 bg-white border border-gray-200 hover:bg-white rounded-xl transition-all shadow-sm uppercase tracking-widest"
               >
                 <FaSync className="text-[10px]" /> Reset
               </button>
             )}
 
             <div className="bg-white px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+              <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{filteredApps.length} Applications</span>
             </div>
           </div>
@@ -177,7 +177,7 @@ const AppliedJobs = () => {
             {filteredApps.length > 0 ? (
               <table className="min-w-full">
                 <thead>
-                  <tr className="bg-gradient-to-r from-green-500 to-blue-600 text-white text-center uppercase tracking-wider text-xs font-semibold">
+                  <tr className="bg-gradient-to-r from-green-500 to-blue-600 text-gray-900 text-center uppercase tracking-wider text-xs font-semibold">
                     <th className="py-2.5 px-8">Applied Role</th>
                     <th className="py-2.5 px-6">Ref ID</th>
                     <th className="py-2.5 px-6">Applied On</th>
@@ -190,7 +190,7 @@ const AppliedJobs = () => {
                     <tr key={app._id} className="group hover:bg-indigo-50/20 transition-all duration-300">
                       <td className="py-2 px-8">
                         <div className="font-bold text-sm text-gray-700 uppercase tracking-tight">{app.jobId?.role || app.role || "N/A"}</div>
-                        <div className="text-[10px] text-blue-500 uppercase tracking-widest mt-1 font-semibold">
+                        <div className="text-[10px] text-blue-600 uppercase tracking-widest mt-1 font-semibold">
                           #{app._id.slice(-6).toUpperCase()}
                         </div>
                       </td>
@@ -201,7 +201,7 @@ const AppliedJobs = () => {
                       </td>
                       <td className="py-2 px-6 text-xs font-medium text-gray-500 uppercase tracking-tight">
                         <div className="flex items-center justify-center gap-2">
-                          <FaCalendarAlt className="text-blue-400" size={12} />
+                          <FaCalendarAlt className="text-blue-500" size={12} />
                           {new Date(app.createdAt || app.appliedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                         </div>
                       </td>
@@ -234,7 +234,7 @@ const AppliedJobs = () => {
                               return (
                                 <button
                                   onClick={() => navigate(`/jobs/${app.jobId?._id}`)}
-                                  className="inline-flex items-center gap-2 px-5 py-2 bg-gray-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-md hover:bg-blue-600 transition-all active:scale-95"
+                                  className="inline-flex items-center gap-2 px-5 py-2 bg-gray-100 text-gray-900 rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-md hover:bg-blue-600 transition-all active:scale-95"
                                 >
                                   View Job <FaEye className="text-xs" />
                                 </button>
@@ -259,7 +259,7 @@ const AppliedJobs = () => {
                                     <div key={quizId} className="flex items-center justify-center gap-2">
                                       <button
                                         onClick={() => navigate(`/assessment/${app.jobId._id}/${app._id}/${quizId}`)}
-                                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-md hover:bg-indigo-700 transition-all active:scale-95 whitespace-nowrap min-w-[140px]"
+                                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-gray-900 rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-md hover:bg-indigo-700 transition-all active:scale-95 whitespace-nowrap min-w-[140px]"
                                       >
                                         Attempt {quizTitle}
                                       </button>
@@ -276,7 +276,7 @@ const AppliedJobs = () => {
                                   );
                                 })}
                                 {completedQuizIds.length > 0 && (
-                                  <div className="text-[9px] font-bold text-emerald-600 uppercase tracking-tight">
+                                  <div className="text-[9px] font-bold text-blue-700 uppercase tracking-tight">
                                     {completedQuizIds.length} of {assessmentIds.length} Completed
                                   </div>
                                 )}
@@ -291,7 +291,7 @@ const AppliedJobs = () => {
               </table>
             ) : (
               <div className="p-24 text-center">
-                <div className="w-20 h-20 bg-gray-50 rounded-[2rem] flex items-center justify-center text-gray-900 mx-auto mb-6 border-2 border-dashed border-gray-200">
+                <div className="w-20 h-20 bg-white rounded-[2rem] flex items-center justify-center text-gray-900 mx-auto mb-6 border-2 border-dashed border-gray-200">
                   <FaFileAlt size={32} />
                 </div>
                 <h3 className="text-lg font-bold text-gray-700 uppercase tracking-widest">No Applications Yet</h3>

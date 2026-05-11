@@ -58,7 +58,7 @@ const ProductList = () => {
     <div className="p-6 bg-white rounded shadow">
       <h3 className="text-lg font-bold mb-4">Product List - Vegetarian Food Items</h3>
       <table className="min-w-full border-collapse">
-        <thead className="bg-green-100">
+        <thead className="bg-blue-100">
           <tr className="border-b">
             <th className="p-4 text-left">Image</th>
             <th className="p-4 text-left">Name</th>
@@ -106,7 +106,7 @@ const ProductList = () => {
               <td className="p-4">{product.subcategory}</td>
               {/* Actions */}
               <td className="p-4 flex space-x-2">
-                <button className="text-blue-500 hover:text-blue-700">
+                <button className="text-blue-600 hover:text-blue-700">
                   <FaEye /> {/* View icon */}
                 </button>
                 <button className="text-yellow-500 hover:text-yellow-700">

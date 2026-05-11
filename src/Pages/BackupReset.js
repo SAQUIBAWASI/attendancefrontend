@@ -8,7 +8,7 @@ export default function DatabaseBackup() {
       <h2 className="mb-4 text-xl font-semibold">Database Backup</h2>
 
       <button
-        className="px-4 py-2 text-green-700 bg-green-100 border border-green-600 rounded"
+        className="px-4 py-2 text-green-700 bg-blue-100 border border-blue-700 rounded"
         onClick={() => setShowModal(true)}
       >
         Backup Database
@@ -59,7 +59,7 @@ export default function DatabaseBackup() {
 
       {/* Confirmation Modal */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-100 ">
           <div className="p-6 text-center bg-white rounded-lg shadow-lg w-96">
             <div className="text-5xl text-orange-400">⚠</div>
             <h3 className="mt-2 text-xl font-semibold">Are you sure?</h3>

@@ -77,7 +77,7 @@ const SubDepartmentList = () => {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Sub Department List</h2>
         <button 
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center"
+          className="bg-blue-600 text-gray-900 px-4 py-2 rounded-lg flex items-center"
           onClick={() => setShowModal(true)}
         >
           <PlusCircle size={18} className="mr-2" /> Add Sub Department
@@ -103,15 +103,15 @@ const SubDepartmentList = () => {
                 <td className="p-2">{subDept.name}</td>
                 <td className="p-2">{subDept.department}</td>
                 <td className="p-2">
-                  <span className="bg-green-500 text-white px-2 py-1 rounded-md text-sm">
+                  <span className="bg-blue-600 text-gray-900 px-2 py-1 rounded-md text-sm">
                     {subDept.status}
                   </span>
                 </td>
                 <td className="p-2 flex space-x-2">
-                  <button className="bg-yellow-500 text-white p-2 rounded-lg" onClick={() => handleEdit(subDept)}>
+                  <button className="bg-yellow-500 text-gray-900 p-2 rounded-lg" onClick={() => handleEdit(subDept)}>
                     <Pencil size={16} />
                   </button>
-                  <button className="bg-red-500 text-white p-2 rounded-lg" onClick={() => handleDelete(subDept.id)}>
+                  <button className="bg-red-500 text-gray-900 p-2 rounded-lg" onClick={() => handleDelete(subDept.id)}>
                     <Trash size={16} />
                   </button>
                 </td>
@@ -123,7 +123,7 @@ const SubDepartmentList = () => {
 
       {/* Add/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+        <div className="fixed inset-0 bg-white  flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-lg font-semibold mb-4">{isEditing ? "Edit" : "Add"} Sub Department</h2>
             <form onSubmit={handleSubmit}>
@@ -162,8 +162,8 @@ const SubDepartmentList = () => {
                 </select>
               </div>
               <div className="flex justify-end space-x-2">
-                <button type="button" onClick={() => setShowModal(false)} className="bg-gray-400 px-4 py-2 rounded-lg text-white">Cancel</button>
-                <button type="submit" className="bg-blue-500 px-4 py-2 rounded-lg text-white">
+                <button type="button" onClick={() => setShowModal(false)} className="bg-gray-400 px-4 py-2 rounded-lg text-gray-900">Cancel</button>
+                <button type="submit" className="bg-blue-600 px-4 py-2 rounded-lg text-gray-900">
                   {isEditing ? "Update" : "Add"}
                 </button>
               </div>

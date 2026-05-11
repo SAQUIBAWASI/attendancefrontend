@@ -134,7 +134,7 @@ const AllQuizzesTable = () => {
                     <td className="border p-2 text-center">
                       <button
                         onClick={() => handleDelete(q._id)}
-                        className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                        className="bg-red-500 text-gray-900 px-2 py-1 rounded hover:bg-red-600"
                       >
                         <FaTrash />
                       </button>
@@ -158,7 +158,7 @@ const AllQuizzesTable = () => {
               <button
                 key={i}
                 onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-blue-600 text-gray-900' : 'bg-gray-200'
                   }`}
               >
                 {i + 1}

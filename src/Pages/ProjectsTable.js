@@ -100,7 +100,7 @@ export default function ProjectsTable() {
           />
         </div>
         <button
-          className="p-2 bg-purple-600 text-white rounded"
+          className="p-2 bg-purple-600 text-gray-900 rounded"
           onClick={() => setShowNewProjectModal(true)}
         >
           + New Project
@@ -122,7 +122,7 @@ export default function ProjectsTable() {
           </thead>
           <tbody>
             {displayedProjects.map((project) => (
-              <tr key={project.id} className="cursor-pointer hover:bg-gray-50 text-center">
+              <tr key={project.id} className="cursor-pointer hover:bg-white text-center">
                 <td className="p-3 border">{project.id}</td>
                 <td className="p-3 border">{project.projectName}</td>
                 <td className="p-3 border">{project.clientName}</td>
@@ -131,7 +131,7 @@ export default function ProjectsTable() {
                 <td className="p-3 border">{project.status}</td>
                 <td className="p-3 border">
                   <button
-                    className="text-blue-500 hover:underline mr-2"
+                    className="text-blue-600 hover:underline mr-2"
                   >
                     <FaEdit /> {/* Edit icon */}
                   </button>
@@ -149,7 +149,7 @@ export default function ProjectsTable() {
 
       {/* New Project Modal */}
       {showNewProjectModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-white ">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-sm font-bold mb-4 text-purple-600">Create Project</h2>
 
@@ -326,13 +326,13 @@ export default function ProjectsTable() {
 
             <div className="mt-4">
               <button
-                className="mr-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+                className="mr-2 px-4 py-2 bg-purple-600 text-gray-900 rounded hover:bg-purple-700"
                 onClick={() => handleAddProject()}
               >
                 Save
               </button>
               <button
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
+                className="px-4 py-2 bg-white0 text-gray-900 rounded hover:bg-gray-700"
                 onClick={() => setShowNewProjectModal(false)}
               >
                 Close

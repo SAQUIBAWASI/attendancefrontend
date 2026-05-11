@@ -70,7 +70,7 @@ const MonthlyAttendance = () => {
       {/* Add Monthly Attendance Button */}
       <button
         onClick={() => setIsModalOpen(true)}
-        className="fixed top-24 right-6 px-4 py-2 text-white bg-green-500 rounded shadow-md"
+        className="fixed top-24 right-6 px-4 py-2 text-gray-900 bg-blue-600 rounded shadow-md"
       >
         + Add Monthly Attendance
       </button>
@@ -112,7 +112,7 @@ const MonthlyAttendance = () => {
 
       {/* Modal for Taking Monthly Attendance */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-white ">
           <div className="p-6 bg-white rounded-lg shadow-lg w-96">
             <h3 className="mb-4 text-lg font-semibold">Take Monthly Attendance</h3>
 
@@ -193,7 +193,7 @@ const MonthlyAttendance = () => {
             {/* Submit Button */}
             <button
               onClick={handleSubmit}
-              className="px-4 py-2 text-green-700 bg-green-100 border border-green-600 rounded w-full mb-4"
+              className="px-4 py-2 text-green-700 bg-blue-100 border border-blue-700 rounded w-full mb-4"
             >
               Submit
             </button>

@@ -11,13 +11,13 @@ const getStatusColors = (status) => {
   switch (status) {
     case "Hired":
     case "Selected":
-      return { bg: "bg-emerald-100", text: "text-emerald-800", border: "border-emerald-200", icon: "text-emerald-500" };
+      return { bg: "bg-blue-100", text: "text-emerald-800", border: "border-emerald-200", icon: "text-blue-600" };
     case "Rejected":
       return { bg: "bg-rose-100", text: "text-rose-800", border: "border-rose-200", icon: "text-rose-500" };
     case "Assessment Shared":
       return { bg: "bg-indigo-100", text: "text-indigo-800", border: "border-indigo-200", icon: "text-indigo-500" };
     case "Interview Scheduled":
-      return { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200", icon: "text-blue-500" };
+      return { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200", icon: "text-blue-600" };
     default:
       return { bg: "bg-gray-100", text: "text-slate-700", border: "border-gray-200", icon: "text-slate-500" };
   }
@@ -73,13 +73,13 @@ const CandidateDashboard = () => {
           <div className="flex flex-wrap items-center justify-start xl:justify-end gap-3 w-full xl:w-auto">
             <button
               onClick={() => navigate("/all-jobs")}
-              className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wider shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95"
+              className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-gray-900 rounded-xl text-xs font-semibold uppercase tracking-wider shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95"
             >
               <FaBriefcase className="text-xs" /> Explore Jobs
             </button>
 
             <div className="bg-white px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+              <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{allJobs.length} Live Openings</span>
             </div>
           </div>
@@ -102,14 +102,14 @@ const CandidateDashboard = () => {
               className="bg-white px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between hover:shadow-md hover:border-blue-200 transition-all group cursor-pointer"
             >
               <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-gray-50 text-${stat.color}-600 group-hover:bg-${stat.color}-50 transition-colors`}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-white text-${stat.color}-600 group-hover:bg-${stat.color}-50 transition-colors`}>
                   <stat.icon size={14} />
                 </div>
                 <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                   {stat.label} <span className="text-gray-700 mx-1">:</span> <span className="text-gray-900 font-black">{stat.value}</span>
                 </span>
               </div>
-              <FaArrowRight className="text-[10px] text-gray-700 group-hover:text-blue-500 transition-colors" />
+              <FaArrowRight className="text-[10px] text-gray-700 group-hover:text-blue-600 transition-colors" />
             </motion.div>
           ))}
         </div>
@@ -138,13 +138,13 @@ const CandidateDashboard = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {pendingInterviews.map((app) => (
-                      <tr key={app._id} className="group hover:bg-gray-50 transition-all duration-300">
+                      <tr key={app._id} className="group hover:bg-white transition-all duration-300">
                         <td className="py-2 px-6 text-center text-sm font-semibold text-gray-700 uppercase tracking-tight">
                           {app.jobId?.role || "Position Update"}
                         </td>
                         <td className="py-2 px-6 text-center text-xs font-medium text-gray-500">
                           <div className="flex items-center justify-center gap-2">
-                            <FaClock className="text-blue-400" />
+                            <FaClock className="text-blue-500" />
                             {new Date(app.interviewTime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
                           </div>
                         </td>
@@ -174,7 +174,7 @@ const CandidateDashboard = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <h3 className="text-lg font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+              <span className="w-2 h-2 rounded-full bg-blue-600"></span>
               Application Status Tracker
             </h3>
             <button
@@ -206,7 +206,7 @@ const CandidateDashboard = () => {
                           <td className="py-2 px-8 text-center text-sm font-bold text-gray-700 uppercase tracking-tight leading-tight">
                             {activity.jobId?.role || "Position Update"}
                             {activity.jobId?.department && (
-                              <span className="block text-[10px] text-blue-500 mt-1 uppercase tracking-widest font-semibold">
+                              <span className="block text-[10px] text-blue-600 mt-1 uppercase tracking-widest font-semibold">
                                 {activity.jobId.department}
                               </span>
                             )}
@@ -246,7 +246,7 @@ const CandidateDashboard = () => {
                                   return (
                                     <button
                                       onClick={() => navigate("/applied-jobs")}
-                                      className="p-1.5 bg-white text-blue-500 hover:bg-blue-600 hover:text-gray-900 rounded-xl transition-all shadow-md border border-gray-200 flex items-center justify-center mx-auto"
+                                      className="p-1.5 bg-white text-blue-600 hover:bg-blue-600 hover:text-gray-900 rounded-xl transition-all shadow-md border border-gray-200 flex items-center justify-center mx-auto"
                                       title="View Details"
                                     >
                                       <FaEye size={14} />
@@ -257,7 +257,7 @@ const CandidateDashboard = () => {
                                 if (pendingAssessments.length === 0) {
                                   return (
                                     <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold uppercase tracking-wider border border-emerald-100 whitespace-nowrap shadow-sm">
-                                      <FaCheckCircle className="text-emerald-500" /> All Completed
+                                      <FaCheckCircle className="text-blue-600" /> All Completed
                                     </div>
                                   );
                                 }
@@ -272,14 +272,14 @@ const CandidateDashboard = () => {
                                         <button
                                           key={quizId}
                                           onClick={() => navigate(`/assessment/${activity.jobId._id}/${activity._id}/${quizId}`)}
-                                          className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:bg-blue-700 transition-all active:scale-95 whitespace-nowrap min-w-[140px]"
+                                          className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-blue-600 text-gray-900 rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:bg-blue-700 transition-all active:scale-95 whitespace-nowrap min-w-[140px]"
                                         >
                                           Take {quizTitle}
                                         </button>
                                       );
                                     })}
                                     {completedQuizIds.length > 0 && (
-                                      <div className="text-[9px] font-bold text-emerald-600 uppercase tracking-tight">
+                                      <div className="text-[9px] font-bold text-blue-700 uppercase tracking-tight">
                                         {completedQuizIds.length}/{assessmentIds.length} Done
                                       </div>
                                     )}
@@ -296,7 +296,7 @@ const CandidateDashboard = () => {
                 </table>
               ) : (
                 <div className="p-24 text-center">
-                  <div className="w-20 h-20 bg-gray-50 rounded-[2rem] flex items-center justify-center text-gray-700 mx-auto mb-6 border-2 border-dashed border-gray-200">
+                  <div className="w-20 h-20 bg-white rounded-[2rem] flex items-center justify-center text-gray-700 mx-auto mb-6 border-2 border-dashed border-gray-200">
                     <FaClipboardList size={32} />
                   </div>
                   <h3 className="text-lg font-bold text-gray-700 uppercase tracking-widest">No Applications Tracked</h3>
@@ -309,7 +309,7 @@ const CandidateDashboard = () => {
 
         {/* ── Footer Link (Matched to AllJobs) ── */}
         <div className="mt-12 flex items-center justify-center gap-3 text-xs font-bold text-gray-500 uppercase tracking-widest">
-          <FaInfoCircle className="text-blue-400" />
+          <FaInfoCircle className="text-blue-500" />
           Portal information is synced in real-time with the central recruitment system.
         </div>
       </motion.div>

@@ -81,12 +81,12 @@ const LeaveApplicationList = () => {
                   <td className="px-4 py-2 border">{item.approvedEnd}</td>
                   <td className="px-4 py-2 border">{item.approvedDays}</td>
                   <td className="px-4 py-2 border">
-                    <span className="px-2 py-1 text-xs text-white bg-green-500 rounded-lg">
+                    <span className="px-2 py-1 text-xs text-gray-900 bg-blue-600 rounded-lg">
                       {item.status}
                     </span>
                   </td>
                   <td className="flex gap-2 px-4 py-2 border">
-                    <button className="text-green-600">
+                    <button className="text-blue-700">
                       <FaCheck />
                     </button>
                     <button className="text-red-600">

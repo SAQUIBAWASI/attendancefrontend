@@ -86,7 +86,7 @@ const DiagnosticsAcceptedBooking = () => {
     if (!showModal || !selectedBooking) return null;
 
     return (
-      <div className="fixed inset-0 flex justify-center items-center bg-gray-500 bg-opacity-50">
+      <div className="fixed inset-0 flex justify-center items-center bg-white0 ">
         <div className="bg-white p-6 rounded shadow-md w-96">
           <h3 className="text-lg font-semibold mb-4">Upload Prescription for {selectedBooking.patient_name}</h3>
           <div className="mb-4">
@@ -100,13 +100,13 @@ const DiagnosticsAcceptedBooking = () => {
           <div className="flex justify-end">
             <button
               onClick={handleFileUpload}
-              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+              className="px-4 py-2 bg-blue-600 text-gray-900 rounded-md hover:bg-blue-600"
             >
               Upload
             </button>
             <button
               onClick={() => setShowModal(false)}
-              className="ml-2 px-4 py-2 bg-gray-300 text-white rounded-md hover:bg-gray-400"
+              className="ml-2 px-4 py-2 bg-gray-300 text-gray-900 rounded-md hover:bg-gray-400"
             >
               Close
             </button>
@@ -132,7 +132,7 @@ const DiagnosticsAcceptedBooking = () => {
         />
         <button
           onClick={exportToExcel}
-          className="px-4 py-2 bg-purple-900 text-white rounded-md hover:bg-purple-600"
+          className="px-4 py-2 bg-purple-900 text-gray-900 rounded-md hover:bg-purple-600"
         >
           <FaFileExcel />
         </button>
@@ -160,7 +160,7 @@ const DiagnosticsAcceptedBooking = () => {
           </thead>
           <tbody>
             {filteredBookings.map((booking) => (
-              <tr key={booking.bookingId} className="hover:bg-gray-50 border-b">
+              <tr key={booking.bookingId} className="hover:bg-white border-b">
                 <td className="p-2 border">{booking.patient_name}</td>
                 <td className="p-2 border">{booking.patient_age || booking.age || "N/A"}</td>
                 <td className="p-2 border">{booking.patient_gender || booking.gender || "N/A"}</td>
@@ -188,7 +188,7 @@ const DiagnosticsAcceptedBooking = () => {
                       setSelectedBooking(booking); // Set selected booking
                       setShowModal(true); // Show modal
                     }}
-                    className="px-4 py-2 bg-blue-900 text-white rounded-md hover:bg-blue-900"
+                    className="px-4 py-2 bg-blue-900 text-gray-900 rounded-md hover:bg-blue-900"
                   >
                     Add
                   </button>

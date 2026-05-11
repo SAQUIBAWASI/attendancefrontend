@@ -51,7 +51,7 @@ const CouponHistoryTable = () => {
 
         <div className="overflow-x-auto">
           <table className="min-w-full border border-gray-200 text-sm">
-            <thead className="bg-green-100 text-gray-500">
+            <thead className="bg-blue-100 text-gray-500">
               <tr>
                 <th className="py-2 px-4 border">SI No</th>
                 <th className="py-2 px-4 border">Customer ID</th>

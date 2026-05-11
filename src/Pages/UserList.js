@@ -183,7 +183,7 @@ export default function UserList() {
 
       <table className="w-full table-auto border-collapse border border-gray-300 mb-4">
         <thead>
-          <tr className="bg-blue-600 text-white">
+          <tr className="bg-blue-600 text-gray-900">
             <th className="p-2 border">Sl</th>
             <th className="p-2 border">Profile</th>
             <th className="p-2 border">Name</th>
@@ -217,7 +217,7 @@ export default function UserList() {
               <td className="p-2 border flex gap-2">
                 <Link to={`/users/${u.id}`}>
                   <button
-                    className="bg-green-500 text-white p-1 rounded"
+                    className="bg-blue-600 text-gray-900 p-1 rounded"
                     title="View"
                     onClick={() => console.log("Viewing user with ID:", u.id)}
                   >
@@ -225,14 +225,14 @@ export default function UserList() {
                   </button>
                 </Link>
                 <button
-                  className="bg-blue-500 text-white p-1 rounded"
+                  className="bg-blue-600 text-gray-900 p-1 rounded"
                   title="Edit"
                   onClick={() => openEditModal(u)}
                 >
                   <FaEdit />
                 </button>
                 <button
-                  className="bg-red-500 text-white p-1 rounded"
+                  className="bg-red-500 text-gray-900 p-1 rounded"
                   title="Delete"
                   onClick={() => handleDelete(u.id)}
                 >
@@ -257,7 +257,7 @@ export default function UserList() {
             key={i}
             onClick={() => setCurrentPage(i + 1)}
             className={`px-4 py-2 rounded ${
-              currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+              currentPage === i + 1 ? "bg-blue-600 text-gray-900" : "bg-gray-200"
             }`}
           >
             {i + 1}
@@ -274,7 +274,7 @@ export default function UserList() {
 
      {/* Edit Modal */}
 {editModal && editedUser && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+  <div className="fixed inset-0 bg-white  flex justify-center items-center z-50 p-4">
     <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl relative max-h-[90vh] overflow-y-auto">
       <h3 className="text-xl font-semibold mb-6">
         Edit User - {editedUser.name}
@@ -396,7 +396,7 @@ export default function UserList() {
         </button>
         <button
           onClick={handleSave}
-          className="px-4 py-2 bg-green-600 text-white rounded"
+          className="px-4 py-2 bg-blue-600 text-gray-900 rounded"
           disabled={loading}
         >
           {loading ? "Saving..." : "Save"}

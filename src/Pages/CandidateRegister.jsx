@@ -54,16 +54,16 @@ const CandidateRegister = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 font-sans">
+        <div className="min-h-screen bg-white flex items-center justify-center p-6 font-sans">
             <div className="w-full max-w-6xl bg-white rounded-[2.5rem] shadow-2xl shadow-indigo-100/50 overflow-hidden flex flex-col md:flex-row border border-gray-200 animate-in fade-in zoom-in duration-500">
 
                 {/* Visual Side */}
-                <div className="md:w-5/12 bg-indigo-600 p-12 text-white flex flex-col justify-between relative overflow-hidden">
+                <div className="md:w-5/12 bg-indigo-600 p-12 text-gray-900 flex flex-col justify-between relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at -20% -20%,rgba(255,255,255,0.2)_0%,transparent_60%)]"></div>
-                    <div className="absolute bottom-[-10%] right-[-10%] w-64 h-64 bg-black/10 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-[-10%] right-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
 
                     <div className="relative z-10">
-                        <div className="w-14 h-14 bg-black/20 rounded-2xl flex items-center justify-center mb-10 backdrop-blur-md border border-white/30 shadow-xl">
+                        <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mb-10 backdrop-blur-md border border-white/30 shadow-xl">
                             <FiUser className="text-2xl" />
                         </div>
                         <h2 className="text-4xl font-black leading-tight mb-4">
@@ -77,13 +77,13 @@ const CandidateRegister = () => {
 
                     <div className="relative z-10 space-y-6">
                         <div className="flex items-center gap-4 group">
-                            <div className="w-10 h-10 bg-black/10 rounded-xl flex items-center justify-center border border-white/20 group-hover:bg-black/20 transition-all">
+                            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/20 group-hover:bg-white/20 transition-all">
                                 <FiCheckCircle className="text-indigo-200" />
                             </div>
                             <span className="text-xs font-bold text-indigo-100 uppercase tracking-wider">Quick 1-minute setup</span>
                         </div>
                         <div className="flex items-center gap-4 group">
-                            <div className="w-10 h-10 bg-black/10 rounded-xl flex items-center justify-center border border-white/20 group-hover:bg-black/20 transition-all">
+                            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/20 group-hover:bg-white/20 transition-all">
                                 <FiCheckCircle className="text-indigo-200" />
                             </div>
                             <span className="text-xs font-bold text-indigo-100 uppercase tracking-wider">Apply with one click</span>
@@ -102,7 +102,7 @@ const CandidateRegister = () => {
 
                     {message.text && (
                         <div className={`mb-8 p-4 rounded-xl flex items-center gap-3 animate-in slide-in-from-top-4 duration-300 border ${message.type === "success"
-                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                            ? "bg-emerald-50 text-blue-700 border-emerald-100"
                             : "bg-rose-50 text-rose-600 border-rose-100"
                             }`}>
                             {message.type === "success" ? <FiCheckCircle className="text-lg shrink-0" /> : <FiAlertCircle className="text-lg shrink-0" />}
@@ -221,7 +221,7 @@ const CandidateRegister = () => {
                                         name="experience"
                                         value={formData.experience}
                                         onChange={handleChange}
-                                        className="w-full pl-11 pr-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl border-dashed focus:bg-white focus:border-solid focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-700"
+                                        className="w-full pl-11 pr-4 py-3.5 bg-white/50 border border-gray-200 rounded-xl border-dashed focus:bg-white focus:border-solid focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-700"
                                         placeholder="e.g. 5 Years"
                                     />
                                 </div>
@@ -237,7 +237,7 @@ const CandidateRegister = () => {
                                         name="skills"
                                         value={formData.skills}
                                         onChange={handleChange}
-                                        className="w-full pl-11 pr-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-xl border-dashed focus:bg-white focus:border-solid focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-700"
+                                        className="w-full pl-11 pr-4 py-3.5 bg-white/50 border border-gray-200 rounded-xl border-dashed focus:bg-white focus:border-solid focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-600 outline-none transition-all text-sm font-medium text-slate-700"
                                         placeholder="React, Node.js, AWS"
                                     />
                                 </div>
@@ -247,7 +247,7 @@ const CandidateRegister = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-6 bg-indigo-600 text-white font-black rounded-xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:pointer-events-none group mt-6 uppercase tracking-widest text-sm"
+                            className="w-full py-6 bg-indigo-600 text-gray-900 font-black rounded-xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:pointer-events-none group mt-6 uppercase tracking-widest text-sm"
                         >
                             {loading ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

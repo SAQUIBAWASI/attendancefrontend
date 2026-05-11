@@ -70,7 +70,7 @@ const Recruitment = () => {
       <div className="bg-white shadow-md rounded-lg p-4">
         <div className="flex justify-between mb-4">
           <h2 className="text-xl font-bold">Candidate List</h2>
-          <button onClick={() => { setShowForm(true); setEditMode(false); }} className="bg-black text-white p-2 rounded flex items-center">
+          <button onClick={() => { setShowForm(true); setEditMode(false); }} className="bg-white text-gray-900 p-2 rounded flex items-center">
             <FaPlus className="mr-2" /> Add New Candidate
           </button>
         </div>
@@ -101,9 +101,9 @@ const Recruitment = () => {
                 <td className="p-2">{candidate.ssn}</td>
                 <td className="p-2">{candidate.phone}</td>
                 <td className="p-2 flex gap-2 justify-center">
-                  <button onClick={() => handleView(candidate)} className="p-2 bg-green-500 text-white rounded"><FaEye /></button>
-                  <button onClick={() => handleEdit(candidate)} className="p-2 bg-blue-500 text-white rounded"><FaEdit /></button>
-                  <button onClick={() => handleDelete(candidate.id)} className="p-2 bg-red-500 text-white rounded"><FaTrash /></button>
+                  <button onClick={() => handleView(candidate)} className="p-2 bg-blue-600 text-gray-900 rounded"><FaEye /></button>
+                  <button onClick={() => handleEdit(candidate)} className="p-2 bg-blue-600 text-gray-900 rounded"><FaEdit /></button>
+                  <button onClick={() => handleDelete(candidate.id)} className="p-2 bg-red-500 text-gray-900 rounded"><FaTrash /></button>
                 </td>
               </tr>
             ))}
@@ -112,7 +112,7 @@ const Recruitment = () => {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-100 ">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h3 className="text-lg font-bold mb-4">{editMode ? "Edit Candidate" : "Add New Candidate"}</h3>
             {Object.keys(candidateData).map((key) => (
@@ -121,14 +121,14 @@ const Recruitment = () => {
                   value={candidateData[key]} onChange={(e) => setCandidateData({ ...candidateData, [key]: e.target.value })} />
               )
             ))}
-            <button onClick={handleSave} className="bg-black text-white p-2 rounded mr-2">Save</button>
-            <button onClick={() => setShowForm(false)} className="bg-red-500 text-white p-2 rounded">Cancel</button>
+            <button onClick={handleSave} className="bg-white text-gray-900 p-2 rounded mr-2">Save</button>
+            <button onClick={() => setShowForm(false)} className="bg-red-500 text-gray-900 p-2 rounded">Cancel</button>
           </div>
         </div>
       )}
 
 {showPopup && viewCandidate && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-100 ">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h3 className="text-lg font-bold mb-4">Candidate Details</h3>
             <p><strong>Name:</strong> {viewCandidate.name}</p>
@@ -136,7 +136,7 @@ const Recruitment = () => {
             <p><strong>Phone:</strong> {viewCandidate.phone}</p>
             <p><strong>SSN:</strong> {viewCandidate.ssn}</p>
             <p><strong>Candidate ID:</strong> {viewCandidate.candidateId}</p>
-            <button onClick={() => setShowPopup(false)} className="bg-red-500 text-white p-2 rounded mt-4">Close</button>
+            <button onClick={() => setShowPopup(false)} className="bg-red-500 text-gray-900 p-2 rounded mt-4">Close</button>
           </div>
         </div>
       )}

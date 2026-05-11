@@ -19,7 +19,7 @@
 
 // const DetailItem = ({ icon, label, value }) => (
 //   <div className="flex items-start gap-3">
-//     <div className="mt-1 text-blue-500">{icon}</div>
+//     <div className="mt-1 text-blue-600">{icon}</div>
 //     <div>
 //       <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</p>
 //       <p className="text-sm font-bold text-gray-700">{value}</p>
@@ -138,11 +138,11 @@
 //   };
 
 //   return (
-//     <div className="w-full min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8 animate-in fade-in duration-500">
+//     <div className="w-full min-h-screen bg-white/50 p-4 md:p-6 lg:p-8 animate-in fade-in duration-500">
 //       {/* Header Section (Replicated from JobApplicants) */}
 //       <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-center xl:justify-between">
 //         <div className="flex items-center gap-3">
-//           <div className="bg-blue-600 text-white p-2 rounded-lg shadow-lg">
+//           <div className="bg-blue-600 text-gray-900 p-2 rounded-lg shadow-lg">
 //             <FaBriefcase className="w-5 h-5" />
 //           </div>
 //           <h2 className="text-xl font-bold text-gray-700">Employee Journeys</h2>
@@ -153,7 +153,7 @@
 //           <div className="relative w-full sm:w-auto">
 //             <input
 //               type="date"
-//               className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm sm:w-40"
+//               className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm sm:w-40"
 //               value={dateFilter}
 //               onChange={(e) => setDateFilter(e.target.value)}
 //             />
@@ -173,7 +173,7 @@
 //               <FaUserTie className="text-sm" />
 //             </div>
 //             <div
-//               className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
+//               className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
 //               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
 //             >
 //               {roleFilter || "Filter by Role"}
@@ -184,7 +184,7 @@
 
 //             {isRoleDropdownOpen && (
 //               <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-//                 <div className="p-2 border-b border-gray-200 bg-gray-50">
+//                 <div className="p-2 border-b border-gray-200 bg-white">
 //                   <input
 //                     type="text"
 //                     className="w-full py-1.5 px-3 text-xs bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -263,7 +263,7 @@
 //         ) : filteredCandidates.length > 0 ? (
 //          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //              <table className="min-w-full">
-//               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//               <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //               <tr>
 //                 <th className="py-2 text-center">Employee Name</th>
 //                 <th className="py-2 text-center">Latest Role</th>
@@ -293,7 +293,7 @@
 //                   <td className="px-2 py-2 font-medium text-center">
 //                     <div className="flex flex-col items-center gap-0.5 text-xs text-gray-500">
 //                       <div className="flex items-center gap-1.5 ">
-//                         <FaPhone className="text-[10px] text-blue-400" /> {item.candidate?.phone || "N/A"}
+//                         <FaPhone className="text-[10px] text-blue-500" /> {item.candidate?.phone || "N/A"}
 //                       </div>
 //                       <div className="flex items-center gap-1.5 font-medium text-gray-500">
 //                         <FaEnvelope className="text-[10px]" /> {item.candidate?.email}
@@ -301,13 +301,13 @@
 //                     </div>
 //                   </td>
 //                   <td className="px-2 py-2 font-medium text-center">
-//                     <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-50 text-gray-700 font-black text-xs border border-gray-200 shadow-inner group-hover:bg-blue-600 group-hover:text-white transition-all">
+//                     <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white text-gray-700 font-black text-xs border border-gray-200 shadow-inner group-hover:bg-blue-600 group-hover:text-gray-900 transition-all">
 //                       {item.experiences.length}
 //                     </div>
 //                   </td>
 //                   <td className="px-2 py-2 font-medium text-center">
-//                     <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100/50">
-//                       <div className="w-1 h-1 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></div>
+//                     <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-blue-700 border border-emerald-100/50">
+//                       <div className="w-1 h-1 rounded-full bg-blue-600 mr-1.5 animate-pulse"></div>
 //                       Verified
 //                     </span>
 //                   </td>
@@ -315,7 +315,7 @@
 //                     <div className="flex justify-center gap-3">
 //                       <button
 //                         onClick={() => handleOpenModal(item)}
-//                         className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all text-[10px] font-black uppercase tracking-widest group/btn shadow-sm"
+//                         className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-gray-900 rounded-lg transition-all text-[10px] font-black uppercase tracking-widest group/btn shadow-sm"
 //                       >
 //                         <FaEye className="group-hover/btn:scale-110" /> View History
 //                       </button>
@@ -328,7 +328,7 @@
 //           </div>
 //         ) : (
 //           <div className="p-20 text-center">
-//             <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-900">
+//             <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 text-gray-900">
 //               <FaBriefcase size={40} />
 //             </div>
 //             <h3 className="text-xl font-bold text-gray-700">No Journey Records Found</h3>
@@ -339,12 +339,12 @@
 
 //       {/* Professional Journey Modal (Timeline View) */}
 //       {isModalOpen && selectedCandidate && (
-//         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+//         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-100/60 backdrop-blur-sm animate-in fade-in duration-300">
 //           <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col relative animate-in zoom-in-95 duration-300">
 //             {/* Modal Header */}
 //             <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
 //               <div className="flex items-center gap-5">
-//                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-xl font-black shadow-lg">
+//                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-gray-900 text-xl font-black shadow-lg">
 //                   {selectedCandidate.candidate?.name?.[0].toUpperCase()}
 //                 </div>
 //                 <div>
@@ -358,14 +358,14 @@
 //               </div>
 //               <button
 //                 onClick={() => setIsModalOpen(false)}
-//                 className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-500 transition-all border border-gray-200 hover:border-red-100"
+//                 className="w-10 h-10 flex items-center justify-center rounded-xl bg-white text-gray-500 hover:bg-red-50 hover:text-red-500 transition-all border border-gray-200 hover:border-red-100"
 //               >
 //                 <FaTimes size={16} />
 //               </button>
 //             </div>
 
 //             {/* Modal Body */}
-//             <div className="flex-1 overflow-y-auto p-8 bg-gray-50/30 no-scrollbar">
+//             <div className="flex-1 overflow-y-auto p-8 bg-white/30 no-scrollbar">
 //               <div className="relative pl-8 border-l-[3px] border-dashed border-gray-200/60 ml-4 space-y-12">
 //                 {selectedCandidate.experiences.map((exp, eIdx) => (
 //                   <div key={eIdx} className="relative">
@@ -399,12 +399,12 @@
 //                               href={`${API_DOMAIN}/${exp.offerLetter.replace(/\\/g, '/')}`}
 //                               target="_blank"
 //                               rel="noreferrer"
-//                               className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-gray-50 text-gray-700 hover:bg-blue-600 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-gray-200 hover:border-blue-600 shadow-sm"
+//                               className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-white text-gray-700 hover:bg-blue-600 hover:text-gray-900 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-gray-200 hover:border-blue-600 shadow-sm"
 //                             >
 //                               <FaFilePdf size={12} /> Offer Letter
 //                             </a>
 //                           ) : (
-//                             <div className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-gray-50/50 text-gray-700 rounded-xl text-[9px] font-black uppercase tracking-widest border border-dashed border-gray-200">
+//                             <div className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-white/50 text-gray-700 rounded-xl text-[9px] font-black uppercase tracking-widest border border-dashed border-gray-200">
 //                               No Letter
 //                             </div>
 //                           )}
@@ -414,12 +414,12 @@
 //                                 href={`${API_DOMAIN}/${exp.payslip.replace(/\\/g, '/')}`}
 //                                 target="_blank"
 //                                 rel="noreferrer"
-//                                 className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-gray-50 text-gray-700 hover:bg-blue-600 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-gray-200 hover:border-blue-600 shadow-sm"
+//                                 className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-white text-gray-700 hover:bg-blue-600 hover:text-gray-900 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-gray-200 hover:border-blue-600 shadow-sm"
 //                               >
 //                                 <FaFilePdf size={12} /> Salary Payslip
 //                               </a>
 //                             ) : (
-//                               <div className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-gray-50/50 text-gray-700 rounded-xl text-[9px] font-black uppercase tracking-widest border border-dashed border-gray-200">
+//                               <div className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-white/50 text-gray-700 rounded-xl text-[9px] font-black uppercase tracking-widest border border-dashed border-gray-200">
 //                                 No Payslip
 //                               </div>
 //                             )
@@ -436,7 +436,7 @@
 //             <div className="p-6 border-t border-gray-50 flex justify-end">
 //               <button
 //                 onClick={() => setIsModalOpen(false)}
-//                 className="px-8 py-3 bg-gray-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-lg"
+//                 className="px-8 py-3 bg-gray-100 text-gray-900 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-lg"
 //               >
 //                 Close Journey
 //               </button>
@@ -482,7 +482,7 @@ import { API_BASE_URL, API_DOMAIN } from "../config";
 
 const DetailItem = ({ icon, label, value }) => (
   <div className="flex items-start gap-3">
-    <div className="mt-1 text-blue-500">{icon}</div>
+    <div className="mt-1 text-blue-600">{icon}</div>
     <div>
       <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</p>
       <p className="text-sm font-bold text-gray-700">{value}</p>
@@ -686,7 +686,7 @@ const EmployeeJourney = () => {
       {/* Header */}
       <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* <div className="flex items-center gap-3">
-          <div className="bg-blue-600 text-white p-2 rounded-lg shadow-lg">
+          <div className="bg-blue-600 text-gray-900 p-2 rounded-lg shadow-lg">
             <FaBriefcase className="w-5 h-5" />
           </div>
           <h2 className="text-xl font-bold text-gray-700">Employee Journeys</h2>
@@ -714,7 +714,7 @@ const EmployeeJourney = () => {
             <button
               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
               className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${roleFilter
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                ? 'bg-blue-600 text-gray-900 hover:bg-blue-700'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
             >
@@ -724,7 +724,7 @@ const EmployeeJourney = () => {
             {/* Role Filter Dropdown */}
             {isRoleDropdownOpen && (
               <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                <div className="p-2 border-b border-gray-200 bg-gray-50">
+                <div className="p-2 border-b border-gray-200 bg-white">
                   <input
                     type="text"
                     className="w-full py-1 px-3 text-xs bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -805,7 +805,7 @@ const EmployeeJourney = () => {
         ) : filteredCandidates.length > 0 ? (
           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
-              <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+              <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
                   <th className="py-2 text-center">Employee Name</th>
                   <th className="py-2 text-center">Latest Role</th>
@@ -835,7 +835,7 @@ const EmployeeJourney = () => {
                     <td className="px-2 py-2 font-medium text-center">
                       <div className="flex flex-col items-center gap-0.5 text-xs text-gray-500">
                         <div className="flex items-center gap-1.5">
-                          <FaPhone className="text-[10px] text-blue-400" /> {item.candidate?.phone || "N/A"}
+                          <FaPhone className="text-[10px] text-blue-500" /> {item.candidate?.phone || "N/A"}
                         </div>
                         <div className="flex items-center gap-1.5 font-medium text-gray-500">
                           <FaEnvelope className="text-[10px]" /> {item.candidate?.email}
@@ -843,13 +843,13 @@ const EmployeeJourney = () => {
                       </div>
                     </td>
                     <td className="px-2 py-2 font-medium text-center">
-                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-50 text-gray-700 font-black text-xs border border-gray-200 shadow-inner group-hover:bg-blue-600 group-hover:text-white transition-all">
+                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white text-gray-700 font-black text-xs border border-gray-200 shadow-inner group-hover:bg-blue-600 group-hover:text-gray-900 transition-all">
                         {item.experiences.length}
                       </div>
                     </td>
                     <td className="px-2 py-2 font-medium text-center">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100/50">
-                        <div className="w-1 h-1 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></div>
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-blue-700 border border-emerald-100/50">
+                        <div className="w-1 h-1 rounded-full bg-blue-600 mr-1.5 animate-pulse"></div>
                         Verified
                       </span>
                     </td>
@@ -857,7 +857,7 @@ const EmployeeJourney = () => {
                       <div className="flex justify-center gap-3">
                         <button
                           onClick={() => handleOpenModal(item)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all text-[10px] font-black uppercase tracking-widest group/btn shadow-sm"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-gray-900 rounded-lg transition-all text-[10px] font-black uppercase tracking-widest group/btn shadow-sm"
                         >
                           <FaEye className="group-hover/btn:scale-110" /> View History
                         </button>
@@ -870,7 +870,7 @@ const EmployeeJourney = () => {
 
             {/* Pagination */}
             {filteredCandidates.length > 0 && (
-              <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
+              <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-white sm:flex-row">
                 <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
                   <span>Showing</span>
                   <span className="font-medium">
@@ -907,7 +907,7 @@ const EmployeeJourney = () => {
                     disabled={pagination.currentPage === 1}
                     className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === 1
                       ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                       }`}
                   >
                     Previous
@@ -922,8 +922,8 @@ const EmployeeJourney = () => {
                         className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${page === "..."
                           ? "text-gray-500 cursor-default"
                           : pagination.currentPage === page
-                            ? "bg-blue-600 text-white"
-                            : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                            ? "bg-blue-600 text-gray-900"
+                            : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
                           }`}
                       >
                         {page}
@@ -936,7 +936,7 @@ const EmployeeJourney = () => {
                     disabled={pagination.currentPage === pagination.totalPages}
                     className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === pagination.totalPages
                       ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                       }`}
                   >
                     Next
@@ -947,7 +947,7 @@ const EmployeeJourney = () => {
           </div>
         ) : (
           <div className="p-20 text-center">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-900">
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 text-gray-900">
               <FaBriefcase size={40} />
             </div>
             <h3 className="text-xl font-bold text-gray-700">No Journey Records Found</h3>
@@ -958,11 +958,11 @@ const EmployeeJourney = () => {
 
       {/* Professional Journey Modal (Timeline View) */}
       {isModalOpen && selectedCandidate && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-100/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col relative animate-in zoom-in-95 duration-300">
             <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
               <div className="flex items-center gap-5">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-xl font-black shadow-lg">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-gray-900 text-xl font-black shadow-lg">
                   {selectedCandidate.candidate?.name?.[0].toUpperCase()}
                 </div>
                 <div>
@@ -976,18 +976,18 @@ const EmployeeJourney = () => {
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-500 transition-all border border-gray-200 hover:border-red-100"
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-white text-gray-500 hover:bg-red-50 hover:text-red-500 transition-all border border-gray-200 hover:border-red-100"
               >
                 <FaTimes size={16} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-8 bg-gray-50/30 no-scrollbar">
+            <div className="flex-1 overflow-y-auto p-8 bg-white/30 no-scrollbar">
               <div className="relative pl-8 border-l-[3px] border-dashed border-gray-200/60 ml-4 space-y-12">
                 {selectedCandidate.experiences.map((exp, eIdx) => (
                   <div key={eIdx} className="relative">
                     {/* Timeline Dot */}
-                    <div className={`absolute -left-[45px] top-6 w-6 h-6 rounded-full border-[5px] border-white ${exp.isCurrentJob ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-blue-600'} shadow-md`} />
+                    <div className={`absolute -left-[45px] top-6 w-6 h-6 rounded-full border-[5px] border-white ${exp.isCurrentJob ? 'bg-blue-600 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-blue-600'} shadow-md`} />
 
                     <div className={`bg-white rounded-3xl p-6 border ${exp.isCurrentJob ? 'border-emerald-200 bg-emerald-50/20' : 'border-gray-200'} shadow-sm hover:border-blue-200 transition-all duration-300`}>
                       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
@@ -997,7 +997,7 @@ const EmployeeJourney = () => {
                               <h5 className="text-lg font-black text-gray-900 tracking-tight">{exp.role}</h5>
                               <span className="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-blue-100/50">Record {selectedCandidate.experiences.length - eIdx}</span>
                               {exp.isCurrentJob && (
-                                <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest rounded-lg border border-emerald-200 animate-pulse">
+                                <span className="px-2.5 py-1 bg-blue-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest rounded-lg border border-emerald-200 animate-pulse">
                                   Current working
                                 </span>
                               )}
@@ -1021,12 +1021,12 @@ const EmployeeJourney = () => {
                               href={`${API_DOMAIN}/${exp.offerLetter.replace(/\\/g, '/')}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-gray-50 text-gray-700 hover:bg-blue-600 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-gray-200 hover:border-blue-600 shadow-sm"
+                              className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-white text-gray-700 hover:bg-blue-600 hover:text-gray-900 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-gray-200 hover:border-blue-600 shadow-sm"
                             >
                               <FaFilePdf size={12} /> Offer Letter
                             </a>
                           ) : (
-                            <div className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-gray-50/50 text-gray-700 rounded-xl text-[9px] font-black uppercase tracking-widest border border-dashed border-gray-200">
+                            <div className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-white/50 text-gray-700 rounded-xl text-[9px] font-black uppercase tracking-widest border border-dashed border-gray-200">
                               No Letter
                             </div>
                           )}
@@ -1035,12 +1035,12 @@ const EmployeeJourney = () => {
                               href={`${API_DOMAIN}/${exp.payslip.replace(/\\/g, '/')}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-gray-50 text-gray-700 hover:bg-blue-600 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-gray-200 hover:border-blue-600 shadow-sm"
+                              className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-white text-gray-700 hover:bg-blue-600 hover:text-gray-900 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-gray-200 hover:border-blue-600 shadow-sm"
                             >
                               <FaFilePdf size={12} /> Salary Payslip
                             </a>
                           ) : (
-                            <div className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-gray-50/50 text-gray-700 rounded-xl text-[9px] font-black uppercase tracking-widest border border-dashed border-gray-200">
+                            <div className="flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-4 py-2 bg-white/50 text-gray-700 rounded-xl text-[9px] font-black uppercase tracking-widest border border-dashed border-gray-200">
                               No Payslip
                             </div>
                           )}
@@ -1055,7 +1055,7 @@ const EmployeeJourney = () => {
             <div className="p-6 border-t border-gray-50 flex justify-end">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-8 py-3 bg-gray-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-lg"
+                className="px-8 py-3 bg-gray-100 text-gray-900 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-lg"
               >
                 Close Journey
               </button>

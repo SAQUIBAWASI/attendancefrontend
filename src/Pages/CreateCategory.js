@@ -48,7 +48,7 @@ const CreateCategory = ({ onCategoryCreated }) => {
 
         <button
           type="submit"
-          className="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 transition duration-300"
+          className="w-full bg-blue-900 text-gray-900 py-2 rounded hover:bg-blue-800 transition duration-300"
         >
           Create
         </button>

@@ -257,7 +257,7 @@ const ApprovedLeaves = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
         <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-green-600 rounded-full animate-spin"></div>
+          <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-blue-700 rounded-full animate-spin"></div>
           <p className="font-semibold text-gray-500">
             Loading approved requests...
           </p>
@@ -291,7 +291,7 @@ const ApprovedLeaves = () => {
 
             {/* Title / Back Indicator */}
             <div className="flex items-center gap-2 pr-4 border-r border-gray-200 mr-2">
-                <FiCheckCircle className="text-xl text-green-600" />
+                <FiCheckCircle className="text-xl text-blue-700" />
                 <h1 className="text-sm font-bold tracking-widest text-gray-700 uppercase">Approved</h1>
             </div>
 
@@ -325,7 +325,7 @@ const ApprovedLeaves = () => {
               <button
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                   }`}
               >
@@ -366,7 +366,7 @@ const ApprovedLeaves = () => {
               <button
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                   }`}
               >
@@ -444,7 +444,7 @@ const ApprovedLeaves = () => {
             <button
               onClick={downloadExcel}
               disabled={filteredLeaves.length === 0}
-              className="flex items-center gap-1.5 h-8 px-3 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+              className="flex items-center gap-1.5 h-8 px-3 text-xs font-medium text-gray-900 bg-blue-600 rounded-md hover:bg-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
             >
               <FaDownload className="text-xs" />
               Download XL ({filteredLeaves.length})
@@ -456,7 +456,7 @@ const ApprovedLeaves = () => {
         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
-              <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-emerald-600">
+              <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-emerald-600">
                 <tr>
                   <th className="py-2 text-center ">Employee ID</th>
                   <th className="py-2 text-center ">Name</th>
@@ -476,7 +476,7 @@ const ApprovedLeaves = () => {
                     return (
                       <tr
                         key={l._id}
-                        className="transition border-b hover:bg-green-50/30"
+                        className="transition border-b hover:bg-blue-50/30"
                       >
                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           {l.employeeId || "N/A"}
@@ -504,7 +504,7 @@ const ApprovedLeaves = () => {
                           {l.reason}
                         </td>
                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                          <span className="px-2 py-2 text-xs text-center text-green-700 bg-green-100 rounded-full">
+                          <span className="px-2 py-2 text-xs text-center text-green-700 bg-blue-100 rounded-full">
                             ✅ Approved
                           </span>
                         </td>
@@ -568,9 +568,9 @@ const ApprovedLeaves = () => {
                   onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                   disabled={page === "..."}
                   className={`px-4 py-1 text-sm border rounded-lg ${page === "..."
-                      ? "text-gray-500 bg-gray-50 cursor-default"
+                      ? "text-gray-500 bg-white cursor-default"
                       : currentPage === page
-                        ? "text-white bg-blue-600 border-blue-600"
+                        ? "text-gray-900 bg-blue-600 border-blue-600"
                         : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                     }`}
                 >

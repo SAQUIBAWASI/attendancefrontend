@@ -49,7 +49,7 @@ const PrivacyPolicyForm = () => {
 
       {/* Success Message */}
       {successMessage && (
-        <div className="bg-green-100 text-green-700 p-4 rounded mb-4">
+        <div className="bg-blue-100 text-green-700 p-4 rounded mb-4">
           {successMessage}
         </div>
       )}
@@ -110,7 +110,7 @@ const PrivacyPolicyForm = () => {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-6 py-2 bg-blue-600 text-gray-900 rounded hover:bg-blue-700"
           >
             Save Privacy Policy
           </button>

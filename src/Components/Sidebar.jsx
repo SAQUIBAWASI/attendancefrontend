@@ -171,7 +171,7 @@
 //       {/* Mobile Overlay */}
 //       {isMobile && !isCollapsed && (
 //         <div
-//           className="fixed inset-0 z-40 bg-black bg-opacity-40"
+//           className="fixed inset-0 z-40 bg-[#1E3A8A] "
 //           onClick={handleAnyClick}
 //         />
 //       )}
@@ -179,7 +179,7 @@
 //       {/* Tooltip for collapsed sidebar */}
 //       {isCollapsed && hoveredItem && !isMobile && (
 //         <div
-//           className="fixed z-[100] bg-blue-600 text-white text-sm px-3 py-2 rounded-md shadow-lg pointer-events-none"
+//           className="fixed z-[100] bg-[#16A34A] text-white text-sm px-3 py-2 rounded-md shadow-lg pointer-events-none"
 //           style={{
 //             left: `${tooltipPosition.x}px`,
 //             top: `${tooltipPosition.y}px`,
@@ -191,25 +191,25 @@
 
 //       {/* Sidebar */}
 //       <div
-//         className={`fixed top-0 left-0 h-full bg-blue-600 text-white z-50 transition-all duration-300 border-r border-gray-200
+//         className={`fixed top-0 left-0 h-full bg-[#16A34A] text-white z-50 transition-all duration-300 border-blue-500 border-blue-500
 //         ${isMobile
 //             ? isCollapsed ? "-translate-x-full w-52" : "translate-x-0 w-52"
 //             : isCollapsed ? "w-16" : "w-52"
 //           }`}
 //       >
 //         {/* Header with Current Page */}
-//         <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-blue-700 border-gray-200">
+//         <div className="flex items-center justify-center px-3 font-bold tracking-tight bg-blue-700 border-blue-500 h-14">
 //           <div className="flex items-center w-full gap-2 overflow-hidden">
 //             {isCollapsed && !isMobile ? (
-//               <span className="text-xl text-blue-500">TM</span>
+//               <span className="text-xl text-white">TM</span>
 //             ) : (
 //               <div className="flex flex-col w-full">
-//                 <span className="text-xs uppercase tracking-[0.2em] font-medium text-gray-100 mb-0.5">
+//                 <span className="text-xs uppercase tracking-[0.2em] font-medium text-white mb-0.5">
 //                   Team Management
 //                 </span>
 //                 <div className="flex items-center gap-1.5">
-//                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-//                   <span className="text-xs font-medium truncate text-gray-100/80">
+//                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></div>
+//                   <span className="text-xs font-medium truncate text-white/80">
 //                     {currentPage}
 //                   </span>
 //                 </div>
@@ -231,7 +231,7 @@
 //                         ? 'bg-blue-600/80 text-white shadow-lg'
 //                         : openDropdown === item.name 
 //                           ? 'bg-blue-700/70' 
-//                           : 'hover:bg-blue-700/60'
+//                           : 'hover:bg-[#1D4ED8]/60/70/70/60'
 //                     }`}
 //                     onClick={() => {
 //                       navigate(item.dropdown[0].path);
@@ -246,8 +246,8 @@
 //                         isDropdownActive(item.dropdown) 
 //                           ? 'text-white' 
 //                           : openDropdown === item.name 
-//                             ? 'text-blue-500' 
-//                             : 'text-white group-hover:text-blue-500'
+//                             ? 'text-white' 
+//                             : 'text-white group-hover:text-white'
 //                       }`}>
 //                         {item.icon}
 //                       </span>
@@ -271,7 +271,7 @@
 //                             isDropdownActive(item.dropdown) 
 //                               ? 'text-white' 
 //                               : openDropdown === item.name 
-//                                 ? 'text-blue-500' 
+//                                 ? 'text-white' 
 //                                 : 'text-white'
 //                           } ${openDropdown === item.name ? "rotate-180" : ""}`}
 //                         />
@@ -289,13 +289,13 @@
 //                             onClick={handleAnyClick}
 //                             className={`block py-1 text-[13px] transition-colors relative before:absolute before:left-[-1.1rem] before:top-1/2 before:w-2 before:h-[1px] before:bg-blue-700 ${
 //                               isActive(sub.path)
-//                                 ? 'text-blue-500 font-semibold'
-//                                 : 'text-white hover:text-blue-500'
+//                                 ? 'text-white font-semibold'
+//                                 : 'text-white hover:text-white'
 //                             }`}
 //                           >
 //                             <div className="flex items-center gap-2">
 //                               {isActive(sub.path) && (
-//                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+//                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
 //                               )}
 //                               {sub.name}
 //                             </div>
@@ -319,13 +319,13 @@
 //                   className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
 //                     isActive(item.path)
 //                       ? 'bg-blue-600/80 text-white shadow-lg'
-//                       : 'hover:bg-blue-700/60'
+//                       : 'hover:bg-[#1D4ED8]/60/70/70/60'
 //                   }`}
 //                 >
 //                   <span className={`text-lg transition-colors duration-200 ${
 //                     isActive(item.path) 
 //                       ? 'text-white' 
-//                       : 'text-white group-hover:text-blue-500'
+//                       : 'text-white group-hover:text-white'
 //                   }`}>
 //                     {item.icon}
 //                   </span>
@@ -348,26 +348,26 @@
 //         </nav>
 
 //         {/* Footer with Page Indicator */}
-//         <div className="px-4 py-3 text-[10px] text-gray-200 border-t border-gray-200 bg-blue-700">
+//         <div className="px-4 py-3 text-[10px] text-white border-blue-500 border-blue-500 bg-blue-700">
 //           {!isCollapsed ? (
 //             <div className="flex flex-col gap-0.5">
 //               <div className="flex items-center justify-between">
-//                 <p className="font-semibold tracking-wider uppercase text-gray-200">System v1.2</p>
+//                 <p className="font-semibold tracking-wider text-white uppercase">System v1.2</p>
 //                 <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-600/20 rounded">
-//                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-//                   <span className="text-[9px] text-blue-500 font-medium">Active</span>
+//                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+//                   <span className="text-[9px] text-white font-medium">Active</span>
 //                 </div>
 //               </div>
 //               <p>© 2026 Timely Health</p>
-//               <div className="pt-1 mt-1 border-t border-blue-700/30">
-//                 <p className="text-[9px] text-gray-100/70">
-//                   Current: <span className="text-blue-500">{currentPage}</span>
+//               <div className="pt-1 mt-1 border-blue-500 border-blue-500/30">
+//                 <p className="text-[9px] text-white/70">
+//                   Current: <span className="text-white">{currentPage}</span>
 //                 </p>
 //               </div>
 //             </div>
 //           ) : (
 //             <div className="text-center">
-//               <div className="w-3 h-3 mx-auto mb-1 rounded-full bg-emerald-400 animate-pulse"></div>
+//               <div className="w-3 h-3 mx-auto mb-1 bg-blue-400 rounded-full animate-pulse"></div>
 //               <span>©</span>
 //             </div>
 //           )}
@@ -565,7 +565,7 @@
 //       {/* Mobile Overlay */}
 //       {isMobile && !isCollapsed && (
 //         <div
-//           className="fixed inset-0 z-40 bg-black bg-opacity-40"
+//           className="fixed inset-0 z-40 bg-[#1E3A8A] "
 //           onClick={handleAnyClick}
 //         />
 //       )}
@@ -573,7 +573,7 @@
 //       {/* Tooltip for collapsed sidebar */}
 //       {isCollapsed && hoveredItem && !isMobile && (
 //         <div
-//           className="fixed z-[100] bg-blue-600 text-white text-sm px-3 py-2 rounded-md shadow-lg pointer-events-none"
+//           className="fixed z-[100] bg-[#16A34A] text-white text-sm px-3 py-2 rounded-md shadow-lg pointer-events-none"
 //           style={{
 //             left: `${tooltipPosition.x}px`,
 //             top: `${tooltipPosition.y}px`,
@@ -585,25 +585,25 @@
 
 //       {/* Sidebar */}
 //       <div
-//         className={`fixed top-0 left-0 h-full bg-blue-600 text-white z-50 transition-all duration-300 border-r border-gray-200
+//         className={`fixed top-0 left-0 h-full bg-[#16A34A] text-white z-50 transition-all duration-300 border-blue-500 border-blue-500
 //         ${isMobile
 //             ? isCollapsed ? "-translate-x-full w-52" : "translate-x-0 w-52"
 //             : isCollapsed ? "w-16" : "w-52"
 //           }`}
 //       >
 //         {/* Header with Current Page */}
-//         <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-blue-700 border-gray-200">
+//         <div className="flex items-center justify-center px-3 font-bold tracking-tight bg-blue-700 border-blue-500 h-14">
 //           <div className="flex items-center w-full gap-2 overflow-hidden">
 //             {isCollapsed && !isMobile ? (
-//               <span className="text-xl text-blue-500">TM</span>
+//               <span className="text-xl text-white">TM</span>
 //             ) : (
 //               <div className="flex flex-col w-full">
-//                 <span className="text-xs uppercase tracking-[0.2em] font-medium text-gray-100 mb-0.5">
+//                 <span className="text-xs uppercase tracking-[0.2em] font-medium text-white mb-0.5">
 //                   Team Management
 //                 </span>
 //                 <div className="flex items-center gap-1.5">
-//                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-//                   <span className="text-xs font-medium truncate text-gray-100/80">
+//                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></div>
+//                   <span className="text-xs font-medium truncate text-white/80">
 //                     {currentPage}
 //                   </span>
 //                 </div>
@@ -624,7 +624,7 @@
 //                         ? 'bg-blue-600/80 text-white shadow-lg'
 //                         : openDropdown === item.name
 //                           ? 'bg-blue-700/70'
-//                           : 'hover:bg-blue-700/60'
+//                           : 'hover:bg-[#1D4ED8]/60/70/70/60'
 //                       }`}
 //                     onClick={() => {
 //                       navigate(item.dropdown[0].path);
@@ -638,8 +638,8 @@
 //                       <span className={`text-lg transition-colors duration-200 ${isDropdownActive(item.dropdown)
 //                           ? 'text-white'
 //                           : openDropdown === item.name
-//                             ? 'text-blue-500'
-//                             : 'text-white group-hover:text-blue-500'
+//                             ? 'text-white'
+//                             : 'text-white group-hover:text-white'
 //                         }`}>
 //                         {item.icon}
 //                       </span>
@@ -658,10 +658,10 @@
 //                         )}
 //                         <FaChevronDown
 //                           onClick={(e) => toggleDropdown(e, item.name)}
-//                           className={`text-xs transition-transform duration-300 p-0 hover:bg-gray-200 rounded cursor-pointer ${isDropdownActive(item.dropdown)
+//                           className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600 rounded cursor-pointer ${isDropdownActive(item.dropdown)
 //                             ? 'text-white'
 //                             : openDropdown === item.name
-//                               ? 'text-blue-500'
+//                               ? 'text-white'
 //                               : 'text-white'
 //                             } ${openDropdown === item.name ? "rotate-180" : ""}`}
 //                           style={{
@@ -684,13 +684,13 @@
 //                             to={sub.path}
 //                             onClick={handleAnyClick}
 //                             className={`block py-1 text-[13px] transition-colors relative before:absolute before:left-[-1.1rem] before:top-1/2 before:w-2 before:h-[1px] before:bg-blue-700 ${isActive(sub.path)
-//                                 ? 'text-blue-500 font-semibold'
-//                                 : 'text-white hover:text-blue-500'
+//                                 ? 'text-white font-semibold'
+//                                 : 'text-white hover:text-white'
 //                               }`}
 //                           >
 //                             <div className="flex items-center gap-2">
 //                               {isActive(sub.path) && (
-//                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+//                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
 //                               )}
 //                               {sub.name}
 //                             </div>
@@ -713,12 +713,12 @@
 //                   onMouseLeave={() => isCollapsed && !isMobile && setHoveredItem(null)}
 //                   className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${isActive(item.path)
 //                       ? 'bg-blue-600/80 text-white shadow-lg'
-//                       : 'hover:bg-blue-700/60'
+//                       : 'hover:bg-[#1D4ED8]/60/70/70/60'
 //                     }`}
 //                 >
 //                   <span className={`text-lg transition-colors duration-200 ${isActive(item.path)
 //                       ? 'text-white'
-//                       : 'text-white group-hover:text-blue-500'
+//                       : 'text-white group-hover:text-white'
 //                     }`}>
 //                     {item.icon}
 //                   </span>
@@ -740,26 +740,26 @@
 //         </nav>
 
 //         {/* Footer with Page Indicator */}
-//         <div className="px-4 py-3 text-[10px] text-gray-200 border-t border-gray-200 bg-blue-700">
+//         <div className="px-4 py-3 text-[10px] text-white border-blue-500 border-blue-500 bg-blue-700">
 //           {!isCollapsed ? (
 //             <div className="flex flex-col gap-0.5">
 //               <div className="flex items-center justify-between">
-//                 <p className="font-semibold tracking-wider uppercase text-gray-200">System v1.2</p>
+//                 <p className="font-semibold tracking-wider text-white uppercase">System v1.2</p>
 //                 <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-600/20 rounded">
-//                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-//                   <span className="text-[9px] text-blue-500 font-medium">Active</span>
+//                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+//                   <span className="text-[9px] text-white font-medium">Active</span>
 //                 </div>
 //               </div>
 //               <p>© 2026 Timely Health</p>
-//               <div className="pt-1 mt-1 border-t border-blue-700/30">
-//                 <p className="text-[9px] text-gray-100/70">
-//                   Current: <span className="text-blue-500">{currentPage}</span>
+//               <div className="pt-1 mt-1 border-blue-500 border-blue-500/30">
+//                 <p className="text-[9px] text-white/70">
+//                   Current: <span className="text-white">{currentPage}</span>
 //                 </p>
 //               </div>
 //             </div>
 //           ) : (
 //             <div className="text-center">
-//               <div className="w-3 h-3 mx-auto mb-1 rounded-full bg-emerald-400 animate-pulse"></div>
+//               <div className="w-3 h-3 mx-auto mb-1 bg-blue-400 rounded-full animate-pulse"></div>
 //               <span>©</span>
 //             </div>
 //           )}
@@ -1009,7 +1009,7 @@
 //     <>
 //       {isMobile && !isCollapsed && (
 //         <div
-//           className="fixed inset-0 z-40 bg-black bg-opacity-40"
+//           className="fixed inset-0 z-40 bg-[#1E3A8A] "
 //           onClick={() => {
 //             setIsCollapsed(true);
 //             setOpenDropdown(null);
@@ -1019,7 +1019,7 @@
 
 //       {isCollapsed && hoveredItem && !isMobile && (
 //         <div
-//           className="fixed z-[100] bg-blue-600 text-white text-sm px-3 py-2 rounded-md shadow-lg pointer-events-none"
+//           className="fixed z-[100] bg-[#16A34A] text-white text-sm px-3 py-2 rounded-md shadow-lg pointer-events-none"
 //           style={{
 //             left: `${tooltipPosition.x}px`,
 //             top: `${tooltipPosition.y}px`,
@@ -1032,7 +1032,7 @@
 //       <div
 //         onMouseEnter={handleMouseEnterSidebar}
 //         onMouseLeave={handleMouseLeaveSidebar}
-//         className={`fixed top-0 left-0 h-full bg-blue-600 text-white z-50 transition-all duration-300 border-r border-gray-200
+//         className={`fixed top-0 left-0 h-full bg-[#16A34A] text-white z-50 transition-all duration-300 border-blue-500 border-blue-500
 //         ${
 //           isMobile
 //             ? isCollapsed
@@ -1044,17 +1044,17 @@
 //         }`}
 //       >
 //         {/* Header */}
-//         <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-blue-700 border-gray-200">
+//         <div className="flex items-center justify-center px-3 font-bold tracking-tight bg-blue-700 border-blue-500 h-14">
 //           {isCollapsed && !isMobile ? (
-//             <span className="text-xl text-blue-500">TM</span>
+//             <span className="text-xl text-white">TM</span>
 //           ) : (
 //             <div className="flex flex-col w-full">
-//               <span className="text-xs uppercase tracking-[0.2em] font-medium text-gray-100 mb-0.5">
+//               <span className="text-xs uppercase tracking-[0.2em] font-medium text-white mb-0.5">
 //                 Team Management
 //               </span>
 //               <div className="flex items-center gap-1.5">
-//                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-//                 <span className="text-xs font-medium truncate text-gray-100/80">
+//                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></div>
+//                 <span className="text-xs font-medium truncate text-white/80">
 //                   {currentPage}
 //                 </span>
 //               </div>
@@ -1071,10 +1071,10 @@
 //                   <div
 //                     className={`group flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
 //                       isDropdownActive(item.dropdown)
-//                         ? "bg-blue-600 text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
+//                         ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
 //                         : openDropdown === item.name
-//                         ? "bg-gray-200"
-//                         : "hover:bg-blue-500"
+//                         ? "bg-[#1E3A8A]"
+//                         : "hover:bg-blue-600"
 //                     }`}
 //                     onClick={(e) => {
 //                       e.stopPropagation();
@@ -1096,8 +1096,8 @@
 //                         isDropdownActive(item.dropdown)
 //                           ? "text-white"
 //                           : openDropdown === item.name
-//                           ? "text-blue-500"
-//                           : "text-white group-hover:text-blue-500"
+//                           ? "text-white"
+//                           : "text-white group-hover:text-white"
 //                       }`}>
 //                         {item.icon}
 //                       </span>
@@ -1115,11 +1115,11 @@
 //                         )}
 //                         <FaChevronDown
 //                           onClick={(e) => toggleDropdown(e, item.name)}
-//                           className={`text-xs transition-transform duration-300 p-0 hover:bg-gray-200 rounded cursor-pointer ${
+//                           className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600 rounded cursor-pointer ${
 //                             isDropdownActive(item.dropdown)
 //                               ? "text-white"
 //                               : openDropdown === item.name
-//                               ? "text-blue-500"
+//                               ? "text-white"
 //                               : "text-white"
 //                           } ${openDropdown === item.name ? "rotate-180" : ""}`}
 //                           style={{
@@ -1143,13 +1143,13 @@
 //                             onClick={() => handleDropdownItemClick(sub.path)}
 //                             className={`block py-1 text-[13px] transition-colors pl-8 ${
 //                               isActive(sub.path)
-//                                 ? "text-blue-500 font-semibold"
-//                                 : "text-white hover:text-blue-500"
+//                                 ? "text-white font-semibold"
+//                                 : "text-white hover:text-white"
 //                             }`}
 //                           >
 //                             <div className="flex items-center gap-2">
 //                               {isActive(sub.path) && (
-//                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+//                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
 //                               )}
 //                               {sub.name}
 //                             </div>
@@ -1167,14 +1167,14 @@
 //                   onMouseLeave={() => isCollapsed && !isMobile && setHoveredItem(null)}
 //                   className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
 //                     isActive(item.path)
-//                       ? "bg-blue-600 text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
-//                       : "hover:bg-blue-500"
+//                       ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
+//                       : "hover:bg-blue-600"
 //                   }`}
 //                 >
 //                   <span className={`text-lg transition-colors duration-200 ${
 //                     isActive(item.path)
 //                       ? "text-white"
-//                       : "text-white group-hover:text-blue-500"
+//                       : "text-white group-hover:text-white"
 //                   }`}>
 //                     {item.icon}
 //                   </span>
@@ -1195,21 +1195,21 @@
 //         </nav>
 
 //         {/* Footer */}
-//         <div className="px-4 py-3 text-[10px] text-gray-200 border-t border-gray-200 bg-blue-700">
+//         <div className="px-4 py-3 text-[10px] text-white border-blue-500 border-blue-500 bg-blue-700">
 //           {!isCollapsed ? (
 //             <div className="flex flex-col gap-0.5">
 //               <div className="flex items-center justify-between">
-//                 <p className="font-semibold tracking-wider uppercase text-gray-200">System v1.2</p>
+//                 <p className="font-semibold tracking-wider text-white uppercase">System v1.2</p>
 //                 <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-600/20 rounded">
-//                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-//                   <span className="text-[9px] text-blue-500 font-medium">Active</span>
+//                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+//                   <span className="text-[9px] text-white font-medium">Active</span>
 //                 </div>
 //               </div>
 //               <p>© 2026 Timely Health</p>
 //             </div>
 //           ) : (
 //             <div className="text-center">
-//               <div className="w-3 h-3 mx-auto mb-1 rounded-full bg-emerald-400 animate-pulse"></div>
+//               <div className="w-3 h-3 mx-auto mb-1 bg-blue-400 rounded-full animate-pulse"></div>
 //               <span>©</span>
 //             </div>
 //           )}
@@ -1445,7 +1445,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
   };
 
   // Handle dropdown item click
-  const handleDropdownItemClick = (path) => {
+  const handleDropdownItemClick = (path) => { 
     navigate(path);
     setOpenDropdown(null);
     
@@ -1462,7 +1462,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
     <>
       {isMobile && !isCollapsed && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-40"
+          className="fixed inset-0 z-40 bg-[#1E3A8A] "
           onClick={() => {
             setIsCollapsed(true);
             setOpenDropdown(null);
@@ -1473,7 +1473,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       <div
         onMouseEnter={handleMouseEnterSidebar}
         onMouseLeave={handleMouseLeaveSidebar}
-        className={`fixed top-0 left-0 h-full bg-blue-600 text-white z-50 transition-all duration-300 border-r border-gray-200
+        className={`fixed top-0 left-0 h-full bg-[#1D4ED8] text-white z-50 transition-all duration-300 border-blue-500 border-blue-500
         ${
           isMobile
             ? isCollapsed
@@ -1485,17 +1485,17 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b h-14 bg-blue-700 border-gray-200">
+        <div className="flex items-center justify-center px-3 font-bold tracking-tight bg-blue-700 border-blue-500 h-14">
           {isCollapsed && !isMobile ? (
-            <span className="text-xl text-blue-500">TM</span>
+            <span className="text-xl text-white">TM</span>
           ) : (
             <div className="flex flex-col w-full">
-              <span className="text-xs uppercase tracking-[0.2em] font-medium text-gray-100 mb-0.5">
+              <span className="text-xs uppercase tracking-[0.2em] font-medium text-white mb-0.5">
                 Team Management
               </span>
               <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                <span className="text-xs font-medium truncate text-gray-100/80">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></div>
+                <span className="text-xs font-medium truncate text-white/80">
                   {currentPage}
                 </span>
               </div>
@@ -1512,10 +1512,10 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                   <div
                     className={`group flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
                       isDropdownActive(item.dropdown)
-                        ? "bg-blue-600 text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
+                        ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
                         : openDropdown === item.name
-                        ? "bg-gray-200"
-                        : "hover:bg-blue-500"
+                        ? "bg-[#1E3A8A]"
+                        : "hover:bg-blue-600"
                     }`}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1534,8 +1534,8 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                         isDropdownActive(item.dropdown)
                           ? "text-white"
                           : openDropdown === item.name
-                          ? "text-blue-500"
-                          : "text-white group-hover:text-blue-500"
+                          ? "text-white"
+                          : "text-white group-hover:text-white"
                       }`}>
                         {item.icon}
                       </span>
@@ -1553,11 +1553,11 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                         )}
                         <FaChevronDown
                           onClick={(e) => toggleDropdown(e, item.name)}
-                          className={`text-xs transition-transform duration-300 p-0 hover:bg-gray-200 rounded cursor-pointer ${
+                          className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600 rounded cursor-pointer ${
                             isDropdownActive(item.dropdown)
                               ? "text-white"
                               : openDropdown === item.name
-                              ? "text-blue-500"
+                              ? "text-white"
                               : "text-white"
                           } ${openDropdown === item.name ? "rotate-180" : ""}`}
                           style={{
@@ -1581,13 +1581,13 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                             onClick={() => handleDropdownItemClick(sub.path)}
                             className={`block py-1 text-[13px] transition-colors  ${
                               isActive(sub.path)
-                                ? "text-blue-500 font-semibold"
-                                : "text-white hover:text-blue-500"
+                                ? "text-white font-semibold"
+                                : "text-white hover:text-white"
                             }`}
                           >
                             <div className="flex items-center gap-2">
                               {isActive(sub.path) && (
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
                               )}
                               {sub.name}
                             </div>
@@ -1602,14 +1602,14 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                   onClick={() => handleItemClick(item.path, item.action)}
                   className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
                     isActive(item.path)
-                      ? "bg-blue-600 text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
-                      : "hover:bg-blue-500"
+                      ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
+                      : "hover:bg-blue-600"
                   }`}
                 >
                   <span className={`text-lg transition-colors duration-200 ${
                     isActive(item.path)
                       ? "text-white"
-                      : "text-white group-hover:text-blue-500"
+                      : "text-white group-hover:text-white"
                   }`}>
                     {item.icon}
                   </span>
@@ -1630,21 +1630,21 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         </nav>
 
         {/* Footer */}
-        <div className="px-4 py-3 text-[10px] text-gray-200 border-t border-gray-200 bg-blue-700">
+        <div className="px-4 py-3 text-[10px] text-white border-blue-500 border-blue-500 bg-blue-700">
           {!isCollapsed ? (
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center justify-between">
-                <p className="font-semibold tracking-wider uppercase text-gray-200">System v1.2</p>
+                <p className="font-semibold tracking-wider text-white uppercase">System v1.2</p>
                 <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-600/20 rounded">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-                  <span className="text-[9px] text-blue-500 font-medium">Active</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                  <span className="text-[9px] text-white font-medium">Active</span>
                 </div>
               </div>
               <p>© 2026 Timely Health</p>
             </div>
           ) : (
             <div className="text-center">
-              <div className="w-3 h-3 mx-auto mb-1 rounded-full bg-emerald-400 animate-pulse"></div>
+              <div className="w-3 h-3 mx-auto mb-1 bg-blue-400 rounded-full animate-pulse"></div>
               <span>©</span>
             </div>
           )}

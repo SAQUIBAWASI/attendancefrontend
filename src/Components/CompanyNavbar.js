@@ -15,12 +15,12 @@ const CompanyNavbar = ({ setIsCollapsed, isCollapsed }) => {
   };
 
   return (
-    <nav className="bg-blue-700 text-white sticky top-0 w-full p-4 flex items-center shadow-lg z-50">
+    <nav className="bg-[#1D4ED8] text-white sticky top-0 w-full p-4 flex items-center shadow-lg z-50">
       <button onClick={() => setIsCollapsed(!isCollapsed)} className="text-xl p-2">
         {isCollapsed ? (
-          <RiMenu2Line className="text-2xl text-gray-200" />
+          <RiMenu2Line className="text-2xl text-white" />
         ) : (
-          <RiMenu3Line className="text-2xl text-gray-200" />
+          <RiMenu3Line className="text-2xl text-white" />
         )}
       </button>
 

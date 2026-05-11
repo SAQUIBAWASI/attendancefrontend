@@ -101,7 +101,7 @@ const PrivacyPolicyPage = () => {
         <div>
           <p>No privacy policy available.</p>
           <button
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+            className="mt-4 px-4 py-2 bg-blue-600 text-gray-900 rounded"
             onClick={handleCreate}
           >
             Create One
@@ -114,20 +114,20 @@ const PrivacyPolicyPage = () => {
             <div className="space-x-2">
               <button
                 onClick={handleEdit}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
+                className="px-4 py-2 bg-blue-600 text-gray-900 rounded"
               >
                 Edit
               </button>
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded"
+                className="px-4 py-2 bg-red-600 text-gray-900 rounded"
               >
                 Delete
               </button>
             </div>
           </div>
           <p className="text-sm text-gray-500 mb-4">Effective Date: {policy.date}</p>
-          <div className="whitespace-pre-line text-gray-800 leading-relaxed">
+          <div className="whitespace-pre-line text-gray-900 leading-relaxed">
             {policy.content}
           </div>
         </>
@@ -169,7 +169,7 @@ const PrivacyPolicyPage = () => {
               </button>
               <button
                 onClick={handleSave}
-                className="px-3 py-2 bg-green-600 text-white rounded"
+                className="px-3 py-2 bg-blue-600 text-gray-900 rounded"
               >
                 Save
               </button>

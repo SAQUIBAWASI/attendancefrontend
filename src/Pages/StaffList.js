@@ -203,14 +203,14 @@ const StaffList = () => {
           data={filteredStaffs}
           headers={headers}
           filename="staff_list.csv"
-          className="px-4 py-2 bg-green-500 text-white rounded text-sm flex items-center gap-2"
+          className="px-4 py-2 bg-blue-600 text-gray-900 rounded text-sm flex items-center gap-2"
         >
           <FaFileCsv /> CSV
         </CSVLink>
 
         <label
           htmlFor="import-file"
-          className="px-4 py-2 bg-purple-600 text-white rounded text-sm flex items-center gap-2 cursor-pointer"
+          className="px-4 py-2 bg-purple-600 text-gray-900 rounded text-sm flex items-center gap-2 cursor-pointer"
         >
           <FaUpload /> Bulk Import
           <input
@@ -276,7 +276,7 @@ const StaffList = () => {
                 <td className="p-2 border">
                   <button
                     onClick={() => openAddAmountModal(staff)}
-                    className="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600"
+                    className="bg-blue-600 text-gray-900 px-2 py-1 rounded text-xs hover:bg-blue-600"
                   >
                     Add Amount
                   </button>
@@ -284,7 +284,7 @@ const StaffList = () => {
                 <td className="p-2 border flex gap-2 justify-center">
                   <button
                     onClick={() => handleEdit(staff)}
-                    className="text-blue-500 hover:text-blue-700"
+                    className="text-blue-600 hover:text-blue-700"
                   >
                     <FaEdit />
                   </button>
@@ -299,7 +299,7 @@ const StaffList = () => {
                          <td className="p-2 border">
                          <button
                            onClick={() => handleViewHistory(staff._id)}
-                           className="bg-indigo-500 text-white px-2 py-1 rounded text-xs hover:bg-indigo-600"
+                           className="bg-indigo-500 text-gray-900 px-2 py-1 rounded text-xs hover:bg-indigo-600"
                          >
                            View
                          </button>
@@ -312,7 +312,7 @@ const StaffList = () => {
 
       {/* Modals for Add Amount & Edit Staff (Same as before) */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-white  flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded shadow-lg w-[300px]">
             <h3 className="text-lg font-semibold mb-4">
               Add Amount to {selectedStaff?.name}'s Wallet
@@ -334,8 +334,8 @@ const StaffList = () => {
               <button
                 onClick={handleAddAmount}
                 disabled={loading}
-                className={`px-3 py-1 rounded text-white ${
-                  loading ? "bg-gray-400" : "bg-green-500 hover:bg-green-600"
+                className={`px-3 py-1 rounded text-gray-900 ${
+                  loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-600"
                 }`}
               >
                 {loading ? "Adding..." : "Add"}
@@ -346,7 +346,7 @@ const StaffList = () => {
       )}
 
       {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-white  flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded shadow-lg w-[300px]">
             <h3 className="text-lg font-semibold mb-4">
               Edit {selectedStaff?.name}'s Details
@@ -383,7 +383,7 @@ const StaffList = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  className="px-3 py-1 bg-blue-600 text-gray-900 rounded hover:bg-blue-600"
                 >
                   Save Changes
                 </button>

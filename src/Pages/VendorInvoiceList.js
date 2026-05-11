@@ -171,7 +171,7 @@ export default function VendorInvoiceList() {
       <div className="overflow-x-auto mb-4">
         <table className="w-full border-collapse border border-gray-300">
           <thead>
-            <tr className="bg-blue-600 text-white">
+            <tr className="bg-blue-600 text-gray-900">
               <th className="p-2 border">Sl</th>
               <th className="p-2 border">Vendor Name</th>
               <th className="p-2 border">Month</th>
@@ -196,7 +196,7 @@ export default function VendorInvoiceList() {
                 <td className="p-2 border">
                   <span
                     className={`px-2 py-1 rounded text-sm ${
-                      invoice.status === "Paid" ? "bg-green-500 text-white" : "bg-yellow-400 text-white"
+                      invoice.status === "Paid" ? "bg-blue-600 text-gray-900" : "bg-yellow-400 text-gray-900"
                     }`}
                   >
                     {invoice.status}
@@ -207,7 +207,7 @@ export default function VendorInvoiceList() {
                 <td className="p-2 border flex gap-2">
                   {invoice.status === "Paid" && (
                     <button
-                      className="bg-blue-500 text-white px-4 py-1 rounded"
+                      className="bg-blue-600 text-gray-900 px-4 py-1 rounded"
                       onClick={() => handleDownloadInvoice(invoice.id)}
                     >
                       Download Invoice
@@ -217,14 +217,14 @@ export default function VendorInvoiceList() {
                     <>
                       {invoiceStatus[invoice.id] !== "Sent" ? (
                         <button
-                          className="bg-blue-500 text-white px-4 py-1 rounded"
+                          className="bg-blue-600 text-gray-900 px-4 py-1 rounded"
                           onClick={() => handleSendInvoice(invoice.id)}
                         >
                           Send Invoice
                         </button>
                       ) : (
                         <button
-                          className="bg-gray-500 text-white px-4 py-1 rounded"
+                          className="bg-white0 text-gray-900 px-4 py-1 rounded"
                           disabled
                         >
                           Invoice Sent
@@ -253,7 +253,7 @@ export default function VendorInvoiceList() {
             key={index}
             onClick={() => setCurrentPage(index + 1)}
             className={`px-4 py-2 rounded ${
-              currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+              currentPage === index + 1 ? "bg-blue-600 text-gray-900" : "bg-gray-200"
             }`}
           >
             {index + 1}

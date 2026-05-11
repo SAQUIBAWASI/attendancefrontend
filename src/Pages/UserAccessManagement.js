@@ -214,7 +214,7 @@
 //   };
 
 //   return (
-//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-700 bg-gray-50 md:p-8">
+//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-700 bg-white md:p-8">
 //       <ToastContainer position="top-right" autoClose={3000} />
 
 //       {/* 🟣 LEFT SIDEBAR - TEAMS/DEPARTMENTS */}
@@ -230,8 +230,8 @@
 //               key={dept}
 //               onClick={() => setSelectedDepartment(dept)}
 //               className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold transition-all flex justify-between items-center ${selectedDepartment === dept
-//                 ? "bg-blue-600 text-white shadow-lg shadow-blue-100"
-//                 : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+//                 ? "bg-blue-600 text-gray-900 shadow-lg shadow-blue-100"
+//                 : "text-gray-500 hover:bg-white hover:text-gray-900"
 //                 }`}
 //             >
 //               <span>{dept}</span>
@@ -248,7 +248,7 @@
 //       {/* 🔵 RIGHT CONTENT - EMPLOYEE GRID */}
 //       <div className="flex flex-col flex-1 overflow-hidden">
 //         {/* Sleek Sub-Header */}
-//         <div className="flex items-center justify-between px-8 py-6 border-b border-gray-200 bg-black/50 backdrop-blur-sm">
+//         <div className="flex items-center justify-between px-8 py-6 border-b border-gray-200 bg-white/50 backdrop-blur-sm">
 //           <div>
 //             <h1 className="text-xl font-black leading-none text-gray-900">User Access</h1>
 //             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Manage platform-wide permissions</p>
@@ -285,7 +285,7 @@
 //                           <p className="text-sm font-bold text-gray-700 group-hover:text-blue-700">{emp.name}</p>
 //                           <p className="text-[10px] text-gray-500 font-medium uppercase mt-0.5">{emp.role || "No Role"}</p>
 //                         </div>
-//                         <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
+//                         <span className="text-[10px] font-bold text-gray-900 bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
 //                           {emp.employeeId}
 //                         </span>
 //                       </div>
@@ -384,7 +384,7 @@
 //                       <div>
 //                         <p className="text-sm font-bold text-gray-700 group-hover:text-blue-700">{emp.name}</p>
 //                         <div className="flex items-center gap-2 mt-1">
-//                           <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
+//                           <span className="text-[10px] font-bold text-gray-900 bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
 //                             {emp.employeeId}
 //                           </span>
 //                           {!selectedRole && (
@@ -410,7 +410,7 @@
 //                 {permissionGroups.flatMap(group => group.items.map(item => ({ ...item, type: group.type }))).map((item) => (
 //                   <label
 //                     key={item.id}
-//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-gray-50 transition-colors ${item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
+//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-white transition-colors ${item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
 //                       }`}
 //                   >
 //                     <div className="relative flex items-center justify-center">
@@ -422,8 +422,8 @@
 //                         className="sr-only peer"
 //                       />
 //                       <div className={`w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center ${item.type === "immutable"
-//                           ? "bg-blue-500 border-blue-500 text-white"
-//                           : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white group-hover:border-blue-400"
+//                           ? "bg-blue-600 border-blue-500 text-gray-900"
+//                           : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-gray-900 group-hover:border-blue-400"
 //                         }`}>
 //                         <FiCheck size={10} className={item.type === "toggleable" && !permissions.includes(item.id) ? "hidden" : "block"} />
 //                       </div>
@@ -439,7 +439,7 @@
 //               <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-gray-200">
 //                 <button
 //                   onClick={savePermissions}
-//                   className="px-8 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-lg rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95"
+//                   className="px-8 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-gray-900 font-bold text-lg rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95"
 //                 >
 //                   Update
 //                 </button>
@@ -448,7 +448,7 @@
 //                     setSelectedEmployee(null);
 //                     setSearchTerm("");
 //                   }}
-//                   className="px-8 py-2.5 bg-[#a55eea] hover:bg-[#9a52d8] text-white font-bold text-lg rounded-xl shadow-lg shadow-pink-200 transition-all active:scale-95"
+//                   className="px-8 py-2.5 bg-[#a55eea] hover:bg-[#9a52d8] text-gray-900 font-bold text-lg rounded-xl shadow-lg shadow-pink-200 transition-all active:scale-95"
 //                 >
 //                   Cancel
 //                 </button>
@@ -456,7 +456,7 @@
 //             </div>
 //           ) : (
 //             /* Empty State */
-//             <div className="flex flex-col items-center justify-center py-12 text-gray-700 border border-gray-200 border-dashed bg-gray-50/50 rounded-xl">
+//             <div className="flex flex-col items-center justify-center py-12 text-gray-700 border border-gray-200 border-dashed bg-white/50 rounded-xl">
 //               <FiFilter size={32} className="mb-3 text-blue-300 opacity-50" />
 //               <p className="text-xs font-bold tracking-widest text-gray-500 uppercase">Select Role & Employee to Configure</p>
 //             </div>
@@ -684,12 +684,12 @@
 //   };
 
 //   return (
-//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-700 bg-gray-50 md:p-8">
+//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-700 bg-white md:p-8">
 //       <ToastContainer position="top-right" autoClose={3000} />
 
 //       <div className="w-full overflow-hidden bg-white border border-gray-200 shadow-sm max-w-8xl rounded-xl">
 //         {/* Header - Enhanced with Global Search */}
-//         <div className="flex flex-col items-center justify-between gap-4 px-6 py-4 border-b border-gray-200 md:flex-row bg-gray-50/50">
+//         <div className="flex flex-col items-center justify-between gap-4 px-6 py-4 border-b border-gray-200 md:flex-row bg-white/50">
 //           <div className="flex items-center gap-2">
 //             <FiSettings className="text-gray-500" />
 //             <h1 className="text-lg font-bold text-gray-700">User Access Management</h1>
@@ -726,7 +726,7 @@
 //                           <p className="text-sm font-bold text-gray-700 group-hover:text-blue-700">{emp.name}</p>
 //                           <p className="text-[10px] text-gray-500 font-medium uppercase mt-0.5">{emp.role || "No Role"}</p>
 //                         </div>
-//                         <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
+//                         <span className="text-[10px] font-bold text-gray-900 bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
 //                           {emp.employeeId}
 //                         </span>
 //                       </div>
@@ -825,7 +825,7 @@
 //                       <div>
 //                         <p className="text-sm font-bold text-gray-700 group-hover:text-blue-700">{emp.name}</p>
 //                         <div className="flex items-center gap-2 mt-1">
-//                           <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
+//                           <span className="text-[10px] font-bold text-gray-900 bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
 //                              {emp.employeeId}
 //                           </span>
 //                           {!selectedRole && (
@@ -851,7 +851,7 @@
 //                 {permissionGroups.flatMap(group => group.items.map(item => ({...item, type: group.type}))).map((item) => (
 //                   <label 
 //                     key={item.id} 
-//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-gray-50 transition-colors ${
+//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-white transition-colors ${
 //                        item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
 //                     }`}
 //                   >
@@ -865,8 +865,8 @@
 //                       />
 //                       <div className={`w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center ${
 //                          item.type === "immutable"
-//                            ? "bg-blue-500 border-blue-500 text-white"
-//                            : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white group-hover:border-blue-400"
+//                            ? "bg-blue-600 border-blue-500 text-gray-900"
+//                            : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-gray-900 group-hover:border-blue-400"
 //                       }`}>
 //                         <FiCheck size={10} className={item.type === "toggleable" && !permissions.includes(item.id) ? "hidden" : "block"} />
 //                       </div>
@@ -882,7 +882,7 @@
 //               <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-gray-200">
 //                  <button
 //                     onClick={savePermissions}
-//                     className="px-8 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-lg rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95"
+//                     className="px-8 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-gray-900 font-bold text-lg rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95"
 //                   >
 //                     Update
 //                   </button>
@@ -891,7 +891,7 @@
 //                       setSelectedEmployee(null);
 //                       setSearchTerm("");
 //                     }}
-//                     className="px-8 py-2.5 bg-[#a55eea] hover:bg-[#9a52d8] text-white font-bold text-lg rounded-xl shadow-lg shadow-pink-200 transition-all active:scale-95"
+//                     className="px-8 py-2.5 bg-[#a55eea] hover:bg-[#9a52d8] text-gray-900 font-bold text-lg rounded-xl shadow-lg shadow-pink-200 transition-all active:scale-95"
 //                   >
 //                     Cancel
 //                   </button>
@@ -899,7 +899,7 @@
 //             </div>
 //           ) : (
 //              /* Empty State */
-//              <div className="flex flex-col items-center justify-center py-12 text-gray-700 border border-gray-200 border-dashed bg-gray-50/50 rounded-xl">
+//              <div className="flex flex-col items-center justify-center py-12 text-gray-700 border border-gray-200 border-dashed bg-white/50 rounded-xl">
 //                <FiFilter size={32} className="mb-3 text-blue-300 opacity-50"/>
 //                <p className="text-xs font-bold tracking-widest text-gray-500 uppercase">Select Role & Employee to Configure</p>
 //              </div>
@@ -1193,12 +1193,12 @@
 //   };
 
 //   return (
-//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-700 bg-gray-50 md:p-8">
+//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-700 bg-white md:p-8">
 //       <ToastContainer position="top-right" autoClose={3000} />
 
 //       <div className="w-full overflow-hidden bg-white border border-gray-200 shadow-sm max-w-8xl rounded-xl">
 //         {/* Header - Enhanced with Global Search */}
-//         <div className="flex flex-col items-center justify-between gap-4 px-6 py-4 border-b border-gray-200 md:flex-row bg-gray-50/50">
+//         <div className="flex flex-col items-center justify-between gap-4 px-6 py-4 border-b border-gray-200 md:flex-row bg-white/50">
 //           <div className="flex items-center gap-2">
 //             <FiSettings className="text-gray-500" />
 //             <h1 className="text-lg font-bold text-gray-700">User Access Management</h1>
@@ -1235,7 +1235,7 @@
 //                           <p className="text-sm font-bold text-gray-700 group-hover:text-blue-700">{emp.name}</p>
 //                           <p className="text-[10px] text-gray-500 font-medium uppercase mt-0.5">{emp.role || "No Role"}</p>
 //                         </div>
-//                         <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
+//                         <span className="text-[10px] font-bold text-gray-900 bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
 //                           {emp.employeeId}
 //                         </span>
 //                       </div>
@@ -1334,7 +1334,7 @@
 //                       <div>
 //                         <p className="text-sm font-bold text-gray-700 group-hover:text-blue-700">{emp.name}</p>
 //                         <div className="flex items-center gap-2 mt-1">
-//                           <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
+//                           <span className="text-[10px] font-bold text-gray-900 bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
 //                              {emp.employeeId}
 //                           </span>
 //                           {!selectedRole && (
@@ -1360,7 +1360,7 @@
 //                 {permissionGroups.flatMap(group => group.items.map(item => ({...item, type: group.type}))).map((item) => (
 //                   <label 
 //                     key={item.id} 
-//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-gray-50 transition-colors ${
+//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-white transition-colors ${
 //                        item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
 //                     }`}
 //                   >
@@ -1374,8 +1374,8 @@
 //                       />
 //                       <div className={`w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center ${
 //                          item.type === "immutable"
-//                            ? "bg-blue-500 border-blue-500 text-white"
-//                            : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white group-hover:border-blue-400"
+//                            ? "bg-blue-600 border-blue-500 text-gray-900"
+//                            : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-gray-900 group-hover:border-blue-400"
 //                       }`}>
 //                         <FiCheck size={10} className={item.type === "toggleable" && !permissions.includes(item.id) ? "hidden" : "block"} />
 //                       </div>
@@ -1391,7 +1391,7 @@
 //               <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-gray-200">
 //                  <button
 //                     onClick={savePermissions}
-//                     className="px-8 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-lg rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95"
+//                     className="px-8 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-gray-900 font-bold text-lg rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95"
 //                   >
 //                     Update
 //                   </button>
@@ -1400,7 +1400,7 @@
 //                       setSelectedEmployee(null);
 //                       setSearchTerm("");
 //                     }}
-//                     className="px-8 py-2.5 bg-[#a55eea] hover:bg-[#9a52d8] text-white font-bold text-lg rounded-xl shadow-lg shadow-pink-200 transition-all active:scale-95"
+//                     className="px-8 py-2.5 bg-[#a55eea] hover:bg-[#9a52d8] text-gray-900 font-bold text-lg rounded-xl shadow-lg shadow-pink-200 transition-all active:scale-95"
 //                   >
 //                     Cancel
 //                   </button>
@@ -1408,7 +1408,7 @@
 //             </div>
 //           ) : (
 //              /* Empty State */
-//              <div className="flex flex-col items-center justify-center py-12 text-gray-700 border border-gray-200 border-dashed bg-gray-50/50 rounded-xl">
+//              <div className="flex flex-col items-center justify-center py-12 text-gray-700 border border-gray-200 border-dashed bg-white/50 rounded-xl">
 //                <FiFilter size={32} className="mb-3 text-blue-300 opacity-50"/>
 //                <p className="text-xs font-bold tracking-widest text-gray-500 uppercase">Select Role & Employee to Configure</p>
 //              </div>
@@ -1699,12 +1699,12 @@
 //   };
 
 //   return (
-//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-700 bg-gray-50 md:p-8">
+//     <div className="flex justify-center min-h-screen p-4 font-sans text-gray-700 bg-white md:p-8">
 //       <ToastContainer position="top-right" autoClose={3000} />
 
 //       <div className="w-full overflow-hidden bg-white border border-gray-200 shadow-sm max-w-8xl rounded-xl">
 //         {/* Header */}
-//         {/* <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50">
+//         {/* <div className="px-6 py-4 border-b border-gray-200 bg-white/50">
 //           <div className="flex items-center gap-2">
 //             <FiSettings className="text-gray-500" />
 //             <h1 className="text-lg font-bold text-gray-700">User Access Management</h1>
@@ -1748,7 +1748,7 @@
 //                             <p className="text-sm font-bold text-gray-700 group-hover:text-blue-700">{emp.name}</p>
 //                             <p className="text-[10px] text-gray-500 font-medium uppercase mt-0.5">{emp.role || "No Role"}</p>
 //                           </div>
-//                           <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
+//                           <span className="text-[10px] font-bold text-gray-900 bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
 //                             {emp.employeeId}
 //                           </span>
 //                         </div>
@@ -1841,7 +1841,7 @@
 //                       <div>
 //                         <p className="text-sm font-bold text-gray-700 group-hover:text-blue-700">{emp.name}</p>
 //                         <div className="flex items-center gap-2 mt-1">
-//                           <span className="text-[10px] font-bold text-white bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
+//                           <span className="text-[10px] font-bold text-gray-900 bg-[#a55eea] px-2 py-0.5 rounded-full shadow-sm shadow-purple-100">
 //                              {emp.employeeId}
 //                           </span>
 //                           {!selectedRole && (
@@ -1867,7 +1867,7 @@
 //                 {permissionGroups.flatMap(group => group.items.map(item => ({...item, type: group.type}))).map((item) => (
 //                   <label 
 //                     key={item.id} 
-//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-gray-50 transition-colors ${
+//                     className={`flex items-center gap-3 cursor-pointer select-none group py-1.5 px-2 rounded-lg hover:bg-white transition-colors ${
 //                        item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
 //                     }`}
 //                   >
@@ -1881,8 +1881,8 @@
 //                       />
 //                       <div className={`w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center ${
 //                          item.type === "immutable"
-//                            ? "bg-blue-500 border-blue-500 text-white"
-//                            : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white group-hover:border-blue-400"
+//                            ? "bg-blue-600 border-blue-500 text-gray-900"
+//                            : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-gray-900 group-hover:border-blue-400"
 //                       }`}>
 //                         <FiCheck size={10} className={item.type === "toggleable" && !permissions.includes(item.id) ? "hidden" : "block"} />
 //                       </div>
@@ -1898,7 +1898,7 @@
 //               <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-gray-200">
 //                  <button
 //                     onClick={savePermissions}
-//                     className="px-8 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-lg rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95"
+//                     className="px-8 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-gray-900 font-bold text-lg rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95"
 //                   >
 //                     Update
 //                   </button>
@@ -1907,7 +1907,7 @@
 //                       setSelectedEmployee(null);
 //                       setSearchTerm("");
 //                     }}
-//                     className="px-8 py-2.5 bg-[#a55eea] hover:bg-[#9a52d8] text-white font-bold text-lg rounded-xl shadow-lg shadow-pink-200 transition-all active:scale-95"
+//                     className="px-8 py-2.5 bg-[#a55eea] hover:bg-[#9a52d8] text-gray-900 font-bold text-lg rounded-xl shadow-lg shadow-pink-200 transition-all active:scale-95"
 //                   >
 //                     Cancel
 //                   </button>
@@ -1915,7 +1915,7 @@
 //             </div>
 //           ) : (
 //              /* Empty State */
-//              <div className="flex flex-col items-center justify-center py-12 text-gray-700 border border-gray-200 border-dashed bg-gray-50/50 rounded-xl">
+//              <div className="flex flex-col items-center justify-center py-12 text-gray-700 border border-gray-200 border-dashed bg-white/50 rounded-xl">
 //                <FiFilter size={32} className="mb-3 text-blue-300 opacity-50"/>
 //                <p className="text-xs font-bold tracking-widest text-gray-500 uppercase">Select Role & Employee to Configure</p>
 //              </div>
@@ -2319,7 +2319,7 @@
 //                             <p className="text-xs font-medium text-gray-700">{emp.name}</p>
 //                             <p className="text-[9px] text-gray-500 mt-0.5">{emp.role || "No Role"}</p>
 //                           </div>
-//                           <span className="text-[8px] font-medium text-white bg-purple-600 px-1.5 py-0.5 rounded-full">
+//                           <span className="text-[8px] font-medium text-gray-900 bg-purple-600 px-1.5 py-0.5 rounded-full">
 //                             {emp.employeeId}
 //                           </span>
 //                         </div>
@@ -2412,7 +2412,7 @@
 //                       <div>
 //                         <p className="text-xs font-medium text-gray-700">{emp.name}</p>
 //                         <div className="flex items-center gap-2 mt-0.5">
-//                           <span className="text-[8px] font-medium text-white bg-purple-600 px-1.5 py-0.5 rounded-full">
+//                           <span className="text-[8px] font-medium text-gray-900 bg-purple-600 px-1.5 py-0.5 rounded-full">
 //                              {emp.employeeId}
 //                           </span>
 //                           {!selectedRole && (
@@ -2443,7 +2443,7 @@
 //                 <div>
 //                   <p className="text-xs font-semibold text-gray-700">{selectedEmployee.name}</p>
 //                   <div className="flex items-center gap-2 mt-0.5">
-//                     <span className="text-[9px] text-white bg-purple-600 px-1.5 py-0.5 rounded-full">{selectedEmployee.employeeId}</span>
+//                     <span className="text-[9px] text-gray-900 bg-purple-600 px-1.5 py-0.5 rounded-full">{selectedEmployee.employeeId}</span>
 //                     <span className="text-[9px] text-gray-500">{selectedEmployee.role || 'No Role'}</span>
 //                   </div>
 //                 </div>
@@ -2458,7 +2458,7 @@
 //                 {permissionGroups.flatMap(group => group.items.map(item => ({...item, type: group.type}))).map((item) => (
 //                   <label 
 //                     key={item.id} 
-//                     className={`flex items-center gap-2 cursor-pointer select-none py-1 px-2 rounded hover:bg-gray-50 transition-colors ${
+//                     className={`flex items-center gap-2 cursor-pointer select-none py-1 px-2 rounded hover:bg-white transition-colors ${
 //                        item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
 //                     }`}
 //                   >
@@ -2472,8 +2472,8 @@
 //                       />
 //                       <div className={`w-3.5 h-3.5 rounded border transition-all duration-200 flex items-center justify-center ${
 //                          item.type === "immutable"
-//                            ? "bg-blue-500 border-blue-500 text-white"
-//                            : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white hover:border-blue-400"
+//                            ? "bg-blue-600 border-blue-500 text-gray-900"
+//                            : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-gray-900 hover:border-blue-400"
 //                       }`}>
 //                         <FiCheck size={8} className={item.type === "toggleable" && !permissions.includes(item.id) ? "hidden" : "block"} />
 //                       </div>
@@ -2489,7 +2489,7 @@
 //               <div className="flex justify-end gap-2 pt-3 mt-4 border-t border-gray-200">
 //                  <button
 //                     onClick={savePermissions}
-//                     className="px-4 py-1.5 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition"
+//                     className="px-4 py-1.5 text-xs font-medium text-gray-900 bg-blue-600 rounded-md hover:bg-blue-800 transition"
 //                   >
 //                     Update Access
 //                   </button>
@@ -2506,8 +2506,8 @@
 //             </div>
 //           ) : (
 //              /* Empty State */
-//              <div className="flex flex-col items-center justify-center py-8 text-gray-500 border border-gray-300 border-dashed rounded-md bg-gray-50">
-//                <FiFilter size={24} className="mb-2 text-blue-400 opacity-50"/>
+//              <div className="flex flex-col items-center justify-center py-8 text-gray-500 border border-gray-300 border-dashed rounded-md bg-white">
+//                <FiFilter size={24} className="mb-2 text-blue-500 opacity-50"/>
 //                <p className="text-[10px] font-medium uppercase tracking-wider text-gray-500">Select Role & Employee to Configure</p>
 //              </div>
 //           )}
@@ -2898,7 +2898,7 @@
 //                             <p className="text-xs font-medium text-gray-700">{emp.name}</p>
 //                             <p className="text-[9px] text-gray-500 mt-0.5">{emp.role || "No Role"}</p>
 //                           </div>
-//                           <span className="text-[8px] font-medium text-white bg-purple-600 px-1.5 py-0.5 rounded-full">
+//                           <span className="text-[8px] font-medium text-gray-900 bg-purple-600 px-1.5 py-0.5 rounded-full">
 //                             {emp.employeeId}
 //                           </span>
 //                         </div>
@@ -2991,7 +2991,7 @@
 //                       <div>
 //                         <p className="text-xs font-medium text-gray-700">{emp.name}</p>
 //                         <div className="flex items-center gap-2 mt-0.5">
-//                           <span className="text-[8px] font-medium text-white bg-purple-600 px-1.5 py-0.5 rounded-full">
+//                           <span className="text-[8px] font-medium text-gray-900 bg-purple-600 px-1.5 py-0.5 rounded-full">
 //                             {emp.employeeId}
 //                           </span>
 //                           {!selectedRole && (
@@ -3022,7 +3022,7 @@
 //                 <div>
 //                   <p className="text-xs font-semibold text-gray-700">{selectedEmployee.name}</p>
 //                   <div className="flex items-center gap-2 mt-0.5">
-//                     <span className="text-[9px] text-white bg-purple-600 px-1.5 py-0.5 rounded-full">{selectedEmployee.employeeId}</span>
+//                     <span className="text-[9px] text-gray-900 bg-purple-600 px-1.5 py-0.5 rounded-full">{selectedEmployee.employeeId}</span>
 //                     <span className="text-[9px] text-gray-500">{selectedEmployee.role || 'No Role'}</span>
 //                   </div>
 //                 </div>
@@ -3037,7 +3037,7 @@
 //                 {permissionGroups.flatMap(group => group.items.map(item => ({ ...item, type: group.type }))).map((item) => (
 //                   <label
 //                     key={item.id}
-//                     className={`flex items-center gap-2 cursor-pointer select-none py-1 px-2 rounded hover:bg-gray-50 transition-colors ${item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
+//                     className={`flex items-center gap-2 cursor-pointer select-none py-1 px-2 rounded hover:bg-white transition-colors ${item.type === "immutable" ? "opacity-60 cursor-not-allowed" : ""
 //                       }`}
 //                   >
 //                     <div className="relative flex items-center justify-center">
@@ -3049,8 +3049,8 @@
 //                         className="sr-only peer"
 //                       />
 //                       <div className={`w-3.5 h-3.5 rounded border transition-all duration-200 flex items-center justify-center ${item.type === "immutable"
-//                           ? "bg-blue-500 border-blue-500 text-white"
-//                           : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white hover:border-blue-400"
+//                           ? "bg-blue-600 border-blue-500 text-gray-900"
+//                           : "border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-gray-900 hover:border-blue-400"
 //                         }`}>
 //                         <FiCheck size={8} className={item.type === "toggleable" && !permissions.includes(item.id) ? "hidden" : "block"} />
 //                       </div>
@@ -3066,7 +3066,7 @@
 //               <div className="flex justify-end gap-2 pt-3 mt-4 border-t border-gray-200">
 //                 <button
 //                   onClick={savePermissions}
-//                   className="px-4 py-1.5 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition"
+//                   className="px-4 py-1.5 text-xs font-medium text-gray-900 bg-blue-600 rounded-md hover:bg-blue-800 transition"
 //                 >
 //                   Update Access
 //                 </button>
@@ -3083,8 +3083,8 @@
 //             </div>
 //           ) : (
 //             /* Empty State */
-//             <div className="flex flex-col items-center justify-center py-8 text-gray-500 border border-gray-300 border-dashed rounded-md bg-gray-50">
-//               <FiFilter size={24} className="mb-2 text-blue-400 opacity-50" />
+//             <div className="flex flex-col items-center justify-center py-8 text-gray-500 border border-gray-300 border-dashed rounded-md bg-white">
+//               <FiFilter size={24} className="mb-2 text-blue-500 opacity-50" />
 //               <p className="text-[10px] font-medium uppercase tracking-wider text-gray-500">Select Role & Employee to Configure</p>
 //             </div>
 //           )}
@@ -3493,7 +3493,7 @@ const UserAccessManagement = () => {
                             <p className="text-xs font-medium text-gray-700">{emp.name}</p>
                             <p className="text-[9px] text-gray-500 mt-0.5">{emp.role || "No Role"}</p>
                           </div>
-                          <span className="text-[8px] font-medium text-white bg-purple-600 px-1.5 py-0.5 rounded-full">
+                          <span className="text-[8px] font-medium text-gray-900 bg-purple-600 px-1.5 py-0.5 rounded-full">
                             {emp.employeeId}
                           </span>
                         </div>
@@ -3586,7 +3586,7 @@ const UserAccessManagement = () => {
                       <div>
                         <p className="text-xs font-medium text-gray-700">{emp.name}</p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[8px] font-medium text-white bg-purple-600 px-1.5 py-0.5 rounded-full">
+                          <span className="text-[8px] font-medium text-gray-900 bg-purple-600 px-1.5 py-0.5 rounded-full">
                              {emp.employeeId}
                           </span>
                           {!selectedRole && (
@@ -3617,7 +3617,7 @@ const UserAccessManagement = () => {
                 <div>
                   <p className="text-xs font-semibold text-gray-700">{selectedEmployee.name}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[9px] text-white bg-purple-600 px-1.5 py-0.5 rounded-full">{selectedEmployee.employeeId}</span>
+                    <span className="text-[9px] text-gray-900 bg-purple-600 px-1.5 py-0.5 rounded-full">{selectedEmployee.employeeId}</span>
                     <span className="text-[9px] text-gray-500">{selectedEmployee.role || 'No Role'}</span>
                   </div>
                 </div>
@@ -3630,7 +3630,7 @@ const UserAccessManagement = () => {
             <h3 className="mb-4 text-sm font-extrabold text-gray-700 border-b border-gray-200 pb-3 flex items-center justify-between">
               <span>{selectedEmployee ? `Permissions Profile: ${selectedEmployee.name}` : 'Platform Permission Models (Read-Only)'}</span>
               {selectedEmployee && (
-                <span className="text-[10px] font-bold text-white bg-gradient-to-r from-purple-500 to-indigo-600 px-2 py-0.5 rounded-full shadow-sm">
+                <span className="text-[10px] font-bold text-gray-900 bg-gradient-to-r from-purple-500 to-indigo-600 px-2 py-0.5 rounded-full shadow-sm">
                   {selectedEmployee.role || 'No Role Assigned'}
                 </span>
               )}
@@ -3638,7 +3638,7 @@ const UserAccessManagement = () => {
             
             {!selectedEmployee && (
               <div className="mb-4 p-3 bg-blue-50/50 border border-blue-100 rounded-lg flex items-center gap-3">
-                <FiFilter className="text-blue-500" size={18} />
+                <FiFilter className="text-blue-600" size={18} />
                 <p className="text-xs text-blue-800 font-medium">Please select an employee or role above to modify these permission assignments. Showing available system modules below.</p>
               </div>
             )}
@@ -3668,8 +3668,8 @@ const UserAccessManagement = () => {
                           />
                           <div className={`w-4 h-4 rounded-md border transition-all duration-300 flex items-center justify-center ${
                              group.type === "immutable"
-                               ? "bg-gradient-to-br from-gray-400 to-gray-500 border-transparent text-white shadow-sm"
-                               : "border-gray-300 peer-checked:bg-gradient-to-br peer-checked:from-purple-500 peer-checked:to-indigo-600 peer-checked:border-transparent peer-checked:text-white group-hover:border-purple-400 group-hover:shadow-[0_0_0_4px_rgba(168,85,247,0.1)]"
+                               ? "bg-gradient-to-br from-gray-400 to-gray-500 border-transparent text-gray-900 shadow-sm"
+                               : "border-gray-300 peer-checked:bg-gradient-to-br peer-checked:from-purple-500 peer-checked:to-indigo-600 peer-checked:border-transparent peer-checked:text-gray-900 group-hover:border-purple-400 group-hover:shadow-[0_0_0_4px_rgba(168,85,247,0.1)]"
                           }`}>
                             <FiCheck size={10} className={group.type === "toggleable" && !permissions.includes(item.id) ? "opacity-0 scale-50 transition-all duration-200" : "opacity-100 scale-100 transition-all duration-300"} />
                           </div>
@@ -3691,14 +3691,14 @@ const UserAccessManagement = () => {
                   setSelectedEmployee(null);
                   setSearchTerm("");
                 }}
-                className="px-6 py-2.5 text-xs font-bold text-gray-500 bg-white border border-gray-200 hover:border-gray-300 rounded-xl hover:bg-gray-50 transition-all active:scale-95 shadow-sm"
+                className="px-6 py-2.5 text-xs font-bold text-gray-500 bg-white border border-gray-200 hover:border-gray-300 rounded-xl hover:bg-white transition-all active:scale-95 shadow-sm"
               >
                 Clear Selection
               </button>
               <button
                 onClick={savePermissions}
                 disabled={!selectedEmployee}
-                className={`px-8 py-2.5 text-xs font-bold text-white rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2 ${
+                className={`px-8 py-2.5 text-xs font-bold text-gray-900 rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2 ${
                   selectedEmployee 
                     ? 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-emerald-200 hover:shadow-emerald-300' 
                     : 'bg-gray-300 shadow-none cursor-not-allowed opacity-50'

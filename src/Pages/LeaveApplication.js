@@ -173,14 +173,14 @@ const LeaveRequestForm = () => {
           <div className="max-w-md mx-auto mb-6 flex flex-col sm:flex-row gap-4 justify-between">
             <button
               onClick={() => navigate("/myleaves")}
-              className="px-5 py-2 text-white bg-gray-600 rounded-lg hover:bg-gray-700 transition-all shadow-sm"
+              className="px-5 py-2 text-gray-900 bg-gray-600 rounded-lg hover:bg-gray-700 transition-all shadow-sm"
             >
               ← My Leaves
             </button>
 
             <button
               onClick={() => setIsPermissionModalOpen(true)}
-              className="px-5 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+              className="px-5 py-2 text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
             >
               Request Permission
             </button>
@@ -221,7 +221,7 @@ const LeaveRequestForm = () => {
                   }
                 }}
                 disabled={submittingDuty}
-                className="w-full py-3 text-lg font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 shadow transition-all flex justify-center items-center gap-2"
+                className="w-full py-3 text-lg font-semibold text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800 shadow transition-all flex justify-center items-center gap-2"
               >
                 {submittingDuty ? "Processing..." : "Report Back to Duty"}
               </button>
@@ -230,7 +230,7 @@ const LeaveRequestForm = () => {
 
           <div className="max-w-md mx-auto bg-white rounded shadow p-6">
             <h2 className="mb-4 text-xl font-bold text-blue-900">Leave Request Form</h2>
-            {successMessage && <div className="p-3 mb-4 text-green-700 bg-green-100 rounded">{successMessage}</div>}
+            {successMessage && <div className="p-3 mb-4 text-green-700 bg-blue-100 rounded">{successMessage}</div>}
             {errorMessage && <div className="p-3 mb-4 text-red-700 bg-red-100 rounded">{errorMessage}</div>}
 
             <form onSubmit={handleSubmit}>
@@ -245,7 +245,7 @@ const LeaveRequestForm = () => {
               <input name="endDate" type="date" value={formData.endDate} onChange={handleChange} className="mb-2 p-2 border rounded w-full" required />
               <input name="days" type="number" value={formData.days} readOnly className="mb-2 p-2 border rounded w-full" placeholder="Number of Days" />
               <textarea name="reason" value={formData.reason} onChange={handleChange} className="mb-2 p-2 border rounded w-full" placeholder="Reason for leave" rows="3" required />
-              <button type="submit" className="w-full px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">Submit Leave Request</button>
+              <button type="submit" className="w-full px-4 py-2 text-gray-900 bg-blue-600 rounded hover:bg-blue-700">Submit Leave Request</button>
             </form>
           </div>
         </div>
@@ -253,7 +253,7 @@ const LeaveRequestForm = () => {
 
       {/* Permission Modal */}
       {isPermissionModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-white  flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-gray-700">Request Permission</h3>
@@ -273,7 +273,7 @@ const LeaveRequestForm = () => {
 
               <div className="flex gap-3">
                 <button type="button" onClick={() => setIsPermissionModalOpen(false)} className="flex-1 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
-                <button onClick={() => navigate('/mypermissions')} type="submit" disabled={permissionLoading} className="flex-1 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">{permissionLoading ? "Submitting..." : "Request"}</button>
+                <button onClick={() => navigate('/mypermissions')} type="submit" disabled={permissionLoading} className="flex-1 py-2 text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">{permissionLoading ? "Submitting..." : "Request"}</button>
               </div>
             </form>
           </div>

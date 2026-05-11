@@ -149,17 +149,17 @@ const RejectedResignations = () => {
         <div className="flex flex-wrap items-center justify-start xl:justify-end gap-3 w-full xl:w-auto">
           {/* filters */}
           <div className="relative w-full sm:w-auto">
-            <input type="date" className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm sm:w-40" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
+            <input type="date" className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm sm:w-40" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
             {dateFilter && (<div className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer text-gray-500 hover:text-red-500 transition-colors" onClick={() => setDateFilter("")}><FaTimes className="text-[12px]" /></div>)}
           </div>
 
           <div className="relative w-full sm:w-56" ref={roleDropdownRef}>
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500 z-10"><FaBriefcase className="text-sm" /></div>
-            <div className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap" onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}>{roleFilter || "Select Role"}</div>
+            <div className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg font-bold transition-all hover:bg-white cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap" onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}>{roleFilter || "Select Role"}</div>
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 z-10">{roleFilter ? (<FaTimes className="text-[12px] text-gray-500 hover:text-red-500 cursor-pointer" onClick={(e) => { e.stopPropagation(); setRoleFilter(""); }} />) : (<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 pointer-events-none"><path d="m6 9 6 6 6-6" /></svg>)}</div>
             {isRoleDropdownOpen && (
               <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden">
-                <div className="p-2 border-b border-gray-200 bg-gray-50">
+                <div className="p-2 border-b border-gray-200 bg-white">
                   <div className="relative">
                     <FaUserTie className="absolute left-2.5 top-2.5 text-gray-500 text-xs" />
                     <input type="text" className="w-full py-1.5 pl-8 pr-4 text-xs bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Search roles..." value={roleSearchQuery} onChange={(e) => setRoleSearchQuery(e.target.value)} onClick={(e) => e.stopPropagation()} autoFocus />
@@ -182,7 +182,7 @@ const RejectedResignations = () => {
           </div>
 
           {/* CSV */}
-          <button onClick={exportToCSV} className="flex items-center gap-1 px-3 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm">
+          <button onClick={exportToCSV} className="flex items-center gap-1 px-3 py-2 text-xs font-medium text-gray-900 bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm">
             <FaDownload className="text-[10px]" /> CSV
           </button>
           <button onClick={fetchResignations} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors shadow-sm">
@@ -197,7 +197,7 @@ const RejectedResignations = () => {
           <div className="p-8 text-center text-gray-500">Loading Rejected Resignations...</div>
         ) : filteredData.length > 0 ? (
           <table className="min-w-full">
-            <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
+            <thead className="text-left text-sm text-gray-900 bg-gradient-to-r from-purple-500 to-blue-600">
               <tr>
                 <th className="py-3 px-4 text-center">Employee Name</th>
                 <th className="py-3 px-4 text-center">Designation</th>
@@ -210,7 +210,7 @@ const RejectedResignations = () => {
             </thead>
             <tbody>
               {filteredData.map((app) => (
-                <tr key={app._id} className="border-b hover:bg-gray-50 transition-colors">
+                <tr key={app._id} className="border-b hover:bg-white transition-colors">
                   <td className="p-4 text-sm font-medium text-center">
                     <div className="font-bold text-gray-700">{app.firstName} {app.lastName}</div>
                     <div className="text-[10px] text-gray-500">{app.email}</div>
@@ -238,7 +238,7 @@ const RejectedResignations = () => {
                   </td>
                   <td className="p-4 text-sm font-medium text-center">
                     <div className="flex justify-center gap-3">
-                      <button onClick={() => { setSelectedResignation(app); setIsModalOpen(true); }} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors group" title="View Details">
+                      <button onClick={() => { setSelectedResignation(app); setIsModalOpen(true); }} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group" title="View Details">
                         <FaEye size={16} className="group-hover:scale-110 transition-transform" />
                       </button>
                       <button onClick={() => downloadResignationPDF(app)} className="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors group" title="Download PDF">
@@ -260,7 +260,7 @@ const RejectedResignations = () => {
 
       {/* Modal */}
       {isModalOpen && selectedResignation && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px]">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-100/40 backdrop-blur-[2px]">
           <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl relative overflow-hidden border border-gray-200">
             <div className="px-8 pt-8 pb-4 flex items-center justify-between">
               <div>
@@ -285,11 +285,11 @@ const RejectedResignations = () => {
                 </div>
               </div>
             </div>
-            <div className="px-8 py-6 border-t border-gray-50 flex justify-between items-center bg-gray-50/50">
+            <div className="px-8 py-6 border-t border-gray-50 flex justify-between items-center bg-white/50">
               <button onClick={() => downloadResignationPDF(selectedResignation)} className="text-[10px] font-black text-gray-500 hover:text-red-500 transition-colors uppercase tracking-[0.2em] flex items-center gap-2 group">
                 <FaDownload className="text-xs group-hover:animate-bounce" /> Archive PDF
               </button>
-              <button onClick={() => setIsModalOpen(false)} className="px-8 py-3 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-white transition-all shadow-lg shadow-gray-200">Dismiss</button>
+              <button onClick={() => setIsModalOpen(false)} className="px-8 py-3 bg-gray-100 text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-white transition-all shadow-lg shadow-gray-200">Dismiss</button>
             </div>
           </div>
         </div>

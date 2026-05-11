@@ -82,7 +82,7 @@ const CompanyLoginPage = () => {
             </div>
           )}
           {successMessage && (
-            <div className="p-3 text-green-600 bg-green-100 rounded-md shadow-sm">
+            <div className="p-3 text-blue-700 bg-blue-100 rounded-md shadow-sm">
               {successMessage}
             </div>
           )}
@@ -123,7 +123,7 @@ const CompanyLoginPage = () => {
             </div>
             <button
               type="submit"
-              className={`w-full p-3 text-white bg-teal-600 rounded-md hover:bg-teal-700 transition duration-200 transform ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
+              className={`w-full p-3 text-gray-900 bg-blue-700 rounded-md hover:bg-blue-800 transition duration-200 transform ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
               disabled={isLoading}
             >
               {isLoading ? 'Logging in...' : 'Login'}

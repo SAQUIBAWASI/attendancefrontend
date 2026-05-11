@@ -68,11 +68,11 @@ const PendingBookingList = () => {
   const getStatusClass = (status) => {
     switch (status) {
       case "Confirmed":
-        return "bg-green-500 text-white";
+        return "bg-blue-600 text-gray-900";
       case "Pending":
         return "bg-transparent border-2 border-yellow-500 text-yellow-500";
       case "Delivered":
-        return "bg-transparent border-2 border-blue-500 text-blue-500";
+        return "bg-transparent border-2 border-blue-500 text-blue-600";
       case "Cancelled":
         return "bg-transparent border-2 border-red-500 text-red-500";
       default:
@@ -127,14 +127,14 @@ const PendingBookingList = () => {
         <div className="space-x-4">
           <button
             onClick={exportToExcel}
-            className="text-green-500 hover:text-green-700 flex items-center"
+            className="text-blue-600 hover:text-green-700 flex items-center"
           >
             <FaFileExcel className="mr-2" /> Export to Excel
           </button>
         </div>
       </div>
       <table className="min-w-full border-collapse">
-        <thead className="bg-green-100">
+        <thead className="bg-blue-100">
           <tr className="border-b">
             <th className="p-4 text-left">User Name</th>
             <th className="p-4 text-left">Product</th>
@@ -169,7 +169,7 @@ const PendingBookingList = () => {
               <td className="p-4 flex space-x-2">
                 <button
                   onClick={() => generateInvoice(booking)} // Generate invoice for the specific booking
-                  className="text-blue-500 hover:text-blue-700"
+                  className="text-blue-600 hover:text-blue-700"
                 >
                   <FaFilePdf /> {/* Generate PDF icon */}
                 </button>

@@ -154,14 +154,14 @@ const ExpenseManagement = () => {
               </h2>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="px-4 py-2 text-sm font-bold text-white transition-all bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700"
+                className="px-4 py-2 text-sm font-bold text-gray-900 transition-all bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700"
               >
                 + Record Expense
               </button>
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="px-3 py-1.5 bg-gray-50 border rounded-lg flex items-center gap-2">
+              <div className="px-3 py-1.5 bg-white border rounded-lg flex items-center gap-2">
                 <span className="text-xs font-medium text-gray-500">Rate:</span>
                 <span className="text-sm font-bold text-blue-600">₹{kmRate}/KM</span>
               </div>
@@ -174,7 +174,7 @@ const ExpenseManagement = () => {
           ) : (
             <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
               <table className="min-w-full">
-                <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
+                <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-purple-500 to-blue-600">
                   <tr>
                     <th className="px-4 py-3">Purpose & Date</th>
                     <th className="px-4 py-3 text-center">Distance</th>
@@ -185,7 +185,7 @@ const ExpenseManagement = () => {
                 </thead>
                 <tbody>
                   {expenses.map((expense, idx) => (
-                    <tr key={idx} className="border-b hover:bg-gray-50">
+                    <tr key={idx} className="border-b hover:bg-white">
                       <td className="px-4 py-4">
                         <div className="flex flex-col">
                           <span className="font-bold text-gray-700">{expense.purpose}</span>
@@ -245,7 +245,7 @@ const ExpenseManagement = () => {
 
       {/* Record Expense Modal - EXACT Match with Leave Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white  backdrop-blur-sm">
           <div className="w-full max-w-3xl p-6 bg-white rounded-xl shadow-2xl animate-in zoom-in-95 duration-200 text-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-700">Record Expense</h3>
@@ -279,14 +279,14 @@ const ExpenseManagement = () => {
                 </div>
                 <div className="text-left">
                   <label className="block mb-1 text-sm font-medium text-gray-700">Total KM Traveled</label>
-                  <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-500 font-medium tabular-nums flex items-center justify-between">
+                  <div className="w-full p-2 bg-white border rounded-lg text-gray-500 font-medium tabular-nums flex items-center justify-between">
                     <span>{totalKm} KM</span>
-                    {stopsKm > 0 && <span className="text-[10px] text-blue-500 font-bold bg-blue-50 px-2 py-0.5 rounded">Calculated from stops</span>}
+                    {stopsKm > 0 && <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded">Calculated from stops</span>}
                   </div>
                 </div>
               </div>
 
-              <div className="p-3 bg-gray-50 border rounded-lg flex items-center justify-between">
+              <div className="p-3 bg-white border rounded-lg flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-500">Estimated Cost:</span>
                 <span className="text-lg font-bold text-blue-600 tabular-nums">₹{calculatedCost}</span>
               </div>
@@ -295,7 +295,7 @@ const ExpenseManagement = () => {
               <div className="pt-2 border-t border-gray-200">
                 <div className="flex items-center justify-between mb-3">
                     <h4 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                        <FaRoute className="text-blue-500" /> Stops / Samples
+                        <FaRoute className="text-blue-600" /> Stops / Samples
                     </h4>
                     <button
                         type="button"
@@ -308,7 +308,7 @@ const ExpenseManagement = () => {
 
                 <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-1 custom-scrollbar">
                     {stops.map((stop, index) => (
-                        <div key={index} className="p-4 bg-gray-50 border border-gray-200 rounded-xl relative group">
+                        <div key={index} className="p-4 bg-white border border-gray-200 rounded-xl relative group">
                             {stops.length > 1 && (
                                 <button
                                     type="button"
@@ -412,7 +412,7 @@ const ExpenseManagement = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors font-bold"
+                  className="flex-1 py-2 text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors font-bold"
                 >
                   {submitting ? "Submitting..." : "Submit Record"}
                 </button>
@@ -424,7 +424,7 @@ const ExpenseManagement = () => {
 
       {/* Expense Details Modal - Match Sleek Record Modal UI */}
       {selectedExpense && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white  backdrop-blur-sm">
           <div className="w-full max-w-3xl p-6 bg-white rounded-xl shadow-2xl animate-in zoom-in-95 duration-200 text-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-700">Expense Details</h3>
@@ -434,20 +434,20 @@ const ExpenseManagement = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2 text-left">
                 <label className="block mb-1 text-sm font-medium text-gray-500">Purpose of Travel</label>
-                <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-700 font-bold">
+                <div className="w-full p-2 bg-white border rounded-lg text-gray-700 font-bold">
                   {selectedExpense.purpose}
                 </div>
               </div>
 
               <div className="text-left">
                 <label className="block mb-1 text-sm font-medium text-gray-500">Date</label>
-                <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-700 font-medium">
+                <div className="w-full p-2 bg-white border rounded-lg text-gray-700 font-medium">
                   {new Date(selectedExpense.date).toLocaleDateString()}
                 </div>
               </div>
               <div className="text-left">
                 <label className="block mb-1 text-sm font-medium text-gray-500">KM Traveled</label>
-                <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-700 font-medium tabular-nums">
+                <div className="w-full p-2 bg-white border rounded-lg text-gray-700 font-medium tabular-nums">
                   {selectedExpense.km} KM
                 </div>
               </div>
@@ -484,7 +484,7 @@ const ExpenseManagement = () => {
                     {selectedExpense.stops && selectedExpense.stops.length > 0 ? (
                         selectedExpense.stops.map((stop, index) => (
                             <div key={index} className="bg-white border hover:border-blue-300 rounded-xl p-3 shadow-sm transition-all relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                                <div className="absolute top-0 left-0 w-1 h-full bg-blue-600"></div>
                                 <div className="flex items-start justify-between mb-2 pl-2">
                                     <div className="flex-1">
                                         <h5 className="text-[13px] font-bold text-gray-700 flex items-center gap-1.5">
@@ -500,7 +500,7 @@ const ExpenseManagement = () => {
                                         <span className="text-xs font-black text-blue-700">{stop.km || 0} KM</span>
                                     </div>
                                     <div className="bg-emerald-50 rounded px-2 py-1 border border-emerald-100 flex justify-between items-center">
-                                        <span className="text-[9px] font-bold text-emerald-600 uppercase">Order</span>
+                                        <span className="text-[9px] font-bold text-blue-700 uppercase">Order</span>
                                         <span className="text-xs font-black text-emerald-700">₹{stop.orderValue || 0}</span>
                                     </div>
                                     <div className="bg-purple-50 rounded px-2 py-1 border border-purple-100 flex justify-between items-center">
@@ -511,7 +511,7 @@ const ExpenseManagement = () => {
                             </div>
                         ))
                     ) : (
-                        <div className="text-center p-4 border border-dashed rounded-lg bg-gray-50">
+                        <div className="text-center p-4 border border-dashed rounded-lg bg-white">
                             <p className="text-xs text-gray-500">No detailed stops recorded for this expense.</p>
                             
                             {/* Fallback to old data format if no stops array exist */}
@@ -538,7 +538,7 @@ const ExpenseManagement = () => {
 
               <div>
                 <label className="block mb-1 text-sm font-medium text-gray-500 text-left">Remark</label>
-                <div className="w-full p-2 bg-gray-50 border rounded-lg text-gray-700 text-xs min-h-[60px] text-left">
+                <div className="w-full p-2 bg-white border rounded-lg text-gray-700 text-xs min-h-[60px] text-left">
                   {selectedExpense.remark || '-'}
                 </div>
               </div>
@@ -546,7 +546,7 @@ const ExpenseManagement = () => {
               <div className="pt-2">
                 <button
                   onClick={() => setSelectedExpense(null)}
-                  className="w-full py-2 bg-gray-900 text-white rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-gray-100 transition-all active:scale-[0.98]"
+                  className="w-full py-2 bg-gray-100 text-gray-900 rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-gray-100 transition-all active:scale-[0.98]"
                 >
                   Close Details
                 </button>

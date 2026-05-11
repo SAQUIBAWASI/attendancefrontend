@@ -33,7 +33,7 @@ const LeaveTypeList = () => {
       <div className="flex items-center justify-between pb-2 mb-4 border-b">
         <h2 className="text-xl font-semibold">Leave Type List</h2>
         <button
-          className="flex items-center px-4 py-2 text-green-700 bg-green-100 border border-green-600 rounded"
+          className="flex items-center px-4 py-2 text-green-700 bg-blue-100 border border-blue-700 rounded"
           onClick={() => {
             setModalData(null);
             setShowModal(true);
@@ -99,7 +99,7 @@ const LeaveTypeModal = ({ data, onClose, onSave }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-white ">
       <div className="p-6 bg-white rounded shadow-lg w-96">
         <h2 className="mb-4 text-xl">{data ? "Edit Leave Type" : "New Leave Type"}</h2>
         <label className="block mb-2">Leave Type Name*</label>

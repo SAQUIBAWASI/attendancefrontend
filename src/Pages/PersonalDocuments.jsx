@@ -13,7 +13,7 @@
 
 // const StatusBadge = ({ status, className = "" }) => {
 //   const badges = {
-//     approved: "bg-green-100 text-green-700",
+//     approved: "bg-blue-100 text-green-700",
 //     rejected: "bg-red-100 text-red-700",
 //     uploaded: "bg-blue-100 text-blue-700",
 //     missing: "bg-gray-100 text-gray-500"
@@ -214,7 +214,7 @@
 //   };
 
 //   if (loading) return (
-//     <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
+//     <div className="min-h-screen flex items-center justify-center bg-white/50">
 //       <div className="text-center">
 //         <FaSpinner className="w-10 h-10 text-blue-600 animate-spin mx-auto mb-4" />
 //         <p className="text-sm font-medium text-gray-500">Loading Documents...</p>
@@ -223,12 +223,12 @@
 //   );
 
 //   if (!data) return (
-//     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50/50 p-6">
+//     <div className="min-h-screen flex flex-col items-center justify-center bg-white/50 p-6">
 //       <div className="bg-white rounded-lg p-8 shadow-md text-center max-w-sm w-full border border-gray-200">
 //         <FaUser size={32} className="mx-auto text-gray-700 mb-4" />
 //         <h2 className="text-xl font-bold text-gray-700 mb-2">Unavailable</h2>
 //         <p className="text-sm text-gray-500 mb-6">Candidate profile not found.</p>
-//         <button onClick={fetchData} className="w-full py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors">Retry</button>
+//         <button onClick={fetchData} className="w-full py-2 bg-blue-600 text-gray-900 font-bold rounded-lg hover:bg-blue-700 transition-colors">Retry</button>
 //       </div>
 //     </div>
 //   );
@@ -281,7 +281,7 @@
 //             <div className="relative w-full sm:w-auto">
 //               <input
 //                 type="date"
-//                 className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm sm:w-40"
+//                 className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm sm:w-40"
 //                 value={dateFilter}
 //                 onChange={(e) => setDateFilter(e.target.value)}
 //               />
@@ -302,7 +302,7 @@
 //                 <FaBriefcase className="text-sm" />
 //               </div>
 //               <div
-//                 className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
+//                 className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
 //                 onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
 //               >
 //                 {roleFilter || "Select Dept"}
@@ -321,7 +321,7 @@
 
 //               {isRoleDropdownOpen && (
 //                 <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-//                   <div className="p-2 border-b border-gray-200 bg-gray-50">
+//                   <div className="p-2 border-b border-gray-200 bg-white">
 //                     <div className="relative">
 //                       <FaUserTie className="absolute left-2.5 top-2.5 text-gray-500 text-xs" />
 //                       <input
@@ -370,7 +370,7 @@
 //                 <FaBriefcase className="text-sm" />
 //               </div>
 //               <div
-//                 className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
+//                 className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
 //                 onClick={() => setIsCandidateRoleDropdownOpen(!isCandidateRoleDropdownOpen)}
 //               >
 //                 {candidateRoleFilter || "Select Role"}
@@ -389,7 +389,7 @@
 
 //               {isCandidateRoleDropdownOpen && (
 //                 <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-//                   <div className="p-2 border-b border-gray-200 bg-gray-50">
+//                   <div className="p-2 border-b border-gray-200 bg-white">
 //                     <div className="relative">
 //                       <FaUserTie className="absolute left-2.5 top-2.5 text-gray-500 text-xs" />
 //                       <input
@@ -461,7 +461,7 @@
 
 //             <button
 //               onClick={() => window.location.assign('/employee-resignation')}
-//               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-red-600 rounded-lg shadow-sm hover:bg-red-700"
+//               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-900 transition-colors bg-red-600 rounded-lg shadow-sm hover:bg-red-700"
 //             >
 //               <FaSignOutAlt />
 //               <span>Resignations</span>
@@ -471,7 +471,7 @@
 
 //         <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //              <table className="min-w-full">
-//               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//               <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //               <tr>
 //                 <th className="py-2 text-center">Candidate Details</th>
 //                 {["Aadhar", "PAN", "Pass", "10th", "12th", "Grad", "Exp", "Bank"].map((header) => (
@@ -498,14 +498,14 @@
 //                           <>
 //                             <button
 //                               onClick={() => openFile(doc.filePath)}
-//                               className="p-1.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all"
+//                               className="p-1.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-gray-900 transition-all"
 //                               title="View"
 //                             >
 //                               <FaEye size={12} />
 //                             </button>
 //                             <button
 //                               onClick={() => openFile(doc.filePath)}
-//                               className="p-1.5 rounded bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-white transition-all"
+//                               className="p-1.5 rounded bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-all"
 //                               title="Download"
 //                             >
 //                               <FaDownload size={12} />
@@ -520,10 +520,10 @@
 //                 };
 
 //                 return (
-//                   <tr key={candId} className="hover:bg-gray-50 transition-colors">
+//                   <tr key={candId} className="hover:bg-white transition-colors">
 //                     <td className="p-4">
 //                       <div className="flex items-center gap-3">
-//                         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-white shadow-sm">
+//                         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-gray-900 shadow-sm">
 //                           {candName.charAt(0)}
 //                         </div>
 //                         <div>
@@ -540,7 +540,7 @@
 //                     {renderDocMini('graduationCertificate')}
 //                     {renderDocMini('experienceLetters')}
 //                     <td className="p-4 text-center">
-//                       <div className={`w-2 h-2 mx-auto rounded-full ${docs.bankDetails?.bankName ? 'bg-green-500 shadow-sm' : 'bg-gray-100'}`}></div>
+//                       <div className={`w-2 h-2 mx-auto rounded-full ${docs.bankDetails?.bankName ? 'bg-blue-600 shadow-sm' : 'bg-gray-100'}`}></div>
 //                     </td>
 //                     <td className="p-4 text-center border-l border-gray-50">
 //                       <button
@@ -574,7 +574,7 @@
 //         {/* Header synced with JobApplicants modal style */}
 //         <div className="px-6 py-5 border-b border-gray-200 flex items-center justify-between">
 //           <div className="flex items-center gap-5">
-//             <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-blue-100">
+//             <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center text-gray-900 text-2xl font-black shadow-lg shadow-blue-100">
 //               {data.candidateName?.charAt(0) || data.email?.charAt(0) || <FaUser />}
 //             </div>
 //             <div>
@@ -587,7 +587,7 @@
 //             </div>
 //           </div>
 //           <div className="flex items-center gap-3">
-//             <button onClick={() => window.location.assign('/personaldocuments')} className="px-6 py-2.5 bg-gray-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-white transition-all">Close</button>
+//             <button onClick={() => window.location.assign('/personaldocuments')} className="px-6 py-2.5 bg-gray-100 text-gray-900 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-white transition-all">Close</button>
 //           </div>
 //         </div>
 
@@ -618,14 +618,14 @@
 //                             <button
 //                               onClick={() => openFile(doc.filePath)}
 //                               disabled={!uploaded}
-//                               className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${uploaded ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-50 text-gray-700'}`}
+//                               className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${uploaded ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' : 'bg-white text-gray-700'}`}
 //                             >
 //                               <FaEye size={12} /> View
 //                             </button>
 //                             <button
 //                               onClick={() => openFile(doc.filePath)}
 //                               disabled={!uploaded}
-//                               className={`flex-1 py-2 rounded-lg text-xs font-bold border flex items-center justify-center gap-2 transition-all ${uploaded ? 'border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-50 border-transparent text-gray-700'}`}
+//                               className={`flex-1 py-2 rounded-lg text-xs font-bold border flex items-center justify-center gap-2 transition-all ${uploaded ? 'border-gray-200 text-gray-700 hover:bg-white' : 'bg-white border-transparent text-gray-700'}`}
 //                             >
 //                               <FaDownload size={12} /> Download
 //                             </button>
@@ -634,7 +634,7 @@
 //                           <div className="flex gap-2">
 //                             <button
 //                               onClick={() => mark(key, 'approved')}
-//                               className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${state === 'approved' ? 'bg-green-100 border-green-200 text-green-700' : 'border-gray-200 text-gray-500 hover:text-green-600'}`}
+//                               className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${state === 'approved' ? 'bg-blue-100 border-green-200 text-green-700' : 'border-gray-200 text-gray-500 hover:text-blue-700'}`}
 //                             >
 //                               Approve
 //                             </button>
@@ -658,7 +658,7 @@
 //                 <div className="space-y-4">
 //                   <div className="flex items-center justify-between">
 //                     <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-//                       <FaBuilding className="text-blue-500" /> Bank Details
+//                       <FaBuilding className="text-blue-600" /> Bank Details
 //                     </h3>
 //                     {!isEditingBank && (
 //                       <button
@@ -671,7 +671,7 @@
 //                     )}
 //                   </div>
 
-//                   <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 space-y-3">
+//                   <div className="bg-white rounded-xl p-5 border border-gray-200 space-y-3">
 //                     {isEditingBank ? (
 //                       <div className="space-y-3">
 //                         <div>
@@ -708,7 +708,7 @@
 //                           <button
 //                             onClick={handleSaveBankDetails}
 //                             disabled={isSavingBank}
-//                             className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+//                             className="flex-1 py-2 bg-blue-600 text-gray-900 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
 //                           >
 //                             {isSavingBank ? <FaSpinner className="animate-spin" /> : <><FaSave /> Save</>}
 //                           </button>
@@ -757,7 +757,7 @@
 //                     )}
 //                   </div>
 
-//                   <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 space-y-3">
+//                   <div className="bg-white rounded-xl p-5 border border-gray-200 space-y-3">
 //                     {isEditingEmergency1 ? (
 //                       <div className="space-y-3">
 //                         <div>
@@ -794,7 +794,7 @@
 //                           <button
 //                             onClick={() => handleSaveEmergencyContact(1)}
 //                             disabled={isSavingE1}
-//                             className="flex-1 py-2 bg-rose-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all flex items-center justify-center gap-2"
+//                             className="flex-1 py-2 bg-rose-600 text-gray-900 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all flex items-center justify-center gap-2"
 //                           >
 //                             {isSavingE1 ? <FaSpinner className="animate-spin" /> : <><FaSave /> Save</>}
 //                           </button>
@@ -830,7 +830,7 @@
 //                 <div className="space-y-4">
 //                   <div className="flex items-center justify-between">
 //                     <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-//                       <FaAsterisk className="text-blue-500" /> Emergency #2
+//                       <FaAsterisk className="text-blue-600" /> Emergency #2
 //                     </h3>
 //                     {!isEditingEmergency2 && (
 //                       <button
@@ -843,7 +843,7 @@
 //                     )}
 //                   </div>
 
-//                   <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 space-y-3">
+//                   <div className="bg-white rounded-xl p-5 border border-gray-200 space-y-3">
 //                     {isEditingEmergency2 ? (
 //                       <div className="space-y-3">
 //                         <div>
@@ -880,7 +880,7 @@
 //                           <button
 //                             onClick={() => handleSaveEmergencyContact(2)}
 //                             disabled={isSavingE2}
-//                             className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+//                             className="flex-1 py-2 bg-blue-600 text-gray-900 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
 //                           >
 //                             {isSavingE2 ? <FaSpinner className="animate-spin" /> : <><FaSave /> Save</>}
 //                           </button>
@@ -917,7 +917,7 @@
 //                   <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
 //                     <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div> Academic Background
 //                   </h3>
-//                   <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 space-y-3">
+//                   <div className="bg-white rounded-xl p-5 border border-gray-200 space-y-3">
 //                     <MetaRow label="Qualification" value={data.candidateId?.qualification} />
 //                     <MetaRow label="Percentage" value={data.candidateId?.percentage} />
 //                     <MetaRow label="Passing Year" value={data.candidateId?.passingYear} />
@@ -932,7 +932,7 @@
 //                   <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
 //                     <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div> Professional Record
 //                   </h3>
-//                   <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 space-y-3">
+//                   <div className="bg-white rounded-xl p-5 border border-gray-200 space-y-3">
 //                     <MetaRow label="Experience" value={data.candidateId?.experience} />
 //                     <MetaRow label="Organization" value={data.candidateId?.currentCompany} />
 //                     <MetaRow label="Current CTC" value={data.candidateId?.currentCTC} />
@@ -955,14 +955,14 @@
 
 //             {/* Sidebar synced with standard JobApplicants side info */}
 //             <div className="space-y-6">
-//               <div className="bg-gray-900 rounded-2xl p-6 text-white shadow-xl">
+//               <div className="bg-gray-100 rounded-2xl p-6 text-gray-900 shadow-xl">
 //                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 text-gray-500">Onboarding Metric</h4>
 //                 <div className="flex items-end gap-2 mb-4">
 //                   <span className="text-4xl font-black">{data.completionPercentage ?? 0}%</span>
 //                   <span className="text-xs font-bold mb-1 opacity-50">Score</span>
 //                 </div>
-//                 <div className="w-full h-1.5 bg-black/10 rounded-full overflow-hidden">
-//                   <div className="h-full bg-blue-500 rounded-full" style={{ width: `${data.completionPercentage ?? 0}%` }}></div>
+//                 <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+//                   <div className="h-full bg-blue-600 rounded-full" style={{ width: `${data.completionPercentage ?? 0}%` }}></div>
 //                 </div>
 //                 <p className="mt-4 text-[10px] font-medium text-gray-500 italic uppercase tracking-tighter">Requires 100% for full clearance</p>
 //               </div>
@@ -998,7 +998,7 @@ import { saveAs } from "file-saver";
 import { API_BASE_URL } from "../config";
 
 const MetaRow = ({ label, value }) => (
-  <div className="flex flex-col gap-1 p-3 bg-gray-50/50 rounded-xl border border-gray-200 transition-all hover:bg-white hover:shadow-sm">
+  <div className="flex flex-col gap-1 p-3 bg-white/50 rounded-xl border border-gray-200 transition-all hover:bg-white hover:shadow-sm">
     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</span>
     <span className="text-sm font-bold text-gray-700 break-words">{value || "---"}</span>
   </div>
@@ -1006,7 +1006,7 @@ const MetaRow = ({ label, value }) => (
 
 const StatusBadge = ({ status, className = "" }) => {
   const badges = {
-    approved: "bg-green-100 text-green-700",
+    approved: "bg-blue-100 text-green-700",
     rejected: "bg-red-100 text-red-700",
     uploaded: "bg-blue-100 text-blue-700",
     missing: "bg-gray-100 text-gray-500"
@@ -1370,7 +1370,7 @@ export default function PersonalDocuments() {
         <FaUser size={32} className="mx-auto text-gray-700 mb-4" />
         <h2 className="text-xl font-bold text-gray-700 mb-2">Unavailable</h2>
         <p className="text-sm text-gray-500 mb-6">Candidate profile not found.</p>
-        <button onClick={fetchData} className="w-full py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors">Retry</button>
+        <button onClick={fetchData} className="w-full py-2 bg-blue-600 text-gray-900 font-bold rounded-lg hover:bg-blue-700 transition-colors">Retry</button>
       </div>
     </div>
   );
@@ -1390,19 +1390,19 @@ export default function PersonalDocuments() {
           <div>
             <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
               Personal Documents
-              <span className="px-3 py-1 bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-lg shadow-blue-200">
+              <span className="px-3 py-1 bg-blue-600 text-gray-900 text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-lg shadow-blue-200">
                 {filteredData.length} Records
               </span>
             </h1>
             <p className="text-sm font-bold text-gray-500 mt-1 uppercase tracking-widest pl-1">Document Verification Manager</p>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={fetchData} className="h-11 px-5 text-xs font-black text-gray-500 bg-white border border-gray-200 shadow-sm rounded-xl hover:bg-gray-50 transition-all flex items-center gap-2 uppercase tracking-widest">
-              <FaSync className={`text-blue-500 ${loading ? 'animate-spin' : ''}`} /> Refresh
+            <button onClick={fetchData} className="h-11 px-5 text-xs font-black text-gray-500 bg-white border border-gray-200 shadow-sm rounded-xl hover:bg-white transition-all flex items-center gap-2 uppercase tracking-widest">
+              <FaSync className={`text-blue-600 ${loading ? 'animate-spin' : ''}`} /> Refresh
             </button>
             <button
               onClick={() => window.location.assign('/employee-resignation')}
-              className="h-11 px-6 text-xs font-black text-white bg-red-600 shadow-lg shadow-red-100 rounded-xl hover:bg-red-700 transition-all flex items-center gap-2 uppercase tracking-widest"
+              className="h-11 px-6 text-xs font-black text-gray-900 bg-red-600 shadow-lg shadow-red-100 rounded-xl hover:bg-red-700 transition-all flex items-center gap-2 uppercase tracking-widest"
             >
               <FaSignOutAlt /> Resignations
             </button>
@@ -1410,17 +1410,17 @@ export default function PersonalDocuments() {
         </div>
 
         {/* Unified Search & Filter Bar */}
-        <div className="mx-6 mb-6 p-4 bg-black/80 backdrop-blur-md rounded-2xl shadow-xl border border-white/50">
+        <div className="mx-6 mb-6 p-4 bg-white/80 backdrop-blur-md rounded-2xl shadow-xl border border-white/50">
           <div className="flex flex-wrap items-center gap-4">
             {/* Professional Search Input */}
             <div className="relative flex-1 min-w-[300px] group">
-              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 group-focus-within:text-blue-500 transition-colors" />
+              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 group-focus-within:text-blue-600 transition-colors" />
               <input
                 type="text"
                 placeholder="Search by candidate name or identifier..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-transparent rounded-xl text-sm font-bold text-gray-700 placeholder:text-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none shadow-inner"
+                className="w-full pl-12 pr-4 py-3.5 bg-white border-transparent rounded-xl text-sm font-bold text-gray-700 placeholder:text-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none shadow-inner"
               />
               {searchQuery && (
                 <button
@@ -1438,17 +1438,17 @@ export default function PersonalDocuments() {
                 <button
                   onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
                   className={`h-12 px-5 text-xs font-black rounded-xl transition-all flex items-center gap-2 border uppercase tracking-widest ${roleFilter
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100'
+                    ? 'bg-blue-600 text-gray-900 border-blue-600 shadow-lg shadow-blue-100'
                     : 'bg-white text-gray-500 border-gray-200 hover:border-blue-200'
                     }`}
                 >
-                  <FaBriefcase className={roleFilter ? 'text-white' : 'text-blue-500'} />
+                  <FaBriefcase className={roleFilter ? 'text-gray-900' : 'text-blue-600'} />
                   {roleFilter || 'All Departments'}
                 </button>
 
                 {isRoleDropdownOpen && (
                   <div className="absolute z-50 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden py-1 animate-in fade-in slide-in-from-top-2">
-                    <div className="p-3 border-b border-gray-50 bg-gray-50/50">
+                    <div className="p-3 border-b border-gray-50 bg-white/50">
                       <div className="relative">
                         <FaUserTie className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs" />
                         <input
@@ -1487,7 +1487,7 @@ export default function PersonalDocuments() {
 
               {/* Date Filter */}
               <div className="relative group">
-                <FaCalendarAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-xs pointer-events-none group-focus-within:text-blue-500 transition-colors" />
+                <FaCalendarAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-900 text-xs pointer-events-none group-focus-within:text-blue-600 transition-colors" />
                 <input
                   type="date"
                   value={dateFilter}
@@ -1511,7 +1511,7 @@ export default function PersonalDocuments() {
 
         <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
           <table className="min-w-full">
-            <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+            <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
               <tr>
                 <th className="py-2 text-center">Candidate Details</th>
                 {["Aadhar", "PAN", "Pass", "10th", "12th", "Grad", "Exp", "Bank"].map((header) => (
@@ -1538,14 +1538,14 @@ export default function PersonalDocuments() {
                           <>
                             <button
                               onClick={() => openFile(doc.filePath)}
-                              className="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all"
+                              className="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-gray-900 transition-all"
                               title="View"
                             >
                               <FaEye size={10} />
                             </button>
                             <button
                               onClick={() => openFile(doc.filePath)}
-                              className="p-1 rounded bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-white transition-all"
+                              className="p-1 rounded bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-all"
                               title="Download"
                             >
                               <FaDownload size={10} />
@@ -1560,10 +1560,10 @@ export default function PersonalDocuments() {
                 };
 
                 return (
-                  <tr key={candId} className="hover:bg-gray-50 transition-colors">
+                  <tr key={candId} className="hover:bg-white transition-colors">
                     <td className="p-2 text-center">
                       <div className="flex items-center justify-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-white shadow-sm text-xs">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-gray-900 shadow-sm text-xs">
                           {candName.charAt(0)}
                         </div>
                         <div>
@@ -1580,13 +1580,13 @@ export default function PersonalDocuments() {
                     {renderDocMini('graduationCertificate')}
                     {renderDocMini('experienceLetters')}
                     <td className="p-2 text-center">
-                      <div className={`w-2 h-2 mx-auto rounded-full ${docs.bankDetails?.bankName ? 'bg-green-500 shadow-sm' : 'bg-gray-100'}`}></div>
+                      <div className={`w-2 h-2 mx-auto rounded-full ${docs.bankDetails?.bankName ? 'bg-blue-600 shadow-sm' : 'bg-gray-100'}`}></div>
                     </td>
                     <td className="p-2 text-center border-l border-gray-50">
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => window.location.assign(`/personaldocuments?userId=${candId}`)}
-                          className="p-1.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all"
+                          className="p-1.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-gray-900 transition-all"
                           title="Review"
                         >
                           <FaEye size={12} />
@@ -1594,7 +1594,7 @@ export default function PersonalDocuments() {
                         <button
                           onClick={() => handleBulkDownload(row)}
                           disabled={isDownloadingBulk}
-                          className="p-1.5 rounded bg-emerald-50 text-emerald-600 hover:bg-blue-600 hover:text-white transition-all disabled:opacity-50"
+                          className="p-1.5 rounded bg-emerald-50 text-blue-700 hover:bg-blue-600 hover:text-gray-900 transition-all disabled:opacity-50"
                           title="Bulk Download"
                         >
                           <FaDownload size={12} />
@@ -1609,7 +1609,7 @@ export default function PersonalDocuments() {
 
           {/* Pagination */}
           {filteredData.length > 0 && (
-            <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
+            <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-white sm:flex-row">
               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
                 <span>Showing</span>
                 <span className="font-medium">
@@ -1646,7 +1646,7 @@ export default function PersonalDocuments() {
                   disabled={pagination.currentPage === 1}
                   className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === 1
                     ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                     }`}
                 >
                   Previous
@@ -1661,8 +1661,8 @@ export default function PersonalDocuments() {
                       className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${page === "..."
                         ? "text-gray-500 cursor-default"
                         : pagination.currentPage === page
-                          ? "bg-blue-600 text-white"
-                          : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                          ? "bg-blue-600 text-gray-900"
+                          : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
                         }`}
                     >
                       {page}
@@ -1675,7 +1675,7 @@ export default function PersonalDocuments() {
                   disabled={pagination.currentPage === pagination.totalPages}
                   className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === pagination.totalPages
                     ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                     }`}
                 >
                   Next
@@ -1703,7 +1703,7 @@ export default function PersonalDocuments() {
         {/* Header Section */}
         <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-200 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl flex items-center justify-center text-white text-3xl font-black shadow-lg shadow-blue-100">
+            <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl flex items-center justify-center text-gray-900 text-3xl font-black shadow-lg shadow-blue-100">
               {data.candidateName?.charAt(0) || data.email?.charAt(0) || <FaUser />}
             </div>
             <div>
@@ -1714,8 +1714,8 @@ export default function PersonalDocuments() {
                 <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-widest rounded-full border border-blue-100">
                   Candidate ID: {data._id?.slice(-8).toUpperCase() || 'N/A'}
                 </span>
-                <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                <span className="flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                  <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
                   {data.completionPercentage ?? 0}% Complete
                 </span>
               </div>
@@ -1728,7 +1728,7 @@ export default function PersonalDocuments() {
               disabled={isDownloadingBulk}
               className={`h-10 px-6 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-md ${isDownloadingBulk
                 ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100 hover:shadow-blue-200'
+                : 'bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-blue-100 hover:shadow-blue-200'
                 }`}
             >
               {isDownloadingBulk ? (
@@ -1740,7 +1740,7 @@ export default function PersonalDocuments() {
             </button>
             <button
               onClick={() => window.location.assign('/personaldocuments')}
-              className="h-10 px-6 bg-gray-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-white transition-all shadow-md"
+              className="h-10 px-6 bg-gray-200 text-gray-900 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-white transition-all shadow-md"
             >
               Close
             </button>
@@ -1753,14 +1753,14 @@ export default function PersonalDocuments() {
             {/* Documents Section */}
             <section>
               <div className="flex items-center gap-2 mb-4">
-                <FaBriefcase className="text-blue-500 text-sm" />
+                <FaBriefcase className="text-blue-600 text-sm" />
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Verification Documents</h3>
               </div>
 
               <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
-                    <thead className="bg-gradient-to-r from-green-500 to-blue-600 text-white">
+                    <thead className="bg-gradient-to-r from-green-500 to-blue-600 text-gray-900">
                       <tr>
                         <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest">Document Type</th>
                         <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-center">Status</th>
@@ -1776,7 +1776,7 @@ export default function PersonalDocuments() {
                         const state = marks[key] || (doc.verified ? 'approved' : uploaded ? 'uploaded' : 'missing');
 
                         return (
-                          <tr key={key} className="group hover:bg-gray-50 transition-colors">
+                          <tr key={key} className="group hover:bg-white transition-colors">
                             <td className="px-6 py-4">
                               <span className="text-sm font-bold text-gray-700">
                                 {key.replace(/([A-Z])/g, ' $1').toUpperCase()}
@@ -1786,7 +1786,7 @@ export default function PersonalDocuments() {
                               <StatusBadge status={state} />
                             </td>
                             <td className="px-6 py-4">
-                              <code className="text-[10px] text-gray-500 font-bold font-mono bg-gray-50 px-3 py-1 rounded-lg border border-gray-200 block max-w-[200px] truncate">
+                              <code className="text-[10px] text-gray-500 font-bold font-mono bg-white px-3 py-1 rounded-lg border border-gray-200 block max-w-[200px] truncate">
                                 {doc.fileName || '--'}
                               </code>
                             </td>
@@ -1795,7 +1795,7 @@ export default function PersonalDocuments() {
                                 <button
                                   onClick={() => openFile(doc.filePath)}
                                   disabled={!uploaded}
-                                  className={`p-2 rounded-lg transition-all ${uploaded ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm' : 'bg-gray-50 text-gray-700 cursor-not-allowed'}`}
+                                  className={`p-2 rounded-lg transition-all ${uploaded ? 'bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-sm' : 'bg-white text-gray-700 cursor-not-allowed'}`}
                                   title="View Document"
                                 >
                                   <FaEye size={12} />
@@ -1803,7 +1803,7 @@ export default function PersonalDocuments() {
                                 <button
                                   onClick={() => openFile(doc.filePath)}
                                   disabled={!uploaded}
-                                  className={`p-2 rounded-lg border transition-all ${uploaded ? 'border-gray-200 bg-white text-gray-500 hover:border-gray-900 hover:text-gray-900 shadow-sm' : 'bg-gray-50 border-transparent text-gray-700 cursor-not-allowed'}`}
+                                  className={`p-2 rounded-lg border transition-all ${uploaded ? 'border-gray-200 bg-white text-gray-500 hover:border-gray-900 hover:text-gray-900 shadow-sm' : 'bg-white border-transparent text-gray-700 cursor-not-allowed'}`}
                                   title="Download Document"
                                 >
                                   <FaDownload size={12} />
@@ -1814,7 +1814,7 @@ export default function PersonalDocuments() {
                               <div className="flex items-center justify-end gap-2">
                                 <button
                                   onClick={() => mark(key, 'approved')}
-                                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest border transition-all flex items-center justify-center gap-1.5 ${state === 'approved' ? 'bg-green-100 border-green-200 text-green-700 shadow-sm' : 'border-gray-200 bg-white text-gray-500 hover:border-green-500 hover:text-green-500'}`}
+                                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest border transition-all flex items-center justify-center gap-1.5 ${state === 'approved' ? 'bg-blue-100 border-green-200 text-green-700 shadow-sm' : 'border-gray-200 bg-white text-gray-500 hover:border-green-500 hover:text-blue-600'}`}
                                 >
                                   <FaCheck size={10} /> Approve
                                 </button>
@@ -1841,7 +1841,7 @@ export default function PersonalDocuments() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                    <FaBuilding className="text-blue-500" /> Bank Details
+                    <FaBuilding className="text-blue-600" /> Bank Details
                   </h3>
                   {!isEditingBank && (
                     <button
@@ -1891,7 +1891,7 @@ export default function PersonalDocuments() {
                         <button
                           onClick={handleSaveBankDetails}
                           disabled={isSavingBank}
-                          className="flex-1 h-9 bg-blue-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+                          className="flex-1 h-9 bg-blue-600 text-gray-900 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
                         >
                           {isSavingBank ? <FaSpinner className="animate-spin" /> : <><FaSave /> Save</>}
                         </button>
@@ -1916,7 +1916,7 @@ export default function PersonalDocuments() {
                       <MetaRow label="Account" value={data.documents?.bankDetails?.accountNumber} />
                       <MetaRow label="IFSC Code" value={data.documents?.bankDetails?.ifscCode} />
                       {!data.documents?.bankDetails?.bankName && (
-                        <p className="text-[10px] font-bold text-gray-500 italic text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200 mt-2">No bank details provided</p>
+                        <p className="text-[10px] font-bold text-gray-500 italic text-center py-4 bg-white rounded-xl border border-dashed border-gray-200 mt-2">No bank details provided</p>
                       )}
                     </div>
                   )}
@@ -1977,7 +1977,7 @@ export default function PersonalDocuments() {
                         <button
                           onClick={() => handleSaveEmergencyContact(1)}
                           disabled={isSavingE1}
-                          className="flex-1 h-9 bg-rose-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-rose-700 transition-all flex items-center justify-center gap-2"
+                          className="flex-1 h-9 bg-rose-600 text-gray-900 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-rose-700 transition-all flex items-center justify-center gap-2"
                         >
                           {isSavingE1 ? <FaSpinner className="animate-spin" /> : <><FaSave /> Save</>}
                         </button>
@@ -2002,7 +2002,7 @@ export default function PersonalDocuments() {
                       <MetaRow label="Phone" value={data.documents?.emergencyContact1?.phone} />
                       <MetaRow label="Relation" value={data.documents?.emergencyContact1?.relationship} />
                       {!data.documents?.emergencyContact1?.name && (
-                        <p className="text-[10px] font-bold text-gray-500 italic text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200 mt-2">No contact provided</p>
+                        <p className="text-[10px] font-bold text-gray-500 italic text-center py-4 bg-white rounded-xl border border-dashed border-gray-200 mt-2">No contact provided</p>
                       )}
                     </div>
                   )}
@@ -2063,7 +2063,7 @@ export default function PersonalDocuments() {
                         <button
                           onClick={() => handleSaveEmergencyContact(2)}
                           disabled={isSavingE2}
-                          className="flex-1 h-9 bg-teal-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-teal-700 transition-all flex items-center justify-center gap-2"
+                          className="flex-1 h-9 bg-blue-700 text-gray-900 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-blue-800 transition-all flex items-center justify-center gap-2"
                         >
                           {isSavingE2 ? <FaSpinner className="animate-spin" /> : <><FaSave /> Save</>}
                         </button>
@@ -2088,7 +2088,7 @@ export default function PersonalDocuments() {
                       <MetaRow label="Phone" value={data.documents?.emergencyContact2?.phone} />
                       <MetaRow label="Relation" value={data.documents?.emergencyContact2?.relationship} />
                       {!data.documents?.emergencyContact2?.name && (
-                        <p className="text-[10px] font-bold text-gray-500 italic text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200 mt-2">No contact provided</p>
+                        <p className="text-[10px] font-bold text-gray-500 italic text-center py-4 bg-white rounded-xl border border-dashed border-gray-200 mt-2">No contact provided</p>
                       )}
                     </div>
                   )}

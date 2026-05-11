@@ -9,10 +9,10 @@ const AllUserCoupons = () => {
 
   // Category colors mapping
   const categoryColorMap = {
-    Food: 'bg-red-100 text-red-800',
-    Fashion: 'bg-blue-100 text-blue-800',
-    Restaurant: 'bg-yellow-100 text-yellow-800',
-    Groceries: 'bg-green-100 text-green-800',
+    Food: 'bg-red-50 text-red-700',
+    Fashion: 'bg-blue-50 text-blue-700',
+    Restaurant: 'bg-amber-50 text-amber-700',
+    Groceries: 'bg-emerald-50 text-emerald-700',
     // Add more categories as needed
   };
 
@@ -55,7 +55,7 @@ const AllUserCoupons = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-white min-h-screen">
       <h1 className="text-2xl font-bold text-center text-gray-700 mb-8">
         All User Coupons Dashboard
       </h1>
@@ -74,7 +74,7 @@ const AllUserCoupons = () => {
           <tbody className="divide-y divide-gray-200">
             {users.map((user) => (
               <React.Fragment key={user._id}>
-                <tr className="hover:bg-gray-50">
+                <tr className="hover:bg-white">
                   <td className="py-4 px-4">
                     <div className="flex items-center">
                       <img 
@@ -89,12 +89,12 @@ const AllUserCoupons = () => {
                     </div>
                   </td>
                   <td className="py-4 px-4">
-                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                    <span className="bg-blue-50 text-blue-700 text-xs font-medium px-2.5 py-0.5 rounded">
                       {user.coins}
                     </span>
                   </td>
                   <td className="py-4 px-4">
-                    <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                    <span className="bg-emerald-50 text-emerald-700 text-xs font-medium px-2.5 py-0.5 rounded">
                       {user.stats.totalActiveCoupons}
                     </span>
                   </td>
@@ -164,7 +164,7 @@ const AllUserCoupons = () => {
                                   </td>
                                   <td className="py-3 px-4">
                                     <span className={`text-xs px-2 py-1 rounded ${
-                                      coupon.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                      coupon.status === 'Active' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
                                     }`}>
                                       {coupon.status}
                                     </span>
@@ -219,7 +219,7 @@ const AllUserCoupons = () => {
                                   </td>
                                   <td className="py-3 px-4">
                                     <span className={`text-xs px-2 py-1 rounded-full ${
-                                      coupon.status === 'Used' ? 'bg-red-100 text-red-800' : 'bg-gray-100'
+                                      coupon.status === 'Used' ? 'bg-red-50 text-red-700' : 'bg-gray-100'
                                     }`}>
                                       {coupon.status}
                                     </span>

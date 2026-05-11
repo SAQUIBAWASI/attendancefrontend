@@ -93,7 +93,7 @@ export default function PosterList() {
       <div className="overflow-x-auto mb-4">
         <table className="w-full border-collapse border border-gray-300">
           <thead>
-            <tr className="bg-purple-600 text-white">
+            <tr className="bg-purple-600 text-gray-900">
               <th className="p-2 border">Sl</th>
               <th className="p-2 border">Images</th>
               <th className="p-2 border">Name</th>
@@ -132,13 +132,13 @@ export default function PosterList() {
                 <td className="p-2 border">{poster.inStock ? "In Stock" : "Out of Stock"}</td>
                 <td className="p-2 border flex gap-2">
                   <button
-                    className="bg-blue-500 text-white p-1 rounded"
+                    className="bg-blue-600 text-gray-900 p-1 rounded"
                     onClick={() => handleEdit(poster._id)}
                   >
                     <FaEdit />
                   </button>
                   <button
-                    className="bg-red-500 text-white p-1 rounded"
+                    className="bg-red-500 text-gray-900 p-1 rounded"
                     onClick={() => handleDelete(poster._id)}
                   >
                     <FaTrash />
@@ -162,7 +162,7 @@ export default function PosterList() {
           <button
             key={index}
             onClick={() => setCurrentPage(index + 1)}
-            className={`px-4 py-2 rounded ${currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+            className={`px-4 py-2 rounded ${currentPage === index + 1 ? "bg-blue-600 text-gray-900" : "bg-gray-200"}`}
           >
             {index + 1}
           </button>

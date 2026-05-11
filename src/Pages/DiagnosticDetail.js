@@ -133,7 +133,7 @@ const DiagnosticDetail = () => {
               <td className="p-2 border">
                 <button
                   onClick={handleEditCenter}
-                  className="text-blue-500 hover:text-blue-700"
+                  className="text-blue-600 hover:text-blue-700"
                 >
                   <FaEdit />
                 </button>
@@ -166,7 +166,7 @@ const DiagnosticDetail = () => {
                 <td className="p-2 border">
                   <button
                     onClick={() => handleEditContact(contact)}
-                    className="text-blue-500 hover:text-blue-700"
+                    className="text-blue-600 hover:text-blue-700"
                   >
                     <FaEdit />
                   </button>
@@ -206,7 +206,7 @@ const DiagnosticDetail = () => {
                 <td className="p-2 border">
                   <button
                     onClick={() => handleEditTest(test)}
-                    className="text-blue-500 hover:text-blue-700"
+                    className="text-blue-600 hover:text-blue-700"
                   >
                     <FaEdit />
                   </button>
@@ -225,7 +225,7 @@ const DiagnosticDetail = () => {
 
       {/* Edit Center Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-white  flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded shadow-md w-96">
             <h3 className="text-lg font-semibold">Edit Center</h3>
             <form onSubmit={handleSubmitEditCenter}>
@@ -238,7 +238,7 @@ const DiagnosticDetail = () => {
               />
               <button
                 type="submit"
-                className="bg-blue-500 text-white mt-4 py-2 px-4 rounded"
+                className="bg-blue-600 text-gray-900 mt-4 py-2 px-4 rounded"
               >
                 Save Changes
               </button>
@@ -256,7 +256,7 @@ const DiagnosticDetail = () => {
 
       {/* Edit Contact Modal */}
       {showContactEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-white  flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded shadow-md w-96">
             <h3 className="text-lg font-semibold">Edit Contact Person</h3>
             <form onSubmit={handleSubmitEditContact}>
@@ -269,7 +269,7 @@ const DiagnosticDetail = () => {
               />
               <button
                 type="submit"
-                className="bg-blue-500 text-white mt-4 py-2 px-4 rounded"
+                className="bg-blue-600 text-gray-900 mt-4 py-2 px-4 rounded"
               >
                 Save Changes
               </button>
@@ -287,7 +287,7 @@ const DiagnosticDetail = () => {
 
 {/* Edit Test Modal */}
 {showTestEditModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+  <div className="fixed inset-0 bg-white  flex justify-center items-center z-50">
     <div className="bg-white p-6 rounded shadow-md w-96">
       <h3 className="text-lg font-semibold">Edit Test</h3>
       <form onSubmit={handleSubmitEditTest}>
@@ -329,7 +329,7 @@ const DiagnosticDetail = () => {
         {/* Save and Cancel Buttons */}
         <button
           type="submit"
-          className="bg-blue-500 text-white mt-4 py-2 px-4 rounded"
+          className="bg-blue-600 text-gray-900 mt-4 py-2 px-4 rounded"
         >
           Save Changes
         </button>

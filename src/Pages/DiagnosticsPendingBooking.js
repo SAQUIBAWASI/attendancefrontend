@@ -107,13 +107,13 @@ const DiagnosticsPendingBooking = () => {
           data={filteredBookings}
           headers={headers}
           filename="diagnostic_bookings.csv"
-          className="px-4 py-2 bg-green-500 text-white rounded text-sm flex items-center gap-1"
+          className="px-4 py-2 bg-blue-600 text-gray-900 rounded text-sm flex items-center gap-1"
         >
           <FaFileCsv /> CSV
         </CSVLink>
         <button
           onClick={exportToExcel}
-          className="px-4 py-2 bg-green-500 text-white rounded text-sm flex items-center gap-1"
+          className="px-4 py-2 bg-blue-600 text-gray-900 rounded text-sm flex items-center gap-1"
         >
           <FaFileExcel /> Excel
         </button>
@@ -141,7 +141,7 @@ const DiagnosticsPendingBooking = () => {
           </thead>
           <tbody>
             {filteredBookings.map((booking) => (
-              <tr key={booking.bookingId} className="hover:bg-gray-50 border-b">
+              <tr key={booking.bookingId} className="hover:bg-white border-b">
                 <td className="p-2 border">{booking.patient_name}</td>
                 <td className="p-2 border">{booking.patient_age}</td>
                 <td className="p-2 border">{booking.patient_gender}</td>
@@ -165,7 +165,7 @@ const DiagnosticsPendingBooking = () => {
                       setEditBooking(booking);
                       setNewStatus(booking.status); // Pre-fill status with current status
                     }}
-                    className="text-blue-500 hover:text-blue-700"
+                    className="text-blue-600 hover:text-blue-700"
                   >
                     <FaEdit />
                   </button>
@@ -181,7 +181,7 @@ const DiagnosticsPendingBooking = () => {
 
       {/* Status Update Modal */}
       {editBooking && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-white  flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded shadow-md w-96">
             <h3 className="text-lg font-semibold mb-4">Update Status</h3>
             <select
@@ -203,7 +203,7 @@ const DiagnosticsPendingBooking = () => {
               </button>
               <button
                 onClick={handleStatusUpdate}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
+                className="px-4 py-2 bg-blue-600 text-gray-900 rounded"
               >
                 Update
               </button>

@@ -153,11 +153,11 @@
 //   // Get action badge color
 //   const getActionBadgeColor = (action) => {
 //     const colorMap = {
-//       login: "bg-green-100 text-green-800",
+//       login: "bg-emerald-50 text-emerald-700",
 //       logout: "bg-gray-100 text-gray-700",
-//       leave_apply: "bg-blue-100 text-blue-800",
-//       leave_approve: "bg-emerald-100 text-emerald-800",
-//       leave_reject: "bg-red-100 text-red-800",
+//       leave_apply: "bg-blue-50 text-blue-700",
+//       leave_approve: "bg-blue-100 text-emerald-800",
+//       leave_reject: "bg-red-50 text-red-700",
 //       payslip_download: "bg-purple-100 text-purple-800",
 //     };
 //     return colorMap[action] || "bg-gray-100 text-gray-700";
@@ -187,7 +187,7 @@
 //                     {stats.totalActivities}
 //                   </p>
 //                 </div>
-//                 <FiUser className="text-3xl text-blue-500" />
+//                 <FiUser className="text-3xl text-blue-600" />
 //               </div>
 //             </div>
 
@@ -199,7 +199,7 @@
 //                     {stats.byRole.find((r) => r._id === "employee")?.count || 0}
 //                   </p>
 //                 </div>
-//                 <FiUser className="text-3xl text-green-500" />
+//                 <FiUser className="text-3xl text-blue-600" />
 //               </div>
 //             </div>
 
@@ -269,7 +269,7 @@
 
 //             {/* Start Date */}
 //             <div className="relative">
-//               <FaCalendarAlt className="absolute text-white transform -translate-y-1/2 left-3 top-1/2" />
+//               <FaCalendarAlt className="absolute text-gray-900 transform -translate-y-1/2 left-3 top-1/2" />
 //               <input
 //                 type="date"
 //                 name="startDate"
@@ -281,7 +281,7 @@
 
 //             {/* End Date */}
 //             <div className="relative">
-//               <FaCalendarAlt className="absolute text-white transform -translate-y-1/2 left-3 top-1/2" />
+//               <FaCalendarAlt className="absolute text-gray-900 transform -translate-y-1/2 left-3 top-1/2" />
 //               <input
 //                 type="date"
 //                 name="endDate"
@@ -303,7 +303,7 @@
 //             </button>
 //             <button
 //               onClick={exportToCSV}
-//               className="flex items-center gap-2 px-4 py-2 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
+//               className="flex items-center gap-2 px-4 py-2 text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
 //             >
 //               <FiDownload className="text-sm" />
 //               Export to CSV
@@ -315,7 +315,7 @@
 //         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
-//               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//               <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
 //                   <th className="py-2 text-center">
 //                     Timestamp
@@ -356,7 +356,7 @@
 //                   activities.map((activity) => (
 //                     <tr
 //                       key={activity._id}
-//                       className="transition-colors hover:bg-gray-50"
+//                       className="transition-colors hover:bg-white"
 //                     >
 //                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                         {new Date(activity.createdAt).toLocaleString("en-IN", {
@@ -378,7 +378,7 @@
 //                         <span
 //                           className={`px-2 py-1 text-xs font-semibold rounded-full ${activity.userRole === "admin"
 //                             ? "bg-purple-100 text-purple-800"
-//                             : "bg-blue-100 text-blue-800"
+//                             : "bg-blue-50 text-blue-700"
 //                             }`}
 //                         >
 //                           {activity.userRole.charAt(0).toUpperCase() +
@@ -406,7 +406,7 @@
 
 //           {/* Pagination */}
 //           {!loading && activities.length > 0 && (
-//             <div className="flex items-center justify-between px-2 py-2 text-center border-t border-gray-200 bg-gray-50">
+//             <div className="flex items-center justify-between px-2 py-2 text-center border-t border-gray-200 bg-white">
 //               <div className="flex flex-wrap items-center justify-between gap-4">
   
 //   {/* Left Side - Showing Info + Select */}
@@ -463,7 +463,7 @@
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === 1}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Previous
 //                 </button>
@@ -488,8 +488,8 @@
 //                             }))
 //                           }
 //                           className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === page
-//                             ? "bg-blue-600 text-white"
-//                             : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+//                             ? "bg-blue-600 text-gray-900"
+//                             : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
 //                             }`}
 //                         >
 //                           {page}
@@ -517,7 +517,7 @@
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === pagination.totalPages}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Next
 //                 </button>
@@ -827,11 +827,11 @@
 //   // Get action badge color
 //   const getActionBadgeColor = (action) => {
 //     const colorMap = {
-//       login: "bg-green-100 text-green-800",
+//       login: "bg-emerald-50 text-emerald-700",
 //       logout: "bg-gray-100 text-gray-700",
-//       leave_apply: "bg-blue-100 text-blue-800",
-//       leave_approve: "bg-emerald-100 text-emerald-800",
-//       leave_reject: "bg-red-100 text-red-800",
+//       leave_apply: "bg-blue-50 text-blue-700",
+//       leave_approve: "bg-blue-100 text-emerald-800",
+//       leave_reject: "bg-red-50 text-red-700",
 //       payslip_download: "bg-purple-100 text-purple-800",
 //     };
 //     return colorMap[action] || "bg-gray-100 text-gray-700";
@@ -903,7 +903,7 @@
 //                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDepartment 
-//                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
 //                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
@@ -946,7 +946,7 @@
 //                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDesignation 
-//                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
 //                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
@@ -1013,7 +1013,7 @@
 
 //             {/* Month Selector */}
 //             <div className="relative w-[130px]">
-//               <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+//               <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
 //               <input
 //                 type="month"
 //                 value={selectedMonth}
@@ -1026,7 +1026,7 @@
 //             {/* Export CSV Button */}
 //             <button
 //               onClick={exportToCSV}
-//               className="h-8 px-3 text-xs font-medium text-white transition bg-green-600 rounded-md hover:bg-green-700"
+//               className="h-8 px-3 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-800"
 //             >
 //               📥 CSV
 //             </button>
@@ -1047,7 +1047,7 @@
 //         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
-//               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//               <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
 //                   <th className="py-2 text-center">Timestamp</th>
 //                   <th className="py-2 text-center">User</th>
@@ -1080,7 +1080,7 @@
 //                   currentItems.map((activity) => (
 //                     <tr
 //                       key={activity._id}
-//                       className="transition-colors hover:bg-gray-50"
+//                       className="transition-colors hover:bg-white"
 //                     >
 //                       <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
 //                         {new Date(activity.createdAt).toLocaleString("en-IN", {
@@ -1109,7 +1109,7 @@
 //                           className={`px-2 py-1 text-xs font-semibold rounded-full ${
 //                             activity.userRole === "admin"
 //                               ? "bg-purple-100 text-purple-800"
-//                               : "bg-blue-100 text-blue-800"
+//                               : "bg-blue-50 text-blue-700"
 //                           }`}
 //                         >
 //                           {activity.userRole?.charAt(0).toUpperCase() + activity.userRole?.slice(1)}
@@ -1136,7 +1136,7 @@
 
 //           {/* Pagination */}
 //           {!loading && filteredActivities.length > 0 && (
-//             <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-gray-50">
+//             <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-white">
 //               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
 //                 <span>Showing</span>
 //                 <span className="font-medium">
@@ -1176,7 +1176,7 @@
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === 1}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Previous
 //                 </button>
@@ -1201,8 +1201,8 @@
 //                           }
 //                           className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
 //                             pagination.currentPage === page
-//                               ? "bg-blue-600 text-white"
-//                               : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+//                               ? "bg-blue-600 text-gray-900"
+//                               : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
 //                           }`}
 //                         >
 //                           {page}
@@ -1230,7 +1230,7 @@
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === pagination.totalPages}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Next
 //                 </button>
@@ -1651,11 +1651,11 @@
 //   // Get action badge color
 //   const getActionBadgeColor = (action) => {
 //     const colorMap = {
-//       login: "bg-green-100 text-green-800",
+//       login: "bg-emerald-50 text-emerald-700",
 //       logout: "bg-gray-100 text-gray-700",
-//       leave_apply: "bg-blue-100 text-blue-800",
-//       leave_approve: "bg-emerald-100 text-emerald-800",
-//       leave_reject: "bg-red-100 text-red-800",
+//       leave_apply: "bg-blue-50 text-blue-700",
+//       leave_approve: "bg-blue-100 text-emerald-800",
+//       leave_reject: "bg-red-50 text-red-700",
 //       payslip_download: "bg-purple-100 text-purple-800",
 //     };
 //     return colorMap[action] || "bg-gray-100 text-gray-700";
@@ -1744,7 +1744,7 @@
 //                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDepartment 
-//                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
 //                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
@@ -1792,7 +1792,7 @@
 //                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDesignation 
-//                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
 //                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
@@ -1864,7 +1864,7 @@
 
 //             {/* Month Selector */}
 //             <div className="relative w-[130px]">
-//               <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+//               <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
 //               <input
 //                 type="month"
 //                 value={selectedMonth}
@@ -1877,7 +1877,7 @@
 //             {/* Export CSV Button */}
 //             <button
 //               onClick={exportToCSV}
-//               className="h-8 px-3 text-xs font-medium text-white transition bg-green-600 rounded-md hover:bg-green-700"
+//               className="h-8 px-3 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-800"
 //             >
 //               📥 CSV
 //             </button>
@@ -1898,7 +1898,7 @@
 //         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
-//               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//               <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
 //                   <th className="py-2 text-center">TIMESTAMP</th>
 //                   <th className="py-2 text-center">USER</th>
@@ -1931,7 +1931,7 @@
 //                   currentItems.map((activity) => (
 //                     <tr
 //                       key={activity._id}
-//                       className="transition-colors hover:bg-gray-50"
+//                       className="transition-colors hover:bg-white"
 //                     >
 //                       <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
 //                         {new Date(activity.createdAt).toLocaleString("en-IN", {
@@ -1960,7 +1960,7 @@
 //                           className={`px-2 py-1 text-xs font-semibold rounded-full ${
 //                             activity.userRole === "admin"
 //                               ? "bg-purple-100 text-purple-800"
-//                               : "bg-blue-100 text-blue-800"
+//                               : "bg-blue-50 text-blue-700"
 //                           }`}
 //                         >
 //                           {activity.userRole?.charAt(0).toUpperCase() + activity.userRole?.slice(1) || "N/A"}
@@ -1987,7 +1987,7 @@
 
 //           {/* Pagination */}
 //           {!loading && filteredActivities.length > 0 && (
-//             <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-gray-50">
+//             <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-white">
 //               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
 //                 <span>Showing</span>
 //                 <span className="font-medium">
@@ -2027,7 +2027,7 @@
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === 1}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Previous
 //                 </button>
@@ -2047,8 +2047,8 @@
 //                         }
 //                         className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
 //                           pagination.currentPage === page
-//                             ? "bg-blue-600 text-white"
-//                             : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+//                             ? "bg-blue-600 text-gray-900"
+//                             : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
 //                         }`}
 //                       >
 //                         {page}
@@ -2065,7 +2065,7 @@
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === pagination.totalPages}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Next
 //                 </button>
@@ -2381,17 +2381,17 @@ const UserActivity = () => {
   // Get action badge color
   const getActionBadgeColor = (action) => {
     const colorMap = {
-      login: "bg-green-100 text-green-800",
+      login: "bg-emerald-50 text-emerald-700",
       logout: "bg-gray-100 text-gray-700",
-      leave_apply: "bg-blue-100 text-blue-800",
-      leave_approve: "bg-emerald-100 text-emerald-800",
-      leave_reject: "bg-red-100 text-red-800",
+      leave_apply: "bg-blue-50 text-blue-700",
+      leave_approve: "bg-blue-100 text-emerald-800",
+      leave_reject: "bg-red-50 text-red-700",
       payslip_download: "bg-purple-100 text-purple-800",
       page_visit: "bg-indigo-100 text-indigo-800",
       data_edit: "bg-orange-100 text-orange-800",
       file_download: "bg-teal-100 text-teal-800",
     };
-    return colorMap[action] || "bg-yellow-100 text-yellow-800";
+    return colorMap[action] || "bg-amber-50 text-amber-700";
   };
 
   // Pagination handlers
@@ -2481,7 +2481,7 @@ const UserActivity = () => {
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDepartment 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -2529,7 +2529,7 @@ const UserActivity = () => {
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDesignation 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -2601,7 +2601,7 @@ const UserActivity = () => {
 
             {/* Month Selector */}
             <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="month"
                 value={selectedMonth}
@@ -2614,7 +2614,7 @@ const UserActivity = () => {
             {/* Export CSV Button */}
             <button
               onClick={exportToCSV}
-              className="h-8 px-3 text-xs font-medium text-white transition bg-green-600 rounded-md hover:bg-green-700"
+              className="h-8 px-3 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-800"
             >
               📥 CSV
             </button>
@@ -2635,7 +2635,7 @@ const UserActivity = () => {
         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
-              <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+              <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
                   <th className="py-2 text-center">TIMESTAMP</th>
                   <th className="py-2 text-center">USER</th>
@@ -2668,7 +2668,7 @@ const UserActivity = () => {
                   currentItems.map((activity) => (
                     <tr
                       key={activity._id}
-                      className="transition-colors hover:bg-gray-50"
+                      className="transition-colors hover:bg-white"
                     >
                       <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                         {new Date(activity.createdAt).toLocaleString("en-IN", {
@@ -2697,7 +2697,7 @@ const UserActivity = () => {
                           className={`px-2 py-1 text-xs font-semibold rounded-full ${
                             activity.userRole === "admin"
                               ? "bg-purple-100 text-purple-800"
-                              : "bg-blue-100 text-blue-800"
+                              : "bg-blue-50 text-blue-700"
                           }`}
                         >
                           {activity.userRole?.charAt(0).toUpperCase() + activity.userRole?.slice(1) || "N/A"}
@@ -2724,7 +2724,7 @@ const UserActivity = () => {
 
           {/* Pagination */}
           {!loading && filteredActivities.length > 0 && (
-            <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-white">
               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
                 <span>Showing</span>
                 <span className="font-medium">
@@ -2764,7 +2764,7 @@ const UserActivity = () => {
                     }))
                   }
                   disabled={pagination.currentPage === 1}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
@@ -2784,8 +2784,8 @@ const UserActivity = () => {
                         }
                         className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
                           pagination.currentPage === page
-                            ? "bg-blue-600 text-white"
-                            : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                            ? "bg-blue-600 text-gray-900"
+                            : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
                         }`}
                       >
                         {page}
@@ -2802,7 +2802,7 @@ const UserActivity = () => {
                     }))
                   }
                   disabled={pagination.currentPage === pagination.totalPages}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -3052,11 +3052,11 @@ export default UserActivity;
 //   // Get action badge color
 //   const getActionBadgeColor = (action) => {
 //     const colorMap = {
-//       login: "bg-green-100 text-green-800",
+//       login: "bg-emerald-50 text-emerald-700",
 //       logout: "bg-gray-100 text-gray-700",
-//       leave_apply: "bg-blue-100 text-blue-800",
-//       leave_approve: "bg-emerald-100 text-emerald-800",
-//       leave_reject: "bg-red-100 text-red-800",
+//       leave_apply: "bg-blue-50 text-blue-700",
+//       leave_approve: "bg-blue-100 text-emerald-800",
+//       leave_reject: "bg-red-50 text-red-700",
 //       payslip_download: "bg-purple-100 text-purple-800",
 //     };
 //     return colorMap[action] || "bg-gray-100 text-gray-700";
@@ -3119,7 +3119,7 @@ export default UserActivity;
 //                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDepartment 
-//                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
 //                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
@@ -3162,7 +3162,7 @@ export default UserActivity;
 //                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDesignation 
-//                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
 //                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
@@ -3201,7 +3201,7 @@ export default UserActivity;
 
 //             {/* Start Date */}
 //             <div className="relative w-[130px]">
-//               <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+//               <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
 //               <input
 //                 type="date"
 //                 value={startDate}
@@ -3213,7 +3213,7 @@ export default UserActivity;
 
 //             {/* End Date */}
 //             <div className="relative w-[130px]">
-//               <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+//               <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
 //               <input
 //                 type="date"
 //                 value={endDate}
@@ -3226,7 +3226,7 @@ export default UserActivity;
 //             {/* Export CSV Button */}
 //             <button
 //               onClick={exportToCSV}
-//               className="h-8 px-3 text-xs font-medium text-white transition bg-green-600 rounded-md hover:bg-green-700"
+//               className="h-8 px-3 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-800"
 //             >
 //               📥 CSV
 //             </button>
@@ -3247,7 +3247,7 @@ export default UserActivity;
 //         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
-//               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//               <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
 //                   <th className="py-2 text-center">Timestamp</th>
 //                   <th className="py-2 text-center">User</th>
@@ -3280,7 +3280,7 @@ export default UserActivity;
 //                   currentItems.map((activity) => (
 //                     <tr
 //                       key={activity._id}
-//                       className="transition-colors hover:bg-gray-50"
+//                       className="transition-colors hover:bg-white"
 //                     >
 //                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                         {new Date(activity.createdAt).toLocaleString("en-IN", {
@@ -3309,7 +3309,7 @@ export default UserActivity;
 //                           className={`px-2 py-1 text-xs font-semibold rounded-full ${
 //                             activity.userRole === "admin"
 //                               ? "bg-purple-100 text-purple-800"
-//                               : "bg-blue-100 text-blue-800"
+//                               : "bg-blue-50 text-blue-700"
 //                           }`}
 //                         >
 //                           {activity.userRole?.charAt(0).toUpperCase() + activity.userRole?.slice(1)}
@@ -3336,7 +3336,7 @@ export default UserActivity;
 
 //           {/* Pagination */}
 //           {!loading && activities.length > 0 && (
-//             <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-gray-50">
+//             <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-white">
 //               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
 //                 <span>Showing</span>
 //                 <span className="font-medium">
@@ -3380,7 +3380,7 @@ export default UserActivity;
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === 1}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Previous
 //                 </button>
@@ -3405,8 +3405,8 @@ export default UserActivity;
 //                           }
 //                           className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
 //                             pagination.currentPage === page
-//                               ? "bg-blue-600 text-white"
-//                               : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+//                               ? "bg-blue-600 text-gray-900"
+//                               : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
 //                           }`}
 //                         >
 //                           {page}
@@ -3434,7 +3434,7 @@ export default UserActivity;
 //                     }))
 //                   }
 //                   disabled={pagination.currentPage === pagination.totalPages}
-//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
 //                 >
 //                   Next
 //                 </button>

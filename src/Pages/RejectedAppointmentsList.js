@@ -38,7 +38,7 @@ const RejectedAppointmentsList = () => {
           </thead>
           <tbody>
             {appointments.map((appt) => (
-              <tr key={appt.appointmentId} className="hover:bg-gray-50 border-b">
+              <tr key={appt.appointmentId} className="hover:bg-white border-b">
                 <td className="p-2 border flex items-center gap-2">
                   <img
                     src={appt.doctor_image}

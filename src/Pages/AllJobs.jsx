@@ -74,7 +74,7 @@ const AllJobs = () => {
                 <FaBuilding className="text-xs" />
               </div>
               <div
-                className="w-full bg-white py-2.5 pl-10 pr-10 text-xs text-gray-700 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
+                className="w-full bg-white py-2.5 pl-10 pr-10 text-xs text-gray-700 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
                 onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
               >
                 {roleFilter || "Filter by Department"}
@@ -93,7 +93,7 @@ const AllJobs = () => {
 
               {isRoleDropdownOpen && (
                 <div className="absolute z-[110] w-full mt-2 bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="p-3 border-b border-gray-50 bg-gray-50/50">
+                  <div className="p-3 border-b border-gray-50 bg-white/50">
                     <div className="relative">
                       <FaSearch className="absolute left-3 top-2.5 text-gray-500 text-[10px]" />
                       <input
@@ -161,14 +161,14 @@ const AllJobs = () => {
                   setRoleFilter("");
                   setRoleSearchQuery("");
                 }}
-                className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-gray-500 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-all shadow-sm uppercase tracking-widest"
+                className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-gray-500 bg-white border border-gray-200 hover:bg-white rounded-xl transition-all shadow-sm uppercase tracking-widest"
               >
                 <FaSync className="text-[10px]" /> Reset
               </button>
             )}
 
             <div className="bg-white px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+              <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{filteredJobs.length} Jobs Live</span>
             </div>
           </div>
@@ -180,7 +180,7 @@ const AllJobs = () => {
             {filteredJobs.length > 0 ? (
               <table className="min-w-full">
                 <thead>
-                  <tr className="bg-gradient-to-r from-green-500 to-blue-600 text-white text-center uppercase tracking-wider text-xs font-semibold">
+                  <tr className="bg-gradient-to-r from-green-500 to-blue-600 text-gray-900 text-center uppercase tracking-wider text-xs font-semibold">
                     <th className="py-2 px-8">Job Role</th>
                     <th className="py-2 px-6">Department</th>
                     <th className="py-2 px-6">Location</th>
@@ -195,7 +195,7 @@ const AllJobs = () => {
                       <td className="py-3 px-8 text-sm font-bold text-gray-700 leading-tight uppercase tracking-tight">
                         {job.role}
                         {job.jobType && (
-                          <span className="block text-[10px] text-blue-500 mt-1 font-semibold tracking-widest">
+                          <span className="block text-[10px] text-blue-600 mt-1 font-semibold tracking-widest">
                             {job.jobType}
                           </span>
                         )}
@@ -207,26 +207,26 @@ const AllJobs = () => {
                       </td>
                       <td className="py-3 px-6 text-xs font-medium text-gray-500">
                         <div className="flex items-center justify-center gap-2">
-                          <FaMapMarkerAlt className="text-blue-400" size={12} />
+                          <FaMapMarkerAlt className="text-blue-500" size={12} />
                           {job.location}
                         </div>
                       </td>
                       <td className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-tight">
                         <div className="flex items-center justify-center gap-2">
-                          <FaClock className="text-blue-400" size={12} />
+                          <FaClock className="text-blue-500" size={12} />
                           {job.experience || "Fresher"}
                         </div>
                       </td>
                       <td className="py-3 px-6 text-xs font-bold text-gray-700">
                         <div className="flex items-center justify-center gap-1.5">
-                          <FaRupeeSign className="text-emerald-500" size={12} />
+                          <FaRupeeSign className="text-blue-600" size={12} />
                           {job.salary || "As per Policy"}
                         </div>
                       </td>
                       <td className="py-3 px-8">
                         <button
                           onClick={() => navigate(`/jobs/${job._id}`)}
-                          className="inline-flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:bg-blue-700 transition-all active:scale-95"
+                          className="inline-flex items-center gap-2 px-5 py-2 bg-blue-600 text-gray-900 rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:bg-blue-700 transition-all active:scale-95"
                         >
                           Review & Apply <FaEye className="text-xs" />
                         </button>
@@ -237,7 +237,7 @@ const AllJobs = () => {
               </table>
             ) : (
               <div className="p-24 text-center">
-                <div className="w-20 h-20 bg-gray-50 rounded-[2rem] flex items-center justify-center text-gray-900 mx-auto mb-6 border-2 border-dashed border-gray-200">
+                <div className="w-20 h-20 bg-white rounded-[2rem] flex items-center justify-center text-gray-900 mx-auto mb-6 border-2 border-dashed border-gray-200">
                   <FaBriefcase size={32} />
                 </div>
                 <h3 className="text-lg font-bold text-gray-700 uppercase tracking-widest">No Matches Found</h3>
@@ -251,7 +251,7 @@ const AllJobs = () => {
 
         {/* Footer Hint */}
         <div className="mt-12 flex items-center justify-center gap-3 text-xs font-bold text-gray-500 uppercase tracking-widest">
-          <FaInfoCircle className="text-blue-400" />
+          <FaInfoCircle className="text-blue-500" />
           New positions are added daily. Keep your profile updated for better matching.
         </div>
       </div>

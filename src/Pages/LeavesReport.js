@@ -37,7 +37,7 @@
 //           <tbody>
 //             {approvedLeaves.length > 0 ? (
 //               approvedLeaves.map((l) => (
-//                 <tr key={l._id} className="border-b hover:bg-gray-50">
+//                 <tr key={l._id} className="border-b hover:bg-white">
 //                   <td className="px-4 py-2 font-medium">{l.employeeName}</td>
 //                   <td className="px-4 py-2 capitalize">{l.leaveType}</td>
 //                   <td className="px-4 py-2">
@@ -114,7 +114,7 @@
 //           <tbody>
 //             {approvedLeaves.length > 0 ? (
 //               approvedLeaves.map((l) => (
-//                 <tr key={l._id} className="border-b hover:bg-gray-50">
+//                 <tr key={l._id} className="border-b hover:bg-white">
 //                   <td className="px-4 py-2 font-medium">{l.employeeName}</td>
 //                   <td className="px-4 py-2 capitalize">{l.leaveType}</td>
 //                   <td className="px-4 py-2">{new Date(l.startDate).toLocaleDateString()}</td>
@@ -198,7 +198,7 @@
 //         <h1 className="text-3xl font-bold">Approved Leave Requests</h1>
 //         <button
 //           onClick={downloadCSV}
-//           className="px-4 py-2 text-white transition bg-green-600 rounded hover:bg-green-700"
+//           className="px-4 py-2 text-gray-900 transition bg-blue-600 rounded hover:bg-blue-800"
 //         >
 //           ⬇️ Download CSV
 //         </button>
@@ -219,7 +219,7 @@
 //           <tbody>
 //             {approvedLeaves.length > 0 ? (
 //               approvedLeaves.map((l) => (
-//                 <tr key={l._id} className="border-b hover:bg-gray-50">
+//                 <tr key={l._id} className="border-b hover:bg-white">
 //                   <td className="px-4 py-2 font-medium">{l.employeeName}</td>
 //                   <td className="px-4 py-2 capitalize">{l.leaveType}</td>
 //                   <td className="px-4 py-2">
@@ -345,7 +345,7 @@
 //           />
 //           <button
 //             onClick={downloadCSV}
-//             className="px-4 py-2 text-white transition bg-green-600 rounded hover:bg-green-700"
+//             className="px-4 py-2 text-gray-900 transition bg-blue-600 rounded hover:bg-blue-800"
 //           >
 //             ⬇️ Download CSV
 //           </button>
@@ -379,7 +379,7 @@
 //           <tbody>
 //             {filteredLeaves.length > 0 ? (
 //               filteredLeaves.map((l) => (
-//                 <tr key={l._id} className="border-b hover:bg-gray-50">
+//                 <tr key={l._id} className="border-b hover:bg-white">
 //                   <td className="px-4 py-2 font-medium">{l.employeeName}</td>
 //                   <td className="px-4 py-2 capitalize">{l.leaveType}</td>
 //                   <td className="px-4 py-2">
@@ -607,7 +607,7 @@
 
 //           <button
 //             onClick={downloadCSV}
-//             className="px-4 py-2 text-white transition bg-green-600 rounded hover:bg-green-700"
+//             className="px-4 py-2 text-gray-900 transition bg-blue-600 rounded hover:bg-blue-800"
 //           >
 //             ⬇️ Download CSV
 //           </button>
@@ -665,7 +665,7 @@
 
 
 //       {/* ✅ Bar Chart */}
-//       {/* <div className="p-4 mb-8 rounded-lg shadow bg-gray-50">
+//       {/* <div className="p-4 mb-8 rounded-lg shadow bg-white">
 //         <h2 className="mb-4 text-xl font-semibold text-gray-700">
 //           📊 Who Took the Most Leaves
 //         </h2>
@@ -687,7 +687,7 @@
 //       {/* ✅ Leave Table */}
 //       <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //         <table className="min-w-full">
-//           <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
+//           <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-purple-500 to-blue-600">
 //             <tr>
 //               <th className="px-4 py-2 border">Name</th>
 //               <th className="px-4 py-2 border">Leave Type</th>
@@ -700,7 +700,7 @@
 //           <tbody>
 //             {filteredLeaves.length > 0 ? (
 //               filteredLeaves.map((l) => (
-//                 <tr key={l._id} className="border-b hover:bg-gray-50">
+//                 <tr key={l._id} className="border-b hover:bg-white">
 //                   <td className="px-4 py-2 font-medium">{l.employeeName}</td>
 //                   <td className="px-4 py-2 capitalize">{l.leaveType}</td>
 //                   <td className="px-4 py-2">{new Date(l.startDate).toLocaleDateString()}</td>
@@ -720,7 +720,7 @@
 //         </table>
 //       </div>
 
-//       <div className="p-4 mb-8 rounded-lg shadow bg-gray-50">
+//       <div className="p-4 mb-8 rounded-lg shadow bg-white">
 //         <h2 className="mb-4 text-xl font-semibold text-gray-700">
 //           📊 Who Took the Most Leaves
 //         </h2>
@@ -1041,7 +1041,7 @@
 //             {/* Clear Button */}
 //             <button
 //               onClick={clearFilters}
-//               className="h-9 px-5 mb-[2px] text-sm font-medium text-white bg-gray-500 rounded-md hover:bg-gray-600 transition"
+//               className="h-9 px-5 mb-[2px] text-sm font-medium text-gray-900 bg-white0 rounded-md hover:bg-gray-600 transition"
 //             >
 //               Clear
 //             </button>
@@ -1049,7 +1049,7 @@
 //             {/* Download CSV Button */}
 //             <button
 //               onClick={downloadCSV}
-//               className="h-9 px-5 mb-[2px] text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition"
+//               className="h-9 px-5 mb-[2px] text-sm font-medium text-gray-900 bg-blue-600 rounded-md hover:bg-blue-800 transition"
 //             >
 //               ⬇️ Download CSV
 //             </button>
@@ -1057,7 +1057,7 @@
 //             {/* Back to Leaves Button */}
 //             <button 
 //               onClick={() => navigate("/leaves")}
-//               className="h-9 px-5 mb-[2px] text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition"
+//               className="h-9 px-5 mb-[2px] text-sm font-medium text-gray-900 bg-blue-600 rounded-md hover:bg-blue-700 transition"
 //             >
 //               ← Back to Leaves
 //             </button>
@@ -1088,7 +1088,7 @@
 //         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
-//               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//               <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
 //                   <th className="px-4 py-2 text-center">Employee Name</th>
 //                   <th className="px-4 py-2 text-center">Leave Type</th>
@@ -1103,7 +1103,7 @@
 //                   currentItems.map((l) => (
 //                     <tr
 //                       key={l._id}
-//                       className="transition border-b hover:bg-gray-50"
+//                       className="transition border-b hover:bg-white"
 //                     >
 //                       <td className="px-4 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                         <div className="font-semibold">{l.employeeName}</div>
@@ -1118,7 +1118,7 @@
 //                         {new Date(l.endDate).toLocaleDateString()}
 //                       </td>
 //                       <td className="px-4 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
-//                         <span className="px-2 py-2 text-xs text-center text-green-700 bg-green-100 rounded-full">
+//                         <span className="px-2 py-2 text-xs text-center text-green-700 bg-blue-100 rounded-full">
 //                           {l.days} {l.days === 1 ? 'day' : 'days'}
 //                         </span>
 //                       </td>
@@ -1183,9 +1183,9 @@
 //                   disabled={page === "..."}
 //                   className={`px-4 py-1 text-sm border rounded-lg ${
 //                     page === "..."
-//                       ? "text-gray-500 bg-gray-50 cursor-default"
+//                       ? "text-gray-500 bg-white cursor-default"
 //                       : currentPage === page
-//                       ? "text-white bg-blue-600 border-blue-600"
+//                       ? "text-gray-900 bg-blue-600 border-blue-600"
 //                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                   }`}
 //                 >
@@ -1553,7 +1553,7 @@ const LeaveReport = () => {
             
             {/* Month Filter */}
             <div className="relative w-[150px]">
-              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="month"
                 value={selectedMonth}
@@ -1598,7 +1598,7 @@ const LeaveReport = () => {
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDepartment 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -1641,7 +1641,7 @@ const LeaveReport = () => {
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDesignation 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -1691,7 +1691,7 @@ const LeaveReport = () => {
             {/* Download CSV Button */}
             <button
               onClick={downloadCSV}
-              className="h-8 px-3 text-xs font-medium text-white transition bg-green-600 rounded-md hover:bg-green-700"
+              className="h-8 px-3 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-800"
             >
               ⬇️ CSV
             </button>
@@ -1699,7 +1699,7 @@ const LeaveReport = () => {
             {/* Back to Leaves Button */}
             {/* <button 
               onClick={() => navigate("/leaves")}
-              className="h-8 px-3 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
+              className="h-8 px-3 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-700"
             >
               ← Back
             </button> */}
@@ -1730,7 +1730,7 @@ const LeaveReport = () => {
         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
-              <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+              <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
                   <th className="py-2 text-center ">Employee ID</th>
                   <th className="py-2 text-center ">Employee Name</th>
@@ -1750,7 +1750,7 @@ const LeaveReport = () => {
                     return (
                       <tr
                         key={l._id}
-                        className="transition border-b hover:bg-gray-50"
+                        className="transition border-b hover:bg-white"
                       >
                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           {l.employeeId}
@@ -1774,7 +1774,7 @@ const LeaveReport = () => {
                           {new Date(l.endDate).toLocaleDateString()}
                         </td>
                         <td className="px-2 py-2 font-medium text-center text-gray-500 ">
-                          <span className="px-2 py-2 text-center text-green-700 bg-green-100 rounded-full">
+                          <span className="px-2 py-2 text-center text-green-700 bg-blue-100 rounded-full">
                             {l.days} {l.days === 1 ? 'day' : 'days'}
                           </span>
                         </td>
@@ -1838,9 +1838,9 @@ const LeaveReport = () => {
                   disabled={page === "..."}
                   className={`px-4 py-1 text-sm border rounded-lg ${
                     page === "..."
-                      ? "text-gray-500 bg-gray-50 cursor-default"
+                      ? "text-gray-500 bg-white cursor-default"
                       : currentPage === page
-                      ? "text-white bg-blue-600 border-blue-600"
+                      ? "text-gray-900 bg-blue-600 border-blue-600"
                       : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                   }`}
                 >

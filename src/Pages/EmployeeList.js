@@ -238,7 +238,7 @@
 //           <CSVLink
 //             data={filteredEmployees}
 //             filename="employees.csv"
-//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-green-600 rounded-lg shadow-sm hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
+//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-800 focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
 //           >
 //             <FaFileCsv className="text-lg" />
 //             <span>Export CSV</span>
@@ -247,7 +247,7 @@
 //           {/* Import Button */}
 //           <label
 //             htmlFor="file-upload"
-//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-purple-600 rounded-lg shadow-sm cursor-pointer hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-1"
+//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-900 transition-colors bg-purple-600 rounded-lg shadow-sm cursor-pointer hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-1"
 //           >
 //             <FaUpload className="text-lg" />
 //             <span>Import</span>
@@ -263,7 +263,7 @@
 //           {/* Add Employee Button */}
 //           <button
 //             onClick={() => navigate("/addemployee")}
-//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
 //           >
 //             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -299,7 +299,7 @@
 //           <tbody>
 //             {currentEmployees.length > 0 ? (
 //               currentEmployees.map((emp) => (
-//                 <tr key={emp._id} className="border-b hover:bg-gray-50">
+//                 <tr key={emp._id} className="border-b hover:bg-white">
 //                   <td className="p-2 border">{emp.employeeId}</td>
 //                   <td className="p-2 border">{emp.name}</td>
 //                   {/* <td className="p-2 border">{emp.email}</td> */}
@@ -317,20 +317,20 @@
 
 //                   <td className="p-2 text-center border">
 //                     <div className="flex justify-center gap-2">
-//                       <button className="text-blue-500" onClick={() => handleView(emp)} title="View Detail">
+//                       <button className="text-blue-600" onClick={() => handleView(emp)} title="View Detail">
 //                         <FaEye />
 //                       </button>
 //                       <button className="text-yellow-500" onClick={() => handleEdit(emp)} title="Edit Employee">
 //                         <FaEdit />
 //                       </button>
-//                       <button className="text-green-500" onClick={() => handleAssignLocation(emp)} title="Assign Location">
+//                       <button className="text-blue-600" onClick={() => handleAssignLocation(emp)} title="Assign Location">
 //                         <FaMapMarkerAlt />
 //                       </button>
 
 //                       {/* Status Toggle Button */}
 //                       <button
 //                         onClick={() => handleToggleStatus(emp)}
-//                         className={`px-2 py-0.5 text-xs font-bold rounded ${isEmployeeHidden(emp) ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+//                         className={`px-2 py-0.5 text-xs font-bold rounded ${isEmployeeHidden(emp) ? 'bg-blue-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
 //                         title={isEmployeeHidden(emp) ? "Make Active" : "Hide Employee"}
 //                       >
 //                         {isEmployeeHidden(emp) ? 'INACTIVE' : 'ACTIVE'}
@@ -364,7 +364,7 @@
 //       {/* Modals remain unchanged */}
 //       {/* VIEW MODAL */}
 //       {selectedEmployee && (
-//         <div className="fixed inset-0 flex items-center justify-center p-3 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 flex items-center justify-center p-3 bg-white ">
 //           <div className="relative w-full max-w-md p-5 bg-white rounded-lg">
 //             <button className="absolute top-2 right-3" onClick={handleCloseModal}>X</button>
 //             <h3 className="mb-3 text-lg font-bold">Employee Details</h3>
@@ -379,7 +379,7 @@
 
 //       {/* ASSIGN LOCATION MODAL */}
 //       {showLocationModal && (
-//         <div className="fixed inset-0 flex items-center justify-center p-3 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 flex items-center justify-center p-3 bg-white ">
 //           <div className="relative w-full max-w-md p-5 bg-white rounded-lg">
 //             <button className="absolute top-2 right-3" onClick={handleCloseLocationModal}>
 //               X
@@ -401,7 +401,7 @@
 
 //             <button
 //               onClick={assignLocation}
-//               className="w-full py-2 mt-4 text-white bg-blue-600 rounded"
+//               className="w-full py-2 mt-4 text-gray-900 bg-blue-600 rounded"
 //             >
 //               Assign
 //             </button>
@@ -708,7 +708,7 @@
 //           {/* Excel Export Button */}
 //           <button
 //             onClick={exportToExcel}
-//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-green-600 rounded-lg shadow-sm hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
+//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-800 focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
 //           >
 //             <FaFileExcel className="text-lg" />
 //             <span>Export Excel</span>
@@ -717,7 +717,7 @@
 //           {/* Import Button */}
 //           <label
 //             htmlFor="file-upload"
-//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-purple-600 rounded-lg shadow-sm cursor-pointer hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-1"
+//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-900 transition-colors bg-purple-600 rounded-lg shadow-sm cursor-pointer hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-1"
 //           >
 //             <FaUpload className="text-lg" />
 //             <span>Import</span>
@@ -733,7 +733,7 @@
 //           {/* Add Employee Button */}
 //           <button
 //             onClick={() => navigate("/addemployee")}
-//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
 //           >
 //             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -765,7 +765,7 @@
 //           <tbody>
 //             {currentEmployees.length > 0 ? (
 //               currentEmployees.map((emp) => (
-//                 <tr key={emp._id} className="border-b hover:bg-gray-50">
+//                 <tr key={emp._id} className="border-b hover:bg-white">
 //                   <td className="p-2 border">{emp.employeeId}</td>
 //                   <td className="p-2 border">{emp.name}</td>
 //                   <td className="p-2 border">{emp.phone}</td>
@@ -782,20 +782,20 @@
 
 //                   <td className="p-2 text-center border">
 //                     <div className="flex justify-center gap-2">
-//                       <button className="text-blue-500" onClick={() => handleView(emp)} title="View Detail">
+//                       <button className="text-blue-600" onClick={() => handleView(emp)} title="View Detail">
 //                         <FaEye />
 //                       </button>
 //                       <button className="text-yellow-500" onClick={() => handleEdit(emp)} title="Edit Employee">
 //                         <FaEdit />
 //                       </button>
-//                       <button className="text-green-500" onClick={() => handleAssignLocation(emp)} title="Assign Location">
+//                       <button className="text-blue-600" onClick={() => handleAssignLocation(emp)} title="Assign Location">
 //                         <FaMapMarkerAlt />
 //                       </button>
 
 //                       {/* Status Toggle Button */}
 //                       <button
 //                         onClick={() => handleToggleStatus(emp)}
-//                         className={`px-2 py-0.5 text-xs font-bold rounded ${isEmployeeHidden(emp) ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+//                         className={`px-2 py-0.5 text-xs font-bold rounded ${isEmployeeHidden(emp) ? 'bg-blue-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
 //                         title={isEmployeeHidden(emp) ? "Make Active" : "Hide Employee"}
 //                       >
 //                         {isEmployeeHidden(emp) ? 'INACTIVE' : 'ACTIVE'}
@@ -828,7 +828,7 @@
 
 //       {/* VIEW MODAL */}
 //       {selectedEmployee && (
-//         <div className="fixed inset-0 flex items-center justify-center p-3 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 flex items-center justify-center p-3 bg-white ">
 //           <div className="relative w-full max-w-md p-5 bg-white rounded-lg">
 //             <button className="absolute top-2 right-3" onClick={handleCloseModal}>X</button>
 //             <h3 className="mb-3 text-lg font-bold">Employee Details</h3>
@@ -846,7 +846,7 @@
 
 //       {/* ASSIGN LOCATION MODAL */}
 //       {showLocationModal && (
-//         <div className="fixed inset-0 flex items-center justify-center p-3 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 flex items-center justify-center p-3 bg-white ">
 //           <div className="relative w-full max-w-md p-5 bg-white rounded-lg">
 //             <button className="absolute top-2 right-3" onClick={handleCloseLocationModal}>
 //               X
@@ -868,7 +868,7 @@
 
 //             <button
 //               onClick={assignLocation}
-//               className="w-full py-2 mt-4 text-white bg-blue-600 rounded"
+//               className="w-full py-2 mt-4 text-gray-900 bg-blue-600 rounded"
 //             >
 //               Assign
 //             </button>
@@ -1245,7 +1245,7 @@
 //           {/* Export Buttons */}
 //           <button
 //             onClick={exportToExcel}
-//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-green-600 rounded-lg shadow-sm hover:bg-green-700"
+//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-800"
 //           >
 //             <FaFileExcel className="text-lg" />
 //             <span>Export Excel</span>
@@ -1253,7 +1253,7 @@
 
 //           <button
 //             onClick={() => navigate("/addemployee")}
-//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700"
+//             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700"
 //           >
 //             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -1266,7 +1266,7 @@
 //       {/* Table */}
 //       <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //         <table className="min-w-full">
-//           <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//           <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //             <tr>
 //               <th className="py-2 text-center ">Employee ID</th>
 //               <th className="py-2 text-center "> Name</th>
@@ -1290,13 +1290,13 @@
 //                 return (
 //                   <tr 
 //                     key={emp._id} 
-//                     className={`border-b hover:bg-gray-50 ${isHidden ? 'bg-red-50 hover:bg-red-100' : ''}`}
+//                     className={`border-b hover:bg-white ${isHidden ? 'bg-red-50 hover:bg-red-100' : ''}`}
 //                   >
 //                     <td className="px-2 py-2 text-sm text-center text-gray-700">
 //                       <div className="px-2 py-2 text-center">
 //                         <span>{emp.employeeId}</span>
 //                         {isHidden && (
-//                           <span className="px-1.5 py-0.5 text-xs font-medium bg-red-100 text-red-800 rounded">
+//                           <span className="px-1.5 py-0.5 text-xs font-medium bg-red-50 text-red-700 rounded">
 //                             INACTIVE
 //                           </span>
 //                         )}
@@ -1318,14 +1318,14 @@
 //                     <td className="px-2 py-2 text-sm text-center text-gray-700">{emp.weekOffPerMonth || 0}</td>
 //                     <td className="px-2 py-2 text-sm text-center text-gray-700">{getLocationName(emp.location)}</td>
 //                     <td className="px-2 py-2 text-sm text-center text-gray-700">
-//                       <span className={`px-2 py-2 text-center text-xs font-medium rounded-full ${isHidden ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+//                       <span className={`px-2 py-2 text-center text-xs font-medium rounded-full ${isHidden ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
 //                         {isHidden ? 'INACTIVE' : 'ACTIVE'}
 //                       </span>
 //                     </td>
 //                     <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                       <div className="flex justify-center gap-2">
 //                         <button 
-//                           className="text-blue-500 hover:text-blue-700" 
+//                           className="text-blue-600 hover:text-blue-700" 
 //                           onClick={() => handleView(emp)} 
 //                           title="View Detail"
 //                         >
@@ -1341,7 +1341,7 @@
                         
 //                         {/* Location Button */}
 //                         <button 
-//                           className="text-green-500 hover:text-green-700" 
+//                           className="text-blue-600 hover:text-green-700" 
 //                           onClick={() => handleAssignLocation(emp)} 
 //                           title="Assign Location"
 //                         >
@@ -1352,7 +1352,7 @@
 //                         <button
 //                           onClick={() => handleToggleStatus(emp)}
 //                           disabled={loading}
-//                           className={`px-2 py-0.5 text-xs font-bold rounded ${isHidden ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'} disabled:opacity-50`}
+//                           className={`px-2 py-0.5 text-xs font-bold rounded ${isHidden ? 'bg-blue-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'} disabled:opacity-50`}
 //                           title={isHidden ? "Make Active" : "Make Inactive"}
 //                         >
 //                           {loading ? '...' : isHidden ? 'Activate' : 'Deactivate'}
@@ -1426,7 +1426,7 @@
 //             onClick={() => handlePageClick(page)}
 //             className={`px-4 py-1 text-sm border rounded-lg ${
 //               currentPage === page
-//                 ? "text-white bg-blue-600 border-blue-600"
+//                 ? "text-gray-900 bg-blue-600 border-blue-600"
 //                 : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //             }`}
 //           >
@@ -1452,7 +1452,7 @@
 
 //       {/* View Modal */}
 //       {selectedEmployee && (
-//         <div className="fixed inset-0 flex items-center justify-center p-3 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 flex items-center justify-center p-3 bg-white ">
 //           <div className="relative w-full max-w-md p-5 bg-white rounded-lg">
 //             <button className="absolute top-2 right-3" onClick={handleCloseModal}>✕</button>
 //             <h3 className="mb-3 text-lg font-bold">Employee Details</h3>
@@ -1469,7 +1469,7 @@
 //               <p><b>Department:</b> {selectedEmployee.department}</p>
 //               <p><b>Role:</b> {selectedEmployee.role}</p>
 //               <p><b>Join Date:</b> {selectedEmployee.joinDate ? new Date(selectedEmployee.joinDate).toLocaleDateString() : 'N/A'}</p>
-//               <p><b>Status:</b> <span className={`px-2 py-1 text-xs font-medium rounded ${isEmployeeHidden(selectedEmployee) ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+//               <p><b>Status:</b> <span className={`px-2 py-1 text-xs font-medium rounded ${isEmployeeHidden(selectedEmployee) ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
 //                 {isEmployeeHidden(selectedEmployee) ? 'INACTIVE' : 'ACTIVE'}
 //               </span></p>
 //               <p><b>Salary Per Month:</b> ₹{selectedEmployee.salaryPerMonth || 'N/A'}</p>
@@ -1483,7 +1483,7 @@
 
 //       {/* Location Modal */}
 //       {showLocationModal && selectedEmployeeForLocation && (
-//         <div className="fixed inset-0 flex items-center justify-center p-3 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 flex items-center justify-center p-3 bg-white ">
 //           <div className="relative w-full max-w-md p-5 bg-white rounded-lg">
 //             <button className="absolute top-2 right-3" onClick={handleCloseLocationModal}>
 //               ✕
@@ -1514,7 +1514,7 @@
 //               <button
 //                 onClick={assignLocation}
 //                 disabled={!selectedLocationId || loading}
-//                 className="flex-1 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+//                 className="flex-1 py-2 text-gray-900 bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
 //               >
 //                 {loading ? 'Assigning...' : 'Assign Location'}
 //               </button>
@@ -1980,7 +1980,7 @@
 //             {/* Export Excel Button */}
 //             <button
 //               onClick={exportToExcel}
-//               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-white transition-colors bg-green-600 rounded-lg shadow-sm hover:bg-green-700 whitespace-nowrap"
+//               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-800 whitespace-nowrap"
 //             >
 //               <FaFileExcel className="text-sm" />
 //               <span>Export</span>
@@ -1989,7 +1989,7 @@
 //             {/* Add Employee Button */}
 //             <button
 //               onClick={() => navigate("/addemployee")}
-//               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-white transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
+//               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
 //             >
 //               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -2003,7 +2003,7 @@
 //         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
-//               <thead className="text-xs text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//               <thead className="text-xs text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
 //                   <th className="px-2 py-2 text-center">Employee ID</th>
 //                   <th className="px-2 py-2 text-center">Name</th>
@@ -2027,7 +2027,7 @@
 //                     return (
 //                       <tr 
 //                         key={emp._id} 
-//                         className={`hover:bg-gray-50 transition-colors text-xs ${isHidden ? 'bg-red-50 hover:bg-red-100' : ''}`}
+//                         className={`hover:bg-white transition-colors text-xs ${isHidden ? 'bg-red-50 hover:bg-red-100' : ''}`}
 //                       >
 //                         <td className="px-2 py-2 font-semibold text-center text-gray-900 whitespace-nowrap">
 //                           {emp.employeeId}
@@ -2049,7 +2049,7 @@
 //                           <span className={`px-2 py-2 text-xs font-semibold rounded-full ${
 //                             isHidden 
 //                               ? 'bg-red-100 text-red-700' 
-//                               : 'bg-green-100 text-green-700'
+//                               : 'bg-blue-100 text-green-700'
 //                           }`}>
 //                             {isHidden ? 'INACTIVE' : 'ACTIVE'}
 //                           </span>
@@ -2057,7 +2057,7 @@
 //                         <td className="px-2 py-2 text-center whitespace-nowrap">
 //                           <div className="flex items-center justify-center gap-1">
 //                             <button 
-//                               className="p-1 text-blue-500 transition-colors hover:text-blue-700" 
+//                               className="p-1 text-blue-600 transition-colors hover:text-blue-700" 
 //                               onClick={() => handleView(emp)} 
 //                               title="View Detail"
 //                             >
@@ -2073,7 +2073,7 @@
                             
 //                             {/* Location Button */}
 //                             <button 
-//                               className="p-1 text-green-500 transition-colors hover:text-green-700" 
+//                               className="p-1 text-blue-600 transition-colors hover:text-green-700" 
 //                               onClick={() => handleAssignLocation(emp)} 
 //                               title="Assign Location"
 //                             >
@@ -2086,7 +2086,7 @@
 //                               disabled={loading}
 //                               className={`px-2 py-2 text-xs font-semibold rounded-md transition-colors ${
 //                                 isHidden 
-//                                   ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+//                                   ? 'bg-blue-100 text-green-700 hover:bg-green-200' 
 //                                   : 'bg-red-100 text-red-700 hover:bg-red-200'
 //                               } disabled:opacity-50`}
 //                               title={isHidden ? "Make Active" : "Make Inactive"}
@@ -2119,7 +2119,7 @@
 
 //           {/* Pagination */}
 //           {filteredEmployees.length > 0 && (
-//             <div className="bg-gray-50 px-2 py-1.5 flex flex-wrap items-center justify-between gap-2 border-t border-gray-200">
+//             <div className="bg-white px-2 py-1.5 flex flex-wrap items-center justify-between gap-2 border-t border-gray-200">
 //               {/* Left Side - Showing Info + Select */}
 //               <div className="flex flex-wrap items-center gap-1 text-xs text-gray-700">
 //                 <span>Showing</span>
@@ -2154,7 +2154,7 @@
 //                   className={`px-2 py-2 border rounded-lg text-xs font-medium transition-colors ${
 //                     pagination.currentPage === 1
 //                       ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-//                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+//                       : "bg-white text-gray-700 border-gray-300 hover:bg-white"
 //                   }`}
 //                 >
 //                   Previous
@@ -2170,8 +2170,8 @@
 //                         page === "..."
 //                           ? "text-gray-500 cursor-default"
 //                           : pagination.currentPage === page
-//                           ? "bg-blue-600 text-white"
-//                           : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+//                           ? "bg-blue-600 text-gray-900"
+//                           : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
 //                       }`}
 //                     >
 //                       {page}
@@ -2185,7 +2185,7 @@
 //                   className={`px-2 py-2 border rounded-lg text-xs font-medium transition-colors ${
 //                     pagination.currentPage === pagination.totalPages
 //                       ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-//                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+//                       : "bg-white text-gray-700 border-gray-300 hover:bg-white"
 //                   }`}
 //                 >
 //                   Next
@@ -2197,7 +2197,7 @@
 
 //         {/* View Modal */}
 //         {selectedEmployee && (
-//           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black bg-opacity-50">
+//           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-white ">
 //             <div className="relative w-full max-w-md p-4 bg-white rounded-lg">
 //               <button className="absolute text-sm text-gray-500 top-2 right-3 hover:text-gray-700" onClick={handleCloseModal}>✕</button>
 //               <h3 className="mb-2 text-base font-bold">Employee Details</h3>
@@ -2214,7 +2214,7 @@
 //                 <p><b>Department:</b> {selectedEmployee.department || "N/A"}</p>
 //                 <p><b>Designation:</b> {selectedEmployee.role || selectedEmployee.designation || "N/A"}</p>
 //                 <p><b>Join Date:</b> {selectedEmployee.joinDate ? new Date(selectedEmployee.joinDate).toLocaleDateString() : 'N/A'}</p>
-//                 <p><b>Status:</b> <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${isEmployeeHidden(selectedEmployee) ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+//                 <p><b>Status:</b> <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${isEmployeeHidden(selectedEmployee) ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
 //                   {isEmployeeHidden(selectedEmployee) ? 'INACTIVE' : 'ACTIVE'}
 //                 </span></p>
 //                 <p><b>Salary Per Month:</b> ₹{selectedEmployee.salaryPerMonth || 'N/A'}</p>
@@ -2228,7 +2228,7 @@
 
 //         {/* Location Modal */}
 //         {showLocationModal && selectedEmployeeForLocation && (
-//           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black bg-opacity-50">
+//           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-white ">
 //             <div className="relative w-full max-w-md p-4 bg-white rounded-lg">
 //               <button className="absolute text-sm text-gray-500 top-2 right-3 hover:text-gray-700" onClick={handleCloseLocationModal}>
 //                 ✕
@@ -2259,7 +2259,7 @@
 //                 <button
 //                   onClick={assignLocation}
 //                   disabled={!selectedLocationId || loading}
-//                   className="flex-1 py-2 text-xs font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+//                   className="flex-1 py-2 text-xs font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
 //                 >
 //                   {loading ? 'Assigning...' : 'Assign Location'}
 //                 </button>
@@ -2699,7 +2699,7 @@ const EmployeeList = () => {
         onClick={onToggle}
         disabled={loading}
         className={`relative inline-flex items-center h-5 w-9 rounded-full transition-colors focus:outline-none ${
-          isActive ? 'bg-green-500' : 'bg-red-500'
+          isActive ? 'bg-blue-600' : 'bg-red-500'
         } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <span
@@ -2735,7 +2735,7 @@ const EmployeeList = () => {
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDepartment 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -2778,7 +2778,7 @@ const EmployeeList = () => {
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDesignation 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -2848,7 +2848,7 @@ const EmployeeList = () => {
             {/* Export Excel Button */}
             <button
               onClick={exportToExcel}
-              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-white transition-colors bg-green-600 rounded-lg shadow-sm hover:bg-green-700 whitespace-nowrap"
+              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-800 whitespace-nowrap"
             >
               <FaFileExcel className="text-sm" />
               <span>Export</span>
@@ -2857,7 +2857,7 @@ const EmployeeList = () => {
             {/* Add Employee Button */}
             <button
               onClick={() => navigate("/addemployee")}
-              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-white transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
+              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -2885,7 +2885,7 @@ const EmployeeList = () => {
         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
-              <thead className="text-xs text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+              <thead className="text-xs text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
                   <th className="px-2 py-2 text-center">Employee ID</th>
                   <th className="px-2 py-2 text-center">Name</th>
@@ -2909,7 +2909,7 @@ const EmployeeList = () => {
                     return (
                       <tr 
                         key={emp._id} 
-                        className={`hover:bg-gray-50 transition-colors text-xs ${isHidden ? 'bg-red-50 hover:bg-red-100' : ''}`}
+                        className={`hover:bg-white transition-colors text-xs ${isHidden ? 'bg-red-50 hover:bg-red-100' : ''}`}
                       >
                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           {emp.employeeId}
@@ -2931,7 +2931,7 @@ const EmployeeList = () => {
                           <span className={`px-2 py-2 text-xs font-medium rounded-full ${
                             isHidden 
                               ? 'bg-red-100 text-red-700' 
-                              : 'bg-green-100 text-green-700'
+                              : 'bg-blue-100 text-green-700'
                           }`}>
                             {isHidden ? 'INACTIVE' : 'ACTIVE'}
                           </span>
@@ -2939,7 +2939,7 @@ const EmployeeList = () => {
                         <td className="px-2 py-2 text-center whitespace-nowrap">
                           <div className="flex items-center justify-center gap-1">
                             <button 
-                              className="p-1 text-blue-500 transition-colors hover:text-blue-700" 
+                              className="p-1 text-blue-600 transition-colors hover:text-blue-700" 
                               onClick={() => handleView(emp)} 
                               title="View Detail"
                             >
@@ -2955,7 +2955,7 @@ const EmployeeList = () => {
                             
                             {/* Location Button */}
                             <button 
-                              className="p-1 text-green-500 transition-colors hover:text-green-700" 
+                              className="p-1 text-blue-600 transition-colors hover:text-green-700" 
                               onClick={() => handleAssignLocation(emp)} 
                               title="Assign Location"
                             >
@@ -2999,7 +2999,7 @@ const EmployeeList = () => {
 
           {/* Pagination */}
           {filteredEmployees.length > 0 && (
-            <div className="bg-gray-50 px-2 py-1.5 flex flex-wrap items-center justify-between gap-2 border-t border-gray-200">
+            <div className="bg-white px-2 py-1.5 flex flex-wrap items-center justify-between gap-2 border-t border-gray-200">
               {/* Left Side - Showing Info + Select */}
               <div className="flex flex-wrap items-center gap-1 text-xs text-gray-700">
                 <span>Showing</span>
@@ -3034,7 +3034,7 @@ const EmployeeList = () => {
                   className={`px-2 py-2 border rounded-lg text-xs font-medium transition-colors ${
                     pagination.currentPage === 1
                       ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                   }`}
                 >
                   Previous
@@ -3050,8 +3050,8 @@ const EmployeeList = () => {
                         page === "..."
                           ? "text-gray-500 cursor-default"
                           : pagination.currentPage === page
-                          ? "bg-blue-600 text-white"
-                          : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                          ? "bg-blue-600 text-gray-900"
+                          : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
                       }`}
                     >
                       {page}
@@ -3065,7 +3065,7 @@ const EmployeeList = () => {
                   className={`px-2 py-2 border rounded-lg text-xs font-medium transition-colors ${
                     pagination.currentPage === pagination.totalPages
                       ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                   }`}
                 >
                   Next
@@ -3077,7 +3077,7 @@ const EmployeeList = () => {
 
         {/* View Modal */}
         {selectedEmployee && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black bg-opacity-50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-white ">
             <div className="relative w-full max-w-md p-4 bg-white rounded-lg">
               <button className="absolute text-sm text-gray-500 top-2 right-3 hover:text-gray-700" onClick={handleCloseModal}>✕</button>
               <h3 className="mb-2 text-base font-bold">Employee Details</h3>
@@ -3094,7 +3094,7 @@ const EmployeeList = () => {
                 <p><b>Department:</b> {selectedEmployee.department || "N/A"}</p>
                 <p><b>Designation:</b> {selectedEmployee.role || selectedEmployee.designation || "N/A"}</p>
                 <p><b>Join Date:</b> {selectedEmployee.joinDate ? new Date(selectedEmployee.joinDate).toLocaleDateString() : 'N/A'}</p>
-                <p><b>Status:</b> <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${isEmployeeHidden(selectedEmployee) ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                <p><b>Status:</b> <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${isEmployeeHidden(selectedEmployee) ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
                   {isEmployeeHidden(selectedEmployee) ? 'INACTIVE' : 'ACTIVE'}
                 </span></p>
                 <p><b>Salary Per Month:</b> ₹{selectedEmployee.salaryPerMonth || 'N/A'}</p>
@@ -3108,7 +3108,7 @@ const EmployeeList = () => {
 
         {/* Location Modal */}
         {showLocationModal && selectedEmployeeForLocation && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black bg-opacity-50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-white ">
             <div className="relative w-full max-w-md p-4 bg-white rounded-lg">
               <button className="absolute text-sm text-gray-500 top-2 right-3 hover:text-gray-700" onClick={handleCloseLocationModal}>
                 ✕
@@ -3139,7 +3139,7 @@ const EmployeeList = () => {
                 <button
                   onClick={assignLocation}
                   disabled={!selectedLocationId || loading}
-                  className="flex-1 py-2 text-xs font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 py-2 text-xs font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
                   {loading ? 'Assigning...' : 'Assign Location'}
                 </button>

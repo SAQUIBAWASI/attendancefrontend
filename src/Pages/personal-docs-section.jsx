@@ -4,7 +4,7 @@
                         {/* DOCUMENT UPLOAD TABLE */}
                         <div className="w-full bg-white rounded-xl border border-gray-200/70 shadow-sm overflow-hidden mb-8">
                             <table className="w-full text-left hidden md:table">
-                                <thead className="bg-gray-50 border-b border-gray-200">
+                                <thead className="bg-white border-b border-gray-200">
                                     <tr className="text-xs font-medium">
                                         <th className="px-6 py-4 w-16 text-center">S.No</th>
                                         <th className="px-6 py-4">Document</th>
@@ -24,7 +24,7 @@
                                         const documentData = personalDocs?.documents?.[doc.key];
                                         const uploaded = documentData?.filePath;
                                         return (
-                                            <tr key={doc.key} className="hover:bg-gray-50 transition align-middle">
+                                            <tr key={doc.key} className="hover:bg-white transition align-middle">
                                                 <td className="px-6 py-4 text-center text-sm">{idx + 1}</td>
                                                 <td className="px-6 py-4">
                                                     <div>
@@ -38,7 +38,7 @@
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-md ${
-                                                        uploaded ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-500"
+                                                        uploaded ? "bg-emerald-50 text-blue-700" : "bg-gray-100 text-gray-500"
                                                     }`}>
                                                         {uploaded ? "Uploaded" : "Pending"}
                                                     </span>
@@ -53,7 +53,7 @@
                                                             <input type="file" className="hidden" onChange={(e) => handlePersonalDocUpload(doc.key, e.target.files[0])} disabled={uploadingPersonalDoc[doc.key]} />
                                                             {uploaded ? "Update" : "Upload"}
                                                         </label>
-                                                        <button onClick={() => uploaded && window.open(`${API_BASE_URL.replace("/api", "")}/${documentData.filePath}`, "_blank")} disabled={!uploaded} className={`px-3.5 py-1.5 text-xs font-medium rounded-md transition ${uploaded ? "bg-indigo-600 hover:bg-indigo-700 text-white" : "bg-gray-100 text-gray-500 cursor-not-allowed"}`}>
+                                                        <button onClick={() => uploaded && window.open(`${API_BASE_URL.replace("/api", "")}/${documentData.filePath}`, "_blank")} disabled={!uploaded} className={`px-3.5 py-1.5 text-xs font-medium rounded-md transition ${uploaded ? "bg-indigo-600 hover:bg-indigo-700 text-gray-900" : "bg-gray-100 text-gray-500 cursor-not-allowed"}`}>
                                                             View
                                                         </button>
                                                     </div>
@@ -69,7 +69,7 @@
                         <div className="mt-10 pt-10 border-t border-gray-200">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <svg className="w-4 h-4 text-gray-900" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/>
                                     </svg>
                                 </div>
@@ -129,7 +129,7 @@
                                         <button
                                             onClick={handleSaveBankDetails}
                                             disabled={savingBankDetails}
-                                            className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-lg text-sm font-bold hover:from-green-600 hover:to-green-700 transition duration-300 transform hover:scale-105 disabled:from-gray-400 disabled:to-gray-500 disabled:scale-100 shadow-lg"
+                                            className="w-full bg-gradient-to-r from-green-500 to-green-600 text-gray-900 py-3 rounded-lg text-sm font-bold hover:from-green-600 hover:to-green-700 transition duration-300 transform hover:scale-105 disabled:from-gray-400 disabled:to-gray-500 disabled:scale-100 shadow-lg"
                                         >
                                             {savingBankDetails ? "💾 Saving..." : "✓ Save Bank Details"}
                                         </button>
@@ -157,7 +157,7 @@
                         <div className="mt-10 pt-10 border-t border-gray-200">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-                                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <svg className="w-4 h-4 text-gray-900" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
                                     </svg>
                                 </div>
@@ -219,7 +219,7 @@
                                             <button
                                                 onClick={() => handleSaveEmergencyContact(1)}
                                                 disabled={savingContact1}
-                                                className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-lg text-sm font-bold hover:from-green-600 hover:to-green-700 transition duration-300 transform hover:scale-105 disabled:from-gray-400 disabled:to-gray-500 disabled:scale-100 shadow-lg"
+                                                className="w-full bg-gradient-to-r from-green-500 to-green-600 text-gray-900 py-3 rounded-lg text-sm font-bold hover:from-green-600 hover:to-green-700 transition duration-300 transform hover:scale-105 disabled:from-gray-400 disabled:to-gray-500 disabled:scale-100 shadow-lg"
                                             >
                                                 {savingContact1 ? "💾 Saving..." : "✓ Save Contact"}
                                             </button>
@@ -296,7 +296,7 @@
                                             <button
                                                 onClick={() => handleSaveEmergencyContact(2)}
                                                 disabled={savingContact2}
-                                                className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-lg text-sm font-bold hover:from-green-600 hover:to-green-700 transition duration-300 transform hover:scale-105 disabled:from-gray-400 disabled:to-gray-500 disabled:scale-100 shadow-lg"
+                                                className="w-full bg-gradient-to-r from-green-500 to-green-600 text-gray-900 py-3 rounded-lg text-sm font-bold hover:from-green-600 hover:to-green-700 transition duration-300 transform hover:scale-105 disabled:from-gray-400 disabled:to-gray-500 disabled:scale-100 shadow-lg"
                                             >
                                                 {savingContact2 ? "💾 Saving..." : "✓ Save Contact"}
                                             </button>

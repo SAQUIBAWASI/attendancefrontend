@@ -135,27 +135,27 @@ function UserDetail() {
           <table className="min-w-full bg-white border border-gray-200">
             <tbody>
               <tr className="border-b border-gray-200">
-                <td className="py-2 px-4 font-semibold bg-gray-50 w-1/4">Name</td>
+                <td className="py-2 px-4 font-semibold bg-white w-1/4">Name</td>
                 <td className="py-2 px-4">{user.name}</td>
               </tr>
               <tr className="border-b border-gray-200">
-                <td className="py-2 px-4 font-semibold bg-gray-50">Email</td>
+                <td className="py-2 px-4 font-semibold bg-white">Email</td>
                 <td className="py-2 px-4">{user.email}</td>
               </tr>
               <tr className="border-b border-gray-200">
-                <td className="py-2 px-4 font-semibold bg-gray-50">Phone</td>
+                <td className="py-2 px-4 font-semibold bg-white">Phone</td>
                 <td className="py-2 px-4">{user.phone || 'N/A'}</td>
               </tr>
               <tr className="border-b border-gray-200">
-                <td className="py-2 px-4 font-semibold bg-gray-50">Date of Birth</td>
+                <td className="py-2 px-4 font-semibold bg-white">Date of Birth</td>
                 <td className="py-2 px-4">{formatDate(user.dateOfBirth)}</td>
               </tr>
               <tr className="border-b border-gray-200">
-                <td className="py-2 px-4 font-semibold bg-gray-50">Location</td>
+                <td className="py-2 px-4 font-semibold bg-white">Location</td>
                 <td className="py-2 px-4">{user.city || 'N/A'}, {user.zipcode || 'N/A'}</td>
               </tr>
               <tr>
-                <td className="py-2 px-4 font-semibold bg-gray-50">Account Created</td>
+                <td className="py-2 px-4 font-semibold bg-white">Account Created</td>
                 <td className="py-2 px-4">{formatDateTime(user.createdAt)}</td>
               </tr>
             </tbody>
@@ -205,7 +205,7 @@ function UserDetail() {
             </thead>
             <tbody>
               {user.steps.map((step, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-white'}>
                   <td className="py-2 px-4 border border-gray-200">{formatDate(step.date)}</td>
                   <td className="py-2 px-4 border border-gray-200">{step.day}</td>
                   <td className="py-2 px-4 border border-gray-200">{step.stepsCount || step.count || 'N/A'}</td>
@@ -258,7 +258,7 @@ function UserDetail() {
               </thead>
               <tbody>
                 {user.MyCoupons.map((myCoupon, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-white'}>
                     <td className="py-2 px-4 border border-gray-200">
                       {myCoupon.couponId?.couponImage ? (
                         <img
@@ -277,8 +277,8 @@ function UserDetail() {
                     <td className="py-2 px-4 border border-gray-200">{formatDate(myCoupon.couponId?.validityDate)}</td>
                     <td className="py-2 px-4 border border-gray-200">{myCoupon.downloadedCount || 0} / {myCoupon.couponId?.limitForSameUser || '∞'}</td>
                     <td className="py-2 px-4 border border-gray-200">
-                      <span className={`px-2 py-1 text-xs rounded-full ${myCoupon.status === 'Active' ? 'bg-green-100 text-green-800' :
-                          myCoupon.status === 'Expired' ? 'bg-red-100 text-red-800' :
+                      <span className={`px-2 py-1 text-xs rounded-full ${myCoupon.status === 'Active' ? 'bg-emerald-50 text-emerald-700' :
+                          myCoupon.status === 'Expired' ? 'bg-red-50 text-red-700' :
                             'bg-gray-100 text-gray-700'
                         }`}>
                         {myCoupon.status}
@@ -291,7 +291,7 @@ function UserDetail() {
             </table>
           </div>
         ) : (
-          <div className="bg-gray-50 rounded-lg p-8 text-center">
+          <div className="bg-white rounded-lg p-8 text-center">
             <p className="text-gray-500">No coupons claimed yet</p>
           </div>
         )}
@@ -316,7 +316,7 @@ function UserDetail() {
               </thead>
               <tbody>
                 {user.favoriteCoupons.map((coupon, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-white'}>
                     <td className="py-2 px-4 border border-gray-200">
                       {coupon.couponImage ? (
                         <img
@@ -334,9 +334,9 @@ function UserDetail() {
                     <td className="py-2 px-4 border border-gray-200">{coupon.requiredCoins} coins</td>
                     <td className="py-2 px-4 border border-gray-200">{formatDate(coupon.validityDate)}</td>
                     <td className="py-2 px-4 border border-gray-200">
-                      <span className={`px-2 py-1 text-xs rounded-full ${coupon.status === 'approved' ? 'bg-green-100 text-green-800' :
-                          coupon.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
+                      <span className={`px-2 py-1 text-xs rounded-full ${coupon.status === 'approved' ? 'bg-emerald-50 text-emerald-700' :
+                          coupon.status === 'pending' ? 'bg-amber-50 text-amber-700' :
+                            'bg-red-50 text-red-700'
                         }`}>
                         {coupon.status}
                       </span>
@@ -348,7 +348,7 @@ function UserDetail() {
             </table>
           </div>
         ) : (
-          <div className="bg-gray-50 rounded-lg p-8 text-center">
+          <div className="bg-white rounded-lg p-8 text-center">
             <p className="text-gray-500">No favorite coupons added yet</p>
           </div>
         )}
@@ -373,7 +373,7 @@ function UserDetail() {
             </thead>
             <tbody>
               {user.coinHistory.map((entry, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-white'}>
                   <td className="py-2 px-4 border border-gray-200 capitalize">{entry.type}</td>
                   <td className="py-2 px-4 border border-gray-200">{entry.amount || 'N/A'}</td>
                   <td className="py-2 px-4 border border-gray-200">{entry.message || 'N/A'}</td>
@@ -451,7 +451,7 @@ function UserDetail() {
             </thead>
             <tbody>
               {user.MyChatMembers.map((member, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-white'}>
                   <td className="py-2 px-4 border border-gray-200">
                     {member.userId.profileImage ? (
                       <img
@@ -476,7 +476,7 @@ function UserDetail() {
                   <td className="py-2 px-4 border border-gray-200">{member.userId.coins || 0}</td>
                   <td className="py-2 px-4 border border-gray-200">{formatDate(member.userId.createdAt)}</td>
                   <td className="py-2 px-4 border border-gray-200">
-                    <span className={`px-2 py-1 text-xs rounded-full ${member.status === 'Accepted' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                    <span className={`px-2 py-1 text-xs rounded-full ${member.status === 'Accepted' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
                       {member.status === 'Accepted' ? 'Connected' : 'Pending'}
                     </span>
                   </td>
@@ -486,7 +486,7 @@ function UserDetail() {
           </table>
         </div>
       ) : (
-        <div className="bg-gray-50 rounded-lg p-8 text-center">
+        <div className="bg-white rounded-lg p-8 text-center">
           <p className="text-gray-500">No chat members found</p>
         </div>
       )}
@@ -510,7 +510,7 @@ function UserDetail() {
           </div>
           <div className="bg-green-50 p-4 rounded-lg border border-green-100">
             <h3 className="text-sm font-medium text-green-800 mb-1">Total Coins Earned</h3>
-            <p className="text-2xl font-bold text-green-900">{totalCoinsEarned} coins</p>
+            <p className="text-2xl font-bold text-white">{totalCoinsEarned} coins</p>
           </div>
           <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
             <h3 className="text-sm font-medium text-purple-800 mb-1">Total Sessions</h3>
@@ -540,11 +540,11 @@ function UserDetail() {
                   const coinsPerHour = Math.round((category.coinsEarned / category.timeSpent) * 3600);
                   
                   return (
-                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-white'}>
                       <td className="py-2 px-4 border border-gray-200 font-semibold capitalize">{category.category}</td>
                       <td className="py-2 px-4 border border-gray-200">{formatTimeSpent(category.timeSpent)}</td>
                       <td className="py-2 px-4 border border-gray-200">
-                        <span className="font-medium text-green-600">{category.coinsEarned} coins</span>
+                        <span className="font-medium text-blue-700">{category.coinsEarned} coins</span>
                       </td>
                       <td className="py-2 px-4 border border-gray-200">{category.sessions}</td>
                       <td className="py-2 px-4 border border-gray-200">{formatDate(category.lastActivity)}</td>
@@ -565,7 +565,7 @@ function UserDetail() {
         {/* Time Distribution Chart (Visual Representation) */}
         <div className="mt-8">
           <h3 className="text-lg font-semibold mb-4">Time Distribution by Category</h3>
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="bg-white p-4 rounded-lg">
             {categoryStats.map((category, index) => {
               const percentage = Math.round((category.timeSpent / totalTimeSpent) * 100);
               return (
@@ -577,8 +577,8 @@ function UserDetail() {
                   <div className="w-full bg-gray-200 rounded-full h-2.5">
                     <div 
                       className={`h-2.5 rounded-full ${
-                        index % 5 === 0 ? 'bg-blue-500' :
-                        index % 5 === 1 ? 'bg-green-500' :
+                        index % 5 === 0 ? 'bg-blue-600' :
+                        index % 5 === 1 ? 'bg-blue-600' :
                         index % 5 === 2 ? 'bg-yellow-500' :
                         index % 5 === 3 ? 'bg-purple-500' : 'bg-red-500'
                       }`}

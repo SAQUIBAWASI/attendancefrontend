@@ -176,14 +176,14 @@ const CompanyList = () => {
           data={filteredCompanies}
           headers={headers}
           filename="company_list.csv"
-          className="px-3 py-1 bg-green-500 text-white rounded flex items-center gap-1"
+          className="px-3 py-1 bg-blue-600 text-gray-900 rounded flex items-center gap-1"
         >
           <FaFileCsv /> CSV
         </CSVLink>
 
         <label
           htmlFor="file-upload"
-          className="px-3 py-1 bg-purple-600 text-white rounded flex items-center gap-1 cursor-pointer"
+          className="px-3 py-1 bg-purple-600 text-gray-900 rounded flex items-center gap-1 cursor-pointer"
         >
           <FaUpload /> Import
           <input
@@ -213,7 +213,7 @@ const CompanyList = () => {
             </thead>
             <tbody>
               {currentCompanies.map((company, idx) => (
-                <tr key={idx} className="hover:bg-gray-50">
+                <tr key={idx} className="hover:bg-white">
                   <td className="p-2 border">{company.name}</td>
                   <td className="p-2 border">{company.companyType}</td>
                   <td className="p-2 border">{company.assignedBy}</td>
@@ -226,7 +226,7 @@ const CompanyList = () => {
                   <td className="p-2 border">{company.companyStrength}</td>
                   <td className="p-2 border text-center">
                     <div className="flex justify-center gap-2">
-                      <button onClick={() => handleEdit(company._id)} className="text-blue-500 hover:text-blue-700">
+                      <button onClick={() => handleEdit(company._id)} className="text-blue-600 hover:text-blue-700">
                         <FaEdit />
                       </button>
                       <button onClick={() => handleDelete(company._id)} className="text-red-500 hover:text-red-700">
@@ -235,12 +235,12 @@ const CompanyList = () => {
                     </div>
                   </td>
                   <td className="p-2 border text-center">
-                    <button onClick={() => handleViewStaff(company._id)} className="px-4 py-2 bg-purple-900 text-white rounded text-sm">
+                    <button onClick={() => handleViewStaff(company._id)} className="px-4 py-2 bg-purple-900 text-gray-900 rounded text-sm">
                       View
                     </button>
                   </td>
                   <td className="p-2 border text-center">
-                    <button onClick={() => handleAddBeneficiary(company._id)} className="px-4 py-2 bg-green-500 text-white rounded text-sm">
+                    <button onClick={() => handleAddBeneficiary(company._id)} className="px-4 py-2 bg-blue-600 text-gray-900 rounded text-sm">
                       Add
                     </button>
                   </td>
@@ -248,7 +248,7 @@ const CompanyList = () => {
                   <td className="p-2 border text-center">
                   <button
                     onClick={() => handleViewDiagnostics(company._id)}
-                    className="px-4 py-2 bg-blue-500 text-white rounded text-sm"
+                    className="px-4 py-2 bg-blue-600 text-gray-900 rounded text-sm"
                   >
                     View
                   </button>
@@ -278,7 +278,7 @@ const CompanyList = () => {
           <button
             key={idx}
             onClick={() => paginate(idx + 1)}
-            className={`px-3 py-1 rounded ${currentPage === idx + 1 ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+            className={`px-3 py-1 rounded ${currentPage === idx + 1 ? "bg-blue-600 text-gray-900" : "bg-gray-200"}`}
           >
             {idx + 1}
           </button>
@@ -290,7 +290,7 @@ const CompanyList = () => {
 
       {/* Edit Company Modal */}
       {isEditingCompanyModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 bg-white  flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 w-[90%] max-w-4xl max-h-[90vh] overflow-y-auto shadow-xl relative">
             <button className="absolute top-2 right-3 text-gray-500 hover:text-red-500 text-xl font-bold" onClick={closeCompanyEditModal}>×</button>
             <h3 className="text-xl mb-4">Edit Company</h3>
@@ -314,8 +314,8 @@ const CompanyList = () => {
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <button type="button" className="px-4 py-2 bg-gray-300 text-white rounded" onClick={closeCompanyEditModal}>Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded">Save Changes</button>
+                <button type="button" className="px-4 py-2 bg-gray-300 text-gray-900 rounded" onClick={closeCompanyEditModal}>Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-gray-900 rounded">Save Changes</button>
               </div>
             </form>
           </div>
@@ -324,7 +324,7 @@ const CompanyList = () => {
 
       {/* Add Beneficiary Modal */}
       {isAddingBeneficiaryModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 bg-white  flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 w-[90%] max-w-4xl max-h-[90vh] overflow-y-auto shadow-xl relative">
             <button className="absolute top-2 right-3 text-gray-500 hover:text-red-500 text-xl font-bold" onClick={closeBeneficiaryModal}>×</button>
             <StaffDetailsForm companyId={selectedCompanyId} closeModal={closeBeneficiaryModal} />

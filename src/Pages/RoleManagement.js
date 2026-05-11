@@ -32,7 +32,7 @@ export default function RoleManagement() {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-white min-h-screen">
       <h2 className="text-2xl font-bold mb-6 text-center text-blue-700 flex items-center gap-2">
         <span>⚙️</span> Permissions Overview
       </h2>
@@ -49,7 +49,7 @@ export default function RoleManagement() {
           </thead>
           <tbody className="bg-white">
             {permissionsList.map((perm) => (
-              <tr key={perm.key} className="hover:bg-gray-50">
+              <tr key={perm.key} className="hover:bg-white">
                 <td className="border px-4 py-2">
                   <div className="font-semibold">{perm.label}</div>
                   <div className="text-gray-500 text-sm">{perm.description}</div>

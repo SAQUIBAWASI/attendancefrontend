@@ -109,13 +109,13 @@ const DoctorAppointmentListPending = () => {
           data={filteredAppointments}
           headers={headers}
           filename="doctor_appointments_pending.csv"
-          className="px-4 py-2 bg-green-500 text-white rounded text-sm flex items-center gap-1"
+          className="px-4 py-2 bg-blue-600 text-gray-900 rounded text-sm flex items-center gap-1"
         >
           <FaFileCsv /> CSV
         </CSVLink>
         <button
           onClick={exportToExcel}
-          className="px-4 py-2 bg-green-500 text-white rounded text-sm flex items-center gap-1"
+          className="px-4 py-2 bg-blue-600 text-gray-900 rounded text-sm flex items-center gap-1"
         >
           <FaFileExcel /> Excel
         </button>
@@ -138,7 +138,7 @@ const DoctorAppointmentListPending = () => {
           </thead>
           <tbody>
             {filteredAppointments.map((appt) => (
-              <tr key={appt.appointmentId} className="hover:bg-gray-50 border-b">
+              <tr key={appt.appointmentId} className="hover:bg-white border-b">
                 <td className="p-2 border flex items-center gap-2">
                   <img
                     src={appt.doctor_image}
@@ -158,7 +158,7 @@ const DoctorAppointmentListPending = () => {
                 </td>
                 <td className="p-2 border text-center flex gap-2 justify-center">
                   <button
-                    className="text-blue-500 hover:text-blue-700"
+                    className="text-blue-600 hover:text-blue-700"
                     onClick={() => openEditModal(appt)}
                   >
                     <FaEdit />
@@ -175,7 +175,7 @@ const DoctorAppointmentListPending = () => {
 
       {/* Edit Status Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-white  z-50">
           <div className="bg-white p-6 rounded shadow-lg w-96">
             <h3 className="text-xl font-semibold mb-4">Edit Status</h3>
             <div className="mb-4">
@@ -193,7 +193,7 @@ const DoctorAppointmentListPending = () => {
             </div>
             <div className="flex justify-between">
               <button
-                className="px-4 py-2 bg-blue-500 text-white rounded"
+                className="px-4 py-2 bg-blue-600 text-gray-900 rounded"
                 onClick={handleStatusChange}
               >
                 Save

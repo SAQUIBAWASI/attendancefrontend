@@ -106,7 +106,7 @@ const SelectProducts = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-200 py-12 px-4">
-            <div className="max-w-6xl mx-auto bg-black/90 backdrop-blur-md shadow-xl rounded-2xl p-8">
+            <div className="max-w-6xl mx-auto bg-white/90 backdrop-blur-md shadow-xl rounded-2xl p-8">
                 {/* Header */}
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-extrabold bg-gradient-to-r from-green-600 to-blue-600 text-transparent bg-clip-text mb-2">
@@ -124,7 +124,7 @@ const SelectProducts = () => {
                     </div>
                 )}
                 {success && (
-                    <div className="p-4 text-green-600 bg-green-100 rounded-lg shadow-sm mb-6">
+                    <div className="p-4 text-blue-700 bg-blue-100 rounded-lg shadow-sm mb-6">
                         {success}
                     </div>
                 )}
@@ -157,7 +157,7 @@ const SelectProducts = () => {
                                         </div>
                                         {selectedApps.includes(product.id) && (
                                             <div className="mt-2">
-                                                <span className="inline-flex items-center px-2 py-1 bg-blue-500 text-white text-xs rounded-full">
+                                                <span className="inline-flex items-center px-2 py-1 bg-blue-600 text-gray-900 text-xs rounded-full">
                                                     ✓ Selected
                                                 </span>
                                             </div>
@@ -198,7 +198,7 @@ const SelectProducts = () => {
                         <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
                             <div className="flex items-center justify-between flex-wrap gap-2">
                                 <div className="flex items-center gap-2">
-                                    <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                    <span className="bg-blue-600 text-gray-900 px-3 py-1 rounded-full text-sm font-semibold">
                                         {selectedApps.length}
                                     </span>
                                     <span className="text-gray-700 font-medium">app(s) selected:</span>
@@ -222,13 +222,13 @@ const SelectProducts = () => {
                         <button
                             type="submit"
                             disabled={isLoading || selectedApps.length === 0}
-                            className={`px-10 py-4 text-white font-semibold rounded-lg bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-600 hover:to-blue-600 transition duration-300 transform hover:scale-105 ${
+                            className={`px-10 py-4 text-gray-900 font-semibold rounded-lg bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-600 hover:to-blue-600 transition duration-300 transform hover:scale-105 ${
                                 isLoading || selectedApps.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
                             }`}
                         >
                             {isLoading ? (
                                 <span className="flex items-center gap-2">
-                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <svg className="animate-spin h-5 w-5 text-gray-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>

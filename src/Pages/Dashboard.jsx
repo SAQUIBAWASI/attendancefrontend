@@ -649,7 +649,7 @@
 //   };
 
 //   return (
-//     <div className="min-h-screen p-2 lg:p-6 bg-gray-50/50">
+//     <div className="min-h-screen p-2 lg:p-6 bg-white/50">
 //       {/* 1. Top Summary Stats - Updated Cards */}
 //       <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-5">
 //         <StatCard
@@ -950,7 +950,7 @@
 // const StatCard = ({ icon: Icon, label, value, color, onClick, isPercentage }) => {
 //   const themes = {
 //     indigo: "border-indigo-500",
-//     emerald: "border-emerald-500",
+//     emerald: "border-blue-500",
 //     amber: "border-amber-500",
 //     rose: "border-rose-500",
 //     cyan: "border-cyan-500",
@@ -980,15 +980,12 @@
 
 import axios from 'axios';
 import { useEffect, useState } from "react";
-import CountUp from "react-countup";
 import { FiClock, FiTrendingUp, FiUserCheck, FiUserX, FiUsers } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import { isEmployeeHidden } from "../utils/employeeStatus";
 import StatCard from "../Components/StatCard";
+import { isEmployeeHidden } from "../utils/employeeStatus";
 
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,

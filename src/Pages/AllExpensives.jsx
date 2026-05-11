@@ -182,9 +182,9 @@ const AllExpensives = () => {
             </div>
 
             {/* KM Rate Update */}
-            <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-2 h-[30px] bg-gray-50">
+            <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-2 h-[30px] bg-white">
               <span className="text-[10px] font-bold text-gray-500 flex items-center gap-1 whitespace-nowrap">
-                <FaMoneyBillWave className="text-green-500" /> ₹{kmRate}
+                <FaMoneyBillWave className="text-blue-600" /> ₹{kmRate}
               </span>
               <div className="h-4 w-[1px] bg-gray-300 mx-1"></div>
               <input
@@ -202,7 +202,7 @@ const AllExpensives = () => {
                 {isUpdatingRate ? <FaSync className="animate-spin" /> : 'Set'}
               </button>
               {rateMessage.text && (
-                <span className={`text-[9px] font-bold ml-1 ${rateMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                <span className={`text-[9px] font-bold ml-1 ${rateMessage.type === 'success' ? 'text-blue-700' : 'text-red-600'}`}>
                   {rateMessage.text}
                 </span>
               )}
@@ -234,7 +234,7 @@ const AllExpensives = () => {
         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
-              <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+              <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
                   <th className="py-2 text-center">EMPLOYEE</th>
                   <th className="py-2 text-center">DESIGNATION</th>
@@ -269,7 +269,7 @@ const AllExpensives = () => {
                   groupedExpenses.map((group, idx) => (
                     <tr
                       key={idx}
-                      className="transition-colors hover:bg-gray-50 group"
+                      className="transition-colors hover:bg-white group"
                     >
                       <td className="px-2 py-2 text-center whitespace-nowrap">
                         <div className="flex flex-col">
@@ -282,7 +282,7 @@ const AllExpensives = () => {
                         </div>
                       </td>
                       <td className="px-2 py-2 text-center whitespace-nowrap">
-                        <span className="px-2 py-1 text-[10px] font-semibold rounded-full bg-blue-100 text-blue-800">
+                        <span className="px-2 py-1 text-[10px] font-semibold rounded-full bg-blue-50 text-blue-700">
                           {group.employeeDetails?.role || 'Employee'}
                         </span>
                       </td>
@@ -320,12 +320,12 @@ const AllExpensives = () => {
 
       {/* Aggregate Details Modal - Sleek Style (AttendanceSummary match) */}
       {isModalOpen && selectedGroup && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-50/50 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-white/50 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-2xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col border border-gray-200">
             {/* Header */}
             <div className="px-8 py-6 bg-white border-b border-gray-200 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-6">
-                <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg">
+                <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-gray-900 text-2xl font-black shadow-lg">
                   {selectedGroup.employeeDetails?.name ? selectedGroup.employeeDetails.name[0].toUpperCase() : 'E'}
                 </div>
                 <div>
@@ -348,7 +348,7 @@ const AllExpensives = () => {
                 </div>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="ml-4 w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-500 transition-all border border-gray-200 shadow-sm"
+                  className="ml-4 w-10 h-10 flex items-center justify-center rounded-full bg-white text-gray-500 hover:bg-red-50 hover:text-red-500 transition-all border border-gray-200 shadow-sm"
                 >
                   <FaTimes size={14} />
                 </button>
@@ -359,7 +359,7 @@ const AllExpensives = () => {
             <div className="flex-1 overflow-y-auto p-0 bg-white">
               <table className="w-full text-sm border-collapse">
                 <thead className="sticky top-0 z-10">
-                  <tr className="bg-blue-700 text-white text-[11px] font-bold uppercase tracking-wider">
+                  <tr className="bg-blue-700 text-gray-900 text-[11px] font-bold uppercase tracking-wider">
                     <th className="px-6 py-4 text-left border-r border-blue-600/30">Date</th>
                     <th className="px-6 py-4 text-left border-r border-blue-600/30">Purpose of visit</th>
                     <th className="px-6 py-4 text-center border-r border-blue-600/30">KM</th>
@@ -399,7 +399,7 @@ const AllExpensives = () => {
                             {rec.stops && rec.stops.length > 0 ? "Multiple Stops" : (rec.outcome ? `"${rec.outcome}"` : '-')}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-right border-r border-gray-50 text-green-600 tabular-nums font-bold">
+                        <td className="px-6 py-4 text-right border-r border-gray-50 text-blue-700 tabular-nums font-bold">
                           {rec.orderValue > 0 ? `₹${rec.orderValue.toLocaleString()}` : '-'}
                         </td>
                         <td className="px-6 py-4 text-right border-r border-gray-50 text-purple-600 tabular-nums font-bold">
@@ -412,7 +412,7 @@ const AllExpensives = () => {
                       
                       {/* Render Stop Sub-rows if they exist */}
                       {rec.stops && rec.stops.length > 0 && rec.stops.map((stop, sIndex) => (
-                        <tr key={`stop-${i}-${sIndex}`} className="bg-gray-50/50 text-xs border-b border-gray-200 last:border-b-0">
+                        <tr key={`stop-${i}-${sIndex}`} className="bg-white/50 text-xs border-b border-gray-200 last:border-b-0">
                            <td className="px-6 py-2 border-r border-gray-200"></td>
                            <td className="px-6 py-2 border-r border-gray-200">
                              <div className="flex items-center gap-2">
@@ -420,14 +420,14 @@ const AllExpensives = () => {
                                <span className="font-semibold text-gray-700">{stop.locationName}</span>
                              </div>
                            </td>
-                           <td className="px-6 py-2 text-center border-r border-gray-200 text-blue-500 font-medium tabular-nums">
+                           <td className="px-6 py-2 text-center border-r border-gray-200 text-blue-600 font-medium tabular-nums">
                              {stop.km > 0 ? stop.km : '-'}
                            </td>
                            <td className="px-6 py-2 border-r border-gray-200"></td>
                            <td className="px-6 py-2 text-center border-r border-gray-200 text-gray-500 font-medium italic truncate max-w-[150px]" title={stop.outcome}>
                              {stop.outcome || '-'}
                            </td>
-                           <td className="px-6 py-2 text-right border-r border-gray-200 text-green-600 tabular-nums">
+                           <td className="px-6 py-2 text-right border-r border-gray-200 text-blue-700 tabular-nums">
                              {stop.orderValue > 0 ? `₹${stop.orderValue.toLocaleString()}` : '-'}
                            </td>
                            <td className="px-6 py-2 text-right border-r border-gray-200 text-purple-600 tabular-nums">
@@ -447,10 +447,10 @@ const AllExpensives = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-8 py-5 border-t border-gray-200 bg-gray-50 flex justify-end flex-shrink-0">
+            <div className="px-8 py-5 border-t border-gray-200 bg-white flex justify-end flex-shrink-0">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-10 py-3 bg-gray-900 text-white rounded-xl font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-white transition-all shadow-lg active:scale-95"
+                className="px-10 py-3 bg-gray-100 text-gray-900 rounded-xl font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-white transition-all shadow-lg active:scale-95"
               >
                 Close Audit View
               </button>

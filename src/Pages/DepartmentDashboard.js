@@ -203,7 +203,7 @@
 //         </div>
 //       )}
 //       {success && (
-//         <div className="p-4 mb-4 text-green-700 bg-green-100 rounded-lg">
+//         <div className="p-4 mb-4 text-green-700 bg-blue-100 rounded-lg">
 //           {success}
 //         </div>
 //       )}
@@ -247,7 +247,7 @@
 //               {/* Employee Count */}
 //               <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-200">
 //                 <div className="flex items-center space-x-2">
-//                   <div className={`w-3 h-3 rounded-full ${department.employeeCount > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+//                   <div className={`w-3 h-3 rounded-full ${department.employeeCount > 0 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
 //                   <span className="text-sm text-gray-500">
 //                     {department.employeeCount || 0} employee(s)
 //                   </span>
@@ -290,7 +290,7 @@
 
 //       {/* Add/Edit Department Modal */}
 //       {showAddModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">
@@ -646,7 +646,7 @@ const DepartmentDashboard = () => {
         </div>
       )}
       {success && (
-        <div className="p-4 mb-4 text-green-700 bg-green-100 rounded-lg">
+        <div className="p-4 mb-4 text-green-700 bg-blue-100 rounded-lg">
           {success}
         </div>
       )}
@@ -654,7 +654,7 @@ const DepartmentDashboard = () => {
       {/* Departments Table */}
       <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
         <table className="min-w-full">
-          <thead className="text-left text-sm text-white bg-gradient-to-r from-green-500 to-blue-600">
+          <thead className="text-left text-sm text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
             <tr>
               <th className="p-2 font-bold text-left text-gray-700">Department Name</th>
               <th className="p-2 font-bold text-left text-gray-700">Description</th>
@@ -666,7 +666,7 @@ const DepartmentDashboard = () => {
           
           <tbody>
             {filteredDepartments.map((department) => (
-              <tr key={department._id} className="border-b hover:bg-gray-50">
+              <tr key={department._id} className="border-b hover:bg-white">
                 <td className="p-2">
                   <div className="font-medium text-gray-700">{department.name}</div>
                 </td>
@@ -675,13 +675,13 @@ const DepartmentDashboard = () => {
                 </td>
                 <td className="p-2">
                   <div className="flex items-center">
-                    <div className={`w-3 h-3 rounded-full mr-2 ${department.employeeCount > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                    <div className={`w-3 h-3 rounded-full mr-2 ${department.employeeCount > 0 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
                     <span className="font-medium">{department.employeeCount || 0}</span>
                     <span className="ml-1 text-gray-500">employees</span>
                   </div>
                 </td>
                 <td className="p-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${department.employeeCount > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${department.employeeCount > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-700'}`}>
                     {department.employeeCount > 0 ? 'Active' : 'No Employees'}
                   </span>
                 </td>
@@ -741,7 +741,7 @@ const DepartmentDashboard = () => {
 
       {/* Add/Edit Department Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
             <div className="flex items-center justify-between p-6 border-b">
               <h3 className="text-xl font-semibold text-gray-700">
@@ -810,7 +810,7 @@ const DepartmentDashboard = () => {
 
       {/* Employee Details Modal (Table Format) */}
       {showEmployeeModal && selectedDeptForModal && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-2 overflow-y-auto bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-2 overflow-y-auto bg-white ">
           <div className="w-full my-8 bg-white rounded-lg shadow-xl max-w-7xl">
             
             {/* Modal Header */}
@@ -839,7 +839,7 @@ const DepartmentDashboard = () => {
             </div>
 
             {/* Search Bar */}
-            <div className="p-2 border-b bg-gray-50">
+            <div className="p-2 border-b bg-white">
               <div className="relative">
                 <FaSearch className="absolute text-gray-500 transform -translate-y-1/2 left-3 top-1/2" />
                 <input
@@ -861,7 +861,7 @@ const DepartmentDashboard = () => {
                 </div>
               ) : filteredEmployees.length > 0 ? (
                 <table className="min-w-full">
-                 <thead className="text-left text-sm text-white bg-gradient-to-r from-purple-500 to-blue-600">
+                 <thead className="text-left text-sm text-gray-900 bg-gradient-to-r from-purple-500 to-blue-600">
                     <tr>
                       <th className="py-3 text-center">Emp ID</th>
                       <th className="py-3 text-center">Name</th>
@@ -878,7 +878,7 @@ const DepartmentDashboard = () => {
                   
                   <tbody>
                     {filteredEmployees.map((emp) => (
-                      <tr key={emp._id || emp.id} className="border-b hover:bg-gray-50">
+                      <tr key={emp._id || emp.id} className="border-b hover:bg-white">
                         <td className="p-2 font-medium border">{emp.employeeId || emp.empId || 'N/A'}</td>
                         <td className="p-2 border">
                           <div className="font-medium">{emp.name || 'N/A'}</div>
@@ -931,14 +931,14 @@ const DepartmentDashboard = () => {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t bg-gray-50">
+            <div className="p-4 border-t bg-white">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-500">
                   Showing {filteredEmployees.length} of {employees.length} employees
                 </p>
                 <button
                   onClick={handleCloseEmployeeModal}
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-white"
                 >
                   Close
                 </button>

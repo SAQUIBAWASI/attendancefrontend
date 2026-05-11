@@ -81,7 +81,7 @@ const CreateLogo = () => {
         <div className="text-center">
           <button
             type="submit"
-            className="bg-blue-900 text-white p-3 rounded-lg shadow-md hover:bg-blue-900 transition duration-300"
+            className="bg-blue-900 text-gray-900 p-3 rounded-lg shadow-md hover:bg-blue-900 transition duration-300"
           >
             Create Logo
           </button>

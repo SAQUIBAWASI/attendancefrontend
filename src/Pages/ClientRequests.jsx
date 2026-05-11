@@ -83,7 +83,7 @@
 //                             </tr>
 //                         ) : (
 //                             requests.map((req) => (
-//                                 <tr key={req._id} className="hover:bg-gray-50 transition-colors duration-150">
+//                                 <tr key={req._id} className="hover:bg-white transition-colors duration-150">
 //                                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
 //                                         <div className="text-center">
 //                                             <p className="text-gray-900 font-medium">
@@ -118,11 +118,11 @@
 //                                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
 //                                         <div className="flex flex-col">
 //                                             <div className="flex items-center mb-2">
-//                                                 <FaBuilding className="text-blue-500 mr-2" />
+//                                                 <FaBuilding className="text-blue-600 mr-2" />
 //                                                 <span className="font-medium text-gray-700">{req.companyName}</span>
 //                                             </div>
 //                                             <div className="flex items-center">
-//                                                 <FaUsers className="text-green-500 mr-2" />
+//                                                 <FaUsers className="text-blue-600 mr-2" />
 //                                                 <span className="text-gray-500 text-sm">
 //                                                     {req.numberOfEmployees} employees
 //                                                 </span>
@@ -144,7 +144,7 @@
 //                                         <div className="flex justify-center space-x-3">
 //                                             <button
 //                                                 onClick={() => handleStatusUpdate(req._id, "Approved")}
-//                                                 className="flex items-center px-4 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition duration-200"
+//                                                 className="flex items-center px-4 py-2 bg-blue-100 text-green-700 rounded-md hover:bg-green-200 transition duration-200"
 //                                                 title="Accept Request"
 //                                             >
 //                                                 <FaCheck className="mr-2" />
@@ -329,7 +329,7 @@ const ClientRequests = () => {
                             </tr>
                         ) : (
                             requests.map((req) => (
-                                <tr key={req._id} className="hover:bg-gray-50 transition-colors duration-150">
+                                <tr key={req._id} className="hover:bg-white transition-colors duration-150">
                                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                         <div className="text-center">
                                             <p className="text-gray-900 font-medium">
@@ -364,11 +364,11 @@ const ClientRequests = () => {
                                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                         <div className="flex flex-col">
                                             <div className="flex items-center mb-2">
-                                                <FaBuilding className="text-blue-500 mr-2" />
+                                                <FaBuilding className="text-blue-600 mr-2" />
                                                 <span className="font-medium text-gray-700">{req.companyName}</span>
                                             </div>
                                             <div className="flex items-center">
-                                                <FaUsers className="text-green-500 mr-2" />
+                                                <FaUsers className="text-blue-600 mr-2" />
                                                 <span className="text-gray-500 text-sm">
                                                     {req.numberOfEmployees} employees
                                                 </span>
@@ -399,19 +399,19 @@ const ClientRequests = () => {
                                                     className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-left bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                                                 >
                                                     <div className="flex items-center">
-                                                        <FaBoxes className="text-blue-500 mr-2" />
+                                                        <FaBoxes className="text-blue-600 mr-2" />
                                                         <span className="text-blue-700">
                                                             {req.selectedProducts.length} Product(s)
                                                         </span>
                                                     </div>
                                                     {expandedProducts[req._id] ? 
-                                                        <FaChevronUp className="text-blue-500" /> : 
-                                                        <FaChevronDown className="text-blue-500" />
+                                                        <FaChevronUp className="text-blue-600" /> : 
+                                                        <FaChevronDown className="text-blue-600" />
                                                     }
                                                 </button>
                                                 
                                                 {expandedProducts[req._id] && (
-                                                    <div className="mt-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                                    <div className="mt-2 p-2 bg-white rounded-lg border border-gray-200">
                                                         <div className="grid grid-cols-2 gap-1">
                                                             {req.selectedProducts.map((productId) => (
                                                                 <div
@@ -441,7 +441,7 @@ const ClientRequests = () => {
                                         <div className="flex justify-center space-x-3">
                                             <button
                                                 onClick={() => handleStatusUpdate(req._id, "Approved")}
-                                                className="flex items-center px-4 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition duration-200"
+                                                className="flex items-center px-4 py-2 bg-blue-100 text-green-700 rounded-md hover:bg-green-200 transition duration-200"
                                                 title="Accept Request"
                                             >
                                                 <FaCheck className="mr-2" />

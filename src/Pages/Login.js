@@ -109,7 +109,7 @@
 
 //   return (
 //     <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-gradient-to-br from-blue-100 to-purple-200">
-//       <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden shadow-xl bg-black/80 backdrop-blur-md rounded-2xl md:grid-cols-2">
+//       <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden shadow-xl bg-white/80 backdrop-blur-md rounded-2xl md:grid-cols-2">
 
 //         {/* Left Side - Login Form */}
 //         <div className="flex flex-col justify-center p-8 md:p-12">
@@ -213,7 +213,7 @@
 //             <button
 //               type="submit"
 //               disabled={isLoading}
-//               className={`w-full py-3 text-white text-sm font-medium rounded-md bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-600 hover:to-blue-600 transition duration-300 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''
+//               className={`w-full py-3 text-gray-900 text-sm font-medium rounded-md bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-600 hover:to-blue-600 transition duration-300 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''
 //                 }`}
 //             >
 //               {isLoading ? 'Verifying...' : 'Login'}
@@ -231,7 +231,7 @@
 //         </div>
 
 //         {/* Right Side - Image */}
-//         <div className="flex items-center justify-center p-6 bg-black/70 md:p-12">
+//         <div className="flex items-center justify-center p-6 bg-white/70 md:p-12">
 //           <img
 //             src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
 //             alt="Login Illustration"
@@ -461,7 +461,7 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3 text-white text-sm font-medium rounded-md bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-600 hover:to-blue-600 transition duration-300 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''
+              className={`w-full py-3 text-gray-900 text-sm font-medium rounded-md bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-600 hover:to-blue-600 transition duration-300 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
             >
               {isLoading ? 'Verifying...' : 'Login'}

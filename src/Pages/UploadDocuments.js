@@ -54,11 +54,11 @@ const UploadDocuments = ({ closeModal }) => {
   };
 
   const renderUploadField = (label, name) => (
-    <div className="flex flex-col items-center gap-4 p-6 bg-gray-50 rounded-xl shadow-md border border-gray-200">
+    <div className="flex flex-col items-center gap-4 p-6 bg-white rounded-xl shadow-md border border-gray-200">
       <label className="text-gray-700 font-medium text-center">{label}</label>
       <label
         htmlFor={name}
-        className="flex items-center justify-center gap-1 px-4 py-2 bg-blue-600 text-white text-xs rounded-lg cursor-pointer hover:bg-blue-700 transition"
+        className="flex items-center justify-center gap-1 px-4 py-2 bg-blue-600 text-gray-900 text-xs rounded-lg cursor-pointer hover:bg-blue-700 transition"
       >
         <FaUpload size={14} /> Upload
       </label>
@@ -102,7 +102,7 @@ const UploadDocuments = ({ closeModal }) => {
         <div className="flex justify-center mt-8">
           <button
             type="submit"
-            className="bg-purple-900 hover:bg-purple-700 text-white px-6 py-2 rounded-lg text-sm shadow-md"
+            className="bg-purple-900 hover:bg-purple-700 text-gray-900 px-6 py-2 rounded-lg text-sm shadow-md"
           >
             Submit Documents
           </button>

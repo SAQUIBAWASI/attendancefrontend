@@ -59,7 +59,7 @@ export default function AssignLocation() {
 
       <button
         onClick={handleAssign}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
+        className="bg-blue-600 text-gray-900 px-4 py-2 rounded hover:bg-blue-700 w-full"
       >
         Assign Location
       </button>

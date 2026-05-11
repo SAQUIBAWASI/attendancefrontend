@@ -103,7 +103,7 @@ const AddLocationPage = () => {
 
       {/* Success / Error Message */}
       {successMessage && (
-        <div className="p-4 mb-4 text-green-700 bg-green-100 rounded">
+        <div className="p-4 mb-4 text-green-700 bg-blue-100 rounded">
           {successMessage}
         </div>
       )}
@@ -138,7 +138,7 @@ const AddLocationPage = () => {
           <button
             type="button"
             onClick={handleGetCurrentLocation}
-            className="px-4 py-1 text-white bg-green-600 rounded hover:bg-green-700"
+            className="px-4 py-1 text-gray-900 bg-blue-600 rounded hover:bg-blue-800"
             disabled={loadingLocation}
           >
             {loadingLocation ? "Fetching..." : "📍 Get Current Location"}
@@ -197,7 +197,7 @@ const AddLocationPage = () => {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="px-6 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
+            className="px-6 py-2 text-gray-900 bg-blue-600 rounded hover:bg-blue-700"
           >
             Add Location
           </button>

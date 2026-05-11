@@ -169,7 +169,7 @@ const TakeAssessment = () => {
                     <div className="w-16 h-16 border-4 border-blue-100 rounded-2xl animate-pulse"></div>
                     <div className="absolute inset-0 w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-2xl animate-spin mx-auto"></div>
                 </div>
-                <p className="text-blue-400 font-bold uppercase tracking-[0.3em] text-[10px] animate-pulse">Initializing Portal Environment...</p>
+                <p className="text-blue-500 font-bold uppercase tracking-[0.3em] text-[10px] animate-pulse">Initializing Portal Environment...</p>
             </div>
         </div>
     );
@@ -184,7 +184,7 @@ const TakeAssessment = () => {
                 <p className="text-gray-500 mb-10 font-medium leading-relaxed">{error}</p>
                 <button
                     onClick={() => navigate('/applied-jobs')}
-                    className="w-full py-4 bg-blue-600 text-white rounded-xl font-black text-sm hover:bg-blue-700 transition-all hover:shadow-xl shadow-blue-100 transform active:scale-95 uppercase tracking-widest"
+                    className="w-full py-4 bg-blue-600 text-gray-900 rounded-xl font-black text-sm hover:bg-blue-700 transition-all hover:shadow-xl shadow-blue-100 transform active:scale-95 uppercase tracking-widest"
                 >
                     Return to My Applications
                 </button>
@@ -206,7 +206,7 @@ const TakeAssessment = () => {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 p-4 font-sans text-slate-700">
                 <div className="max-w-xl w-full bg-white p-12 rounded-2xl shadow-2xl shadow-blue-900/10 border border-blue-50 text-center">
-                    <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-emerald-900/5">
+                    <div className="w-20 h-20 bg-emerald-50 text-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-emerald-900/5">
                         <FaCheckCircle className="text-4xl" />
                     </div>
                     <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">Assessment Completed!</h2>
@@ -221,7 +221,7 @@ const TakeAssessment = () => {
                                     onClick={() => {
                                         window.location.href = `/assessment/${jobId}/${applicationId}/${pendingAssessmentIds[0]._id || pendingAssessmentIds[0]}`;
                                     }}
-                                    className="w-full py-5 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl font-black text-sm hover:shadow-2xl shadow-indigo-100 transition-all active:scale-95 uppercase tracking-widest flex items-center justify-center gap-2"
+                                    className="w-full py-5 bg-gradient-to-r from-indigo-600 to-indigo-700 text-gray-900 rounded-xl font-black text-sm hover:shadow-2xl shadow-indigo-100 transition-all active:scale-95 uppercase tracking-widest flex items-center justify-center gap-2"
                                 >
                                     Take Next Assessment <FaArrowRight />
                                 </button>
@@ -235,7 +235,7 @@ const TakeAssessment = () => {
                         ) : (
                             <button
                                 onClick={() => navigate('/applied-jobs')}
-                                className="w-full py-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-black text-sm hover:shadow-2xl shadow-blue-100 transition-all active:scale-95 uppercase tracking-widest"
+                                className="w-full py-5 bg-gradient-to-r from-blue-600 to-blue-700 text-gray-900 rounded-xl font-black text-sm hover:shadow-2xl shadow-blue-100 transition-all active:scale-95 uppercase tracking-widest"
                             >
                                 Return to My Applications
                             </button>
@@ -251,12 +251,12 @@ const TakeAssessment = () => {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 p-4 font-sans text-slate-700">
             <div className="max-w-2xl w-full bg-white p-8 md:p-12 rounded-2xl shadow-2xl shadow-blue-900/10 border border-blue-50">
                 <div className="flex items-center gap-5 mb-10">
-                    <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-100">
+                    <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 text-gray-900 rounded-xl flex items-center justify-center shadow-lg shadow-blue-100">
                         <FaTasks className="text-2xl" />
                     </div>
                     <div>
                         <h2 className="text-2xl font-black text-gray-900 tracking-tight">Assessment Instructions</h2>
-                        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Read carefully before starting</p>
+                        <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Read carefully before starting</p>
                     </div>
                 </div>
 
@@ -272,7 +272,7 @@ const TakeAssessment = () => {
                             { id: 3, text: "Click \"Next\" to proceed. You can revisit previous questions." },
                             { id: 4, text: "Click \"Finish\" once all questions are correctly answered." }
                         ].map(item => (
-                            <div key={item.id} className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200/50">
+                            <div key={item.id} className="flex gap-4 p-4 bg-white rounded-xl border border-gray-200/50">
                                 <div className="w-6 h-6 rounded-lg bg-white text-blue-600 flex items-center justify-center font-black text-[10px] shadow-sm shrink-0">{item.id}</div>
                                 <p className="text-[11px] font-bold text-gray-500 leading-normal">{item.text}</p>
                             </div>
@@ -289,7 +289,7 @@ const TakeAssessment = () => {
 
                 <button
                     onClick={() => setShowInstructions(false)}
-                    className="w-full py-5 bg-blue-600 text-white rounded-xl font-black text-sm hover:bg-blue-700 hover:shadow-2xl shadow-blue-100 transition-all flex items-center justify-center gap-3 group uppercase tracking-widest"
+                    className="w-full py-5 bg-blue-600 text-gray-900 rounded-xl font-black text-sm hover:bg-blue-700 hover:shadow-2xl shadow-blue-100 transition-all flex items-center justify-center gap-3 group uppercase tracking-widest"
                 >
                     Start Assessment Now
                     <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
@@ -306,18 +306,18 @@ const TakeAssessment = () => {
             <div className="bg-gradient-to-r from-purple-500 to-blue-600 sticky top-0 z-50 px-4 py-3 md:py-4 shadow-lg">
                 <div className="max-w-5xl mx-auto flex flex-row items-center justify-between gap-3">
                     <div className="flex items-center gap-2 md:gap-4 min-w-0">
-                        <div className="w-8 h-8 md:w-10 md:h-10 shrink-0 bg-black/20 backdrop-blur-md text-white rounded-lg flex items-center justify-center border border-white/30">
+                        <div className="w-8 h-8 md:w-10 md:h-10 shrink-0 bg-white/20 backdrop-blur-md text-gray-900 rounded-lg flex items-center justify-center border border-white/30">
                             <FaTasks className="text-sm md:text-lg" />
                         </div>
                         <div className="truncate">
-                            <h1 className="text-xs md:text-base font-bold text-white tracking-tight truncate leading-tight">
+                            <h1 className="text-xs md:text-base font-bold text-gray-900 tracking-tight truncate leading-tight">
                                 {application?.firstName || "Hello"}, {quiz.title}
                             </h1>
                             <p className="hidden xs:block text-[9px] md:text-[10px] font-medium text-blue-100 uppercase tracking-widest opacity-80 truncate">Assignment Phase</p>
                         </div>
                     </div>
 
-                    <div className={`shrink-0 px-3 py-1.5 md:px-5 md:py-2 rounded-lg border flex items-center gap-2 md:gap-3 transition-all duration-500 shadow-sm ${timeLeft < 60 ? "bg-red-500 border-red-400 text-white animate-pulse" : "bg-black/10 border-white/20 text-white"
+                    <div className={`shrink-0 px-3 py-1.5 md:px-5 md:py-2 rounded-lg border flex items-center gap-2 md:gap-3 transition-all duration-500 shadow-sm ${timeLeft < 60 ? "bg-red-500 border-red-400 text-gray-900 animate-pulse" : "bg-white/10 border-white/20 text-gray-900"
                         }`}>
                         <FaClock className="text-xs md:text-sm" />
                         <span className="font-bold tabular-nums text-xs md:text-sm">{formatTime(timeLeft)}</span>
@@ -344,7 +344,7 @@ const TakeAssessment = () => {
                 {/* Question Card - Matches UserActivity sleekness */}
                 <div className="bg-white rounded-xl shadow-md border border-gray-200 p-5 md:p-8 overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
                     <div className="mb-5 md:mb-6">
-                        <div className="text-[8px] md:text-[9px] font-bold text-blue-500 uppercase tracking-[0.2em] mb-1 md:mb-2">Current Question</div>
+                        <div className="text-[8px] md:text-[9px] font-bold text-blue-600 uppercase tracking-[0.2em] mb-1 md:mb-2">Current Question</div>
                         <h2 className="text-base md:text-lg font-bold text-gray-700 leading-snug">
                             {currentQuestion.questionText}
                         </h2>
@@ -362,7 +362,7 @@ const TakeAssessment = () => {
                             >
                                 <span className="font-semibold text-[11px] md:text-xs leading-tight">{option}</span>
                                 <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ml-3 transition-all ${answers[currentQuestionIndex] === option
-                                    ? "bg-blue-600 border-blue-600 text-white"
+                                    ? "bg-blue-600 border-blue-600 text-gray-900"
                                     : "border-gray-200 group-hover:border-blue-300"
                                     }`}>
                                     {answers[currentQuestionIndex] === option && <FiCheckCircle className="text-[8px]" />}
@@ -388,7 +388,7 @@ const TakeAssessment = () => {
                                 <button
                                     onClick={handleSubmit}
                                     disabled={!answers[currentQuestionIndex]}
-                                    className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-3 md:py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg font-bold text-[11px] md:text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all transform active:scale-95 disabled:bg-gray-200 disabled:shadow-none"
+                                    className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-3 md:py-3.5 bg-gradient-to-r from-blue-600 to-blue-800 text-gray-900 rounded-lg font-bold text-[11px] md:text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all transform active:scale-95 disabled:bg-gray-200 disabled:shadow-none"
                                 >
                                     Finish Assessment <FaCheckCircle />
                                 </button>
@@ -396,7 +396,7 @@ const TakeAssessment = () => {
                                 <button
                                     disabled={!answers[currentQuestionIndex]}
                                     onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
-                                    className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-3 md:py-3.5 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-lg font-bold text-[11px] md:text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all transform active:scale-95 disabled:bg-gray-200 disabled:shadow-none"
+                                    className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-3 md:py-3.5 bg-gradient-to-r from-blue-600 to-indigo-700 text-gray-900 rounded-lg font-bold text-[11px] md:text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all transform active:scale-95 disabled:bg-gray-200 disabled:shadow-none"
                                 >
                                     Next Question <FaArrowRight />
                                 </button>

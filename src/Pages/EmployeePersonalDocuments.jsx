@@ -110,7 +110,7 @@ const EmployeePersonalDocuments = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen gap-3">
                 <div className="text-red-500 text-lg font-semibold">⚠️ {errorMsg}</div>
-                <button onClick={fetchDashboardData} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">Retry</button>
+                <button onClick={fetchDashboardData} className="px-4 py-2 text-sm bg-blue-600 text-gray-900 rounded-md hover:bg-blue-700">Retry</button>
             </div>
         );
     }
@@ -180,7 +180,7 @@ const EmployeePersonalDocuments = () => {
                 <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg border border-gray-200">
                     <div className="overflow-x-auto">
                         <table className="min-w-full">
-                            <thead className="text-sm text-center text-white bg-blue-600">
+                            <thead className="text-sm text-center text-gray-900 bg-blue-600">
                                 <tr className="uppercase tracking-wider text-[11px] font-bold">
                                     <th className="py-2.5 px-6">DOCUMENT IDENTITY</th>
                                     <th className="py-2.5 px-6">CLASSIFICATION</th>
@@ -192,10 +192,10 @@ const EmployeePersonalDocuments = () => {
                                 {filteredDocs.length > 0 ? filteredDocs.map((doc) => {
                                     const filed = !!docs[doc.id]?.filePath;
                                     return (
-                                        <tr key={doc.id} className="transition-colors hover:bg-gray-50">
+                                        <tr key={doc.id} className="transition-colors hover:bg-white">
                                             <td className="px-6 py-2">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`p-1.5 rounded ${filed ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"} border border-gray-200`}>
+                                                    <div className={`p-1.5 rounded ${filed ? "bg-green-50 text-blue-700" : "bg-orange-50 text-orange-600"} border border-gray-200`}>
                                                         <doc.icon size={14} />
                                                     </div>
                                                     <div>
@@ -209,7 +209,7 @@ const EmployeePersonalDocuments = () => {
                                             </td>
                                             <td className="px-6 py-2 text-center">
                                                 <div className="flex flex-col items-center">
-                                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border uppercase tracking-widest shadow-sm transition-all ${filed ? "bg-emerald-100 text-emerald-800 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
+                                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border uppercase tracking-widest shadow-sm transition-all ${filed ? "bg-blue-100 text-emerald-800 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
                                                         }`}>
                                                         {filed ? "Verified" : "Pending"}
                                                     </span>
@@ -220,12 +220,12 @@ const EmployeePersonalDocuments = () => {
                                                     {filed ? (
                                                         <button
                                                             onClick={() => window.open(formatDocumentUrl(docs[doc.id].filePath), "_blank")}
-                                                            className="px-3 py-1 bg-gray-900 text-white rounded text-[9px] font-bold uppercase tracking-wider hover:bg-blue-600 transition-all shadow-sm"
+                                                            className="px-3 py-1 bg-gray-100 text-gray-900 rounded text-[9px] font-bold uppercase tracking-wider hover:bg-blue-600 transition-all shadow-sm"
                                                         >
                                                             VIEW
                                                         </button>
                                                     ) : (
-                                                        <span className="text-[9px] font-bold text-gray-700 uppercase tracking-wider bg-gray-50 px-2 py-1 rounded border border-gray-200">N/A</span>
+                                                        <span className="text-[9px] font-bold text-gray-700 uppercase tracking-wider bg-white px-2 py-1 rounded border border-gray-200">N/A</span>
                                                     )}
                                                 </div>
                                             </td>
@@ -235,7 +235,7 @@ const EmployeePersonalDocuments = () => {
                                     <tr>
                                         <td colSpan="4" className="py-10 text-center">
                                             <div className="flex flex-col items-center gap-2">
-                                                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-900 border-2 border-dashed border-gray-200">
+                                                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-gray-900 border-2 border-dashed border-gray-200">
                                                     <FaSearch size={18} />
                                                 </div>
                                                 <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">No matching records</h3>
@@ -258,13 +258,13 @@ const EmployeePersonalDocuments = () => {
                                 <span className="p-2 bg-blue-50 text-blue-600 rounded-lg"><FaUniversity size={18} /></span>
                                 Banking Vault
                             </h3>
-                            <button className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 uppercase">Verified</button>
+                            <button className="text-[10px] font-bold text-blue-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 uppercase">Verified</button>
                         </div>
 
                         <div className="p-4 sm:p-6 space-y-4">
                             <div>
                                 <label className="block mb-1 text-xs font-medium text-gray-700">Institution Name</label>
-                                <div className="w-full p-2.5 text-sm font-semibold text-gray-700 border border-gray-200 rounded-lg bg-gray-50/50">
+                                <div className="w-full p-2.5 text-sm font-semibold text-gray-700 border border-gray-200 rounded-lg bg-white/50">
                                     {docs.bankDetails?.bankName || "Pending Verification"}
                                 </div>
                             </div>
@@ -272,13 +272,13 @@ const EmployeePersonalDocuments = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block mb-1 text-xs font-medium text-gray-700">Account Number</label>
-                                    <div className="w-full p-2.5 text-sm font-mono font-bold text-gray-700 border border-gray-200 rounded-lg bg-gray-50/50 tracking-wider">
+                                    <div className="w-full p-2.5 text-sm font-mono font-bold text-gray-700 border border-gray-200 rounded-lg bg-white/50 tracking-wider">
                                         {docs.bankDetails?.accountNumber || "•••• •••• ••••"}
                                     </div>
                                 </div>
                                 <div>
                                     <label className="block mb-1 text-xs font-medium text-gray-700">IFSC Code</label>
-                                    <div className="w-full p-2.5 text-sm font-mono font-bold text-gray-700 border border-gray-200 rounded-lg bg-gray-50/50">
+                                    <div className="w-full p-2.5 text-sm font-mono font-bold text-gray-700 border border-gray-200 rounded-lg bg-white/50">
                                         {docs.bankDetails?.ifscCode || "N/A"}
                                     </div>
                                 </div>
@@ -305,7 +305,7 @@ const EmployeePersonalDocuments = () => {
                         <div className="p-4 sm:p-6 space-y-4">
                             <div>
                                 <label className="block mb-1 text-xs font-medium text-gray-700">Contact Identity (Name)</label>
-                                <div className="w-full p-2.5 text-sm font-bold text-gray-700 border border-gray-200 rounded-lg bg-gray-50/50 uppercase">
+                                <div className="w-full p-2.5 text-sm font-bold text-gray-700 border border-gray-200 rounded-lg bg-white/50 uppercase">
                                     {docs.emergencyContact1?.name || "Not Established"}
                                 </div>
                             </div>
@@ -326,7 +326,7 @@ const EmployeePersonalDocuments = () => {
                             </div>
 
                             {/* <div className="pt-2 text-center">
-                                <p className="text-[10px] text-gray-500 font-semibold italic p-3 bg-gray-50 rounded-md border border-gray-200">
+                                <p className="text-[10px] text-gray-500 font-semibold italic p-3 bg-white rounded-md border border-gray-200">
                                     * Protocol active for immediate medical and site contingency reporting.
                                 </p>
                             </div> */}

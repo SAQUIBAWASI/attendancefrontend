@@ -66,7 +66,7 @@
 //           ) : (
 //             <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //               <table className="min-w-full">
-//                 <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
+//                 <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-purple-500 to-blue-600">
 //                   <tr>
 //                     <th className="px-4 py-2 border">Name</th>
 //                     <th className="px-4 py-2 border">Date</th>
@@ -78,7 +78,7 @@
 //                 </thead>
 //                 <tbody className="divide-y divide-gray-200">
 //                   {permissions.map((p) => (
-//                     <tr key={p._id} className="transition-colors hover:bg-gray-50">
+//                     <tr key={p._id} className="transition-colors hover:bg-white">
 //                       <td className="p-4 px-4 py-2 text-sm font-medium text-gray-700 border">{p.employeeName}</td>
 //                       <td className="px-4 py-2 text-gray-500 border">
 //                         {new Date(p.createdAt).toLocaleDateString()}
@@ -92,7 +92,7 @@
 //                       <td className="px-4 py-2 border">
 //                         <span
 //                           className={`px-2 py-2 text-center rounded-full text-xs font-bold uppercase tracking-wider ${p.status === "APPROVED"
-//                             ? "bg-green-100 text-green-700 border border-green-200"
+//                             ? "bg-blue-100 text-green-700 border border-green-200"
 //                             : p.status === "COMPLETED"
 //                               ? "bg-blue-100 text-blue-700 border border-blue-200"
 //                               : p.status === "PENDING"
@@ -103,7 +103,7 @@
 //                           {p.status === "COMPLETED" ? "IN DUTY" : p.status}
 //                         </span>
 //                         {p.status === "COMPLETED" && p.returnLocation && (
-//                           <div className="bg-gray-50 text-[10px] text-gray-500 font-mono mt-1">
+//                           <div className="bg-white text-[10px] text-gray-500 font-mono mt-1">
 //                             <p className="text-[#1E40AF] font-bold">
 //                               Reported: {new Date(p.returnedAt).toLocaleTimeString()}
 //                             </p>
@@ -115,14 +115,14 @@
 //                           <div className="flex justify-center gap-2">
 //                             <button
 //                               onClick={() => handleApprove(p._id)}
-//                               className="px-4 py-2 font-bold text-white transition-all bg-green-600 rounded shadow-sm hover:bg-green-700"
+//                               className="px-4 py-2 font-bold text-gray-900 transition-all bg-blue-600 rounded shadow-sm hover:bg-blue-800"
 //                             >
 //                               Approve
 //                             </button>
 //                             {/* Rejection logic can be added later if needed */}
 //                           </div>
 //                         ) : p.status === "APPROVED" ? (
-//                           <span className="italic font-bold text-green-600">Active</span>
+//                           <span className="italic font-bold text-blue-700">Active</span>
 //                         ) : (
 //                           <span className="text-gray-500">Processed</span>
 //                         )}
@@ -243,7 +243,7 @@
 //             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //                       <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //                         <table className="min-w-full">
-//                           <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//                           <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                   <tr>
 //                     <th className="py-2 text-center ">Name</th>
 //                     <th className="py-2 text-center ">Date</th>
@@ -255,7 +255,7 @@
 //                 </thead>
 //                 <tbody className="divide-y divide-gray-200">
 //                   {filteredPermissions.map((p) => (
-//                     <tr key={p._id} className="transition-colors hover:bg-gray-50">
+//                     <tr key={p._id} className="transition-colors hover:bg-white">
 //                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">{p.employeeName}</td>
 //                       <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                         {new Date(p.createdAt).toLocaleDateString()}
@@ -270,7 +270,7 @@
 //                         <span
 //                           className={`px-2 py-2 text-center text-xs font-semibold rounded-full uppercase tracking-wider ${
 //                             p.status === "APPROVED"
-//                               ? "bg-green-100 text-green-700 border border-green-200"
+//                               ? "bg-blue-100 text-green-700 border border-green-200"
 //                               : p.status === "COMPLETED"
 //                               ? "bg-blue-100 text-blue-700 border border-blue-200"
 //                               : p.status === "PENDING"
@@ -292,9 +292,9 @@
 //                             </button>
 //                           </div>
 //                         ) : p.status === "APPROVED" ? (
-//                           <span className="px-2 py-2 text-xs font-semibold font-bold text-center transition-all rounded-full shadow-sm hover:bg-green-500">Active</span>
+//                           <span className="px-2 py-2 text-xs font-semibold font-bold text-center transition-all rounded-full shadow-sm hover:bg-blue-600">Active</span>
 //                         ) : (
-//                           <span className="px-2 py-2 text-xs font-semibold font-bold text-center transition-all rounded-full shadow-sm hover:bg-blue-500">Processed</span>
+//                           <span className="px-2 py-2 text-xs font-semibold font-bold text-center transition-all rounded-full shadow-sm hover:bg-blue-600">Processed</span>
 //                         )}
 //                       </td>
 //                     </tr>
@@ -461,7 +461,7 @@
 //               <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //                 <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //                   <table className="min-w-full">
-//                     <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//                     <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                       <tr>
 //                         <th className="px-2 py-2 text-center">Employee ID</th>
 //                         <th className="px-2 py-2 text-center">Name</th>
@@ -474,7 +474,7 @@
 //                     </thead>
 //                     <tbody className="divide-y divide-gray-200">
 //                       {currentItems.map((p) => (
-//                         <tr key={p._id} className="transition-colors hover:bg-gray-50">
+//                         <tr key={p._id} className="transition-colors hover:bg-white">
 //                           <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                             {p.employeeId || "N/A"}
 //                           </td>
@@ -500,7 +500,7 @@
 //                             <span
 //                               className={`px-2 py-2 text-center text-xs font-semibold rounded-full uppercase tracking-wider ${
 //                                 p.status === "APPROVED"
-//                                   ? "bg-green-100 text-green-700 border border-green-200"
+//                                   ? "bg-blue-100 text-green-700 border border-green-200"
 //                                   : p.status === "COMPLETED"
 //                                   ? "bg-blue-100 text-blue-700 border border-blue-200"
 //                                   : p.status === "PENDING"
@@ -515,12 +515,12 @@
 //                             {p.status === "PENDING" ? (
 //                               <button
 //                                 onClick={() => handleApprove(p._id)}
-//                                 className="px-2 py-2 text-xs font-semibold text-center text-white transition-all bg-green-600 rounded-md shadow-sm hover:bg-green-700"
+//                                 className="px-2 py-2 text-xs font-semibold text-center text-gray-900 transition-all bg-blue-600 rounded-md shadow-sm hover:bg-blue-800"
 //                               >
 //                                 Approve
 //                               </button>
 //                             ) : p.status === "APPROVED" ? (
-//                               <span className="px-2 py-2 text-xs font-semibold text-center text-green-700 bg-green-100 rounded-md">
+//                               <span className="px-2 py-2 text-xs font-semibold text-center text-green-700 bg-blue-100 rounded-md">
 //                                 Active
 //                               </span>
 //                             ) : (
@@ -579,9 +579,9 @@
 //                       disabled={page === "..."}
 //                       className={`px-4 py-1 text-sm border rounded-lg ${
 //                         page === "..."
-//                           ? "text-gray-500 bg-gray-50 cursor-default"
+//                           ? "text-gray-500 bg-white cursor-default"
 //                           : currentPage === page
-//                           ? "text-white bg-blue-600 border-blue-600"
+//                           ? "text-gray-900 bg-blue-600 border-blue-600"
 //                           : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                     >
@@ -878,7 +878,7 @@
 //             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //               <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //                 <table className="min-w-full">
-//                   <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//                   <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                     <tr>
 //                       <th className="px-3 py-2 text-center">Employee ID</th>
 //                       <th className="px-3 py-2 text-center">Name</th>
@@ -893,7 +893,7 @@
 //                   </thead>
 //                   <tbody className="bg-white divide-y divide-gray-200">
 //                     {currentItems.map((p) => (
-//                       <tr key={p._id} className="transition-colors hover:bg-gray-50">
+//                       <tr key={p._id} className="transition-colors hover:bg-white">
 //                         <td className="px-3 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                           {p.employeeId || "N/A"}
 //                         </td>
@@ -925,7 +925,7 @@
 //                           <span
 //                             className={`px-3 py-1 text-xs font-semibold rounded-full uppercase tracking-wider ${
 //                               p.status === "APPROVED"
-//                                 ? "bg-green-100 text-green-700"
+//                                 ? "bg-blue-100 text-green-700"
 //                                 : p.status === "COMPLETED"
 //                                 ? "bg-blue-100 text-blue-700"
 //                                 : p.status === "PENDING"
@@ -940,12 +940,12 @@
 //                           {p.status === "PENDING" ? (
 //                             <button
 //                               onClick={() => handleApprove(p._id)}
-//                               className="px-3 py-1 text-xs font-semibold text-white transition-all bg-green-600 rounded-md shadow-sm hover:bg-green-700"
+//                               className="px-3 py-1 text-xs font-semibold text-gray-900 transition-all bg-blue-600 rounded-md shadow-sm hover:bg-blue-800"
 //                             >
 //                               Approve
 //                             </button>
 //                           ) : p.status === "APPROVED" ? (
-//                             <span className="px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-md">
+//                             <span className="px-3 py-1 text-xs font-semibold text-green-700 bg-blue-100 rounded-md">
 //                               Active
 //                             </span>
 //                           ) : (
@@ -962,7 +962,7 @@
 
 //               {/* Pagination */}
 //               {filteredPermissions.length > 0 && (
-//                 <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
+//                 <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-white sm:flex-row">
 //                   {/* Left Side - Showing Info + Select */}
 //                   <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
 //                     <span>Showing</span>
@@ -1003,7 +1003,7 @@
 //                       className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
 //                         pagination.currentPage === 1
 //                           ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-//                           : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+//                           : "bg-white text-gray-700 border-gray-300 hover:bg-white"
 //                       }`}
 //                     >
 //                       Previous
@@ -1019,8 +1019,8 @@
 //                             page === "..."
 //                               ? "text-gray-500 cursor-default"
 //                               : pagination.currentPage === page
-//                               ? "bg-blue-600 text-white"
-//                               : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+//                               ? "bg-blue-600 text-gray-900"
+//                               : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
 //                           }`}
 //                         >
 //                           {page}
@@ -1034,7 +1034,7 @@
 //                       className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
 //                         pagination.currentPage === pagination.totalPages
 //                           ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-//                           : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+//                           : "bg-white text-gray-700 border-gray-300 hover:bg-white"
 //                       }`}
 //                     >
 //                       Next
@@ -1384,7 +1384,7 @@
 //                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDepartment 
-//                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
 //                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
@@ -1427,7 +1427,7 @@
 //                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDesignation 
-//                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
 //                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
@@ -1494,7 +1494,7 @@
 
 //             {/* Month Selector */}
 //             <div className="relative w-[130px]">
-//               <FaCalendarAlt className="absolute left-2 top-1/2 transform -translate-y-1/2 text-white text-xs" />
+//               <FaCalendarAlt className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-900 text-xs" />
 //               <input
 //                 type="month"
 //                 value={selectedMonth}
@@ -1529,7 +1529,7 @@
 //             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //               <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //                 <table className="min-w-full">
-//                   <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//                   <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                     <tr>
 //                       <th className="px-3 py-2 text-center">Employee ID</th>
 //                       <th className="px-3 py-2 text-center">Name</th>
@@ -1544,7 +1544,7 @@
 //                   </thead>
 //                   <tbody className="bg-white divide-y divide-gray-200">
 //                     {currentItems.map((p) => (
-//                       <tr key={p._id} className="transition-colors hover:bg-gray-50">
+//                       <tr key={p._id} className="transition-colors hover:bg-white">
 //                         <td className="px-3 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                           {p.employeeId || "N/A"}
 //                         </td>
@@ -1576,7 +1576,7 @@
 //                           <span
 //                             className={`px-3 py-1 text-xs font-semibold rounded-full uppercase tracking-wider ${
 //                               p.status === "APPROVED"
-//                                 ? "bg-green-100 text-green-700"
+//                                 ? "bg-blue-100 text-green-700"
 //                                 : p.status === "COMPLETED"
 //                                 ? "bg-blue-100 text-blue-700"
 //                                 : p.status === "PENDING"
@@ -1591,12 +1591,12 @@
 //                           {p.status === "PENDING" ? (
 //                             <button
 //                               onClick={() => handleApprove(p._id)}
-//                               className="px-3 py-1 text-xs font-semibold text-white transition-all bg-green-600 rounded-md shadow-sm hover:bg-green-700"
+//                               className="px-3 py-1 text-xs font-semibold text-gray-900 transition-all bg-blue-600 rounded-md shadow-sm hover:bg-blue-800"
 //                             >
 //                               Approve
 //                             </button>
 //                           ) : p.status === "APPROVED" ? (
-//                             <span className="px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-md">
+//                             <span className="px-3 py-1 text-xs font-semibold text-green-700 bg-blue-100 rounded-md">
 //                               Active
 //                             </span>
 //                           ) : (
@@ -1613,7 +1613,7 @@
 
 //               {/* Pagination */}
 //               {filteredPermissions.length > 0 && (
-//                 <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
+//                 <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-white sm:flex-row">
 //                   <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
 //                     <span>Showing</span>
 //                     <span className="font-medium">
@@ -1651,7 +1651,7 @@
 //                       className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
 //                         pagination.currentPage === 1
 //                           ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-//                           : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+//                           : "bg-white text-gray-700 border-gray-300 hover:bg-white"
 //                       }`}
 //                     >
 //                       Previous
@@ -1667,8 +1667,8 @@
 //                             page === "..."
 //                               ? "text-gray-500 cursor-default"
 //                               : pagination.currentPage === page
-//                               ? "bg-blue-600 text-white"
-//                               : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+//                               ? "bg-blue-600 text-gray-900"
+//                               : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
 //                           }`}
 //                         >
 //                           {page}
@@ -1682,7 +1682,7 @@
 //                       className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
 //                         pagination.currentPage === pagination.totalPages
 //                           ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-//                           : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+//                           : "bg-white text-gray-700 border-gray-300 hover:bg-white"
 //                       }`}
 //                     >
 //                       Next
@@ -1986,7 +1986,7 @@
 //                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDepartment 
-//                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
 //                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
@@ -2029,7 +2029,7 @@
 //                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDesignation 
-//                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
 //                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
@@ -2096,7 +2096,7 @@
 
 //           {/* Month Selector */}
 //             <div className="relative w-[130px]">
-//               <FaCalendarAlt className="absolute left-2 top-1/2 transform -translate-y-1/2 text-white text-xs" />
+//               <FaCalendarAlt className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-900 text-xs" />
 //               <input
 //                 type="month"
 //                 value={selectedMonth}
@@ -2131,7 +2131,7 @@
 //             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //               <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //                 <table className="min-w-full">
-//                   <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//                   <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                     <tr>
 //                       <th className=" py-2 text-center">Employee ID</th>
 //                       <th className=" py-2 text-center">Name</th>
@@ -2146,7 +2146,7 @@
 //                   </thead>
 //                   <tbody className="bg-white divide-y divide-gray-200">
 //                     {currentItems.map((p) => (
-//                       <tr key={p._id} className="transition-colors hover:bg-gray-50">
+//                       <tr key={p._id} className="transition-colors hover:bg-white">
 //                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
 //                           {p.employeeId || "N/A"}
 //                         </td>
@@ -2178,7 +2178,7 @@
 //                           <span
 //                             className={`px-2 py-1 text-xs font-semibold rounded-full uppercase tracking-wider ${
 //                               p.status === "APPROVED"
-//                                 ? "bg-green-100 text-green-700"
+//                                 ? "bg-blue-100 text-green-700"
 //                                 : p.status === "COMPLETED"
 //                                 ? "bg-blue-100 text-blue-700"
 //                                 : p.status === "PENDING"
@@ -2193,12 +2193,12 @@
 //                           {p.status === "PENDING" ? (
 //                             <button
 //                               onClick={() => handleApprove(p._id)}
-//                               className="px-3 py-1 text-xs font-semibold text-white transition-all bg-green-600 rounded-md shadow-sm hover:bg-green-700"
+//                               className="px-3 py-1 text-xs font-semibold text-gray-900 transition-all bg-blue-600 rounded-md shadow-sm hover:bg-blue-800"
 //                             >
 //                               Approve
 //                             </button>
 //                           ) : p.status === "APPROVED" ? (
-//                             <span className="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-md">
+//                             <span className="px-2 py-1 text-xs font-semibold text-green-700 bg-blue-100 rounded-md">
 //                               Active
 //                             </span>
 //                           ) : (
@@ -2215,7 +2215,7 @@
 
 //               {/* Pagination */}
 //               {filteredPermissions.length > 0 && (
-//                 <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
+//                 <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-white sm:flex-row">
 //                   {/* Left Side - Showing Info + Select */}
 //                   <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
 //                     <span>Showing</span>
@@ -2256,7 +2256,7 @@
 //                       className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
 //                         pagination.currentPage === 1
 //                           ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-//                           : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+//                           : "bg-white text-gray-700 border-gray-300 hover:bg-white"
 //                       }`}
 //                     >
 //                       Previous
@@ -2272,8 +2272,8 @@
 //                             page === "..."
 //                               ? "text-gray-500 cursor-default"
 //                               : pagination.currentPage === page
-//                               ? "bg-blue-600 text-white"
-//                               : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+//                               ? "bg-blue-600 text-gray-900"
+//                               : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
 //                           }`}
 //                         >
 //                           {page}
@@ -2287,7 +2287,7 @@
 //                       className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
 //                         pagination.currentPage === pagination.totalPages
 //                           ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-//                           : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+//                           : "bg-white text-gray-700 border-gray-300 hover:bg-white"
 //                       }`}
 //                     >
 //                       Next
@@ -2662,7 +2662,7 @@ export const Permissions = () => {
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDepartment 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -2705,7 +2705,7 @@ export const Permissions = () => {
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDesignation 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -2782,7 +2782,7 @@ export const Permissions = () => {
 
             {/* Month Selector */}
             <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute left-2 top-1/2 transform -translate-y-1/2 text-white text-xs" />
+              <FaCalendarAlt className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-900 text-xs" />
               <input
                 type="month"
                 value={selectedMonth}
@@ -2796,7 +2796,7 @@ export const Permissions = () => {
             <button
               onClick={handleDateRangeFilter}
               disabled={!fromDate || !toDate}
-              className="h-8 px-3 text-xs font-medium text-white transition bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-8 px-3 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Apply Date Range
             </button>
@@ -2826,7 +2826,7 @@ export const Permissions = () => {
             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
               <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
                 <table className="min-w-full">
-                  <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+                  <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                     <tr>
                       <th className="py-2 text-center">Employee ID</th>
                       <th className="py-2 text-center">Name</th>
@@ -2841,7 +2841,7 @@ export const Permissions = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {currentItems.map((p) => (
-                      <tr key={p._id} className="transition-colors hover:bg-gray-50">
+                      <tr key={p._id} className="transition-colors hover:bg-white">
                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           {p.employeeId || "N/A"}
                         </td>
@@ -2873,7 +2873,7 @@ export const Permissions = () => {
                           <span
                             className={`px-2 py-1 text-xs font-semibold rounded-full uppercase tracking-wider ${
                               p.status === "APPROVED"
-                                ? "bg-green-100 text-green-700"
+                                ? "bg-blue-100 text-green-700"
                                 : p.status === "COMPLETED"
                                 ? "bg-blue-100 text-blue-700"
                                 : p.status === "PENDING"
@@ -2888,12 +2888,12 @@ export const Permissions = () => {
                           {p.status === "PENDING" ? (
                             <button
                               onClick={() => handleApprove(p._id)}
-                              className="px-3 py-1 text-xs font-semibold text-white transition-all bg-green-600 rounded-md shadow-sm hover:bg-green-700"
+                              className="px-3 py-1 text-xs font-semibold text-gray-900 transition-all bg-blue-600 rounded-md shadow-sm hover:bg-blue-800"
                             >
                               Approve
                             </button>
                           ) : p.status === "APPROVED" ? (
-                            <span className="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-md">
+                            <span className="px-2 py-1 text-xs font-semibold text-green-700 bg-blue-100 rounded-md">
                               Active
                             </span>
                           ) : (
@@ -2910,7 +2910,7 @@ export const Permissions = () => {
 
               {/* Pagination */}
               {filteredPermissions.length > 0 && (
-                <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
+                <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-white sm:flex-row">
                   {/* Left Side - Showing Info + Select */}
                   <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
                     <span>Showing</span>
@@ -2951,7 +2951,7 @@ export const Permissions = () => {
                       className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                         pagination.currentPage === 1
                           ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                          : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                       }`}
                     >
                       Previous
@@ -2967,8 +2967,8 @@ export const Permissions = () => {
                             page === "..."
                               ? "text-gray-500 cursor-default"
                               : pagination.currentPage === page
-                              ? "bg-blue-600 text-white"
-                              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                              ? "bg-blue-600 text-gray-900"
+                              : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
                           }`}
                         >
                           {page}
@@ -2982,7 +2982,7 @@ export const Permissions = () => {
                       className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                         pagination.currentPage === pagination.totalPages
                           ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                          : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                       }`}
                     >
                       Next

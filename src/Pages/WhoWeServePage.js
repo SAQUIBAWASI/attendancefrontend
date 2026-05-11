@@ -47,7 +47,7 @@ const WhoWeServePage = () => {
       cta: "Get Family Health Plan"
     },
     {
-      icon: <Building className="w-12 h-12 text-green-600" />,
+      icon: <Building className="w-12 h-12 text-blue-700" />,
       title: "Corporates & HR Teams",
       description: "Employee wellness programs that make a difference",
       services: [
@@ -70,7 +70,7 @@ const WhoWeServePage = () => {
     <div className="min-h-screen">
         <TimelyNavbar/>
      {/* Hero Section */}
-<section className="px-6 py-5 text-white bg-white lg:px-20 lg:py-5 bg-opacity-60">
+<section className="px-6 py-5 text-gray-900 bg-white lg:px-20 lg:py-5 ">
   {/* Text */}
   <div className="max-w-4xl mx-auto text-left">
     <h1 className="mb-6 text-3xl font-bold md:text-5xl font-calibri">
@@ -115,7 +115,7 @@ const WhoWeServePage = () => {
       </section>
 
       {/* Audience Grid */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-white">
         <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="space-y-12">
             {audiences.map((audience, index) => (
@@ -138,7 +138,7 @@ const WhoWeServePage = () => {
 
                       <button
                         onClick={() => handleServiceRequest(audience.title.split(' ')[1])}
-                        className="px-6 py-3 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
+                        className="px-6 py-3 text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
                       >
                         {audience.cta}
                       </button>
@@ -184,18 +184,18 @@ const WhoWeServePage = () => {
       </section>
 
       {/* Partner Invitation */}
-      <section className="py-20 text-center text-white bg-gradient-to-r from-blue-500 to-green-500">
+      <section className="py-20 text-center text-gray-900 bg-gradient-to-r from-blue-500 to-green-500">
         <div className="max-w-4xl px-4 mx-auto text-center sm:px-6 lg:px-8">
-          <h2 className="mb-6 text-white font-calibri">
+          <h2 className="mb-6 text-gray-900 font-calibri">
             Are you a community leader or corporate wellness head?
           </h2>
-          <p className="mb-8 font-sans text-white">
+          <p className="mb-8 font-sans text-gray-900">
             Let's create a customized health engagement plan for your people.
             We'll work with you to design programs that meet your specific needs and goals.
           </p>
           <button
             onClick={handleStrategyCall}
-            className="px-8 py-4 font-sans font-semibold text-blue-500 transition-colors bg-white rounded-lg hover:bg-green-500"
+            className="px-8 py-4 font-sans font-semibold text-blue-600 transition-colors bg-white rounded-lg hover:bg-blue-600"
           >
             Schedule a Strategy Call
           </button>
@@ -203,7 +203,7 @@ const WhoWeServePage = () => {
       </section>
 
       {/* Contact Section */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-white">
         <div className="max-w-4xl px-4 mx-auto text-center sm:px-6 lg:px-8">
           <h2 className="mb-6 font-calibri text-[#007a52]">Ready to Get Started?</h2>
           <p className="mb-8 font-sans">
@@ -213,7 +213,7 @@ const WhoWeServePage = () => {
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <button
               onClick={handleWhatsApp}
-              className="flex items-center justify-center px-6 py-3 space-x-2 text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
+              className="flex items-center justify-center px-6 py-3 space-x-2 text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-800"
             >
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
@@ -224,7 +224,7 @@ const WhoWeServePage = () => {
             </button>
             <button
               onClick={handleStrategyCall}
-              className="flex items-center justify-center px-6 py-3 space-x-2 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
+              className="flex items-center justify-center px-6 py-3 space-x-2 text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
             >
               <Calendar size={20} />
               <span className='font-sans'>Schedule a Consultation</span>

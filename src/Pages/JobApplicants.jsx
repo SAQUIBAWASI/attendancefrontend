@@ -20,7 +20,7 @@
 
 // const DetailItem = ({ icon, label, value }) => (
 //     <div className="flex items-start gap-3">
-//         <div className="mt-1 text-blue-500">{icon}</div>
+//         <div className="mt-1 text-blue-600">{icon}</div>
 //         <div>
 //             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</p>
 //             <p className="text-sm font-bold text-gray-700">{value}</p>
@@ -175,7 +175,7 @@
 //         <div>
 //             <p className="text-xs text-gray-500">{label}</p>
 //             <p className={`text-sm font-semibold ${score >= 80
-//                 ? "text-green-600"
+//                 ? "text-blue-700"
 //                 : score >= 50
 //                     ? "text-yellow-600"
 //                     : "text-red-600"
@@ -188,7 +188,7 @@
 
 
 //     return (
-//         <div className="w-full min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8">
+//         <div className="w-full min-h-screen bg-white/50 p-4 md:p-6 lg:p-8">
 //             {/* Header Section */}
 //             <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-center xl:justify-between">
 //                 <div className="flex-shrink-0">
@@ -200,7 +200,7 @@
 //                     <div className="relative w-full sm:w-auto">
 //                         <input
 //                             type="date"
-//                             className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm sm:w-40"
+//                             className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm sm:w-40"
 //                             value={dateFilter}
 //                             onChange={(e) => setDateFilter(e.target.value)}
 //                         />
@@ -222,7 +222,7 @@
 //                             <FaBriefcase className="text-sm" />
 //                         </div>
 //                         <div
-//                             className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
+//                             className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
 //                             onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
 //                         >
 //                             {roleFilter || "Select Role"}
@@ -241,7 +241,7 @@
 
 //                         {isRoleDropdownOpen && (
 //                             <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-//                                 <div className="p-2 border-b border-gray-200 bg-gray-50">
+//                                 <div className="p-2 border-b border-gray-200 bg-white">
 //                                     <div className="relative">
 //                                         <FaUserTie className="absolute left-2.5 top-2.5 text-gray-500 text-xs" />
 //                                         <input
@@ -292,7 +292,7 @@
 //                             <FaBriefcase className="text-sm" />
 //                         </div>
 //                         <div
-//                             className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
+//                             className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
 //                             onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
 //                         >
 //                             {roleFilter || "Select Dept"}
@@ -311,7 +311,7 @@
 
 //                         {isRoleDropdownOpen && (
 //                             <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-//                                 <div className="p-2 border-b border-gray-200 bg-gray-50">
+//                                 <div className="p-2 border-b border-gray-200 bg-white">
 //                                     <div className="relative">
 //                                         <FaUserTie className="absolute left-2.5 top-2.5 text-gray-500 text-xs" />
 //                                         <input
@@ -357,7 +357,7 @@
 //                     {/* Score Filter */}
 //                     <div className="relative w-full sm:w-auto">
 //                         <select
-//                             className="w-full appearance-none bg-white py-2 pl-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm sm:w-40"
+//                             className="w-full appearance-none bg-white py-2 pl-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm sm:w-40"
 //                             value={scoreFilter}
 //                             onChange={(e) => setScoreFilter(Number(e.target.value))}
 //                         >
@@ -431,7 +431,7 @@
 //                 ) : filteredApplications.length > 0 ? (
 //                    <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //              <table className="min-w-full">
-//               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//               <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                             <tr>
 //                                 <th className="py-2 text-center">Candidate Name</th>
 //                                 <th className="py-2 text-center">Applied Role</th>
@@ -445,7 +445,7 @@
 //                         </thead>
 //                         <tbody>
 //                             {filteredApplications.map((app) => (
-//                                 <tr key={app._id} className="border-b hover:bg-gray-50 transition-colors">
+//                                 <tr key={app._id} className="border-b hover:bg-white transition-colors">
 //                                     <td className="px-2 py-2 font-medium text-center">
 //                                         <div className="text-gray-900 whitespace-nowrap">{app.firstName} {app.lastName}</div>
 //                                         <div className="text-[10px] text-gray-500">{new Date(app.appliedAt).toLocaleDateString()}</div>
@@ -471,7 +471,7 @@
 //                                             type="number"
 //                                             min="0"
 //                                             max="100"
-//                                             className="w-20 p-1.5 border rounded-lg text-xs text-center focus:outline-none focus:ring-2 focus:ring-blue-500  bg-gray-50"
+//                                             className="w-20 p-1.5 border rounded-lg text-xs text-center focus:outline-none focus:ring-2 focus:ring-blue-500  bg-white"
 //                                             value={app.technicalScore || 0}
 //                                             onChange={(e) => handleUpdateScore(app._id, "technicalScore", e.target.value)}
 //                                         />
@@ -487,7 +487,7 @@
 //                                     </td> */}
 //                                     <td className="px-2 py-2 text-center">
 //                                         <div className="flex flex-col items-center gap-1">
-//                                             <span className={`px-2 py-1 rounded-full text-[10px]  ${app.status === 'Selected' ? 'bg-green-100 text-green-700' :
+//                                             <span className={`px-2 py-1 rounded-full text-[10px]  ${app.status === 'Selected' ? 'bg-blue-100 text-green-700' :
 //                                                 app.status === 'Rejected' ? 'bg-red-100 text-red-700' :
 //                                                     app.status === 'Resigned' ? 'bg-orange-100 text-orange-700' :
 //                                                         'bg-yellow-100 text-yellow-700'
@@ -544,7 +544,7 @@
 //                     </div>
 //                 ) : (
 //                     <div className="p-12 text-center">
-//                         <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-700">
+//                         <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-gray-700">
 //                             <FaUserGraduate size={32} />
 //                         </div>
 //                         <h3 className="text-lg font-medium text-gray-700">No applicants yet</h3>
@@ -555,7 +555,7 @@
 
 //             {/* Candidate Details Modal */}
 //             {/* {isModalOpen && selectedApplicant && (
-//                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+//                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-100/60 backdrop-blur-sm">
 //                     <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 relative animate-in fade-in zoom-in duration-300">
 //                         <button
 //                             onClick={() => setIsModalOpen(false)}
@@ -565,7 +565,7 @@
 //                         </button>
 
 //                         <div className="flex items-center gap-5 mb-8 border-b border-gray-200 pb-6">
-//                             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-blue-100">
+//                             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-gray-900 text-2xl font-black shadow-lg shadow-blue-100">
 //                                 {selectedApplicant.firstName.charAt(0)}{selectedApplicant.lastName.charAt(0)}
 //                             </div>
 //                             <div>
@@ -590,7 +590,7 @@
 //                         </div>
 
 //                         {selectedApplicant.skills && (
-//                             <div className="mt-10 p-5 bg-gray-50 rounded-2xl border border-gray-200">
+//                             <div className="mt-10 p-5 bg-white rounded-2xl border border-gray-200">
 //                                 <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Technical Skills</p>
 //                                 <div className="flex flex-wrap gap-2">
 //                                     {selectedApplicant.skills.split(',').map((skill, i) => (
@@ -614,13 +614,13 @@
 //                                         window.open(`${API_BASE_URL.replace('/api', '')}/${relativePath}`, '_blank');
 //                                     }
 //                                 }}
-//                                 className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-100"
+//                                 className="px-6 py-3 bg-blue-600 text-gray-900 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-100"
 //                             >
 //                                 <FaDownload /> Download Resume
 //                             </button>
 //                             <button
 //                                 onClick={() => setIsModalOpen(false)}
-//                                 className="px-6 py-3 bg-gray-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-white transition-all"
+//                                 className="px-6 py-3 bg-gray-100 text-gray-900 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-white transition-all"
 //                             >
 //                                 Close View
 //                             </button>
@@ -633,7 +633,7 @@
 //             )} */}
 
 //             {isModalOpen && selectedApplicant && (
-//                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+//                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/40 backdrop-blur-sm p-4">
 //                     <div className="bg-white w-full max-w-3xl rounded-xl shadow-xl relative overflow-hidden">
 
 //                         {/* Close Button */}
@@ -659,7 +659,7 @@
 //           ${selectedApplicant.status === "Pending"
 //                                     ? "bg-yellow-100 text-yellow-700"
 //                                     : selectedApplicant.status === "Selected"
-//                                         ? "bg-green-100 text-green-700"
+//                                         ? "bg-blue-100 text-green-700"
 //                                         : "bg-red-100 text-red-700"}`}>
 //                                 {selectedApplicant.status}
 //                             </span>
@@ -765,7 +765,7 @@
 
 //                             {/* Comment */}
 //                             {selectedApplicant.comment && (
-//                                 <div className="text-xs bg-gray-50 p-3 rounded-md border text-gray-500">
+//                                 <div className="text-xs bg-white p-3 rounded-md border text-gray-500">
 //                                     {selectedApplicant.comment}
 //                                 </div>
 //                             )}
@@ -777,7 +777,7 @@
 //                                         <h3 className="text-sm font-bold text-red-800 flex items-center gap-2">
 //                                             <FaUserTie className="text-red-500" /> Resignation Request
 //                                         </h3>
-//                                         <span className={`px-3 py-1 text-[10px] font-bold rounded-full uppercase tracking-widest ${selectedApplicant.resignationStatus === 'Approved' ? 'bg-green-100 text-green-700' :
+//                                         <span className={`px-3 py-1 text-[10px] font-bold rounded-full uppercase tracking-widest ${selectedApplicant.resignationStatus === 'Approved' ? 'bg-blue-100 text-green-700' :
 //                                             selectedApplicant.resignationStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
 //                                                 'bg-yellow-100 text-yellow-700'
 //                                             }`}>
@@ -795,13 +795,13 @@
 //                                         <div className="flex gap-3">
 //                                             <button
 //                                                 onClick={() => handleResignationStatusUpdate(selectedApplicant._id, "Approved")}
-//                                                 className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold uppercase rounded-lg transition-all"
+//                                                 className="flex-1 py-2 bg-blue-600 hover:bg-blue-800 text-gray-900 text-[10px] font-bold uppercase rounded-lg transition-all"
 //                                             >
 //                                                 Approve Resignation
 //                                             </button>
 //                                             <button
 //                                                 onClick={() => handleResignationStatusUpdate(selectedApplicant._id, "Rejected")}
-//                                                 className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold uppercase rounded-lg transition-all"
+//                                                 className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-gray-900 text-[10px] font-bold uppercase rounded-lg transition-all"
 //                                             >
 //                                                 Reject Resignation
 //                                             </button>
@@ -819,14 +819,14 @@
 //                                         window.open(formatDocumentUrl(selectedApplicant.resume), "_blank");
 //                                     }
 //                                 }}
-//                                 className="px-4 py-2 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700"
+//                                 className="px-4 py-2 bg-blue-600 text-gray-900 text-xs rounded-md hover:bg-blue-700"
 //                             >
 //                                 View Resume
 //                             </button>
 
 //                             <button
 //                                 onClick={() => setIsModalOpen(false)}
-//                                 className="px-4 py-2 bg-gray-800 text-white text-xs rounded-md hover:bg-white"
+//                                 className="px-4 py-2 bg-gray-200 text-gray-900 text-xs rounded-md hover:bg-white"
 //                             >
 //                                 Close
 //                             </button>
@@ -859,7 +859,7 @@ import { API_BASE_URL } from "../config";
 
 const DetailItem = ({ icon, label, value }) => (
     <div className="flex items-start gap-3">
-        <div className="mt-1 text-blue-500">{icon}</div>
+        <div className="mt-1 text-blue-600">{icon}</div>
         <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</p>
             <p className="text-sm font-bold text-gray-700">{value}</p>
@@ -1070,7 +1070,7 @@ const JobApplicants = () => {
         <div>
             <p className="text-xs text-gray-500">{label}</p>
             <p className={`text-sm font-semibold ${score >= 80
-                ? "text-green-600"
+                ? "text-blue-700"
                 : score >= 50
                     ? "text-yellow-600"
                     : "text-red-600"
@@ -1104,7 +1104,7 @@ const JobApplicants = () => {
                             onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
                             className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                                 roleFilter 
-                                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                             }`}
                         >
@@ -1114,7 +1114,7 @@ const JobApplicants = () => {
                         {/* Role Filter Dropdown */}
                         {isRoleDropdownOpen && (
                             <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                <div className="p-2 border-b border-gray-200 bg-gray-50">
+                                <div className="p-2 border-b border-gray-200 bg-white">
                                     <div className="relative">
                                         <FaUserTie className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs" />
                                         <input
@@ -1221,7 +1221,7 @@ const JobApplicants = () => {
                 ) : filteredApplications.length > 0 ? (
                     <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
                         <table className="min-w-full">
-                            <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+                            <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                                 <tr>
                                     <th className="py-2 text-center">Candidate Name</th>
                                     <th className="py-2 text-center">Applied Role</th>
@@ -1233,7 +1233,7 @@ const JobApplicants = () => {
                             </thead>
                             <tbody>
                                 {currentItems.map((app) => (
-                                    <tr key={app._id} className="border-b hover:bg-gray-50 transition-colors">
+                                    <tr key={app._id} className="border-b hover:bg-white transition-colors">
                                         <td className="px-2 py-2 font-medium text-center">
                                             <div className="text-gray-900 whitespace-nowrap">{app.firstName} {app.lastName}</div>
                                             <div className="text-[10px] text-gray-500">{new Date(app.appliedAt).toLocaleDateString()}</div>
@@ -1253,7 +1253,7 @@ const JobApplicants = () => {
                                                 type="number"
                                                 min="0"
                                                 max="100"
-                                                className="w-20 p-1.5 border rounded-lg text-xs text-center focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 font-bold"
+                                                className="w-20 p-1.5 border rounded-lg text-xs text-center focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-bold"
                                                 value={app.assessmentResults && app.assessmentResults.length > 0 
                                                     ? Math.round(app.assessmentResults.reduce((acc, curr) => acc + curr.score, 0) / app.assessmentResults.length)
                                                     : (app.technicalScore || 0)}
@@ -1262,7 +1262,7 @@ const JobApplicants = () => {
                                         </td>
                                         <td className="px-2 py-2 text-center">
                                             <div className="flex flex-col items-center gap-1">
-                                                <span className={`px-2 py-1 rounded-full text-[10px] ${app.status === 'Selected' ? 'bg-green-100 text-green-700' :
+                                                <span className={`px-2 py-1 rounded-full text-[10px] ${app.status === 'Selected' ? 'bg-blue-100 text-green-700' :
                                                     app.status === 'Rejected' ? 'bg-red-100 text-red-700' :
                                                         'bg-yellow-100 text-yellow-700'
                                                     }`}>
@@ -1311,7 +1311,7 @@ const JobApplicants = () => {
                         
                         {/* Pagination */}
                         {filteredApplications.length > 0 && (
-                            <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
+                            <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-white sm:flex-row">
                                 <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
                                     <span>Showing</span>
                                     <span className="font-medium">
@@ -1349,7 +1349,7 @@ const JobApplicants = () => {
                                         className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                                             pagination.currentPage === 1
                                                 ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                                : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                                         }`}
                                     >
                                         Previous
@@ -1365,8 +1365,8 @@ const JobApplicants = () => {
                                                     page === "..."
                                                         ? "text-gray-500 cursor-default"
                                                         : pagination.currentPage === page
-                                                        ? "bg-blue-600 text-white"
-                                                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                                                        ? "bg-blue-600 text-gray-900"
+                                                        : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
                                                 }`}
                                             >
                                                 {page}
@@ -1380,7 +1380,7 @@ const JobApplicants = () => {
                                         className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                                             pagination.currentPage === pagination.totalPages
                                                 ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                                : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                                         }`}
                                     >
                                         Next
@@ -1391,7 +1391,7 @@ const JobApplicants = () => {
                     </div>
                 ) : (
                     <div className="p-12 text-center">
-                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-700">
+                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-gray-700">
                             <FaUserGraduate size={32} />
                         </div>
                         <h3 className="text-lg font-medium text-gray-700">No applicants yet</h3>
@@ -1402,7 +1402,7 @@ const JobApplicants = () => {
 
             {/* Candidate Details Modal */}
             {isModalOpen && selectedApplicant && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/40 backdrop-blur-sm p-4">
                     <div className="bg-white w-full max-w-3xl rounded-xl shadow-xl relative overflow-hidden">
 
                         {/* Close Button */}
@@ -1428,7 +1428,7 @@ const JobApplicants = () => {
                                 ${selectedApplicant.status === "Pending"
                                     ? "bg-yellow-100 text-yellow-700"
                                     : selectedApplicant.status === "Selected"
-                                        ? "bg-green-100 text-green-700"
+                                        ? "bg-blue-100 text-green-700"
                                         : "bg-red-100 text-red-700"}`}>
                                 {selectedApplicant.status}
                             </span>
@@ -1525,7 +1525,7 @@ const JobApplicants = () => {
                                 <div className="space-y-3">
                                     {selectedApplicant.assessmentResults && selectedApplicant.assessmentResults.length > 0 ? (
                                         selectedApplicant.assessmentResults.map((result, idx) => (
-                                            <div key={result._id || idx} className="bg-gray-50 border border-gray-200 rounded-xl p-3 hover:shadow-md transition-all">
+                                            <div key={result._id || idx} className="bg-white border border-gray-200 rounded-xl p-3 hover:shadow-md transition-all">
                                                 <div className="flex items-center justify-between mb-2">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs shadow-sm">
@@ -1590,7 +1590,7 @@ const JobApplicants = () => {
 
                             {/* Comment */}
                             {selectedApplicant.comment && (
-                                <div className="text-xs bg-gray-50 p-3 rounded-md border text-gray-500">
+                                <div className="text-xs bg-white p-3 rounded-md border text-gray-500">
                                     {selectedApplicant.comment}
                                 </div>
                             )}
@@ -1606,14 +1606,14 @@ const JobApplicants = () => {
                                         window.open(formatDocumentUrl(selectedApplicant.resume), "_blank");
                                     }
                                 }}
-                                className="px-4 py-2 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700"
+                                className="px-4 py-2 bg-blue-600 text-gray-900 text-xs rounded-md hover:bg-blue-700"
                             >
                                 View Resume
                             </button>
 
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="px-4 py-2 bg-gray-800 text-white text-xs rounded-md hover:bg-white"
+                                className="px-4 py-2 bg-gray-200 text-gray-900 text-xs rounded-md hover:bg-white"
                             >
                                 Close
                             </button>

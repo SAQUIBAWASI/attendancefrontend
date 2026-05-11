@@ -89,7 +89,7 @@ const WeeklyHoliday = () => {
           <p>Showing 1 to {holidays.length} of {holidays.length} entries</p>
           <div className="flex space-x-1">
             <button className="px-3 py-1 bg-gray-200 border rounded">Previous</button>
-            <button className="px-3 py-1 text-white bg-green-600 border rounded">1</button>
+            <button className="px-3 py-1 text-gray-900 bg-blue-600 border rounded">1</button>
             <button className="px-3 py-1 bg-gray-200 border rounded">Next</button>
           </div>
         </div>
@@ -117,7 +117,7 @@ const WeeklyHoliday = () => {
             <option value="Sunday">Sunday</option>
           </select>
           <button
-            className="px-4 py-2 mt-3 text-green-700 bg-green-100 border border-green-600 rounded"
+            className="px-4 py-2 mt-3 text-green-700 bg-blue-100 border border-blue-700 rounded"
             onClick={handleUpdate}
           >
             Update
@@ -127,7 +127,7 @@ const WeeklyHoliday = () => {
 
       {/* Update Success Message */}
       {updateMessage && (
-        <div className="px-4 py-2 mt-4 text-white bg-green-500 rounded">
+        <div className="px-4 py-2 mt-4 text-gray-900 bg-blue-600 rounded">
           {updateMessage}
         </div>
       )}

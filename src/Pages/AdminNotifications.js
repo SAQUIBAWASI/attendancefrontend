@@ -4,11 +4,11 @@ import { MdDelete, MdNotificationsActive } from "react-icons/md";
 import { API_BASE_URL } from "../config";
 
 const iconMap = {
-  newUser: <FaUserPlus className="text-green-600" />,
+  newUser: <FaUserPlus className="text-blue-700" />,
   security: <FaExclamationTriangle className="text-red-600" />,
   roleChange: <FaUserShield className="text-blue-600" />,
   vendorOrder: <FaShoppingCart className="text-blue-600" />,
-  vendorCoupon: <FaTag className="text-green-600" />,
+  vendorCoupon: <FaTag className="text-blue-700" />,
   leave: <MdNotificationsActive className="text-orange-500" />,
   permission: <MdNotificationsActive className="text-purple-500" />,
 };

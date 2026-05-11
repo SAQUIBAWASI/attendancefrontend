@@ -89,7 +89,7 @@ export default function ProjectTasksTable() {
           />
         </div>
         <button
-          className="p-2 bg-purple-600 text-white rounded"
+          className="p-2 bg-purple-600 text-gray-900 rounded"
           onClick={() => setShowNewTaskModal(true)}
         >
           + Create Task
@@ -115,7 +115,7 @@ export default function ProjectTasksTable() {
           </thead>
           <tbody>
             {displayedTasks.map((task) => (
-              <tr key={task.id} className="cursor-pointer hover:bg-gray-50 text-center">
+              <tr key={task.id} className="cursor-pointer hover:bg-white text-center">
                 <td className="p-3 border">{task.id}</td>
                 <td className="p-3 border">{task.summary}</td>
                 <td className="p-3 border">{task.sprintName}</td>
@@ -128,7 +128,7 @@ export default function ProjectTasksTable() {
                 <td className="p-3 border">{task.createdBy}</td>
                 <td className="p-3 border">
                   <button
-                    className="text-blue-500 hover:underline mr-2"
+                    className="text-blue-600 hover:underline mr-2"
                   >
                     <FaEdit /> {/* Edit icon */}
                   </button>
@@ -146,7 +146,7 @@ export default function ProjectTasksTable() {
 
       {/* New Task Modal */}
       {showNewTaskModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-white ">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-sm font-bold mb-4 text-purple-600">Create Task</h2>
             <input
@@ -203,13 +203,13 @@ export default function ProjectTasksTable() {
             </select>
             <div className="mt-4">
               <button
-                className="mr-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+                className="mr-2 px-4 py-2 bg-purple-600 text-gray-900 rounded hover:bg-purple-700"
                 onClick={handleAddTask}
               >
                 Save
               </button>
               <button
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
+                className="px-4 py-2 bg-white0 text-gray-900 rounded hover:bg-gray-700"
                 onClick={() => setShowNewTaskModal(false)}
               >
                 Close

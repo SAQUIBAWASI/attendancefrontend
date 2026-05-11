@@ -66,11 +66,11 @@ const CancelledBookingList = () => {
   const getStatusClass = (status) => {
     switch (status) {
       case "Confirmed":
-        return "bg-green-500 text-white";
+        return "bg-blue-600 text-gray-900";
       case "Pending":
         return "bg-transparent border-2 border-yellow-500 text-yellow-500";
       case "Delivered":
-        return "bg-transparent border-2 border-blue-500 text-blue-500";
+        return "bg-transparent border-2 border-blue-500 text-blue-600";
       case "Cancelled":
         return "bg-transparent border-2 border-red-500 text-red-500";
       default:
@@ -123,7 +123,7 @@ const CancelledBookingList = () => {
       <h3 className="text-lg font-bold mb-4">Cancelled Order List</h3>
       <button
         onClick={generatePDF}
-        className="bg-blue-500 text-white p-2 rounded mb-4"
+        className="bg-blue-600 text-gray-900 p-2 rounded mb-4"
       >
         Download PDF
       </button>

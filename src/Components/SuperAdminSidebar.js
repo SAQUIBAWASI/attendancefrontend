@@ -71,17 +71,17 @@ const SuperAdminSidebar = ({ isCollapsed, isMobile, onClose }) => {
     <>
       {isMobile && !isCollapsed && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-50"
+          className="fixed inset-0 z-40 bg-[#1E3A8A] "
           onClick={onClose}
         ></div>
       )}
 
       <div
-        className={`fixed md:static top-0 left-0 h-screen bg-blue-800 text-white flex flex-col transition-all duration-300 z-50
+        className={`fixed md:static top-0 left-0 h-screen bg-[#1E3A8A] text-white flex flex-col transition-all duration-300 z-50
           ${isMobile ? (isCollapsed ? "-translate-x-full" : "translate-x-0 w-64") : isCollapsed ? "w-16" : "w-64"}
         `}
       >
-        <div className="sticky top-0 flex items-center justify-center p-4 text-xl font-bold border-b border-blue-700">
+        <div className="sticky top-0 flex items-center justify-center p-4 text-xl font-bold border-b border-blue-900/50/40">
           <span className="truncate">
             {isCollapsed && !isMobile ? "SA" : "Super Admin"}
           </span>
@@ -98,7 +98,7 @@ const SuperAdminSidebar = ({ isCollapsed, isMobile, onClose }) => {
                 <>
                   <div
                     onClick={() => toggleDropdown(item.name)}
-                    className="flex items-center py-3 px-3 rounded-lg text-sm font-medium hover:bg-gray-700 hover:text-[#00B074] transition cursor-pointer"
+                    className="flex items-center py-3 px-3 rounded-lg text-sm font-medium hover:bg-blue-600 hover:text-[#00B074] transition cursor-pointer"
                   >
                     <span className="text-xl">{item.icon}</span>
                     <span
@@ -151,7 +151,7 @@ const SuperAdminSidebar = ({ isCollapsed, isMobile, onClose }) => {
                     if (item.action) item.action();
                     if (isMobile) onClose();
                   }}
-                  className="flex items-center py-3 px-3 rounded-lg text-sm font-medium hover:bg-gray-700 hover:text-[#00B074] transition cursor-pointer"
+                  className="flex items-center py-3 px-3 rounded-lg text-sm font-medium hover:bg-blue-600 hover:text-[#00B074] transition cursor-pointer"
                 >
                   <span className="text-xl">{item.icon}</span>
                   <span

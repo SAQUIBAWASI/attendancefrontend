@@ -113,7 +113,7 @@ export default function MessagesTable() {
                     />
                 </div>
                 <button
-                    className="p-2 bg-purple-600 text-white rounded"
+                    className="p-2 bg-purple-600 text-gray-900 rounded"
                     onClick={() => setShowNewMessageModal(true)}
                 >
                     + New Message
@@ -134,7 +134,7 @@ export default function MessagesTable() {
                     </thead>
                     <tbody>
                         {displayedMessages.map((msg) => (
-                            <tr key={msg.id} className="cursor-pointer hover:bg-gray-50 text-center">
+                            <tr key={msg.id} className="cursor-pointer hover:bg-white text-center">
                                 <td className="p-3 border">{msg.id}</td>
                                 <td className="p-3 border">{msg.sender}</td>
                                 <td className="p-3 border">{msg.subject}</td>
@@ -142,7 +142,7 @@ export default function MessagesTable() {
                                 <td className="p-3 border text-yellow-500 font-semibold">{msg.status}</td>
                                 <td className="p-3 border">
                                     <button
-                                        className="text-blue-500 hover:underline mr-2"
+                                        className="text-blue-600 hover:underline mr-2"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handleEdit(msg.id); // Open the edit modal
@@ -167,19 +167,19 @@ export default function MessagesTable() {
             </div>
 
             {deleteMessageId !== null && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-white ">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
                         <h2 className="text-lg font-bold mb-4 text-red-900">Are you sure?</h2>
                         <p>You want to delete this message.</p>
                         <div className="mt-4">
                             <button
-                                className="mr-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700"
+                                className="mr-2 px-4 py-2 bg-red-500 text-gray-900 rounded hover:bg-red-700"
                                 onClick={handleDelete}
                             >
                                 Yes, Delete it!
                             </button>
                             <button
-                                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
+                                className="px-4 py-2 bg-white0 text-gray-900 rounded hover:bg-gray-700"
                                 onClick={() => setDeleteMessageId(null)}
                             >
                                 Cancel
@@ -191,7 +191,7 @@ export default function MessagesTable() {
 
             {/* Edit Message Modal */}
             {isModalOpen && currentMessage && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-white ">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                         <h2 className="text-sm font-bold mb-4 text-purple-600">Edit Message</h2>
 
@@ -230,13 +230,13 @@ export default function MessagesTable() {
                         <div className="mt-4">
                             <button
                                 onClick={handleSave}
-                                className="mr-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+                                className="mr-2 px-4 py-2 bg-purple-600 text-gray-900 rounded hover:bg-purple-700"
                             >
                                 Save
                             </button>
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
+                                className="px-4 py-2 bg-white0 text-gray-900 rounded hover:bg-gray-700"
                             >
                                 Cancel
                             </button>
@@ -247,7 +247,7 @@ export default function MessagesTable() {
 
             {/* New Message Modal */}
             {showNewMessageModal && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-white ">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                         <h2 className="text-sm font-bold mb-4 text-purple-600">New Message</h2>
                         <input
@@ -271,13 +271,13 @@ export default function MessagesTable() {
                             onChange={(e) => setNewMessage({ ...newMessage, message: e.target.value })}
                         />
                         <button
-                            className="mr-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+                            className="mr-2 px-4 py-2 bg-purple-600 text-gray-900 rounded hover:bg-purple-700"
                             onClick={handleAddMessage}
                         >
                             Save
                         </button>
                         <button
-                            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
+                            className="px-4 py-2 bg-white0 text-gray-900 rounded hover:bg-gray-700"
                             onClick={() => setShowNewMessageModal(false)}
                         >
                             Close

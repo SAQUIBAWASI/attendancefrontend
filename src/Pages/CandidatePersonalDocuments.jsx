@@ -133,7 +133,7 @@ const CandidatePersonalDocuments = () => {
             <p className="text-sm text-gray-500">Track and manage your identification assets</p>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+            <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
             <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
               Vault Secured
             </span>
@@ -183,7 +183,7 @@ const CandidatePersonalDocuments = () => {
         <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
-              <thead className="text-sm text-center text-white bg-gradient-to-r from-green-500 to-blue-600">
+              <thead className="text-sm text-center text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
                   <th className="py-2 px-4">DOCUMENT NAME</th>
                   <th className="py-2 px-4">DESCRIPTION</th>
@@ -196,10 +196,10 @@ const CandidatePersonalDocuments = () => {
                   const filed = !!docs[doc.id]?.filePath;
                   const isUploading = !!uploading[doc.id];
                   return (
-                    <tr key={doc.id} className="transition-colors hover:bg-gray-50">
+                    <tr key={doc.id} className="transition-colors hover:bg-white">
                       <td className="px-4 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
                         <div className="flex items-center justify-center gap-2">
-                          <doc.icon className="text-blue-500" />
+                          <doc.icon className="text-blue-600" />
                           {doc.label}
                         </div>
                       </td>
@@ -207,7 +207,7 @@ const CandidatePersonalDocuments = () => {
                         {doc.desc}
                       </td>
                       <td className="px-4 py-2 text-center whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${filed ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${filed ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
                           }`}>
                           {filed ? "Asset Filed" : "Pending"}
                         </span>
@@ -215,7 +215,7 @@ const CandidatePersonalDocuments = () => {
                       <td className="px-4 py-2 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-2">
                           <label className="cursor-pointer">
-                            <span className={`px-3 py-1 text-xs font-semibold rounded-md border transition-all ${isUploading ? "bg-gray-50 text-gray-500 border-gray-200" : "bg-white border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white"
+                            <span className={`px-3 py-1 text-xs font-semibold rounded-md border transition-all ${isUploading ? "bg-white text-gray-500 border-gray-200" : "bg-white border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-gray-900"
                               }`}>
                               {isUploading ? "..." : filed ? "UPDATE" : "UPLOAD"}
                             </span>
@@ -224,7 +224,7 @@ const CandidatePersonalDocuments = () => {
                           {filed && (
                             <button
                               onClick={() => window.open(formatDocumentUrl(docs[doc.id].filePath), "_blank")}
-                              className="px-3 py-1 text-xs font-semibold bg-gray-800 text-white rounded-md hover:bg-blue-600 transition-colors"
+                              className="px-3 py-1 text-xs font-semibold bg-gray-200 text-gray-900 rounded-md hover:bg-blue-600 transition-colors"
                             >
                               VIEW
                             </button>
@@ -250,12 +250,12 @@ const CandidatePersonalDocuments = () => {
 
           {/* Banking Details Card */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-2.5 flex items-center justify-between text-white">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-2.5 flex items-center justify-between text-gray-900">
               <div className="flex items-center gap-2">
                 <FaUniversity />
                 <span className="text-sm font-bold uppercase tracking-wider">Banking Details</span>
               </div>
-              <button onClick={() => setIsBankModalOpen(true)} className="p-1 hover:bg-black/20 rounded transition-colors text-white">
+              <button onClick={() => setIsBankModalOpen(true)} className="p-1 hover:bg-white/20 rounded transition-colors text-gray-900">
                 <FaEdit size={14} />
               </button>
             </div>
@@ -275,12 +275,12 @@ const CandidatePersonalDocuments = () => {
 
           {/* Emergency Contact Card */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-            <div className="bg-gradient-to-r from-green-500 to-blue-600 px-4 py-2.5 flex items-center justify-between text-white">
+            <div className="bg-gradient-to-r from-green-500 to-blue-600 px-4 py-2.5 flex items-center justify-between text-gray-900">
               <div className="flex items-center gap-2">
                 <FaPhoneAlt />
                 <span className="text-sm font-bold uppercase tracking-wider">Emergency Contact</span>
               </div>
-              <button onClick={() => setIsEmergencyModalOpen(true)} className="p-1 hover:bg-black/20 rounded transition-colors text-white">
+              <button onClick={() => setIsEmergencyModalOpen(true)} className="p-1 hover:bg-white/20 rounded transition-colors text-gray-900">
                 <FaEdit size={14} />
               </button>
             </div>
@@ -302,9 +302,9 @@ const CandidatePersonalDocuments = () => {
 
         {/* Update Modals - Simple & Clean to match the utilitarian theme */}
         {isBankModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-50/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-gray-200">
-              <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-4 flex justify-between items-center text-white">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-4 flex justify-between items-center text-gray-900">
                 <h3 className="font-bold uppercase tracking-wider text-sm">Update Bank Details</h3>
                 <button onClick={() => setIsBankModalOpen(false)}><FaTimes /></button>
               </div>
@@ -340,7 +340,7 @@ const CandidatePersonalDocuments = () => {
                 </div>
                 <div className="flex gap-2 pt-2">
                   <button type="button" onClick={() => setIsBankModalOpen(false)} className="flex-1 py-2 text-xs font-bold text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">CANCEL</button>
-                  <button type="submit" disabled={isSaving} className="flex-1 py-2 text-xs font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                  <button type="submit" disabled={isSaving} className="flex-1 py-2 text-xs font-bold text-gray-900 bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
                     {isSaving ? "SAVING..." : "SAVE CHANGES"}
                   </button>
                 </div>
@@ -350,9 +350,9 @@ const CandidatePersonalDocuments = () => {
         )}
 
         {isEmergencyModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-50/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-gray-200">
-              <div className="bg-gradient-to-r from-green-500 to-green-700 p-4 flex justify-between items-center text-white">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-700 p-4 flex justify-between items-center text-gray-900">
                 <h3 className="font-bold uppercase tracking-wider text-sm">Update Emergency Contact</h3>
                 <button onClick={() => setIsEmergencyModalOpen(false)}><FaTimes /></button>
               </div>
@@ -388,7 +388,7 @@ const CandidatePersonalDocuments = () => {
                 </div>
                 <div className="flex gap-2 pt-2">
                   <button type="button" onClick={() => setIsEmergencyModalOpen(false)} className="flex-1 py-2 text-xs font-bold text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">CANCEL</button>
-                  <button type="submit" disabled={isSaving} className="flex-1 py-2 text-xs font-bold text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors">
+                  <button type="submit" disabled={isSaving} className="flex-1 py-2 text-xs font-bold text-gray-900 bg-blue-600 rounded-md hover:bg-blue-800 transition-colors">
                     {isSaving ? "SAVING..." : "SAVE CONTACT"}
                   </button>
                 </div>

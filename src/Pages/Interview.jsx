@@ -65,7 +65,7 @@ const Interview = () => {
   const getConfirmationStyle = (status) => {
     switch (status) {
       case "Confirmed":
-        return "bg-emerald-100 text-emerald-800 border-emerald-200";
+        return "bg-blue-100 text-emerald-800 border-emerald-200";
       case "Declined":
         return "bg-rose-100 text-rose-800 border-rose-200";
       default:
@@ -115,7 +115,7 @@ const Interview = () => {
                 <FaBriefcase className="text-xs" />
               </div>
               <div
-                className="w-full bg-white py-2.5 pl-10 pr-10 text-xs text-gray-700 border border-gray-200 rounded-xl font-bold cursor-pointer hover:bg-gray-50 shadow-sm text-ellipsis whitespace-nowrap overflow-hidden"
+                className="w-full bg-white py-2.5 pl-10 pr-10 text-xs text-gray-700 border border-gray-200 rounded-xl font-bold cursor-pointer hover:bg-white shadow-sm text-ellipsis whitespace-nowrap overflow-hidden"
                 onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
               >
                 {statusFilter || "Filter by Confirmation"}
@@ -164,13 +164,13 @@ const Interview = () => {
 
             {/* Reset */}
             {hasFilters && (
-              <button onClick={resetFilters} className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-gray-500 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl shadow-sm uppercase tracking-widest transition-all">
+              <button onClick={resetFilters} className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-gray-500 bg-white border border-gray-200 hover:bg-white rounded-xl shadow-sm uppercase tracking-widest transition-all">
                 <FaSync className="text-[10px]" /> Reset
               </button>
             )}
 
             <div className="bg-white px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+              <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{filteredApps.length} Interviews</span>
             </div>
           </div>
@@ -182,7 +182,7 @@ const Interview = () => {
             {filteredApps.length > 0 ? (
               <table className="min-w-full">
                 <thead>
-                  <tr className="bg-gradient-to-r from-green-500 to-blue-600 text-white text-center uppercase tracking-wider text-xs font-semibold">
+                  <tr className="bg-gradient-to-r from-green-500 to-blue-600 text-gray-900 text-center uppercase tracking-wider text-xs font-semibold">
                     <th className="py-2.5 px-8">Role</th>
                     <th className="py-2.5 px-6">Interview Date & Time</th>
                     <th className="py-2.5 px-6">Mode</th>
@@ -209,7 +209,7 @@ const Interview = () => {
                           {app.interviewTime ? (
                             <div className="space-y-1">
                               <div className="flex items-center justify-center gap-2 text-xs font-bold text-gray-700">
-                                <FaCalendarAlt className="text-blue-400" size={12} />
+                                <FaCalendarAlt className="text-blue-500" size={12} />
                                 {new Date(app.interviewTime).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                               </div>
                               <div className="flex items-center justify-center gap-2 text-[10px] font-medium text-gray-500 uppercase">
@@ -226,7 +226,7 @@ const Interview = () => {
                         <td className="py-2 px-6">
                           <div className="flex items-center justify-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-tight">
                             {(app.interviewMode || "Online").toLowerCase() === "online" ? (
-                              <FaVideo className="text-blue-400" size={12} />
+                              <FaVideo className="text-blue-500" size={12} />
                             ) : (
                               <FaMapMarkerAlt className="text-orange-400" size={12} />
                             )}
@@ -255,7 +255,7 @@ const Interview = () => {
                               <button
                                 onClick={() => handleConfirm(app._id, "Declined")}
                                 disabled={confirmingId === app._id + "Declined"}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-rose-200 text-rose-500 rounded-xl text-[10px] font-bold uppercase tracking-wider hover:bg-rose-500 hover:text-white transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-rose-200 text-rose-500 rounded-xl text-[10px] font-bold uppercase tracking-wider hover:bg-rose-500 hover:text-gray-900 transition-all shadow-sm active:scale-95 disabled:opacity-50"
                               >
                                 <FaTimesCircle size={12} />
                                 Decline
@@ -263,7 +263,7 @@ const Interview = () => {
                               <button
                                 onClick={() => handleConfirm(app._id, "Confirmed")}
                                 disabled={confirmingId === app._id + "Confirmed"}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-md hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-gray-900 rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-md hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50"
                               >
                                 <FaCheckCircle size={12} />
                                 Confirm
@@ -283,7 +283,7 @@ const Interview = () => {
               </table>
             ) : (
               <div className="p-24 text-center">
-                <div className="w-20 h-20 bg-gray-50 rounded-[2rem] flex items-center justify-center text-gray-900 mx-auto mb-6 border-2 border-dashed border-gray-200">
+                <div className="w-20 h-20 bg-white rounded-[2rem] flex items-center justify-center text-gray-900 mx-auto mb-6 border-2 border-dashed border-gray-200">
                   <FaInbox size={32} />
                 </div>
                 <h3 className="text-lg font-bold text-gray-700 uppercase tracking-widest">No Interviews Scheduled</h3>

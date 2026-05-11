@@ -27,7 +27,7 @@ import { API_BASE_URL, API_DOMAIN } from "../config";
 const StatCard = ({ icon: Icon, label, value, color, isPercentage }) => {
   const themes = {
     indigo: "border-indigo-500",
-    emerald: "border-emerald-500",
+    emerald: "border-blue-500",
     amber: "border-amber-500",
     rose: "border-rose-500",
     cyan: "border-cyan-500",
@@ -74,7 +74,7 @@ const QualityCard = ({ label, value, total, color }) => {
         <div
           className={`h-full rounded-full ${
             color === 'amber' ? 'bg-amber-500' :
-            color === 'emerald' ? 'bg-emerald-500' :
+            color === 'emerald' ? 'bg-blue-600' :
             color === 'cyan' ? 'bg-cyan-500' :
             color === 'purple' ? 'bg-purple-500' :
             color === 'rose' ? 'bg-rose-500' :
@@ -144,7 +144,7 @@ const AllMedicalCertificate = () => {
     if (diffDays < 0) return { label: "Expired", color: "#EF4444", text: "text-red-700", bg: "bg-red-100", border: "border-red-200" };
     if (diffDays <= 30) return { label: "Expiring Next Month", color: "#F87171", text: "text-red-600", bg: "bg-red-50", border: "border-red-100" };
     if (diffDays <= 60) return { label: "Expiring in 2 Months", color: "#FB923C", text: "text-orange-600", bg: "bg-orange-50", border: "border-orange-100" };
-    return { label: "Active", color: "#10B981", text: "text-green-700", bg: "bg-green-100", border: "border-green-200" };
+    return { label: "Active", color: "#10B981", text: "text-green-700", bg: "bg-blue-100", border: "border-green-200" };
   };
 
   const getStats = () => {
@@ -273,7 +273,7 @@ const AllMedicalCertificate = () => {
   const total = certificates.length;
 
   return (
-    <div className="min-h-screen p-2 lg:p-6 bg-gray-50/50">
+    <div className="min-h-screen p-2 lg:p-6 bg-white/50">
       <div className="max-w-9xl mx-auto">
         
         {/* 1. Top Summary Stats - Matching RecruitmentDashboard */}
@@ -350,7 +350,7 @@ const AllMedicalCertificate = () => {
             <div className="mt-auto pt-3 border-t border-gray-200">
               <div className="flex justify-between text-xs">
                 <span className="text-gray-500 font-medium">Compliance Rate</span>
-                <span className="font-bold text-emerald-600">{total > 0 ? ((chartData[3].val / total) * 100).toFixed(1) : 0}%</span>
+                <span className="font-bold text-blue-700">{total > 0 ? ((chartData[3].val / total) * 100).toFixed(1) : 0}%</span>
               </div>
               <div className="flex justify-between text-xs mt-1">
                 <span className="text-gray-500 font-medium">Immediate Action Required</span>
@@ -375,7 +375,7 @@ const AllMedicalCertificate = () => {
           <select 
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 bg-gray-50 border-0 rounded-xl text-xs font-bold text-gray-700 cursor-pointer"
+            className="px-4 py-2 bg-white border-0 rounded-xl text-xs font-bold text-gray-700 cursor-pointer"
           >
             <option value="all">All Certificates</option>
             <option value="expired">EXPIRED</option>
@@ -385,18 +385,18 @@ const AllMedicalCertificate = () => {
           </select>
           <button 
             onClick={fetchCertificates}
-            className="p-2.5 bg-gray-50 text-gray-500 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all border border-gray-200"
+            className="p-2.5 bg-white text-gray-500 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all border border-gray-200"
             title="Refresh Data"
           >
             <FaSync size={12} className={loading ? 'animate-spin' : ''} />
           </button>
           <button 
             onClick={handleReset}
-            className="px-4 py-2 bg-gray-50 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 transition-all border border-gray-200"
+            className="px-4 py-2 bg-white text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 transition-all border border-gray-200"
           >
             Clear
           </button>
-          <button onClick={downloadCSV} className="px-6 py-2 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all flex items-center gap-2 ml-auto">
+          <button onClick={downloadCSV} className="px-6 py-2 bg-gray-100 text-gray-900 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all flex items-center gap-2 ml-auto">
             <FaDownload /> Export CSV
           </button>
         </div>
@@ -406,7 +406,7 @@ const AllMedicalCertificate = () => {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-gray-50/50">
+                <tr className="bg-white/50">
                   <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-200">ID</th>
                   <th className="px-4 py-4 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-200">Candidate Name</th>
                   <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-200">Reg. Date</th>
@@ -419,7 +419,7 @@ const AllMedicalCertificate = () => {
                 {currentItems.map((c) => {
                   const info = getStatusInfo(c.expiryDate);
                   return (
-                    <tr key={c._id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={c._id} className="hover:bg-white transition-colors">
                       <td className="px-4 py-3 text-center font-bold text-gray-900 text-xs">
                         {c.employeeId || c.candidateId || "N/A"}
                       </td>
@@ -444,14 +444,14 @@ const AllMedicalCertificate = () => {
                             href={`${API_DOMAIN}${c.documentUrl ? c.documentUrl.replace(/\\/g, '/').startsWith('/') ? c.documentUrl.replace(/\\/g, '/') : '/' + c.documentUrl.replace(/\\/g, '/') : ''}`} 
                             target="_blank" 
                             rel="noreferrer"
-                            className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold hover:bg-blue-700 transition-colors"
+                            className="px-3 py-1.5 bg-blue-600 text-gray-900 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition-colors"
                           >
                             View
                           </a>
                           {info.label !== "Active" && (
                             <button 
                               onClick={() => handleSendReminder(c)}
-                              className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-lg text-[10px] font-black uppercase tracking-tight hover:bg-rose-600 hover:text-white transition-all shadow-sm active:scale-95 flex items-center gap-1.5"
+                              className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-lg text-[10px] font-black uppercase tracking-tight hover:bg-rose-600 hover:text-gray-900 transition-all shadow-sm active:scale-95 flex items-center gap-1.5"
                               title="Send Re-upload Reminder"
                             >
                               <FiActivity size={10} />
@@ -483,14 +483,14 @@ const AllMedicalCertificate = () => {
               <button 
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-50 disabled:opacity-30"
+                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:bg-white disabled:opacity-30"
               >
                 Prev
               </button>
               <button 
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-50 disabled:opacity-30"
+                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:bg-white disabled:opacity-30"
               >
                 Next
               </button>

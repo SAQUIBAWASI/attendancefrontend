@@ -54,7 +54,7 @@
 
 //     return (
 //         <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-gradient-to-br from-blue-100 to-purple-200">
-//             <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden shadow-xl bg-black/80 backdrop-blur-md rounded-2xl md:grid-cols-2">
+//             <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden shadow-xl bg-white/80 backdrop-blur-md rounded-2xl md:grid-cols-2">
 
 //                 {/* Left Side - Register Form */}
 //                 <div className="flex flex-col justify-center p-8 md:p-12">
@@ -71,7 +71,7 @@
 //                         </div>
 //                     )}
 //                     {success && (
-//                         <div className="p-3 mb-4 text-sm text-green-600 bg-green-100 rounded-md shadow-sm">
+//                         <div className="p-3 mb-4 text-sm text-blue-700 bg-blue-100 rounded-md shadow-sm">
 //                             {success}
 //                         </div>
 //                     )}
@@ -134,7 +134,7 @@
 //                         <button
 //                             type="submit"
 //                             disabled={isLoading}
-//                             className={`w-full py-3 text-white text-sm font-medium rounded-md bg-gradient-to-r from-blue-600 to-purple-600 hover:from-purple-600 hover:to-blue-600 transition duration-300 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+//                             className={`w-full py-3 text-gray-900 text-sm font-medium rounded-md bg-gradient-to-r from-blue-600 to-purple-600 hover:from-purple-600 hover:to-blue-600 transition duration-300 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
 //                         >
 //                             {isLoading ? 'Submitting...' : 'Register'}
 //                         </button>
@@ -146,7 +146,7 @@
 //                 </div>
 
 //                 {/* Right Side - Image */}
-//                 <div className="flex items-center justify-center p-6 bg-black/70 md:p-12">
+//                 <div className="flex items-center justify-center p-6 bg-white/70 md:p-12">
 //                     <img
 //                         src="https://img.freepik.com/free-vector/sign-up-concept-illustration_114360-7885.jpg"
 //                         alt="Registration Illustration"
@@ -215,7 +215,7 @@
 
 //     return (
 //         <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-gradient-to-br from-blue-100 to-purple-200">
-//             <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden shadow-xl bg-black/80 backdrop-blur-md rounded-2xl md:grid-cols-2">
+//             <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden shadow-xl bg-white/80 backdrop-blur-md rounded-2xl md:grid-cols-2">
 
 //                 {/* Left Side - Register Form */}
 //                 <div className="flex flex-col justify-center p-8 md:p-12">
@@ -232,7 +232,7 @@
 //                         </div>
 //                     )}
 //                     {success && (
-//                         <div className="p-3 mb-4 text-sm text-green-600 bg-green-100 rounded-md shadow-sm">
+//                         <div className="p-3 mb-4 text-sm text-blue-700 bg-blue-100 rounded-md shadow-sm">
 //                             {success}
 //                         </div>
 //                     )}
@@ -335,7 +335,7 @@
 //                         <button
 //                             type="submit"
 //                             disabled={isLoading}
-//                             className={`w-full py-3 text-white text-sm font-medium rounded-md bg-gradient-to-r from-blue-600 to-purple-600 hover:from-purple-600 hover:to-blue-600 transition duration-300 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+//                             className={`w-full py-3 text-gray-900 text-sm font-medium rounded-md bg-gradient-to-r from-blue-600 to-purple-600 hover:from-purple-600 hover:to-blue-600 transition duration-300 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
 //                         >
 //                             {isLoading ? 'Submitting...' : 'Register'}
 //                         </button>
@@ -347,7 +347,7 @@
 //                 </div>
 
 //                 {/* Right Side - Image */}
-//                 <div className="flex items-center justify-center p-6 bg-black/70 md:p-12">
+//                 <div className="flex items-center justify-center p-6 bg-white/70 md:p-12">
 //                     <img
 //                         src="https://img.freepik.com/free-vector/sign-up-concept-illustration_114360-7885.jpg"
 //                         alt="Registration Illustration"
@@ -492,7 +492,7 @@
 
 //     return (
 //         <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-gradient-to-br from-blue-100 to-purple-200">
-//             <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden shadow-xl bg-black/80 backdrop-blur-md rounded-2xl md:grid-cols-2">
+//             <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden shadow-xl bg-white/80 backdrop-blur-md rounded-2xl md:grid-cols-2">
 //                 {/* Left Side - Register Form */}
 //                 <div className="flex flex-col justify-center p-8 md:p-12">
 //                     <div className="mb-6 text-center">
@@ -508,7 +508,7 @@
 //                         </div>
 //                     )}
 //                     {success && (
-//                         <div className="p-3 mb-4 text-sm text-green-600 bg-green-100 rounded-md shadow-sm">
+//                         <div className="p-3 mb-4 text-sm text-blue-700 bg-blue-100 rounded-md shadow-sm">
 //                             {success}
 //                         </div>
 //                     )}
@@ -643,7 +643,7 @@
 //                                     onChange={handleChange}
 //                                     required
 //                                     readOnly
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md bg-gray-50 focus:outline-none"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md bg-white focus:outline-none"
 //                                 />
 //                             </div>
 //                             <div>
@@ -655,7 +655,7 @@
 //                                     onChange={handleChange}
 //                                     required
 //                                     readOnly
-//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md bg-gray-50 focus:outline-none"
+//                                     className="w-full px-4 py-2 mt-1 text-sm border border-gray-300 rounded-md bg-white focus:outline-none"
 //                                 />
 //                             </div>
 //                         </div>
@@ -663,7 +663,7 @@
 //                         <button
 //                             type="submit"
 //                             disabled={isLoading}
-//                             className={`w-full py-3 text-white text-sm font-medium rounded-md bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-600 hover:to-blue-600 transition duration-300 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+//                             className={`w-full py-3 text-gray-900 text-sm font-medium rounded-md bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-600 hover:to-blue-600 transition duration-300 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
 //                         >
 //                             {isLoading ? 'Submitting...' : 'Register'}
 //                         </button>
@@ -675,7 +675,7 @@
 //                 </div>
 
 //                 {/* Right Side - Image */}
-//                 <div className="flex items-center justify-center p-6 bg-black/70 md:p-12">
+//                 <div className="flex items-center justify-center p-6 bg-white/70 md:p-12">
 //                     <img
 //                         src="https://img.freepik.com/free-vector/sign-up-concept-illustration_114360-7885.jpg"
 //                         alt="Registration Illustration"
@@ -1200,13 +1200,13 @@
 //                         transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
 //                         className="inline-flex items-center justify-center w-24 h-24 bg-white rounded-full mb-4 shadow-lg"
 //                     >
-//                         <CheckCircle className="w-12 h-12 text-green-500" />
+//                         <CheckCircle className="w-12 h-12 text-blue-600" />
 //                     </motion.div>
 //                     <motion.h1 
 //                         initial={{ y: 20, opacity: 0 }}
 //                         animate={{ y: 0, opacity: 1 }}
 //                         transition={{ delay: 0.3 }}
-//                         className="text-3xl font-bold text-white"
+//                         className="text-3xl font-bold text-gray-900"
 //                     >
 //                         Congratulations!
 //                     </motion.h1>
@@ -1214,12 +1214,12 @@
 //                         initial={{ y: 20, opacity: 0 }}
 //                         animate={{ y: 0, opacity: 1 }}
 //                         transition={{ delay: 0.4 }}
-//                         className="text-white/90 mt-2"
+//                         className="text-gray-900/90 mt-2"
 //                     >
 //                         Welcome to our platform
 //                     </motion.p>
-//                     <div className="absolute top-0 right-0 w-32 h-32 bg-black/10 rounded-full -mr-16 -mt-16"></div>
-//                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full -ml-16 -mb-16"></div>
+//                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+//                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
 //                 </div>
                 
 //                 <div className="p-8">
@@ -1287,7 +1287,7 @@
 //                         initial={{ y: 20, opacity: 0 }}
 //                         animate={{ y: 0, opacity: 1 }}
 //                         transition={{ delay: 0.8 }}
-//                         className="bg-gray-50 rounded-xl p-5 mb-6"
+//                         className="bg-white rounded-xl p-5 mb-6"
 //                     >
 //                         <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
 //                             <FileCheck className="w-5 h-5" />
@@ -1320,8 +1320,8 @@
 //                             </div>
 //                             {registrationData?.totalPaidAmount > 0 && (
 //                                 <div className="flex justify-between py-1">
-//                                     <span className="font-medium text-green-600">Amount Paid:</span>
-//                                     <span className="text-green-600 font-bold">₹{registrationData.totalPaidAmount}</span>
+//                                     <span className="font-medium text-blue-700">Amount Paid:</span>
+//                                     <span className="text-blue-700 font-bold">₹{registrationData.totalPaidAmount}</span>
 //                                 </div>
 //                             )}
 //                         </div>
@@ -1335,13 +1335,13 @@
 //                     >
 //                         <button
 //                             onClick={() => navigate('/login')}
-//                             className="flex-1 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
+//                             className="flex-1 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-gray-900 font-semibold rounded-xl hover:from-green-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
 //                         >
 //                             Go to Login
 //                         </button>
 //                         <button
 //                             onClick={() => window.location.reload()}
-//                             className="flex-1 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300"
+//                             className="flex-1 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-white transition-all duration-300"
 //                         >
 //                             Register Another Account
 //                         </button>
@@ -1376,47 +1376,47 @@
 //                     initial={{ opacity: 0, y: -20 }}
 //                     animate={{ opacity: 1, y: 0 }}
 //                     transition={{ duration: 0.5 }}
-//                     className="max-w-6xl mx-auto bg-black/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden"
+//                     className="max-w-6xl mx-auto bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden"
 //                 >
 //                     {/* Header with Progress Steps */}
 //                     <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
 //                         <div className="flex items-center justify-between max-w-3xl mx-auto">
 //                             <div className="flex-1 text-center">
 //                                 <div className={`relative flex items-center justify-center w-12 h-12 mx-auto rounded-full transition-all duration-500 ${
-//                                     currentStep >= 1 ? 'bg-white text-blue-600 shadow-lg transform scale-110' : 'bg-black/30 text-white'
+//                                     currentStep >= 1 ? 'bg-white text-blue-600 shadow-lg transform scale-110' : 'bg-white/30 text-gray-900'
 //                                 }`}>
 //                                     <span className="text-xl font-bold">1</span>
 //                                     {currentStep >= 1 && (
 //                                         <motion.div 
 //                                             initial={{ scale: 0 }}
 //                                             animate={{ scale: 1 }}
-//                                             className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center"
+//                                             className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center"
 //                                         >
-//                                             <CheckCircle className="w-3 h-3 text-white" />
+//                                             <CheckCircle className="w-3 h-3 text-gray-900" />
 //                                         </motion.div>
 //                                     )}
 //                                 </div>
-//                                 <p className={`mt-2 text-sm font-medium ${currentStep >= 1 ? 'text-white' : 'text-white/70'}`}>
+//                                 <p className={`mt-2 text-sm font-medium ${currentStep >= 1 ? 'text-gray-900' : 'text-gray-900/70'}`}>
 //                                     Personal Details
 //                                 </p>
 //                             </div>
-//                             <div className={`flex-1 h-0.5 ${currentStep >= 2 ? 'bg-white' : 'bg-black/30'}`}></div>
+//                             <div className={`flex-1 h-0.5 ${currentStep >= 2 ? 'bg-white' : 'bg-white/30'}`}></div>
 //                             <div className="flex-1 text-center">
 //                                 <div className={`relative flex items-center justify-center w-12 h-12 mx-auto rounded-full transition-all duration-500 ${
-//                                     currentStep >= 2 ? 'bg-white text-purple-600 shadow-lg transform scale-110' : 'bg-black/30 text-white'
+//                                     currentStep >= 2 ? 'bg-white text-purple-600 shadow-lg transform scale-110' : 'bg-white/30 text-gray-900'
 //                                 }`}>
 //                                     <span className="text-xl font-bold">2</span>
 //                                     {currentStep >= 2 && (
 //                                         <motion.div 
 //                                             initial={{ scale: 0 }}
 //                                             animate={{ scale: 1 }}
-//                                             className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center"
+//                                             className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center"
 //                                         >
-//                                             <CheckCircle className="w-3 h-3 text-white" />
+//                                             <CheckCircle className="w-3 h-3 text-gray-900" />
 //                                         </motion.div>
 //                                     )}
 //                                 </div>
-//                                 <p className={`mt-2 text-sm font-medium ${currentStep >= 2 ? 'text-white' : 'text-white/70'}`}>
+//                                 <p className={`mt-2 text-sm font-medium ${currentStep >= 2 ? 'text-gray-900' : 'text-gray-900/70'}`}>
 //                                     Select Products
 //                                 </p>
 //                             </div>
@@ -1444,7 +1444,7 @@
 //                                     initial={{ opacity: 0, y: -20 }}
 //                                     animate={{ opacity: 1, y: 0 }}
 //                                     exit={{ opacity: 0, y: -20 }}
-//                                     className="p-4 mb-6 text-sm text-green-700 bg-green-100 rounded-xl border-l-4 border-green-500"
+//                                     className="p-4 mb-6 text-sm text-green-700 bg-blue-100 rounded-xl border-l-4 border-green-500"
 //                                 >
 //                                     <div className="flex items-center gap-2">
 //                                         <CheckCircle className="w-5 h-5" />
@@ -1527,7 +1527,7 @@
 //                                         {/* Company Information Section */}
 //                                         <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-2xl p-6">
 //                                             <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-//                                                 <Building className="w-5 h-5 text-green-600" />
+//                                                 <Building className="w-5 h-5 text-blue-700" />
 //                                                 Company Information
 //                                             </h3>
 //                                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -1663,7 +1663,7 @@
 //                                                             onChange={handleChange}
 //                                                             required
 //                                                             readOnly
-//                                                             className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none"
+//                                                             className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-white focus:outline-none"
 //                                                             placeholder="Auto-filled"
 //                                                         />
 //                                                     </div>
@@ -1676,7 +1676,7 @@
 //                                                             onChange={handleChange}
 //                                                             required
 //                                                             readOnly
-//                                                             className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none"
+//                                                             className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-white focus:outline-none"
 //                                                             placeholder="Auto-filled"
 //                                                         />
 //                                                     </div>
@@ -1737,7 +1737,7 @@
 //                                                             </div>
 //                                                         )}
 //                                                         {documents.aadhaarCard && uploadProgress.aadhaarCard === 100 && (
-//                                                             <div className="mt-2 flex items-center gap-1 text-green-600">
+//                                                             <div className="mt-2 flex items-center gap-1 text-blue-700">
 //                                                                 <CheckCircle className="w-4 h-4" />
 //                                                                 <span className="text-xs">Uploaded successfully</span>
 //                                                             </div>
@@ -1769,7 +1769,7 @@
 //                                                             </div>
 //                                                         )}
 //                                                         {documents.panCard && uploadProgress.panCard === 100 && (
-//                                                             <div className="mt-2 flex items-center gap-1 text-green-600">
+//                                                             <div className="mt-2 flex items-center gap-1 text-blue-700">
 //                                                                 <CheckCircle className="w-4 h-4" />
 //                                                                 <span className="text-xs">Uploaded successfully</span>
 //                                                             </div>
@@ -1808,7 +1808,7 @@
 //                                                 >
 //                                                     {selectedProducts.length} product{selectedProducts.length !== 1 ? 's' : ''} selected
 //                                                     {selectedProducts.some(p => p.price > 0) && (
-//                                                         <span className="block text-green-600 font-bold mt-1">
+//                                                         <span className="block text-blue-700 font-bold mt-1">
 //                                                             Total: ₹{selectedProducts.reduce((sum, p) => sum + p.price, 0)}
 //                                                         </span>
 //                                                     )}
@@ -1837,17 +1837,17 @@
 //                                                             onClick={() => handleProductToggle(product)}
 //                                                             className={`cursor-pointer rounded-2xl p-6 transition-all duration-300 ${
 //                                                                 selectedProducts.find(p => p._id === product._id)
-//                                                                     ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-2xl transform scale-105'
+//                                                                     ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-gray-900 shadow-2xl transform scale-105'
 //                                                                     : 'bg-white border-2 border-gray-200 hover:border-blue-300 hover:shadow-xl'
 //                                                             }`}
 //                                                         >
 //                                                             <div className="flex justify-between items-start mb-4">
-//                                                                 <h3 className={`text-xl font-bold ${selectedProducts.find(p => p._id === product._id) ? 'text-white' : 'text-gray-700'}`}>
+//                                                                 <h3 className={`text-xl font-bold ${selectedProducts.find(p => p._id === product._id) ? 'text-gray-900' : 'text-gray-700'}`}>
 //                                                                     {product.name}
 //                                                                 </h3>
 //                                                                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
 //                                                                     product.price === 0 
-//                                                                         ? 'bg-green-500 text-white' 
+//                                                                         ? 'bg-blue-600 text-gray-900' 
 //                                                                         : selectedProducts.find(p => p._id === product._id)
 //                                                                             ? 'bg-white text-purple-600'
 //                                                                             : 'bg-blue-100 text-blue-600'
@@ -1857,18 +1857,18 @@
 //                                                             </div>
                                                             
 //                                                             {product.code && (
-//                                                                 <p className={`text-xs mb-2 ${selectedProducts.find(p => p._id === product._id) ? 'text-white/80' : 'text-gray-500'}`}>
+//                                                                 <p className={`text-xs mb-2 ${selectedProducts.find(p => p._id === product._id) ? 'text-gray-900/80' : 'text-gray-500'}`}>
 //                                                                     Code: {product.code}
 //                                                                 </p>
 //                                                             )}
                                                             
-//                                                             <p className={`text-sm mb-3 ${selectedProducts.find(p => p._id === product._id) ? 'text-white/90' : 'text-gray-500'}`}>
+//                                                             <p className={`text-sm mb-3 ${selectedProducts.find(p => p._id === product._id) ? 'text-gray-900/90' : 'text-gray-500'}`}>
 //                                                                 {product.description}
 //                                                             </p>
                                                             
 //                                                             {product.price === 0 && (
 //                                                                 <div className="mt-3">
-//                                                                     <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-green-500 text-white rounded-full">
+//                                                                     <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-600 text-gray-900 rounded-full">
 //                                                                         <Zap className="w-3 h-3" />
 //                                                                         Free Access
 //                                                                     </span>
@@ -1933,7 +1933,7 @@
 //                                         whileTap={{ scale: 0.95 }}
 //                                         type="button"
 //                                         onClick={nextStep}
-//                                         className="ml-auto px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all duration-300 flex items-center gap-2 font-medium"
+//                                         className="ml-auto px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-gray-900 rounded-xl hover:shadow-lg transition-all duration-300 flex items-center gap-2 font-medium"
 //                                     >
 //                                         Next: Select Products
 //                                         <ArrowRight className="w-4 h-4" />
@@ -1946,7 +1946,7 @@
 //                                         whileTap={{ scale: 0.95 }}
 //                                         type="submit"
 //                                         disabled={isLoading}
-//                                         className={`ml-auto px-8 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl transition-all duration-300 flex items-center gap-2 font-medium ${
+//                                         className={`ml-auto px-8 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-gray-900 rounded-xl transition-all duration-300 flex items-center gap-2 font-medium ${
 //                                             isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:shadow-lg'
 //                                         }`}
 //                                     >
@@ -2555,13 +2555,13 @@ const RegisterPage = () => {
                         transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
                         className="inline-flex items-center justify-center w-24 h-24 bg-white rounded-full mb-4 shadow-lg"
                     >
-                        <Crown className="w-12 h-12 text-green-500" />
+                        <Crown className="w-12 h-12 text-blue-600" />
                     </motion.div>
                     <motion.h1 
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.3 }}
-                        className="text-3xl font-bold text-white"
+                        className="text-3xl font-bold text-gray-900"
                     >
                         You're Amazing! 🎉
                     </motion.h1>
@@ -2569,12 +2569,12 @@ const RegisterPage = () => {
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.4 }}
-                        className="text-white/90 mt-2"
+                        className="text-gray-900/90 mt-2"
                     >
                         Welcome to the family — let's grow together!
                     </motion.p>
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-black/10 rounded-full -mr-16 -mt-16"></div>
-                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full -ml-16 -mb-16"></div>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
                 </div>
                 
                 <div className="p-8">
@@ -2616,7 +2616,7 @@ const RegisterPage = () => {
                         className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-5 mb-6"
                     >
                         <h3 className="font-bold text-gray-700 mb-3 flex items-center gap-2">
-                            <Rocket className="w-5 h-5 text-green-600" />
+                            <Rocket className="w-5 h-5 text-blue-700" />
                             Your Journey Ahead:
                         </h3>
                         <ul className="space-y-3 text-sm text-gray-700">
@@ -2628,7 +2628,7 @@ const RegisterPage = () => {
                                 <li key={idx} className="flex items-start group">
                                     <motion.span 
                                         whileHover={{ scale: 1.2 }}
-                                        className="inline-flex items-center justify-center w-6 h-6 bg-green-100 rounded-full text-green-600 text-xs font-bold mr-3 mt-0.5 group-hover:bg-green-200 transition"
+                                        className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full text-blue-700 text-xs font-bold mr-3 mt-0.5 group-hover:bg-green-200 transition"
                                     >
                                         {idx + 1}
                                     </motion.span>
@@ -2642,10 +2642,10 @@ const RegisterPage = () => {
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.8 }}
-                        className="bg-gray-50 rounded-xl p-5 mb-6"
+                        className="bg-white rounded-xl p-5 mb-6"
                     >
                         <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                            <FileCheck className="w-5 h-5 text-green-600" />
+                            <FileCheck className="w-5 h-5 text-blue-700" />
                             Registration Details:
                         </h3>
                         <div className="space-y-2 text-sm">
@@ -2675,8 +2675,8 @@ const RegisterPage = () => {
                             </div>
                             {registrationData?.totalPaidAmount > 0 && (
                                 <div className="flex justify-between py-1">
-                                    <span className="font-medium text-green-600">Amount Paid:</span>
-                                    <span className="text-green-600 font-bold">₹{registrationData.totalPaidAmount}</span>
+                                    <span className="font-medium text-blue-700">Amount Paid:</span>
+                                    <span className="text-blue-700 font-bold">₹{registrationData.totalPaidAmount}</span>
                                 </div>
                             )}
                         </div>
@@ -2690,13 +2690,13 @@ const RegisterPage = () => {
                     >
                         <button
                             onClick={() => navigate('/login')}
-                            className="flex-1 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white font-semibold rounded-xl btn-perfect shadow-lg relative overflow-hidden group"
+                            className="flex-1 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-gray-900 font-semibold rounded-xl btn-perfect shadow-lg relative overflow-hidden group"
                         >
                             <span className="relative z-10">Go to Login →</span>
                         </button>
                         <button
                             onClick={() => window.location.reload()}
-                            className="flex-1 py-3 border-2 border-green-300 text-green-700 font-semibold rounded-xl hover:bg-green-50 transition-all duration-300"
+                            className="flex-1 py-3 border-2 border-green-300 text-green-700 font-semibold rounded-xl hover:bg-blue-50 transition-all duration-300"
                         >
                             Register Another Account
                         </button>
@@ -2736,7 +2736,7 @@ const RegisterPage = () => {
                     <div className="flex items-center justify-between flex-wrap gap-4">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center animate-float">
-                                <Star className="w-5 h-5 text-white" />
+                                <Star className="w-5 h-5 text-gray-900" />
                             </div>
                             <div>
                                 <p className="text-sm font-semibold text-gray-700">Why join us?</p>
@@ -2744,9 +2744,9 @@ const RegisterPage = () => {
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">✓ Instant Access</span>
+                            <span className="px-3 py-1 bg-blue-100 text-green-700 rounded-full text-xs font-medium">✓ Instant Access</span>
                             <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">✓ Free Support</span>
-                            <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">✓ Best Price</span>
+                            <span className="px-3 py-1 bg-blue-100 text-emerald-700 rounded-full text-xs font-medium">✓ Best Price</span>
                         </div>
                     </div>
                 </motion.div>
@@ -2757,47 +2757,47 @@ const RegisterPage = () => {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="max-w-6xl mx-auto bg-black/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/50"
+                    className="max-w-6xl mx-auto bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/50"
                 >
                     {/* Header with Progress Steps - Updated Colors */}
                     <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-blue-600 p-6">
                         <div className="flex items-center justify-between max-w-3xl mx-auto">
                             <div className="flex-1 text-center">
                                 <div className={`relative flex items-center justify-center w-12 h-12 mx-auto rounded-full transition-all duration-500 ${
-                                    currentStep >= 1 ? 'bg-white text-green-600 shadow-lg transform scale-110' : 'bg-black/30 text-white'
+                                    currentStep >= 1 ? 'bg-white text-blue-700 shadow-lg transform scale-110' : 'bg-white/30 text-gray-900'
                                 }`}>
                                     <span className="text-xl font-bold">1</span>
                                     {currentStep >= 1 && (
                                         <motion.div 
                                             initial={{ scale: 0 }}
                                             animate={{ scale: 1 }}
-                                            className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center"
+                                            className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center"
                                         >
-                                            <CheckCircle className="w-3 h-3 text-white" />
+                                            <CheckCircle className="w-3 h-3 text-gray-900" />
                                         </motion.div>
                                     )}
                                 </div>
-                                <p className={`mt-2 text-sm font-medium ${currentStep >= 1 ? 'text-white' : 'text-white/70'}`}>
+                                <p className={`mt-2 text-sm font-medium ${currentStep >= 1 ? 'text-gray-900' : 'text-gray-900/70'}`}>
                                     Personal Details
                                 </p>
                             </div>
-                            <div className={`flex-1 h-0.5 ${currentStep >= 2 ? 'bg-white' : 'bg-black/30'}`}></div>
+                            <div className={`flex-1 h-0.5 ${currentStep >= 2 ? 'bg-white' : 'bg-white/30'}`}></div>
                             <div className="flex-1 text-center">
                                 <div className={`relative flex items-center justify-center w-12 h-12 mx-auto rounded-full transition-all duration-500 ${
-                                    currentStep >= 2 ? 'bg-white text-blue-600 shadow-lg transform scale-110' : 'bg-black/30 text-white'
+                                    currentStep >= 2 ? 'bg-white text-blue-600 shadow-lg transform scale-110' : 'bg-white/30 text-gray-900'
                                 }`}>
                                     <span className="text-xl font-bold">2</span>
                                     {currentStep >= 2 && (
                                         <motion.div 
                                             initial={{ scale: 0 }}
                                             animate={{ scale: 1 }}
-                                            className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center"
+                                            className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center"
                                         >
-                                            <CheckCircle className="w-3 h-3 text-white" />
+                                            <CheckCircle className="w-3 h-3 text-gray-900" />
                                         </motion.div>
                                     )}
                                 </div>
-                                <p className={`mt-2 text-sm font-medium ${currentStep >= 2 ? 'text-white' : 'text-white/70'}`}>
+                                <p className={`mt-2 text-sm font-medium ${currentStep >= 2 ? 'text-gray-900' : 'text-gray-900/70'}`}>
                                     Select Products
                                 </p>
                             </div>
@@ -2825,7 +2825,7 @@ const RegisterPage = () => {
                                     initial={{ opacity: 0, y: -20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -20 }}
-                                    className="p-4 mb-6 text-sm text-green-700 bg-green-100 rounded-xl border-l-4 border-green-500"
+                                    className="p-4 mb-6 text-sm text-green-700 bg-blue-100 rounded-xl border-l-4 border-green-500"
                                 >
                                     <div className="flex items-center gap-2">
                                         <CheckCircle className="w-5 h-5" />
@@ -2849,7 +2849,7 @@ const RegisterPage = () => {
                                         {/* Personal Information Section - Updated Colors */}
                                         <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 shadow-sm">
                                             <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-                                                <User className="w-5 h-5 text-green-600" />
+                                                <User className="w-5 h-5 text-blue-700" />
                                                 Personal Information
                                             </h3>
                                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -3044,7 +3044,7 @@ const RegisterPage = () => {
                                                             onChange={handleChange}
                                                             required
                                                             readOnly
-                                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none"
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-white focus:outline-none"
                                                             placeholder="Auto-filled"
                                                         />
                                                     </div>
@@ -3057,7 +3057,7 @@ const RegisterPage = () => {
                                                             onChange={handleChange}
                                                             required
                                                             readOnly
-                                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none"
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-white focus:outline-none"
                                                             placeholder="Auto-filled"
                                                         />
                                                     </div>
@@ -3111,14 +3111,14 @@ const RegisterPage = () => {
                                                                     <motion.div 
                                                                         initial={{ width: 0 }}
                                                                         animate={{ width: `${uploadProgress.aadhaarCard}%` }}
-                                                                        className="h-full bg-teal-500 rounded-full"
+                                                                        className="h-full bg-blue-600 rounded-full"
                                                                     />
                                                                 </div>
                                                                 <p className="text-xs text-gray-500 mt-1">Uploading... {uploadProgress.aadhaarCard}%</p>
                                                             </div>
                                                         )}
                                                         {documents.aadhaarCard && uploadProgress.aadhaarCard === 100 && (
-                                                            <div className="mt-2 flex items-center gap-1 text-green-600">
+                                                            <div className="mt-2 flex items-center gap-1 text-blue-700">
                                                                 <CheckCircle className="w-4 h-4" />
                                                                 <span className="text-xs">Uploaded successfully</span>
                                                             </div>
@@ -3143,14 +3143,14 @@ const RegisterPage = () => {
                                                                     <motion.div 
                                                                         initial={{ width: 0 }}
                                                                         animate={{ width: `${uploadProgress.panCard}%` }}
-                                                                        className="h-full bg-teal-500 rounded-full"
+                                                                        className="h-full bg-blue-600 rounded-full"
                                                                     />
                                                                 </div>
                                                                 <p className="text-xs text-gray-500 mt-1">Uploading... {uploadProgress.panCard}%</p>
                                                             </div>
                                                         )}
                                                         {documents.panCard && uploadProgress.panCard === 100 && (
-                                                            <div className="mt-2 flex items-center gap-1 text-green-600">
+                                                            <div className="mt-2 flex items-center gap-1 text-blue-700">
                                                                 <CheckCircle className="w-4 h-4" />
                                                                 <span className="text-xs">Uploaded successfully</span>
                                                             </div>
@@ -3189,7 +3189,7 @@ const RegisterPage = () => {
                                                 >
                                                     {selectedProducts.length} product{selectedProducts.length !== 1 ? 's' : ''} selected
                                                     {selectedProducts.some(p => p.price > 0) && (
-                                                        <span className="block text-green-600 font-bold mt-1">
+                                                        <span className="block text-blue-700 font-bold mt-1">
                                                             Total: ₹{selectedProducts.reduce((sum, p) => sum + p.price, 0)}
                                                         </span>
                                                     )}
@@ -3218,38 +3218,38 @@ const RegisterPage = () => {
                                                             onClick={() => handleProductToggle(product)}
                                                             className={`cursor-pointer rounded-2xl p-6 transition-all duration-300 card-hover ${
                                                                 selectedProducts.find(p => p._id === product._id)
-                                                                    ? 'bg-gradient-to-br from-green-500 to-blue-600 text-white shadow-2xl transform scale-105'
+                                                                    ? 'bg-gradient-to-br from-green-500 to-blue-600 text-gray-900 shadow-2xl transform scale-105'
                                                                     : 'bg-white border-2 border-gray-200 hover:border-green-300 hover:shadow-xl'
                                                             }`}
                                                         >
                                                             <div className="flex justify-between items-start mb-4">
-                                                                <h3 className={`text-xl font-bold ${selectedProducts.find(p => p._id === product._id) ? 'text-white' : 'text-gray-700'}`}>
+                                                                <h3 className={`text-xl font-bold ${selectedProducts.find(p => p._id === product._id) ? 'text-gray-900' : 'text-gray-700'}`}>
                                                                     {product.name}
                                                                 </h3>
                                                                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                                                                     product.price === 0 
-                                                                        ? 'bg-green-500 text-white' 
+                                                                        ? 'bg-blue-600 text-gray-900' 
                                                                         : selectedProducts.find(p => p._id === product._id)
-                                                                            ? 'bg-white text-green-600'
-                                                                            : 'bg-green-100 text-green-700'
+                                                                            ? 'bg-white text-blue-700'
+                                                                            : 'bg-blue-100 text-green-700'
                                                                 }`}>
                                                                     {formatPrice(product.price)}
                                                                 </span>
                                                             </div>
                                                             
                                                             {product.code && (
-                                                                <p className={`text-xs mb-2 ${selectedProducts.find(p => p._id === product._id) ? 'text-white/80' : 'text-gray-500'}`}>
+                                                                <p className={`text-xs mb-2 ${selectedProducts.find(p => p._id === product._id) ? 'text-gray-900/80' : 'text-gray-500'}`}>
                                                                     Code: {product.code}
                                                                 </p>
                                                             )}
                                                             
-                                                            <p className={`text-sm mb-3 ${selectedProducts.find(p => p._id === product._id) ? 'text-white/90' : 'text-gray-500'}`}>
+                                                            <p className={`text-sm mb-3 ${selectedProducts.find(p => p._id === product._id) ? 'text-gray-900/90' : 'text-gray-500'}`}>
                                                                 {product.description}
                                                             </p>
                                                             
                                                             {product.price === 0 && (
                                                                 <div className="mt-3">
-                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-green-500 text-white rounded-full">
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-600 text-gray-900 rounded-full">
                                                                         <Zap className="w-3 h-3" />
                                                                         Free Access
                                                                     </span>
@@ -3263,7 +3263,7 @@ const RegisterPage = () => {
                                                                         : 'border-gray-300'
                                                                 }`}>
                                                                     {selectedProducts.find(p => p._id === product._id) && (
-                                                                        <CheckCircle className="w-4 h-4 text-green-600" />
+                                                                        <CheckCircle className="w-4 h-4 text-blue-700" />
                                                                     )}
                                                                 </div>
                                                             </div>
@@ -3314,7 +3314,7 @@ const RegisterPage = () => {
                                         whileTap={{ scale: 0.98 }}
                                         type="button"
                                         onClick={nextStep}
-                                        className="ml-auto px-8 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-xl shadow-lg transition-all duration-300 flex items-center gap-2 font-medium btn-perfect"
+                                        className="ml-auto px-8 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-gray-900 rounded-xl shadow-lg transition-all duration-300 flex items-center gap-2 font-medium btn-perfect"
                                     >
                                         Next: Select Products
                                         <ArrowRight className="w-4 h-4" />
@@ -3327,7 +3327,7 @@ const RegisterPage = () => {
                                         whileTap={{ scale: 0.98 }}
                                         type="submit"
                                         disabled={isLoading}
-                                        className={`ml-auto px-8 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-xl shadow-lg transition-all duration-300 flex items-center gap-2 font-medium btn-perfect ${
+                                        className={`ml-auto px-8 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-gray-900 rounded-xl shadow-lg transition-all duration-300 flex items-center gap-2 font-medium btn-perfect ${
                                             isLoading ? 'opacity-70 cursor-not-allowed' : ''
                                         }`}
                                     >
@@ -3350,7 +3350,7 @@ const RegisterPage = () => {
                         <div className="mt-8 text-center">
                             <p className="text-sm text-gray-500">
                                 Already have an account?{' '}
-                                <Link to="/login" className="text-green-600 hover:text-green-700 font-semibold hover:underline transition">
+                                <Link to="/login" className="text-blue-700 hover:text-green-700 font-semibold hover:underline transition">
                                     Login here
                                 </Link>
                             </p>

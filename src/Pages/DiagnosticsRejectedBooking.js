@@ -81,7 +81,7 @@ const DiagnosticsRejectedBooking = () => {
         />
         <button
           onClick={exportToExcel}
-          className="px-4 py-2 bg-green-700 text-white rounded text-sm flex items-center gap-1"
+          className="px-4 py-2 bg-blue-800 text-gray-900 rounded text-sm flex items-center gap-1"
         >
           <FaFileExcel /> Excel
         </button>
@@ -108,7 +108,7 @@ const DiagnosticsRejectedBooking = () => {
           </thead>
           <tbody>
             {currentBookings.map((booking) => (
-              <tr key={booking.bookingId} className="hover:bg-gray-50 border-b">
+              <tr key={booking.bookingId} className="hover:bg-white border-b">
                 <td className="p-2 border">{booking.patient_name}</td>
                 <td className="p-2 border">{booking.patient_age || booking.age || "N/A"}</td>
                 <td className="p-2 border">{booking.patient_gender || booking.gender || "N/A"}</td>

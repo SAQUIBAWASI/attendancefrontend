@@ -33,7 +33,7 @@ const CandidateDocuments = () => {
                 </div>
                 <input
                   type="text"
-                  className="w-full py-2.5 pl-10 pr-4 bg-gray-50 text-xs text-gray-700 placeholder-gray-400 font-bold border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all"
+                  className="w-full py-2.5 pl-10 pr-4 bg-white text-xs text-gray-700 placeholder-gray-400 font-bold border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all"
                   placeholder="Search by position..."
                   value={localSearchQuery}
                   onChange={(e) => setLocalSearchQuery(e.target.value)}
@@ -41,8 +41,8 @@ const CandidateDocuments = () => {
               </div>
 
               <div className="hidden sm:flex bg-emerald-50 px-4 py-2.5 rounded-xl border border-emerald-100 shadow-sm items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{agreementApps.length} Agreements</span>
+                <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
+                <span className="text-[10px] font-bold text-blue-700 uppercase tracking-widest">{agreementApps.length} Agreements</span>
               </div>
             </div>
           </div>
@@ -54,7 +54,7 @@ const CandidateDocuments = () => {
             <div className="overflow-x-auto">
               <table className="min-w-full">
                 <thead>
-                  <tr className="bg-gradient-to-r from-green-500 to-blue-600 text-white text-center uppercase tracking-wider text-[10px] font-bold">
+                  <tr className="bg-gradient-to-r from-green-500 to-blue-600 text-gray-900 text-center uppercase tracking-wider text-[10px] font-bold">
                     <th className="py-3 px-8">Document Portfolio</th>
                     <th className="py-3 px-6">Reference ID</th>
                     <th className="py-3 px-6">Audit Date</th>
@@ -67,7 +67,7 @@ const CandidateDocuments = () => {
                     <tr key={app._id} className="group hover:bg-indigo-50/20 transition-all duration-300">
                       <td className="py-2 px-8">
                         <div className="flex items-center justify-center gap-3">
-                          <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-500 border border-emerald-100 group-hover:scale-110 transition-transform shrink-0">
+                          <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center text-blue-600 border border-emerald-100 group-hover:scale-110 transition-transform shrink-0">
                             <FaShieldAlt size={14} />
                           </div>
                           <div className="text-left">
@@ -77,18 +77,18 @@ const CandidateDocuments = () => {
                         </div>
                       </td>
                       <td className="py-2 px-6">
-                        <span className="font-bold text-[10px] text-gray-500 border border-gray-200 px-2 py-0.5 rounded bg-gray-50 uppercase tracking-widest">
+                        <span className="font-bold text-[10px] text-gray-500 border border-gray-200 px-2 py-0.5 rounded bg-white uppercase tracking-widest">
                           #{app._id.slice(-8).toUpperCase()}
                         </span>
                       </td>
                       <td className="py-2 px-6 text-xs font-bold text-gray-500 uppercase tracking-tight">
                         <div className="flex items-center justify-center gap-2">
-                          <FaCalendarAlt className="text-blue-400" size={10} />
+                          <FaCalendarAlt className="text-blue-500" size={10} />
                           {new Date(app.updatedAt).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' })}
                         </div>
                       </td>
                       <td className="py-2 px-6">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold uppercase tracking-widest">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold uppercase tracking-widest">
                           <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>
                           Verified
                         </div>
@@ -96,7 +96,7 @@ const CandidateDocuments = () => {
                       <td className="py-2 px-8 text-center">
                         <button
                           onClick={() => { setSelectedOffer(app); setActiveDocTab("agreement"); setIsModalOpen(true); }}
-                          className="p-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-lg transition-all shadow-sm"
+                          className="p-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-gray-900 rounded-lg transition-all shadow-sm"
                           title="View Document"
                         >
                           <FaEye size={14} />
@@ -109,7 +109,7 @@ const CandidateDocuments = () => {
             </div>
           ) : (
             <div className="p-24 text-center">
-              <div className="w-20 h-20 bg-gray-50 rounded-[2.5rem] flex items-center justify-center text-gray-900 mx-auto mb-6 border-2 border-dashed border-gray-200">
+              <div className="w-20 h-20 bg-white rounded-[2.5rem] flex items-center justify-center text-gray-900 mx-auto mb-6 border-2 border-dashed border-gray-200">
                 <FaInbox size={32} />
               </div>
               <h3 className="text-lg font-bold text-gray-700 uppercase tracking-widest">No Archival Records</h3>

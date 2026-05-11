@@ -36,7 +36,7 @@ const UsersPlansList = () => {
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse border border-gray-300">
-            <thead className="bg-purple-600 text-white">
+            <thead className="bg-purple-600 text-gray-900">
               <tr>
                 <th className="p-2 border">Sl</th>
                 <th className="p-2 border">Name</th>
@@ -47,7 +47,7 @@ const UsersPlansList = () => {
             </thead>
             <tbody>
               {usersData.map((user, index) => (
-                <tr key={user.email} className="border-b hover:bg-gray-50">
+                <tr key={user.email} className="border-b hover:bg-white">
                   <td className="p-2 border">{index + 1}</td>
                   <td className="p-2 border">{user.name}</td>
                   <td className="p-2 border">{user.email}</td>

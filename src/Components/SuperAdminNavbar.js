@@ -2,7 +2,7 @@ import { Menu, X } from "lucide-react";
 
 const SuperAdminNavbar = ({ isCollapsed, setIsCollapsed, isMobile, setIsMobile }) => {
   return (
-    <header className="flex items-center justify-between w-full p-4 text-white bg-blue-800 shadow">
+    <header className="flex items-center justify-between w-full p-4 text-white bg-[#1E3A8A] shadow">
       {/* Sidebar Toggle Button */}
       <button
         onClick={() => {

@@ -518,7 +518,7 @@ const EmployeeDashboard = () => {
             </p>
           </div>
           <div className="flex items-center gap-3 bg-white px-4 py-2 text-slate-500 rounded-xl shadow-md border border-gray-200 transition-all hover:shadow-lg">
-            <FiCalendar className="text-blue-500" />
+            <FiCalendar className="text-blue-600" />
             <span className="text-xs font-semibold tracking-tight">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </span>
@@ -542,7 +542,7 @@ const EmployeeDashboard = () => {
                 {isMyBirthday && (
                   <div className="relative overflow-hidden p-6 rounded-2xl bg-gradient-to-r from-rose-500 to-indigo-600 text-gray-900 shadow-lg animate-in fade-in slide-in-from-bottom duration-500">
                     <div className="relative z-10 flex items-center gap-4">
-                      <div className="p-3 bg-black/20 rounded-xl backdrop-blur-sm border border-white/30">
+                      <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm border border-white/30">
                         <FaBirthdayCake className="text-3xl text-gray-900" />
                       </div>
                       <div>
@@ -556,7 +556,7 @@ const EmployeeDashboard = () => {
                 {myAnniversary && (
                   <div className="relative overflow-hidden p-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-700 text-gray-900 shadow-lg animate-in fade-in slide-in-from-bottom duration-500">
                     <div className="relative z-10 flex items-center gap-4">
-                      <div className="p-3 bg-black/20 rounded-xl backdrop-blur-sm border border-white/30">
+                      <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm border border-white/30">
                         <FaAward className="text-3xl text-gray-900" />
                       </div>
                       <div>
@@ -617,7 +617,7 @@ const EmployeeDashboard = () => {
                     <div className="flex items-center gap-3">
                       <div className="flex -space-x-2 overflow-hidden">
                         {deptAnniversaries.slice(0, 3).map((a, i) => (
-                          <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-emerald-50 flex items-center justify-center text-xs font-bold text-emerald-600 border border-emerald-100" title={a.name}>
+                          <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-emerald-50 flex items-center justify-center text-xs font-bold text-blue-700 border border-emerald-100" title={a.name}>
                             {a.name.split(' ').map(n => n[0]).join('')}
                           </div>
                         ))}
@@ -637,9 +637,9 @@ const EmployeeDashboard = () => {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="text-[10px] font-bold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">View All</div>
+                      <div className="text-[10px] font-bold text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity">View All</div>
                       <button 
-                        className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                        className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
                         onClick={(e) => { e.stopPropagation(); alert(`Anniversary congratulations sent! 🎊`); }}
                       >
                         Celebrate
@@ -697,7 +697,7 @@ const EmployeeDashboard = () => {
                         </h3>
                       <button 
                         onClick={() => setShowModal(false)}
-                        className="p-2 text-slate-500 hover:text-slate-500 hover:bg-gray-50 rounded-xl transition-all"
+                        className="p-2 text-slate-500 hover:text-slate-500 hover:bg-white rounded-xl transition-all"
                       >
                         <FiX className="text-xl" />
                       </button>
@@ -705,11 +705,11 @@ const EmployeeDashboard = () => {
                     <div className="p-2 max-h-[60vh] overflow-y-auto">
                       <div className="grid grid-cols-1 gap-2 p-2">
                         {(modalType === 'birthday' ? deptBirthdays : modalType === 'anniversary' ? deptAnniversaries : deptLeaves).map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl hover:bg-white border border-transparent hover:border-gray-200 hover:shadow-sm transition-all group">
+                          <div key={idx} className="flex items-center justify-between p-4 bg-white/50 rounded-xl hover:bg-white border border-transparent hover:border-gray-200 hover:shadow-sm transition-all group">
                              <div className="flex items-center gap-4">
                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shadow-sm ${
                                  modalType === 'birthday' ? 'bg-rose-100 text-rose-600' : 
-                                 modalType === 'anniversary' ? 'bg-emerald-100 text-emerald-600' :
+                                 modalType === 'anniversary' ? 'bg-blue-100 text-blue-700' :
                                  'bg-amber-100 text-amber-600'
                                }`}>
                                  {(item.name || item.employeeName).split(' ').map(n => n[0]).join('')}
@@ -725,7 +725,7 @@ const EmployeeDashboard = () => {
                                <button 
                                  className={`px-3 py-1.5 bg-white border rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm ${
                                    modalType === 'birthday' ? 'text-rose-500 border-rose-100 hover:bg-rose-500 hover:text-gray-900' : 
-                                   'text-emerald-600 border-emerald-100 hover:bg-blue-600 hover:text-gray-900'
+                                   'text-blue-700 border-emerald-100 hover:bg-blue-600 hover:text-gray-900'
                                  }`}
                                  onClick={() => alert(`Celebration wish sent to ${item.name}! 🎊`)}
                                >
@@ -741,10 +741,10 @@ const EmployeeDashboard = () => {
                         ))}
                       </div>
                     </div>
-                    <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+                    <div className="p-4 bg-white border-t border-gray-200 flex justify-end">
                        <button 
                          onClick={() => setShowModal(false)}
-                         className="px-5 py-2 bg-gray-900 text-white rounded-lg text-xs font-bold hover:bg-gray-100 transition-all shadow-md shadow-gray-200"
+                         className="px-5 py-2 bg-gray-100 text-gray-900 rounded-lg text-xs font-bold hover:bg-gray-100 transition-all shadow-md shadow-gray-200"
                        >
                          Close
                        </button>
@@ -782,7 +782,7 @@ const EmployeeDashboard = () => {
 
               <button
                 onClick={() => navigate("/myattendance")}
-                className="w-full mt-6 py-2 bg-gray-50 hover:bg-gray-100 text-slate-700 border border-gray-200 rounded-lg text-xs font-bold transition-all"
+                className="w-full mt-6 py-2 bg-white hover:bg-gray-100 text-slate-700 border border-gray-200 rounded-lg text-xs font-bold transition-all"
               >
                 View Full Attendance Report
               </button>
@@ -955,15 +955,15 @@ const EmployeeDashboard = () => {
                 <table className="w-full text-left">
                   <thead className="bg-gradient-to-r from-green-500 to-blue-600">
                     <tr>
-                      <th className="px-4 py-3 text-xs font-bold text-white uppercase tracking-wider">DATE</th>
-                      <th className="px-4 py-3 text-xs font-bold text-white uppercase tracking-wider">CHECK IN</th>
-                      <th className="px-4 py-3 text-xs font-bold text-white uppercase tracking-wider">CHECK OUT</th>
-                      <th className="px-4 py-3 text-xs font-bold text-white uppercase tracking-wider text-right">STATUS</th>
+                      <th className="px-4 py-3 text-xs font-bold text-gray-900 uppercase tracking-wider">DATE</th>
+                      <th className="px-4 py-3 text-xs font-bold text-gray-900 uppercase tracking-wider">CHECK IN</th>
+                      <th className="px-4 py-3 text-xs font-bold text-gray-900 uppercase tracking-wider">CHECK OUT</th>
+                      <th className="px-4 py-3 text-xs font-bold text-gray-900 uppercase tracking-wider text-right">STATUS</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {userAttendance.slice(0, 5).map((record, index) => (
-                      <tr key={index} className="group hover:bg-gray-50 transition-colors">
+                      <tr key={index} className="group hover:bg-white transition-colors">
                         <td className="px-4 py-4 text-sm font-semibold text-slate-700">
                           {new Date(record.checkInTime).toLocaleDateString()}
                         </td>
@@ -974,7 +974,7 @@ const EmployeeDashboard = () => {
                           {record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
                         </td>
                         <td className="px-4 py-4 text-right">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${record.status === 'present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${record.status === 'present' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
                             }`}>
                             {record.status}
                           </span>
@@ -1004,8 +1004,8 @@ const MiniDetail = ({ label, value, isStatus }) => (
   <div className="flex items-center justify-between py-1 border-b border-gray-50 last:border-0">
     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</span>
     {isStatus ? (
-      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-100 text-green-800">
-        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
+        <div className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></div>
         <span className="text-[10px] font-bold uppercase tracking-wider">Active</span>
       </div>
     ) : (
@@ -1017,8 +1017,8 @@ const MiniDetail = ({ label, value, isStatus }) => (
 // SleekAction Component - Compact and Professional
 const SleekAction = ({ icon, title, desc, color, onClick }) => {
   const themes = {
-    blue: "bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:shadow-lg shadow-blue-100",
-    slate: "bg-gray-50 text-slate-700 border-gray-200 hover:bg-gray-100 hover:border-gray-200"
+    blue: "bg-blue-600 text-gray-900 border-blue-600 hover:bg-blue-700 hover:shadow-lg shadow-blue-100",
+    slate: "bg-white text-slate-700 border-gray-200 hover:bg-gray-100 hover:border-gray-200"
   };
 
   const iconColors = {
@@ -1031,7 +1031,7 @@ const SleekAction = ({ icon, title, desc, color, onClick }) => {
       onClick={onClick}
       className={`p-3 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 ${themes[color]}`}
     >
-      <div className={`text-lg p-1.5 rounded-lg ${color === 'blue' ? 'bg-black/10' : 'bg-white shadow-sm'} ${iconColors[color]}`}>
+      <div className={`text-lg p-1.5 rounded-lg ${color === 'blue' ? 'bg-white/10' : 'bg-white shadow-sm'} ${iconColors[color]}`}>
         {icon}
       </div>
       <div>

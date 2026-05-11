@@ -197,7 +197,7 @@
 //               const isEmployee = window.location.pathname.startsWith("/emp-");
 //               navigate(isEmployee ? "/emp-add-location" : "/addlocation");
 //             }}
-//             className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+//             className="flex items-center gap-2 px-4 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800"
 //           >
 //             📍 Add Location
 //           </button>
@@ -216,7 +216,7 @@
 
 //       {/* Empty State */}
 //       {!loading && filteredLocations.length === 0 && (
-//         <div className="p-6 text-center text-gray-500 rounded-md bg-gray-50">
+//         <div className="p-6 text-center text-gray-500 rounded-md bg-white">
 //           No matching locations found.
 //         </div>
 //       )}
@@ -225,7 +225,7 @@
 //       {!loading && filteredLocations.length > 0 && (
 //         <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //           <table className="min-w-full">
-//             <thead className="text-left text-sm text-white bg-gradient-to-r from-green-500 to-blue-600">
+//             <thead className="text-left text-sm text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //               <tr>
 //                 <th className="px-2 py-2 text-center">S.No</th>
 //                 <th className="px-2 py-2 text-center">Location Name</th>
@@ -254,8 +254,8 @@
 //                       <button
 //                         onClick={() => handleToggleStatus(loc)}
 //                         className={`px-2 py-2 text-center text-[10px] font-bold rounded uppercase transition ${loc.status === "inactive"
-//                           ? "bg-gray-100 text-gray-500 hover:bg-green-100 hover:text-green-700"
-//                           : "bg-green-100 text-green-700 hover:bg-gray-200 hover:text-gray-700"
+//                           ? "bg-gray-100 text-gray-500 hover:bg-blue-100 hover:text-green-700"
+//                           : "bg-blue-100 text-green-700 hover:bg-gray-200 hover:text-gray-700"
 //                           }`}
 //                         title={loc.status === "inactive" ? "Make Active" : "Make Inactive"}
 //                       >
@@ -278,7 +278,7 @@
 
 //       {/* Edit Modal */}
 //       {isEditModalOpen && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100/60">
 //           <div className="w-full max-w-md p-6 bg-white border border-gray-200 shadow-2xl rounded-xl">
 //             <h3 className="mb-4 text-lg font-semibold text-blue-800">Edit Location</h3>
 //             <form onSubmit={handleUpdate}>
@@ -341,7 +341,7 @@
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-2 py-2 text-center text-white transition bg-blue-600 rounded shadow-md hover:bg-blue-700 hover:shadow-lg"
+//                   className="px-2 py-2 text-center text-gray-900 transition bg-blue-600 rounded shadow-md hover:bg-blue-700 hover:shadow-lg"
 //                 >
 //                   Save Changes
 //                 </button>
@@ -745,7 +745,7 @@ const LocationListPage = () => {
                 onClick={() => setShowCityFilter(!showCityFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterCity 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -788,7 +788,7 @@ const LocationListPage = () => {
                 onClick={() => setShowStateFilter(!showStateFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterState 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -843,7 +843,7 @@ const LocationListPage = () => {
                 const isEmployee = window.location.pathname.startsWith("/emp-");
                 navigate(isEmployee ? "/emp-add-location" : "/addlocation");
               }}
-              className="h-8 px-3 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition flex items-center gap-1"
+              className="h-8 px-3 text-xs font-medium text-gray-900 bg-blue-600 rounded-md hover:bg-blue-800 transition flex items-center gap-1"
             >
               📍 Add Location
             </button>
@@ -883,7 +883,7 @@ const LocationListPage = () => {
           <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
             <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
               <table className="min-w-full">
-                <thead className="text-left text-sm text-white bg-gradient-to-r from-green-500 to-blue-600">
+                <thead className="text-left text-sm text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                   <tr>
                     <th className="px-2 py-2 text-center">S.No</th>
                     <th className="px-2 py-2 text-center">Location Name</th>
@@ -944,8 +944,8 @@ const LocationListPage = () => {
                               onClick={() => handleToggleStatus(loc)}
                               className={`px-2 py-2 text-center text-[10px] font-bold rounded uppercase transition ${
                                 loc.status === "inactive"
-                                  ? "bg-gray-100 text-gray-500 hover:bg-green-100 hover:text-green-700"
-                                  : "bg-green-100 text-green-700 hover:bg-gray-200 hover:text-gray-700"
+                                  ? "bg-gray-100 text-gray-500 hover:bg-blue-100 hover:text-green-700"
+                                  : "bg-blue-100 text-green-700 hover:bg-gray-200 hover:text-gray-700"
                               }`}
                               title={loc.status === "inactive" ? "Make Active" : "Make Inactive"}
                             >
@@ -969,7 +969,7 @@ const LocationListPage = () => {
 
             {/* Pagination */}
             {filteredLocations.length > 0 && (
-              <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
+              <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-white sm:flex-row">
                 {/* Show entries dropdown */}
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-2">
@@ -1018,9 +1018,9 @@ const LocationListPage = () => {
                       disabled={page === "..."}
                       className={`px-4 py-1 text-sm border rounded-lg ${
                         page === "..."
-                          ? "text-gray-500 bg-gray-50 cursor-default"
+                          ? "text-gray-500 bg-white cursor-default"
                           : pagination.currentPage === page
-                          ? "text-white bg-blue-600 border-blue-600"
+                          ? "text-gray-900 bg-blue-600 border-blue-600"
                           : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                       }`}
                     >
@@ -1047,7 +1047,7 @@ const LocationListPage = () => {
 
         {/* Edit Modal */}
         {isEditModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100/60">
             <div className="w-full max-w-md p-6 bg-white border border-gray-200 shadow-2xl rounded-xl">
               <h3 className="mb-4 text-lg font-semibold text-blue-800">Edit Location</h3>
               <form onSubmit={handleUpdate}>
@@ -1110,7 +1110,7 @@ const LocationListPage = () => {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 text-white transition bg-blue-600 rounded shadow-md hover:bg-blue-700 hover:shadow-lg"
+                    className="px-4 py-2 text-gray-900 transition bg-blue-600 rounded shadow-md hover:bg-blue-700 hover:shadow-lg"
                   >
                     Save Changes
                   </button>

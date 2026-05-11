@@ -84,7 +84,7 @@ const PlanList = () => {
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300">
-          <thead className="bg-purple-600 text-white">
+          <thead className="bg-purple-600 text-gray-900">
             <tr>
               <th className="p-2 border">Sl</th>
               <th className="p-2 border">Plan Name</th>
@@ -98,7 +98,7 @@ const PlanList = () => {
           </thead>
           <tbody>
             {currentPlans.map((plan, index) => (
-              <tr key={plan._id} className="border-b hover:bg-gray-50">
+              <tr key={plan._id} className="border-b hover:bg-white">
                 <td className="p-2 border">{index + 1 + indexOfFirstPlan}</td>
                 <td className="p-2 border">{plan.name}</td>
                 <td className="p-2 border">₹{plan.originalPrice}</td>
@@ -150,7 +150,7 @@ const PlanList = () => {
             key={index}
             onClick={() => setCurrentPage(index + 1)}
             className={`px-4 py-2 rounded ${
-              currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+              currentPage === index + 1 ? "bg-blue-600 text-gray-900" : "bg-gray-200"
             }`}
           >
             {index + 1}
@@ -167,7 +167,7 @@ const PlanList = () => {
 
       {/* Edit Modal */}
       {isModalOpen && selectedPlan && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-white  z-50">
           <div className="bg-white p-6 rounded shadow-lg w-full max-w-lg">
             <h3 className="text-lg font-semibold mb-4">Edit Plan</h3>
             <div className="space-y-3">
@@ -229,7 +229,7 @@ const PlanList = () => {
               </button>
               <button
                 onClick={handleModalSubmit}
-                className="px-4 py-2 rounded bg-blue-600 text-white"
+                className="px-4 py-2 rounded bg-blue-600 text-gray-900"
               >
                 Save
               </button>

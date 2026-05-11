@@ -54,7 +54,7 @@ const AcceptedAppointmentsList = () => {
     if (!showModal || !selectedAppointment) return null;
 
     return (
-      <div className="fixed inset-0 flex justify-center items-center bg-gray-500 bg-opacity-50">
+      <div className="fixed inset-0 flex justify-center items-center bg-white0 ">
         <div className="bg-white p-6 rounded shadow-md w-96">
           <h3 className="text-lg font-semibold mb-4">Upload Prescription for {selectedAppointment.patient_name}</h3>
           <div className="mb-4">
@@ -68,13 +68,13 @@ const AcceptedAppointmentsList = () => {
           <div className="flex justify-end">
             <button
               onClick={handleFileUpload}
-              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+              className="px-4 py-2 bg-blue-600 text-gray-900 rounded-md hover:bg-blue-600"
             >
               Upload
             </button>
             <button
               onClick={() => setShowModal(false)}
-              className="ml-2 px-4 py-2 bg-gray-300 text-white rounded-md hover:bg-gray-400"
+              className="ml-2 px-4 py-2 bg-gray-300 text-gray-900 rounded-md hover:bg-gray-400"
             >
               Close
             </button>
@@ -89,7 +89,7 @@ const AcceptedAppointmentsList = () => {
       <h2 className="text-xl font-semibold mb-4">Accepted Appointments</h2>
       <div className="overflow-x-auto">
         <table className="w-full border rounded text-sm">
-          <thead className="bg-green-100">
+          <thead className="bg-blue-100">
             <tr>
               <th className="p-2 border">Doctor</th>
               <th className="p-2 border">Specialization</th>
@@ -104,7 +104,7 @@ const AcceptedAppointmentsList = () => {
           </thead>
           <tbody>
             {appointments.map((appt) => (
-              <tr key={appt.appointmentId} className="hover:bg-gray-50 border-b">
+              <tr key={appt.appointmentId} className="hover:bg-white border-b">
                 <td className="p-2 border flex items-center gap-2">
                   <img
                     src={appt.doctor_image}
@@ -126,7 +126,7 @@ const AcceptedAppointmentsList = () => {
                       setSelectedAppointment(appt); // Set the selected appointment
                       setShowModal(true); // Show the modal
                     }}
-                    className="px-4 py-2 bg-blue-900 text-white rounded-md"
+                    className="px-4 py-2 bg-blue-900 text-gray-900 rounded-md"
                   >
                     Add
                   </button>

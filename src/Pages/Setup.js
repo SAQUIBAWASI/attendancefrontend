@@ -29,38 +29,38 @@ export default function SetupRulesTable() {
           </thead>
           <tbody>
             {data.map((item, index) => (
-              <tr key={item.id} className="border-b hover:bg-gray-50">
+              <tr key={item.id} className="border-b hover:bg-white">
                 <td className="p-3">{index + 1}</td>
                 <td className="p-3">{item.name}</td>
                 <td className="p-3">{item.type}</td>
                 <td className="p-3">{item.amount}</td>
                 <td className="p-3">
-                  <span className={`px-2 py-1 rounded text-white ${item.onGross === "Yes" ? "bg-green-500" : "bg-red-500"}`}>
+                  <span className={`px-2 py-1 rounded text-gray-900 ${item.onGross === "Yes" ? "bg-blue-600" : "bg-red-500"}`}>
                     {item.onGross}
                   </span>
                 </td>
                 <td className="p-3">
-                  <span className={`px-2 py-1 rounded text-white ${item.onBasic === "Yes" ? "bg-green-500" : "bg-red-500"}`}>
+                  <span className={`px-2 py-1 rounded text-gray-900 ${item.onBasic === "Yes" ? "bg-blue-600" : "bg-red-500"}`}>
                     {item.onBasic}
                   </span>
                 </td>
                 <td className="p-3">
-                  <span className="px-2 py-1 bg-green-500 text-white rounded">{item.status}</span>
+                  <span className="px-2 py-1 bg-blue-600 text-gray-900 rounded">{item.status}</span>
                 </td>
                 <td className="p-3 flex space-x-2">
                   <div className="relative group">
-                    <button className="p-2 bg-blue-500 text-white rounded hover:scale-110 transition">
+                    <button className="p-2 bg-blue-600 text-gray-900 rounded hover:scale-110 transition">
                       <Pencil size={16} />
                     </button>
-                    <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-white text-white text-xs px-2 py-1 rounded">
+                    <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-white text-gray-900 text-xs px-2 py-1 rounded">
                       Edit
                     </span>
                   </div>
                   <div className="relative group">
-                    <button className="p-2 bg-red-500 text-white rounded hover:scale-110 transition">
+                    <button className="p-2 bg-red-500 text-gray-900 rounded hover:scale-110 transition">
                       <Trash size={16} />
                     </button>
-                    <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-white text-white text-xs px-2 py-1 rounded">
+                    <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-white text-gray-900 text-xs px-2 py-1 rounded">
                       Delete
                     </span>
                   </div>

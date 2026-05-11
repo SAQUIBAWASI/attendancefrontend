@@ -79,7 +79,7 @@
 //       </h2> */}
 
 //       {absentEmployees.length === 0 ? (
-//         <p className="font-semibold text-center text-green-600">
+//         <p className="font-semibold text-center text-blue-700">
 //           No absent employees today 🎉
 //         </p>
 //       ) : (
@@ -96,7 +96,7 @@
 //               {absentEmployees.map((emp) => (
 //                 <tr
 //                   key={emp.employeeId}
-//                   className="border-t cursor-pointer hover:bg-gray-50"
+//                   className="border-t cursor-pointer hover:bg-white"
 //                 >
 //                   <td className="px-4 py-2 font-medium">{emp.employeeId}</td>
 //                   <td className="px-4 py-2">{emp.name}</td>
@@ -359,7 +359,7 @@
 
 //   const getAbsentColor = (absentDays, totalDays) => {
 //     const percentage = (absentDays / totalDays) * 100;
-//     if (percentage <= 10) return 'bg-green-100 text-green-700';
+//     if (percentage <= 10) return 'bg-blue-100 text-green-700';
 //     if (percentage <= 25) return 'bg-lime-100 text-lime-700';
 //     if (percentage <= 50) return 'bg-yellow-100 text-yellow-700';
 //     if (percentage <= 75) return 'bg-orange-100 text-orange-700';
@@ -416,7 +416,7 @@
 
 //             {/* Date/Month Picker */}
 //             <div className="relative">
-//               <FaCalendarAlt className="absolute text-white transform -translate-y-1/2 left-3 top-1/2" />
+//               <FaCalendarAlt className="absolute text-gray-900 transform -translate-y-1/2 left-3 top-1/2" />
 //               {filterType === "date" ? (
 //                 <input
 //                   type="date"
@@ -452,7 +452,7 @@
 //           </div>
 //         ) : filteredEmployees.length === 0 ? (
 //           <div className="p-8 text-center bg-white rounded-lg shadow-md">
-//             <p className="text-lg font-semibold text-green-600">
+//             <p className="text-lg font-semibold text-blue-700">
 //               {filterType === 'date' 
 //                 ? `No absent employees on ${selectedDate} 🎉` 
 //                 : `No absent days in ${selectedMonth} 🎉`}
@@ -470,7 +470,7 @@
 //             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //               <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //                 <table className="min-w-full">
-//                   <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//                   <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                     <tr>
 //                       <th className="py-2 text-center">Employee ID</th>
 //                       <th className="py-2 text-center">Name</th>
@@ -492,7 +492,7 @@
 //                     {currentRows.map((emp) => (
 //                       <tr
 //                         key={emp.employeeId}
-//                         className="transition-colors hover:bg-gray-50"
+//                         className="transition-colors hover:bg-white"
 //                       >
 //                         <td className="px-2 py-2 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
 //                           {emp.employeeId}
@@ -510,7 +510,7 @@
 //                         {filterType === 'month' && (
 //                           <>
 //                             <td className="px-2 py-2 text-center">
-//                               <span className="px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
+//                               <span className="px-3 py-1 text-xs font-semibold text-green-700 bg-blue-100 rounded-full">
 //                                 {emp.presentDays}
 //                               </span>
 //                             </td>
@@ -545,7 +545,7 @@
 
 //               {/* Pagination */}
 //               {filteredEmployees.length > 0 && (
-//                 <div className="flex items-center justify-between px-2 py-2 text-center border-t border-gray-200 bg-gray-50">
+//                 <div className="flex items-center justify-between px-2 py-2 text-center border-t border-gray-200 bg-white">
 //                   <div className="flex flex-wrap items-center justify-between gap-4">
 //                     {/* Left Side - Showing Info + Select */}
 //                     <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
@@ -592,7 +592,7 @@
 //                         }))
 //                       }
 //                       disabled={pagination.currentPage === 1}
-//                       className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                       className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
 //                     >
 //                       Previous
 //                     </button>
@@ -617,8 +617,8 @@
 //                               }
 //                               className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
 //                                 pagination.currentPage === page
-//                                   ? "bg-blue-600 text-white"
-//                                   : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+//                                   ? "bg-blue-600 text-gray-900"
+//                                   : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
 //                               }`}
 //                             >
 //                               {page}
@@ -646,7 +646,7 @@
 //                         }))
 //                       }
 //                       disabled={pagination.currentPage === pagination.totalPages}
-//                       className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                       className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
 //                     >
 //                       Next
 //                     </button>
@@ -994,7 +994,7 @@
 
 //   const getAbsentColor = (absentDays, totalDays) => {
 //     const percentage = (absentDays / totalDays) * 100;
-//     if (percentage <= 10) return 'bg-green-100 text-green-700';
+//     if (percentage <= 10) return 'bg-blue-100 text-green-700';
 //     if (percentage <= 25) return 'bg-lime-100 text-lime-700';
 //     if (percentage <= 50) return 'bg-yellow-100 text-yellow-700';
 //     if (percentage <= 75) return 'bg-orange-100 text-orange-700';
@@ -1026,7 +1026,7 @@
 //                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDepartment 
-//                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
 //                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
@@ -1069,7 +1069,7 @@
 //                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
 //                   filterDesignation 
-//                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
 //                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                 }`}
 //               >
@@ -1136,7 +1136,7 @@
 
 //             {/* Month Selector */}
 //             <div className="relative w-[150px]">
-//               <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+//               <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
 //               <input
 //                 type="month"
 //                 value={selectedMonth}
@@ -1178,7 +1178,7 @@
 //           </div>
 //         ) : filteredEmployees.length === 0 ? (
 //           <div className="p-8 text-center bg-white rounded-lg shadow-md">
-//             <p className="text-lg font-semibold text-green-600">
+//             <p className="text-lg font-semibold text-blue-700">
 //               {fromDate && toDate 
 //                 ? `No absent employees from ${fromDate} to ${toDate} 🎉` 
 //                 : fromDate && !toDate
@@ -1204,7 +1204,7 @@
 //             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //               <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //                 <table className="min-w-full">
-//                   <thead className="text-xs text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//                   <thead className="text-xs text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                     <tr>
 //                       <th className="px-2 py-2 text-center">Employee ID</th>
 //                       <th className="px-2 py-2 text-center">Name</th>
@@ -1225,7 +1225,7 @@
 //                     {currentRows.map((emp) => (
 //                       <tr
 //                         key={emp.employeeId}
-//                         className="text-xs transition-colors hover:bg-gray-50"
+//                         className="text-xs transition-colors hover:bg-white"
 //                       >
 //                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
 //                           {emp.employeeId}
@@ -1243,7 +1243,7 @@
 //                         {selectedMonth && !fromDate && !toDate ? (
 //                           <>
 //                             <td className="px-2 py-2 text-center">
-//                               <span className="px-2 py-1 text-[10px] font-semibold text-green-700 bg-green-100 rounded-full">
+//                               <span className="px-2 py-1 text-[10px] font-semibold text-green-700 bg-blue-100 rounded-full">
 //                                 {emp.presentDays}
 //                               </span>
 //                             </td>
@@ -1276,7 +1276,7 @@
 
 //               {/* Pagination */}
 //               {filteredEmployees.length > 0 && (
-//                 <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-gray-50">
+//                 <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-white">
 //                   <div className="flex flex-wrap items-center gap-2 text-xs text-gray-700">
 //                     <span>Showing</span>
 //                     <span className="font-medium">
@@ -1320,7 +1320,7 @@
 //                         }))
 //                       }
 //                       disabled={pagination.currentPage === 1}
-//                       className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                       className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
 //                     >
 //                       Previous
 //                     </button>
@@ -1345,8 +1345,8 @@
 //                               }
 //                               className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
 //                                 pagination.currentPage === page
-//                                   ? "bg-blue-600 text-white"
-//                                   : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+//                                   ? "bg-blue-600 text-gray-900"
+//                                   : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
 //                               }`}
 //                             >
 //                               {page}
@@ -1374,7 +1374,7 @@
 //                         }))
 //                       }
 //                       disabled={pagination.currentPage === pagination.totalPages}
-//                       className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+//                       className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
 //                     >
 //                       Next
 //                     </button>
@@ -1683,7 +1683,7 @@ const AbsentToday = () => {
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDepartment 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -1725,7 +1725,7 @@ const AbsentToday = () => {
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDesignation 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -1789,7 +1789,7 @@ const AbsentToday = () => {
 
             {/* Month Selector */}
             <div className="relative w-[150px]">
-              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="month"
                 value={selectedMonth}
@@ -1801,7 +1801,7 @@ const AbsentToday = () => {
             {/* Apply Button */}
             <button
               onClick={fetchAbsentEmployees}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-900 bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
             >
               <FaSearch className="text-xs" /> Apply
             </button>
@@ -1820,7 +1820,7 @@ const AbsentToday = () => {
 
         {filteredEmployees.length === 0 ? (
           <div className="p-8 text-center bg-white rounded-lg shadow-md">
-            <p className="text-lg font-semibold text-green-600">
+            <p className="text-lg font-semibold text-blue-700">
               {fromDate && toDate 
                 ? `No absent employees from ${fromDate} to ${toDate} 🎉` 
                 : fromDate && !toDate
@@ -1839,7 +1839,7 @@ const AbsentToday = () => {
             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
               <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
                 <table className="min-w-full">
-                  <thead className="text-xs text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+                  <thead className="text-xs text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                     <tr>
                       <th className="px-2 py-2 text-center">Employee ID</th>
                       <th className="px-2 py-2 text-center">Name</th>
@@ -1852,7 +1852,7 @@ const AbsentToday = () => {
                     {currentRows.map((emp) => (
                       <tr
                         key={emp.employeeId}
-                        className="text-xs transition-colors hover:bg-gray-50"
+                        className="text-xs transition-colors hover:bg-white"
                       >
                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                           {emp.employeeId}
@@ -1877,7 +1877,7 @@ const AbsentToday = () => {
 
               {/* Pagination - Same as TodayAttendance */}
               {filteredEmployees.length > 0 && (
-                <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-white">
                   <div className="flex flex-wrap items-center gap-2 text-xs text-gray-700">
                     <span>Showing</span>
                     <span className="font-medium">
@@ -1920,7 +1920,7 @@ const AbsentToday = () => {
                         }))
                       }
                       disabled={pagination.currentPage === 1}
-                      className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Previous
                     </button>
@@ -1945,8 +1945,8 @@ const AbsentToday = () => {
                               }
                               className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
                                 pagination.currentPage === page
-                                  ? "bg-blue-600 text-white"
-                                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                                  ? "bg-blue-600 text-gray-900"
+                                  : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
                               }`}
                             >
                               {page}
@@ -1974,7 +1974,7 @@ const AbsentToday = () => {
                         }))
                       }
                       disabled={pagination.currentPage === pagination.totalPages}
-                      className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Next
                     </button>

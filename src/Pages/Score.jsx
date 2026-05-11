@@ -316,7 +316,7 @@
 //     if (loading) return <div className="p-8 text-center">Loading Score Board...</div>;
 
 //     return (
-//         <div className="w-full min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8">
+//         <div className="w-full min-h-screen bg-white/50 p-4 md:p-6 lg:p-8">
 //             <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-center xl:justify-between">
 //                 <div className="flex-shrink-0">
 //                     <h2 className="text-base font-bold text-gray-700">Scoring & Selection</h2>
@@ -327,7 +327,7 @@
 //                     <div className="relative w-full sm:w-auto">
 //                         <input
 //                             type="date"
-//                             className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm sm:w-40"
+//                             className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm sm:w-40"
 //                             value={dateFilter}
 //                             onChange={(e) => setDateFilter(e.target.value)}
 //                         />
@@ -348,7 +348,7 @@
 //                             <FiBriefcaseIcon className="text-sm" />
 //                         </div>
 //                         <div
-//                             className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
+//                             className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
 //                             onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
 //                         >
 //                             {roleFilter || "Select Role"}
@@ -366,7 +366,7 @@
 
 //                         {isRoleDropdownOpen && (
 //                             <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-//                                 <div className="p-2 border-b border-gray-200 bg-gray-50">
+//                                 <div className="p-2 border-b border-gray-200 bg-white">
 //                                     <div className="relative">
 //                                         <FiSearch className="absolute left-2.5 top-2.5 text-gray-500 text-xs" />
 //                                         <input
@@ -416,7 +416,7 @@
 //                                                 <FaBriefcase className="text-sm" />
 //                                             </div>
 //                                             <div
-//                                                 className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
+//                                                 className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
 //                                                 onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
 //                                             >
 //                                                 {roleFilter || "Select Dept"}
@@ -435,7 +435,7 @@
 
 //                                             {isRoleDropdownOpen && (
 //                                                 <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-//                                                     <div className="p-2 border-b border-gray-200 bg-gray-50">
+//                                                     <div className="p-2 border-b border-gray-200 bg-white">
 //                                                         <div className="relative">
 //                                                             <FaUserTie className="absolute left-2.5 top-2.5 text-gray-500 text-xs" />
 //                                                             <input
@@ -487,7 +487,7 @@
 //                             <FaStar className="text-[12px]" />
 //                         </div>
 //                         <select
-//                             className="w-full appearance-none bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm"
+//                             className="w-full appearance-none bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm"
 //                             value={scoreFilter}
 //                             onChange={(e) => setScoreFilter(Number(e.target.value))}
 //                         >
@@ -551,7 +551,7 @@
 
 //             <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //              <table className="min-w-full">
-//               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//               <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                         <tr>
 //                             <th className="py-2 text-center">Candidate</th>
 //                             <th className="py-2 text-center">Role</th>
@@ -566,7 +566,7 @@
 //                     </thead>
 //                     <tbody>
 //                         {filteredCandidates.map((c) => (
-//                             <tr key={c._id} className="border-b hover:bg-gray-50 transition-colors">
+//                             <tr key={c._id} className="border-b hover:bg-white transition-colors">
 //                                 <td className="px-2 py-2 font-medium text-center">
 //                                     <div className="flex flex-col">
 //                                         <span className="text-gray-900 whitespace-nowrap">{c.firstName} {c.lastName}</span>
@@ -611,7 +611,7 @@
 //                                         {c.assessmentResults && c.assessmentResults.length > 0 && (
 //                                             <button
 //                                                 onClick={() => handleOpenAssessmentDetails(c)}
-//                                                 className="p-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl transition-all duration-300 shadow-sm hover:shadow-md border border-indigo-100 group flex items-center justify-center transform hover:-translate-y-0.5"
+//                                                 className="p-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-gray-900 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md border border-indigo-100 group flex items-center justify-center transform hover:-translate-y-0.5"
 //                                                 title="View Detailed Answers"
 //                                             >
 //                                                 <FaTasks size={14} className="group-hover:scale-110 transition-transform" />
@@ -631,7 +631,7 @@
 //                                 </td>
 //                                 <td className="px-2 py-2 font-medium text-center">
 //                                     <select
-//                                         className={`p-1 border rounded text-[10px]  ${c.status === "Selected" ? "text-green-600 bg-green-50" :
+//                                         className={`p-1 border rounded text-[10px]  ${c.status === "Selected" ? "text-blue-700 bg-green-50" :
 //                                             c.status === "Interview" ? "text-blue-600 bg-blue-50" : "text-gray-500"
 //                                             }`}
 //                                         value={c.status || "Pending"}
@@ -661,7 +661,7 @@
 //                                         {c.status === "Selected" && (
 //                                             <button
 //                                                 onClick={() => handleOpenInviteModal(c)}
-//                                                 className="p-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center justify-center gap-1 text-[10px] font-bold shadow-sm"
+//                                                 className="p-1.5 bg-blue-600 text-gray-900 rounded hover:bg-blue-700 transition flex items-center justify-center gap-1 text-[10px] font-bold shadow-sm"
 //                                                 title="Send Interview Invite"
 //                                             >
 //                                                 <FaPaperPlane /> INVITE
@@ -670,7 +670,7 @@
 //                                         {c.status === "Selected" && (
 //                                             <button
 //                                                 onClick={() => handleOpenOfferModal(c)}
-//                                                 className="p-1.5 bg-purple-600 text-white rounded hover:bg-purple-700 transition flex items-center justify-center gap-1 text-[10px] font-bold shadow-sm"
+//                                                 className="p-1.5 bg-purple-600 text-gray-900 rounded hover:bg-purple-700 transition flex items-center justify-center gap-1 text-[10px] font-bold shadow-sm"
 //                                                 title="Send Offer Letter"
 //                                             >
 //                                                 <FaEnvelope /> OFFER
@@ -679,7 +679,7 @@
 //                                         {c.status === "Selected" && (
 //                                             <button
 //                                                 onClick={() => handleOpenDocsModal(c)}
-//                                                 className={`p-1.5 text-white rounded transition flex items-center justify-center gap-1 text-[10px] font-bold shadow-sm ${c.docReviewStatus === "Accepted" ? "bg-green-600 hover:bg-green-700" :
+//                                                 className={`p-1.5 text-gray-900 rounded transition flex items-center justify-center gap-1 text-[10px] font-bold shadow-sm ${c.docReviewStatus === "Accepted" ? "bg-blue-600 hover:bg-blue-800" :
 //                                                     c.docReviewStatus === "Pending" ? "bg-orange-500 hover:bg-orange-600" :
 //                                                         "bg-indigo-600 hover:bg-indigo-700"
 //                                                     }`}
@@ -696,9 +696,9 @@
 //                                         {c.status === "Interview" && (
 //                                             <button
 //                                                 onClick={() => handleOpenInviteModal(c)}
-//                                                 className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 flex items-center justify-center gap-1.5 text-[10px] font-black tracking-widest shadow-md hover:shadow-lg hover:-translate-y-0.5"
+//                                                 className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-gray-900 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 flex items-center justify-center gap-1.5 text-[10px] font-black tracking-widest shadow-md hover:shadow-lg hover:-translate-y-0.5"
 //                                             >
-//                                                 <FaPaperPlane className="text-white/90" /> INVITE
+//                                                 <FaPaperPlane className="text-gray-900/90" /> INVITE
 //                                             </button>
 //                                         )}
 
@@ -707,14 +707,14 @@
 //                                             <div className="flex gap-2">
 //                                                 <button
 //                                                     onClick={() => handleOpenOfferModal(c)}
-//                                                     className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-fuchsia-600 text-white rounded-xl hover:from-purple-600 hover:to-fuchsia-700 transition-all duration-300 flex items-center justify-center gap-1.5 text-[10px] font-black tracking-widest shadow-md hover:shadow-lg hover:-translate-y-0.5"
+//                                                     className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-fuchsia-600 text-gray-900 rounded-xl hover:from-purple-600 hover:to-fuchsia-700 transition-all duration-300 flex items-center justify-center gap-1.5 text-[10px] font-black tracking-widest shadow-md hover:shadow-lg hover:-translate-y-0.5"
 //                                                 >
-//                                                     <FaEnvelope className="text-white/90" /> OFFER
+//                                                     <FaEnvelope className="text-gray-900/90" /> OFFER
 //                                                 </button>
 
 //                                                 <button
 //                                                     onClick={() => handleOpenDocsModal(c)}
-//                                                     className={`px-3 py-1.5 text-white rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 text-[10px] font-black tracking-widest shadow-md hover:shadow-lg hover:-translate-y-0.5 ${c.docReviewStatus === "Accepted"
+//                                                     className={`px-3 py-1.5 text-gray-900 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 text-[10px] font-black tracking-widest shadow-md hover:shadow-lg hover:-translate-y-0.5 ${c.docReviewStatus === "Accepted"
 //                                                         ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
 //                                                         : c.docReviewStatus === "Pending"
 //                                                             ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
@@ -738,7 +738,7 @@
 //             {/* Invite Modal */}
 //             {
 //                 isInviteModalOpen && (
-//                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+//                     <div className="fixed inset-0 bg-white  flex items-center justify-center p-4 z-50">
 //                         <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
 //                             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
 //                                 <FaPaperPlane className="text-blue-600" /> Send Interview Invite
@@ -791,7 +791,7 @@
 //                                     Cancel
 //                                 </button>
 //                                 <button
-//                                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 shadow-lg"
+//                                     className="px-4 py-2 bg-blue-600 text-gray-900 rounded hover:bg-blue-700 shadow-lg"
 //                                     onClick={handleSendInvite}
 //                                 >
 //                                     Send Invitation
@@ -805,13 +805,13 @@
 //             {/* Document Management Modal */}
 //             {
 //                 isDocsModalOpen && (
-//                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+//                     <div className="fixed inset-0 bg-white  flex items-center justify-center p-4 z-50">
 //                         <div className="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
 //                             <div className="flex justify-between items-center mb-4">
 //                                 <h2 className="text-xl font-bold flex items-center gap-2">
 //                                     <FaSave className="text-indigo-600" /> Document Management
 //                                 </h2>
-//                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${selectedCandidate?.docReviewStatus === 'Accepted' ? 'bg-green-100 text-green-700' :
+//                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${selectedCandidate?.docReviewStatus === 'Accepted' ? 'bg-blue-100 text-green-700' :
 //                                     selectedCandidate?.docReviewStatus === 'Pending' ? 'bg-orange-100 text-orange-700' :
 //                                         'bg-gray-100 text-gray-700'
 //                                     }`}>
@@ -821,7 +821,7 @@
 
 //                             <div className="space-y-6">
 //                                 {/* Step 1: Send Agreements */}
-//                                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+//                                 <div className="bg-white p-4 rounded-lg border border-gray-200">
 //                                     <h3 className="text-sm font-black uppercase text-slate-700 mb-3 tracking-wider">Step 1: Agreements for Candidate</h3>
 //                                     <textarea
 //                                         className="w-full p-3 border rounded-md text-sm min-h-[150px] focus:ring-2 focus:ring-indigo-500"
@@ -839,7 +839,7 @@
 //                                     </div>
 //                                     <button
 //                                         onClick={handleSendAgreements}
-//                                         className="mt-3 px-6 py-2 bg-indigo-600 text-white rounded text-xs font-bold uppercase tracking-widest hover:bg-indigo-700"
+//                                         className="mt-3 px-6 py-2 bg-indigo-600 text-gray-900 rounded text-xs font-bold uppercase tracking-widest hover:bg-indigo-700"
 //                                     >
 //                                         Send / Update Agreements
 //                                     </button>
@@ -851,7 +851,7 @@
 //                                         <h3 className="text-sm font-black uppercase text-blue-800 mb-3 tracking-wider">Step 2: Review Uploaded Document</h3>
 //                                         <div className="flex items-center justify-between bg-white p-3 rounded border border-blue-100 mb-4">
 //                                             <div className="flex items-center gap-2">
-//                                                 <FaPaperPlane className="text-blue-500" />
+//                                                 <FaPaperPlane className="text-blue-600" />
 //                                                 <span className="text-xs font-bold text-slate-700">Signed_Agreement.pdf</span>
 //                                             </div>
 //                                             <button
@@ -864,13 +864,13 @@
 //                                         <div className="flex gap-2">
 //                                             <button
 //                                                 onClick={() => handleReviewDocs("Accepted")}
-//                                                 className="flex-1 py-2 bg-green-600 text-white rounded text-xs font-bold uppercase tracking-widest hover:bg-green-700 shadow-md"
+//                                                 className="flex-1 py-2 bg-blue-600 text-gray-900 rounded text-xs font-bold uppercase tracking-widest hover:bg-blue-800 shadow-md"
 //                                             >
 //                                                 Accept Documents
 //                                             </button>
 //                                             <button
 //                                                 onClick={() => handleReviewDocs("Rejected")}
-//                                                 className="flex-1 py-2 bg-red-600 text-white rounded text-xs font-bold uppercase tracking-widest hover:bg-red-700 shadow-md"
+//                                                 className="flex-1 py-2 bg-red-600 text-gray-900 rounded text-xs font-bold uppercase tracking-widest hover:bg-red-700 shadow-md"
 //                                             >
 //                                                 Reject & Resubmit
 //                                             </button>
@@ -879,7 +879,7 @@
 //                                 )}
 
 //                                 {!selectedCandidate?.candidateAgreementsUpload && (
-//                                     <div className="text-center p-8 bg-gray-50 rounded-lg border border-dashed border-slate-300">
+//                                     <div className="text-center p-8 bg-white rounded-lg border border-dashed border-slate-300">
 //                                         <p className="text-xs font-bold text-slate-500 uppercase">Awaiting candidate upload...</p>
 //                                     </div>
 //                                 )}
@@ -899,7 +899,7 @@
 //             }
 //             {/* Assessment Detail Modal */}
 //             {isAssessmentModalOpen && selectedAssessmentData && (
-//                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+//                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-100/40 backdrop-blur-[2px] animate-in fade-in duration-200">
 //                     <div className="bg-white max-w-4xl w-full rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-200 max-h-[90vh] flex flex-col">
 
 //                         {/* Header matching JobPost */}
@@ -944,7 +944,7 @@
 
 //                                 <div className="flex items-center gap-2">
 //                                     <span className="text-xs font-semibold text-gray-500">Status:</span>
-//                                     <span className={`text-xs font-black uppercase tracking-wider ${selectedAssessmentData.score >= 70 ? 'text-emerald-600' :
+//                                     <span className={`text-xs font-black uppercase tracking-wider ${selectedAssessmentData.score >= 70 ? 'text-blue-700' :
 //                                         selectedAssessmentData.score >= 50 ? 'text-amber-600' :
 //                                             'text-rose-600'
 //                                         }`}>
@@ -966,8 +966,8 @@
 //                                     return (
 //                                         <div key={idx} className="bg-white rounded-xl border border-gray-200 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] overflow-hidden">
 //                                             {/* Question Header */}
-//                                             <div className="flex items-start gap-3 px-5 py-4 border-b border-gray-200 bg-gray-50/50">
-//                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-black text-xs ${ans.isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+//                                             <div className="flex items-start gap-3 px-5 py-4 border-b border-gray-200 bg-white/50">
+//                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-black text-xs ${ans.isCorrect ? 'bg-blue-100 text-blue-700' : 'bg-rose-100 text-rose-600'}`}>
 //                                                     Q{idx + 1}
 //                                                 </div>
 //                                                 <div className="flex-grow pt-1">
@@ -975,7 +975,7 @@
 //                                                 </div>
 //                                                 <div className="shrink-0 pt-1.5 flex items-center gap-1.5">
 //                                                     {ans.isCorrect ? (
-//                                                         <span className="text-[10px] font-black uppercase text-emerald-600 flex items-center gap-1"><FaCheckCircle className="text-sm" /> Correct</span>
+//                                                         <span className="text-[10px] font-black uppercase text-blue-700 flex items-center gap-1"><FaCheckCircle className="text-sm" /> Correct</span>
 //                                                     ) : (
 //                                                         <span className="text-[10px] font-black uppercase text-rose-600 flex items-center gap-1"><FaExclamationTriangle className="text-sm" /> Incorrect</span>
 //                                                     )}
@@ -995,12 +995,12 @@
 
 //                                                     if (isCorrectOpt && isCandidateOpt) {
 //                                                         optStyle = "bg-emerald-50/50 border-emerald-300 text-emerald-800";
-//                                                         radioStyle = "border-emerald-500 bg-emerald-500";
-//                                                         badge = <span className="text-[9px] font-black text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded text-right uppercase tracking-wider">✓ Selected Correctly</span>;
+//                                                         radioStyle = "border-blue-500 bg-blue-600";
+//                                                         badge = <span className="text-[9px] font-black text-blue-700 bg-blue-100 px-2.5 py-1 rounded text-right uppercase tracking-wider">✓ Selected Correctly</span>;
 //                                                     } else if (isCorrectOpt) {
 //                                                         optStyle = "bg-emerald-50/30 border-emerald-200 text-emerald-700 border-dashed";
 //                                                         radioStyle = "border-emerald-400 border-2";
-//                                                         badge = <span className="text-[9px] font-black text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded text-right uppercase tracking-wider">✓ Correct Answer</span>;
+//                                                         badge = <span className="text-[9px] font-black text-blue-700 bg-blue-100 px-2.5 py-1 rounded text-right uppercase tracking-wider">✓ Correct Answer</span>;
 //                                                     } else if (isCandidateOpt) {
 //                                                         optStyle = "bg-rose-50/50 border-rose-300 text-rose-800";
 //                                                         radioStyle = "border-rose-500 bg-rose-500";
@@ -1011,13 +1011,13 @@
 //                                                         <div key={oIdx} className={`flex items-center gap-4 px-4 py-3 rounded-xl border transition-all ${optStyle}`}>
 //                                                             {/* Option Label */}
 //                                                             <div className="shrink-0">
-//                                                                 <span className="text-[10px] font-black text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded uppercase">{label}</span>
+//                                                                 <span className="text-[10px] font-black text-gray-500 bg-white border border-gray-200 px-2 py-0.5 rounded uppercase">{label}</span>
 //                                                             </div>
 
 //                                                             {/* Radio Circle */}
 //                                                             <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${radioStyle}`}>
 //                                                                 {(isCandidateOpt || isCorrectOpt) && (
-//                                                                     <div className={`w-1.5 h-1.5 rounded-full ${isCorrectOpt && !isCandidateOpt ? 'bg-emerald-400' : 'bg-white'}`} />
+//                                                                     <div className={`w-1.5 h-1.5 rounded-full ${isCorrectOpt && !isCandidateOpt ? 'bg-blue-400' : 'bg-white'}`} />
 //                                                                 )}
 //                                                             </div>
 
@@ -1038,7 +1038,7 @@
 //                                     );
 //                                 })
 //                             ) : (
-//                                 <div className="text-center py-20 bg-gray-50 rounded-xl border border-gray-200 flex flex-col items-center justify-center">
+//                                 <div className="text-center py-20 bg-white rounded-xl border border-gray-200 flex flex-col items-center justify-center">
 //                                     <div className="w-16 h-16 bg-white text-gray-700 rounded-full flex items-center justify-center mb-4 border border-gray-200 shadow-sm">
 //                                         <FaTasks className="text-3xl" />
 //                                     </div>
@@ -1049,7 +1049,7 @@
 //                         </div>
 
 //                         {/* Footer */}
-//                         <div className="px-8 py-4 border-t border-gray-200 bg-gray-50 flex justify-end flex-shrink-0">
+//                         <div className="px-8 py-4 border-t border-gray-200 bg-white flex justify-end flex-shrink-0">
 //                             <button
 //                                 onClick={() => setIsAssessmentModalOpen(false)}
 //                                 className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-[0_2px_4px_rgba(0,0,0,0.02)]"
@@ -1083,7 +1083,7 @@ import { API_BASE_URL } from "../config";
 
 const DetailItem = ({ icon, label, value }) => (
     <div className="flex items-start gap-3">
-        <div className="mt-1 text-blue-500">{icon}</div>
+        <div className="mt-1 text-blue-600">{icon}</div>
         <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</p>
             <p className="text-sm font-bold text-gray-700">{value}</p>
@@ -1480,7 +1480,7 @@ const Score = () => {
                         <button
                             onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
                             className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${roleFilter
-                                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                                 }`}
                         >
@@ -1490,7 +1490,7 @@ const Score = () => {
                         {/* Role Filter Dropdown */}
                         {isRoleDropdownOpen && (
                             <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                <div className="p-2 border-b border-gray-200 bg-gray-50">
+                                <div className="p-2 border-b border-gray-200 bg-white">
                                     <div className="relative">
                                         <FaUserTie className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs" />
                                         <input
@@ -1590,7 +1590,7 @@ const Score = () => {
                 {filteredCandidates.length > 0 ? (
                     <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
                         <table className="min-w-full">
-                            <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+                            <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                                 <tr>
                                     <th className="py-2 text-center">Candidate</th>
                                     <th className="py-2 text-center">Role</th>
@@ -1605,7 +1605,7 @@ const Score = () => {
                             </thead>
                             <tbody>
                                 {currentItems.map((c) => (
-                                    <tr key={c._id} className="border-b hover:bg-gray-50 transition-colors">
+                                    <tr key={c._id} className="border-b hover:bg-white transition-colors">
                                         <td className="px-2 py-2 font-medium text-center">
                                             <div className="flex flex-col">
                                                 <span className="text-gray-900 whitespace-nowrap">{c.firstName} {c.lastName}</span>
@@ -1651,7 +1651,7 @@ const Score = () => {
                                                 {c.assessmentResults && c.assessmentResults.length > 0 && (
                                                     <button
                                                         onClick={() => handleOpenAssessmentDetails(c)}
-                                                        className="p-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl transition-all duration-300 shadow-sm hover:shadow-md border border-indigo-100 group flex items-center justify-center transform hover:-translate-y-0.5"
+                                                        className="p-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-gray-900 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md border border-indigo-100 group flex items-center justify-center transform hover:-translate-y-0.5"
                                                         title="View Detailed Answers"
                                                     >
                                                         <FaEye size={14} className="group-hover:scale-110 transition-transform" />
@@ -1682,7 +1682,7 @@ const Score = () => {
                                         </td>
                                         <td className="px-2 py-2 font-medium text-center">
                                             <select
-                                                className={`p-1 border rounded text-[10px]  ${c.status === "Selected" ? "text-green-600 bg-green-50" :
+                                                className={`p-1 border rounded text-[10px]  ${c.status === "Selected" ? "text-blue-700 bg-green-50" :
                                                     c.status === "Interview" ? "text-blue-600 bg-blue-50" : "text-gray-500"
                                                     }`}
                                                 value={c.status || "Pending"}
@@ -1713,7 +1713,7 @@ const Score = () => {
                                                 {c.status === "Interview" && (
                                                     <button
                                                         onClick={() => handleOpenInviteModal(c)}
-                                                        className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 flex items-center justify-center gap-1.5 text-[10px] font-black tracking-widest shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                                                        className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-gray-900 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 flex items-center justify-center gap-1.5 text-[10px] font-black tracking-widest shadow-md hover:shadow-lg hover:-translate-y-0.5"
                                                     >
                                                         INVITE
                                                     </button>
@@ -1723,14 +1723,14 @@ const Score = () => {
                                                     <div className="flex gap-2">
                                                         <button
                                                             onClick={() => handleOpenOfferModal(c)}
-                                                            className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-fuchsia-600 text-white rounded-xl hover:from-purple-600 hover:to-fuchsia-700 transition-all duration-300 flex items-center justify-center gap-1.5 text-[10px] font-black tracking-widest shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                                                            className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-fuchsia-600 text-gray-900 rounded-xl hover:from-purple-600 hover:to-fuchsia-700 transition-all duration-300 flex items-center justify-center gap-1.5 text-[10px] font-black tracking-widest shadow-md hover:shadow-lg hover:-translate-y-0.5"
                                                         >
                                                             OFFER
                                                         </button>
 
                                                         <button
                                                             onClick={() => handleOpenDocsModal(c)}
-                                                            className={`px-3 py-1.5 text-white rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 text-[10px] font-black tracking-widest shadow-md hover:shadow-lg hover:-translate-y-0.5 ${c.docReviewStatus === "Accepted"
+                                                            className={`px-3 py-1.5 text-gray-900 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 text-[10px] font-black tracking-widest shadow-md hover:shadow-lg hover:-translate-y-0.5 ${c.docReviewStatus === "Accepted"
                                                                 ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
                                                                 : c.docReviewStatus === "Pending"
                                                                     ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
@@ -1751,7 +1751,7 @@ const Score = () => {
 
                         {/* Pagination */}
                         {filteredCandidates.length > 0 && (
-                            <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
+                            <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-white sm:flex-row">
                                 <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
                                     <span>Showing</span>
                                     <span className="font-medium">
@@ -1788,7 +1788,7 @@ const Score = () => {
                                         disabled={pagination.currentPage === 1}
                                         className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === 1
                                                 ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                                : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                                             }`}
                                     >
                                         Previous
@@ -1803,8 +1803,8 @@ const Score = () => {
                                                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${page === "..."
                                                         ? "text-gray-500 cursor-default"
                                                         : pagination.currentPage === page
-                                                            ? "bg-blue-600 text-white"
-                                                            : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                                                            ? "bg-blue-600 text-gray-900"
+                                                            : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
                                                     }`}
                                             >
                                                 {page}
@@ -1817,7 +1817,7 @@ const Score = () => {
                                         disabled={pagination.currentPage === pagination.totalPages}
                                         className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === pagination.totalPages
                                                 ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                                : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                                             }`}
                                     >
                                         Next
@@ -1828,7 +1828,7 @@ const Score = () => {
                     </div>
                 ) : (
                     <div className="p-12 text-center">
-                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-700">
+                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-gray-700">
                             <FaUserGraduate size={32} />
                         </div>
                         <h3 className="text-lg font-medium text-gray-700">No candidates found</h3>
@@ -1839,7 +1839,7 @@ const Score = () => {
 
             {/* Invite Modal */}
             {isInviteModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-50/50 backdrop-blur-sm">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-white/50 backdrop-blur-sm">
                     <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
                         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                             Send Interview Invite
@@ -1892,7 +1892,7 @@ const Score = () => {
                                 Cancel
                             </button>
                             <button
-                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 shadow-lg"
+                                className="px-4 py-2 bg-blue-600 text-gray-900 rounded hover:bg-blue-700 shadow-lg"
                                 onClick={handleSendInvite}
                             >
                                 Send Invitation
@@ -1904,13 +1904,13 @@ const Score = () => {
 
             {/* Document Management Modal */}
             {isDocsModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-50/50 backdrop-blur-sm">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-white/50 backdrop-blur-sm">
                     <div className="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold flex items-center gap-2">
                                 Document Management
                             </h2>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${selectedCandidate?.docReviewStatus === 'Accepted' ? 'bg-green-100 text-green-700' :
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${selectedCandidate?.docReviewStatus === 'Accepted' ? 'bg-blue-100 text-green-700' :
                                 selectedCandidate?.docReviewStatus === 'Pending' ? 'bg-orange-100 text-orange-700' :
                                     'bg-gray-100 text-gray-700'
                                 }`}>
@@ -1920,7 +1920,7 @@ const Score = () => {
 
                         <div className="space-y-6">
                             {/* Step 1: Send Agreements */}
-                            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <div className="bg-white p-4 rounded-lg border border-gray-200">
                                 <h3 className="text-sm font-black uppercase text-slate-700 mb-3 tracking-wider">Step 1: Agreements for Candidate</h3>
                                 <textarea
                                     className="w-full p-3 border rounded-md text-sm min-h-[150px] focus:ring-2 focus:ring-indigo-500"
@@ -1938,7 +1938,7 @@ const Score = () => {
                                 </div>
                                 <button
                                     onClick={handleSendAgreements}
-                                    className="mt-3 px-6 py-2 bg-indigo-600 text-white rounded text-xs font-bold uppercase tracking-widest hover:bg-indigo-700"
+                                    className="mt-3 px-6 py-2 bg-indigo-600 text-gray-900 rounded text-xs font-bold uppercase tracking-widest hover:bg-indigo-700"
                                 >
                                     Send / Update Agreements
                                 </button>
@@ -1962,13 +1962,13 @@ const Score = () => {
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => handleReviewDocs("Accepted")}
-                                            className="flex-1 py-2 bg-green-600 text-white rounded text-xs font-bold uppercase tracking-widest hover:bg-green-700 shadow-md"
+                                            className="flex-1 py-2 bg-blue-600 text-gray-900 rounded text-xs font-bold uppercase tracking-widest hover:bg-blue-800 shadow-md"
                                         >
                                             Accept Documents
                                         </button>
                                         <button
                                             onClick={() => handleReviewDocs("Rejected")}
-                                            className="flex-1 py-2 bg-red-600 text-white rounded text-xs font-bold uppercase tracking-widest hover:bg-red-700 shadow-md"
+                                            className="flex-1 py-2 bg-red-600 text-gray-900 rounded text-xs font-bold uppercase tracking-widest hover:bg-red-700 shadow-md"
                                         >
                                             Reject & Resubmit
                                         </button>
@@ -1977,7 +1977,7 @@ const Score = () => {
                             )}
 
                             {!selectedCandidate?.candidateAgreementsUpload && (
-                                <div className="text-center p-8 bg-gray-50 rounded-lg border border-dashed border-slate-300">
+                                <div className="text-center p-8 bg-white rounded-lg border border-dashed border-slate-300">
                                     <p className="text-xs font-bold text-slate-500 uppercase">Awaiting candidate upload...</p>
                                 </div>
                             )}
@@ -1996,8 +1996,8 @@ const Score = () => {
             )}
 
             {isAssessmentModalOpen && Array.isArray(selectedAssessmentData) && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
-                    <div className="bg-gray-50 max-w-5xl w-full rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-200 max-h-[95vh] flex flex-col">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-100/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+                    <div className="bg-white max-w-5xl w-full rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-200 max-h-[95vh] flex flex-col">
 
                         <div className="px-8 pt-8 pb-6 border-b border-gray-200 flex-shrink-0 bg-white">
                             <div className="flex items-start justify-between">
@@ -2022,7 +2022,7 @@ const Score = () => {
                             {selectedAssessmentData.map((result, rIdx) => (
                                 <div key={rIdx} className="space-y-6">
                                     <div className="flex items-center gap-3 mb-4">
-                                        <div className="px-3 py-1 bg-indigo-600 text-white text-[10px] font-black uppercase rounded-lg">
+                                        <div className="px-3 py-1 bg-indigo-600 text-gray-900 text-[10px] font-black uppercase rounded-lg">
                                             Test #{rIdx + 1}
                                         </div>
                                         <h3 className="text-lg font-black text-gray-700 border-b-2 border-indigo-100 pb-1">
@@ -2051,8 +2051,8 @@ const Score = () => {
 
                                                 return (
                                                     <div key={idx} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                                                        <div className="flex items-start gap-3 px-5 py-4 border-b border-gray-200 bg-gray-50/50">
-                                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-black text-xs ${ans.isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                                        <div className="flex items-start gap-3 px-5 py-4 border-b border-gray-200 bg-white/50">
+                                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-black text-xs ${ans.isCorrect ? 'bg-blue-100 text-blue-700' : 'bg-rose-100 text-rose-600'}`}>
                                                                 Q{idx + 1}
                                                             </div>
                                                             <div className="flex-grow pt-1">
@@ -2060,7 +2060,7 @@ const Score = () => {
                                                             </div>
                                                             <div className="shrink-0 pt-1.5 flex items-center gap-1.5">
                                                                 {ans.isCorrect ? (
-                                                                    <span className="text-[10px] font-black uppercase text-emerald-600 flex items-center gap-1">✓ Correct</span>
+                                                                    <span className="text-[10px] font-black uppercase text-blue-700 flex items-center gap-1">✓ Correct</span>
                                                                 ) : (
                                                                     <span className="text-[10px] font-black uppercase text-rose-600 flex items-center gap-1">✗ Incorrect</span>
                                                                 )}
@@ -2079,12 +2079,12 @@ const Score = () => {
 
                                                                 if (isCorrectOpt && isCandidateOpt) {
                                                                     optStyle = "bg-emerald-50/50 border-emerald-300 text-emerald-800";
-                                                                    radioStyle = "border-emerald-500 bg-emerald-500";
-                                                                    badge = <span className="text-[9px] font-black text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded text-right uppercase tracking-wider">✓ Selected Correctly</span>;
+                                                                    radioStyle = "border-blue-500 bg-blue-600";
+                                                                    badge = <span className="text-[9px] font-black text-blue-700 bg-blue-100 px-2.5 py-1 rounded text-right uppercase tracking-wider">✓ Selected Correctly</span>;
                                                                 } else if (isCorrectOpt) {
                                                                     optStyle = "bg-emerald-50/30 border-emerald-200 text-emerald-700 border-dashed";
                                                                     radioStyle = "border-emerald-400 border-2";
-                                                                    badge = <span className="text-[9px] font-black text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded text-right uppercase tracking-wider">✓ Correct Answer</span>;
+                                                                    badge = <span className="text-[9px] font-black text-blue-700 bg-blue-100 px-2.5 py-1 rounded text-right uppercase tracking-wider">✓ Correct Answer</span>;
                                                                 } else if (isCandidateOpt) {
                                                                     optStyle = "bg-rose-50/50 border-rose-300 text-rose-800";
                                                                     radioStyle = "border-rose-500 bg-rose-500";
@@ -2094,11 +2094,11 @@ const Score = () => {
                                                                 return (
                                                                     <div key={oIdx} className={`flex items-center gap-4 px-4 py-3 rounded-xl border transition-all ${optStyle}`}>
                                                                         <div className="shrink-0">
-                                                                            <span className="text-[10px] font-black text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded uppercase">{label}</span>
+                                                                            <span className="text-[10px] font-black text-gray-500 bg-white border border-gray-200 px-2 py-0.5 rounded uppercase">{label}</span>
                                                                         </div>
                                                                         <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${radioStyle}`}>
                                                                             {(isCandidateOpt || isCorrectOpt) && (
-                                                                                <div className={`w-1.5 h-1.5 rounded-full ${isCorrectOpt && !isCandidateOpt ? 'bg-emerald-400' : 'bg-white'}`} />
+                                                                                <div className={`w-1.5 h-1.5 rounded-full ${isCorrectOpt && !isCandidateOpt ? 'bg-blue-400' : 'bg-white'}`} />
                                                                             )}
                                                                         </div>
                                                                         <p className="text-xs font-semibold flex-grow">{opt}</p>

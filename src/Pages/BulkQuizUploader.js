@@ -61,13 +61,13 @@ const BulkQuizUploader = () => {
       </div>
 
       {uploadResult && (
-        <p className={`text-sm mb-4 ${uploadResult.success ? "text-green-600" : "text-red-600"}`}>
+        <p className={`text-sm mb-4 ${uploadResult.success ? "text-blue-700" : "text-red-600"}`}>
           {uploadResult.message}
         </p>
       )}
 
       {/* JSON Format Instruction */}
-      <div className="mb-10 bg-gray-50 p-4 border rounded">
+      <div className="mb-10 bg-white p-4 border rounded">
         <h2 className="font-semibold mb-2">📄 JSON Format Example:</h2>
         <pre className="bg-white p-3 text-xs rounded border overflow-auto">
           {`{

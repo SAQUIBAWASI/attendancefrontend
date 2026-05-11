@@ -260,7 +260,7 @@ const EmployeePermissions = () => {
           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-2 font-semibold text-white transition bg-red-600 rounded-lg hover:bg-red-700"
+            className="px-6 py-2 font-semibold text-gray-900 transition bg-red-600 rounded-lg hover:bg-red-700"
           >
             🔄 Retry
           </button>
@@ -314,7 +314,7 @@ const EmployeePermissions = () => {
 
             {/* Date Filter */}
             <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="date"
                 value={selectedDate}
@@ -326,7 +326,7 @@ const EmployeePermissions = () => {
 
             {/* Month Filter */}
             <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="month"
                 value={selectedMonth}
@@ -339,7 +339,7 @@ const EmployeePermissions = () => {
             {/* Request Permission Button */}
             <button
               onClick={() => setIsPermissionModalOpen(true)}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-700"
             >
               <FaPlus className="text-xs" /> Request Permission
             </button>
@@ -380,7 +380,7 @@ const EmployeePermissions = () => {
               {permissions.length > 0 && (
                 <button
                   onClick={clearFilters}
-                  className="px-6 py-2 font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="px-6 py-2 font-semibold text-gray-900 transition bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
                   🔄 Clear Filters
                 </button>
@@ -390,7 +390,7 @@ const EmployeePermissions = () => {
             <>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
-                  <thead className="text-xs text-left text-white sm:text-sm bg-gradient-to-r from-green-500 to-blue-600">
+                  <thead className="text-xs text-left text-gray-900 sm:text-sm bg-gradient-to-r from-green-500 to-blue-600">
                     <tr>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Date</th>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Duration (mins)</th>
@@ -403,7 +403,7 @@ const EmployeePermissions = () => {
                     {currentRecords.map((p, index) => (
                       <tr
                         key={p._id || index}
-                        className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                        className={`${index % 2 === 0 ? "bg-white" : "bg-white"
                           } hover:bg-blue-50 transition duration-150`}
                       >
                         <td className="px-2 py-1.5 text-center text-xs sm:text-sm">
@@ -422,12 +422,12 @@ const EmployeePermissions = () => {
                         <td className="px-2 py-1.5 text-center">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-semibold ${p.status === "APPROVED"
-                              ? "bg-green-100 text-green-800 border border-green-300"
+                              ? "bg-emerald-50 text-emerald-700 border border-green-300"
                               : p.status === "REJECTED"
-                                ? "bg-red-100 text-red-800 border border-red-300"
+                                ? "bg-red-50 text-red-700 border border-red-300"
                                 : p.status === "COMPLETED"
-                                  ? "bg-blue-100 text-blue-800 border border-blue-300"
-                                  : "bg-yellow-100 text-yellow-800 border border-yellow-300 animate-pulse"
+                                  ? "bg-blue-50 text-blue-700 border border-blue-300"
+                                  : "bg-amber-50 text-amber-700 border border-yellow-300 animate-pulse"
                               }`}
                           >
                             {p.status}
@@ -438,7 +438,7 @@ const EmployeePermissions = () => {
                             <button
                               onClick={() => handleBackToDuty(p._id)}
                               disabled={submittingDuty}
-                              className="px-3 py-1 text-xs font-bold text-white transition bg-blue-600 rounded-full hover:bg-blue-700 disabled:opacity-50"
+                              className="px-3 py-1 text-xs font-bold text-gray-900 transition bg-blue-600 rounded-full hover:bg-blue-700 disabled:opacity-50"
                             >
                               {submittingDuty ? "..." : "Back To Duty"}
                             </button>
@@ -483,7 +483,7 @@ const EmployeePermissions = () => {
                       disabled={currentPage === 1}
                       className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentPage === 1
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                        : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
                         }`}
                     >
                       ← Prev
@@ -497,7 +497,7 @@ const EmployeePermissions = () => {
                         className={`px-3 py-1 text-xs font-semibold rounded-lg transition min-w-[28px] ${page === "..."
                           ? "bg-gray-200 text-gray-500 cursor-default"
                           : currentPage === page
-                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-gray-900 shadow-lg"
                             : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                           }`}
                       >
@@ -510,7 +510,7 @@ const EmployeePermissions = () => {
                       disabled={currentPage === totalPages}
                       className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentPage === totalPages
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                        : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
                         }`}
                     >
                       Next →
@@ -525,7 +525,7 @@ const EmployeePermissions = () => {
 
       {/* Permission Request Modal */}
       {isPermissionModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
           <div className="w-full max-w-md p-4 bg-white rounded-lg shadow-xl sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-700 sm:text-xl">Request Permission</h3>
@@ -576,7 +576,7 @@ const EmployeePermissions = () => {
                 <button
                   type="submit"
                   disabled={permissionLoading}
-                  className="flex-1 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
                   {permissionLoading ? "Submitting..." : "Request"}
                 </button>

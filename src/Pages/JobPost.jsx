@@ -254,7 +254,7 @@
 
 //   // return (
 //   return (
-//     <div className="w-full min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8">
+//     <div className="w-full min-h-screen bg-white/50 p-4 md:p-6 lg:p-8">
 //       {/* Header Section */}
 //       <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-center xl:justify-between">
 //         <div className="flex-shrink-0">
@@ -267,7 +267,7 @@
 //           <div className="relative w-full sm:w-auto">
 //             <input
 //               type="date"
-//               className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm sm:w-40"
+//               className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm sm:w-40"
 //               value={dateFilter}
 //               onChange={(e) => setDateFilter(e.target.value)}
 //             />
@@ -288,7 +288,7 @@
 //               <FiBriefcase />
 //             </div>
 //             <div
-//               className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
+//               className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
 //               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
 //             >
 //               {roleFilter || "Select Role"}
@@ -306,7 +306,7 @@
 
 //             {isRoleDropdownOpen && (
 //               <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-//                 <div className="p-2 border-b border-gray-200 bg-gray-50">
+//                 <div className="p-2 border-b border-gray-200 bg-white">
 //                   <div className="relative">
 //                     <FiSearch className="absolute left-2.5 top-2.5 text-gray-500 text-xs" />
 //                     <input
@@ -356,7 +356,7 @@
 //               <FiBriefcase />
 //             </div>
 //             <div
-//               className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-gray-50 cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
+//               className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
 //               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
 //             >
 //               {roleFilter || "Select Role"}
@@ -374,7 +374,7 @@
 
 //             {isRoleDropdownOpen && (
 //               <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-//                 <div className="p-2 border-b border-gray-200 bg-gray-50">
+//                 <div className="p-2 border-b border-gray-200 bg-white">
 //                   <div className="relative">
 //                     <FiSearch className="absolute left-2.5 top-2.5 text-gray-500 text-xs" />
 //                     <input
@@ -452,7 +452,7 @@
 //             )}
 //             <button
 //               onClick={openCreateModal}
-//               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700"
+//               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700"
 //             >
 //               <FiPlus />
 //               <span>Post New Job</span>
@@ -472,7 +472,7 @@
          
 //           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
-//               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//               <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //               <tr>
 //                 <th className="py-2 text-center">Job Role</th>
 //                 <th className="py-2 text-center">Skills</th>
@@ -483,7 +483,7 @@
 //             </thead>
 //             <tbody>
 //               {filteredJobs.map((job) => (
-//                 <tr key={job._id} className="border-b hover:bg-gray-50 transition-colors">
+//                 <tr key={job._id} className="border-b hover:bg-white transition-colors">
 //                   <td className="px-2 py-2 font-medium text-center">
 //                     <div className="text-gray-900 whitespace-nowrap">{job.role}</div>
 //                   </td>
@@ -497,7 +497,7 @@
 //                     </div>
 //                   </td>
 //                   <td className="px-2 py-2 text-center">
-//                     <span className="text-emerald-600 ">{job.salary || "Competitive"}</span>
+//                     <span className="text-blue-700 ">{job.salary || "Competitive"}</span>
 //                   </td>
 //                   <td className="px-2 py-2 text-center">
 //                     <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-[10px] ">
@@ -508,7 +508,7 @@
 //                     <div className="flex justify-center gap-2">
 //                       <button
 //                         onClick={() => handleViewDetails(job)}
-//                         className="text-blue-500 hover:text-blue-700"
+//                         className="text-blue-600 hover:text-blue-700"
 //                         title="View Details"
 //                       >
 //                         <FiEye />
@@ -529,7 +529,7 @@
 //                       </button>
 //                       <button
 //                         onClick={() => copyToClipboard(job)}
-//                         className={`text-sm ${copiedId === job._id ? "text-emerald-600" : "text-gray-500 hover:text-indigo-600"}`}
+//                         className={`text-sm ${copiedId === job._id ? "text-blue-700" : "text-gray-500 hover:text-indigo-600"}`}
 //                         title="Copy Formatted Share Template"
 //                       >
 //                         {copiedId === job._id ? <FiCheckCircle /> : <FiCopy />}
@@ -550,7 +550,7 @@
 //           </div>
 //         ) : (
 //           <div className="text-center py-20">
-//             <div className="bg-gray-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+//             <div className="bg-white w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
 //               <FiSearch className="text-2xl text-gray-900" />
 //             </div>
 //             <h2 className="text-lg font-bold text-gray-700">No jobs found</h2>
@@ -563,7 +563,7 @@
 
 //       {/* Create Job Modal */}
 //       {isModalOpen && (
-//         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+//         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-100/40 backdrop-blur-[2px] animate-in fade-in duration-200">
 //           <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-200">
 //             {/* Modal Header */}
 //             <div className="px-8 pt-8 pb-4 flex items-center justify-between">
@@ -587,7 +587,7 @@
 //             <div className="p-8 pt-4 max-h-[75vh] overflow-y-auto no-scrollbar">
 //               {message.text && (
 //                 <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === "success"
-//                   ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+//                   ? "bg-emerald-50 text-blue-700 border border-emerald-100"
 //                   : "bg-rose-50 text-rose-600 border border-rose-100"
 //                   }`}>
 //                   {message.type === "success" ? <FiCheckCircle className="text-lg" /> : <FiX className="text-lg" />}
@@ -708,7 +708,7 @@
 //                   <label className="block mb-1 text-sm font-medium text-gray-700">
 //                     Link Assessments (Multiple selection supported)
 //                   </label>
-//                   <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto p-3 rounded-xl border border-gray-200 bg-gray-50/30">
+//                   <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto p-3 rounded-xl border border-gray-200 bg-white/30">
 //                     {quizzes
 //                       .slice() // Clone before sort
 //                       .sort((a, b) => {
@@ -747,14 +747,14 @@
 //                               : "bg-white border-gray-200"
 //                               }`}>
 //                               {formData.assessmentIds.includes(quiz._id) && (
-//                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="text-white"><polyline points="20 6 9 17 4 12" /></svg>
+//                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="text-gray-900"><polyline points="20 6 9 17 4 12" /></svg>
 //                               )}
 //                             </div>
 //                             <div className="flex flex-col flex-grow">
 //                               <div className="flex items-center justify-between">
 //                                 <span className="text-xs">{quiz.topic || quiz.title}</span>
 //                                 {isSuggested && (
-//                                   <span className="bg-emerald-100 text-emerald-700 text-[8px] px-2 py-0.5 rounded-full uppercase tracking-tighter">Matched</span>
+//                                   <span className="bg-blue-100 text-emerald-700 text-[8px] px-2 py-0.5 rounded-full uppercase tracking-tighter">Matched</span>
 //                                 )}
 //                               </div>
 //                               <span className="text-[8px] font-bold text-gray-500 uppercase tracking-tighter">
@@ -799,14 +799,14 @@
 //                   <button
 //                     type="button"
 //                     onClick={() => setIsModalOpen(false)}
-//                     className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-all border border-transparent"
+//                     className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-500 hover:text-gray-700 hover:bg-white transition-all border border-transparent"
 //                   >
 //                     Discard
 //                   </button>
 //                   <button
 //                     type="submit"
 //                     disabled={loading}
-//                     className={`flex-[1.5] py-3.5 px-8 rounded-xl font-bold text-white shadow-sm transition-all transform active:scale-95 ${loading ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg shadow-indigo-100"
+//                     className={`flex-[1.5] py-3.5 px-8 rounded-xl font-bold text-gray-900 shadow-sm transition-all transform active:scale-95 ${loading ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg shadow-indigo-100"
 //                       }`}
 //                   >
 //                     {loading ? (
@@ -827,7 +827,7 @@
 
 //       {/* View Details Modal */}
 //       {isDetailsModalOpen && selectedJob && (
-//         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+//         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-100/40 backdrop-blur-[2px] animate-in fade-in duration-200">
 //           <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-200">
 
 //             {/* Header — SAME STYLE AS CREATE MODAL */}
@@ -857,7 +857,7 @@
 //                 <label className="block text-sm font-medium text-gray-700">
 //                   Salary / Package
 //                 </label>
-//                 <div className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700">
+//                 <div className="w-full p-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-700">
 //                   {selectedJob.salary || "Competitive Salary"}
 //                 </div>
 //               </div>
@@ -867,7 +867,7 @@
 //                 <label className="block text-sm font-medium text-gray-700">
 //                   Experience
 //                 </label>
-//                 <div className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700">
+//                 <div className="w-full p-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-700">
 //                   {selectedJob.experience || "Not Specified"}
 //                 </div>
 //               </div>
@@ -877,7 +877,7 @@
 //                 <label className="block text-sm font-medium text-gray-700">
 //                   Location
 //                 </label>
-//                 <div className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700">
+//                 <div className="w-full p-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-700">
 //                   {selectedJob.location || "Not Specified"}
 //                 </div>
 //               </div>
@@ -888,7 +888,7 @@
 //                   Required Skills
 //                 </label>
 
-//                 <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-gray-200 bg-gray-50">
+//                 <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-gray-200 bg-white">
 //                   {selectedJob.skills.split(",").map((skill, idx) => (
 //                     <span
 //                       key={idx}
@@ -906,7 +906,7 @@
 //                   Linked Assessments
 //                 </label>
 
-//                 <div className="space-y-2 p-3 rounded-xl border border-gray-200 bg-gray-50">
+//                 <div className="space-y-2 p-3 rounded-xl border border-gray-200 bg-white">
 //                   {selectedJob.assessmentIds &&
 //                     selectedJob.assessmentIds.length > 0 ? (
 //                     selectedJob.assessmentIds.map((assessment, idx) => (
@@ -932,7 +932,7 @@
 //                 <label className="block text-sm font-medium text-gray-700">
 //                   Job Description
 //                 </label>
-//                 <div className="w-full p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700 whitespace-pre-line">
+//                 <div className="w-full p-4 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 whitespace-pre-line">
 //                   {selectedJob.description || selectedJob.responsibilities}
 //                 </div>
 //               </div>
@@ -943,7 +943,7 @@
 //                   Public Access Link
 //                 </label>
 
-//                 <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50">
+//                 <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-white">
 //                   <span className="text-sm text-gray-700 truncate">
 //                     {window.location.origin + selectedJob.link}
 //                   </span>
@@ -966,14 +966,14 @@
 //                     setIsDetailsModalOpen(false);
 //                     handleEdit(selectedJob);
 //                   }}
-//                   className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-all"
+//                   className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-500 hover:text-gray-900 hover:bg-white transition-all"
 //                 >
 //                   Edit Position
 //                 </button>
 
 //                 <button
 //                   onClick={() => setIsDetailsModalOpen(false)}
-//                   className="flex-[1.5] py-3.5 px-8 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all"
+//                   className="flex-[1.5] py-3.5 px-8 rounded-xl font-bold text-gray-900 bg-indigo-600 hover:bg-indigo-700 transition-all"
 //                 >
 //                   Close View
 //                 </button>
@@ -1376,7 +1376,7 @@ Direct Apply Link: ${fullLink}`;
               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
               className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                 roleFilter 
-                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                  ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
               }`}
             >
@@ -1386,7 +1386,7 @@ Direct Apply Link: ${fullLink}`;
             {/* Role Filter Dropdown */}
             {isRoleDropdownOpen && (
               <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                <div className="p-2 border-b border-gray-200 bg-gray-50">
+                <div className="p-2 border-b border-gray-200 bg-white">
                   <div className="relative">
                     <FiSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs" />
                     <input
@@ -1455,7 +1455,7 @@ Direct Apply Link: ${fullLink}`;
           {/* Post New Job Button - Moved inside filters div */}
           <button
             onClick={openCreateModal}
-            className="h-8 px-3 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition flex items-center gap-1 ml-auto"
+            className="h-8 px-3 text-xs font-medium text-gray-900 bg-blue-600 rounded-md hover:bg-blue-700 transition flex items-center gap-1 ml-auto"
           >
             <FiPlus className="text-xs" />
             <span>Post New Job</span>
@@ -1484,7 +1484,7 @@ Direct Apply Link: ${fullLink}`;
          
           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full">
-              <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+              <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
               <tr>
                 <th className="py-2 text-center">Job Role</th>
                 <th className="py-2 text-center">Skills</th>
@@ -1496,7 +1496,7 @@ Direct Apply Link: ${fullLink}`;
             </thead>
             <tbody>
               {currentItems.map((job) => (
-                <tr key={job._id} className="border-b hover:bg-gray-50 transition-colors">
+                <tr key={job._id} className="border-b hover:bg-white transition-colors">
                   <td className="px-2 py-2 font-medium text-center">
                     <div className="text-gray-900 whitespace-nowrap">{job.role}</div>
                   </td>
@@ -1510,7 +1510,7 @@ Direct Apply Link: ${fullLink}`;
                     </div>
                   </td>
                   <td className="px-2 py-2 text-center">
-                    <span className="text-emerald-600 ">{job.salary || "Competitive"}</span>
+                    <span className="text-blue-700 ">{job.salary || "Competitive"}</span>
                   </td>
                   <td className="px-2 py-2 text-center">
                     <div className="flex flex-col items-center">
@@ -1527,7 +1527,7 @@ Direct Apply Link: ${fullLink}`;
                     <div className="flex justify-center gap-2">
                       <button
                         onClick={() => handleViewDetails(job)}
-                        className="text-blue-500 hover:text-blue-700"
+                        className="text-blue-600 hover:text-blue-700"
                         title="View Details"
                       >
                         <FiEye />
@@ -1548,7 +1548,7 @@ Direct Apply Link: ${fullLink}`;
                       </button>
                       <button
                         onClick={() => copyToClipboard(job)}
-                        className={`text-sm ${copiedId === job._id ? "text-emerald-600" : "text-gray-500 hover:text-indigo-600"}`}
+                        className={`text-sm ${copiedId === job._id ? "text-blue-700" : "text-gray-500 hover:text-indigo-600"}`}
                         title="Copy Formatted Share Template"
                       >
                         {copiedId === job._id ? <FiCheckCircle /> : <FiCopy />}
@@ -1569,7 +1569,7 @@ Direct Apply Link: ${fullLink}`;
           
           {/* Pagination */}
           {filteredJobs.length > 0 && (
-            <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 sm:flex-row">
+            <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-white sm:flex-row">
               {/* Left Side - Showing Info + Select */}
               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
                 <span>Showing</span>
@@ -1610,7 +1610,7 @@ Direct Apply Link: ${fullLink}`;
                   className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                     pagination.currentPage === 1
                       ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                   }`}
                 >
                   Previous
@@ -1626,8 +1626,8 @@ Direct Apply Link: ${fullLink}`;
                         page === "..."
                           ? "text-gray-500 cursor-default"
                           : pagination.currentPage === page
-                          ? "bg-blue-600 text-white"
-                          : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                          ? "bg-blue-600 text-gray-900"
+                          : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
                       }`}
                     >
                       {page}
@@ -1641,7 +1641,7 @@ Direct Apply Link: ${fullLink}`;
                   className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                     pagination.currentPage === pagination.totalPages
                       ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                   }`}
                 >
                   Next
@@ -1652,7 +1652,7 @@ Direct Apply Link: ${fullLink}`;
           </div>
         ) : (
           <div className="text-center py-20">
-            <div className="bg-gray-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="bg-white w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <FiSearch className="text-2xl text-gray-900" />
             </div>
             <h2 className="text-lg font-bold text-gray-700">No jobs found</h2>
@@ -1665,7 +1665,7 @@ Direct Apply Link: ${fullLink}`;
 
       {/* Create Job Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-100/40 backdrop-blur-[2px] animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-200">
             {/* Modal Header */}
             <div className="px-8 pt-8 pb-4 flex items-center justify-between">
@@ -1689,7 +1689,7 @@ Direct Apply Link: ${fullLink}`;
             <div className="p-8 pt-4 max-h-[75vh] overflow-y-auto no-scrollbar">
               {message.text && (
                 <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === "success"
-                  ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                  ? "bg-emerald-50 text-blue-700 border border-emerald-100"
                   : "bg-rose-50 text-rose-600 border border-rose-100"
                   }`}>
                   {message.type === "success" ? <FiCheckCircle className="text-lg" /> : <FiX className="text-lg" />}
@@ -1858,7 +1858,7 @@ Direct Apply Link: ${fullLink}`;
                   <label className="block mb-1 text-sm font-medium text-gray-700">
                     Link Assessments (Multiple selection supported)
                   </label>
-                  <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto p-3 rounded-xl border border-gray-200 bg-gray-50/30">
+                  <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto p-3 rounded-xl border border-gray-200 bg-white/30">
                     {quizzes
                       .slice() // Clone before sort
                       .sort((a, b) => {
@@ -1897,14 +1897,14 @@ Direct Apply Link: ${fullLink}`;
                               : "bg-white border-gray-200"
                               }`}>
                               {formData.assessmentIds.includes(quiz._id) && (
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="text-white"><polyline points="20 6 9 17 4 12" /></svg>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="text-gray-900"><polyline points="20 6 9 17 4 12" /></svg>
                               )}
                             </div>
                             <div className="flex flex-col flex-grow">
                               <div className="flex items-center justify-between">
                                 <span className="text-xs">{quiz.topic || quiz.title}</span>
                                 {isSuggested && (
-                                  <span className="bg-emerald-100 text-emerald-700 text-[8px] px-2 py-0.5 rounded-full uppercase tracking-tighter">Matched</span>
+                                  <span className="bg-blue-100 text-emerald-700 text-[8px] px-2 py-0.5 rounded-full uppercase tracking-tighter">Matched</span>
                                 )}
                               </div>
                               <span className="text-[8px] font-bold text-gray-500 uppercase tracking-tighter">
@@ -1949,14 +1949,14 @@ Direct Apply Link: ${fullLink}`;
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-all border border-transparent"
+                    className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-500 hover:text-gray-700 hover:bg-white transition-all border border-transparent"
                   >
                     Discard
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`flex-[1.5] py-3.5 px-8 rounded-xl font-bold text-white shadow-sm transition-all transform active:scale-95 ${loading ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg shadow-indigo-100"
+                    className={`flex-[1.5] py-3.5 px-8 rounded-xl font-bold text-gray-900 shadow-sm transition-all transform active:scale-95 ${loading ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg shadow-indigo-100"
                       }`}
                   >
                     {loading ? (
@@ -1977,7 +1977,7 @@ Direct Apply Link: ${fullLink}`;
 
       {/* View Details Modal */}
       {isDetailsModalOpen && selectedJob && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-100/40 backdrop-blur-[2px] animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-4 duration-300 border border-gray-200">
 
             {/* Header — SAME STYLE AS CREATE MODAL */}
@@ -2007,7 +2007,7 @@ Direct Apply Link: ${fullLink}`;
                 <label className="block text-sm font-medium text-gray-700">
                   Salary / Package
                 </label>
-                <div className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700">
+                <div className="w-full p-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-700">
                   {selectedJob.salary || "Competitive Salary"}
                 </div>
               </div>
@@ -2017,7 +2017,7 @@ Direct Apply Link: ${fullLink}`;
                 <label className="block text-sm font-medium text-gray-700">
                   Experience
                 </label>
-                <div className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700">
+                <div className="w-full p-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-700">
                   {selectedJob.experience || "Not Specified"}
                 </div>
               </div>
@@ -2027,7 +2027,7 @@ Direct Apply Link: ${fullLink}`;
                 <label className="block text-sm font-medium text-gray-700">
                   Location
                 </label>
-                <div className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700">
+                <div className="w-full p-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-700">
                   {selectedJob.location || "Not Specified"}
                 </div>
               </div>
@@ -2037,7 +2037,7 @@ Direct Apply Link: ${fullLink}`;
                 <label className="block text-sm font-medium text-gray-700">
                   Department
                 </label>
-                <div className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700">
+                <div className="w-full p-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-700">
                   {selectedJob.department || "General"}
                 </div>
               </div>
@@ -2047,7 +2047,7 @@ Direct Apply Link: ${fullLink}`;
                 <label className="block text-sm font-medium text-gray-700">
                   Vacancies
                 </label>
-                <div className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700">
+                <div className="w-full p-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-700">
                   {selectedJob.vacancies || 1}
                 </div>
               </div>
@@ -2058,7 +2058,7 @@ Direct Apply Link: ${fullLink}`;
                   Required Skills
                 </label>
 
-                <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-gray-200 bg-gray-50">
+                <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-gray-200 bg-white">
                   {selectedJob.skills.split(",").map((skill, idx) => (
                     <span
                       key={idx}
@@ -2076,7 +2076,7 @@ Direct Apply Link: ${fullLink}`;
                   Linked Assessments
                 </label>
 
-                <div className="space-y-2 p-3 rounded-xl border border-gray-200 bg-gray-50">
+                <div className="space-y-2 p-3 rounded-xl border border-gray-200 bg-white">
                   {selectedJob.assessmentIds &&
                     selectedJob.assessmentIds.length > 0 ? (
                     selectedJob.assessmentIds.map((assessment, idx) => (
@@ -2102,7 +2102,7 @@ Direct Apply Link: ${fullLink}`;
                 <label className="block text-sm font-medium text-gray-700">
                   Job Description
                 </label>
-                <div className="w-full p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700 whitespace-pre-line">
+                <div className="w-full p-4 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 whitespace-pre-line">
                   {selectedJob.description || selectedJob.responsibilities}
                 </div>
               </div>
@@ -2113,7 +2113,7 @@ Direct Apply Link: ${fullLink}`;
                   Public Access Link
                 </label>
 
-                <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-white">
                   <span className="text-sm text-gray-700 truncate">
                     {window.location.origin + selectedJob.link}
                   </span>
@@ -2136,14 +2136,14 @@ Direct Apply Link: ${fullLink}`;
                     setIsDetailsModalOpen(false);
                     handleEdit(selectedJob);
                   }}
-                  className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-all"
+                  className="flex-1 py-3.5 px-6 rounded-xl font-bold text-gray-500 hover:text-gray-900 hover:bg-white transition-all"
                 >
                   Edit Position
                 </button>
 
                 <button
                   onClick={() => setIsDetailsModalOpen(false)}
-                  className="flex-[1.5] py-3.5 px-8 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all"
+                  className="flex-[1.5] py-3.5 px-8 rounded-xl font-bold text-gray-900 bg-indigo-600 hover:bg-indigo-700 transition-all"
                 >
                   Close View
                 </button>

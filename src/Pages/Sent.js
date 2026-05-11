@@ -77,7 +77,7 @@ export default function SentMessagesTable() {
                     </thead>
                     <tbody>
                         {displayedMessages.map((msg) => (
-                            <tr key={msg.id} className="cursor-pointer hover:bg-gray-50 text-center">
+                            <tr key={msg.id} className="cursor-pointer hover:bg-white text-center">
                                 <td className="p-3 border">{msg.id}</td>
                                 <td className="p-3 border">{msg.sender}</td>
                                 <td className="p-3 border">{msg.subject}</td>
@@ -85,7 +85,7 @@ export default function SentMessagesTable() {
                                 <td className="p-3 border text-yellow-500 font-semibold">{msg.status}</td>
                                 <td className="p-3 border">
                                     <button
-                                        className="text-blue-500 hover:underline mr-2"
+                                        className="text-blue-600 hover:underline mr-2"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handleView(msg.id); // View message details
@@ -102,7 +102,7 @@ export default function SentMessagesTable() {
 
             {/* View Message Modal */}
             {viewMessage && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-white ">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                         <h2 className="text-sm font-bold mb-4 text-purple-600">View Message</h2>
                         <p><strong>Sender:</strong> {viewMessage.sender}</p>
@@ -113,7 +113,7 @@ export default function SentMessagesTable() {
                         <div className="mt-4">
                             <button
                                 onClick={() => setViewMessage(null)} // Close view modal
-                                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
+                                className="px-4 py-2 bg-white0 text-gray-900 rounded hover:bg-gray-700"
                             >
                                 Close
                             </button>

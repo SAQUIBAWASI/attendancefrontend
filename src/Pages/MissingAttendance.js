@@ -40,7 +40,7 @@ const MissingAttendance = () => {
           <div className="overflow-x-auto">
             <table className="w-full border border-gray-300 rounded-lg shadow-md">
               <thead>
-                <tr className="text-lg text-white bg-green-500">
+                <tr className="text-lg text-gray-900 bg-blue-600">
                   <th className="p-4 border">Employee</th>
                   <th className="p-4 border">Date</th>
                   <th className="p-4 border">Reason</th>

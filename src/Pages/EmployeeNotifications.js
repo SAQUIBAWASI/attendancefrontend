@@ -16,9 +16,9 @@ const EmployeeNotifications = () => {
   // Icon mapping based on type
   const iconMap = {
     leave: <FiCalendar className="text-orange-500" />,
-    shift: <FiClock className="text-blue-500" />,
+    shift: <FiClock className="text-blue-600" />,
     general: <FiSun className="text-yellow-500" />, // Holidays
-    attendance: <MdCheckCircle className="text-green-500" />,
+    attendance: <MdCheckCircle className="text-blue-600" />,
     default: <MdNotificationsActive className="text-gray-500" />
   };
 
@@ -126,7 +126,7 @@ const EmployeeNotifications = () => {
                   {notif.message}
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-gray-500 font-medium bg-gray-50 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] text-gray-500 font-medium bg-white px-1.5 py-0.5 rounded">
                     {new Date(notif.createdAt).toLocaleString()}
                   </span>
                   {notif.type === 'shift' && (
@@ -141,7 +141,7 @@ const EmployeeNotifications = () => {
           ))
         ) : (
           <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-200">
-            <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-500 text-2xl">
+            <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-500 text-2xl">
               <MdNotificationsActive />
             </div>
             <h3 className="text-gray-900 font-semibold mb-1">No notifications yet</h3>

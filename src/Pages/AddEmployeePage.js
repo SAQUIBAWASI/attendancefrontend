@@ -99,7 +99,7 @@
 
 //       {/* Success or Error Message */}
 //       {successMessage && (
-//         <div className="p-4 mb-4 text-green-700 bg-green-100 rounded">
+//         <div className="p-4 mb-4 text-green-700 bg-blue-100 rounded">
 //           {successMessage}
 //         </div>
 //       )}
@@ -264,7 +264,7 @@
 //         <div className="flex justify-end">
 //           <button
 //             type="submit"
-//             className="px-6 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
+//             className="px-6 py-2 text-gray-900 bg-blue-600 rounded hover:bg-blue-700"
 //           >
 //             Add Employee
 //           </button>
@@ -440,7 +440,7 @@
 //       </h2>
 
 //       {successMessage && (
-//         <div className="p-4 mb-4 text-green-700 bg-green-100 rounded">
+//         <div className="p-4 mb-4 text-green-700 bg-blue-100 rounded">
 //           {successMessage}
 //         </div>
 //       )}
@@ -611,7 +611,7 @@
 //           </label>
 //           <div
 //             onClick={handleOpenLocationModal}
-//             className="w-full p-2 mt-1 border border-gray-300 rounded cursor-pointer hover:border-blue-400 bg-gray-50"
+//             className="w-full p-2 mt-1 border border-gray-300 rounded cursor-pointer hover:border-blue-400 bg-white"
 //           >
 //             {locationId
 //               ? locations.find((loc) => loc._id === locationId)?.name ||
@@ -625,7 +625,7 @@
 //           <button
 //             type="submit"
 //             disabled={loading}
-//             className="px-6 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
+//             className="px-6 py-2 text-gray-900 bg-blue-600 rounded hover:bg-blue-700"
 //           >
 //             {loading ? "Saving..." : "Add Employee"}
 //           </button>
@@ -634,7 +634,7 @@
 
 //       {/* ✅ Location Modal */}
 //       {showLocationModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black bg-opacity-40">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-white ">
 //           <div className="relative w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
 //             <h3 className="mb-4 text-lg font-semibold">Select Location</h3>
 //             <select
@@ -659,7 +659,7 @@
 //               </button>
 //               <button
 //                 onClick={handleCloseLocationModal}
-//                 className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
+//                 className="px-4 py-2 text-gray-900 bg-blue-600 rounded hover:bg-blue-700"
 //               >
 //                 Done
 //               </button>
@@ -817,7 +817,7 @@
 //       <h2 className="mb-6 text-2xl font-bold text-blue-900">Add New Employee Data</h2>
 
 //       {successMessage && (
-//         <div className="p-4 mb-4 text-green-700 bg-green-100 rounded">
+//         <div className="p-4 mb-4 text-green-700 bg-blue-100 rounded">
 //           {successMessage}
 //         </div>
 //       )}
@@ -1004,7 +1004,7 @@
 //         <button
 //           type="submit"
 //           disabled={loading}
-//           className="px-6 py-2 text-white bg-blue-600 rounded"
+//           className="px-6 py-2 text-gray-900 bg-blue-600 rounded"
 //         >
 //           {loading ? "Saving..." : "AddEmployee"}
 //         </button>
@@ -1209,7 +1209,7 @@
 //       </h2>
 
 //       {successMessage && (
-//         <div className="p-4 mb-4 text-green-700 bg-green-100 rounded">
+//         <div className="p-4 mb-4 text-green-700 bg-blue-100 rounded">
 //           {successMessage}
 //         </div>
 //       )}
@@ -1386,7 +1386,7 @@
 
 //     <button onClick={()=>navigate("/addlocation")}
 //       type="button"
-//       className="px-3 py-1 text-xs font-semibold text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
+//       className="px-3 py-1 text-xs font-semibold text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-700"
 //     >
 //       + Add Location
 //     </button>
@@ -1408,7 +1408,7 @@
 // </div>
 
 
-//         <button type="submit" disabled={loading} className="px-6 py-2 text-white bg-blue-600 rounded">
+//         <button type="submit" disabled={loading} className="px-6 py-2 text-gray-900 bg-blue-600 rounded">
 //           {loading ? "Saving..." : editingEmployee ? "Update Employee" : "Add Employee"}
 //         </button>
 
@@ -1764,7 +1764,7 @@
 //       </h2>
 
 //       {successMessage && (
-//         <div className="p-4 mb-4 text-green-700 bg-green-100 rounded">
+//         <div className="p-4 mb-4 text-green-700 bg-blue-100 rounded">
 //           {successMessage}
 //         </div>
 //       )}
@@ -1890,7 +1890,7 @@
 //         </div>
 
 //         {/* ✅ ENHANCED SHIFT SECTION WITH TIME PICKERS */}
-//         <div className="p-4 mb-4 border rounded-lg bg-gray-50">
+//         <div className="p-4 mb-4 border rounded-lg bg-white">
 //           <label className="block mb-2 text-sm font-medium">Shift Details *</label>
 
 //           <div className="flex gap-2 mb-3">
@@ -1981,7 +1981,7 @@
 //                       Selected: <span className="text-blue-600">Shift {shiftType}</span>
 //                     </span>
 //                     {allShiftsData.find(s => s.shiftType === shiftType) && (
-//                       <span className="text-xs text-green-600">✓ Existing Shift</span>
+//                       <span className="text-xs text-blue-700">✓ Existing Shift</span>
 //                     )}
 //                   </div>
 
@@ -2079,7 +2079,7 @@
 //             </label>
 //             <button onClick={() => navigate("/addlocation")}
 //               type="button"
-//               className="px-3 py-1 text-xs font-semibold text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
+//               className="px-3 py-1 text-xs font-semibold text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-700"
 //             >
 //               + Add Location
 //             </button>
@@ -2108,7 +2108,7 @@
 
 //             {/* <button onClick={() => navigate("/addlocation")}
 //               type="button"
-//               className="px-3 py-1 text-xs font-semibold text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
+//               className="px-3 py-1 text-xs font-semibold text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-700"
 //             >
 //               + Add Location
 //             </button> */}
@@ -2157,7 +2157,7 @@
 
 
 
-//         <button type="submit" disabled={loading} className="px-6 py-2 text-white bg-blue-600 rounded">
+//         <button type="submit" disabled={loading} className="px-6 py-2 text-gray-900 bg-blue-600 rounded">
 //           {loading ? "Saving..." : editingEmployee ? "Update Employee" : "Add Employee"}
 //         </button>
 
@@ -2572,7 +2572,7 @@
 //       </h2>
 
 //       {successMessage && (
-//         <div className="p-4 mb-4 text-green-700 bg-green-100 rounded">
+//         <div className="p-4 mb-4 text-green-700 bg-blue-100 rounded">
 //           {successMessage}
 //         </div>
 //       )}
@@ -2643,7 +2643,7 @@
 //             {/* <button
 //               type="button"
 //               onClick={handleAddNewDepartment}
-//               className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 whitespace-nowrap"
+//               className="px-4 py-2 text-gray-900 bg-blue-600 rounded hover:bg-blue-700 whitespace-nowrap"
 //               title="Manage Departments"
 //             >
 //               Manage
@@ -2672,7 +2672,7 @@
 //           )}
           
 //           {department && !isAddingNewDept && (
-//             <p className="mt-1 text-xs text-green-600">Selected: {department}</p>
+//             <p className="mt-1 text-xs text-blue-700">Selected: {department}</p>
 //           )}
 //         </div>
 
@@ -2710,7 +2710,7 @@
 //             {/* <button
 //               type="button"
 //               onClick={handleAddNewRole}
-//               className="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700 whitespace-nowrap"
+//               className="px-4 py-2 text-gray-900 bg-blue-600 rounded hover:bg-blue-800 whitespace-nowrap"
 //               title="Manage Roles"
 //             >
 //               Manage
@@ -2739,12 +2739,12 @@
 //           )}
           
 //           {role && !isAddingNewRole && (
-//             <p className="mt-1 text-xs text-green-600">Selected: {role}</p>
+//             <p className="mt-1 text-xs text-blue-700">Selected: {role}</p>
 //           )}
 //         </div>
 
 //         {/* ✅ SHIFT SECTION */}
-//         <div className="p-4 mb-4 border rounded-lg bg-gray-50">
+//         <div className="p-4 mb-4 border rounded-lg bg-white">
 //           <label className="block mb-2 text-sm font-medium">Shift Details *</label>
 
 //           <div className="flex gap-2 mb-3">
@@ -2834,7 +2834,7 @@
 //                       Selected: <span className="text-blue-600">Shift {shiftType}</span>
 //                     </span>
 //                     {allShiftsData.find(s => s.shiftType === shiftType) && (
-//                       <span className="text-xs text-green-600">✓ Existing Shift</span>
+//                       <span className="text-xs text-blue-700">✓ Existing Shift</span>
 //                     )}
 //                   </div>
 
@@ -2931,7 +2931,7 @@
 //             </label>
 //             <button onClick={() => navigate("/addlocation")}
 //               type="button"
-//               className="px-3 py-1 text-xs font-semibold text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
+//               className="px-3 py-1 text-xs font-semibold text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-700"
 //             >
 //               + Add Location
 //             </button>
@@ -2960,7 +2960,7 @@
 
 //             {/* <button onClick={() => navigate("/addlocation")}
 //               type="button"
-//               className="px-3 py-1 text-xs font-semibold text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
+//               className="px-3 py-1 text-xs font-semibold text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-700"
 //             >
 //               + Add Location
 //             </button> */}
@@ -3009,7 +3009,7 @@
 
 
 
-//         <button type="submit" disabled={loading} className="px-6 py-2 text-white bg-blue-600 rounded">
+//         <button type="submit" disabled={loading} className="px-6 py-2 text-gray-900 bg-blue-600 rounded">
 //           {loading ? "Saving..." : editingEmployee ? "Update Employee" : "Add Employee"}
 //         </button>
 
@@ -3562,7 +3562,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaIdCard className="inline mr-1 text-blue-500" /> Full Name *
+//                 <FaIdCard className="inline mr-1 text-blue-600" /> Full Name *
 //               </label>
 //               <input 
 //                 value={name} 
@@ -3575,7 +3575,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaEnvelope className="inline mr-1 text-blue-500" /> Email *
+//                 <FaEnvelope className="inline mr-1 text-blue-600" /> Email *
 //               </label>
 //               <input 
 //                 type="email" 
@@ -3589,7 +3589,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaLock className="inline mr-1 text-blue-500" /> Password {!editingEmployee && "*"}
+//                 <FaLock className="inline mr-1 text-blue-600" /> Password {!editingEmployee && "*"}
 //               </label>
 //               <div className="relative">
 //                 <input
@@ -3615,7 +3615,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaBuilding className="inline mr-1 text-blue-500" /> Department *
+//                 <FaBuilding className="inline mr-1 text-blue-600" /> Department *
 //               </label>
 //               <select
 //                 value={department}
@@ -3643,7 +3643,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaUserTie className="inline mr-1 text-blue-500" /> Role *
+//                 <FaUserTie className="inline mr-1 text-blue-600" /> Role *
 //               </label>
 //               <select
 //                 value={role}
@@ -3671,12 +3671,12 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaBriefcase className="inline mr-1 text-blue-500" /> Employee ID *
+//                 <FaBriefcase className="inline mr-1 text-blue-600" /> Employee ID *
 //               </label>
 //               <input
 //                 value={employeeId}
 //                 onChange={(e) => setEmployeeId(e.target.value)}
-//                 className={`w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${editingEmployee ? 'bg-gray-50' : ''}`}
+//                 className={`w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${editingEmployee ? 'bg-white' : ''}`}
 //                 placeholder="EMP001"
 //                 required
 //                 readOnly={!!editingEmployee}
@@ -3688,7 +3688,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaCalendar className="inline mr-1 text-blue-500" /> Join Date *
+//                 <FaCalendar className="inline mr-1 text-blue-600" /> Join Date *
 //               </label>
 //               <input 
 //                 type="date" 
@@ -3701,7 +3701,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaPhone className="inline mr-1 text-blue-500" /> Phone Number
+//                 <FaPhone className="inline mr-1 text-blue-600" /> Phone Number
 //               </label>
 //               <input 
 //                 value={phone} 
@@ -3713,7 +3713,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaMapMarkerAlt className="inline mr-1 text-blue-500" /> Location *
+//                 <FaMapMarkerAlt className="inline mr-1 text-blue-600" /> Location *
 //               </label>
 //               <select
 //                 value={locationId}
@@ -3745,7 +3745,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaClock className="inline mr-1 text-blue-500" /> Shift Type *
+//                 <FaClock className="inline mr-1 text-blue-600" /> Shift Type *
 //               </label>
 //               <select
 //                 value={shiftType}
@@ -3817,7 +3817,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaDollarSign className="inline mr-1 text-blue-500" /> Salary/Month *
+//                 <FaDollarSign className="inline mr-1 text-blue-600" /> Salary/Month *
 //               </label>
 //               <div className="relative">
 //                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -3851,7 +3851,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaHome className="inline mr-1 text-blue-500" /> Address
+//                 <FaHome className="inline mr-1 text-blue-600" /> Address
 //               </label>
 //               <input
 //                 value={address}
@@ -3870,12 +3870,12 @@
 //               className={`w-full md:w-auto px-8 py-3 rounded-lg font-medium transition duration-200 ${
 //                 loading 
 //                   ? 'bg-gray-400 cursor-not-allowed' 
-//                   : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'
+//                   : 'bg-blue-600 hover:bg-blue-700 text-gray-900 shadow-md hover:shadow-lg'
 //               }`}
 //             >
 //               {loading ? (
 //                 <div className="flex items-center justify-center">
-//                   <svg className="w-5 h-5 mr-3 -ml-1 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+//                   <svg className="w-5 h-5 mr-3 -ml-1 text-gray-900 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 //                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
 //                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 //                   </svg>
@@ -3893,7 +3893,7 @@
 
 //       {/* ✅ SHIFT MODAL */}
 //       {showShiftModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Create Custom Shift</h3>
@@ -3947,7 +3947,7 @@
 //                     <button
 //                       type="button"
 //                       onClick={addTimeSlot}
-//                       className="px-3 py-1 text-sm text-white bg-green-600 rounded hover:bg-green-700"
+//                       className="px-3 py-1 text-sm text-gray-900 bg-blue-600 rounded hover:bg-blue-800"
 //                     >
 //                       + Add Slot
 //                     </button>
@@ -3955,7 +3955,7 @@
                   
 //                   <div className="space-y-3">
 //                     {createShiftForm.timeSlots.map((slot, index) => (
-//                       <div key={slot.slotId} className="p-4 border rounded-lg bg-gray-50">
+//                       <div key={slot.slotId} className="p-4 border rounded-lg bg-white">
 //                         <div className="flex items-center justify-between mb-2">
 //                           <span className="text-sm font-medium">Slot {index + 1}</span>
 //                           {createShiftForm.timeSlots.length > 1 && (
@@ -4017,13 +4017,13 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowShiftModal(false)}
-//                   className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-white"
 //                 >
 //                   Cancel
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700"
+//                   className="px-4 py-2 text-gray-900 bg-purple-600 rounded-lg hover:bg-purple-700"
 //                 >
 //                   Create Custom Shift
 //                 </button>
@@ -4035,7 +4035,7 @@
 
 //       {/* ✅ DEPARTMENT MODAL */}
 //       {showDeptModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Add New Department</h3>
@@ -4084,7 +4084,7 @@
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//                   className="px-4 py-2 text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //                 >
 //                   Add Department
 //                 </button>
@@ -4096,7 +4096,7 @@
 
 //       {/* ✅ ROLE MODAL */}
 //       {showRoleModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Add New Role</h3>
@@ -4145,7 +4145,7 @@
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+//                   className="px-4 py-2 text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800"
 //                 >
 //                   Add Role
 //                 </button>
@@ -4157,7 +4157,7 @@
 
 //       {/* ✅ LOCATION MODAL */}
 //       {showLocationModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Add New Location</h3>
@@ -4189,7 +4189,7 @@
 //                   <button
 //                     type="button"
 //                     onClick={handleGetCurrentLocation}
-//                     className="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700"
+//                     className="px-4 py-2 text-gray-900 bg-blue-600 rounded hover:bg-blue-800"
 //                   >
 //                     📍 Get Current Location
 //                   </button>
@@ -4250,7 +4250,7 @@
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700"
+//                   className="px-4 py-2 text-gray-900 bg-purple-600 rounded-lg hover:bg-purple-700"
 //                 >
 //                   Add Location
 //                 </button>
@@ -5035,7 +5035,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaIdCard className="inline mr-1 text-blue-500" /> Full Name *
+//                 <FaIdCard className="inline mr-1 text-blue-600" /> Full Name *
 //               </label>
 //               <input 
 //                 value={name} 
@@ -5048,7 +5048,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaEnvelope className="inline mr-1 text-blue-500" /> Email *
+//                 <FaEnvelope className="inline mr-1 text-blue-600" /> Email *
 //               </label>
 //               <input 
 //                 type="email" 
@@ -5062,7 +5062,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaLock className="inline mr-1 text-blue-500" /> Password {!editingEmployee && "*"}
+//                 <FaLock className="inline mr-1 text-blue-600" /> Password {!editingEmployee && "*"}
 //               </label>
 //               <div className="relative">
 //                 <input
@@ -5085,7 +5085,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaPhone className="inline mr-1 text-blue-500" /> Phone
+//                 <FaPhone className="inline mr-1 text-blue-600" /> Phone
 //               </label>
 //               <input 
 //                 value={phone} 
@@ -5100,7 +5100,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaCalendar className="inline mr-1 text-blue-500" /> Date of Birth
+//                 <FaCalendar className="inline mr-1 text-blue-600" /> Date of Birth
 //               </label>
 //               <input 
 //                 type="date" 
@@ -5114,12 +5114,12 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaBriefcase className="inline mr-1 text-blue-500" /> Employee ID *
+//                 <FaBriefcase className="inline mr-1 text-blue-600" /> Employee ID *
 //               </label>
 //               <input
 //                 value={employeeId}
 //                 onChange={(e) => setEmployeeId(e.target.value)}
-//                 className={`w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${editingEmployee ? 'bg-gray-50' : ''}`}
+//                 className={`w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${editingEmployee ? 'bg-white' : ''}`}
 //                 placeholder="EMP001"
 //                 required
 //                 readOnly={!!editingEmployee}
@@ -5128,7 +5128,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaCalendar className="inline mr-1 text-blue-500" /> Join Date *
+//                 <FaCalendar className="inline mr-1 text-blue-600" /> Join Date *
 //               </label>
 //               <input 
 //                 type="date" 
@@ -5141,7 +5141,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaMapMarkerAlt className="inline mr-1 text-blue-500" /> Location *
+//                 <FaMapMarkerAlt className="inline mr-1 text-blue-600" /> Location *
 //               </label>
 //               <select
 //                 value={locationId}
@@ -5169,7 +5169,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaBuilding className="inline mr-1 text-blue-500" /> Department *
+//                 <FaBuilding className="inline mr-1 text-blue-600" /> Department *
 //               </label>
 //               <select
 //                 value={department}
@@ -5195,7 +5195,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaUserTie className="inline mr-1 text-blue-500" /> Role *
+//                 <FaUserTie className="inline mr-1 text-blue-600" /> Role *
 //               </label>
 //               <select
 //                 value={role}
@@ -5311,7 +5311,7 @@
 // {/* ✅ UPDATED WEEK OFF SECTION WITH PROPER MULTI-SELECT DROPDOWN */}
 // <div className="pt-6 border-t">
 //   <h3 className="mb-4 text-lg font-semibold text-gray-700">
-//     <FaCalendar className="inline mr-2 text-blue-500" /> Week Off Selection
+//     <FaCalendar className="inline mr-2 text-blue-600" /> Week Off Selection
 //   </h3>
   
 //   <div className="space-y-6">
@@ -5359,10 +5359,10 @@
 //             type="number" 
 //             value={autoWeekOffPerMonth} 
 //             readOnly
-//             className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
+//             className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
 //           />
 //           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-//             <span className="text-green-600">
+//             <span className="text-blue-700">
 //               <FaCheck />
 //             </span>
 //           </div>
@@ -5407,7 +5407,7 @@
 //           {/* Dropdown Options */}
 //           {isDropdownOpen && (
 //             <div className="absolute z-10 w-full mt-1 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg max-h-60">
-//               <div className="p-3 border-b bg-gray-50">
+//               <div className="p-3 border-b bg-white">
 //                 <div className="flex items-center justify-between">
 //                   <span className="text-sm font-medium text-gray-700">Select Multiple Days</span>
 //                   <div className="flex gap-2">
@@ -5449,7 +5449,7 @@
 //                   return (
 //                     <div 
 //                       key={day.id}
-//                       className={`p-3 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${
+//                       className={`p-3 rounded-lg cursor-pointer hover:bg-white transition-colors ${
 //                         isSelected ? 'bg-blue-50 border border-blue-200' : ''
 //                       }`}
 //                       onClick={() => {
@@ -5467,11 +5467,11 @@
 //                         <div className="flex items-center">
 //                           <div className={`w-5 h-5 border rounded mr-3 flex items-center justify-center ${
 //                             isSelected 
-//                               ? 'bg-blue-500 border-blue-500' 
+//                               ? 'bg-blue-600 border-blue-500' 
 //                               : 'border-gray-300'
 //                           }`}>
 //                             {isSelected && (
-//                               <FaCheck className="w-3 h-3 text-white" />
+//                               <FaCheck className="w-3 h-3 text-gray-900" />
 //                             )}
 //                           </div>
 //                           <div>
@@ -5512,12 +5512,12 @@
 //                 })}
 //               </div>
               
-//               <div className="p-3 border-t bg-gray-50">
+//               <div className="p-3 border-t bg-white">
 //                 <div className="flex items-center justify-between">
 //                   <div className="text-sm text-gray-700">
 //                     <span className="font-medium">Total Selected:</span> {selectedDays.length} day{selectedDays.length !== 1 ? 's' : ''}
 //                   </div>
-//                   <div className="text-sm font-medium text-green-600">
+//                   <div className="text-sm font-medium text-blue-700">
 //                     Week Offs/Month: {selectedDays.length}
 //                   </div>
 //                 </div>
@@ -5531,7 +5531,7 @@
 
 //         {/* Selected Summary (Only if there are selections) */}
 //         {selectedDays.length > 0 && (
-//           <div className="p-4 rounded-lg bg-gray-50">
+//           <div className="p-4 rounded-lg bg-white">
 //             <div className="flex items-center justify-between mb-3">
 //               <h4 className="font-medium text-gray-700">Selected Days Summary</h4>
 //               <button
@@ -5593,7 +5593,7 @@
 //                 </div>
 //                 <div>
 //                   <span className="font-bold text-gray-700">Week Offs/Month:</span>
-//                   <span className="ml-2 text-xl font-bold text-green-600">{selectedDays.length}</span>
+//                   <span className="ml-2 text-xl font-bold text-blue-700">{selectedDays.length}</span>
 //                 </div>
 //               </div>
 //               <p className="mt-2 text-xs text-gray-500">
@@ -5623,7 +5623,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaClock className="inline mr-1 text-blue-500" /> Shift Type *
+//                 <FaClock className="inline mr-1 text-blue-600" /> Shift Type *
 //               </label>
 //               <select
 //                 value={shiftType}
@@ -5655,7 +5655,7 @@
 //                     type="time"
 //                     value={shiftStartTime}
 //                     onChange={(e) => setShiftStartTime(e.target.value)}
-//                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
+//                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
 //                     required
 //                     readOnly
 //                   />
@@ -5669,7 +5669,7 @@
 //                     type="time"
 //                     value={shiftEndTime}
 //                     onChange={(e) => setShiftEndTime(e.target.value)}
-//                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
+//                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
 //                     required
 //                     readOnly
 //                   />
@@ -5697,7 +5697,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaDollarSign className="inline mr-1 text-blue-500" /> Salary/Month *
+//                 <FaDollarSign className="inline mr-1 text-blue-600" /> Salary/Month *
 //               </label>
 //               <div className="relative">
 //                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -5722,7 +5722,7 @@
 //                 type="number" 
 //                 value={weekOffPerMonth} 
 //                 readOnly
-//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
 //                 placeholder="0"
 //                 required 
 //               />
@@ -5738,12 +5738,12 @@
 //               className={`w-full md:w-auto px-8 py-3 rounded-lg font-medium transition duration-200 ${
 //                 loading 
 //                   ? 'bg-gray-400 cursor-not-allowed' 
-//                   : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'
+//                   : 'bg-blue-600 hover:bg-blue-700 text-gray-900 shadow-md hover:shadow-lg'
 //               }`}
 //             >
 //               {loading ? (
 //                 <div className="flex items-center justify-center">
-//                   <svg className="w-5 h-5 mr-3 -ml-1 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+//                   <svg className="w-5 h-5 mr-3 -ml-1 text-gray-900 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 //                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
 //                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 //                   </svg>
@@ -5761,7 +5761,7 @@
 
 //       {/* CREATE SHIFT MODAL */}
 //       {showShiftModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Create New Shift</h3>
@@ -5813,7 +5813,7 @@
 //                     Time Slot Configuration *
 //                   </label>
                   
-//                   <div className="p-3 space-y-3 border rounded-lg bg-gray-50">
+//                   <div className="p-3 space-y-3 border rounded-lg bg-white">
 //                     <div>
 //                       <label className="block mb-1 text-xs text-gray-500">Time Range *</label>
 //                       <input
@@ -5858,13 +5858,13 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowShiftModal(false)}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-white"
 //                 >
 //                   Cancel
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-sm text-white bg-purple-600 rounded-lg hover:bg-purple-700"
+//                   className="px-4 py-2 text-sm text-gray-900 bg-purple-600 rounded-lg hover:bg-purple-700"
 //                 >
 //                   Create Shift
 //                 </button>
@@ -5876,7 +5876,7 @@
 
 //       {/* DEPARTMENT MODAL */}
 //       {showDeptModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Add New Department</h3>
@@ -5889,7 +5889,7 @@
 //               </div>
 //               <div className="flex justify-end pt-6 mt-6 space-x-3 border-t">
 //                 <button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg">Cancel</button>
-//                 <button type="submit" className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">Add Department</button>
+//                 <button type="submit" className="px-4 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700">Add Department</button>
 //               </div>
 //             </form>
 //           </div>
@@ -5898,7 +5898,7 @@
 
 //       {/* ROLE MODAL */}
 //       {showRoleModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Add New Role</h3>
@@ -5911,7 +5911,7 @@
 //               </div>
 //               <div className="flex justify-end pt-6 mt-6 space-x-3 border-t">
 //                 <button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg">Cancel</button>
-//                 <button type="submit" className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700">Add Role</button>
+//                 <button type="submit" className="px-4 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800">Add Role</button>
 //               </div>
 //             </form>
 //           </div>
@@ -5920,7 +5920,7 @@
 
 //       {/* LOCATION MODAL */}
 //       {showLocationModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Add New Location</h3>
@@ -5929,7 +5929,7 @@
 //             <form onSubmit={handleCreateLocation} className="p-6">
 //               <div className="space-y-6">
 //                 <div><label className="block mb-2 text-sm font-medium text-gray-700">Location Name *</label><input type="text" value={locationForm.name} onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., Main Office, Branch Office" required /></div>
-//                 <div className="flex items-center justify-between mb-3"><label className="block text-sm font-medium text-gray-700">Location Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-4 py-2 text-sm text-white bg-green-600 rounded hover:bg-green-700">📍 Get Current Location</button></div>
+//                 <div className="flex items-center justify-between mb-3"><label className="block text-sm font-medium text-gray-700">Location Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-4 py-2 text-sm text-gray-900 bg-blue-600 rounded hover:bg-blue-800">📍 Get Current Location</button></div>
 //                 <div className="grid grid-cols-2 gap-4">
 //                   <div><label className="block mb-2 text-sm font-medium text-gray-700">Latitude *</label><input type="text" value={locationForm.latitude} onChange={(e) => setLocationForm(prev => ({ ...prev, latitude: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., 28.6139" required /></div>
 //                   <div><label className="block mb-2 text-sm font-medium text-gray-700">Longitude *</label><input type="text" value={locationForm.longitude} onChange={(e) => setLocationForm(prev => ({ ...prev, longitude: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., 77.2090" required /></div>
@@ -5938,7 +5938,7 @@
 //               </div>
 //               <div className="flex justify-end pt-6 mt-6 space-x-3 border-t">
 //                 <button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg">Cancel</button>
-//                 <button type="submit" className="px-4 py-2 text-sm text-white bg-purple-600 rounded-lg hover:bg-purple-700">Add Location</button>
+//                 <button type="submit" className="px-4 py-2 text-sm text-gray-900 bg-purple-600 rounded-lg hover:bg-purple-700">Add Location</button>
 //               </div>
 //             </form>
 //           </div>
@@ -6770,7 +6770,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaPhone className="inline mr-1 text-blue-500" /> Phone Number *
+//                 <FaPhone className="inline mr-1 text-blue-600" /> Phone Number *
 //               </label>
 //               <div className="relative">
 //                 <input 
@@ -6782,12 +6782,12 @@
 //                 />
 //                 {searching && (
 //                   <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-//                     <FaSpinner className="text-blue-500 animate-spin" />
+//                     <FaSpinner className="text-blue-600 animate-spin" />
 //                   </div>
 //                 )}
 //                 {employeeFound && !searching && (
 //                   <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-//                     <FaCheck className="text-green-500" />
+//                     <FaCheck className="text-blue-600" />
 //                   </div>
 //                 )}
 //               </div>
@@ -6827,7 +6827,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaEnvelope className="inline mr-1 text-blue-500" /> Email *
+//                 <FaEnvelope className="inline mr-1 text-blue-600" /> Email *
 //               </label>
 //               <input 
 //                 type="email" 
@@ -6841,7 +6841,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaLock className="inline mr-1 text-blue-500" /> Password {!editingEmployee && !employeeFound && "*"}
+//                 <FaLock className="inline mr-1 text-blue-600" /> Password {!editingEmployee && !employeeFound && "*"}
 //               </label>
 //               <div className="relative">
 //                 <input
@@ -6864,7 +6864,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaCalendar className="inline mr-1 text-blue-500" /> Date of Birth
+//                 <FaCalendar className="inline mr-1 text-blue-600" /> Date of Birth
 //               </label>
 //               <input 
 //                 type="date" 
@@ -6881,7 +6881,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaUser className="inline mr-1 text-blue-500" /> First Name *
+//                 <FaUser className="inline mr-1 text-blue-600" /> First Name *
 //               </label>
 //               <input 
 //                 value={firstName} 
@@ -6894,7 +6894,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaUser className="inline mr-1 text-blue-500" /> Last Name
+//                 <FaUser className="inline mr-1 text-blue-600" /> Last Name
 //               </label>
 //               <input 
 //                 value={lastName} 
@@ -6906,13 +6906,13 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaBriefcase className="inline mr-1 text-blue-500" /> Employee ID *
+//                 <FaBriefcase className="inline mr-1 text-blue-600" /> Employee ID *
 //               </label>
 //               <input
 //                 value={employeeId}
 //                 onChange={(e) => setEmployeeId(e.target.value)}
 //                 className={`w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-//                   editingEmployee || employeeFound ? 'bg-gray-50' : ''
+//                   editingEmployee || employeeFound ? 'bg-white' : ''
 //                 }`}
 //                 placeholder="EMP001"
 //                 required
@@ -6925,7 +6925,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaCalendar className="inline mr-1 text-blue-500" /> Join Date *
+//                 <FaCalendar className="inline mr-1 text-blue-600" /> Join Date *
 //               </label>
 //               <input 
 //                 type="date" 
@@ -6938,7 +6938,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaMapMarkerAlt className="inline mr-1 text-blue-500" /> Location *
+//                 <FaMapMarkerAlt className="inline mr-1 text-blue-600" /> Location *
 //               </label>
 //               <select
 //                 value={locationId}
@@ -6963,7 +6963,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaBuilding className="inline mr-1 text-blue-500" /> Department *
+//                 <FaBuilding className="inline mr-1 text-blue-600" /> Department *
 //               </label>
 //               <select
 //                 value={department}
@@ -6992,7 +6992,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaUserTie className="inline mr-1 text-blue-500" /> Role *
+//                 <FaUserTie className="inline mr-1 text-blue-600" /> Role *
 //               </label>
 //               <select
 //                 value={role}
@@ -7018,7 +7018,7 @@
 
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaCalendar className="inline mr-1 text-blue-500" /> Week Offs per Month *
+//                 <FaCalendar className="inline mr-1 text-blue-600" /> Week Offs per Month *
 //               </label>
 //               <input
 //                 type="number"
@@ -7037,7 +7037,7 @@
 //           {/* ADDRESS SECTION */}
 //           <div className="pt-6 border-t">
 //             <h3 className="mb-4 text-lg font-semibold text-gray-700">
-//               <FaMapMarkerAlt className="inline mr-2 text-blue-500" /> Address Details
+//               <FaMapMarkerAlt className="inline mr-2 text-blue-600" /> Address Details
 //             </h3>
             
 //             <div className="grid grid-cols-1 gap-4 mb-4 md:grid-cols-2">
@@ -7131,7 +7131,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaClock className="inline mr-1 text-blue-500" /> Shift Type *
+//                 <FaClock className="inline mr-1 text-blue-600" /> Shift Type *
 //               </label>
 //               <select
 //                 value={shiftType}
@@ -7162,7 +7162,7 @@
 //                     type="time"
 //                     value={shiftStartTime}
 //                     onChange={(e) => setShiftStartTime(e.target.value)}
-//                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
+//                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
 //                     readOnly
 //                   />
 //                 </div>
@@ -7175,7 +7175,7 @@
 //                     type="time"
 //                     value={shiftEndTime}
 //                     onChange={(e) => setShiftEndTime(e.target.value)}
-//                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
+//                     className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
 //                     readOnly
 //                   />
 //                 </div>
@@ -7201,7 +7201,7 @@
 //           <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
 //             <div>
 //               <label className="block mb-1 text-sm font-medium text-gray-700">
-//                 <FaDollarSign className="inline mr-1 text-blue-500" /> CTC (Yearly) *
+//                 <FaDollarSign className="inline mr-1 text-blue-600" /> CTC (Yearly) *
 //               </label>
 //               <div className="relative">
 //                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -7231,7 +7231,7 @@
 //                 type="number" 
 //                 value={weekOffsPerMonth} 
 //                 readOnly
-//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
+//                 className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
 //                 placeholder="0"
 //                 required 
 //               />
@@ -7261,12 +7261,12 @@
 //               className={`w-full md:w-auto px-8 py-3 rounded-lg font-medium transition duration-200 ${
 //                 loading 
 //                   ? 'bg-gray-400 cursor-not-allowed' 
-//                   : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'
+//                   : 'bg-blue-600 hover:bg-blue-700 text-gray-900 shadow-md hover:shadow-lg'
 //               }`}
 //             >
 //               {loading ? (
 //                 <div className="flex items-center justify-center">
-//                   <svg className="w-5 h-5 mr-3 -ml-1 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+//                   <svg className="w-5 h-5 mr-3 -ml-1 text-gray-900 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 //                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
 //                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 //                   </svg>
@@ -7284,7 +7284,7 @@
 
 //       {/* CREATE SHIFT MODAL */}
 //       {showShiftModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Create New Shift</h3>
@@ -7336,7 +7336,7 @@
 //                     Time Slot Configuration *
 //                   </label>
                   
-//                   <div className="p-3 space-y-3 border rounded-lg bg-gray-50">
+//                   <div className="p-3 space-y-3 border rounded-lg bg-white">
 //                     <div>
 //                       <label className="block mb-1 text-xs text-gray-500">Time Range *</label>
 //                       <input
@@ -7381,13 +7381,13 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowShiftModal(false)}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-white"
 //                 >
 //                   Cancel
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-sm text-white bg-purple-600 rounded-lg hover:bg-purple-700"
+//                   className="px-4 py-2 text-sm text-gray-900 bg-purple-600 rounded-lg hover:bg-purple-700"
 //                 >
 //                   Create Shift
 //                 </button>
@@ -7399,7 +7399,7 @@
 
 //       {/* DEPARTMENT MODAL */}
 //       {showDeptModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Add New Department</h3>
@@ -7412,7 +7412,7 @@
 //               </div>
 //               <div className="flex justify-end pt-6 mt-6 space-x-3 border-t">
 //                 <button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg">Cancel</button>
-//                 <button type="submit" className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">Add Department</button>
+//                 <button type="submit" className="px-4 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700">Add Department</button>
 //               </div>
 //             </form>
 //           </div>
@@ -7421,7 +7421,7 @@
 
 //       {/* ROLE MODAL */}
 //       {showRoleModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Add New Role</h3>
@@ -7434,7 +7434,7 @@
 //               </div>
 //               <div className="flex justify-end pt-6 mt-6 space-x-3 border-t">
 //                 <button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg">Cancel</button>
-//                 <button type="submit" className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700">Add Role</button>
+//                 <button type="submit" className="px-4 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800">Add Role</button>
 //               </div>
 //             </form>
 //           </div>
@@ -7443,7 +7443,7 @@
 
 //       {/* LOCATION MODAL */}
 //       {showLocationModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Add New Location</h3>
@@ -7452,7 +7452,7 @@
 //             <form onSubmit={handleCreateLocation} className="p-6">
 //               <div className="space-y-6">
 //                 <div><label className="block mb-2 text-sm font-medium text-gray-700">Location Name *</label><input type="text" value={locationForm.name} onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., Main Office, Branch Office" required /></div>
-//                 <div className="flex items-center justify-between mb-3"><label className="block text-sm font-medium text-gray-700">Location Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-4 py-2 text-sm text-white bg-green-600 rounded hover:bg-green-700">📍 Get Current Location</button></div>
+//                 <div className="flex items-center justify-between mb-3"><label className="block text-sm font-medium text-gray-700">Location Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-4 py-2 text-sm text-gray-900 bg-blue-600 rounded hover:bg-blue-800">📍 Get Current Location</button></div>
 //                 <div className="grid grid-cols-2 gap-4">
 //                   <div><label className="block mb-2 text-sm font-medium text-gray-700">Latitude *</label><input type="text" value={locationForm.latitude} onChange={(e) => setLocationForm(prev => ({ ...prev, latitude: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., 28.6139" required /></div>
 //                   <div><label className="block mb-2 text-sm font-medium text-gray-700">Longitude *</label><input type="text" value={locationForm.longitude} onChange={(e) => setLocationForm(prev => ({ ...prev, longitude: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g., 77.2090" required /></div>
@@ -7461,7 +7461,7 @@
 //               </div>
 //               <div className="flex justify-end pt-6 mt-6 space-x-3 border-t">
 //                 <button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg">Cancel</button>
-//                 <button type="submit" className="px-4 py-2 text-sm text-white bg-purple-600 rounded-lg hover:bg-purple-700">Add Location</button>
+//                 <button type="submit" className="px-4 py-2 text-sm text-gray-900 bg-purple-600 rounded-lg hover:bg-purple-700">Add Location</button>
 //               </div>
 //             </form>
 //           </div>
@@ -8059,8 +8059,8 @@
 //                   <label className="block mb-1 text-sm font-medium">Phone Number *</label>
 //                   <div className="relative">
 //                     <input value={phone} onChange={handlePhoneChange} className="w-full p-2.5 border rounded-lg" placeholder="10-digit phone" required />
-//                     {searching && <FaSpinner className="absolute right-3 top-3 animate-spin text-blue-500" />}
-//                     {employeeFound && !searching && <FaCheck className="absolute right-3 top-3 text-green-500" />}
+//                     {searching && <FaSpinner className="absolute right-3 top-3 animate-spin text-blue-600" />}
+//                     {employeeFound && !searching && <FaCheck className="absolute right-3 top-3 text-blue-600" />}
 //                   </div>
 //                   <p className="mt-1 text-xs text-gray-500">Enter 10 digits to search existing employee</p>
 //                 </div>
@@ -8110,7 +8110,7 @@
 //             </div>
 //             <div className="p-4 space-y-4">
 //               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-//                 <div><label className="block mb-1 text-sm">Employee ID *</label><input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className="w-full p-2.5 border rounded-lg bg-gray-50" readOnly /></div>
+//                 <div><label className="block mb-1 text-sm">Employee ID *</label><input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className="w-full p-2.5 border rounded-lg bg-white" readOnly /></div>
 //                 <div><label className="block mb-1 text-sm">Join Date *</label><input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} className="w-full p-2.5 border rounded-lg" required /></div>
 //               </div>
 //               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -8167,7 +8167,7 @@
 //                     <div><label className="block text-sm">Medical Allowance</label><input type="number" value={medicalAllowance} onChange={(e) => setMedicalAllowance(e.target.value)} className="w-full p-2 border rounded" /></div>
 //                     <div><label className="block text-sm">Performance Allowance</label><input type="number" value={performanceAllowance} onChange={(e) => setPerformanceAllowance(e.target.value)} className="w-full p-2 border rounded" /></div>
 //                     <div><label className="block text-sm">Special Allowance</label><input type="number" value={specialAllowance} onChange={(e) => setSpecialAllowance(e.target.value)} className="w-full p-2 border rounded" /></div>
-//                     <div className="pt-2 border-t"><label className="font-semibold">Total Earnings</label><div className="text-xl font-bold text-green-600">₹{totalEarnings.toLocaleString()}</div></div>
+//                     <div className="pt-2 border-t"><label className="font-semibold">Total Earnings</label><div className="text-xl font-bold text-blue-700">₹{totalEarnings.toLocaleString()}</div></div>
 //                   </div>
 //                 </div>
 //                 <div className="border rounded-lg p-3">
@@ -8181,11 +8181,11 @@
 //                   </div>
 //                 </div>
 //               </div>
-//               <div className="bg-gray-50 p-3 rounded-lg border mt-3">
+//               <div className="bg-white p-3 rounded-lg border mt-3">
 //                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
 //                   <div><label className="font-semibold">Total Earnings</label><div className="text-lg">₹{totalEarnings.toLocaleString()}</div></div>
 //                   <div><label className="font-semibold">Total Deductions</label><div className="text-lg text-red-600">₹{totalDeductions.toLocaleString()}</div></div>
-//                   <div><label className="font-semibold text-green-600">Net Salary (Monthly)</label><div className="text-2xl font-bold text-green-600">₹{netSalary.toLocaleString()}</div></div>
+//                   <div><label className="font-semibold text-blue-700">Net Salary (Monthly)</label><div className="text-2xl font-bold text-blue-700">₹{netSalary.toLocaleString()}</div></div>
 //                 </div>
 //                 <div className="mt-2 pt-2 border-t"><label className="font-semibold">Yearly CTC</label><div className="text-xl text-blue-600">₹{(netSalary * 12).toLocaleString()}</div></div>
 //               </div>
@@ -8206,14 +8206,14 @@
 //               </div>
 //               {showShiftDetails && (
 //                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-//                   <div><label className="block mb-1 text-sm">Start Time</label><input type="time" value={shiftStartTime} readOnly className="w-full p-2.5 border rounded-lg bg-gray-50" /></div>
-//                   <div><label className="block mb-1 text-sm">End Time</label><input type="time" value={shiftEndTime} readOnly className="w-full p-2.5 border rounded-lg bg-gray-50" /></div>
+//                   <div><label className="block mb-1 text-sm">Start Time</label><input type="time" value={shiftStartTime} readOnly className="w-full p-2.5 border rounded-lg bg-white" /></div>
+//                   <div><label className="block mb-1 text-sm">End Time</label><input type="time" value={shiftEndTime} readOnly className="w-full p-2.5 border rounded-lg bg-white" /></div>
 //                 </div>
 //               )}
 //               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //                 <div><label className="block mb-1 text-sm">Week Off Day</label><select value={weekOffDay} onChange={(e) => setWeekOffDay(e.target.value)} className="w-full p-2.5 border rounded-lg"><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div>
 //                 <div><label className="block mb-1 text-sm">Week Offs per Month *</label><input type="number" value={weekOffsPerMonth} onChange={(e) => setWeekOffsPerMonth(e.target.value)} min="0" max="30" className="w-full p-2.5 border rounded-lg" required /></div>
-//                 <div><label className="block mb-1 text-sm">Monthly Salary (Net)</label><input type="number" value={netSalary} readOnly className="w-full p-2.5 border rounded-lg bg-gray-50" /></div>
+//                 <div><label className="block mb-1 text-sm">Monthly Salary (Net)</label><input type="number" value={netSalary} readOnly className="w-full p-2.5 border rounded-lg bg-white" /></div>
 //                 <div><label className="block mb-1 text-sm">Annual CTC (Yearly)</label><input type="number" value={ctc} onChange={(e) => setCtc(e.target.value)} className="w-full p-2.5 border rounded-lg" placeholder="e.g. 500000" /></div>
 //               </div>
 //               <div>
@@ -8230,7 +8230,7 @@
 
 //           {/* SUBMIT BUTTON */}
 //           <div className="flex justify-end pt-4">
-//             <button type="submit" disabled={loading} className={`px-8 py-3 rounded-lg font-medium transition duration-200 ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'}`}>
+//             <button type="submit" disabled={loading} className={`px-8 py-3 rounded-lg font-medium transition duration-200 ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-gray-900 shadow-md'}`}>
 //               {loading ? <><FaSpinner className="inline mr-2 animate-spin" /> Processing...</> : <><FaSave className="inline mr-2" /> {editingEmployee || employeeFound ? "Update Employee" : "Add Employee"}</>}
 //             </button>
 //           </div>
@@ -8239,55 +8239,55 @@
 
 //       {/* MODALS */}
 //       {showShiftModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Create New Shift</h3><button onClick={() => setShowShiftModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateCustomShift} className="p-4 space-y-4">
 //               <div className="grid grid-cols-2 gap-3"><input type="text" placeholder="Shift Type (A-Z)" value={createShiftForm.shiftType} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftType: e.target.value.toUpperCase() }))} className="p-2 border rounded" required /><input type="text" placeholder="Shift Name" value={createShiftForm.shiftName} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftName: e.target.value }))} className="p-2 border rounded" required /></div>
 //               <input type="text" placeholder="Time Range (e.g., 09:00 - 18:00)" value={createShiftForm.timeRange} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, timeRange: e.target.value }))} className="w-full p-2 border rounded" required />
 //               <input type="text" placeholder="Description" value={createShiftForm.description} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, description: e.target.value }))} className="w-full p-2 border rounded" required />
-//               <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowShiftModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-purple-600 rounded">Create</button></div>
+//               <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowShiftModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-purple-600 rounded">Create</button></div>
 //             </form>
 //           </div>
 //         </div>
 //       )}
 
 //       {showDeptModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Department</h3><button onClick={() => setShowDeptModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateDepartment} className="p-4 space-y-4">
 //               <input type="text" placeholder="Department Name" value={deptForm.name} onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
 //               <textarea placeholder="Description" value={deptForm.description} onChange={(e) => setDeptForm(prev => ({ ...prev, description: e.target.value }))} rows="2" className="w-full p-2 border rounded"></textarea>
-//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-blue-600 rounded">Add</button></div>
+//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-blue-600 rounded">Add</button></div>
 //             </form>
 //           </div>
 //         </div>
 //       )}
 
 //       {showRoleModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Role</h3><button onClick={() => setShowRoleModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateRole} className="p-4 space-y-4">
 //               <input type="text" placeholder="Role Name" value={roleForm.name} onChange={(e) => setRoleForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
 //               <textarea placeholder="Description" value={roleForm.description} onChange={(e) => setRoleForm(prev => ({ ...prev, description: e.target.value }))} rows="2" className="w-full p-2 border rounded"></textarea>
-//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-green-600 rounded">Add</button></div>
+//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-blue-600 rounded">Add</button></div>
 //             </form>
 //           </div>
 //         </div>
 //       )}
 
 //       {showLocationModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Location</h3><button onClick={() => setShowLocationModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateLocation} className="p-4 space-y-4">
 //               <input type="text" placeholder="Location Name" value={locationForm.name} onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
-//               <div className="flex justify-between items-center"><label className="text-sm">Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-3 py-1 text-sm bg-green-600 text-white rounded">📍 Get Current Location</button></div>
+//               <div className="flex justify-between items-center"><label className="text-sm">Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-3 py-1 text-sm bg-blue-600 text-gray-900 rounded">📍 Get Current Location</button></div>
 //               <div className="grid grid-cols-2 gap-3"><input type="text" placeholder="Latitude" value={locationForm.latitude} onChange={(e) => setLocationForm(prev => ({ ...prev, latitude: e.target.value }))} className="p-2 border rounded" required /><input type="text" placeholder="Longitude" value={locationForm.longitude} onChange={(e) => setLocationForm(prev => ({ ...prev, longitude: e.target.value }))} className="p-2 border rounded" required /></div>
 //               <textarea placeholder="Full Address" value={locationForm.fullAddress} onChange={(e) => setLocationForm(prev => ({ ...prev, fullAddress: e.target.value }))} rows="3" className="w-full p-2 border rounded" required></textarea>
-//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-purple-600 rounded">Add Location</button></div>
+//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-purple-600 rounded">Add Location</button></div>
 //             </form>
 //           </div>
 //         </div>
@@ -9028,8 +9028,8 @@
 //                   <label className="block mb-1 text-sm font-medium">Phone Number *</label>
 //                   <div className="relative">
 //                     <input value={phone} onChange={handlePhoneChange} className="w-full p-2.5 border rounded-lg" placeholder="10-digit phone" required />
-//                     {searching && <FaSpinner className="absolute right-3 top-3 animate-spin text-blue-500" />}
-//                     {employeeFound && !searching && <FaCheck className="absolute right-3 top-3 text-green-500" />}
+//                     {searching && <FaSpinner className="absolute right-3 top-3 animate-spin text-blue-600" />}
+//                     {employeeFound && !searching && <FaCheck className="absolute right-3 top-3 text-blue-600" />}
 //                   </div>
 //                   <p className="mt-1 text-xs text-gray-500">Enter 10 digits to search existing employee</p>
 //                 </div>
@@ -9135,7 +9135,7 @@
 //                     <div><label className="block text-sm">Medical Allowance</label><input type="number" value={medicalAllowance} onChange={(e) => setMedicalAllowance(e.target.value)} className="w-full p-2 border rounded" /></div>
 //                     <div><label className="block text-sm">Performance Allowance</label><input type="number" value={performanceAllowance} onChange={(e) => setPerformanceAllowance(e.target.value)} className="w-full p-2 border rounded" /></div>
 //                     <div><label className="block text-sm">Special Allowance</label><input type="number" value={specialAllowance} onChange={(e) => setSpecialAllowance(e.target.value)} className="w-full p-2 border rounded" /></div>
-//                     <div className="pt-2 border-t"><label className="font-semibold">Total Earnings</label><div className="text-xl font-bold text-green-600">₹{totalEarnings.toLocaleString()}</div></div>
+//                     <div className="pt-2 border-t"><label className="font-semibold">Total Earnings</label><div className="text-xl font-bold text-blue-700">₹{totalEarnings.toLocaleString()}</div></div>
 //                   </div>
 //                 </div>
 //                 <div className="border rounded-lg p-3">
@@ -9149,11 +9149,11 @@
 //                   </div>
 //                 </div>
 //               </div>
-//               <div className="bg-gray-50 p-3 rounded-lg border mt-3">
+//               <div className="bg-white p-3 rounded-lg border mt-3">
 //                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
 //                   <div><label className="font-semibold">Total Earnings</label><div className="text-lg">₹{totalEarnings.toLocaleString()}</div></div>
 //                   <div><label className="font-semibold">Total Deductions</label><div className="text-lg text-red-600">₹{totalDeductions.toLocaleString()}</div></div>
-//                   <div><label className="font-semibold text-green-600">Net Salary (Monthly)</label><div className="text-2xl font-bold text-green-600">₹{netSalary.toLocaleString()}</div></div>
+//                   <div><label className="font-semibold text-blue-700">Net Salary (Monthly)</label><div className="text-2xl font-bold text-blue-700">₹{netSalary.toLocaleString()}</div></div>
 //                 </div>
 //                 <div className="mt-2 pt-2 border-t flex flex-col md:flex-row md:justify-between md:items-center">
 //                   <div>
@@ -9193,7 +9193,7 @@
 //               {showShiftDetails && shiftTimeSlots && shiftTimeSlots.length > 0 && (
 //                 <div className="space-y-3">
 //                   {shiftTimeSlots.map((slot, index) => (
-//                     <div key={index} className="grid grid-cols-1 gap-4 md:grid-cols-3 bg-gray-50 p-3 rounded-lg border">
+//                     <div key={index} className="grid grid-cols-1 gap-4 md:grid-cols-3 bg-white p-3 rounded-lg border">
 //                       <div className="col-span-1 md:col-span-3 text-xs font-semibold text-gray-500 uppercase">
 //                         {slot.description || `Time Slot ${index + 1}`}
 //                       </div>
@@ -9216,7 +9216,7 @@
 //               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //                 <div><label className="block mb-1 text-sm">Week Off Day</label><select value={weekOffDay} onChange={(e) => setWeekOffDay(e.target.value)} className="w-full p-2.5 border rounded-lg"><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div>
 //                 <div><label className="block mb-1 text-sm">Week Offs per Month *</label><input type="number" value={weekOffsPerMonth} onChange={(e) => setWeekOffsPerMonth(e.target.value)} min="0" max="30" className="w-full p-2.5 border rounded-lg" required /></div>
-//                 <div><label className="block mb-1 text-sm">Monthly Salary (Net)</label><input type="number" value={netSalary} readOnly className="w-full p-2.5 border rounded-lg bg-gray-50" /></div>
+//                 <div><label className="block mb-1 text-sm">Monthly Salary (Net)</label><input type="number" value={netSalary} readOnly className="w-full p-2.5 border rounded-lg bg-white" /></div>
 //                 <div><label className="block mb-1 text-sm">Annual CTC (Yearly)</label><input type="number" value={ctc} onChange={(e) => setCtc(e.target.value)} className="w-full p-2.5 border rounded-lg" placeholder="e.g. 500000" /></div>
 //               </div>
 //               <div>
@@ -9302,7 +9302,7 @@
 //                       </div>
 //                       <div>
 //                         <span className="text-gray-500">Increment:</span>
-//                         <p className="font-bold text-green-600">
+//                         <p className="font-bold text-blue-700">
 //                           {incrementType === 'percentage' 
 //                             ? `${incrementValue}%`
 //                             : `₹${parseInt(incrementValue).toLocaleString()}`
@@ -9330,13 +9330,13 @@
 //                   type="button"
 //                   onClick={handleApplyIncrement}
 //                   disabled={!incrementType || !incrementValue || !incrementEffectiveDate || loading}
-//                   className="w-full md:w-auto px-6 py-2.5 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 flex items-center justify-center gap-2"
+//                   className="w-full md:w-auto px-6 py-2.5 text-gray-900 bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 flex items-center justify-center gap-2"
 //                 >
 //                   {loading ? <FaSpinner className="animate-spin" /> : <FaChartLine />}
 //                   Apply Increment
 //                 </button>
                 
-//                 <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg">
+//                 <div className="text-xs text-gray-500 bg-white p-2 rounded-lg">
 //                   <p className="font-medium">ℹ️ Note:</p>
 //                   <ul className="list-disc list-inside space-y-0.5 mt-1">
 //                     <li>Increment will be effective from the selected date</li>
@@ -9351,7 +9351,7 @@
 
 //           {/* SUBMIT BUTTON */}
 //           <div className="flex justify-end pt-4">
-//             <button type="submit" disabled={loading} className={`px-8 py-3 rounded-lg font-medium transition duration-200 ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'}`}>
+//             <button type="submit" disabled={loading} className={`px-8 py-3 rounded-lg font-medium transition duration-200 ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-gray-900 shadow-md'}`}>
 //               {loading ? <><FaSpinner className="inline mr-2 animate-spin" /> Processing...</> : <><FaSave className="inline mr-2" /> {editingEmployee || employeeFound ? "Update Employee" : "Add Employee"}</>}
 //             </button>
 //           </div>
@@ -9360,55 +9360,55 @@
 
 //       {/* MODALS */}
 //       {showShiftModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Create New Shift</h3><button onClick={() => setShowShiftModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateCustomShift} className="p-4 space-y-4">
 //               <div className="grid grid-cols-2 gap-3"><input type="text" placeholder="Shift Type (A-Z)" value={createShiftForm.shiftType} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftType: e.target.value.toUpperCase() }))} className="p-2 border rounded" required /><input type="text" placeholder="Shift Name" value={createShiftForm.shiftName} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftName: e.target.value }))} className="p-2 border rounded" required /></div>
 //               <input type="text" placeholder="Time Range (e.g., 09:00 - 18:00)" value={createShiftForm.timeRange} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, timeRange: e.target.value }))} className="w-full p-2 border rounded" required />
 //               <input type="text" placeholder="Description" value={createShiftForm.description} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, description: e.target.value }))} className="w-full p-2 border rounded" required />
-//               <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowShiftModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-purple-600 rounded">Create</button></div>
+//               <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowShiftModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-purple-600 rounded">Create</button></div>
 //             </form>
 //           </div>
 //         </div>
 //       )}
 
 //       {showDeptModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Department</h3><button onClick={() => setShowDeptModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateDepartment} className="p-4 space-y-4">
 //               <input type="text" placeholder="Department Name" value={deptForm.name} onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
 //               <textarea placeholder="Description" value={deptForm.description} onChange={(e) => setDeptForm(prev => ({ ...prev, description: e.target.value }))} rows="2" className="w-full p-2 border rounded"></textarea>
-//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-blue-600 rounded">Add</button></div>
+//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-blue-600 rounded">Add</button></div>
 //             </form>
 //           </div>
 //         </div>
 //       )}
 
 //       {showRoleModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Role</h3><button onClick={() => setShowRoleModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateRole} className="p-4 space-y-4">
 //               <input type="text" placeholder="Role Name" value={roleForm.name} onChange={(e) => setRoleForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
 //               <textarea placeholder="Description" value={roleForm.description} onChange={(e) => setRoleForm(prev => ({ ...prev, description: e.target.value }))} rows="2" className="w-full p-2 border rounded"></textarea>
-//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-green-600 rounded">Add</button></div>
+//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-blue-600 rounded">Add</button></div>
 //             </form>
 //           </div>
 //         </div>
 //       )}
 
 //       {showLocationModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Location</h3><button onClick={() => setShowLocationModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateLocation} className="p-4 space-y-4">
 //               <input type="text" placeholder="Location Name" value={locationForm.name} onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
-//               <div className="flex justify-between items-center"><label className="text-sm">Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-3 py-1 text-sm bg-green-600 text-white rounded">📍 Get Current Location</button></div>
+//               <div className="flex justify-between items-center"><label className="text-sm">Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-3 py-1 text-sm bg-blue-600 text-gray-900 rounded">📍 Get Current Location</button></div>
 //               <div className="grid grid-cols-2 gap-3"><input type="text" placeholder="Latitude" value={locationForm.latitude} onChange={(e) => setLocationForm(prev => ({ ...prev, latitude: e.target.value }))} className="p-2 border rounded" required /><input type="text" placeholder="Longitude" value={locationForm.longitude} onChange={(e) => setLocationForm(prev => ({ ...prev, longitude: e.target.value }))} className="p-2 border rounded" required /></div>
 //               <textarea placeholder="Full Address" value={locationForm.fullAddress} onChange={(e) => setLocationForm(prev => ({ ...prev, fullAddress: e.target.value }))} rows="3" className="w-full p-2 border rounded" required></textarea>
-//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-purple-600 rounded">Add Location</button></div>
+//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-purple-600 rounded">Add Location</button></div>
 //             </form>
 //           </div>
 //         </div>
@@ -10179,8 +10179,8 @@
 //                   <label className="block mb-1 text-sm font-medium">Phone Number *</label>
 //                   <div className="relative">
 //                     <input value={phone} onChange={handlePhoneChange} className="w-full p-2.5 border rounded-lg" placeholder="10-digit phone" required />
-//                     {searching && <FaSpinner className="absolute right-3 top-3 animate-spin text-blue-500" />}
-//                     {employeeFound && !searching && <FaCheck className="absolute right-3 top-3 text-green-500" />}
+//                     {searching && <FaSpinner className="absolute right-3 top-3 animate-spin text-blue-600" />}
+//                     {employeeFound && !searching && <FaCheck className="absolute right-3 top-3 text-blue-600" />}
 //                   </div>
 //                   <p className="mt-1 text-xs text-gray-500">Enter 10 digits to search existing employee</p>
 //                 </div>
@@ -10286,7 +10286,7 @@
 //                     <div><label className="block text-sm">Medical Allowance</label><input type="number" value={medicalAllowance} onChange={(e) => setMedicalAllowance(e.target.value)} className="w-full p-2 border rounded" /></div>
 //                     <div><label className="block text-sm">Performance Allowance</label><input type="number" value={performanceAllowance} onChange={(e) => setPerformanceAllowance(e.target.value)} className="w-full p-2 border rounded" /></div>
 //                     <div><label className="block text-sm">Special Allowance</label><input type="number" value={specialAllowance} onChange={(e) => setSpecialAllowance(e.target.value)} className="w-full p-2 border rounded" /></div>
-//                     <div className="pt-2 border-t"><label className="font-semibold">Total Earnings</label><div className="text-xl font-bold text-green-600">₹{totalEarnings.toLocaleString()}</div></div>
+//                     <div className="pt-2 border-t"><label className="font-semibold">Total Earnings</label><div className="text-xl font-bold text-blue-700">₹{totalEarnings.toLocaleString()}</div></div>
 //                   </div>
 //                 </div>
 //                 <div className="border rounded-lg p-3">
@@ -10300,11 +10300,11 @@
 //                   </div>
 //                 </div>
 //               </div>
-//               <div className="bg-gray-50 p-3 rounded-lg border mt-3">
+//               <div className="bg-white p-3 rounded-lg border mt-3">
 //                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
 //                   <div><label className="font-semibold">Total Earnings</label><div className="text-lg">₹{totalEarnings.toLocaleString()}</div></div>
 //                   <div><label className="font-semibold">Total Deductions</label><div className="text-lg text-red-600">₹{totalDeductions.toLocaleString()}</div></div>
-//                   <div><label className="font-semibold text-green-600">Net Salary (Monthly)</label><div className="text-2xl font-bold text-green-600">₹{netSalary.toLocaleString()}</div></div>
+//                   <div><label className="font-semibold text-blue-700">Net Salary (Monthly)</label><div className="text-2xl font-bold text-blue-700">₹{netSalary.toLocaleString()}</div></div>
 //                 </div>
 //                 <div className="mt-2 pt-2 border-t flex flex-col md:flex-row md:justify-between md:items-center">
 //                   <div>
@@ -10383,7 +10383,7 @@
 //                       <p className="text-xs text-gray-500 mb-1">Time Slots</p>
 //                       <div className="space-y-2">
 //                         {shiftTimeSlots.map((slot, idx) => (
-//                           <div key={idx} className="bg-gray-50 p-2 rounded border">
+//                           <div key={idx} className="bg-white p-2 rounded border">
 //                             <div className="grid grid-cols-3 gap-2 text-xs">
 //                               <div>
 //                                 <span className="text-gray-500">Time:</span>
@@ -10408,7 +10408,7 @@
 //                       <div className="mt-3 pt-2 border-t">
 //                         <div className="flex justify-between items-center">
 //                           <p className="text-xs text-gray-500">Total Shift Hours/Day</p>
-//                           <p className="text-sm font-bold text-green-600">{shiftHours} hours</p>
+//                           <p className="text-sm font-bold text-blue-700">{shiftHours} hours</p>
 //                         </div>
 //                       </div>
 //                     )}
@@ -10419,7 +10419,7 @@
 //               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 //                 <div><label className="block mb-1 text-sm">Week Off Day</label><select value={weekOffDay} onChange={(e) => setWeekOffDay(e.target.value)} className="w-full p-2.5 border rounded-lg"><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div>
 //                 <div><label className="block mb-1 text-sm">Week Offs per Month *</label><input type="number" value={weekOffsPerMonth} onChange={(e) => setWeekOffsPerMonth(e.target.value)} min="0" max="30" className="w-full p-2.5 border rounded-lg" required /></div>
-//                 <div><label className="block mb-1 text-sm">Monthly Salary (Net)</label><input type="number" value={netSalary} readOnly className="w-full p-2.5 border rounded-lg bg-gray-50" /></div>
+//                 <div><label className="block mb-1 text-sm">Monthly Salary (Net)</label><input type="number" value={netSalary} readOnly className="w-full p-2.5 border rounded-lg bg-white" /></div>
 //                 <div><label className="block mb-1 text-sm">Annual CTC (Yearly)</label><input type="number" value={ctc} onChange={(e) => setCtc(e.target.value)} className="w-full p-2.5 border rounded-lg" placeholder="e.g. 500000" /></div>
 //               </div>
 //               <div>
@@ -10505,7 +10505,7 @@
 //                       </div>
 //                       <div>
 //                         <span className="text-gray-500">Increment:</span>
-//                         <p className="font-bold text-green-600">
+//                         <p className="font-bold text-blue-700">
 //                           {incrementType === 'percentage' 
 //                             ? `${incrementValue}%`
 //                             : `₹${parseInt(incrementValue).toLocaleString()}`
@@ -10533,13 +10533,13 @@
 //                   type="button"
 //                   onClick={handleApplyIncrement}
 //                   disabled={!incrementType || !incrementValue || !incrementEffectiveDate || loading}
-//                   className="w-full md:w-auto px-6 py-2.5 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 flex items-center justify-center gap-2"
+//                   className="w-full md:w-auto px-6 py-2.5 text-gray-900 bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 flex items-center justify-center gap-2"
 //                 >
 //                   {loading ? <FaSpinner className="animate-spin" /> : <FaChartLine />}
 //                   Apply Increment
 //                 </button>
                 
-//                 <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg">
+//                 <div className="text-xs text-gray-500 bg-white p-2 rounded-lg">
 //                   <p className="font-medium">ℹ️ Note:</p>
 //                   <ul className="list-disc list-inside space-y-0.5 mt-1">
 //                     <li>Increment will be effective from the selected date</li>
@@ -10554,7 +10554,7 @@
 
 //           {/* SUBMIT BUTTON */}
 //           <div className="flex justify-end pt-4">
-//             <button type="submit" disabled={loading} className={`px-8 py-3 rounded-lg font-medium transition duration-200 ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'}`}>
+//             <button type="submit" disabled={loading} className={`px-8 py-3 rounded-lg font-medium transition duration-200 ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-gray-900 shadow-md'}`}>
 //               {loading ? <><FaSpinner className="inline mr-2 animate-spin" /> Processing...</> : <><FaSave className="inline mr-2" /> {editingEmployee || employeeFound ? "Update Employee" : "Add Employee"}</>}
 //             </button>
 //           </div>
@@ -10563,55 +10563,55 @@
 
 //       {/* MODALS */}
 //       {showShiftModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Create New Shift</h3><button onClick={() => setShowShiftModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateCustomShift} className="p-4 space-y-4">
 //               <div className="grid grid-cols-2 gap-3"><input type="text" placeholder="Shift Type (A-Z)" value={createShiftForm.shiftType} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftType: e.target.value.toUpperCase() }))} className="p-2 border rounded" required /><input type="text" placeholder="Shift Name" value={createShiftForm.shiftName} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftName: e.target.value }))} className="p-2 border rounded" required /></div>
 //               <input type="text" placeholder="Time Range (e.g., 09:00 - 18:00)" value={createShiftForm.timeRange} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, timeRange: e.target.value }))} className="w-full p-2 border rounded" required />
 //               <input type="text" placeholder="Description" value={createShiftForm.description} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, description: e.target.value }))} className="w-full p-2 border rounded" required />
-//               <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowShiftModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-purple-600 rounded">Create</button></div>
+//               <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowShiftModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-purple-600 rounded">Create</button></div>
 //             </form>
 //           </div>
 //         </div>
 //       )}
 
 //       {showDeptModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Department</h3><button onClick={() => setShowDeptModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateDepartment} className="p-4 space-y-4">
 //               <input type="text" placeholder="Department Name" value={deptForm.name} onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
 //               <textarea placeholder="Description" value={deptForm.description} onChange={(e) => setDeptForm(prev => ({ ...prev, description: e.target.value }))} rows="2" className="w-full p-2 border rounded"></textarea>
-//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-blue-600 rounded">Add</button></div>
+//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-blue-600 rounded">Add</button></div>
 //             </form>
 //           </div>
 //         </div>
 //       )}
 
 //       {showRoleModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Role</h3><button onClick={() => setShowRoleModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateRole} className="p-4 space-y-4">
 //               <input type="text" placeholder="Role Name" value={roleForm.name} onChange={(e) => setRoleForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
 //               <textarea placeholder="Description" value={roleForm.description} onChange={(e) => setRoleForm(prev => ({ ...prev, description: e.target.value }))} rows="2" className="w-full p-2 border rounded"></textarea>
-//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-green-600 rounded">Add</button></div>
+//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-blue-600 rounded">Add</button></div>
 //             </form>
 //           </div>
 //         </div>
 //       )}
 
 //       {showLocationModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold">Add Location</h3><button onClick={() => setShowLocationModal(false)} className="text-2xl">&times;</button></div>
 //             <form onSubmit={handleCreateLocation} className="p-4 space-y-4">
 //               <input type="text" placeholder="Location Name" value={locationForm.name} onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded" required />
-//               <div className="flex justify-between items-center"><label className="text-sm">Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-3 py-1 text-sm bg-green-600 text-white rounded">📍 Get Current Location</button></div>
+//               <div className="flex justify-between items-center"><label className="text-sm">Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-3 py-1 text-sm bg-blue-600 text-gray-900 rounded">📍 Get Current Location</button></div>
 //               <div className="grid grid-cols-2 gap-3"><input type="text" placeholder="Latitude" value={locationForm.latitude} onChange={(e) => setLocationForm(prev => ({ ...prev, latitude: e.target.value }))} className="p-2 border rounded" required /><input type="text" placeholder="Longitude" value={locationForm.longitude} onChange={(e) => setLocationForm(prev => ({ ...prev, longitude: e.target.value }))} className="p-2 border rounded" required /></div>
 //               <textarea placeholder="Full Address" value={locationForm.fullAddress} onChange={(e) => setLocationForm(prev => ({ ...prev, fullAddress: e.target.value }))} rows="3" className="w-full p-2 border rounded" required></textarea>
-//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-purple-600 rounded">Add Location</button></div>
+//               <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 border rounded">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-purple-600 rounded">Add Location</button></div>
 //             </form>
 //           </div>
 //         </div>
@@ -11336,7 +11336,7 @@ const AddEmployeePage = () => {
     <div className="max-w-7xl p-4 mx-auto">
       <div className="p-6 bg-white shadow-lg rounded-xl">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">
+          <h2 className="text-2xl font-bold text-gray-900">
             {editingEmployee ? "Edit Employee" : "Add New Employee"}
           </h2>
           <p className="mt-1 text-sm text-gray-500">Fill all employee details below</p>
@@ -11372,44 +11372,44 @@ const AddEmployeePage = () => {
                 <div>
                   <label className="block mb-1 text-sm font-medium text-gray-700">Phone Number *</label>
                   <div className="relative">
-                    <input value={phone} onChange={handlePhoneChange} className="w-full p-2.5 border rounded-lg text-gray-800" placeholder="10-digit phone" required />
-                    {searching && <FaSpinner className="absolute right-3 top-3 animate-spin text-blue-500" />}
-                    {employeeFound && !searching && <FaCheck className="absolute right-3 top-3 text-green-500" />}
+                    <input value={phone} onChange={handlePhoneChange} className="w-full p-2.5 border rounded-lg text-gray-900" placeholder="10-digit phone" required />
+                    {searching && <FaSpinner className="absolute right-3 top-3 animate-spin text-blue-600" />}
+                    {employeeFound && !searching && <FaCheck className="absolute right-3 top-3 text-blue-600" />}
                   </div>
                   <p className="mt-1 text-xs text-gray-500">Enter 10 digits to search existing employee</p>
                 </div>
-                <div><label className="block mb-1 text-sm font-medium text-gray-700">Alternate Number</label><input value={alternateNumber} onChange={(e) => setAlternateNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} className="w-full p-2.5 border rounded-lg text-gray-800" /></div>
-                <div><label className="block mb-1 text-sm font-medium text-gray-700">Parents Name</label><input value={parentsName} onChange={(e) => setParentsName(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" /></div>
+                <div><label className="block mb-1 text-sm font-medium text-gray-700">Alternate Number</label><input value={alternateNumber} onChange={(e) => setAlternateNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
+                <div><label className="block mb-1 text-sm font-medium text-gray-700">Parents Name</label><input value={parentsName} onChange={(e) => setParentsName(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div><label className="block mb-1 text-sm font-medium text-gray-700">First Name *</label><input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" required /></div>
-                <div><label className="block mb-1 text-sm font-medium text-gray-700">Last Name</label><input value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" /></div>
-                <div><label className="block mb-1 text-sm font-medium text-gray-700">Email *</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" required /></div>
+                <div><label className="block mb-1 text-sm font-medium text-gray-700">First Name *</label><input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required /></div>
+                <div><label className="block mb-1 text-sm font-medium text-gray-700">Last Name</label><input value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
+                <div><label className="block mb-1 text-sm font-medium text-gray-700">Email *</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required /></div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label className="block mb-1 text-sm font-medium text-gray-700">Password {!editingEmployee && !employeeFound && "*"}</label>
                   <div className="relative">
-                    <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2.5 pr-10 border rounded-lg text-gray-800" placeholder={editingEmployee || employeeFound ? "Keep blank for no change" : "Enter password"} required={!editingEmployee && !employeeFound} />
+                    <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2.5 pr-10 border rounded-lg text-gray-900" placeholder={editingEmployee || employeeFound ? "Keep blank for no change" : "Enter password"} required={!editingEmployee && !employeeFound} />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-500">{showPassword ? <FaEyeSlash /> : <FaEye />}</button>
                   </div>
                 </div>
-                <div><label className="block mb-1 text-sm font-medium text-gray-700">Date of Birth</label><input type="date" value={dob} onChange={(e) => setDob(e.target.value)} max={getCurrentDate()} className="w-full p-2.5 border rounded-lg text-gray-800" /></div>
+                <div><label className="block mb-1 text-sm font-medium text-gray-700">Date of Birth</label><input type="date" value={dob} onChange={(e) => setDob(e.target.value)} max={getCurrentDate()} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
               </div>
 
               <div>
-                <h4 className="mb-2 font-semibold text-gray-800"><FaMapMarkerAlt className="inline mr-1" /> Address</h4>
+                <h4 className="mb-2 font-semibold text-gray-900"><FaMapMarkerAlt className="inline mr-1" /> Address</h4>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-3">
-                  <div><label className="block mb-1 text-sm text-gray-700">Address Line 1 *</label><input value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" required /></div>
-                  <div><label className="block mb-1 text-sm text-gray-700">Address Line 2</label><input value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" /></div>
+                  <div><label className="block mb-1 text-sm text-gray-700">Address Line 1 *</label><input value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required /></div>
+                  <div><label className="block mb-1 text-sm text-gray-700">Address Line 2</label><input value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                  <div><label className="block mb-1 text-sm text-gray-700">Pin Code *</label><input type="text" value={pinCode} onChange={handlePinCodeChange} maxLength="6" className="w-full p-2.5 border rounded-lg text-gray-800" required /></div>
-                  <div><label className="block mb-1 text-sm text-gray-700">City *</label><input value={city} onChange={(e) => setCity(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" required /></div>
-                  <div><label className="block mb-1 text-sm text-gray-700">State *</label><input value={state} onChange={(e) => setState(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" required /></div>
-                  <div><label className="block mb-1 text-sm text-gray-700">Country</label><select value={country} onChange={(e) => setCountry(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800"><option>India</option><option>USA</option><option>UK</option></select></div>
+                  <div><label className="block mb-1 text-sm text-gray-700">Pin Code *</label><input type="text" value={pinCode} onChange={handlePinCodeChange} maxLength="6" className="w-full p-2.5 border rounded-lg text-gray-900" required /></div>
+                  <div><label className="block mb-1 text-sm text-gray-700">City *</label><input value={city} onChange={(e) => setCity(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required /></div>
+                  <div><label className="block mb-1 text-sm text-gray-700">State *</label><input value={state} onChange={(e) => setState(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required /></div>
+                  <div><label className="block mb-1 text-sm text-gray-700">Country</label><select value={country} onChange={(e) => setCountry(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900"><option>India</option><option>USA</option><option>UK</option></select></div>
                 </div>
               </div>
             </div>
@@ -11424,16 +11424,16 @@ const AddEmployeePage = () => {
             </div>
             <div className="p-4 space-y-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div><label className="block mb-1 text-sm text-gray-700">Employee ID *</label><input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" /></div>
-                <div><label className="block mb-1 text-sm text-gray-700">Join Date *</label><input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" required /></div>
+                <div><label className="block mb-1 text-sm text-gray-700">Employee ID *</label><input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
+                <div><label className="block mb-1 text-sm text-gray-700">Join Date *</label><input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required /></div>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div><label className="block mb-1 text-sm text-gray-700">Department *</label><select value={department} onChange={(e) => e.target.value === "ADD_NEW_DEPT" ? setShowDeptModal(true) : setDepartment(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" required><option value="">Select Department</option>{departments.map(dept => <option key={dept.name} value={dept.name}>{dept.name}</option>)}<option value="ADD_NEW_DEPT" className="text-blue-600">+ Add New</option></select></div>
-                <div><label className="block mb-1 text-sm text-gray-700">Role *</label><select value={role} onChange={(e) => e.target.value === "ADD_NEW_ROLE" ? setShowRoleModal(true) : setRole(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" required><option value="">Select Role</option>{roles.map(r => <option key={r.name} value={r.name}>{r.name}</option>)}<option value="ADD_NEW_ROLE" className="text-blue-600">+ Add New</option></select></div>
+                <div><label className="block mb-1 text-sm text-gray-700">Department *</label><select value={department} onChange={(e) => e.target.value === "ADD_NEW_DEPT" ? setShowDeptModal(true) : setDepartment(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required><option value="">Select Department</option>{departments.map(dept => <option key={dept.name} value={dept.name}>{dept.name}</option>)}<option value="ADD_NEW_DEPT" className="text-blue-600">+ Add New</option></select></div>
+                <div><label className="block mb-1 text-sm text-gray-700">Role *</label><select value={role} onChange={(e) => e.target.value === "ADD_NEW_ROLE" ? setShowRoleModal(true) : setRole(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required><option value="">Select Role</option>{roles.map(r => <option key={r.name} value={r.name}>{r.name}</option>)}<option value="ADD_NEW_ROLE" className="text-blue-600">+ Add New</option></select></div>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div><label className="block mb-1 text-sm text-gray-700">Work Location *</label><select value={locationId} onChange={(e) => e.target.value === "ADD_NEW_LOCATION" ? setShowLocationModal(true) : setLocationId(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" required><option value="">Select Location</option>{locations.map(loc => <option key={loc._id} value={loc._id}>{loc.name}</option>)}<option value="ADD_NEW_LOCATION" className="text-blue-600">+ Add New</option></select></div>
-                <div><label className="block mb-1 text-sm text-gray-700">Employment Type</label><select value={employmentType} onChange={(e) => setEmploymentType(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800"><option value="fulltime">Full Time</option><option value="parttime">Part Time</option><option value="contract">Contract</option><option value="internship">Internship</option></select></div>
+                <div><label className="block mb-1 text-sm text-gray-700">Work Location *</label><select value={locationId} onChange={(e) => e.target.value === "ADD_NEW_LOCATION" ? setShowLocationModal(true) : setLocationId(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required><option value="">Select Location</option>{locations.map(loc => <option key={loc._id} value={loc._id}>{loc.name}</option>)}<option value="ADD_NEW_LOCATION" className="text-blue-600">+ Add New</option></select></div>
+                <div><label className="block mb-1 text-sm text-gray-700">Employment Type</label><select value={employmentType} onChange={(e) => setEmploymentType(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900"><option value="fulltime">Full Time</option><option value="parttime">Part Time</option><option value="contract">Contract</option><option value="internship">Internship</option></select></div>
               </div>
             </div>
           </div>
@@ -11447,17 +11447,17 @@ const AddEmployeePage = () => {
             </div>
             <div className="p-4 space-y-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div><label className="block mb-1 text-sm text-gray-700">Bank Name</label><input value={bankName} onChange={(e) => setBankName(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" /></div>
-                <div><label className="block mb-1 text-sm text-gray-700">Bank Account Number</label><input value={bankAccountNo} onChange={(e) => setBankAccountNo(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" /></div>
+                <div><label className="block mb-1 text-sm text-gray-700">Bank Name</label><input value={bankName} onChange={(e) => setBankName(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
+                <div><label className="block mb-1 text-sm text-gray-700">Bank Account Number</label><input value={bankAccountNo} onChange={(e) => setBankAccountNo(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div><label className="block mb-1 text-sm text-gray-700">IFSC Code</label><input value={ifscCode} onChange={(e) => setIfscCode(e.target.value.toUpperCase())} className="w-full p-2.5 border rounded-lg text-gray-800" /></div>
-                <div><label className="block mb-1 text-sm text-gray-700">PAN Number</label><input value={panNumber} onChange={(e) => setPanNumber(e.target.value.toUpperCase())} className="w-full p-2.5 border rounded-lg text-gray-800" /></div>
+                <div><label className="block mb-1 text-sm text-gray-700">IFSC Code</label><input value={ifscCode} onChange={(e) => setIfscCode(e.target.value.toUpperCase())} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
+                <div><label className="block mb-1 text-sm text-gray-700">PAN Number</label><input value={panNumber} onChange={(e) => setPanNumber(e.target.value.toUpperCase())} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div><label className="block mb-1 text-sm text-gray-700">UAN Number</label><input value={uanNumber} onChange={(e) => setUanNumber(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" /></div>
-                <div><label className="block mb-1 text-sm text-gray-700">PF Number</label><input value={pfNumber} onChange={(e) => setPfNumber(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" /></div>
-                <div><label className="block mb-1 text-sm text-gray-700">ESIC Number</label><input value={esicNumber} onChange={(e) => setEsicNumber(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" /></div>
+                <div><label className="block mb-1 text-sm text-gray-700">UAN Number</label><input value={uanNumber} onChange={(e) => setUanNumber(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
+                <div><label className="block mb-1 text-sm text-gray-700">PF Number</label><input value={pfNumber} onChange={(e) => setPfNumber(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
+                <div><label className="block mb-1 text-sm text-gray-700">ESIC Number</label><input value={esicNumber} onChange={(e) => setEsicNumber(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
               </div>
             </div>
           </div>
@@ -11474,35 +11474,35 @@ const AddEmployeePage = () => {
                 <div className="border rounded-lg p-3">
                   <h4 className="font-semibold text-blue-600 mb-2">Earnings</h4>
                   <div className="space-y-2">
-                    <div><label className="block text-sm text-gray-700">Basic Pay *</label><input type="number" value={basicPay} onChange={(e) => setBasicPay(e.target.value)} className="w-full p-2 border rounded text-gray-800" /></div>
-                    <div><label className="block text-sm text-gray-700">HRA</label><input type="number" value={hra} onChange={(e) => setHra(e.target.value)} className="w-full p-2 border rounded text-gray-800" /></div>
-                    <div><label className="block text-sm text-gray-700">Conveyance Allowance</label><input type="number" value={conveyanceAllowance} onChange={(e) => setConveyanceAllowance(e.target.value)} className="w-full p-2 border rounded text-gray-800" /></div>
-                    <div><label className="block text-sm text-gray-700">Medical Allowance</label><input type="number" value={medicalAllowance} onChange={(e) => setMedicalAllowance(e.target.value)} className="w-full p-2 border rounded text-gray-800" /></div>
-                    <div><label className="block text-sm text-gray-700">Performance Allowance</label><input type="number" value={performanceAllowance} onChange={(e) => setPerformanceAllowance(e.target.value)} className="w-full p-2 border rounded text-gray-800" /></div>
-                    <div><label className="block text-sm text-gray-700">Special Allowance</label><input type="number" value={specialAllowance} onChange={(e) => setSpecialAllowance(e.target.value)} className="w-full p-2 border rounded text-gray-800" /></div>
-                    <div className="pt-2 border-t"><label className="font-semibold text-gray-800">Total Earnings</label><div className="text-xl font-bold text-green-600">₹{totalEarnings.toLocaleString()}</div></div>
+                    <div><label className="block text-sm text-gray-700">Basic Pay *</label><input type="number" value={basicPay} onChange={(e) => setBasicPay(e.target.value)} className="w-full p-2 border rounded text-gray-900" /></div>
+                    <div><label className="block text-sm text-gray-700">HRA</label><input type="number" value={hra} onChange={(e) => setHra(e.target.value)} className="w-full p-2 border rounded text-gray-900" /></div>
+                    <div><label className="block text-sm text-gray-700">Conveyance Allowance</label><input type="number" value={conveyanceAllowance} onChange={(e) => setConveyanceAllowance(e.target.value)} className="w-full p-2 border rounded text-gray-900" /></div>
+                    <div><label className="block text-sm text-gray-700">Medical Allowance</label><input type="number" value={medicalAllowance} onChange={(e) => setMedicalAllowance(e.target.value)} className="w-full p-2 border rounded text-gray-900" /></div>
+                    <div><label className="block text-sm text-gray-700">Performance Allowance</label><input type="number" value={performanceAllowance} onChange={(e) => setPerformanceAllowance(e.target.value)} className="w-full p-2 border rounded text-gray-900" /></div>
+                    <div><label className="block text-sm text-gray-700">Special Allowance</label><input type="number" value={specialAllowance} onChange={(e) => setSpecialAllowance(e.target.value)} className="w-full p-2 border rounded text-gray-900" /></div>
+                    <div className="pt-2 border-t"><label className="font-semibold text-gray-900">Total Earnings</label><div className="text-xl font-bold text-blue-700">₹{totalEarnings.toLocaleString()}</div></div>
                   </div>
                 </div>
                 <div className="border rounded-lg p-3">
                   <h4 className="font-semibold text-red-600 mb-2">Deductions</h4>
                   <div className="space-y-2">
-                    <div><label className="block text-sm text-gray-700">Professional Tax (PT)</label><input type="number" value={ptax} onChange={(e) => setPtax(e.target.value)} className="w-full p-2 border rounded text-gray-800" /></div>
-                    <div><label className="block text-sm text-gray-700">GMC Type</label><select value={gmc} onChange={(e) => setGmc(e.target.value)} className="w-full p-2 border rounded text-gray-800"><option value="">None</option><option value="enrolled">Enrolled</option><option value="waived">Waived</option></select></div>
-                    <div><label className="block text-sm text-gray-700">GMC Amount</label><input type="number" value={gmcAmount} onChange={(e) => setGmcAmount(e.target.value)} className="w-full p-2 border rounded text-gray-800" /></div>
-                    <div><label className="block text-sm text-gray-700">Other Deductions</label><input type="number" value={otherDeductions} onChange={(e) => setOtherDeductions(e.target.value)} className="w-full p-2 border rounded text-gray-800" /></div>
-                    <div className="pt-2 border-t"><label className="font-semibold text-gray-800">Total Deductions</label><div className="text-xl font-bold text-red-600">₹{totalDeductions.toLocaleString()}</div></div>
+                    <div><label className="block text-sm text-gray-700">Professional Tax (PT)</label><input type="number" value={ptax} onChange={(e) => setPtax(e.target.value)} className="w-full p-2 border rounded text-gray-900" /></div>
+                    <div><label className="block text-sm text-gray-700">GMC Type</label><select value={gmc} onChange={(e) => setGmc(e.target.value)} className="w-full p-2 border rounded text-gray-900"><option value="">None</option><option value="enrolled">Enrolled</option><option value="waived">Waived</option></select></div>
+                    <div><label className="block text-sm text-gray-700">GMC Amount</label><input type="number" value={gmcAmount} onChange={(e) => setGmcAmount(e.target.value)} className="w-full p-2 border rounded text-gray-900" /></div>
+                    <div><label className="block text-sm text-gray-700">Other Deductions</label><input type="number" value={otherDeductions} onChange={(e) => setOtherDeductions(e.target.value)} className="w-full p-2 border rounded text-gray-900" /></div>
+                    <div className="pt-2 border-t"><label className="font-semibold text-gray-900">Total Deductions</label><div className="text-xl font-bold text-red-600">₹{totalDeductions.toLocaleString()}</div></div>
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 p-3 rounded-lg border mt-3">
+              <div className="bg-white p-3 rounded-lg border mt-3">
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                  <div><label className="font-semibold text-gray-800">Total Earnings</label><div className="text-lg text-gray-800">₹{totalEarnings.toLocaleString()}</div></div>
-                  <div><label className="font-semibold text-gray-800">Total Deductions</label><div className="text-lg text-red-600">₹{totalDeductions.toLocaleString()}</div></div>
-                  <div><label className="font-semibold text-green-600">Net Salary (Monthly)</label><div className="text-2xl font-bold text-green-600">₹{netSalary.toLocaleString()}</div></div>
+                  <div><label className="font-semibold text-gray-900">Total Earnings</label><div className="text-lg text-gray-900">₹{totalEarnings.toLocaleString()}</div></div>
+                  <div><label className="font-semibold text-gray-900">Total Deductions</label><div className="text-lg text-red-600">₹{totalDeductions.toLocaleString()}</div></div>
+                  <div><label className="font-semibold text-blue-700">Net Salary (Monthly)</label><div className="text-2xl font-bold text-blue-700">₹{netSalary.toLocaleString()}</div></div>
                 </div>
                 <div className="mt-2 pt-2 border-t flex flex-col md:flex-row md:justify-between md:items-center">
                   <div>
-                    <label className="font-semibold text-gray-800">Yearly CTC</label>
+                    <label className="font-semibold text-gray-900">Yearly CTC</label>
                     <div className="text-xl text-blue-600">₹{(netSalary * 12).toLocaleString()}</div>
                   </div>
                   {editingEmployee && (
@@ -11512,7 +11512,7 @@ const AddEmployeePage = () => {
                         type="date" 
                         value={salaryEffectiveDate} 
                         onChange={(e) => setSalaryEffectiveDate(e.target.value)} 
-                        className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 border-indigo-300 text-gray-800" 
+                        className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 border-indigo-300 text-gray-900" 
                         required 
                       />
                       <p className="text-xs text-gray-500 mt-1">Date from which this new salary should apply</p>
@@ -11537,7 +11537,7 @@ const AddEmployeePage = () => {
                   <select 
                     value={shiftType} 
                     onChange={(e) => handleShiftChange(e.target.value)} 
-                    className="w-full p-2.5 border rounded-lg text-gray-800" 
+                    className="w-full p-2.5 border rounded-lg text-gray-900" 
                     required
                   >
                     <option value="">-- Select a Shift --</option>
@@ -11562,11 +11562,11 @@ const AddEmployeePage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
                         <p className="text-xs text-gray-500">Shift Name</p>
-                        <p className="text-sm font-medium text-gray-800">{selectedShift.shiftName}</p>
+                        <p className="text-sm font-medium text-gray-900">{selectedShift.shiftName}</p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Shift Type</p>
-                        <p className="text-sm font-medium text-gray-800">
+                        <p className="text-sm font-medium text-gray-900">
                           {selectedShift.isBrakeShift ? 'Brake Shift' : 'Regular Shift'}
                         </p>
                       </div>
@@ -11577,19 +11577,19 @@ const AddEmployeePage = () => {
                       <p className="text-xs text-gray-500 mb-1">Time Slots</p>
                       <div className="space-y-2">
                         {shiftTimeSlots.map((slot, idx) => (
-                          <div key={idx} className="bg-gray-50 p-2 rounded border">
+                          <div key={idx} className="bg-white p-2 rounded border">
                             <div className="grid grid-cols-3 gap-2 text-xs">
                               <div>
                                 <span className="text-gray-500">Time:</span>
-                                <span className="ml-1 font-medium text-gray-800">{slot.timeRange}</span>
+                                <span className="ml-1 font-medium text-gray-900">{slot.timeRange}</span>
                               </div>
                               <div>
                                 <span className="text-gray-500">Description:</span>
-                                <span className="ml-1 text-gray-800">{slot.description}</span>
+                                <span className="ml-1 text-gray-900">{slot.description}</span>
                               </div>
                               <div>
                                 <span className="text-gray-500">Slot:</span>
-                                <span className="ml-1 text-gray-800">{idx + 1}</span>
+                                <span className="ml-1 text-gray-900">{idx + 1}</span>
                               </div>
                             </div>
                           </div>
@@ -11602,7 +11602,7 @@ const AddEmployeePage = () => {
                       <div className="mt-3 pt-2 border-t">
                         <div className="flex justify-between items-center">
                           <p className="text-xs text-gray-500">Total Shift Hours/Day</p>
-                          <p className="text-sm font-bold text-green-600">{shiftHours} hours</p>
+                          <p className="text-sm font-bold text-blue-700">{shiftHours} hours</p>
                         </div>
                       </div>
                     )}
@@ -11611,18 +11611,18 @@ const AddEmployeePage = () => {
               )}
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div><label className="block mb-1 text-sm text-gray-700">Week Off Day</label><select value={weekOffDay} onChange={(e) => setWeekOffDay(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800"><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div>
-                <div><label className="block mb-1 text-sm text-gray-700">Week Offs per Month *</label><input type="number" value={weekOffsPerMonth} onChange={(e) => setWeekOffsPerMonth(e.target.value)} min="0" max="30" className="w-full p-2.5 border rounded-lg text-gray-800" required /></div>
-                <div><label className="block mb-1 text-sm text-gray-700">Monthly Salary (Net)</label><input type="number" value={netSalary} readOnly className="w-full p-2.5 border rounded-lg bg-gray-100 text-gray-800" /></div>
-                <div><label className="block mb-1 text-sm text-gray-700">Annual CTC (Yearly)</label><input type="number" value={ctc} onChange={(e) => setCtc(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" placeholder="e.g. 500000" /></div>
+                <div><label className="block mb-1 text-sm text-gray-700">Week Off Day</label><select value={weekOffDay} onChange={(e) => setWeekOffDay(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900"><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div>
+                <div><label className="block mb-1 text-sm text-gray-700">Week Offs per Month *</label><input type="number" value={weekOffsPerMonth} onChange={(e) => setWeekOffsPerMonth(e.target.value)} min="0" max="30" className="w-full p-2.5 border rounded-lg text-gray-900" required /></div>
+                <div><label className="block mb-1 text-sm text-gray-700">Monthly Salary (Net)</label><input type="number" value={netSalary} readOnly className="w-full p-2.5 border rounded-lg bg-gray-100 text-gray-900" /></div>
+                <div><label className="block mb-1 text-sm text-gray-700">Annual CTC (Yearly)</label><input type="number" value={ctc} onChange={(e) => setCtc(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" placeholder="e.g. 500000" /></div>
               </div>
               <div>
-                <h4 className="mb-2 font-semibold text-gray-800">Leave Limits</h4>
+                <h4 className="mb-2 font-semibold text-gray-900">Leave Limits</h4>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <div><label className="block mb-1 text-sm text-gray-700">Casual Leave (CL) / Month *</label><input type="number" min="0" value={maxCL} onChange={(e) => setMaxCL(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" required /></div>
-                  <div><label className="block mb-1 text-sm text-gray-700">Sick Leave (SL) / Month *</label><input type="number" min="0" value={maxSL} onChange={(e) => setMaxSL(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" required /></div>
-                  <div><label className="block mb-1 text-sm text-gray-700">Earned Leave (EL) / Year *</label><input type="number" min="0" value={maxEL} onChange={(e) => setMaxEL(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" required /></div>
-                  <div><label className="block mb-1 text-sm text-gray-700">Comp Off (COFF) *</label><input type="number" min="0" value={maxCompOff} onChange={(e) => setMaxCompOff(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-800" required /></div>
+                  <div><label className="block mb-1 text-sm text-gray-700">Casual Leave (CL) / Month *</label><input type="number" min="0" value={maxCL} onChange={(e) => setMaxCL(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required /></div>
+                  <div><label className="block mb-1 text-sm text-gray-700">Sick Leave (SL) / Month *</label><input type="number" min="0" value={maxSL} onChange={(e) => setMaxSL(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required /></div>
+                  <div><label className="block mb-1 text-sm text-gray-700">Earned Leave (EL) / Year *</label><input type="number" min="0" value={maxEL} onChange={(e) => setMaxEL(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required /></div>
+                  <div><label className="block mb-1 text-sm text-gray-700">Comp Off (COFF) *</label><input type="number" min="0" value={maxCompOff} onChange={(e) => setMaxCompOff(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required /></div>
                 </div>
               </div>
             </div>
@@ -11644,7 +11644,7 @@ const AddEmployeePage = () => {
                     <select
                       value={incrementType}
                       onChange={(e) => setIncrementType(e.target.value)}
-                      className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-gray-800"
+                      className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-gray-900"
                     >
                       <option value="">Select Type</option>
                       <option value="percentage">Percentage (%)</option>
@@ -11659,7 +11659,7 @@ const AddEmployeePage = () => {
                       type="number"
                       value={incrementValue}
                       onChange={(e) => setIncrementValue(e.target.value)}
-                      className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-gray-800"
+                      className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-gray-900"
                       placeholder={incrementType === 'percentage' ? 'e.g., 10' : 'e.g., 5000'}
                     />
                   </div>
@@ -11671,7 +11671,7 @@ const AddEmployeePage = () => {
                       type="date"
                       value={incrementEffectiveDate}
                       onChange={(e) => setIncrementEffectiveDate(e.target.value)}
-                      className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-gray-800"
+                      className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-gray-900"
                       min={joinDate || new Date().toISOString().split('T')[0]}
                     />
                     <p className="text-xs text-gray-500 mt-1">Increment will apply from this date onward</p>
@@ -11682,7 +11682,7 @@ const AddEmployeePage = () => {
                       type="text"
                       value={incrementReason}
                       onChange={(e) => setIncrementReason(e.target.value)}
-                      className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-gray-800"
+                      className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-gray-900"
                       placeholder="e.g., Performance bonus, Promotion, etc."
                     />
                   </div>
@@ -11695,11 +11695,11 @@ const AddEmployeePage = () => {
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <span className="text-gray-500">Current Salary:</span>
-                        <p className="font-bold text-gray-800">₹{netSalary.toLocaleString()}</p>
+                        <p className="font-bold text-gray-900">₹{netSalary.toLocaleString()}</p>
                       </div>
                       <div>
                         <span className="text-gray-500">Increment:</span>
-                        <p className="font-bold text-green-600">
+                        <p className="font-bold text-blue-700">
                           {incrementType === 'percentage' 
                             ? `${incrementValue}%`
                             : `₹${parseInt(incrementValue).toLocaleString()}`
@@ -11708,7 +11708,7 @@ const AddEmployeePage = () => {
                       </div>
                       <div>
                         <span className="text-gray-500">Effective From:</span>
-                        <p className="font-medium text-gray-800">{new Date(incrementEffectiveDate).toLocaleDateString()}</p>
+                        <p className="font-medium text-gray-900">{new Date(incrementEffectiveDate).toLocaleDateString()}</p>
                       </div>
                       <div>
                         <span className="text-gray-500">New Salary:</span>
@@ -11727,15 +11727,15 @@ const AddEmployeePage = () => {
                   type="button"
                   onClick={handleApplyIncrement}
                   disabled={!incrementType || !incrementValue || !incrementEffectiveDate || loading}
-                  className="w-full md:w-auto px-6 py-2.5 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 flex items-center justify-center gap-2"
+                  className="w-full md:w-auto px-6 py-2.5 text-gray-900 bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 flex items-center justify-center gap-2"
                 >
                   {loading ? <FaSpinner className="animate-spin" /> : <FaChartLine />}
                   Apply Increment
                 </button>
                 
-                <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg">
+                <div className="text-xs text-gray-500 bg-white p-2 rounded-lg">
                   <p className="font-medium text-gray-700">ℹ️ Note:</p>
-                  <ul className="list-disc list-inside space-y-0.5 mt-1 text-gray-600">
+                  <ul className="list-disc list-inside space-y-0.5 mt-1 text-gray-500">
                     <li>Increment will be effective from the selected date</li>
                     <li>Previous months' salaries will remain unchanged</li>
                     <li>Increment history will be saved for future reference</li>
@@ -11748,7 +11748,7 @@ const AddEmployeePage = () => {
 
           {/* SUBMIT BUTTON */}
           <div className="flex justify-end pt-4">
-            <button type="submit" disabled={loading} className={`px-8 py-3 rounded-lg font-medium transition duration-200 ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'}`}>
+            <button type="submit" disabled={loading} className={`px-8 py-3 rounded-lg font-medium transition duration-200 ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-gray-900 shadow-md'}`}>
               {loading ? <><FaSpinner className="inline mr-2 animate-spin" /> Processing...</> : <><FaSave className="inline mr-2" /> {editingEmployee || employeeFound ? "Update Employee" : "Add Employee"}</>}
             </button>
           </div>
@@ -11757,55 +11757,55 @@ const AddEmployeePage = () => {
 
       {/* MODALS */}
       {showShiftModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
-            <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold text-gray-800">Create New Shift</h3><button onClick={() => setShowShiftModal(false)} className="text-2xl text-gray-500">&times;</button></div>
+            <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold text-gray-900">Create New Shift</h3><button onClick={() => setShowShiftModal(false)} className="text-2xl text-gray-500">&times;</button></div>
             <form onSubmit={handleCreateCustomShift} className="p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-3"><input type="text" placeholder="Shift Type (A-Z)" value={createShiftForm.shiftType} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftType: e.target.value.toUpperCase() }))} className="p-2 border rounded text-gray-800" required /><input type="text" placeholder="Shift Name" value={createShiftForm.shiftName} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftName: e.target.value }))} className="p-2 border rounded text-gray-800" required /></div>
-              <input type="text" placeholder="Time Range (e.g., 09:00 - 18:00)" value={createShiftForm.timeRange} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, timeRange: e.target.value }))} className="w-full p-2 border rounded text-gray-800" required />
-              <input type="text" placeholder="Description" value={createShiftForm.description} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, description: e.target.value }))} className="w-full p-2 border rounded text-gray-800" required />
-              <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowShiftModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-purple-600 rounded">Create</button></div>
+              <div className="grid grid-cols-2 gap-3"><input type="text" placeholder="Shift Type (A-Z)" value={createShiftForm.shiftType} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftType: e.target.value.toUpperCase() }))} className="p-2 border rounded text-gray-900" required /><input type="text" placeholder="Shift Name" value={createShiftForm.shiftName} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, shiftName: e.target.value }))} className="p-2 border rounded text-gray-900" required /></div>
+              <input type="text" placeholder="Time Range (e.g., 09:00 - 18:00)" value={createShiftForm.timeRange} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, timeRange: e.target.value }))} className="w-full p-2 border rounded text-gray-900" required />
+              <input type="text" placeholder="Description" value={createShiftForm.description} onChange={(e) => setCreateShiftForm(prev => ({ ...prev, description: e.target.value }))} className="w-full p-2 border rounded text-gray-900" required />
+              <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowShiftModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-purple-600 rounded">Create</button></div>
             </form>
           </div>
         </div>
       )}
 
       {showDeptModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
-            <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold text-gray-800">Add Department</h3><button onClick={() => setShowDeptModal(false)} className="text-2xl text-gray-500">&times;</button></div>
+            <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold text-gray-900">Add Department</h3><button onClick={() => setShowDeptModal(false)} className="text-2xl text-gray-500">&times;</button></div>
             <form onSubmit={handleCreateDepartment} className="p-4 space-y-4">
-              <input type="text" placeholder="Department Name" value={deptForm.name} onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded text-gray-800" required />
-              <textarea placeholder="Description" value={deptForm.description} onChange={(e) => setDeptForm(prev => ({ ...prev, description: e.target.value }))} rows="2" className="w-full p-2 border rounded text-gray-800"></textarea>
-              <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-blue-600 rounded">Add</button></div>
+              <input type="text" placeholder="Department Name" value={deptForm.name} onChange={(e) => setDeptForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded text-gray-900" required />
+              <textarea placeholder="Description" value={deptForm.description} onChange={(e) => setDeptForm(prev => ({ ...prev, description: e.target.value }))} rows="2" className="w-full p-2 border rounded text-gray-900"></textarea>
+              <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowDeptModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-blue-600 rounded">Add</button></div>
             </form>
           </div>
         </div>
       )}
 
       {showRoleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
-            <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold text-gray-800">Add Role</h3><button onClick={() => setShowRoleModal(false)} className="text-2xl text-gray-500">&times;</button></div>
+            <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold text-gray-900">Add Role</h3><button onClick={() => setShowRoleModal(false)} className="text-2xl text-gray-500">&times;</button></div>
             <form onSubmit={handleCreateRole} className="p-4 space-y-4">
-              <input type="text" placeholder="Role Name" value={roleForm.name} onChange={(e) => setRoleForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded text-gray-800" required />
-              <textarea placeholder="Description" value={roleForm.description} onChange={(e) => setRoleForm(prev => ({ ...prev, description: e.target.value }))} rows="2" className="w-full p-2 border rounded text-gray-800"></textarea>
-              <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-green-600 rounded">Add</button></div>
+              <input type="text" placeholder="Role Name" value={roleForm.name} onChange={(e) => setRoleForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded text-gray-900" required />
+              <textarea placeholder="Description" value={roleForm.description} onChange={(e) => setRoleForm(prev => ({ ...prev, description: e.target.value }))} rows="2" className="w-full p-2 border rounded text-gray-900"></textarea>
+              <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowRoleModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-blue-600 rounded">Add</button></div>
             </form>
           </div>
         </div>
       )}
 
       {showLocationModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
           <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold text-gray-800">Add Location</h3><button onClick={() => setShowLocationModal(false)} className="text-2xl text-gray-500">&times;</button></div>
+            <div className="flex justify-between p-4 border-b"><h3 className="text-lg font-semibold text-gray-900">Add Location</h3><button onClick={() => setShowLocationModal(false)} className="text-2xl text-gray-500">&times;</button></div>
             <form onSubmit={handleCreateLocation} className="p-4 space-y-4">
-              <input type="text" placeholder="Location Name" value={locationForm.name} onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded text-gray-800" required />
-              <div className="flex justify-between items-center"><label className="text-sm text-gray-700">Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-3 py-1 text-sm bg-green-600 text-white rounded">📍 Get Current Location</button></div>
-              <div className="grid grid-cols-2 gap-3"><input type="text" placeholder="Latitude" value={locationForm.latitude} onChange={(e) => setLocationForm(prev => ({ ...prev, latitude: e.target.value }))} className="p-2 border rounded text-gray-800" required /><input type="text" placeholder="Longitude" value={locationForm.longitude} onChange={(e) => setLocationForm(prev => ({ ...prev, longitude: e.target.value }))} className="p-2 border rounded text-gray-800" required /></div>
-              <textarea placeholder="Full Address" value={locationForm.fullAddress} onChange={(e) => setLocationForm(prev => ({ ...prev, fullAddress: e.target.value }))} rows="3" className="w-full p-2 border rounded text-gray-800" required></textarea>
-              <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-white bg-purple-600 rounded">Add Location</button></div>
+              <input type="text" placeholder="Location Name" value={locationForm.name} onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))} className="w-full p-2 border rounded text-gray-900" required />
+              <div className="flex justify-between items-center"><label className="text-sm text-gray-700">Coordinates</label><button type="button" onClick={handleGetCurrentLocation} className="px-3 py-1 text-sm bg-blue-600 text-gray-900 rounded">📍 Get Current Location</button></div>
+              <div className="grid grid-cols-2 gap-3"><input type="text" placeholder="Latitude" value={locationForm.latitude} onChange={(e) => setLocationForm(prev => ({ ...prev, latitude: e.target.value }))} className="p-2 border rounded text-gray-900" required /><input type="text" placeholder="Longitude" value={locationForm.longitude} onChange={(e) => setLocationForm(prev => ({ ...prev, longitude: e.target.value }))} className="p-2 border rounded text-gray-900" required /></div>
+              <textarea placeholder="Full Address" value={locationForm.fullAddress} onChange={(e) => setLocationForm(prev => ({ ...prev, fullAddress: e.target.value }))} rows="3" className="w-full p-2 border rounded text-gray-900" required></textarea>
+              <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowLocationModal(false)} className="px-4 py-2 border rounded text-gray-700">Cancel</button><button type="submit" className="px-4 py-2 text-gray-900 bg-purple-600 rounded">Add Location</button></div>
             </form>
           </div>
         </div>

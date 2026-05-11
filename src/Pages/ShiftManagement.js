@@ -75,7 +75,7 @@
 //   };
 
 //   return (
-//     <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
+//     <div className="flex items-center justify-center min-h-screen p-4 bg-white">
 //       <div className="w-full max-w-md p-6 bg-white shadow-lg rounded-2xl">
 //         <h1 className="mb-4 text-xl font-bold text-center text-gray-700">
 //           Assign Shift to Employee
@@ -129,7 +129,7 @@
 //                   onClick={() => handleShiftChange(shift)}
 //                   className={`flex-1 py-2 rounded-lg border text-center font-semibold ${
 //                     formData.shiftType === shift
-//                       ? "bg-blue-600 text-white"
+//                       ? "bg-blue-600 text-gray-900"
 //                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
 //                   }`}
 //                 >
@@ -175,7 +175,7 @@
 //           <button
 //             type="submit"
 //             disabled={loading}
-//             className="w-full py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="w-full py-2 font-semibold text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             {loading ? "Assigning..." : "Assign Shift"}
 //           </button>
@@ -292,7 +292,7 @@
 //   };
 
 //   return (
-//     <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
+//     <div className="flex items-center justify-center min-h-screen p-4 bg-white">
 //       <div className="w-full max-w-md p-6 bg-white shadow-lg rounded-2xl">
 //         <h1 className="mb-4 text-xl font-bold text-center text-gray-700">
 //           Create Shift for Employee
@@ -346,7 +346,7 @@
 //                   onClick={() => handleShiftChange(shift)}
 //                   className={`py-2 rounded-lg border text-center font-semibold ${
 //                     formData.shiftType === shift
-//                       ? "bg-blue-600 text-white"
+//                       ? "bg-blue-600 text-gray-900"
 //                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
 //                   }`}
 //                 >
@@ -366,7 +366,7 @@
 //                 type="text"
 //                 value={formData.startTime}
 //                 readOnly
-//                 className="w-full px-3 py-2 border rounded-lg bg-gray-50"
+//                 className="w-full px-3 py-2 border rounded-lg bg-white"
 //               />
 //             </div>
 //             <div>
@@ -377,7 +377,7 @@
 //                 type="text"
 //                 value={formData.endTime}
 //                 readOnly
-//                 className="w-full px-3 py-2 border rounded-lg bg-gray-50"
+//                 className="w-full px-3 py-2 border rounded-lg bg-white"
 //               />
 //             </div>
 //           </div>
@@ -386,7 +386,7 @@
 //           <button
 //             type="submit"
 //             disabled={loading}
-//             className="w-full py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="w-full py-2 font-semibold text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             {loading ? "Creating..." : "Create Shift"}
 //           </button>
@@ -597,7 +597,7 @@
 //       "I": "bg-red-50 border-red-200",
 //       "J": "bg-cyan-50 border-cyan-200"
 //     };
-//     return colors[type] || "bg-gray-50";
+//     return colors[type] || "bg-white";
 //   };
 
 //   const getShiftTextColor = (type) => {
@@ -830,19 +830,19 @@
 //         <div className="flex gap-3">
 //           {/* <button
 //             onClick={() => setShowCreateModal(true)}
-//             className="flex items-center gap-2 px-6 py-3 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+//             className="flex items-center gap-2 px-6 py-3 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800"
 //           >
 //             <FaPlus /> Quick Create (A-D)
 //           </button> */}
 //           <button
 //             onClick={() => setShowCustomCreateModal(true)}
-//             className="flex items-center gap-2 px-6 py-3 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+//             className="flex items-center gap-2 px-6 py-3 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800"
 //           >
 //             <FaPlus /> Custom Create (E-Z)
 //           </button>
 //           <button
 //             onClick={() => setShowAssignModal(true)}
-//             className="flex items-center gap-2 px-6 py-3 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="flex items-center gap-2 px-6 py-3 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             <FaClock /> Assign Shift
 //           </button>
@@ -856,7 +856,7 @@
 //         </div>
 //       )}
 //       {success && (
-//         <div className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg">
+//         <div className="p-4 mb-4 text-sm text-green-700 bg-blue-100 rounded-lg">
 //           ✅ {success}
 //         </div>
 //       )}
@@ -865,13 +865,13 @@
 //       <div className="mb-8">
 //         <h2 className="mb-4 text-xl font-bold text-gray-700">Available Shifts ({masterShifts.length})</h2>
 //         {masterShifts.length === 0 ? (
-//           <div className="py-12 text-center rounded-lg bg-gray-50">
+//           <div className="py-12 text-center rounded-lg bg-white">
 //             <div className="mb-4 text-6xl text-gray-500">⏰</div>
 //             <h3 className="mb-2 text-xl font-semibold text-gray-500">No shifts created yet</h3>
 //             <p className="mb-4 text-gray-500">Create your first shift to get started</p>
 //             <button
 //               onClick={() => setShowCreateModal(true)}
-//               className="px-6 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+//               className="px-6 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800"
 //             >
 //               Create First Shift
 //             </button>
@@ -953,7 +953,7 @@
 //                         setEditingAssignment(null);
 //                         setShowAssignModal(true);
 //                       }}
-//                       className="px-2 py-1 text-xs text-white bg-blue-600 rounded hover:bg-blue-700"
+//                       className="px-2 py-1 text-xs text-gray-900 bg-blue-600 rounded hover:bg-blue-700"
 //                     >
 //                       <FaPlus className="text-xs" /> Assign
 //                     </button>
@@ -987,7 +987,7 @@
 //                     </p>
 
 //                     {/* Time Slot Display */}
-//                     <div className="p-2 mt-2 text-xs rounded bg-gray-50">
+//                     <div className="p-2 mt-2 text-xs rounded bg-white">
 //                       <p className="font-medium text-gray-700">
 //                         ⏰ <span className="font-bold">{getEmployeeTimeRange(assignment)}</span>
 //                       </p>
@@ -1030,7 +1030,7 @@
 
 //       {/* QUICK CREATE MODAL (A-D) */}
 //       {/* {showCreateModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Quick Create Shift (A-D)</h3>
@@ -1124,7 +1124,7 @@
 //                     type="text"
 //                     value={createForm.shiftName}
 //                     readOnly
-//                     className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+//                     className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white"
 //                   />
 //                 </div>
 //               </div>
@@ -1133,13 +1133,13 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowCreateModal(false)}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-white"
 //                 >
 //                   Cancel
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+//                   className="px-4 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800"
 //                 >
 //                   Create Shift
 //                 </button>
@@ -1151,7 +1151,7 @@
 
 //       {/* CUSTOM CREATE MODAL (E-Z) */}
 //       {showCustomCreateModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Create Custom Shift (E-Z or any letter)</h3>
@@ -1206,7 +1206,7 @@
 //                     <button
 //                       type="button"
 //                       onClick={addTimeSlot}
-//                       className="px-3 py-1 text-xs text-white bg-green-600 rounded hover:bg-green-700"
+//                       className="px-3 py-1 text-xs text-gray-900 bg-blue-600 rounded hover:bg-blue-800"
 //                     >
 //                       + Add Slot
 //                     </button>
@@ -1214,7 +1214,7 @@
 
 //                   <div className="space-y-3">
 //                     {createForm.timeSlots.map((slot, index) => (
-//                       <div key={slot.slotId} className="p-3 border rounded-lg bg-gray-50">
+//                       <div key={slot.slotId} className="p-3 border rounded-lg bg-white">
 //                         <div className="flex items-center justify-between mb-2">
 //                           <span className="text-sm font-medium">Slot {index + 1}</span>
 //                           {createForm.timeSlots.length > 1 && (
@@ -1276,13 +1276,13 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowCustomCreateModal(false)}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-white"
 //                 >
 //                   Cancel
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+//                   className="px-4 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800"
 //                 >
 //                   Create Custom Shift
 //                 </button>
@@ -1294,7 +1294,7 @@
 
 //       {/* ASSIGN SHIFT MODAL */}
 //       {showAssignModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">
@@ -1387,7 +1387,7 @@
 //                           className={`w-full p-3 text-left rounded-lg border flex justify-between items-center text-sm ${
 //                             assignForm.selectedSlotId === slot.slotId
 //                               ? 'bg-blue-50 border-blue-300'
-//                               : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+//                               : 'bg-white border-gray-200 hover:bg-gray-100'
 //                           }`}
 //                         >
 //                           <div>
@@ -1417,13 +1417,13 @@
 //                       selectedSlotId: ''
 //                     });
 //                   }}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-white"
 //                 >
 //                   Cancel
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//                   className="px-4 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //                 >
 //                   {editingAssignment ? 'Update' : 'Assign'} Shift
 //                 </button>
@@ -1435,7 +1435,7 @@
 
 //       {/* VIEW EMPLOYEES MODAL - WITH CLOSE BUTTON */}
 //       {showViewModal && viewEmployees.length > 0 && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
 //             {/* Modal Header */}
 //             <div className="flex items-center justify-between p-4 border-b">
@@ -1458,7 +1458,7 @@
 //             {/* Modal Body - Scrollable */}
 //             <div className="flex-1 overflow-y-auto">
 //               <table className="w-full">
-//                 <thead className="sticky top-0 bg-gray-50">
+//                 <thead className="sticky top-0 bg-white">
 //                   <tr>
 //                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee</th>
 //                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Time Slot</th>
@@ -1467,7 +1467,7 @@
 //                 </thead>
 //                 <tbody className="divide-y divide-gray-200">
 //                   {viewEmployees.map((emp) => (
-//                     <tr key={emp._id} className="hover:bg-gray-50">
+//                     <tr key={emp._id} className="hover:bg-white">
 //                       <td className="px-4 py-3">
 //                         <div>
 //                           <div className="text-sm font-medium">{emp.employeeAssignment?.employeeName || emp.employeeName}</div>
@@ -1690,7 +1690,7 @@
 //       "I": "bg-red-50 border-red-200",
 //       "J": "bg-cyan-50 border-cyan-200"
 //     };
-//     return colors[type] || "bg-gray-50 border-gray-200";
+//     return colors[type] || "bg-white border-gray-200";
 //   };
 
 //   const getShiftTextColor = (type) => {
@@ -1713,8 +1713,8 @@
 //   const getRowBgColor = (type) => {
 //     const colors = {
 //       "A": "bg-blue-50 hover:bg-blue-100",
-//       "B": "bg-green-50 hover:bg-green-100", 
-//       "C": "bg-green-50 hover:bg-green-100",
+//       "B": "bg-green-50 hover:bg-blue-100", 
+//       "C": "bg-green-50 hover:bg-blue-100",
 //       "D": "bg-orange-50 hover:bg-orange-100",
 //       "E": "bg-pink-50 hover:bg-pink-100",
 //       "F": "bg-teal-50 hover:bg-teal-100",
@@ -1723,7 +1723,7 @@
 //       "I": "bg-red-50 hover:bg-red-100",
 //       "J": "bg-cyan-50 hover:bg-cyan-100"
 //     };
-//     return colors[type] || "bg-gray-50 hover:bg-gray-100";
+//     return colors[type] || "bg-white hover:bg-gray-100";
 //   };
 
 //   // ✅ Get border color for shift card
@@ -1746,15 +1746,15 @@
 //   // ✅ Get badge color
 //   const getBadgeColor = (type) => {
 //     const colors = {
-//       "A": "bg-blue-100 text-blue-800 border-blue-200",
-//       "B": "bg-green-100 text-green-800 border-green-200",
-//       "C": "bg-green-100 text-green-800 border-green-200",
+//       "A": "bg-blue-50 text-blue-700 border-blue-200",
+//       "B": "bg-emerald-50 text-emerald-700 border-green-200",
+//       "C": "bg-emerald-50 text-emerald-700 border-green-200",
 //       "D": "bg-orange-100 text-orange-800 border-orange-200",
 //       "E": "bg-pink-100 text-pink-800 border-pink-200",
 //       "F": "bg-teal-100 text-teal-800 border-teal-200",
 //       "G": "bg-indigo-100 text-indigo-800 border-indigo-200",
-//       "H": "bg-yellow-100 text-yellow-800 border-yellow-200",
-//       "I": "bg-red-100 text-red-800 border-red-200",
+//       "H": "bg-amber-50 text-amber-700 border-yellow-200",
+//       "I": "bg-red-50 text-red-700 border-red-200",
 //       "J": "bg-cyan-100 text-cyan-800 border-cyan-200"
 //     };
 //     return colors[type] || "bg-gray-100 text-gray-700 border-gray-200";
@@ -1941,20 +1941,20 @@
 //           {masterShifts.length === 0 && (
 //             <button
 //               onClick={handleCreateDefaultShifts}
-//               className="flex items-center gap-2 px-6 py-3 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+//               className="flex items-center gap-2 px-6 py-3 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800"
 //             >
 //               <FaPlus /> Create Default Shifts (A-D)
 //             </button>
 //           )}
 //           <button
 //             onClick={() => setShowCustomCreateModal(true)}
-//             className="flex items-center gap-2 px-6 py-3 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+//             className="flex items-center gap-2 px-6 py-3 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800"
 //           >
 //             <FaPlus /> Create New Shift
 //           </button>
 //           <button
 //             onClick={() => setShowAssignModal(true)}
-//             className="flex items-center gap-2 px-6 py-3 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="flex items-center gap-2 px-6 py-3 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             <FaClock /> Assign Shift
 //           </button>
@@ -1968,7 +1968,7 @@
 //         </div>
 //       )}
 //       {success && (
-//         <div className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg">
+//         <div className="p-4 mb-4 text-sm text-green-700 bg-blue-100 rounded-lg">
 //           ✅ {success}
 //         </div>
 //       )}
@@ -1981,13 +1981,13 @@
 //         </div>
 
 //         {masterShifts.length === 0 ? (
-//           <div className="py-12 text-center rounded-lg bg-gray-50">
+//           <div className="py-12 text-center rounded-lg bg-white">
 //             <div className="mb-4 text-6xl text-gray-500">⏰</div>
 //             <h3 className="mb-2 text-xl font-semibold text-gray-500">No shifts created yet</h3>
 //             <p className="mb-4 text-gray-500">Create your first shift to get started</p>
 //             <button
 //               onClick={() => setShowCustomCreateModal(true)}
-//               className="px-6 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+//               className="px-6 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800"
 //             >
 //               Create First Shift
 //             </button>
@@ -2069,14 +2069,14 @@
 //                         setEditingAssignment(null);
 //                         setShowAssignModal(true);
 //                       }}
-//                       className="flex items-center justify-center flex-1 gap-1 px-3 py-2 text-xs text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//                       className="flex items-center justify-center flex-1 gap-1 px-3 py-2 text-xs text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //                       title="Assign employee to this shift"
 //                     >
 //                       <FaPlus /> Assign
 //                     </button>
 //                     <button
 //                       onClick={() => handleDeleteMasterShift(shift._id, shift.shiftName)}
-//                       className="flex items-center justify-center gap-1 px-3 py-2 text-xs text-white bg-red-600 rounded-lg hover:bg-red-700"
+//                       className="flex items-center justify-center gap-1 px-3 py-2 text-xs text-gray-900 bg-red-600 rounded-lg hover:bg-red-700"
 //                       title="Delete this shift"
 //                     >
 //                       <FaTimes />
@@ -2098,7 +2098,7 @@
 //           </div>
 //           <div className="overflow-hidden bg-white border rounded-lg shadow-sm">
 //             <table className="w-full">
-//               <thead className="bg-gray-50">
+//               <thead className="bg-white">
 //                 <tr>
 //                   <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee ID</th>
 //                   <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee Name</th>
@@ -2149,14 +2149,14 @@
 //                               });
 //                               setShowAssignModal(true);
 //                             }}
-//                             className="flex items-center gap-1 px-3 py-1.5 text-xs text-white bg-blue-600 rounded hover:bg-blue-700"
+//                             className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-900 bg-blue-600 rounded hover:bg-blue-700"
 //                             title="Edit Assignment"
 //                           >
 //                             <FaEdit /> Edit
 //                           </button>
 //                           <button
 //                             onClick={() => handleDeleteAssignment(assignment._id)}
-//                             className="flex items-center gap-1 px-3 py-1.5 text-xs text-white bg-red-600 rounded hover:bg-red-700"
+//                             className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-900 bg-red-600 rounded hover:bg-red-700"
 //                             title="Delete Assignment"
 //                           >
 //                             <FaTrash /> Remove
@@ -2174,7 +2174,7 @@
 
 //       {/* CUSTOM CREATE MODAL */}
 //       {showCustomCreateModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Create New Shift</h3>
@@ -2226,7 +2226,7 @@
 //                     Time Slot Configuration *
 //                   </label>
 
-//                   <div className="p-3 space-y-3 border rounded-lg bg-gray-50">
+//                   <div className="p-3 space-y-3 border rounded-lg bg-white">
 //                     <div>
 //                       <label className="block mb-1 text-xs text-gray-500">Time Range *</label>
 //                       <input
@@ -2271,13 +2271,13 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowCustomCreateModal(false)}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-white"
 //                 >
 //                   Cancel
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+//                   className="px-4 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800"
 //                 >
 //                   Create Shift
 //                 </button>
@@ -2289,7 +2289,7 @@
 
 //       {/* ASSIGN SHIFT MODAL */}
 //       {showAssignModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">
@@ -2385,13 +2385,13 @@
 //                       shiftType: ''
 //                     });
 //                   }}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-white"
 //                 >
 //                   Cancel
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//                   className="px-4 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //                 >
 //                   {editingAssignment ? 'Update' : 'Assign'} Shift
 //                 </button>
@@ -2403,7 +2403,7 @@
 
 //       {/* VIEW EMPLOYEES MODAL */}
 //       {showViewModal && viewEmployees.length > 0 && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
 //             <div className="flex items-center justify-between p-4 border-b">
 //               <div>
@@ -2424,7 +2424,7 @@
 
 //             <div className="flex-1 overflow-y-auto">
 //               <table className="w-full">
-//                 <thead className="sticky top-0 bg-gray-50">
+//                 <thead className="sticky top-0 bg-white">
 //                   <tr>
 //                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee ID</th>
 //                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee Name</th>
@@ -2465,7 +2465,7 @@
 //                                 });
 //                                 setShowAssignModal(true);
 //                               }}
-//                               className="flex items-center gap-1 px-3 py-1.5 text-xs text-white bg-blue-600 rounded hover:bg-blue-700"
+//                               className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-900 bg-blue-600 rounded hover:bg-blue-700"
 //                             >
 //                               <FaEdit /> Edit
 //                             </button>
@@ -2474,7 +2474,7 @@
 //                                 handleDeleteAssignment(emp._id);
 //                                 setShowViewModal(false);
 //                               }}
-//                               className="flex items-center gap-1 px-3 py-1.5 text-xs text-white bg-red-600 rounded hover:bg-red-700"
+//                               className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-900 bg-red-600 rounded hover:bg-red-700"
 //                             >
 //                               <FaTrash /> Delete
 //                             </button>
@@ -2696,7 +2696,7 @@
 //       "I": "bg-red-50 border-red-200",
 //       "J": "bg-cyan-50 border-cyan-200"
 //     };
-//     return colors[type] || "bg-gray-50 border-gray-200";
+//     return colors[type] || "bg-white border-gray-200";
 //   };
 
 //   const getShiftTextColor = (type) => {
@@ -2719,8 +2719,8 @@
 //   const getRowBgColor = (type) => {
 //     const colors = {
 //       "A": "bg-blue-50 hover:bg-blue-100",
-//       "B": "bg-green-50 hover:bg-green-100", 
-//       "C": "bg-green-50 hover:bg-green-100",
+//       "B": "bg-green-50 hover:bg-blue-100", 
+//       "C": "bg-green-50 hover:bg-blue-100",
 //       "D": "bg-orange-50 hover:bg-orange-100",
 //       "E": "bg-pink-50 hover:bg-pink-100",
 //       "F": "bg-teal-50 hover:bg-teal-100",
@@ -2729,7 +2729,7 @@
 //       "I": "bg-red-50 hover:bg-red-100",
 //       "J": "bg-cyan-50 hover:bg-cyan-100"
 //     };
-//     return colors[type] || "bg-gray-50 hover:bg-gray-100";
+//     return colors[type] || "bg-white hover:bg-gray-100";
 //   };
 
 //   // ✅ Get border color for shift card
@@ -2752,15 +2752,15 @@
 //   // ✅ Get badge color
 //   const getBadgeColor = (type) => {
 //     const colors = {
-//       "A": "bg-blue-100 text-blue-800 border-blue-200",
-//       "B": "bg-green-100 text-green-800 border-green-200",
-//       "C": "bg-green-100 text-green-800 border-green-200",
+//       "A": "bg-blue-50 text-blue-700 border-blue-200",
+//       "B": "bg-emerald-50 text-emerald-700 border-green-200",
+//       "C": "bg-emerald-50 text-emerald-700 border-green-200",
 //       "D": "bg-orange-100 text-orange-800 border-orange-200",
 //       "E": "bg-pink-100 text-pink-800 border-pink-200",
 //       "F": "bg-teal-100 text-teal-800 border-teal-200",
 //       "G": "bg-indigo-100 text-indigo-800 border-indigo-200",
-//       "H": "bg-yellow-100 text-yellow-800 border-yellow-200",
-//       "I": "bg-red-100 text-red-800 border-red-200",
+//       "H": "bg-amber-50 text-amber-700 border-yellow-200",
+//       "I": "bg-red-50 text-red-700 border-red-200",
 //       "J": "bg-cyan-100 text-cyan-800 border-cyan-200"
 //     };
 //     return colors[type] || "bg-gray-100 text-gray-700 border-gray-200";
@@ -2961,20 +2961,20 @@
 //           {masterShifts.length === 0 && (
 //             <button
 //               onClick={handleCreateDefaultShifts}
-//               className="flex items-center gap-2 px-6 py-3 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+//               className="flex items-center gap-2 px-6 py-3 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800"
 //             >
 //               <FaPlus /> Create Default Shifts (A-D)
 //             </button>
 //           )}
 //           <button
 //             onClick={() => setShowCustomCreateModal(true)}
-//             className="flex items-center gap-2 px-6 py-3 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+//             className="flex items-center gap-2 px-6 py-3 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800"
 //           >
 //             <FaPlus /> Create New Shift
 //           </button>
 //           <button
 //             onClick={() => setShowAssignModal(true)}
-//             className="flex items-center gap-2 px-6 py-3 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="flex items-center gap-2 px-6 py-3 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             <FaClock /> Assign Shift
 //           </button>
@@ -2988,7 +2988,7 @@
 //         </div>
 //       )}
 //       {success && (
-//         <div className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg">
+//         <div className="p-4 mb-4 text-sm text-green-700 bg-blue-100 rounded-lg">
 //           ✅ {success}
 //         </div>
 //       )}
@@ -3001,13 +3001,13 @@
 //         </div>
 
 //         {masterShifts.length === 0 ? (
-//           <div className="py-12 text-center rounded-lg bg-gray-50">
+//           <div className="py-12 text-center rounded-lg bg-white">
 //             <div className="mb-4 text-6xl text-gray-500">⏰</div>
 //             <h3 className="mb-2 text-xl font-semibold text-gray-500">No shifts created yet</h3>
 //             <p className="mb-4 text-gray-500">Create your first shift to get started</p>
 //             <button
 //               onClick={() => setShowCustomCreateModal(true)}
-//               className="px-6 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+//               className="px-6 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800"
 //             >
 //               Create First Shift
 //             </button>
@@ -3081,14 +3081,14 @@
 //                         setEditingAssignment(null);
 //                         setShowAssignModal(true);
 //                       }}
-//                       className="flex items-center justify-center flex-1 gap-1 px-3 py-2 text-xs text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//                       className="flex items-center justify-center flex-1 gap-1 px-3 py-2 text-xs text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //                       title="Assign employee to this shift"
 //                     >
 //                       <FaPlus /> Assign
 //                     </button>
 //                     <button
 //                       onClick={() => handleDeleteMasterShift(shift._id, shift.shiftName)}
-//                       className="flex items-center justify-center gap-1 px-3 py-2 text-xs text-white bg-red-600 rounded-lg hover:bg-red-700"
+//                       className="flex items-center justify-center gap-1 px-3 py-2 text-xs text-gray-900 bg-red-600 rounded-lg hover:bg-red-700"
 //                       title="Delete this shift"
 //                     >
 //                       <FaTimes />
@@ -3110,7 +3110,7 @@
 //           </div>
 //           <div className="overflow-hidden bg-white border rounded-lg shadow-sm">
 //             <table className="w-full">
-//               <thead className="bg-gray-50">
+//               <thead className="bg-white">
 //                 <tr>
 //                   <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee ID</th>
 //                   <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee Name</th>
@@ -3161,14 +3161,14 @@
 //                               });
 //                               setShowAssignModal(true);
 //                             }}
-//                             className="flex items-center gap-1 px-3 py-1.5 text-xs text-white bg-blue-600 rounded hover:bg-blue-700"
+//                             className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-900 bg-blue-600 rounded hover:bg-blue-700"
 //                             title="Edit Assignment"
 //                           >
 //                             <FaEdit /> Edit
 //                           </button>
 //                           <button
 //                             onClick={() => handleDeleteAssignment(assignment._id)}
-//                             className="flex items-center gap-1 px-3 py-1.5 text-xs text-white bg-red-600 rounded hover:bg-red-700"
+//                             className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-900 bg-red-600 rounded hover:bg-red-700"
 //                             title="Delete Assignment"
 //                           >
 //                             <FaTrash /> Remove
@@ -3186,7 +3186,7 @@
 
 //       {/* CUSTOM CREATE MODAL */}
 //       {showCustomCreateModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">Create New Shift</h3>
@@ -3238,7 +3238,7 @@
 //                     Time Slot Configuration *
 //                   </label>
 
-//                   <div className="p-3 space-y-3 border rounded-lg bg-gray-50">
+//                   <div className="p-3 space-y-3 border rounded-lg bg-white">
 //                     <div>
 //                       <label className="block mb-1 text-xs text-gray-500">Time Range *</label>
 //                       <input
@@ -3283,13 +3283,13 @@
 //                 <button
 //                   type="button"
 //                   onClick={() => setShowCustomCreateModal(false)}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-white"
 //                 >
 //                   Cancel
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700"
+//                   className="px-4 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800"
 //                 >
 //                   Create Shift
 //                 </button>
@@ -3301,7 +3301,7 @@
 
 //       {/* ASSIGN SHIFT MODAL */}
 //       {showAssignModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-6 border-b">
 //               <h3 className="text-xl font-semibold text-gray-700">
@@ -3397,13 +3397,13 @@
 //                       shiftType: ''
 //                     });
 //                   }}
-//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+//                   className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-white"
 //                 >
 //                   Cancel
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//                   className="px-4 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //                 >
 //                   {editingAssignment ? 'Update' : 'Assign'} Shift
 //                 </button>
@@ -3415,7 +3415,7 @@
 
 //       {/* VIEW EMPLOYEES MODAL */}
 //       {showViewModal && viewEmployees.length > 0 && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
 //             <div className="flex items-center justify-between p-4 border-b">
 //               <div>
@@ -3436,7 +3436,7 @@
 
 //             <div className="flex-1 overflow-y-auto">
 //               <table className="w-full">
-//                 <thead className="sticky top-0 bg-gray-50">
+//                 <thead className="sticky top-0 bg-white">
 //                   <tr>
 //                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee ID</th>
 //                     <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Employee Name</th>
@@ -3477,7 +3477,7 @@
 //                                 });
 //                                 setShowAssignModal(true);
 //                               }}
-//                               className="flex items-center gap-1 px-3 py-1.5 text-xs text-white bg-blue-600 rounded hover:bg-blue-700"
+//                               className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-900 bg-blue-600 rounded hover:bg-blue-700"
 //                             >
 //                               <FaEdit /> Edit
 //                             </button>
@@ -3486,7 +3486,7 @@
 //                                 handleDeleteAssignment(emp._id);
 //                                 setShowViewModal(false);
 //                               }}
-//                               className="flex items-center gap-1 px-3 py-1.5 text-xs text-white bg-red-600 rounded hover:bg-red-700"
+//                               className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-900 bg-red-600 rounded hover:bg-red-700"
 //                             >
 //                               <FaTrash /> Delete
 //                             </button>
@@ -3733,11 +3733,11 @@
 //     const colorMap = {
 //       // Primary Professional Colors
 //       "A": "bg-blue-600",      // Blue - Most common
-//       "B": "bg-green-600",     // Green 
-//       "C": "bg-green-600",    // Purple
+//       "B": "bg-blue-600",     // Green 
+//       "C": "bg-blue-600",    // Purple
 //       "D": "bg-orange-600",    // Orange
 //       "E": "bg-red-600",       // Red
-//       "F": "bg-teal-600",      // Teal
+//       "F": "bg-blue-700",      // Teal
 //       "G": "bg-indigo-600",    // Indigo
 //       "H": "bg-pink-600",      // Pink
 //       "I": "bg-yellow-600",    // Yellow
@@ -3758,8 +3758,8 @@
 //       "V": "bg-slate-600",
 //       "W": "bg-stone-600",
 //       "X": "bg-red-500",
-//       "Y": "bg-blue-500",
-//       "Z": "bg-green-500",
+//       "Y": "bg-blue-600",
+//       "Z": "bg-blue-600",
 
 //       // Special Shifts
 //       "BR": "bg-gradient-to-r from-green-600 to-pink-600"  // Brake Shift
@@ -3772,8 +3772,8 @@
 //   const getShiftRowColor = (type) => {
 //     const colorMap = {
 //       "A": "bg-blue-50 hover:bg-blue-100",
-//       "B": "bg-green-50 hover:bg-green-100",
-//       "C": "bg-green-50 hover:bg-green-100",
+//       "B": "bg-green-50 hover:bg-blue-100",
+//       "C": "bg-green-50 hover:bg-blue-100",
 //       "D": "bg-orange-50 hover:bg-orange-100",
 //       "E": "bg-red-50 hover:bg-red-100",
 //       "F": "bg-teal-50 hover:bg-teal-100",
@@ -3784,11 +3784,11 @@
 //       "BR": "bg-gradient-to-r from-green-50 to-pink-50 hover:from-green-100 hover:to-pink-100"
 //     };
 
-//     return colorMap[type] || "bg-gray-50 hover:bg-gray-100";
+//     return colorMap[type] || "bg-white hover:bg-gray-100";
 //   };
 
 //   const getShiftTextColor = () => {
-//     return "text-white";
+//     return "text-gray-900";
 //   };
 
 //   const getShiftBorderColor = (type) => {
@@ -3812,15 +3812,15 @@
 //   // ✅ FIXED: Professional badge colors
 //   const getBadgeColor = (type) => {
 //     const colorMap = {
-//       "A": "bg-blue-100 text-blue-800 border border-blue-200",
-//       "B": "bg-green-100 text-green-800 border border-green-200",
-//       "C": "bg-green-100 text-green-800 border border-green-200",
+//       "A": "bg-blue-50 text-blue-700 border border-blue-200",
+//       "B": "bg-emerald-50 text-emerald-700 border border-green-200",
+//       "C": "bg-emerald-50 text-emerald-700 border border-green-200",
 //       "D": "bg-orange-100 text-orange-800 border border-orange-200",
-//       "E": "bg-red-100 text-red-800 border border-red-200",
+//       "E": "bg-red-50 text-red-700 border border-red-200",
 //       "F": "bg-teal-100 text-teal-800 border border-teal-200",
 //       "G": "bg-indigo-100 text-indigo-800 border border-indigo-200",
 //       "H": "bg-pink-100 text-pink-800 border border-pink-200",
-//       "I": "bg-yellow-100 text-yellow-800 border border-yellow-200",
+//       "I": "bg-amber-50 text-amber-700 border border-yellow-200",
 //       "J": "bg-cyan-100 text-cyan-800 border border-cyan-200",
 //       "BR": "bg-gradient-to-r from-green-100 to-pink-100 text-green-800 border border-green-200"
 //     };
@@ -4013,26 +4013,26 @@
 //           {masterShifts.length === 0 && (
 //             <button
 //               onClick={handleCreateDefaultShifts}
-//               className="flex items-center gap-2 px-4 py-2.5 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+//               className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800 transition-colors"
 //             >
 //               <FaPlus /> Create Default Shifts
 //             </button>
 //           )}
 //           <button
 //             onClick={() => setShowCustomCreateModal(true)}
-//             className="flex items-center gap-2 px-4 py-2.5 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+//             className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800 transition-colors"
 //           >
 //             <FaPlus /> Create Regular Shift
 //           </button>
 //           <button
 //             onClick={() => setShowBrakeShiftModal(true)}
-//             className="flex items-center gap-2 px-4 py-2.5 text-sm text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-lg hover:from-green-700 hover:to-pink-700 transition-all"
+//             className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-900 bg-gradient-to-r from-green-600 to-pink-600 rounded-lg hover:from-green-700 hover:to-pink-700 transition-all"
 //           >
 //             <FaPlus /> Create Brake Shift
 //           </button>
 //           <button
 //             onClick={() => setShowAssignModal(true)}
-//             className="flex items-center gap-2 px-4 py-2.5 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+//             className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
 //           >
 //             <FaClock /> Assign Shift
 //           </button>
@@ -4046,7 +4046,7 @@
 //         </div>
 //       )}
 //       {success && (
-//         <div className="p-3 mb-4 text-sm text-green-700 bg-green-100 border border-green-200 rounded-lg">
+//         <div className="p-3 mb-4 text-sm text-green-700 bg-blue-100 border border-green-200 rounded-lg">
 //           ✅ {success}
 //         </div>
 //       )}
@@ -4059,20 +4059,20 @@
 //         </div>
 
 //         {masterShifts.length === 0 ? (
-//           <div className="py-12 text-center border border-gray-200 rounded-lg bg-gray-50">
+//           <div className="py-12 text-center border border-gray-200 rounded-lg bg-white">
 //             <div className="mb-4 text-6xl text-gray-500">⏰</div>
 //             <h3 className="mb-2 text-xl font-semibold text-gray-500">No shifts created yet</h3>
 //             <p className="mb-4 text-gray-500">Create your first shift to get started</p>
 //             <div className="flex justify-center gap-2">
 //               <button
 //                 onClick={() => setShowCustomCreateModal(true)}
-//                 className="px-4 py-2 text-sm text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
+//                 className="px-4 py-2 text-sm text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-800"
 //               >
 //                 Create Regular Shift
 //               </button>
 //               <button
 //                 onClick={() => setShowBrakeShiftModal(true)}
-//                 className="px-4 py-2 text-sm text-white transition-all rounded-lg bg-gradient-to-r from-green-600 to-pink-600 hover:from-green-700 hover:to-pink-700"
+//                 className="px-4 py-2 text-sm text-gray-900 transition-all rounded-lg bg-gradient-to-r from-green-600 to-pink-600 hover:from-green-700 hover:to-pink-700"
 //               >
 //                 Create Brake Shift
 //               </button>
@@ -4096,14 +4096,14 @@
 //                   {/* Shift Header */}
 //                   <div className="flex items-start justify-between mb-3">
 //                     <div className="flex items-start gap-2">
-//                       <div className="p-1.5 rounded-md bg-black/20 backdrop-blur-sm">
+//                       <div className="p-1.5 rounded-md bg-white/20 backdrop-blur-sm">
 //                         <FaClock className="text-sm" />
 //                       </div>
 //                       <div>
 //                         <span className="text-sm font-semibold">
 //                           Shift {shift.shiftType} {isBrakeShift && '(Brake)'}
 //                         </span>
-//                         <div className="text-xs text-white/90">
+//                         <div className="text-xs text-gray-900/90">
 //                           {shift.shiftName}
 //                         </div>
 //                       </div>
@@ -4111,7 +4111,7 @@
 
 //                     <div className="text-right">
 //                       <div className="text-xl font-bold">{employeeCount}</div>
-//                       <div className="text-xs text-white/80">employees</div>
+//                       <div className="text-xs text-gray-900/80">employees</div>
 //                     </div>
 //                   </div>
 
@@ -4122,12 +4122,12 @@
 //                         {isBrakeShift ? getBrakeShiftTimeDisplay(shift) : (timeSlot?.timeRange || "Not set")}
 //                       </span>
 //                       {isBrakeShift && (
-//                         <span className="px-1.5 py-0.5 text-xs bg-black/20 rounded-full">
+//                         <span className="px-1.5 py-0.5 text-xs bg-white/20 rounded-full">
 //                           Brake
 //                         </span>
 //                       )}
 //                     </div>
-//                     <p className="text-xs text-white/80 line-clamp-1">
+//                     <p className="text-xs text-gray-900/80 line-clamp-1">
 //                       {isBrakeShift ?
 //                         "07:00-13:00 & 17:00-21:30 with break" :
 //                         (timeSlot?.description || "No description")}
@@ -4140,8 +4140,8 @@
 //                       onClick={() => handleViewEmployees(shift.shiftType, shift.shiftName)}
 //                       disabled={employeeCount === 0}
 //                       className={`flex-1 px-2 py-1.5 text-xs rounded flex items-center justify-center gap-1 ${employeeCount > 0
-//                         ? 'bg-black/20 text-white hover:bg-black/30 transition-colors'
-//                         : 'bg-black/10 text-white/50 cursor-not-allowed'
+//                         ? 'bg-white/20 text-gray-900 hover:bg-white/30 transition-colors'
+//                         : 'bg-white/10 text-gray-900/50 cursor-not-allowed'
 //                         }`}
 //                     >
 //                       <FaEye className="text-xs" /> View
@@ -4156,14 +4156,14 @@
 //                         setEditingAssignment(null);
 //                         setShowAssignModal(true);
 //                       }}
-//                       className="flex-1 px-2 py-1.5 text-xs text-white bg-black/30 rounded hover:bg-black/40 transition-colors flex items-center justify-center gap-1"
+//                       className="flex-1 px-2 py-1.5 text-xs text-gray-900 bg-white/30 rounded hover:bg-white/40 transition-colors flex items-center justify-center gap-1"
 //                       title="Assign employee to this shift"
 //                     >
 //                       <FaPlus className="text-xs" /> Assign
 //                     </button>
 //                     <button
 //                       onClick={() => handleDeleteMasterShift(shift._id, shift.shiftName)}
-//                       className="px-2 py-1.5 text-xs text-white bg-black/20 rounded hover:bg-black/30 transition-colors flex items-center justify-center"
+//                       className="px-2 py-1.5 text-xs text-gray-900 bg-white/20 rounded hover:bg-white/30 transition-colors flex items-center justify-center"
 //                       title="Delete this shift"
 //                     >
 //                       <FaTimes className="text-xs" />
@@ -4185,7 +4185,7 @@
 //           </div>
 //           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //             <table className="min-w-full">
-//               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//               <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
 //                   <th className="py-3 text-center">Employee ID</th>
 //                   <th className="py-3 text-center">Employee Name</th>
@@ -4268,7 +4268,7 @@
 
 //       {/* REGULAR SHIFT CREATE MODAL */}
 //       {showCustomCreateModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-4 border-b">
 //               <h3 className="text-lg font-semibold text-gray-700">Create Regular Shift</h3>
@@ -4320,7 +4320,7 @@
 //                     Time Slot Configuration *
 //                   </label>
 
-//                   <div className="p-3 space-y-3 border border-gray-200 rounded-lg bg-gray-50">
+//                   <div className="p-3 space-y-3 border border-gray-200 rounded-lg bg-white">
 //                     <div>
 //                       <label className="block mb-1 text-xs text-gray-500">Time Range *</label>
 //                       <input
@@ -4349,7 +4349,7 @@
 
 //                 {/* Preview */}
 //                 {createForm.shiftType && createForm.timeSlots[0].timeRange && (
-//                   <div className="p-3 border border-gray-200 rounded-lg bg-gray-50">
+//                   <div className="p-3 border border-gray-200 rounded-lg bg-white">
 //                     <h4 className="mb-1.5 text-sm text-sm text-gray-700">Preview:</h4>
 //                     <p className="text-sm text-gray-700">
 //                       Shift {createForm.shiftType}: {createForm.shiftName}
@@ -4371,7 +4371,7 @@
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-sm text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
+//                   className="px-4 py-2 text-sm text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-800"
 //                 >
 //                   Create Regular Shift
 //                 </button>
@@ -4383,7 +4383,7 @@
 
 //       {/* ✅ BRAKE SHIFT CREATE MODAL */}
 //       {showBrakeShiftModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-4 border-b">
 //               <h3 className="text-lg font-semibold text-gray-700">Create Brake Shift</h3>
@@ -4434,8 +4434,8 @@
 //                   <h4 className="mb-2 text-sm text-green-800">Brake Shift Details</h4>
 //                   <div className="space-y-2">
 //                     <div className="flex items-center gap-2">
-//                       <div className="flex items-center justify-center bg-green-100 rounded-full w-7 h-7">
-//                         <FaClock className="text-xs text-green-600" />
+//                       <div className="flex items-center justify-center bg-blue-100 rounded-full w-7 h-7">
+//                         <FaClock className="text-xs text-blue-700" />
 //                       </div>
 //                       <div>
 //                         <p className="text-sm text-gray-700">07:00 - 13:00</p>
@@ -4453,7 +4453,7 @@
 //                       </div>
 //                     </div>
 
-//                     <div className="p-1.5 text-xs text-gray-500 bg-black/50 rounded">
+//                     <div className="p-1.5 text-xs text-gray-500 bg-white/50 rounded">
 //                       Total working hours: 10.5 hours with afternoon break
 //                     </div>
 //                   </div>
@@ -4466,7 +4466,7 @@
 //                     <p className="text-sm text-green-700">
 //                       Shift {createForm.shiftType} (Brake): {createForm.shiftName}
 //                     </p>
-//                     <p className="mt-0.5 text-sm text-green-600">
+//                     <p className="mt-0.5 text-sm text-blue-700">
 //                       Time: 07:00-13:00 & 17:00-21:30
 //                     </p>
 //                   </div>
@@ -4483,7 +4483,7 @@
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-sm text-white transition-all rounded-lg bg-gradient-to-r from-green-600 to-pink-600 hover:from-green-700 hover:to-pink-700"
+//                   className="px-4 py-2 text-sm text-gray-900 transition-all rounded-lg bg-gradient-to-r from-green-600 to-pink-600 hover:from-green-700 hover:to-pink-700"
 //                 >
 //                   Create Brake Shift
 //                 </button>
@@ -4495,7 +4495,7 @@
 
 //       {/* ASSIGN SHIFT MODAL */}
 //       {showAssignModal && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //             <div className="flex items-center justify-between p-4 border-b">
 //               <h3 className="text-lg font-semibold text-gray-700">
@@ -4600,7 +4600,7 @@
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-4 py-2 text-sm text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
+//                   className="px-4 py-2 text-sm text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
 //                 >
 //                   {editingAssignment ? 'Update' : 'Assign'} Shift
 //                 </button>
@@ -4612,7 +4612,7 @@
 
 //       {/* ✅ VIEW EMPLOYEES MODAL - PROFESSIONAL DESIGN */}
 //       {showViewModal && viewEmployees.length > 0 && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
 //             <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
 //               <div>
@@ -4633,7 +4633,7 @@
 
 //             <div className="flex-1 overflow-y-auto">
 //               <table className="w-full">
-//                 <thead className="sticky top-0 border-b border-gray-200 bg-gray-50">
+//                 <thead className="sticky top-0 border-b border-gray-200 bg-white">
 //                   <tr>
 //                     <th className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-500 uppercase">Employee ID</th>
 //                     <th className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-gray-500 uppercase">Employee Name</th>
@@ -4701,10 +4701,10 @@
 //               </table>
 //             </div>
 
-//             <div className="p-4 border-t border-gray-200 bg-gray-50">
+//             <div className="p-4 border-t border-gray-200 bg-white">
 //               <button
 //                 onClick={() => setShowViewModal(false)}
-//                 className="w-full py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 text-sm text-sm transition-colors"
+//                 className="w-full py-2.5 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-100 text-sm text-sm transition-colors"
 //               >
 //                 Close
 //               </button>
@@ -4937,11 +4937,11 @@
 //   const getShiftColor = (type) => {
 //     const colorMap = {
 //       "A": "bg-blue-600",
-//       "B": "bg-green-600",
-//       "C": "bg-green-600",
+//       "B": "bg-blue-600",
+//       "C": "bg-blue-600",
 //       "D": "bg-orange-600",
 //       "E": "bg-red-600",
-//       "F": "bg-teal-600",
+//       "F": "bg-blue-700",
 //       "G": "bg-indigo-600",
 //       "H": "bg-pink-600",
 //       "I": "bg-yellow-600",
@@ -4960,8 +4960,8 @@
 //       "V": "bg-slate-600",
 //       "W": "bg-stone-600",
 //       "X": "bg-red-500",
-//       "Y": "bg-blue-500",
-//       "Z": "bg-green-500",
+//       "Y": "bg-blue-600",
+//       "Z": "bg-blue-600",
 //       "BR": "bg-gradient-to-r from-green-600 to-pink-600"
 //     };
 
@@ -4971,8 +4971,8 @@
 //   const getShiftRowColor = (type) => {
 //     const colorMap = {
 //       "A": "bg-blue-50 hover:bg-blue-100",
-//       "B": "bg-green-50 hover:bg-green-100",
-//       "C": "bg-green-50 hover:bg-green-100",
+//       "B": "bg-green-50 hover:bg-blue-100",
+//       "C": "bg-green-50 hover:bg-blue-100",
 //       "D": "bg-orange-50 hover:bg-orange-100",
 //       "E": "bg-red-50 hover:bg-red-100",
 //       "F": "bg-teal-50 hover:bg-teal-100",
@@ -4983,11 +4983,11 @@
 //       "BR": "bg-gradient-to-r from-green-50 to-pink-50 hover:from-green-100 hover:to-pink-100"
 //     };
 
-//     return colorMap[type] || "bg-gray-50 hover:bg-gray-100";
+//     return colorMap[type] || "bg-white hover:bg-gray-100";
 //   };
 
 //   const getShiftTextColor = () => {
-//     return "text-white";
+//     return "text-gray-900";
 //   };
 
 //   const getShiftBorderColor = (type) => {
@@ -5010,15 +5010,15 @@
 
 //   const getBadgeColor = (type) => {
 //     const colorMap = {
-//       "A": "bg-blue-100 text-blue-800 border border-blue-200",
-//       "B": "bg-green-100 text-green-800 border border-green-200",
-//       "C": "bg-green-100 text-purple-800 border border-green-200",
+//       "A": "bg-blue-50 text-blue-700 border border-blue-200",
+//       "B": "bg-emerald-50 text-emerald-700 border border-green-200",
+//       "C": "bg-blue-100 text-purple-800 border border-green-200",
 //       "D": "bg-orange-100 text-orange-800 border border-orange-200",
-//       "E": "bg-red-100 text-red-800 border border-red-200",
+//       "E": "bg-red-50 text-red-700 border border-red-200",
 //       "F": "bg-teal-100 text-teal-800 border border-teal-200",
 //       "G": "bg-indigo-100 text-indigo-800 border border-indigo-200",
 //       "H": "bg-pink-100 text-pink-800 border border-pink-200",
-//       "I": "bg-yellow-100 text-yellow-800 border border-yellow-200",
+//       "I": "bg-amber-50 text-amber-700 border border-yellow-200",
 //       "J": "bg-cyan-100 text-cyan-800 border border-cyan-200",
 //       "BR": "bg-gradient-to-r from-green-100 to-pink-100 text-green-800 border border-green-200"
 //     };
@@ -5245,7 +5245,7 @@
 //     return (
 //       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 to-blue-100">
 //         <div className="text-center">
-//           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-green-600 rounded-full animate-spin"></div>
+//           <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-blue-700 rounded-full animate-spin"></div>
 //           <p className="font-semibold text-gray-500">
 //             Loading shift management...
 //           </p>
@@ -5288,26 +5288,26 @@
 //               {masterShifts.length === 0 && (
 //                 <button
 //                   onClick={handleCreateDefaultShifts}
-//                   className="h-9 px-4 mb-[2px] text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition flex items-center gap-1"
+//                   className="h-9 px-4 mb-[2px] text-sm font-medium text-gray-900 bg-blue-600 rounded-md hover:bg-blue-800 transition flex items-center gap-1"
 //                 >
 //                   <FaPlus className="text-xs" /> Create Defaults
 //                 </button>
 //               )}
 //               <button
 //                 onClick={() => setShowCustomCreateModal(true)}
-//                 className="h-9 px-4 mb-[2px] text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition flex items-center gap-1"
+//                 className="h-9 px-4 mb-[2px] text-sm font-medium text-gray-900 bg-blue-600 rounded-md hover:bg-blue-800 transition flex items-center gap-1"
 //               >
 //                 <FaPlus className="text-xs" /> Regular Shift
 //               </button>
 //               <button
 //                 onClick={() => setShowBrakeShiftModal(true)}
-//                 className="h-9 px-4 mb-[2px] text-sm font-medium text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-md hover:from-green-700 hover:to-pink-700 transition flex items-center gap-1"
+//                 className="h-9 px-4 mb-[2px] text-sm font-medium text-gray-900 bg-gradient-to-r from-green-600 to-pink-600 rounded-md hover:from-green-700 hover:to-pink-700 transition flex items-center gap-1"
 //               >
 //                 <FaPlus className="text-xs" /> Brake Shift
 //               </button>
 //               <button
 //                 onClick={() => setShowAssignModal(true)}
-//                 className="h-9 px-4 mb-[2px] text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition flex items-center gap-1"
+//                 className="h-9 px-4 mb-[2px] text-sm font-medium text-gray-900 bg-blue-600 rounded-md hover:bg-blue-700 transition flex items-center gap-1"
 //               >
 //                 <FaClock className="text-xs" /> Assign
 //               </button>
@@ -5322,7 +5322,7 @@
 //           </div>
 //         )}
 //         {success && (
-//           <div className="p-3 mb-4 text-sm text-green-700 bg-green-100 border border-green-200 rounded-lg">
+//           <div className="p-3 mb-4 text-sm text-green-700 bg-blue-100 border border-green-200 rounded-lg">
 //             ✅ {success}
 //           </div>
 //         )}
@@ -5339,13 +5339,13 @@
 //               <div className="flex justify-center gap-2">
 //                 <button
 //                   onClick={() => setShowCustomCreateModal(true)}
-//                   className="px-3 py-1.5 text-xs text-white bg-green-600 rounded-md hover:bg-green-700"
+//                   className="px-3 py-1.5 text-xs text-gray-900 bg-blue-600 rounded-md hover:bg-blue-800"
 //                 >
 //                   Create Regular Shift
 //                 </button>
 //                 <button
 //                   onClick={() => setShowBrakeShiftModal(true)}
-//                   className="px-3 py-1.5 text-xs text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-md hover:from-green-700 hover:to-pink-700"
+//                   className="px-3 py-1.5 text-xs text-gray-900 bg-gradient-to-r from-green-600 to-pink-600 rounded-md hover:from-green-700 hover:to-pink-700"
 //                 >
 //                   Create Brake Shift
 //                 </button>
@@ -5369,14 +5369,14 @@
 //                     {/* Shift Header */}
 //                     <div className="flex items-start justify-between mb-2">
 //                       <div className="flex items-start gap-1.5">
-//                         <div className="p-1 rounded-md bg-black/20 backdrop-blur-sm">
+//                         <div className="p-1 rounded-md bg-white/20 backdrop-blur-sm">
 //                           <FaClock className="text-xs" />
 //                         </div>
 //                         <div>
 //                           <span className="text-xs font-semibold">
 //                             Shift {shift.shiftType} {isBrakeShift && '(Brake)'}
 //                           </span>
-//                           <div className="text-xs text-white/90">
+//                           <div className="text-xs text-gray-900/90">
 //                             {shift.shiftName}
 //                           </div>
 //                         </div>
@@ -5384,7 +5384,7 @@
 
 //                       <div className="text-right">
 //                         <div className="text-base font-bold">{employeeCount}</div>
-//                         <div className="text-[10px] text-white/80">employees</div>
+//                         <div className="text-[10px] text-gray-900/80">employees</div>
 //                       </div>
 //                     </div>
 
@@ -5395,12 +5395,12 @@
 //                           {isBrakeShift ? getBrakeShiftTimeDisplay(shift) : (timeSlot?.timeRange || "Not set")}
 //                         </span>
 //                         {isBrakeShift && (
-//                           <span className="px-1 py-0.5 text-[10px] bg-black/20 rounded-full">
+//                           <span className="px-1 py-0.5 text-[10px] bg-white/20 rounded-full">
 //                             Brake
 //                           </span>
 //                         )}
 //                       </div>
-//                       <p className="text-[10px] text-white/80 line-clamp-1">
+//                       <p className="text-[10px] text-gray-900/80 line-clamp-1">
 //                         {isBrakeShift ?
 //                           "07:00-13:00 & 17:00-21:30" :
 //                           (timeSlot?.description || "No description")}
@@ -5414,8 +5414,8 @@
 //                         disabled={employeeCount === 0}
 //                         className={`flex-1 px-1.5 py-1 text-[10px] rounded flex items-center justify-center gap-0.5 ${
 //                           employeeCount > 0
-//                             ? 'bg-black/20 text-white hover:bg-black/30 transition-colors'
-//                             : 'bg-black/10 text-white/50 cursor-not-allowed'
+//                             ? 'bg-white/20 text-gray-900 hover:bg-white/30 transition-colors'
+//                             : 'bg-white/10 text-gray-900/50 cursor-not-allowed'
 //                         }`}
 //                       >
 //                         <FaEye className="text-[8px]" /> View
@@ -5430,13 +5430,13 @@
 //                           setEditingAssignment(null);
 //                           setShowAssignModal(true);
 //                         }}
-//                         className="flex-1 px-1.5 py-1 text-[10px] text-white bg-black/30 rounded hover:bg-black/40 transition-colors flex items-center justify-center gap-0.5"
+//                         className="flex-1 px-1.5 py-1 text-[10px] text-gray-900 bg-white/30 rounded hover:bg-white/40 transition-colors flex items-center justify-center gap-0.5"
 //                       >
 //                         <FaPlus className="text-[8px]" /> Assign
 //                       </button>
 //                       <button
 //                         onClick={() => handleDeleteMasterShift(shift._id, shift.shiftName)}
-//                         className="px-1.5 py-1 text-[10px] text-white bg-black/20 rounded hover:bg-black/30 transition-colors"
+//                         className="px-1.5 py-1 text-[10px] text-gray-900 bg-white/20 rounded hover:bg-white/30 transition-colors"
 //                       >
 //                         <FaTimes className="text-[8px]" />
 //                       </button>
@@ -5456,7 +5456,7 @@
 //             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //               <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //                 <table className="min-w-full">
-//                   <thead className="text-xs text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//                   <thead className="text-xs text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                     <tr>
 //                       <th className="px-2 py-2 text-center">Employee ID</th>
 //                       <th className="px-2 py-2 text-center">Employee Name</th>
@@ -5477,7 +5477,7 @@
 //                         const rowColor = getShiftRowColor(assignment.shiftType);
 
 //                         return (
-//                           <tr key={assignment._id} className={`${rowColor} transition border-b hover:bg-gray-50`}>
+//                           <tr key={assignment._id} className={`${rowColor} transition border-b hover:bg-white`}>
 //                             <td className="px-2 py-2 text-xs font-medium text-center text-gray-900 whitespace-nowrap">
 //                               {employeeId}
 //                             </td>
@@ -5578,9 +5578,9 @@
 //                       disabled={page === "..."}
 //                       className={`px-3 py-1 text-xs border rounded-lg ${
 //                         page === "..."
-//                           ? "text-gray-500 bg-gray-50 cursor-default"
+//                           ? "text-gray-500 bg-white cursor-default"
 //                           : currentPageAssignments === page
-//                           ? "text-white bg-blue-600 border-blue-600"
+//                           ? "text-gray-900 bg-blue-600 border-blue-600"
 //                           : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
 //                       }`}
 //                     >
@@ -5614,7 +5614,7 @@
 
 //         {/* REGULAR SHIFT CREATE MODAL - Styled like LeavesList */}
 //         {showCustomCreateModal && (
-//           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //             <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //               <div className="flex items-center justify-between p-3 border-b">
 //                 <h3 className="text-sm font-semibold text-gray-700">Create Regular Shift</h3>
@@ -5665,7 +5665,7 @@
 //                     <label className="block mb-1 text-xs text-gray-700">
 //                       Time Slot *
 //                     </label>
-//                     <div className="p-2 space-y-2 border border-gray-200 rounded-md bg-gray-50">
+//                     <div className="p-2 space-y-2 border border-gray-200 rounded-md bg-white">
 //                       <div>
 //                         <label className="block mb-0.5 text-[10px] text-gray-500">Time Range</label>
 //                         <input
@@ -5693,7 +5693,7 @@
 
 //                   {/* Preview */}
 //                   {createForm.shiftType && createForm.timeSlots[0].timeRange && (
-//                     <div className="p-2 border border-gray-200 rounded-md bg-gray-50">
+//                     <div className="p-2 border border-gray-200 rounded-md bg-white">
 //                       <h4 className="mb-0.5 text-xs text-gray-700">Preview:</h4>
 //                       <p className="text-[10px] text-gray-700">
 //                         Shift {createForm.shiftType}: {createForm.shiftName}
@@ -5715,7 +5715,7 @@
 //                   </button>
 //                   <button
 //                     type="submit"
-//                     className="px-3 py-1.5 text-xs text-white bg-green-600 rounded-md hover:bg-green-700"
+//                     className="px-3 py-1.5 text-xs text-gray-900 bg-blue-600 rounded-md hover:bg-blue-800"
 //                   >
 //                     Create Shift
 //                   </button>
@@ -5727,7 +5727,7 @@
 
 //         {/* BRAKE SHIFT CREATE MODAL */}
 //         {showBrakeShiftModal && (
-//           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //             <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //               <div className="flex items-center justify-between p-3 border-b">
 //                 <h3 className="text-sm font-semibold text-gray-700">Create Brake Shift</h3>
@@ -5777,8 +5777,8 @@
 //                     <h4 className="mb-1 text-xs text-green-800">Brake Shift Details</h4>
 //                     <div className="space-y-1">
 //                       <div className="flex items-center gap-1">
-//                         <div className="flex items-center justify-center w-5 h-5 bg-green-100 rounded-full">
-//                           <FaClock className="text-[8px] text-green-600" />
+//                         <div className="flex items-center justify-center w-5 h-5 bg-blue-100 rounded-full">
+//                           <FaClock className="text-[8px] text-blue-700" />
 //                         </div>
 //                         <span className="text-[10px] text-gray-700">07:00 - 13:00</span>
 //                       </div>
@@ -5798,7 +5798,7 @@
 //                       <p className="text-xs text-green-700">
 //                         Shift {createForm.shiftType} (Brake): {createForm.shiftName}
 //                       </p>
-//                       <p className="text-[10px] text-green-600">
+//                       <p className="text-[10px] text-blue-700">
 //                         07:00-13:00 & 17:00-21:30
 //                       </p>
 //                     </div>
@@ -5815,7 +5815,7 @@
 //                   </button>
 //                   <button
 //                     type="submit"
-//                     className="px-3 py-1.5 text-xs text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-md hover:from-green-700 hover:to-pink-700"
+//                     className="px-3 py-1.5 text-xs text-gray-900 bg-gradient-to-r from-green-600 to-pink-600 rounded-md hover:from-green-700 hover:to-pink-700"
 //                   >
 //                     Create Brake Shift
 //                   </button>
@@ -5827,7 +5827,7 @@
 
 //         {/* ASSIGN SHIFT MODAL */}
 //         {showAssignModal && (
-//           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //             <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
 //               <div className="flex items-center justify-between p-3 border-b">
 //                 <h3 className="text-sm font-semibold text-gray-700">
@@ -5927,7 +5927,7 @@
 //                   </button>
 //                   <button
 //                     type="submit"
-//                     className="px-3 py-1.5 text-xs text-white bg-blue-600 rounded-md hover:bg-blue-700"
+//                     className="px-3 py-1.5 text-xs text-gray-900 bg-blue-600 rounded-md hover:bg-blue-700"
 //                   >
 //                     {editingAssignment ? 'Update' : 'Assign'}
 //                   </button>
@@ -5939,7 +5939,7 @@
 
 //         {/* VIEW EMPLOYEES MODAL */}
 //         {showViewModal && viewEmployees.length > 0 && (
-//           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+//           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
 //             <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
 //               <div className="flex items-center justify-between p-3 bg-white border-b border-gray-200">
 //                 <div>
@@ -5960,7 +5960,7 @@
 
 //               <div className="flex-1 overflow-y-auto">
 //                 <table className="w-full">
-//                   <thead className="sticky top-0 border-b border-gray-200 bg-gray-50">
+//                   <thead className="sticky top-0 border-b border-gray-200 bg-white">
 //                     <tr>
 //                       <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase">Employee ID</th>
 //                       <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase">Employee Name</th>
@@ -6402,7 +6402,7 @@ const getShiftColor = (type) => {
     "B": "bg-[#2563EB]", // Blue 600
     "C": "bg-[#16A34A]", // Green 600
     "D": "bg-[#CA8A04]", // Yellow 600
-    "E": "bg-gray-50", // Black
+    "E": "bg-white", // Black
     "F": "bg-[#4B5563]", // Grey 600
     "G": "bg-[#A16207]", // Brown 600
     "H": "bg-[#EA580C]", // Orange 600
@@ -6427,7 +6427,7 @@ const getShiftRowColor = (type) => {
     "B": "bg-[#2563EB]/10 hover:bg-[#2563EB]/20",
     "C": "bg-[#16A34A]/10 hover:bg-[#16A34A]/20",
     "D": "bg-[#CA8A04]/10 hover:bg-[#CA8A04]/20",
-    "E": "bg-black/10 hover:bg-black/20",
+    "E": "bg-white/10 hover:bg-white/20",
     "F": "bg-[#4B5563]/10 hover:bg-[#4B5563]/20",
     "G": "bg-[#A16207]/10 hover:bg-[#A16207]/20",
     "H": "bg-[#EA580C]/10 hover:bg-[#EA580C]/20",
@@ -6450,7 +6450,7 @@ const getShiftTextColor = (type) => {
   // Dark background → white text
   const whiteText = ["A","B","C","E","F","H","I","J"];
 
-  return whiteText.includes(type) ? "text-white" : "text-gray-900";
+  return whiteText.includes(type) ? "text-gray-900" : "text-gray-900";
 };
 
 
@@ -6490,7 +6490,7 @@ const getBadgeColor = (type) => {
     "B": "bg-[#2563EB]/20 text-[#1D4ED8] border border-[#2563EB]",
     "C": "bg-[#16A34A]/20 text-[#15803D] border border-[#16A34A]",
     "D": "bg-[#CA8A04]/20 text-[#A16207] border border-[#CA8A04]",
-    "E": "bg-black/20 text-white border border-black",
+    "E": "bg-white/20 text-gray-900 border border-black",
     "F": "bg-[#4B5563]/20 text-[#374151] border border-[#4B5563]",
     "G": "bg-[#A16207]/20 text-[#78350F] border border-[#A16207]",
     "H": "bg-[#EA580C]/20 text-[#C2410C] border border-[#EA580C]",
@@ -6727,7 +6727,7 @@ const getBadgeColor = (type) => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 to-blue-100">
         <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-green-600 rounded-full animate-spin"></div>
+          <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-blue-700 rounded-full animate-spin"></div>
           <p className="font-semibold text-gray-500">
             Loading shift management...
           </p>
@@ -6790,7 +6790,7 @@ const getBadgeColor = (type) => {
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDepartment 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -6832,7 +6832,7 @@ const getBadgeColor = (type) => {
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDesignation 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -6874,7 +6874,7 @@ const getBadgeColor = (type) => {
                 onClick={() => setShowShiftTypeFilter(!showShiftTypeFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterShiftType 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -6917,26 +6917,26 @@ const getBadgeColor = (type) => {
             {masterShifts.length === 0 && (
               <button
                 onClick={handleCreateDefaultShifts}
-                className="flex items-center h-8 gap-1 px-3 text-xs font-medium text-white transition bg-green-600 rounded-md hover:bg-green-700"
+                className="flex items-center h-8 gap-1 px-3 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-800"
               >
                 <FaPlus className="text-xs" /> Create Defaults
               </button>
             )}
             <button
               onClick={() => setShowCustomCreateModal(true)}
-              className="flex items-center h-8 gap-1 px-3 text-xs font-medium text-white transition bg-green-600 rounded-md hover:bg-green-700"
+              className="flex items-center h-8 gap-1 px-3 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-800"
             >
               <FaPlus className="text-xs" /> Regular Shift
             </button>
             <button
               onClick={() => setShowBrakeShiftModal(true)}
-              className="flex items-center h-8 gap-1 px-3 text-xs font-medium text-white transition rounded-md bg-gradient-to-r from-green-600 to-pink-600 hover:from-green-700 hover:to-pink-700"
+              className="flex items-center h-8 gap-1 px-3 text-xs font-medium text-gray-900 transition rounded-md bg-gradient-to-r from-green-600 to-pink-600 hover:from-green-700 hover:to-pink-700"
             >
               <FaPlus className="text-xs" /> Brake Shift
             </button>
             <button
               onClick={() => setShowAssignModal(true)}
-              className="flex items-center h-8 gap-1 px-3 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
+              className="flex items-center h-8 gap-1 px-3 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-700"
             >
               <FaClock className="text-xs" /> Assign
             </button>
@@ -6960,7 +6960,7 @@ const getBadgeColor = (type) => {
           </div>
         )}
         {success && (
-          <div className="p-3 mb-4 text-sm text-green-700 bg-green-100 border border-green-200 rounded-lg">
+          <div className="p-3 mb-4 text-sm text-green-700 bg-blue-100 border border-green-200 rounded-lg">
             ✅ {success}
           </div>
         )}
@@ -6975,13 +6975,13 @@ const getBadgeColor = (type) => {
               <div className="flex justify-center gap-2">
                 <button
                   onClick={() => setShowCustomCreateModal(true)}
-                  className="px-3 py-1.5 text-xs text-white bg-green-600 rounded-md hover:bg-green-700"
+                  className="px-3 py-1.5 text-xs text-gray-900 bg-blue-600 rounded-md hover:bg-blue-800"
                 >
                   Create Regular Shift
                 </button>
                 <button
                   onClick={() => setShowBrakeShiftModal(true)}
-                  className="px-3 py-1.5 text-xs text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-md hover:from-green-700 hover:to-pink-700"
+                  className="px-3 py-1.5 text-xs text-gray-900 bg-gradient-to-r from-green-600 to-pink-600 rounded-md hover:from-green-700 hover:to-pink-700"
                 >
                   Create Brake Shift
                 </button>
@@ -7005,14 +7005,14 @@ const getBadgeColor = (type) => {
                     {/* Shift Header */}
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-start gap-1.5">
-                        <div className="p-1 rounded-md bg-black/20 backdrop-blur-sm">
+                        <div className="p-1 rounded-md bg-white/20 backdrop-blur-sm">
                           <FaClock className="text-xs" />
                         </div>
                         <div>
                           <span className="text-xs font-semibold">
                             Shift {shift.shiftType} {isBrakeShift && '(Brake)'}
                           </span>
-                          <div className="text-xs text-white/90">
+                          <div className="text-xs text-gray-900/90">
                             {shift.shiftName}
                           </div>
                         </div>
@@ -7020,7 +7020,7 @@ const getBadgeColor = (type) => {
 
                       <div className="text-right">
                         <div className="text-base font-bold">{employeeCount}</div>
-                        <div className="text-[10px] text-white/80">employees</div>
+                        <div className="text-[10px] text-gray-900/80">employees</div>
                       </div>
                     </div>
 
@@ -7031,12 +7031,12 @@ const getBadgeColor = (type) => {
                           {isBrakeShift ? getBrakeShiftTimeDisplay(shift) : (timeSlot?.timeRange || "Not set")}
                         </span>
                         {isBrakeShift && (
-                          <span className="px-1 py-0.5 text-[10px] bg-black/20 rounded-full">
+                          <span className="px-1 py-0.5 text-[10px] bg-white/20 rounded-full">
                             Brake
                           </span>
                         )}
                       </div>
-                      <p className="text-[10px] text-white/80 line-clamp-1">
+                      <p className="text-[10px] text-gray-900/80 line-clamp-1">
                         {isBrakeShift ?
                           (shift.timeSlots?.[0]?.description ? `${shift.timeSlots[0].description} & ${shift.timeSlots[1]?.description || ''}` : "Brake shift") :
                           (timeSlot?.description || "No description")}
@@ -7050,8 +7050,8 @@ const getBadgeColor = (type) => {
                         disabled={employeeCount === 0}
                         className={`flex-1 px-1.5 py-1 text-[10px] rounded flex items-center justify-center gap-0.5 ${
                           employeeCount > 0
-                            ? 'bg-black/20 text-white hover:bg-black/30 transition-colors'
-                            : 'bg-black/10 text-white/50 cursor-not-allowed'
+                            ? 'bg-white/20 text-gray-900 hover:bg-white/30 transition-colors'
+                            : 'bg-white/10 text-gray-900/50 cursor-not-allowed'
                         }`}
                       >
                         <FaEye className="text-[8px]" /> View
@@ -7066,13 +7066,13 @@ const getBadgeColor = (type) => {
                           setEditingAssignment(null);
                           setShowAssignModal(true);
                         }}
-                        className="flex-1 px-1.5 py-1 text-[10px] text-white bg-black/30 rounded hover:bg-black/40 transition-colors flex items-center justify-center gap-0.5"
+                        className="flex-1 px-1.5 py-1 text-[10px] text-gray-900 bg-white/30 rounded hover:bg-white/40 transition-colors flex items-center justify-center gap-0.5"
                       >
                         <FaPlus className="text-[8px]" /> Assign
                       </button>
                       <button
                         onClick={() => handleDeleteMasterShift(shift._id, shift.shiftName)}
-                        className="px-1.5 py-1 text-[10px] text-white bg-black/20 rounded hover:bg-black/30 transition-colors"
+                        className="px-1.5 py-1 text-[10px] text-gray-900 bg-white/20 rounded hover:bg-white/30 transition-colors"
                       >
                         <FaTimes className="text-[8px]" />
                       </button>
@@ -7106,7 +7106,7 @@ const getBadgeColor = (type) => {
             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
               <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
                 <table className="min-w-full">
-                  <thead className="text-xs text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+                  <thead className="text-xs text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                     <tr>
                       <th className="px-2 py-2 text-center">Employee ID</th>
                       <th className="px-2 py-2 text-center">Employee Name</th>
@@ -7131,7 +7131,7 @@ const getBadgeColor = (type) => {
                         const rowColor = getShiftRowColor(assignment.shiftType);
 
                         return (
-                          <tr key={assignment._id} className={`${rowColor} transition border-b hover:bg-gray-50`}>
+                          <tr key={assignment._id} className={`${rowColor} transition border-b hover:bg-white`}>
                             <td className="px-2 py-2 text-xs font-medium text-center text-gray-900 whitespace-nowrap">
                               {employeeId}
                             </td>
@@ -7238,9 +7238,9 @@ const getBadgeColor = (type) => {
                       disabled={page === "..."}
                       className={`px-3 py-1 text-xs border rounded-lg ${
                         page === "..."
-                          ? "text-gray-500 bg-gray-50 cursor-default"
+                          ? "text-gray-500 bg-white cursor-default"
                           : currentPageAssignments === page
-                          ? "text-white bg-blue-600 border-blue-600"
+                          ? "text-gray-900 bg-blue-600 border-blue-600"
                           : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
                       }`}
                     >
@@ -7274,7 +7274,7 @@ const getBadgeColor = (type) => {
 
         {/* REGULAR SHIFT CREATE MODAL */}
         {showCustomCreateModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
             <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
               <div className="flex items-center justify-between p-3 border-b">
                 <h3 className="text-sm font-semibold text-gray-700">Create Regular Shift</h3>
@@ -7325,7 +7325,7 @@ const getBadgeColor = (type) => {
                     <label className="block mb-1 text-xs text-gray-700">
                       Time Slot *
                     </label>
-                    <div className="p-2 space-y-2 border border-gray-200 rounded-md bg-gray-50">
+                    <div className="p-2 space-y-2 border border-gray-200 rounded-md bg-white">
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="block mb-0.5 text-[10px] text-gray-500">Start Time</label>
@@ -7364,7 +7364,7 @@ const getBadgeColor = (type) => {
 
                   {/* Preview */}
                   {createForm.shiftType && createForm.timeSlots[0].startTime && createForm.timeSlots[0].endTime && (
-                    <div className="p-2 border border-gray-200 rounded-md bg-gray-50">
+                    <div className="p-2 border border-gray-200 rounded-md bg-white">
                       <h4 className="mb-0.5 text-xs text-gray-700">Preview:</h4>
                       <p className="text-[10px] text-gray-700">
                         Shift {createForm.shiftType}: {createForm.shiftName}
@@ -7396,7 +7396,7 @@ const getBadgeColor = (type) => {
                   </button>
                   <button
                     type="submit"
-                    className="px-3 py-1.5 text-xs text-white bg-green-600 rounded-md hover:bg-green-700"
+                    className="px-3 py-1.5 text-xs text-gray-900 bg-blue-600 rounded-md hover:bg-blue-800"
                   >
                     Create Shift
                   </button>
@@ -7408,7 +7408,7 @@ const getBadgeColor = (type) => {
 
         {/* BRAKE SHIFT CREATE MODAL */}
         {showBrakeShiftModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
             <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
               <div className="flex items-center justify-between p-3 border-b">
                 <h3 className="text-sm font-semibold text-gray-700">Create Brake Shift</h3>
@@ -7458,7 +7458,7 @@ const getBadgeColor = (type) => {
                     <label className="block mb-1 text-xs text-gray-700">
                       Brake Shift Slots *
                     </label>
-                    <div className="p-2 space-y-3 border border-gray-200 rounded-md bg-gray-50">
+                    <div className="p-2 space-y-3 border border-gray-200 rounded-md bg-white">
                       {/* Slot 1 */}
                       <div>
                         <h4 className="mb-1 text-[10px] font-semibold text-green-700 border-b pb-1 border-green-200">Morning Slot</h4>
@@ -7521,7 +7521,7 @@ const getBadgeColor = (type) => {
                       <p className="text-xs text-green-700">
                         Shift {createForm.shiftType} (Brake): {createForm.shiftName}
                       </p>
-                      <p className="text-[10px] text-green-600 mt-1">
+                      <p className="text-[10px] text-blue-700 mt-1">
                         {(() => {
                            const formatAmPm = (time24) => {
                              if (!time24) return ''; let [h, m] = time24.split(':').map(Number);
@@ -7545,7 +7545,7 @@ const getBadgeColor = (type) => {
                   </button>
                   <button
                     type="submit"
-                    className="px-3 py-1.5 text-xs text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-md hover:from-green-700 hover:to-pink-700"
+                    className="px-3 py-1.5 text-xs text-gray-900 bg-gradient-to-r from-green-600 to-pink-600 rounded-md hover:from-green-700 hover:to-pink-700"
                   >
                     Create Brake Shift
                   </button>
@@ -7557,7 +7557,7 @@ const getBadgeColor = (type) => {
 
         {/* ASSIGN SHIFT MODAL */}
         {showAssignModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
             <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
               <div className="flex items-center justify-between p-3 border-b">
                 <h3 className="text-sm font-semibold text-gray-700">
@@ -7657,7 +7657,7 @@ const getBadgeColor = (type) => {
                   </button>
                   <button
                     type="submit"
-                    className="px-3 py-1.5 text-xs text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                    className="px-3 py-1.5 text-xs text-gray-900 bg-blue-600 rounded-md hover:bg-blue-700"
                   >
                     {editingAssignment ? 'Update' : 'Assign'}
                   </button>
@@ -7669,7 +7669,7 @@ const getBadgeColor = (type) => {
 
         {/* VIEW EMPLOYEES MODAL */}
         {showViewModal && viewEmployees.length > 0 && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
               <div className="flex items-center justify-between p-3 bg-white border-b border-gray-200">
                 <div>
@@ -7690,7 +7690,7 @@ const getBadgeColor = (type) => {
 
               <div className="flex-1 overflow-y-auto">
                 <table className="w-full">
-                  <thead className="sticky top-0 border-b border-gray-200 bg-gray-50">
+                  <thead className="sticky top-0 border-b border-gray-200 bg-white">
                     <tr>
                       <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase">Employee ID</th>
                       <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase">Employee Name</th>
@@ -7757,10 +7757,10 @@ const getBadgeColor = (type) => {
                 </table>
               </div>
 
-              <div className="p-3 border-t border-gray-200 bg-gray-50">
+              <div className="p-3 border-t border-gray-200 bg-white">
                 <button
                   onClick={() => setShowViewModal(false)}
-                  className="w-full py-2 text-[10px] bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
+                  className="w-full py-2 text-[10px] bg-gray-200 text-gray-900 rounded hover:bg-gray-100 transition-colors"
                 >
                   Close
                 </button>

@@ -53,7 +53,7 @@ const ServicesPage = () => {
       ]
     },
     {
-      icon: <Home className="w-12 h-12 text-green-600" />,
+      icon: <Home className="w-12 h-12 text-blue-700" />,
       title: "Home Diagnostics",
       description: "Trusted lab services, sample collection from your doorstep",
       link: "/home-diagnostics",
@@ -120,10 +120,10 @@ const ServicesPage = () => {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
         <TimelyNavbar/>
       {/* Hero Section */}
-      <section className="px-6 py-5 text-white bg-white lg:px-20 lg:py-5 bg-opacity-60">
+      <section className="px-6 py-5 text-gray-900 bg-white lg:px-20 lg:py-5 ">
         <div className="max-w-4xl mx-auto text-left">
           <h1 className="mb-6 text-3xl font-bold md:text-5xl font-calibri">
             Healthcare{" "}
@@ -210,21 +210,21 @@ const ServicesPage = () => {
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <button
               onClick={handleBookDoctor}
-              className="flex items-center justify-center px-6 py-3 space-x-2 font-semibold text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
+              className="flex items-center justify-center px-6 py-3 space-x-2 font-semibold text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
             >
               <Phone size={20} />
               <span className='font-sans'>Book a Doctor</span>
             </button>
             <button
               onClick={handleOrganizeCamp}
-              className="flex items-center justify-center px-6 py-3 space-x-2 font-semibold text-white transition-colors bg-purple-600 rounded-lg hover:bg-purple-700"
+              className="flex items-center justify-center px-6 py-3 space-x-2 font-semibold text-gray-900 transition-colors bg-purple-600 rounded-lg hover:bg-purple-700"
             >
               <Calendar size={20} />
               <span className='font-sans'>Organize a Health Camp</span>
             </button>
             <button
               onClick={handleHealthPlan}
-              className="flex items-center justify-center px-6 py-3 space-x-2 font-semibold text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
+              className="flex items-center justify-center px-6 py-3 space-x-2 font-semibold text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-800"
             >
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
@@ -238,17 +238,17 @@ const ServicesPage = () => {
       </section>
 
       {/* Contact Section */}
-      <section className="py-20 text-center text-white bg-gradient-to-r from-blue-500 to-green-500">
+      <section className="py-20 text-center text-gray-900 bg-gradient-to-r from-blue-500 to-green-500">
         <div className="max-w-4xl px-4 mx-auto text-center sm:px-6 lg:px-8">
           <h2 className="mb-6 text-3xl font-bold font-calibri text-[#007a52]">
             Have Questions About Our Services?
           </h2>
-          <p className="mb-8 font-sans text-lg leading-relaxed text-white">
+          <p className="mb-8 font-sans text-lg leading-relaxed text-gray-900">
             Our health advisors are ready to help you choose the right service for your needs.
           </p>
           <button
             onClick={handleWhatsApp}
-            className="px-8 py-4 font-sans font-semibold text-blue-600 transition-colors bg-white rounded-lg hover:bg-green-500"
+            className="px-8 py-4 font-sans font-semibold text-blue-600 transition-colors bg-white rounded-lg hover:bg-blue-600"
           >
             Chat with Our Health Advisor
           </button>

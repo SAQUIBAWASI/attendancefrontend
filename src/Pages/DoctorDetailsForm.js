@@ -190,7 +190,7 @@ const DoctorDetailsForm = () => {
           <button
             type="button"
             onClick={handleAddSchedule}
-            className="px-4 py-2 bg-purple-900 text-white rounded"
+            className="px-4 py-2 bg-purple-900 text-gray-900 rounded"
           >
             Add Schedule
           </button>

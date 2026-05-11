@@ -118,7 +118,7 @@ const DiagnosticsBookingList = () => {
         />
         <button
           onClick={exportToExcel}
-          className="px-4 py-2 bg-green-500 text-white rounded text-sm flex items-center gap-1"
+          className="px-4 py-2 bg-blue-600 text-gray-900 rounded text-sm flex items-center gap-1"
         >
           <FaFileExcel /> Excel
         </button>
@@ -146,7 +146,7 @@ const DiagnosticsBookingList = () => {
           </thead>
           <tbody>
             {currentBookings.map((booking) => (
-              <tr key={booking.bookingId} className="hover:bg-gray-50 border-b">
+              <tr key={booking.bookingId} className="hover:bg-white border-b">
                 <td className="p-2 border">{booking.patient_name}</td>
                 <td className="p-2 border">{booking.patient_age || booking.age}</td>
                 <td className="p-2 border">{booking.patient_gender || booking.gender}</td>
@@ -174,7 +174,7 @@ const DiagnosticsBookingList = () => {
                       setEditBooking(booking);
                       setNewStatus(booking.status);
                     }}
-                    className="text-blue-500 hover:text-blue-700"
+                    className="text-blue-600 hover:text-blue-700"
                   >
                     <FaEdit />
                   </button>
@@ -211,7 +211,7 @@ const DiagnosticsBookingList = () => {
 
       {/* Modal for status update */}
       {editBooking && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-white  flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded shadow-md w-96">
             <h3 className="text-lg font-semibold mb-4">Update Booking</h3>
             <div className="mb-4">
@@ -253,7 +253,7 @@ const DiagnosticsBookingList = () => {
               </button>
               <button
                 onClick={handleStatusUpdate}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
+                className="px-4 py-2 bg-blue-600 text-gray-900 rounded"
               >
                 Update
               </button>

@@ -225,8 +225,8 @@ export default function VendorDetail() {
   // Filter data for graph based on selected filter
   const getFilteredGraphData = () => {
     const data = [
-      { label: "Overall", value: stats.overall, color: "bg-blue-500", hoverColor: "bg-blue-600" },
-      { label: "Monthly", value: stats.monthly, color: "bg-green-500", hoverColor: "bg-green-600" },
+      { label: "Overall", value: stats.overall, color: "bg-blue-600", hoverColor: "bg-blue-600" },
+      { label: "Monthly", value: stats.monthly, color: "bg-blue-600", hoverColor: "bg-blue-600" },
       { label: "Weekly", value: stats.weekly, color: "bg-yellow-500", hoverColor: "bg-yellow-600" },
       { label: "Daily", value: stats.daily, color: "bg-purple-500", hoverColor: "bg-purple-600" }
     ];
@@ -263,27 +263,27 @@ export default function VendorDetail() {
           <table className="min-w-full bg-white border border-gray-200">
             <tbody>
               <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50 w-1/4">Business Name</td>
+                <td className="py-3 px-4 font-semibold bg-white w-1/4">Business Name</td>
                 <td className="py-3 px-4">{vendor.businessName}</td>
               </tr>
               <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Contact Person</td>
+                <td className="py-3 px-4 font-semibold bg-white">Contact Person</td>
                 <td className="py-3 px-4">{vendor.name}</td>
               </tr>
               <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Email</td>
+                <td className="py-3 px-4 font-semibold bg-white">Email</td>
                 <td className="py-3 px-4 break-all">{vendor.email}</td>
               </tr>
               <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Phone</td>
+                <td className="py-3 px-4 font-semibold bg-white">Phone</td>
                 <td className="py-3 px-4">{vendor.phone || 'N/A'}</td>
               </tr>
               <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Location</td>
+                <td className="py-3 px-4 font-semibold bg-white">Location</td>
                 <td className="py-3 px-4">{vendor.city || 'N/A'}, {vendor.zipcode || 'N/A'}</td>
               </tr>
               <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Coordinates</td>
+                <td className="py-3 px-4 font-semibold bg-white">Coordinates</td>
                 <td className="py-3 px-4">
                   {vendor.location?.coordinates
                     ? `${vendor.location.coordinates[0]}, ${vendor.location.coordinates[1]}`
@@ -291,11 +291,11 @@ export default function VendorDetail() {
                 </td>
               </tr>
               <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Account Created</td>
+                <td className="py-3 px-4 font-semibold bg-white">Account Created</td>
                 <td className="py-3 px-4">{formatDateTime(vendor.createdAt)}</td>
               </tr>
               <tr>
-                <td className="py-3 px-4 font-semibold bg-gray-50">Last Updated</td>
+                <td className="py-3 px-4 font-semibold bg-white">Last Updated</td>
                 <td className="py-3 px-4">{formatDateTime(vendor.updatedAt)}</td>
               </tr>
             </tbody>
@@ -309,7 +309,7 @@ export default function VendorDetail() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-700">Customer Feedback</h2>
-        <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+        <span className="bg-blue-50 text-blue-700 text-sm font-medium px-3 py-1 rounded-full">
           {feedbacks.length} {feedbacks.length === 1 ? 'Review' : 'Reviews'}
         </span>
       </div>
@@ -327,7 +327,7 @@ export default function VendorDetail() {
             </thead>
             <tbody>
               {feedbacks.map((feedback, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-white'}>
                   <td className="py-3 px-4 border border-gray-200">
                     <div className="flex items-center">
                       {feedback.userId?.profileImage ? (
@@ -380,7 +380,7 @@ export default function VendorDetail() {
           </table>
         </div>
       ) : (
-        <div className="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-200">
+        <div className="bg-white rounded-xl p-10 text-center border-2 border-dashed border-gray-200">
           <svg className="mx-auto h-12 w-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
           </svg>
@@ -408,7 +408,7 @@ export default function VendorDetail() {
                 onClick={() => setGraphFilter("all")}
                 className={`px-3 py-1 text-sm font-medium rounded-full ${
                   graphFilter === "all" 
-                    ? "bg-blue-100 text-blue-800" 
+                    ? "bg-blue-50 text-blue-700" 
                     : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                 }`}
               >
@@ -418,7 +418,7 @@ export default function VendorDetail() {
                 onClick={() => setGraphFilter("overall")}
                 className={`px-3 py-1 text-sm font-medium rounded-full ${
                   graphFilter === "overall" 
-                    ? "bg-blue-100 text-blue-800" 
+                    ? "bg-blue-50 text-blue-700" 
                     : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                 }`}
               >
@@ -428,7 +428,7 @@ export default function VendorDetail() {
                 onClick={() => setGraphFilter("monthly")}
                 className={`px-3 py-1 text-sm font-medium rounded-full ${
                   graphFilter === "monthly" 
-                    ? "bg-green-100 text-green-800" 
+                    ? "bg-emerald-50 text-emerald-700" 
                     : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                 }`}
               >
@@ -438,7 +438,7 @@ export default function VendorDetail() {
                 onClick={() => setGraphFilter("weekly")}
                 className={`px-3 py-1 text-sm font-medium rounded-full ${
                   graphFilter === "weekly" 
-                    ? "bg-yellow-100 text-yellow-800" 
+                    ? "bg-amber-50 text-amber-700" 
                     : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                 }`}
               >
@@ -464,7 +464,7 @@ export default function VendorDetail() {
             </div>
             <div className="bg-green-50 p-4 rounded-lg border border-green-100">
               <h3 className="text-sm font-medium text-green-800 mb-1">Monthly Redeemed</h3>
-              <p className="text-2xl font-bold text-green-900">{stats.monthly}</p>
+              <p className="text-2xl font-bold text-white">{stats.monthly}</p>
             </div>
             <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
               <h3 className="text-sm font-medium text-yellow-800 mb-1">Weekly Redeemed</h3>
@@ -477,7 +477,7 @@ export default function VendorDetail() {
           </div>
           
           {/* Enhanced Bar Chart with Filtering */}
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="bg-white p-4 rounded-lg">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">
               Redemption Trend {graphFilter !== "all" ? `(${graphFilter.charAt(0).toUpperCase() + graphFilter.slice(1)})` : ""}
             </h3>
@@ -501,7 +501,7 @@ export default function VendorDetail() {
         <div>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-gray-700">Coupons</h2>
-            <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+            <span className="bg-blue-50 text-blue-700 text-sm font-medium px-3 py-1 rounded-full">
               {coupons.length} {coupons.length === 1 ? 'Coupon' : 'Coupons'}
             </span>
           </div>
@@ -526,7 +526,7 @@ export default function VendorDetail() {
                 </thead>
                 <tbody>
                   {coupons.map((coupon, index) => (
-                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-white'}>
                       <td className="py-3 px-4 border border-gray-200">
                         {coupon.couponImage ? (
                           <img 
@@ -559,8 +559,8 @@ export default function VendorDetail() {
                       <td className="py-3 px-4 border border-gray-200">{coupon.downloadedCount || 0}</td>
                       <td className="py-3 px-4 border border-gray-200">
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          coupon.status === 'approved' ? 'bg-green-100 text-green-800' :
-                          coupon.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          coupon.status === 'approved' ? 'bg-emerald-50 text-emerald-700' :
+                          coupon.status === 'pending' ? 'bg-amber-50 text-amber-700' :
                           'bg-gray-100 text-gray-700'
                         }`}>
                           {coupon.status.charAt(0).toUpperCase() + coupon.status.slice(1)}
@@ -573,7 +573,7 @@ export default function VendorDetail() {
               </table>
             </div>
           ) : (
-            <div className="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-200">
+            <div className="bg-white rounded-xl p-10 text-center border-2 border-dashed border-gray-200">
               <svg className="mx-auto h-12 w-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
               </svg>
@@ -602,8 +602,8 @@ export default function VendorDetail() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-green-50 p-4 rounded-lg border border-green-100">
               <h3 className="text-sm font-medium text-green-800 mb-1">Total Paid</h3>
-              <p className="text-2xl font-bold text-green-900">{formatCurrency(totalPaid)}</p>
-              <p className="text-xs text-green-600 mt-1">
+              <p className="text-2xl font-bold text-white">{formatCurrency(totalPaid)}</p>
+              <p className="text-xs text-blue-700 mt-1">
                 {payments.filter(p => p.status === 'completed').length} completed payments
               </p>
             </div>
@@ -629,10 +629,10 @@ export default function VendorDetail() {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-gray-700">Payment History</h2>
             <div className="flex space-x-2">
-              <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <button className="bg-blue-600 hover:bg-blue-600 text-gray-900 px-4 py-2 rounded-lg text-sm font-medium">
                 Send Reminder
               </button>
-              <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <button className="bg-blue-600 hover:bg-blue-600 text-gray-900 px-4 py-2 rounded-lg text-sm font-medium">
                 Record Payment
               </button>
             </div>
@@ -655,14 +655,14 @@ export default function VendorDetail() {
                 </thead>
                 <tbody>
                   {payments.map((payment, index) => (
-                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-white'}>
                       <td className="py-3 px-4 border border-gray-200 font-semibold">{payment.month}</td>
                       <td className="py-3 px-4 border border-gray-200 font-medium">{formatCurrency(payment.amount)}</td>
                       <td className="py-3 px-4 border border-gray-200">
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          payment.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
+                          payment.status === 'completed' ? 'bg-emerald-50 text-emerald-700' :
+                          payment.status === 'pending' ? 'bg-amber-50 text-amber-700' :
+                          'bg-red-50 text-red-700'
                         }`}>
                           {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
                         </span>
@@ -682,7 +682,7 @@ export default function VendorDetail() {
                       <td className="py-3 px-4 border border-gray-200">
                         <div className="flex space-x-2">
                           {payment.status !== 'completed' && (
-                            <button className="text-green-600 hover:text-green-800" title="Mark as Paid">
+                            <button className="text-blue-700 hover:text-green-800" title="Mark as Paid">
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                               </svg>
@@ -701,7 +701,7 @@ export default function VendorDetail() {
               </table>
             </div>
           ) : (
-            <div className="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-200">
+            <div className="bg-white rounded-xl p-10 text-center border-2 border-dashed border-gray-200">
               <svg className="mx-auto h-12 w-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -753,11 +753,11 @@ export default function VendorDetail() {
         <h1 className="text-3xl font-bold text-gray-900 mt-4">Vendor Management</h1>
         <div className="flex items-center mt-2">
           <h2 className="text-xl font-semibold text-gray-700">{vendor.businessName}</h2>
-          <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+          <span className="ml-2 bg-blue-50 text-blue-700 text-xs font-medium px-2.5 py-0.5 rounded">
             ID: {id}
           </span>
           {error && (
-            <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
+            <span className="ml-2 bg-amber-50 text-amber-700 text-xs font-medium px-2.5 py-0.5 rounded">
               Using Demo Data
             </span>
           )}

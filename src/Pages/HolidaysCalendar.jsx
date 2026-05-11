@@ -276,7 +276,7 @@
 //                     onClick={() => setFilter(key)}
 //                     className={`h-7 px-2 text-[10px] font-bold rounded-md transition border ${
 //                       active
-//                         ? "bg-blue-600 text-white border-blue-600"
+//                         ? "bg-blue-600 text-gray-900 border-blue-600"
 //                         : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
 //                     }`}
 //                   >
@@ -304,7 +304,7 @@
 //             {isAdmin && (
 //               <button
 //                 onClick={openNewForm}
-//                 className="flex items-center gap-1 h-7 px-3 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+//                 className="flex items-center gap-1 h-7 px-3 text-xs font-medium text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700 transition"
 //               >
 //                 + Add Holiday
 //               </button>
@@ -393,7 +393,7 @@
 //                         value={form.name}
 //                         onChange={(e) => setForm({ ...form, name: e.target.value })}
 //                         placeholder='e.g. "Good Friday", "Diwali", "Independence Day"…'
-//                         className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-300 focus:border-blue-500 rounded-lg font-semibold text-gray-700 outline-none transition"
+//                         className="w-full px-3 py-2 text-xs bg-white border border-gray-300 focus:border-blue-500 rounded-lg font-semibold text-gray-700 outline-none transition"
 //                       />
 //                     </div>
 
@@ -429,7 +429,7 @@
 //                           required type="date"
 //                           value={form.fromDate}
 //                           onChange={(e) => setForm({ ...form, fromDate: e.target.value })}
-//                           className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-300 focus:border-blue-500 rounded-lg font-semibold outline-none transition"
+//                           className="w-full px-3 py-2 text-xs bg-white border border-gray-300 focus:border-blue-500 rounded-lg font-semibold outline-none transition"
 //                         />
 //                       </div>
 //                       <div>
@@ -439,7 +439,7 @@
 //                           value={form.toDate}
 //                           min={form.fromDate}
 //                           onChange={(e) => setForm({ ...form, toDate: e.target.value })}
-//                           className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-300 focus:border-blue-500 rounded-lg font-semibold outline-none transition"
+//                           className="w-full px-3 py-2 text-xs bg-white border border-gray-300 focus:border-blue-500 rounded-lg font-semibold outline-none transition"
 //                         />
 //                       </div>
 //                     </div>
@@ -458,7 +458,7 @@
 //                       <button
 //                         type="submit"
 //                         disabled={saving}
-//                         className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-600 text-white text-xs font-black rounded-lg hover:bg-blue-700 disabled:opacity-60 transition"
+//                         className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-600 text-gray-900 text-xs font-black rounded-lg hover:bg-blue-700 disabled:opacity-60 transition"
 //                       >
 //                         <Save size={13} />
 //                         {saving ? "Saving…" : editingId ? "Update Holiday" : "Save to Calendar"}
@@ -475,7 +475,7 @@
 //                       <button
 //                         type="button"
 //                         onClick={() => setShowForm(false)}
-//                         className="px-3 py-2 text-xs text-gray-500 border border-gray-200 font-black rounded-lg hover:bg-gray-50 transition"
+//                         className="px-3 py-2 text-xs text-gray-500 border border-gray-200 font-black rounded-lg hover:bg-white transition"
 //                       >
 //                         <XCircle size={13} />
 //                       </button>
@@ -491,13 +491,13 @@
 
 //             {/* Stats row */}
 //             <div className="grid grid-cols-2 gap-2">
-//               <div className="px-3 py-2 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg text-white shadow-md flex items-center justify-between">
-//                 <p className="text-[9px] font-black uppercase tracking-widest text-white/70">Total Holidays</p>
+//               <div className="px-3 py-2 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg text-gray-900 shadow-md flex items-center justify-between">
+//                 <p className="text-[9px] font-black uppercase tracking-widest text-gray-900/70">Total Holidays</p>
 //                 <h3 className="text-xl font-black">{holidays.length}</h3>
 //               </div>
 //               <div className="px-3 py-2 bg-white rounded-lg border border-gray-200 shadow-md flex items-center justify-between">
 //                 <p className="text-[9px] font-black uppercase tracking-widest text-gray-500">Upcoming</p>
-//                 <h3 className="text-xl font-black text-green-600">
+//                 <h3 className="text-xl font-black text-blue-700">
 //                   {holidays.filter((h) => { try { return parseISO(h.fromDate) >= startOfDay(new Date()); } catch { return false; } }).length}
 //                 </h3>
 //               </div>
@@ -539,7 +539,7 @@
 //         <div className="mb-6 overflow-hidden bg-white rounded-xl shadow-lg border border-gray-200">
 
 //           {/* Table Filter Bar */}
-//           <div className="p-3 border-b border-gray-200 bg-gray-50/50">
+//           <div className="p-3 border-b border-gray-200 bg-white/50">
 //             <div className="flex flex-wrap items-center gap-2">
 
 //               {/* Search */}
@@ -583,7 +583,7 @@
 //                       onClick={() => setTableFilter(key)}
 //                       className={`h-7 px-2 text-[10px] font-bold rounded-md transition border ${
 //                         active
-//                           ? "bg-blue-600 text-white border-blue-600"
+//                           ? "bg-blue-600 text-gray-900 border-blue-600"
 //                           : "bg-gray-100 text-gray-500 border-gray-300 hover:bg-gray-200"
 //                       }`}
 //                     >
@@ -613,7 +613,7 @@
 
 //           <div className="overflow-x-auto">
 //             <table className="min-w-full text-left bg-white">
-//               <thead className="text-sm font-semibold tracking-wide text-left text-white uppercase bg-gradient-to-r from-green-500 to-blue-600">
+//               <thead className="text-sm font-semibold tracking-wide text-left text-gray-900 uppercase bg-gradient-to-r from-green-500 to-blue-600">
 //                 <tr>
 //                   <th className="px-3 py-3 text-center">#</th>
 //                   <th className="px-3 py-3 text-center">Holiday / Occasion</th>
@@ -1136,24 +1136,24 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#1f68e0] opacity-30 rounded-full blur-xl transform -translate-x-5 translate-y-5 pointer-events-none"></div>
           
           <div className="relative z-10 flex items-center gap-3 shadow-sm">
-            <div className="w-12 h-12 rounded-xl bg-black/20 flex items-center justify-center backdrop-blur-md border border-white/40 shadow-inner">
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-md border border-white/40 shadow-inner">
               <FaCalendarAlt className="text-2xl text-gray-500" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-2xl font-black tracking-widest text-white uppercase drop-shadow-md leading-tight">Holiday Calendar</h1>
+              <h1 className="text-2xl font-black tracking-widest text-gray-900 uppercase drop-shadow-md leading-tight">Holiday Calendar</h1>
               <p className="text-[10px] font-bold text-teal-50 tracking-[0.2em] uppercase opacity-90 drop-shadow-sm">Company Approved Festivals & Occasions</p>
             </div>
           </div>
           
           <div className="relative z-10 hidden sm:flex items-center gap-3">
-            <div className="px-4 py-2 rounded-xl bg-black/10 backdrop-blur-md border border-white/20 text-[11px] font-black text-white shadow-inner flex items-center gap-2 uppercase tracking-widest">
+            <div className="px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-[11px] font-black text-gray-900 shadow-inner flex items-center gap-2 uppercase tracking-widest">
               Year <span className="px-2 py-0.5 rounded-md bg-white text-[#1f68e0] font-black shadow-sm">{activeLabelYear}</span>
             </div>
             {isAdmin && (
               <div className="flex items-center gap-3 pl-3 border-l border-white/20">
                 <button
                   onClick={() => { fetchHolidays(); }}
-                  className="flex items-center justify-center w-8 h-8 bg-black/20 hover:bg-black/30 backdrop-blur-md border border-white/30 rounded-lg text-white transition disabled:opacity-50"
+                  className="flex items-center justify-center w-8 h-8 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 rounded-lg text-gray-900 transition disabled:opacity-50"
                   title="Sync Data"
                   disabled={loading}
                 >
@@ -1161,7 +1161,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                 </button>
                 <button
                   onClick={openNewForm}
-                  className="px-4 py-2 bg-black/20 hover:bg-black/30 backdrop-blur-md border border-white/30 text-[11px] font-black text-white uppercase tracking-widest rounded-xl transition shadow-lg flex items-center gap-2 hover:scale-105 transform active:scale-95"
+                  className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-[11px] font-black text-gray-900 uppercase tracking-widest rounded-xl transition shadow-lg flex items-center gap-2 hover:scale-105 transform active:scale-95"
                 >
                   <span className="text-[14px] leading-none">+</span> Add Holiday
                 </button>
@@ -1260,7 +1260,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
                         placeholder='e.g. "Good Friday", "Diwali", "Independence Day"…'
-                        className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-300 focus:border-blue-500 rounded-lg font-semibold text-gray-700 outline-none transition"
+                        className="w-full px-3 py-2 text-xs bg-white border border-gray-300 focus:border-blue-500 rounded-lg font-semibold text-gray-700 outline-none transition"
                       />
                     </div>
 
@@ -1272,7 +1272,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                       <select
                         value={form.state}
                         onChange={(e) => setForm({ ...form, state: e.target.value })}
-                        className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-300 focus:border-blue-500 rounded-lg font-semibold text-gray-700 outline-none transition"
+                        className="w-full px-3 py-2 text-xs bg-white border border-gray-300 focus:border-blue-500 rounded-lg font-semibold text-gray-700 outline-none transition"
                       >
                         {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
@@ -1310,7 +1310,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                           required type="date"
                           value={form.fromDate}
                           onChange={(e) => setForm({ ...form, fromDate: e.target.value })}
-                          className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-300 focus:border-blue-500 rounded-lg font-semibold outline-none transition"
+                          className="w-full px-3 py-2 text-xs bg-white border border-gray-300 focus:border-blue-500 rounded-lg font-semibold outline-none transition"
                         />
                       </div>
                       <div>
@@ -1320,7 +1320,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                           value={form.toDate}
                           min={form.fromDate}
                           onChange={(e) => setForm({ ...form, toDate: e.target.value })}
-                          className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-300 focus:border-blue-500 rounded-lg font-semibold outline-none transition"
+                          className="w-full px-3 py-2 text-xs bg-white border border-gray-300 focus:border-blue-500 rounded-lg font-semibold outline-none transition"
                         />
                       </div>
                     </div>
@@ -1339,7 +1339,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                       <button
                         type="submit"
                         disabled={saving}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-600 text-white text-xs font-black rounded-lg hover:bg-blue-700 disabled:opacity-60 transition"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-600 text-gray-900 text-xs font-black rounded-lg hover:bg-blue-700 disabled:opacity-60 transition"
                       >
                         <Save size={13} />
                         {saving ? "Saving…" : editingId ? "Update Holiday" : "Save to Calendar"}
@@ -1356,7 +1356,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                       <button
                         type="button"
                         onClick={() => setShowForm(false)}
-                        className="px-3 py-2 text-xs text-gray-500 border border-gray-200 font-black rounded-lg hover:bg-gray-50 transition"
+                        className="px-3 py-2 text-xs text-gray-500 border border-gray-200 font-black rounded-lg hover:bg-white transition"
                       >
                         <XCircle size={13} />
                       </button>
@@ -1372,13 +1372,13 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
 
             {/* Stats row */}
             <div className="grid grid-cols-2 gap-2">
-              <div className="px-3 py-2 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg text-white shadow-md flex items-center justify-between">
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/70">Total Holidays</p>
+              <div className="px-3 py-2 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg text-gray-900 shadow-md flex items-center justify-between">
+                <p className="text-[9px] font-black uppercase tracking-widest text-gray-900/70">Total Holidays</p>
                 <h3 className="text-xl font-black">{statsHolidays.length}</h3>
               </div>
               <div className="px-3 py-2 bg-white rounded-lg border border-gray-200 shadow-md flex items-center justify-between">
                 <p className="text-[9px] font-black uppercase tracking-widest text-gray-500">Upcoming</p>
-                <h3 className="text-xl font-black text-green-600">
+                <h3 className="text-xl font-black text-blue-700">
                   {statsHolidays.filter((h) => { try { return parseISO(h.fromDate) >= startOfDay(new Date()); } catch { return false; } }).length}
                 </h3>
               </div>
@@ -1420,7 +1420,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
         <div className="mb-6 overflow-hidden bg-white rounded-xl shadow-lg border border-gray-200">
 
           {/* Table Filter Bar */}
-          <div className="p-3 border-b border-gray-200 bg-gray-50/50">
+          <div className="p-3 border-b border-gray-200 bg-white/50">
             <div className="flex flex-wrap items-center gap-2">
 
               {/* Search */}
@@ -1464,7 +1464,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                       onClick={() => setTableFilter(key)}
                       className={`h-7 px-2 text-[10px] font-bold rounded-md transition border ${
                         active
-                          ? "bg-blue-600 text-white border-blue-600"
+                          ? "bg-blue-600 text-gray-900 border-blue-600"
                           : "bg-gray-100 text-gray-500 border-gray-300 hover:bg-gray-200"
                       }`}
                     >
@@ -1494,7 +1494,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
 
           <div className="overflow-x-auto">
             <table className="min-w-full text-left bg-white">
-              <thead className="text-sm font-semibold tracking-wide text-left text-white uppercase bg-gradient-to-r from-green-500 to-blue-600">
+              <thead className="text-sm font-semibold tracking-wide text-left text-gray-900 uppercase bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
                   <th className="px-3 py-3 text-center">#</th>
                   <th className="px-3 py-3 text-center">Holiday / Occasion</th>
@@ -1560,7 +1560,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                           <td className="px-3 py-3 text-center border-b border-gray-200">
                             <button
                               onClick={() => handleToggleActive(hol)}
-                              className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${hol.isActive === false ? 'bg-red-100 text-red-700 hover:bg-red-200' : (hol.isActive === null ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-green-100 text-green-700 hover:bg-green-200')}`}
+                              className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${hol.isActive === false ? 'bg-red-100 text-red-700 hover:bg-red-200' : (hol.isActive === null ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-blue-100 text-green-700 hover:bg-green-200')}`}
                             >
                               {hol.isActive === false ? "SKIPPED" : (hol.isActive === null ? "DECIDE" : "YES")}
                             </button>
@@ -1600,7 +1600,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
             {!loading && tableListed.length === 0 && (
               <div className="flex flex-col items-center justify-center p-12 bg-white">
                 <div className="w-20 h-20 mb-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full flex items-center justify-center border border-blue-100 shadow-sm">
-                  <span className="text-4xl text-blue-500">🏖️</span>
+                  <span className="text-4xl text-blue-600">🏖️</span>
                 </div>
                 <h3 className="text-lg font-black text-gray-700 mb-1 tracking-wide uppercase">
                   No Holidays Found

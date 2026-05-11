@@ -67,11 +67,11 @@ const CompletedBookingList = () => {
   const getStatusClass = (status) => {
     switch (status) {
       case "Confirmed":
-        return "bg-green-500 text-white";
+        return "bg-blue-600 text-gray-900";
       case "Pending":
         return "bg-transparent border-2 border-yellow-500 text-yellow-500";
       case "Delivered":
-        return "bg-transparent border-2 border-blue-500 text-blue-500";
+        return "bg-transparent border-2 border-blue-500 text-blue-600";
       case "Cancelled":
         return "bg-transparent border-2 border-red-500 text-red-500";
       default:
@@ -112,7 +112,7 @@ const CompletedBookingList = () => {
       <div className="mb-4">
         <button
           onClick={downloadExcel}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 flex items-center"
+          className="px-4 py-2 bg-blue-600 text-gray-900 rounded hover:bg-blue-600 flex items-center"
         >
           <FaFileExcel className="mr-2" />
           Download Excel
@@ -152,7 +152,7 @@ const CompletedBookingList = () => {
               </td>
               <td className="p-4 flex space-x-2">
                 <button
-                  className="text-blue-500 hover:text-blue-700"
+                  className="text-blue-600 hover:text-blue-700"
                   onClick={() => generateInvoicePDF(booking)}
                 >
                   <FaFilePdf /> {/* PDF Invoice */}

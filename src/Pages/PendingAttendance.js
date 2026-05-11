@@ -69,7 +69,7 @@ const PendingAttendance = () => {
 
       <div className="overflow-x-auto rounded-xl border border-gray-200">
         <table className="w-full text-sm text-left">
-          <thead className="text-xs text-gray-500 uppercase bg-gray-50/50 font-bold border-b border-gray-200">
+          <thead className="text-xs text-gray-500 uppercase bg-white/50 font-bold border-b border-gray-200">
             <tr>
               <th className="px-6 py-4">Employee</th>
               <th className="px-6 py-4">Request Type</th>
@@ -82,7 +82,7 @@ const PendingAttendance = () => {
           <tbody className="divide-y divide-gray-50">
             {requests.length > 0 ? (
               requests.map((rec) => (
-                <tr key={rec._id} className="hover:bg-gray-50/50 transition-colors group">
+                <tr key={rec._id} className="hover:bg-white/50 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="font-bold text-gray-700">{rec.employeeName}</div>
                     <div className="text-[10px] text-gray-500 font-mono tracking-tighter">{rec.employeeId}</div>
@@ -107,21 +107,21 @@ const PendingAttendance = () => {
                       <button
                         title="Approve"
                         onClick={() => updateRequestStatus(rec._id, "Approved")}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-blue-700 hover:bg-blue-600 hover:text-gray-900 transition-all shadow-sm"
                       >
                         <FaCheckCircle />
                       </button>
                       <button
                         title="Reject"
                         onClick={() => updateRequestStatus(rec._id, "Rejected")}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-gray-900 transition-all shadow-sm"
                       >
                         <FaTimesCircle />
                       </button>
                       <button
                         title="View Details"
                         onClick={() => alert(`Full Reason:\n${rec.reason}\n\nApplied On: ${new Date(rec.createdAt).toLocaleString()}`)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-gray-900 transition-all shadow-sm"
                       >
                         <FaInfoCircle />
                       </button>

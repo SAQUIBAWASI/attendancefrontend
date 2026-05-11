@@ -71,7 +71,7 @@ const CandidateSelection = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <button
-            className="flex items-center px-4 py-2 text-green-700 bg-green-100 border border-green-600 rounded"
+            className="flex items-center px-4 py-2 text-green-700 bg-blue-100 border border-blue-700 rounded"
             onClick={() => {
               setModalData(null);  // Clear modal data for new entry
               setShowModal(true);  // Show the modal
@@ -174,7 +174,7 @@ const CandidateModal = ({ data, onClose, onSave }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-white ">
       <div className="p-6 bg-white rounded shadow-lg w-96">
         <h2 className="mb-4 text-xl">{data ? "Edit Candidate" : "New Candidate"}</h2>
 

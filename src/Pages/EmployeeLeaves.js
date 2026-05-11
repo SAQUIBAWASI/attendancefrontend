@@ -495,7 +495,7 @@ const EmployeeLeaves = () => {
           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-2 font-semibold text-white transition bg-red-600 rounded-lg hover:bg-red-700"
+            className="px-6 py-2 font-semibold text-gray-900 transition bg-red-600 rounded-lg hover:bg-red-700"
           >
             🔄 Retry
           </button>
@@ -542,7 +542,7 @@ const EmployeeLeaves = () => {
             </div>
 
             <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="date"
                 value={selectedDate}
@@ -553,7 +553,7 @@ const EmployeeLeaves = () => {
             </div>
 
             <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="month"
                 value={selectedMonth}
@@ -566,7 +566,7 @@ const EmployeeLeaves = () => {
             {/* Apply Leave Button */}
             <button
               onClick={() => setIsLeaveModalOpen(true)}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-700"
             >
               <FaPlus className="text-xs" /> Apply Leave
             </button>
@@ -574,7 +574,7 @@ const EmployeeLeaves = () => {
             {/* ✅ Apply Permission Button - Same as EmployeePermissions */}
             <button
               onClick={() => setIsPermissionModalOpen(true)}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white transition bg-green-600 rounded-md hover:bg-green-700"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-800"
             >
               <FaShieldAlt className="text-xs" /> Apply Permission
             </button>
@@ -610,7 +610,7 @@ const EmployeeLeaves = () => {
               {leaves.length > 0 && (
                 <button
                   onClick={clearFilters}
-                  className="px-6 py-2 font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="px-6 py-2 font-semibold text-gray-900 transition bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
                   🔄 Clear Filters
                 </button>
@@ -620,7 +620,7 @@ const EmployeeLeaves = () => {
             <>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
-                  <thead className="text-xs text-left text-white sm:text-sm bg-gradient-to-r from-green-500 to-blue-600">
+                  <thead className="text-xs text-left text-gray-900 sm:text-sm bg-gradient-to-r from-green-500 to-blue-600">
                     <tr>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Leave Type</th>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Start Date</th>
@@ -640,7 +640,7 @@ const EmployeeLeaves = () => {
                       return (
                         <tr
                           key={leave._id || index}
-                          className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50 transition duration-150 ${hasApproved ? 'bg-purple-50' : ''}`}
+                          className={`${index % 2 === 0 ? "bg-white" : "bg-white"} hover:bg-blue-50 transition duration-150 ${hasApproved ? 'bg-purple-50' : ''}`}
                         >
                           <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
                             <span className="px-2 py-1 text-xs font-medium text-gray-700 capitalize bg-gray-100 rounded-full">
@@ -654,7 +654,7 @@ const EmployeeLeaves = () => {
                             {formatDate(leave.endDate)}
                           </td>
                           <td className="px-2 py-1.5 text-center">
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${hasApproved ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-800'}`}>
+                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${hasApproved ? 'bg-purple-100 text-purple-700' : 'bg-blue-50 text-blue-700'}`}>
                               {leave.days}
                             </span>
                           </td>
@@ -667,10 +667,10 @@ const EmployeeLeaves = () => {
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-semibold ${
                                 leave.status === "approved"
-                                  ? "bg-green-100 text-green-800 border border-green-300"
+                                  ? "bg-emerald-50 text-emerald-700 border border-green-300"
                                   : leave.status === "rejected"
-                                  ? "bg-red-100 text-red-800 border border-red-300"
-                                  : "bg-yellow-100 text-yellow-800 border border-yellow-300 animate-pulse"
+                                  ? "bg-red-50 text-red-700 border border-red-300"
+                                  : "bg-amber-50 text-amber-700 border border-yellow-300 animate-pulse"
                               }`}
                             >
                               {leave.status}
@@ -700,7 +700,7 @@ const EmployeeLeaves = () => {
                                 <button
                                   onClick={() => openCompOffRequestModal(leave)}
                                   disabled={!requestStatus.allowed}
-                                  className={`flex items-center gap-1 px-2 py-1 mx-auto text-xs text-white transition rounded-md ${
+                                  className={`flex items-center gap-1 px-2 py-1 mx-auto text-xs text-gray-900 transition rounded-md ${
                                     requestStatus.allowed 
                                       ? "bg-purple-500 hover:bg-purple-600" 
                                       : "bg-gray-400 cursor-not-allowed"
@@ -742,11 +742,11 @@ const EmployeeLeaves = () => {
                   </div>
 
                   <div className="flex items-center gap-1">
-                    <button onClick={handlePrevPage} disabled={currentPage === 1} className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentPage === 1 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"}`}>← Prev</button>
+                    <button onClick={handlePrevPage} disabled={currentPage === 1} className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentPage === 1 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"}`}>← Prev</button>
                     {getPageNumbers().map((page, index) => (
-                      <button key={index} onClick={() => typeof page === 'number' ? handlePageClick(page) : null} disabled={page === "..."} className={`px-3 py-1 text-xs font-semibold rounded-lg transition min-w-[28px] ${page === "..." ? "bg-gray-200 text-gray-500 cursor-default" : currentPage === page ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>{page}</button>
+                      <button key={index} onClick={() => typeof page === 'number' ? handlePageClick(page) : null} disabled={page === "..."} className={`px-3 py-1 text-xs font-semibold rounded-lg transition min-w-[28px] ${page === "..." ? "bg-gray-200 text-gray-500 cursor-default" : currentPage === page ? "bg-gradient-to-r from-blue-600 to-purple-600 text-gray-900 shadow-lg" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>{page}</button>
                     ))}
-                    <button onClick={handleNextPage} disabled={currentPage === totalPages} className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentPage === totalPages ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"}`}>Next →</button>
+                    <button onClick={handleNextPage} disabled={currentPage === totalPages} className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentPage === totalPages ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"}`}>Next →</button>
                   </div>
                 </div>
               )}
@@ -757,7 +757,7 @@ const EmployeeLeaves = () => {
 
       {/* Apply Leave Modal */}
       {isLeaveModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
           <div className="w-full max-w-md p-4 bg-white rounded-lg shadow-xl sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-700 sm:text-xl">Apply for Leave</h3>
@@ -801,7 +801,7 @@ const EmployeeLeaves = () => {
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setIsLeaveModalOpen(false)} className="flex-1 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
-                <button type="submit" disabled={submittingLeave} className="flex-1 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">{submittingLeave ? "Applying..." : "Apply Leave"}</button>
+                <button type="submit" disabled={submittingLeave} className="flex-1 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">{submittingLeave ? "Applying..." : "Apply Leave"}</button>
               </div>
             </form>
           </div>
@@ -810,7 +810,7 @@ const EmployeeLeaves = () => {
 
       {/* ✅ Apply Permission Modal - Same as EmployeePermissions */}
       {isPermissionModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
           <div className="w-full max-w-md p-4 bg-white rounded-lg shadow-xl sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-700 sm:text-xl">Request Permission</h3>
@@ -861,7 +861,7 @@ const EmployeeLeaves = () => {
                 <button
                   type="submit"
                   disabled={permissionLoading}
-                  className="flex-1 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                  className="flex-1 py-2 text-sm text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800 disabled:opacity-50"
                 >
                   {permissionLoading ? "Submitting..." : "Request Permission"}
                 </button>
@@ -873,7 +873,7 @@ const EmployeeLeaves = () => {
 
       {/* ✅ Comp-off Request Modal */}
       {isCompOffModalOpen && selectedLeaveForCompOff && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/40">
           <div className="w-full max-w-sm p-4 bg-white rounded-xl shadow-lg">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-semibold text-purple-700">Request Comp-off</h3>
@@ -910,7 +910,7 @@ const EmployeeLeaves = () => {
 
               <div className="flex gap-2 pt-2">
                 <button type="button" onClick={() => setIsCompOffModalOpen(false)} className="flex-1 py-1.5 text-xs text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">Cancel</button>
-                <button type="submit" disabled={submittingCompOff} className="flex-1 py-1.5 text-xs text-white bg-purple-600 rounded-md hover:bg-purple-700 disabled:opacity-50">{submittingCompOff ? "Submitting..." : "Submit"}</button>
+                <button type="submit" disabled={submittingCompOff} className="flex-1 py-1.5 text-xs text-gray-900 bg-purple-600 rounded-md hover:bg-purple-700 disabled:opacity-50">{submittingCompOff ? "Submitting..." : "Submit"}</button>
               </div>
             </form>
           </div>

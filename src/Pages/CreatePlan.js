@@ -122,7 +122,7 @@ const CreatePlan = () => {
             <button
               type="button"
               onClick={handleAddFeature}
-              className="bg-blue-500 text-white px-4 rounded"
+              className="bg-blue-600 text-gray-900 px-4 rounded"
             >
               Add
             </button>
@@ -145,7 +145,7 @@ const CreatePlan = () => {
 
         <button
           type="submit"
-          className="w-full bg-blue-900 text-white p-3 rounded hover:bg-blue-800 transition"
+          className="w-full bg-blue-900 text-gray-900 p-3 rounded hover:bg-blue-800 transition"
         >
           Create Plan
         </button>

@@ -38,13 +38,13 @@
 //   };
 
 //   return (
-//     <div className="min-h-screen p-6 bg-gray-50">
+//     <div className="min-h-screen p-6 bg-white">
 //       <div className="max-w-5xl p-6 mx-auto bg-white shadow-lg rounded-2xl">
 //         <div className="flex items-center justify-between mb-6">
 //           <h1 className="text-2xl font-bold text-gray-700">Assigned Shifts</h1>
 //           <button
 //             onClick={() => navigate("/shift")}
-//             className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//             className="px-4 py-2 text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
 //           >
 //             + Assign New Shift
 //           </button>
@@ -73,7 +73,7 @@
 //                 {shifts.map((shift) => (
 //                   <tr
 //                     key={shift._id}
-//                     className="text-sm text-gray-700 border-b hover:bg-gray-50"
+//                     className="text-sm text-gray-700 border-b hover:bg-white"
 //                   >
 //                     <td className="px-4 py-3">{shift.employeeId}</td>
 //                     <td className="px-4 py-3">{shift.employeeName}</td>
@@ -85,13 +85,13 @@
 //                     <td className="flex justify-center gap-2 px-4 py-3 text-center">
 //                       <button
 //                         onClick={() => navigate(`/edit-shift/${shift._id}`)}
-//                         className="px-3 py-1 text-white bg-yellow-400 rounded-lg hover:bg-yellow-500"
+//                         className="px-3 py-1 text-gray-900 bg-yellow-400 rounded-lg hover:bg-yellow-500"
 //                       >
 //                         Edit
 //                       </button>
 //                       <button
 //                         onClick={() => handleDelete(shift._id)}
-//                         className="px-3 py-1 text-white bg-red-600 rounded-lg hover:bg-red-700"
+//                         className="px-3 py-1 text-gray-900 bg-red-600 rounded-lg hover:bg-red-700"
 //                       >
 //                         Delete
 //                       </button>
@@ -157,14 +157,14 @@ export default function ShiftList() {
   };
 
   return (
-    <div className="min-h-screen p-6 bg-gray-50">
+    <div className="min-h-screen p-6 bg-white">
       <div className="max-w-5xl p-6 mx-auto bg-white shadow-lg rounded-2xl">
         {/* Header Section */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-700">Assigned Shifts</h1>
           <button
             onClick={() => navigate("/shift")}
-            className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700"
           >
             + Assign New Shift
           </button>
@@ -194,7 +194,7 @@ export default function ShiftList() {
                 {shifts.map((shift) => (
                   <tr
                     key={shift._id}
-                    className="text-sm text-gray-700 border-b hover:bg-gray-50"
+                    className="text-sm text-gray-700 border-b hover:bg-white"
                   >
                     <td className="px-4 py-3">{shift.employeeId}</td>
                     <td className="px-4 py-3">{shift.employeeName}</td>
@@ -206,13 +206,13 @@ export default function ShiftList() {
                     <td className="flex justify-center gap-2 px-4 py-3 text-center">
                       <button
                         onClick={() => navigate(`/edit-shift/${shift._id}`)}
-                        className="px-3 py-1 text-white bg-yellow-400 rounded-lg hover:bg-yellow-500"
+                        className="px-3 py-1 text-gray-900 bg-yellow-400 rounded-lg hover:bg-yellow-500"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDelete(shift._id)}
-                        className="px-3 py-1 text-white bg-red-600 rounded-lg hover:bg-red-700"
+                        className="px-3 py-1 text-gray-900 bg-red-600 rounded-lg hover:bg-red-700"
                       >
                         Delete
                       </button>

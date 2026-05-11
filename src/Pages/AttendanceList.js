@@ -189,7 +189,7 @@
 //           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
 //           <button
 //             onClick={() => window.location.reload()}
-//             className="px-6 py-2 font-semibold text-white transition bg-red-600 rounded-lg hover:bg-red-700"
+//             className="px-6 py-2 font-semibold text-gray-900 transition bg-red-600 rounded-lg hover:bg-red-700"
 //           >
 //             🔄 Retry
 //           </button>
@@ -209,7 +209,7 @@
 //             <div className="font-semibold text-blue-800">Total Records</div>
 //           </div>
 //           <div className="p-6 text-center bg-white border border-green-200 shadow-lg rounded-2xl">
-//             <div className="text-3xl font-bold text-green-600">
+//             <div className="text-3xl font-bold text-blue-700">
 //               {records.filter(r => r.onsite).length}
 //             </div>
 //             <div className="font-semibold text-green-800">Onsite Entries</div>
@@ -238,7 +238,7 @@
 //           </div>
 
 //           <div className="p-3 text-center bg-white border rounded-lg shadow-sm">
-//             <div className="text-lg font-semibold text-green-600">
+//             <div className="text-lg font-semibold text-blue-700">
 //               {records.filter(r => r.onsite).length}
 //             </div>
 //             <div className="text-[11px] text-gray-500">
@@ -277,14 +277,14 @@
 //             <div className="flex flex-col gap-3 sm:flex-row">
 //               <button
 //                 onClick={downloadCSV}
-//                 className="flex items-center gap-2 px-6 py-3 font-semibold text-white transition shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl hover:from-green-600 hover:to-emerald-700"
+//                 className="flex items-center gap-2 px-6 py-3 font-semibold text-gray-900 transition shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl hover:from-green-600 hover:to-emerald-700"
 //               >
 //                 📥 Download CSV
 //               </button>
 
 //               <button
 //                 onClick={clearFilters}
-//                 className="flex items-center gap-2 px-6 py-3 font-semibold text-white transition bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl hover:from-gray-600 hover:to-gray-700"
+//                 className="flex items-center gap-2 px-6 py-3 font-semibold text-gray-900 transition bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl hover:from-gray-600 hover:to-gray-700"
 //               >
 //                 🗑️ Clear Filters
 //               </button>
@@ -374,14 +374,14 @@
 //             <div className="flex gap-2">
 //               <button
 //                 onClick={downloadCSV}
-//                 className="px-3 py-1.5 text-xs text-white bg-green-600 rounded-md hover:bg-green-700"
+//                 className="px-3 py-1.5 text-xs text-gray-900 bg-blue-600 rounded-md hover:bg-blue-800"
 //               >
 //                 CSV
 //               </button>
 
 //               <button
 //                 onClick={clearFilters}
-//                 className="px-3 py-1.5 text-xs text-white bg-gray-600 rounded-md hover:bg-gray-700"
+//                 className="px-3 py-1.5 text-xs text-gray-900 bg-gray-600 rounded-md hover:bg-gray-700"
 //               >
 //                 Clear
 //               </button>
@@ -410,7 +410,7 @@
 //               {records.length > 0 && (
 //                 <button
 //                   onClick={clearFilters}
-//                   className="px-6 py-2 font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
+//                   className="px-6 py-2 font-semibold text-gray-900 transition bg-blue-600 rounded-lg hover:bg-blue-700"
 //                 >
 //                   🔄 Clear Filters
 //                 </button>
@@ -420,7 +420,7 @@
 //             <>
 //               <div className="overflow-x-auto">
 //                 <table className="w-full text-sm">
-//                   <thead className="text-white bg-gradient-to-r from-blue-500 to-purple-600">
+//                   <thead className="text-gray-900 bg-gradient-to-r from-blue-500 to-purple-600">
 //                     <tr>
 //                       <th className="px-6 py-4 font-semibold text-left">Employee</th>
 //                       <th className="px-6 py-4 font-semibold text-left">Date</th>
@@ -437,7 +437,7 @@
 //                     {currentRecords.map((rec, idx) => (
 //                       <tr
 //                         key={rec._id}
-//                         className={`border-t transition-all duration-200 ${idx % 2 === 0 ? "bg-gray-50" : "bg-white"
+//                         className={`border-t transition-all duration-200 ${idx % 2 === 0 ? "bg-white" : "bg-white"
 //                           } hover:bg-blue-50 hover:shadow-sm`}
 //                       >
 //                         <td className="px-6 py-4">
@@ -453,7 +453,7 @@
 //                         </td>
 //                         <td className="px-6 py-4">
 //                           <div className="flex items-center gap-2">
-//                             <span className="text-lg text-green-600">🟢</span>
+//                             <span className="text-lg text-blue-700">🟢</span>
 //                             <div>
 //                               <div className="font-semibold">{formatTime(rec.checkInTime)}</div>
 //                             </div>
@@ -470,7 +470,7 @@
 //                           </div>
 //                         </td>
 //                         <td className="px-6 py-4">
-//                           <span className={`font-bold text-lg ${rec.totalHours >= 8 ? 'text-green-600' :
+//                           <span className={`font-bold text-lg ${rec.totalHours >= 8 ? 'text-blue-700' :
 //                             rec.totalHours >= 4 ? 'text-orange-600' : 'text-red-600'
 //                             }`}>
 //                             {rec.totalHours ? rec.totalHours.toFixed(1) : "0.0"}h
@@ -484,8 +484,8 @@
 //                         <td className="px-6 py-4">
 //                           <span
 //                             className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.onsite
-//                               ? "bg-green-100 text-green-800 border border-green-300"
-//                               : "bg-red-100 text-red-800 border border-red-300"
+//                               ? "bg-emerald-50 text-emerald-700 border border-green-300"
+//                               : "bg-red-50 text-red-700 border border-red-300"
 //                               }`}
 //                           >
 //                             {rec.onsite ? "🏢 Yes" : "🏠 No"}
@@ -499,7 +499,7 @@
 //                         <td className="px-6 py-4">
 //                           <span
 //                             className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.status === "checked-in"
-//                               ? "bg-blue-100 text-blue-800 border border-blue-300"
+//                               ? "bg-blue-50 text-blue-700 border border-blue-300"
 //                               : "bg-purple-100 text-purple-800 border border-purple-300"
 //                               }`}
 //                           >
@@ -514,7 +514,7 @@
 
 //               {/* Pagination */}
 //               {totalPages > 1 && (
-//                 <div className="flex flex-col items-center justify-between gap-4 p-6 border-t sm:flex-row bg-gray-50">
+//                 <div className="flex flex-col items-center justify-between gap-4 p-6 border-t sm:flex-row bg-white">
 //                   <div className="text-sm text-gray-500">
 //                     Showing <strong>{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredRecords.length)}</strong> of{" "}
 //                     <strong>{filteredRecords.length}</strong> records
@@ -526,7 +526,7 @@
 //                       disabled={currentPage === 1}
 //                       className={`px-4 py-2 rounded-lg transition font-semibold ${currentPage === 1
 //                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-//                         : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+//                         : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
 //                         }`}
 //                     >
 //                       ← Previous
@@ -550,7 +550,7 @@
 //                             key={pageNum}
 //                             onClick={() => setCurrentPage(pageNum)}
 //                             className={`px-3 py-2 rounded-lg transition font-semibold ${currentPage === pageNum
-//                               ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+//                               ? "bg-gradient-to-r from-blue-600 to-purple-600 text-gray-900 shadow-lg"
 //                               : "bg-gray-200 text-gray-700 hover:bg-gray-300"
 //                               }`}
 //                           >
@@ -565,7 +565,7 @@
 //                       disabled={currentPage === totalPages}
 //                       className={`px-4 py-2 rounded-lg transition font-semibold ${currentPage === totalPages
 //                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-//                         : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+//                         : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
 //                         }`}
 //                     >
 //                       Next →
@@ -876,7 +876,7 @@
 //           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
 //           <button
 //             onClick={() => window.location.reload()}
-//             className="px-6 py-2 font-semibold text-white transition bg-red-600 rounded-lg hover:bg-red-700"
+//             className="px-6 py-2 font-semibold text-gray-900 transition bg-red-600 rounded-lg hover:bg-red-700"
 //           >
 //             🔄 Retry
 //           </button>
@@ -893,11 +893,11 @@
 //         <div className="grid grid-cols-2 gap-2 mb-2 sm:grid-cols-4">
 //           <StatCard
 //             label={`Total Records: ${records.length}`}
-//             color="bg-blue-500"
+//             color="bg-blue-600"
 //           />
 //           <StatCard
 //             label={`Onsite: ${records.filter((r) => r.onsite).length}`}
-//             color="bg-green-500"
+//             color="bg-blue-600"
 //           />
 //           <StatCard
 //             label={`Checked In: ${records.filter((r) => r.status === "checked-in").length}`}
@@ -956,7 +956,7 @@
 //             {/* CSV Button */}
 //             <button
 //               onClick={downloadCSV}
-//               className="px-4 text-sm font-medium text-white transition bg-green-600 rounded-md h-9 hover:bg-green-700"
+//               className="px-4 text-sm font-medium text-gray-900 transition bg-blue-600 rounded-md h-9 hover:bg-blue-800"
 //             >
 //               📥 CSV
 //             </button>
@@ -964,7 +964,7 @@
 //             {/* Clear Button */}
 //             <button
 //               onClick={clearFilters}
-//               className="px-4 text-sm font-medium text-white transition bg-gray-500 rounded-md h-9 hover:bg-gray-600"
+//               className="px-4 text-sm font-medium text-gray-900 transition bg-white0 rounded-md h-9 hover:bg-gray-600"
 //             >
 //               Clear
 //             </button>
@@ -991,7 +991,7 @@
 //               {records.length > 0 && (
 //                 <button
 //                   onClick={clearFilters}
-//                   className="px-6 py-2 font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
+//                   className="px-6 py-2 font-semibold text-gray-900 transition bg-blue-600 rounded-lg hover:bg-blue-700"
 //                 >
 //                   🔄 Clear Filters
 //                 </button>
@@ -1002,7 +1002,7 @@
 //               <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //                 <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //                   <table className="min-w-full">
-//                     <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//                     <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                       <tr>
 //                         <th className="py-2 text-center">Employee ID</th>
 //                         <th className="py-2 text-center">Name</th>
@@ -1022,7 +1022,7 @@
 //                         return (
 //                           <tr
 //                             key={rec._id}
-//                             className={`${idx % 2 === 0 ? "bg-gray-50" : "bg-white"
+//                             className={`${idx % 2 === 0 ? "bg-white" : "bg-white"
 //                               } hover:bg-blue-50 hover:shadow-sm`}
 //                           >
 //                             {/* Employee ID */}
@@ -1048,7 +1048,7 @@
 //                             {/* Check-In */}
 //                             <td className="px-2 py-2 text-center">
 //                               <div className="flex items-center justify-center gap-2">
-//                                 <span className="text-lg text-green-600">🟢</span>
+//                                 <span className="text-lg text-blue-700">🟢</span>
 //                                 <div>
 //                                   <div className="font-semibold">{formatTime(rec.checkInTime)}</div>
 //                                 </div>
@@ -1069,7 +1069,7 @@
 
 //                             {/* Hours */}
 //                             <td className="px-2 py-2 text-center">
-//                               <span className={`font-bold text-lg ${rec.totalHours >= 8 ? 'text-green-600' :
+//                               <span className={`font-bold text-lg ${rec.totalHours >= 8 ? 'text-blue-700' :
 //                                 rec.totalHours >= 4 ? 'text-orange-600' : 'text-red-600'
 //                                 }`}>
 //                                 {rec.totalHours ? rec.totalHours.toFixed(1) : "0.0"}h
@@ -1087,8 +1087,8 @@
 //                             <td className="px-2 py-2 text-center">
 //                               <span
 //                                 className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.onsite
-//                                   ? "bg-green-100 text-green-800 border border-green-300"
-//                                   : "bg-red-100 text-red-800 border border-red-300"
+//                                   ? "bg-emerald-50 text-emerald-700 border border-green-300"
+//                                   : "bg-red-50 text-red-700 border border-red-300"
 //                                   }`}
 //                               >
 //                                 {rec.onsite ? "🏢 Yes" : "🏠 No"}
@@ -1106,8 +1106,8 @@
 //                             <td className="px-2 py-2 text-center">
 //                               <span
 //                                 className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.status === "checked-in"
-//                                   ? "bg-blue-100 text-blue-800 border border-blue-300"
-//                                   : "bg-green-100 text-green-800 border border-green-300"
+//                                   ? "bg-blue-50 text-blue-700 border border-blue-300"
+//                                   : "bg-emerald-50 text-emerald-700 border border-green-300"
 //                                   }`}
 //                               >
 //                                 {rec.status}
@@ -1123,7 +1123,7 @@
 
 //               {/* Pagination Section */}
 //               {filteredRecords.length > 0 && (
-//                 <div className="flex flex-col items-center justify-between gap-4 p-6 border-t sm:flex-row bg-gray-50">
+//                 <div className="flex flex-col items-center justify-between gap-4 p-6 border-t sm:flex-row bg-white">
 //                   {/* Show entries dropdown */}
 //                   <div className="flex flex-wrap items-center gap-4">
 //                     <div className="flex items-center gap-2">
@@ -1155,7 +1155,7 @@
 //                       disabled={currentPage === 1}
 //                       className={`px-4 py-2 text-sm font-semibold rounded-lg transition ${currentPage === 1
 //                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-//                         : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+//                         : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
 //                         }`}
 //                     >
 //                       ← Previous
@@ -1169,7 +1169,7 @@
 //                         className={`px-4 py-2 text-sm font-semibold rounded-lg transition ${page === "..."
 //                           ? "bg-gray-200 text-gray-500 cursor-default"
 //                           : currentPage === page
-//                             ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+//                             ? "bg-gradient-to-r from-blue-600 to-purple-600 text-gray-900 shadow-lg"
 //                             : "bg-gray-200 text-gray-700 hover:bg-gray-300"
 //                           }`}
 //                       >
@@ -1182,7 +1182,7 @@
 //                       disabled={currentPage === totalPages}
 //                       className={`px-4 py-2 text-sm font-semibold rounded-lg transition ${currentPage === totalPages
 //                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-//                         : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+//                         : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
 //                         }`}
 //                     >
 //                       Next →
@@ -1514,10 +1514,10 @@
 //       return (
 //         <div className="flex items-center justify-center gap-1">
 //           <span className="relative flex w-2 h-2">
-//             <span className="absolute inline-flex w-full h-full bg-green-400 rounded-full opacity-75 animate-ping"></span>
-//             <span className="relative inline-flex w-2 h-2 bg-green-500 rounded-full"></span>
+//             <span className="absolute inline-flex w-full h-full bg-blue-500 rounded-full opacity-75 animate-ping"></span>
+//             <span className="relative inline-flex w-2 h-2 bg-blue-600 rounded-full"></span>
 //           </span>
-//           <span className="font-semibold text-green-600">{checkIn}</span>
+//           <span className="font-semibold text-blue-700">{checkIn}</span>
 //           <span className="text-xs text-gray-500">/ --:--</span>
 //         </div>
 //       );
@@ -1556,7 +1556,7 @@
 //           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
 //           <button
 //             onClick={() => window.location.reload()}
-//             className="px-6 py-2 font-semibold text-white transition bg-red-600 rounded-lg hover:bg-red-700"
+//             className="px-6 py-2 font-semibold text-gray-900 transition bg-red-600 rounded-lg hover:bg-red-700"
 //           >
 //             🔄 Retry
 //           </button>
@@ -1618,7 +1618,7 @@
 //               <button
 //                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment
-//                     ? 'bg-blue-600 text-white hover:bg-blue-700'
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700'
 //                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                   }`}
 //               >
@@ -1659,7 +1659,7 @@
 //               <button
 //                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
 //                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation
-//                     ? 'bg-blue-600 text-white hover:bg-blue-700'
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700'
 //                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
 //                   }`}
 //               >
@@ -1697,7 +1697,7 @@
 
 //             {/* Date */}
 //             <div className="relative w-[130px]">
-//               <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+//               <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
 //               <input
 //                 type="date"
 //                 value={selectedDate}
@@ -1709,7 +1709,7 @@
 
 //             {/* Month */}
 //             <div className="relative w-[130px]">
-//               <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+//               <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
 //               <input
 //                 type="month"
 //                 value={selectedMonth}
@@ -1722,7 +1722,7 @@
 //             {/* CSV Button */}
 //             <button
 //               onClick={downloadCSV}
-//               className="h-8 px-3 text-xs font-medium text-white transition bg-green-600 rounded-md hover:bg-green-700"
+//               className="h-8 px-3 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-800"
 //             >
 //               📥 CSV
 //             </button>
@@ -1750,7 +1750,7 @@
 //               {records.length > 0 && (
 //                 <button
 //                   onClick={clearFilters}
-//                   className="px-6 py-2 font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
+//                   className="px-6 py-2 font-semibold text-gray-900 transition bg-blue-600 rounded-lg hover:bg-blue-700"
 //                 >
 //                   🔄 Clear Filters
 //                 </button>
@@ -1761,7 +1761,7 @@
 //               <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
 //                 <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
 //                   <table className="min-w-full">
-//                     <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+//                     <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
 //                       <tr>
 //                         <th className="py-2 text-center">Employee ID</th>
 //                         <th className="py-2 text-center">Name</th>
@@ -1781,7 +1781,7 @@
 //                         return (
 //                           <tr
 //                             key={rec._id}
-//                             className={`${idx % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-blue-50 hover:shadow-sm`}
+//                             className={`${idx % 2 === 0 ? "bg-white" : "bg-white"} hover:bg-blue-50 hover:shadow-sm`}
 //                           >
 //                             {/* Employee ID */}
 //                             <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
@@ -1812,7 +1812,7 @@
 
 //                             {/* Hours */}
 //                             <td className="px-2 py-2 text-center">
-//                               <span className={`font-medium text-lg ${rec.totalHours >= 8 ? 'text-green-600' :
+//                               <span className={`font-medium text-lg ${rec.totalHours >= 8 ? 'text-blue-700' :
 //                                 rec.totalHours >= 4 ? 'text-orange-600' : 'text-red-600'
 //                                 }`}>
 //                                 {rec.totalHours ? rec.totalHours.toFixed(1) : "0.0"}h
@@ -1830,8 +1830,8 @@
 //                             <td className="px-2 py-2 text-center">
 //                               <span
 //                                 className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.onsite
-//                                   ? "bg-green-100 text-green-800 border border-green-300"
-//                                   : "bg-red-100 text-red-800 border border-red-300"
+//                                   ? "bg-emerald-50 text-emerald-700 border border-green-300"
+//                                   : "bg-red-50 text-red-700 border border-red-300"
 //                                   }`}
 //                               >
 //                                 {rec.onsite ? "🏢 Yes" : "🏠 No"}
@@ -1849,8 +1849,8 @@
 //                             <td className="px-2 py-2 text-center">
 //                               <span
 //                                 className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.status === "checked-in"
-//                                   ? "bg-blue-100 text-blue-800 border border-blue-300 animate-pulse"
-//                                   : "bg-green-100 text-green-800 border border-green-300"
+//                                   ? "bg-blue-50 text-blue-700 border border-blue-300 animate-pulse"
+//                                   : "bg-emerald-50 text-emerald-700 border border-green-300"
 //                                   }`}
 //                               >
 //                                 {rec.status}
@@ -1866,7 +1866,7 @@
 
 //               {/* Pagination Section */}
 //               {filteredRecords.length > 0 && (
-//                 <div className="flex flex-col items-center justify-between gap-4 p-6 border-t sm:flex-row bg-gray-50">
+//                 <div className="flex flex-col items-center justify-between gap-4 p-6 border-t sm:flex-row bg-white">
 //                   <div className="flex flex-wrap items-center gap-4">
 //                     <div className="flex items-center gap-2">
 //                       <label className="text-sm font-medium text-gray-700">
@@ -1896,7 +1896,7 @@
 //                       disabled={currentPage === 1}
 //                       className={`px-4 py-2 text-sm font-semibold rounded-lg transition ${currentPage === 1
 //                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-//                         : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+//                         : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
 //                         }`}
 //                     >
 //                       ← Previous
@@ -1910,7 +1910,7 @@
 //                         className={`px-4 py-2 text-sm font-semibold rounded-lg transition ${page === "..."
 //                           ? "bg-gray-200 text-gray-500 cursor-default"
 //                           : currentPage === page
-//                             ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+//                             ? "bg-gradient-to-r from-blue-600 to-purple-600 text-gray-900 shadow-lg"
 //                             : "bg-gray-200 text-gray-700 hover:bg-gray-300"
 //                           }`}
 //                       >
@@ -1923,7 +1923,7 @@
 //                       disabled={currentPage === totalPages}
 //                       className={`px-4 py-2 text-sm font-semibold rounded-lg transition ${currentPage === totalPages
 //                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-//                         : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+//                         : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
 //                         }`}
 //                     >
 //                       Next →
@@ -2231,10 +2231,10 @@ export default function AttendanceList() {
       return (
         <div className="flex items-center justify-center gap-1">
           <span className="relative flex w-2 h-2">
-            <span className="absolute inline-flex w-full h-full bg-green-400 rounded-full opacity-75 animate-ping"></span>
-            <span className="relative inline-flex w-2 h-2 bg-green-500 rounded-full"></span>
+            <span className="absolute inline-flex w-full h-full bg-blue-500 rounded-full opacity-75 animate-ping"></span>
+            <span className="relative inline-flex w-2 h-2 bg-blue-600 rounded-full"></span>
           </span>
-          <span className="font-semibold text-green-600">{checkIn}</span>
+          <span className="font-semibold text-blue-700">{checkIn}</span>
           <span className="text-xs text-gray-500">/ --:--</span>
         </div>
       );
@@ -2271,7 +2271,7 @@ export default function AttendanceList() {
           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-2 font-semibold text-white transition bg-red-600 rounded-lg hover:bg-red-700"
+            className="px-6 py-2 font-semibold text-gray-900 transition bg-red-600 rounded-lg hover:bg-red-700"
           >
             🔄 Retry
           </button>
@@ -2333,7 +2333,7 @@ export default function AttendanceList() {
               <button
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                   }`}
               >
@@ -2373,7 +2373,7 @@ export default function AttendanceList() {
               <button
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                   }`}
               >
@@ -2436,7 +2436,7 @@ export default function AttendanceList() {
 
             {/* Month Selector */}
             <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-white transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="month"
                 value={selectedMonth}
@@ -2448,7 +2448,7 @@ export default function AttendanceList() {
             {/* Apply Button */}
             <button
               onClick={fetchAttendanceData}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-900 bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
             >
               <FaSearch className="text-xs" /> Apply
             </button>
@@ -2466,7 +2466,7 @@ export default function AttendanceList() {
             {/* CSV Button */}
             <button
               onClick={downloadCSV}
-              className="h-8 px-3 text-xs font-medium text-white transition bg-green-600 rounded-md hover:bg-green-700"
+              className="h-8 px-3 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-800"
             >
               📥 CSV
             </button>
@@ -2484,7 +2484,7 @@ export default function AttendanceList() {
               {records.length > 0 && (
                 <button
                   onClick={clearFilters}
-                  className="px-6 py-2 font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="px-6 py-2 font-semibold text-gray-900 transition bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
                   🔄 Clear Filters
                 </button>
@@ -2495,7 +2495,7 @@ export default function AttendanceList() {
               <div className="overflow-hidden bg-white rounded-lg shadow-lg">
                 <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
                   <table className="min-w-full">
-                    <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+                    <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                       <tr>
                         <th className="py-2 text-center">Employee ID</th>
                         <th className="py-2 text-center">Name</th>
@@ -2518,7 +2518,7 @@ export default function AttendanceList() {
                         return (
                           <tr
                             key={rec._id}
-                            className={`${idx % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-blue-50 hover:shadow-sm transition-colors`}
+                            className={`${idx % 2 === 0 ? "bg-white" : "bg-white"} hover:bg-blue-50 hover:shadow-sm transition-colors`}
                           >
                             <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
                               {rec.employeeId}
@@ -2544,7 +2544,7 @@ export default function AttendanceList() {
                               {formatTimeWithStatus(rec.checkInTime, rec.checkOutTime)}
                             </td>
                             <td className="px-2 py-2 text-center">
-                              <span className={`font-medium text-lg ${rec.totalHours >= 8 ? 'text-green-600' :
+                              <span className={`font-medium text-lg ${rec.totalHours >= 8 ? 'text-blue-700' :
                                 rec.totalHours >= 4 ? 'text-orange-600' : 'text-red-600'
                                 }`}>
                                 {rec.totalHours ? rec.totalHours.toFixed(1) : "0.0"}h
@@ -2558,8 +2558,8 @@ export default function AttendanceList() {
                             <td className="px-2 py-2 text-center">
                               <span
                                 className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.onsite
-                                  ? "bg-green-100 text-green-800 border border-green-300"
-                                  : "bg-red-100 text-red-800 border border-red-300"
+                                  ? "bg-emerald-50 text-emerald-700 border border-green-300"
+                                  : "bg-red-50 text-red-700 border border-red-300"
                                   }`}
                               >
                                 {rec.onsite ? "🏢 Yes" : "🏠 No"}
@@ -2568,8 +2568,8 @@ export default function AttendanceList() {
                             <td className="px-2 py-2 text-center">
                               <span
                                 className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.status === "checked-in"
-                                  ? "bg-blue-100 text-blue-800 border border-blue-300 animate-pulse"
-                                  : "bg-green-100 text-green-800 border border-green-300"
+                                  ? "bg-blue-50 text-blue-700 border border-blue-300 animate-pulse"
+                                  : "bg-emerald-50 text-emerald-700 border border-green-300"
                                   }`}
                               >
                                 {rec.status}
@@ -2585,7 +2585,7 @@ export default function AttendanceList() {
 
               {/* Pagination Section */}
               {filteredRecords.length > 0 && (
-                <div className="flex flex-col items-center justify-between gap-4 p-4 border-t sm:flex-row bg-gray-50">
+                <div className="flex flex-col items-center justify-between gap-4 p-4 border-t sm:flex-row bg-white">
                   <div className="flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-2">
                       <label className="text-sm font-medium text-gray-700">
@@ -2615,7 +2615,7 @@ export default function AttendanceList() {
                       disabled={currentPage === 1}
                       className={`px-3 py-1 text-sm font-semibold rounded-lg transition ${currentPage === 1
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                        : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
                         }`}
                     >
                       ← Previous
@@ -2629,7 +2629,7 @@ export default function AttendanceList() {
                         className={`px-3 py-1 text-sm font-semibold rounded-lg transition ${page === "..."
                           ? "bg-gray-200 text-gray-500 cursor-default"
                           : currentPage === page
-                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-gray-900 shadow-lg"
                             : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                           }`}
                       >
@@ -2642,7 +2642,7 @@ export default function AttendanceList() {
                       disabled={currentPage === totalPages}
                       className={`px-3 py-1 text-sm font-semibold rounded-lg transition ${currentPage === totalPages
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                        : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
                         }`}
                     >
                       Next →
