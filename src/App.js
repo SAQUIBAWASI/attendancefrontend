@@ -202,6 +202,7 @@ import BankReports from "./Pages/BankReports.js";
 import ApprovedResignations from "./Pages/ApprovedResignations.jsx";
 import RejectedResignations from "./Pages/RejectedResignations.jsx";
 import PendingResignations from "./Pages/PendingResignations.jsx";
+import Events from "./Pages/Events.jsx";
 
 
 
@@ -451,6 +452,7 @@ function App() {
               <Route path="/approved-resignations" element={<ApprovedResignations />} />
               <Route path="/rejected-resignations" element={<RejectedResignations />} />
               <Route path="/pending-resignations" element={<PendingResignations />} />
+              <Route path="/events" element={<Events />} />
            
            
 

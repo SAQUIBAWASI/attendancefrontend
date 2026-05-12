@@ -1268,7 +1268,8 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/score": "Score Board",
       "/assessment-manager": "Assessments",
       "/documents": "Documents",
-      "/all-expensives": "Expenses"
+      "/all-expensives": "Expenses",
+      "/events": "Events"
     };
     return pathMap[path] || "Dashboard";
   };
@@ -1349,6 +1350,11 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       icon: <i className="ri-calendar-fill"></i>,
       name: "Holidays",
       path: "/holidays-calendar",
+    },
+    {
+      icon: <i className="ri-calendar-event-fill"></i>,
+      name: "Events",
+      path: "/events",
     },
     {
       icon: <i className="ri-shield-keyhole-fill"></i>,

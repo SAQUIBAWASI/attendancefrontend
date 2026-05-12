@@ -8,7 +8,9 @@ import {
   FiList,
   FiUserX,
   FiX,
-  FiInfo
+  FiInfo,
+  FiTrash2,
+  FiPlus
 } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
@@ -212,6 +214,80 @@ const EmployeeDashboard = () => {
 
     fetchData();
   }, [email]);
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !profile?._id) return;
+
+    const formData = new FormData();
+    formData.append("profileImage", file);
+
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      formData.append("profileImage", file);
+      formData.append("profile_image", file); // For compatibility with some backend versions
+      formData.append("image", file);         // Common field name fallback
+      
+      const response = await axios.put(`${API_BASE_URL}/employees/update/${profile._id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      const updatedData = response.data?.data || response.data?.employee || response.data;
+      
+      if (updatedData) {
+        // If the server didn't return the full profile, fetch it again to be safe
+        const refreshed = await axios.get(`${API_BASE_URL}/employees/get-employee?email=${profile.email}`);
+        const finalProfile = refreshed.data.data || refreshed.data;
+        setProfile(finalProfile);
+        
+        // Sync local storage
+        const stored = localStorage.getItem("employeeData");
+        if (stored) {
+          const data = JSON.parse(stored);
+          const newImg = finalProfile.profileImage || finalProfile.profile_image || finalProfile.image;
+          if (newImg) data.profileImage = newImg;
+          localStorage.setItem("employeeData", JSON.stringify(data));
+        }
+        
+        alert("✅ Profile image updated successfully!");
+      }
+    } catch (error) {
+      console.error("Error updating profile image:", error);
+      alert("❌ Failed to update profile image. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImageDelete = async (e) => {
+    e?.stopPropagation(); // Prevent triggering file upload
+    if (!profile?._id || !window.confirm("Are you sure you want to remove your profile image?")) return;
+
+    try {
+      setLoading(true);
+      await axios.put(`${API_BASE_URL}/employees/update/${profile._id}`, {
+        profileImage: ""
+      });
+
+      setProfile(prev => ({ ...prev, profileImage: "" }));
+      
+      // Update local storage
+      const stored = localStorage.getItem("employeeData");
+      if (stored) {
+        const data = JSON.parse(stored);
+        data.profileImage = "";
+        localStorage.setItem("employeeData", JSON.stringify(data));
+      }
+      
+      alert("✅ Profile image removed successfully!");
+    } catch (error) {
+      console.error("Error deleting profile image:", error);
+      alert("❌ Failed to remove profile image.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Calculate employee specific stats for selected month
   const calculateEmployeeStats = (attendance, profileData) => {
@@ -498,13 +574,13 @@ const EmployeeDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 text-slate-700 font-sans">
-      <main className="p-6 lg:p-10 max-w-full overflow-hidden">
+    <div className="min-h-screen p-2 sm:p-4 lg:p-6 bg-[#F8FAFC] text-gray-900">
+      <main className="max-w-full">
         
         {/* Welcome Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-slate-900 leading-tight flex items-center gap-2">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight flex items-center gap-2">
               {(() => {
                 const hour = new Date().getHours();
                 if (hour >= 5 && hour < 12) return <>Good morning, 🌅</>;
@@ -514,14 +590,14 @@ const EmployeeDashboard = () => {
               })()}
               <span className="text-blue-600">{profile.name.split(' ')[0]}!</span>
             </h1>
-            <p className="text-sm text-slate-500 mt-1 font-medium">
+            <p className="text-xs text-gray-500 mt-0.5 font-medium">
               Here's what's happening with your attendance today.
             </p>
           </div>
-          <div className="flex items-center gap-3 bg-white px-4 py-2 text-slate-500 rounded-xl shadow-md border border-gray-200 transition-all hover:shadow-lg">
-            <FiCalendar className="text-blue-600" />
-            <span className="text-xs font-semibold tracking-tight">
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          <div className="flex items-center gap-2 bg-white px-3 py-1.5 text-gray-500 rounded-lg shadow-sm border border-gray-200">
+            <FiCalendar className="text-blue-600 text-sm" />
+            <span className="text-[11px] font-semibold">
+              {new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
             </span>
           </div>
         </div>
@@ -536,16 +612,23 @@ const EmployeeDashboard = () => {
 
           if (!isMyBirthday && !myAnniversary && deptBirthdays.length === 0 && deptAnniversaries.length === 0 && deptLeaves.length === 0) return null;
 
+          const totalEvents = (isMyBirthday ? 1 : 0) + (myAnniversary ? 1 : 0) + (deptBirthdays.length > 0 ? 1 : 0) + (deptAnniversaries.length > 0 ? 1 : 0) + (deptLeaves.length > 0 ? 1 : 0);
+
           return (
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4 px-1">
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                  <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
-                  Today's Celebrations
-                </h3>
+            <div className="mb-4 sm:mb-6 bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+              {/* Section Header */}
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-50">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></div>
+                  <h3 className="text-[11px] font-black text-slate-700 uppercase tracking-widest">Today's Celebrations & Updates</h3>
+                </div>
+                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 px-2 py-0.5 rounded-full">
+                  {totalEvents} event{totalEvents !== 1 ? 's' : ''}
+                </span>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+              {/* Cards Grid */}
+              <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {/* Personal Birthday */}
                 {isMyBirthday && (
                   <CelebrationCard 
@@ -669,23 +752,92 @@ const EmployeeDashboard = () => {
           );
         })()}
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-4 lg:gap-6 lg:grid-cols-12">
 
           {/* Left Column: Profile Card + Employee Stats */}
-          <div className="space-y-6 lg:col-span-4">
+          <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:block lg:space-y-4 lg:col-span-3">
             {/* Profile Card */}
-            <div className="p-6 bg-white border border-gray-200 shadow-lg rounded-2xl">
-              <div className="flex items-center gap-4 pb-6 mb-6 border-b border-gray-50">
-                <div className="flex items-center justify-center text-xl font-bold text-blue-600 w-14 h-14 rounded-2xl bg-blue-50">
-                  {profile.name.split(' ').map(n => n[0]).join('')}
+            <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
+              <div className="flex items-center gap-3 pb-3 mb-3 border-b border-gray-100">
+                <div className="relative group w-14 h-14">
+                  <input 
+                    type="file" 
+                    id="profile-upload" 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+                  {(() => {
+                    const imgPath = profile.profileImage || profile.profile_image || profile.image;
+                    const name = profile.name || "User";
+                    const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                    
+                    if (imgPath) {
+                      const fullUrl = imgPath.startsWith('http') ? 
+                        imgPath : 
+                        `${API_BASE_URL.replace(/\/api$/, '')}/${imgPath.replace(/^\//, '')}`;
+                        
+                      return (
+                        <div className="relative w-full h-full">
+                          <img 
+                            src={`${fullUrl}${fullUrl.includes('?') ? '&' : '?'}t=${new Date().getTime()}`} 
+                            alt={name} 
+                            className="w-full h-full rounded-xl object-cover border-2 border-blue-100 shadow-sm transition-all group-hover:border-blue-400"
+                            onError={(e) => { 
+                              e.target.onerror = null;
+                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=f0f7ff&color=2563eb&bold=true&size=128`; 
+                            }}
+                          />
+                          {/* Persistent Edit Indicator */}
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-600 rounded-full border-2 border-white flex items-center justify-center text-white shadow-sm z-20">
+                            <FiCamera className="text-[10px]" />
+                          </div>
+                          
+                          {/* Hover Overlay - Edit/Delete */}
+                          <div className="absolute inset-0 bg-black/60 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center gap-3 z-30">
+                            <label 
+                              htmlFor="profile-upload" 
+                              className="p-2 bg-white/20 hover:bg-white/40 rounded-lg cursor-pointer text-white transition-colors"
+                              title="Change Photo"
+                            >
+                              <FiCamera className="text-sm" />
+                            </label>
+                            <button 
+                              onClick={handleImageDelete} 
+                              className="p-2 bg-white/20 hover:bg-red-500/60 rounded-lg text-white transition-colors"
+                              title="Remove Photo"
+                            >
+                              <FiTrash2 className="text-sm" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+                    
+                    return (
+                      <div className="relative w-full h-full flex items-center justify-center text-base font-bold text-blue-600 rounded-xl bg-blue-50 border-2 border-blue-100 group-hover:border-blue-400 transition-all shadow-sm">
+                        {initials}
+                        <label 
+                          htmlFor="profile-upload" 
+                          className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-xl transition-all cursor-pointer flex items-center justify-center z-30"
+                          title="Add Photo"
+                        >
+                          <FiPlus className="text-blue-600 opacity-0 group-hover:opacity-100 text-lg" />
+                        </label>
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full border-2 border-white flex items-center justify-center text-white shadow-sm">
+                          <FiPlus className="text-[10px]" />
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div>
-                  <h2 className="mb-1 text-base font-bold leading-none text-gray-900">{profile.name}</h2>
-                  <p className="text-xs font-medium text-blue-600">{profile.department || "Developer"}</p>
+                  <h2 className="text-sm font-bold leading-none text-gray-900">{profile.name}</h2>
+                  <p className="text-[11px] font-medium text-blue-600 mt-0.5">{profile.department || "Developer"}</p>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <MiniDetail label="Employee ID" value={profile.employeeId} />
                 <MiniDetail label="Status" value="Active" isStatus />
                 <MiniDetail label="Location" value={assignedLocation} />
@@ -695,23 +847,23 @@ const EmployeeDashboard = () => {
 
               <button
                 onClick={() => navigate("/myattendance")}
-                className="w-full mt-6 py-2 bg-white hover:bg-gray-100 text-slate-700 border border-gray-200 rounded-lg text-xs font-bold transition-all"
+                className="w-full mt-4 py-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-lg text-[11px] font-bold transition-all"
               >
                 View Full Attendance Report
               </button>
 
               <button
                 onClick={() => navigate("/candidate-login")}
-                className="w-full mt-2 py-2 bg-blue-600 hover:bg-blue-700 text-gray-900 border border-blue-700 rounded-lg text-xs font-bold transition-all shadow-sm shadow-blue-100"
+                className="w-full mt-2 py-1.5 bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 rounded-lg text-[11px] font-bold transition-all shadow-sm"
               >
                 Complete Profile
               </button>
             </div>
 
             {/* Quick Actions */}
-            <div className="p-6 bg-white border border-gray-200 shadow-lg rounded-2xl">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">QUICK ACTIONS</h3>
-              <div className="grid grid-cols-1 gap-2">
+            <div className="p-3 sm:p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
+              <h3 className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 sm:mb-3 px-1">QUICK ACTIONS</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
                 <SleekAction
                   icon={<FiCamera />}
                   title="Check Attendance"
@@ -743,18 +895,18 @@ const EmployeeDashboard = () => {
               </div>
             </div>
           </div>          {/* Right Column */}
-          <div className="space-y-6 lg:col-span-8">
+          <div className="space-y-4 lg:col-span-9">
             
             {/* Charts Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Late Analysis Card */}
-              <div className="p-6 bg-white border border-gray-200 shadow-lg rounded-2xl">
-                <div className="flex items-center justify-between gap-4 mb-6 text-slate-900">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold whitespace-nowrap">Late Minutes by Week</h3>
-                    <p className="text-sm font-medium text-slate-500 mt-1 whitespace-nowrap">Weekly distribution for {lateMonth}</p>
+              <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-gray-900">
+                  <div>
+                    <h3 className="text-sm font-bold">Late Minutes by Week</h3>
+                    <p className="text-[11px] font-medium text-gray-500 mt-0.5">Weekly distribution for {lateMonth}</p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="shrink-0">
                     <input
                       type="month"
                       value={lateMonth}
@@ -762,12 +914,12 @@ const EmployeeDashboard = () => {
                         setLateMonth(e.target.value);
                         setLateDate("");
                       }}
-                      className="px-4 py-2 text-sm font-semibold text-slate-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none bg-white cursor-pointer transition-all"
+                      className="px-2 py-1 text-xs font-semibold text-gray-700 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none bg-white cursor-pointer"
                     />
                   </div>
                 </div>
  
-                <div className="h-64">
+                <div className="h-52 sm:h-64">
                   {lateChartData.some(d => d.value > 0) || lateDate ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={lateChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -800,13 +952,13 @@ const EmployeeDashboard = () => {
               </div>
 
               {/* Absent Analysis Card */}
-              <div className="p-6 bg-white border border-gray-200 shadow-lg rounded-2xl">
-                <div className="flex items-center justify-between gap-4 mb-6 text-slate-900">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold whitespace-nowrap">Absent Days by Week</h3>
-                    <p className="text-sm font-medium text-slate-500 mt-1 whitespace-nowrap">Weekly breakdown for {absentMonth}</p>
+              <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 text-gray-900">
+                  <div>
+                    <h3 className="text-sm font-bold">Absent Days by Week</h3>
+                    <p className="text-[11px] font-medium text-gray-500 mt-0.5">Weekly breakdown for {absentMonth}</p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="shrink-0">
                     <input
                       type="month"
                       value={absentMonth}
@@ -814,12 +966,12 @@ const EmployeeDashboard = () => {
                         setAbsentMonth(e.target.value);
                         setAbsentDate("");
                       }}
-                      className="px-4 py-2 text-sm font-semibold text-slate-700 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none bg-white cursor-pointer transition-all"
+                      className="px-2 py-1 text-xs font-semibold text-gray-700 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none bg-white cursor-pointer"
                     />
                   </div>
                 </div>
 
-                <div className="h-64">
+                <div className="h-52 sm:h-64">
                   {absentChartData.some(d => d.value > 0) || absentDate ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={absentChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -854,40 +1006,40 @@ const EmployeeDashboard = () => {
             </div>
 
             {/* Recent Attendance Registry */}
-            <div className="p-6 bg-white border border-gray-200 shadow-lg rounded-2xl">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-base font-bold text-slate-900">Recent Attendance Activity</h3>
+            <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-gray-900">Recent Attendance Activity</h3>
                 <button
                   onClick={() => navigate("/myattendance")}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors"
+                  className="text-[11px] font-bold text-blue-600 hover:text-blue-700 transition-colors"
                 >
-                  View All Activity
+                  View All →
                 </button>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
+              <div className="overflow-x-auto -mx-4">
+                <table className="w-full min-w-[400px] text-left">
                   <thead className="bg-gradient-to-r from-green-500 to-blue-600">
                     <tr>
-                      <th className="px-4 py-3 text-xs font-bold text-gray-900 uppercase tracking-wider">DATE</th>
-                      <th className="px-4 py-3 text-xs font-bold text-gray-900 uppercase tracking-wider">CHECK IN</th>
-                      <th className="px-4 py-3 text-xs font-bold text-gray-900 uppercase tracking-wider">CHECK OUT</th>
-                      <th className="px-4 py-3 text-xs font-bold text-gray-900 uppercase tracking-wider text-right">STATUS</th>
+                      <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider">DATE</th>
+                      <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider">CHECK IN</th>
+                      <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider">CHECK OUT</th>
+                      <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider text-right">STATUS</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-gray-100">
                     {userAttendance.slice(0, 5).map((record, index) => (
-                      <tr key={index} className="group hover:bg-white transition-colors">
-                        <td className="px-4 py-4 text-sm font-semibold text-slate-700">
+                      <tr key={index} className="group hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-2.5 text-xs font-semibold text-gray-700">
                           {new Date(record.checkInTime).toLocaleDateString()}
                         </td>
-                        <td className="px-4 py-4 text-sm font-medium text-slate-500">
+                        <td className="px-4 py-2.5 text-xs font-medium text-gray-500">
                           {record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
                         </td>
-                        <td className="px-4 py-4 text-sm font-medium text-slate-500">
+                        <td className="px-4 py-2.5 text-xs font-medium text-gray-500">
                           {record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
                         </td>
-                        <td className="px-4 py-4 text-right">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${record.status === 'present' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+                        <td className="px-4 py-2.5 text-right">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${record.status === 'present' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
                             }`}>
                             {record.status}
                           </span>
@@ -914,15 +1066,15 @@ const EmployeeDashboard = () => {
 
 // MiniDetail Component
 const MiniDetail = ({ label, value, isStatus }) => (
-  <div className="flex items-center justify-between py-1 border-b border-gray-50 last:border-0">
-    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</span>
+  <div className="flex items-center justify-between py-1 border-b border-gray-100 last:border-0">
+    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{label}</span>
     {isStatus ? (
-      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
-        <div className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></div>
+      <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
         <span className="text-[10px] font-bold uppercase tracking-wider">Active</span>
       </div>
     ) : (
-      <span className="text-xs font-semibold text-slate-700">{value}</span>
+      <span className="text-[11px] font-semibold text-gray-700">{value}</span>
     )}
   </div>
 );
@@ -930,26 +1082,26 @@ const MiniDetail = ({ label, value, isStatus }) => (
 // SleekAction Component - Compact and Professional
 const SleekAction = ({ icon, title, desc, color, onClick }) => {
   const themes = {
-    blue: "bg-blue-600 text-gray-900 border-blue-600 hover:bg-blue-700 hover:shadow-lg shadow-blue-100",
-    slate: "bg-white text-slate-700 border-gray-200 hover:bg-gray-100 hover:border-gray-200"
+    blue: "bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:shadow-md",
+    slate: "bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
   };
 
   const iconColors = {
-    blue: "text-gray-900",
+    blue: "text-white",
     slate: "text-blue-600"
   };
 
   return (
     <div
       onClick={onClick}
-      className={`p-3 rounded-xl border cursor-pointer transition-all duration-200 flex items-center gap-3 ${themes[color]}`}
+      className={`p-2 sm:p-2.5 rounded-lg border cursor-pointer transition-all duration-200 flex items-center gap-2 sm:gap-2.5 ${themes[color]}`}
     >
-      <div className={`text-lg p-1.5 rounded-lg ${color === 'blue' ? 'bg-white/10' : 'bg-white shadow-sm'} ${iconColors[color]}`}>
+      <div className={`text-xs sm:text-sm p-1 sm:p-1.5 rounded-lg ${color === 'blue' ? 'bg-white/10' : 'bg-gray-50'} ${iconColors[color]}`}>
         {icon}
       </div>
-      <div>
-        <h4 className="text-xs font-bold tracking-tight leading-none mb-0.5">{title}</h4>
-        <p className={`text-[10px] font-semibold uppercase tracking-wider ${color === 'blue' ? 'opacity-80' : 'text-slate-500'}`}>
+      <div className="min-w-0 flex-1">
+        <h4 className="text-[10px] sm:text-[11px] font-bold tracking-tight leading-none mb-0.5 truncate">{title}</h4>
+        <p className={`text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider truncate ${color === 'blue' ? 'opacity-80' : 'text-gray-400'}`}>
           {desc}
         </p>
       </div>
