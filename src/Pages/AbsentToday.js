@@ -1391,6 +1391,607 @@
 
 // export default AbsentToday;
 
+// import axios from "axios";
+// import { useEffect, useRef, useState } from "react";
+// import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag } from "react-icons/fa";
+// import { API_BASE_URL } from "../config";
+// import "../index.css";
+// import { isEmployeeHidden } from "../utils/employeeStatus";
+
+// const BASE_URL = API_BASE_URL;
+
+// const AbsentToday = () => {
+//   const [absentEmployees, setAbsentEmployees] = useState([]);
+//   const [filteredEmployees, setFilteredEmployees] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+  
+//   const [fromDate, setFromDate] = useState("");
+//   const [toDate, setToDate] = useState("");
+//   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  
+//   const [searchTerm, setSearchTerm] = useState("");
+  
+//   const [filterDepartment, setFilterDepartment] = useState("");
+//   const [filterDesignation, setFilterDesignation] = useState("");
+//   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
+//   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
+  
+//   const [uniqueDepartments, setUniqueDepartments] = useState([]);
+//   const [uniqueDesignations, setUniqueDesignations] = useState([]);
+  
+//   const departmentFilterRef = useRef(null);
+//   const designationFilterRef = useRef(null);
+  
+//   const [pagination, setPagination] = useState({
+//     currentPage: 1,
+//     totalPages: 1,
+//     totalCount: 0,
+//     limit: 10,
+//   });
+
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       if (departmentFilterRef.current && !departmentFilterRef.current.contains(event.target)) {
+//         setShowDepartmentFilter(false);
+//       }
+//       if (designationFilterRef.current && !designationFilterRef.current.contains(event.target)) {
+//         setShowDesignationFilter(false);
+//       }
+//     };
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () => document.removeEventListener("mousedown", handleClickOutside);
+//   }, []);
+
+//   const extractUniqueValues = (employees) => {
+//     const depts = new Set();
+//     const designations = new Set();
+    
+//     employees.forEach(emp => {
+//       if (emp.department) depts.add(emp.department);
+//       if (emp.role || emp.designation) designations.add(emp.role || emp.designation);
+//     });
+    
+//     setUniqueDepartments(Array.from(depts).sort());
+//     setUniqueDesignations(Array.from(designations).sort());
+//   };
+
+//   // ✅ Fetch when date filters change
+//   useEffect(() => {
+//     fetchAbsentEmployees();
+//   }, [fromDate, toDate, selectedMonth]);
+
+//   useEffect(() => {
+//     filterEmployees();
+//   }, [absentEmployees, searchTerm, filterDepartment, filterDesignation]);
+
+//   useEffect(() => {
+//     setPagination(prev => ({ ...prev, currentPage: 1 }));
+//   }, [searchTerm, filterDepartment, filterDesignation]);
+
+//   const filterEmployees = () => {
+//     let filtered = [...absentEmployees];
+    
+//     if (searchTerm.trim()) {
+//       const term = searchTerm.toLowerCase().trim();
+//       filtered = filtered.filter(emp => 
+//         emp.employeeId?.toString().toLowerCase().includes(term) ||
+//         emp.name?.toLowerCase().includes(term)
+//       );
+//     }
+    
+//     if (filterDepartment) {
+//       filtered = filtered.filter(emp => emp.department === filterDepartment);
+//     }
+    
+//     if (filterDesignation) {
+//       filtered = filtered.filter(emp => emp.designation === filterDesignation);
+//     }
+    
+//     setFilteredEmployees(filtered);
+//     setPagination(prev => ({
+//       ...prev,
+//       totalCount: filtered.length,
+//       totalPages: Math.ceil(filtered.length / prev.limit)
+//     }));
+//   };
+
+//   const indexOfLastRow = pagination.currentPage * pagination.limit;
+//   const indexOfFirstRow = indexOfLastRow - pagination.limit;
+//   const currentRows = filteredEmployees.slice(indexOfFirstRow, indexOfLastRow);
+
+//   const handleItemsPerPageChange = (limit) => {
+//     setPagination({
+//       currentPage: 1,
+//       limit: limit,
+//       totalCount: filteredEmployees.length,
+//       totalPages: Math.ceil(filteredEmployees.length / limit)
+//     });
+//   };
+
+//   // ✅ Modified fetch with date parameters
+//   const fetchAbsentEmployees = async () => {
+//     try {
+//       setLoading(true);
+
+//       const params = new URLSearchParams();
+//       if (fromDate && toDate) {
+//         params.append('fromDate', fromDate);
+//         params.append('toDate', toDate);
+//       } else if (fromDate && !toDate) {
+//         params.append('fromDate', fromDate);
+//       } else if (selectedMonth) {
+//         params.append('month', selectedMonth);
+//       }
+
+//       const [empResp, attResp] = await Promise.all([
+//         axios.get(`${BASE_URL}/employees/get-employees`),
+//         axios.get(`${BASE_URL}/attendance/allattendance${params.toString() ? `?${params.toString()}` : ''}`)
+//       ]);
+
+//       const employees = empResp.data || [];
+//       const activeEmployees = employees.filter(emp => !isEmployeeHidden(emp));
+      
+//       extractUniqueValues(activeEmployees);
+
+//       const attendanceData = attResp.data || [];
+//       const allAttendance = Array.isArray(attendanceData)
+//         ? attendanceData
+//         : attendanceData.records || attendanceData.allAttendance || [];
+
+//       // Get present employees based on filters
+//       const presentIds = new Set();
+//       let formatted = [];
+
+//       // Date or range mode
+//       const fromDateTime = fromDate ? new Date(fromDate) : null;
+//       const toDateTime = toDate ? new Date(toDate) : null;
+      
+//       if (fromDateTime) fromDateTime.setHours(0, 0, 0, 0);
+//       if (toDateTime) toDateTime.setHours(23, 59, 59, 999);
+
+//       // Track which employees were present
+//       allAttendance.forEach(record => {
+//         if (!record.checkInTime) return;
+        
+//         const recordDateTime = new Date(record.checkInTime);
+        
+//         let shouldInclude = false;
+        
+//         if (fromDateTime && toDateTime) {
+//           if (recordDateTime >= fromDateTime && recordDateTime <= toDateTime) {
+//             shouldInclude = true;
+//           }
+//         } else if (fromDateTime && !toDateTime) {
+//           const recordDateStr = recordDateTime.toISOString().split('T')[0];
+//           if (recordDateStr === fromDate) {
+//             shouldInclude = true;
+//           }
+//         } else if (selectedMonth && !fromDate && !toDate) {
+//           const recordMonth = recordDateTime.toISOString().slice(0, 7);
+//           if (recordMonth === selectedMonth) {
+//             shouldInclude = true;
+//           }
+//         } else if (!fromDate && !toDate && !selectedMonth) {
+//           const today = new Date();
+//           const todayStr = today.toISOString().split('T')[0];
+//           const recordDateStr = recordDateTime.toISOString().split('T')[0];
+//           if (recordDateStr === todayStr) {
+//             shouldInclude = true;
+//           }
+//         }
+
+//         if (!shouldInclude) return;
+
+//         const id = (typeof record.employeeId === 'object' 
+//           ? record.employeeId?.employeeId || record.employeeId?._id
+//           : record.employeeId);
+        
+//         if (id) presentIds.add(id.toString());
+//       });
+
+//       // Date or range mode: Employees not present
+//       const absents = activeEmployees.filter((emp) => {
+//         const empId = emp.employeeId || emp._id || emp.empId;
+//         return !presentIds.has(empId?.toString());
+//       });
+
+//       let dateDisplay = "";
+//       if (fromDate && toDate) {
+//         dateDisplay = `${fromDate} to ${toDate}`;
+//       } else if (fromDate && !toDate) {
+//         dateDisplay = fromDate;
+//       } else if (selectedMonth && !fromDate && !toDate) {
+//         dateDisplay = selectedMonth;
+//       } else {
+//         dateDisplay = new Date().toISOString().split('T')[0];
+//       }
+
+//       formatted = absents.map((emp) => ({
+//         employeeId: emp.employeeId || emp._id,
+//         name: emp.name || emp.fullName || "N/A",
+//         date: dateDisplay,
+//         department: emp.department || emp.departmentName || "N/A",
+//         designation: emp.designation || emp.role || "N/A",
+//       }));
+
+//       setAbsentEmployees(formatted);
+//     } catch (err) {
+//       console.error("Error fetching absent employees:", err);
+//       setError("Failed to fetch absent employees");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const clearFilters = () => {
+//     setSearchTerm("");
+//     setFilterDepartment("");
+//     setFilterDesignation("");
+//     setFromDate("");
+//     setToDate("");
+//     setSelectedMonth(new Date().toISOString().slice(0, 7));
+//   };
+
+//   if (loading)
+//     return (
+//       <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+//         <div className="mx-auto max-w-9xl">
+//           <div className="p-8 text-center bg-white rounded-lg shadow-md">
+//             <div className="flex items-center justify-center">
+//               <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
+//               <span className="ml-2 text-gray-500">Loading absent employees...</span>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     );
+    
+//   if (error)
+//     return (
+//       <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+//         <div className="mx-auto max-w-9xl">
+//           <div className="p-8 text-center bg-white rounded-lg shadow-md">
+//             <p className="text-red-600">{error}</p>
+//           </div>
+//         </div>
+//       </div>
+//     );
+
+//   return (
+//     <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+//       <div className="mx-auto max-w-9xl">
+//         {/* Filters - Same as TodayAttendance */}
+//         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+//           <div className="flex flex-wrap items-center gap-2">
+            
+//             {/* ID/Name Search */}
+//             <div className="relative flex-1 min-w-[180px]">
+//               <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
+//               <input
+//                 type="text"
+//                 placeholder="Search by ID or Name..."
+//                 value={searchTerm}
+//                 onChange={(e) => setSearchTerm(e.target.value)}
+//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* Department Filter Button */}
+//             <div className="relative" ref={departmentFilterRef}>
+//               <button
+//                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+//                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
+//                   filterDepartment 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
+//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+//                 }`}
+//               >
+//                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
+//               </button>
+              
+//               {showDepartmentFilter && (
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                   <div 
+//                     onClick={() => {
+//                       setFilterDepartment('');
+//                       setShowDepartmentFilter(false);
+//                     }}
+//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
+//                   >
+//                     All Departments
+//                   </div>
+//                   {uniqueDepartments.map(dept => (
+//                     <div 
+//                       key={dept}
+//                       onClick={() => {
+//                         setFilterDepartment(dept);
+//                         setShowDepartmentFilter(false);
+//                       }}
+//                       className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
+//                         filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''
+//                       }`}
+//                     >
+//                       {dept}
+//                     </div>
+//                   ))}
+//                 </div>
+//               )}
+//             </div>
+
+//             {/* Designation Filter Button */}
+//             <div className="relative" ref={designationFilterRef}>
+//               <button
+//                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
+//                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
+//                   filterDesignation 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
+//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+//                 }`}
+//               >
+//                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
+//               </button>
+              
+//               {showDesignationFilter && (
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                   <div 
+//                     onClick={() => {
+//                       setFilterDesignation('');
+//                       setShowDesignationFilter(false);
+//                     }}
+//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
+//                   >
+//                     All Designations
+//                   </div>
+//                   {uniqueDesignations.map(des => (
+//                     <div 
+//                       key={des}
+//                       onClick={() => {
+//                         setFilterDesignation(des);
+//                         setShowDesignationFilter(false);
+//                       }}
+//                       className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
+//                         filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''
+//                       }`}
+//                     >
+//                       {des}
+//                     </div>
+//                   ))}
+//                 </div>
+//               )}
+//             </div>
+
+//             {/* From Date */}
+//             <div className="relative w-[150px]">
+//               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
+//                 From:
+//               </span>
+//               <input
+//                 type="date"
+//                 value={fromDate}
+//                 onChange={(e) => setFromDate(e.target.value)}
+//                 className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* To Date */}
+//             <div className="relative w-[150px]">
+//               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
+//                 To:
+//               </span>
+//               <input
+//                 type="date"
+//                 value={toDate}
+//                 onChange={(e) => setToDate(e.target.value)}
+//                 className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* Month Selector */}
+//             <div className="relative w-[150px]">
+//               <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
+//               <input
+//                 type="month"
+//                 value={selectedMonth}
+//                 onChange={(e) => setSelectedMonth(e.target.value)}
+//                 className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* Apply Button */}
+//             <button
+//               onClick={fetchAbsentEmployees}
+//               className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-900 bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
+//             >
+//               <FaSearch className="text-xs" /> Apply
+//             </button>
+
+//             {/* Clear Filters Button */}
+//             {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate) && (
+//               <button
+//                 onClick={clearFilters}
+//                 className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+//               >
+//                 Clear
+//               </button>
+//             )}
+//           </div>
+//         </div>
+
+//         {filteredEmployees.length === 0 ? (
+//           <div className="p-8 text-center bg-white rounded-lg shadow-md">
+//             <p className="text-lg font-semibold text-blue-700">
+//               {fromDate && toDate 
+//                 ? `No absent employees from ${fromDate} to ${toDate} 🎉` 
+//                 : fromDate && !toDate
+//                 ? `No absent employees on ${fromDate} 🎉`
+//                 : selectedMonth 
+//                 ? `No absent days in ${selectedMonth} 🎉`
+//                 : "No absent employees found 🎉"}
+//             </p>
+//             <p className="mt-2 text-sm text-gray-500">
+//               {(searchTerm || filterDepartment || filterDesignation) && " - Try clearing filters"}
+//             </p>
+//           </div>
+//         ) : (
+//           <>
+//             {/* Activities Table - Same as TodayAttendance style */}
+//             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+//               <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//                 <table className="min-w-full">
+//                   <thead className="text-xs text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
+//                     <tr>
+//                       <th className="px-2 py-2 text-center">Employee ID</th>
+//                       <th className="px-2 py-2 text-center">Name</th>
+//                       <th className="px-2 py-2 text-center">Department</th>
+//                       <th className="px-2 py-2 text-center">Designation</th>
+//                       <th className="px-2 py-2 text-center">Date/Month</th>
+//                     </tr>
+//                   </thead>
+//                   <tbody className="bg-white divide-y divide-gray-200">
+//                     {currentRows.map((emp) => (
+//                       <tr
+//                         key={emp.employeeId}
+//                         className="text-xs transition-colors hover:bg-white"
+//                       >
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+//                           {emp.employeeId}
+//                         </td>
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+//                           {emp.name}
+//                         </td>
+//                         <td className="px-2 py-2 text-center text-gray-500">
+//                           {emp.department}
+//                         </td>
+//                         <td className="px-2 py-2 text-center text-gray-500">
+//                           {emp.designation}
+//                         </td>
+//                         <td className="px-2 py-2 text-center text-gray-500 text-[10px]">
+//                           {emp.date}
+//                         </td>
+//                       </tr>
+//                     ))}
+//                   </tbody>
+//                 </table>
+//               </div>
+
+//               {/* Pagination - Same as TodayAttendance */}
+//               {filteredEmployees.length > 0 && (
+//                 <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-white">
+//                   <div className="flex flex-wrap items-center gap-2 text-xs text-gray-700">
+//                     <span>Showing</span>
+//                     <span className="font-medium">
+//                       {(pagination.currentPage - 1) * pagination.limit + 1}
+//                     </span>
+//                     <span>to</span>
+//                     <span className="font-medium">
+//                       {Math.min(
+//                         pagination.currentPage * pagination.limit,
+//                         pagination.totalCount
+//                       )}
+//                     </span>
+//                     <span>of</span>
+//                     <span className="font-medium">
+//                       {pagination.totalCount}
+//                     </span>
+//                     <span>results</span>
+
+//                     <select
+//                       value={pagination.limit}
+//                       onChange={(e) => {
+//                         const newLimit = Number(e.target.value);
+//                         handleItemsPerPageChange(newLimit);
+//                       }}
+//                       className="p-1 ml-1 text-xs border rounded-lg"
+//                     >
+//                       <option value={5}>5</option>
+//                       <option value={10}>10</option>
+//                       <option value={20}>20</option>
+//                       <option value={50}>50</option>
+//                     </select>
+//                   </div>
+
+//                   <div className="flex gap-1">
+//                     <button
+//                       onClick={() =>
+//                         setPagination((prev) => ({
+//                           ...prev,
+//                           currentPage: prev.currentPage - 1,
+//                         }))
+//                       }
+//                       disabled={pagination.currentPage === 1}
+//                       className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+//                     >
+//                       Previous
+//                     </button>
+
+//                     <div className="flex items-center gap-0.5">
+//                       {[...Array(pagination.totalPages)].map((_, index) => {
+//                         const page = index + 1;
+//                         if (
+//                           page === 1 ||
+//                           page === pagination.totalPages ||
+//                           (page >= pagination.currentPage - 1 &&
+//                             page <= pagination.currentPage + 1)
+//                         ) {
+//                           return (
+//                             <button
+//                               key={page}
+//                               onClick={() =>
+//                                 setPagination((prev) => ({
+//                                   ...prev,
+//                                   currentPage: page,
+//                                 }))
+//                               }
+//                               className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+//                                 pagination.currentPage === page
+//                                   ? "bg-blue-600 text-gray-900"
+//                                   : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
+//                               }`}
+//                             >
+//                               {page}
+//                             </button>
+//                           );
+//                         } else if (
+//                           page === pagination.currentPage - 2 ||
+//                           page === pagination.currentPage + 2
+//                         ) {
+//                           return (
+//                             <span key={page} className="px-1 text-xs text-gray-500">
+//                               ...
+//                             </span>
+//                           );
+//                         }
+//                         return null;
+//                       })}
+//                     </div>
+
+//                     <button
+//                       onClick={() =>
+//                         setPagination((prev) => ({
+//                           ...prev,
+//                           currentPage: prev.currentPage + 1,
+//                         }))
+//                       }
+//                       disabled={pagination.currentPage === pagination.totalPages}
+//                       className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+//                     >
+//                       Next
+//                     </button>
+//                   </div>
+//                 </div>
+//               )}
+//             </div>
+//           </>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default AbsentToday;
+
+
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag } from "react-icons/fa";
@@ -1401,14 +2002,43 @@ import { isEmployeeHidden } from "../utils/employeeStatus";
 const BASE_URL = API_BASE_URL;
 
 const AbsentToday = () => {
-  const [absentEmployees, setAbsentEmployees] = useState([]);
-  const [filteredEmployees, setFilteredEmployees] = useState([]);
+  const [absentRecords, setAbsentRecords] = useState([]);
+  const [filteredRecords, setFilteredRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  // Format date as DD-MM-YYYY for display
+  const formatDateForDisplay = (dateStr) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-GB');
+  };
+  
+  // Format date as YYYY-MM-DD for API
+  const formatDateForAPI = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const getTodayDate = () => {
+    return formatDateForAPI(new Date());
+  };
+  
+  // Parse date from DD-MM-YYYY to YYYY-MM-DD
+  const parseDisplayDate = (dateStr) => {
+    if (!dateStr) return "";
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return dateStr;
+  };
+  
+  const [fromDate, setFromDate] = useState(getTodayDate());
+  const [toDate, setToDate] = useState(getTodayDate());
+  const [selectedMonth, setSelectedMonth] = useState("");
   
   const [searchTerm, setSearchTerm] = useState("");
   
@@ -1456,39 +2086,38 @@ const AbsentToday = () => {
     setUniqueDesignations(Array.from(designations).sort());
   };
 
-  // ✅ Fetch when date filters change
   useEffect(() => {
-    fetchAbsentEmployees();
+    fetchAbsentRecords();
   }, [fromDate, toDate, selectedMonth]);
 
   useEffect(() => {
-    filterEmployees();
-  }, [absentEmployees, searchTerm, filterDepartment, filterDesignation]);
+    filterRecords();
+  }, [absentRecords, searchTerm, filterDepartment, filterDesignation]);
 
   useEffect(() => {
     setPagination(prev => ({ ...prev, currentPage: 1 }));
   }, [searchTerm, filterDepartment, filterDesignation]);
 
-  const filterEmployees = () => {
-    let filtered = [...absentEmployees];
+  const filterRecords = () => {
+    let filtered = [...absentRecords];
     
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
-      filtered = filtered.filter(emp => 
-        emp.employeeId?.toString().toLowerCase().includes(term) ||
-        emp.name?.toLowerCase().includes(term)
+      filtered = filtered.filter(rec => 
+        rec.employeeId?.toString().toLowerCase().includes(term) ||
+        rec.employeeName?.toLowerCase().includes(term)
       );
     }
     
     if (filterDepartment) {
-      filtered = filtered.filter(emp => emp.department === filterDepartment);
+      filtered = filtered.filter(rec => rec.department === filterDepartment);
     }
     
     if (filterDesignation) {
-      filtered = filtered.filter(emp => emp.designation === filterDesignation);
+      filtered = filtered.filter(rec => rec.designation === filterDesignation);
     }
     
-    setFilteredEmployees(filtered);
+    setFilteredRecords(filtered);
     setPagination(prev => ({
       ...prev,
       totalCount: filtered.length,
@@ -1498,32 +2127,43 @@ const AbsentToday = () => {
 
   const indexOfLastRow = pagination.currentPage * pagination.limit;
   const indexOfFirstRow = indexOfLastRow - pagination.limit;
-  const currentRows = filteredEmployees.slice(indexOfFirstRow, indexOfLastRow);
+  const currentRows = filteredRecords.slice(indexOfFirstRow, indexOfLastRow);
 
   const handleItemsPerPageChange = (limit) => {
     setPagination({
       currentPage: 1,
       limit: limit,
-      totalCount: filteredEmployees.length,
-      totalPages: Math.ceil(filteredEmployees.length / limit)
+      totalCount: filteredRecords.length,
+      totalPages: Math.ceil(filteredRecords.length / limit)
     });
   };
 
-  // ✅ Modified fetch with date parameters
-  const fetchAbsentEmployees = async () => {
+  const fetchAbsentRecords = async () => {
     try {
       setLoading(true);
 
       const params = new URLSearchParams();
-      if (fromDate && toDate) {
-        params.append('fromDate', fromDate);
-        params.append('toDate', toDate);
-      } else if (fromDate && !toDate) {
-        params.append('fromDate', fromDate);
-      } else if (selectedMonth) {
-        params.append('month', selectedMonth);
+      
+      let startDate = fromDate;
+      let endDate = toDate;
+      
+      if (selectedMonth) {
+        const [year, month] = selectedMonth.split('-');
+        const firstDay = `${year}-${month}-01`;
+        const lastDay = new Date(parseInt(year), parseInt(month), 0).toISOString().split('T')[0];
+        startDate = firstDay;
+        endDate = lastDay;
+      }
+      
+      // IMPORTANT: Always send date range to API
+      if (startDate && endDate) {
+        params.append('fromDate', startDate);
+        params.append('toDate', endDate);
       }
 
+      console.log("Fetching attendance for date range:", startDate, "to", endDate);
+
+      // Fetch all employees and attendance for the specific date range
       const [empResp, attResp] = await Promise.all([
         axios.get(`${BASE_URL}/employees/get-employees`),
         axios.get(`${BASE_URL}/attendance/allattendance${params.toString() ? `?${params.toString()}` : ''}`)
@@ -1534,91 +2174,120 @@ const AbsentToday = () => {
       
       extractUniqueValues(activeEmployees);
 
-      const attendanceData = attResp.data || [];
-      const allAttendance = Array.isArray(attendanceData)
-        ? attendanceData
-        : attendanceData.records || attendanceData.allAttendance || [];
-
-      // Get present employees based on filters
-      const presentIds = new Set();
-      let formatted = [];
-
-      // Date or range mode
-      const fromDateTime = fromDate ? new Date(fromDate) : null;
-      const toDateTime = toDate ? new Date(toDate) : null;
+      let attendanceData = attResp.data || [];
+      // Handle different response formats
+      if (attendanceData.allAttendance) {
+        attendanceData = attendanceData.allAttendance;
+      } else if (attendanceData.records) {
+        attendanceData = attendanceData.records;
+      }
       
-      if (fromDateTime) fromDateTime.setHours(0, 0, 0, 0);
-      if (toDateTime) toDateTime.setHours(23, 59, 59, 999);
+      const allAttendance = Array.isArray(attendanceData) ? attendanceData : [];
+      
+      console.log("Total attendance records received:", allAttendance.length);
 
-      // Track which employees were present
+      // Create start and end datetime objects
+      const startDateTime = new Date(startDate);
+      startDateTime.setHours(0, 0, 0, 0);
+      
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      
+      // Generate all dates in the range
+      const allDatesInRange = [];
+      let currentDate = new Date(startDateTime);
+      while (currentDate <= endDateTime) {
+        const dateStr = formatDateForAPI(currentDate);
+        allDatesInRange.push(dateStr);
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      
+      console.log("Dates in range:", allDatesInRange);
+      
+      // Create a Map of employee ID -> Set of dates they were present
+      const presentDatesByEmployee = new Map();
+      
+      // Process attendance records
       allAttendance.forEach(record => {
-        if (!record.checkInTime) return;
+        let checkInTime = record.checkInTime;
         
-        const recordDateTime = new Date(record.checkInTime);
-        
-        let shouldInclude = false;
-        
-        if (fromDateTime && toDateTime) {
-          if (recordDateTime >= fromDateTime && recordDateTime <= toDateTime) {
-            shouldInclude = true;
+        // Handle different date formats
+        if (checkInTime) {
+          let recordDate;
+          // Check if date is in DD-MM-YYYY format
+          if (typeof checkInTime === 'string' && checkInTime.includes('-')) {
+            const parts = checkInTime.split(' ');
+            const datePart = parts[0];
+            if (datePart.includes('-')) {
+              const dateParts = datePart.split('-');
+              if (dateParts[0].length === 4) {
+                // YYYY-MM-DD format
+                recordDate = new Date(datePart);
+              } else {
+                // DD-MM-YYYY format
+                recordDate = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
+              }
+            } else {
+              recordDate = new Date(checkInTime);
+            }
+          } else {
+            recordDate = new Date(checkInTime);
           }
-        } else if (fromDateTime && !toDateTime) {
-          const recordDateStr = recordDateTime.toISOString().split('T')[0];
-          if (recordDateStr === fromDate) {
-            shouldInclude = true;
-          }
-        } else if (selectedMonth && !fromDate && !toDate) {
-          const recordMonth = recordDateTime.toISOString().slice(0, 7);
-          if (recordMonth === selectedMonth) {
-            shouldInclude = true;
-          }
-        } else if (!fromDate && !toDate && !selectedMonth) {
-          const today = new Date();
-          const todayStr = today.toISOString().split('T')[0];
-          const recordDateStr = recordDateTime.toISOString().split('T')[0];
-          if (recordDateStr === todayStr) {
-            shouldInclude = true;
+          
+          if (!isNaN(recordDate.getTime()) && recordDate >= startDateTime && recordDate <= endDateTime) {
+            const recordDateStr = formatDateForAPI(recordDate);
+            
+            let id = record.employeeId;
+            if (typeof id === 'object' && id !== null) {
+              id = id.employeeId || id._id;
+            }
+            
+            if (id) {
+              if (!presentDatesByEmployee.has(id.toString())) {
+                presentDatesByEmployee.set(id.toString(), new Set());
+              }
+              presentDatesByEmployee.get(id.toString()).add(recordDateStr);
+            }
           }
         }
-
-        if (!shouldInclude) return;
-
-        const id = (typeof record.employeeId === 'object' 
-          ? record.employeeId?.employeeId || record.employeeId?._id
-          : record.employeeId);
+      });
+      
+      console.log("Employees with attendance:", presentDatesByEmployee.size);
+      
+      // Find absent records
+      const absentRecordsList = [];
+      
+      activeEmployees.forEach((emp) => {
+        const empId = (emp.employeeId || emp._id || emp.empId)?.toString();
+        if (!empId) return;
         
-        if (id) presentIds.add(id.toString());
+        const presentDates = presentDatesByEmployee.get(empId) || new Set();
+        
+        // Check each date in the range
+        allDatesInRange.forEach(date => {
+          if (!presentDates.has(date)) {
+            absentRecordsList.push({
+              _id: `${empId}_${date}`,
+              employeeId: empId,
+              employeeName: emp.name || emp.fullName || "N/A",
+              date: date,
+              department: emp.department || emp.departmentName || "N/A",
+              designation: emp.designation || emp.role || "N/A",
+            });
+          }
+        });
       });
-
-      // Date or range mode: Employees not present
-      const absents = activeEmployees.filter((emp) => {
-        const empId = emp.employeeId || emp._id || emp.empId;
-        return !presentIds.has(empId?.toString());
-      });
-
-      let dateDisplay = "";
-      if (fromDate && toDate) {
-        dateDisplay = `${fromDate} to ${toDate}`;
-      } else if (fromDate && !toDate) {
-        dateDisplay = fromDate;
-      } else if (selectedMonth && !fromDate && !toDate) {
-        dateDisplay = selectedMonth;
-      } else {
-        dateDisplay = new Date().toISOString().split('T')[0];
-      }
-
-      formatted = absents.map((emp) => ({
-        employeeId: emp.employeeId || emp._id,
-        name: emp.name || emp.fullName || "N/A",
-        date: dateDisplay,
-        department: emp.department || emp.departmentName || "N/A",
-        designation: emp.designation || emp.role || "N/A",
-      }));
-
-      setAbsentEmployees(formatted);
+      
+      console.log("Total absent records found:", absentRecordsList.length);
+      
+      // Sort by date (newest first)
+      absentRecordsList.sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      setAbsentRecords(absentRecordsList);
+      
     } catch (err) {
-      console.error("Error fetching absent employees:", err);
-      setError("Failed to fetch absent employees");
+      console.error("Error fetching absent records:", err);
+      setError("Failed to fetch absent records");
     } finally {
       setLoading(false);
     }
@@ -1628,9 +2297,9 @@ const AbsentToday = () => {
     setSearchTerm("");
     setFilterDepartment("");
     setFilterDesignation("");
-    setFromDate("");
-    setToDate("");
-    setSelectedMonth(new Date().toISOString().slice(0, 7));
+    setFromDate(getTodayDate());
+    setToDate(getTodayDate());
+    setSelectedMonth("");
   };
 
   if (loading)
@@ -1640,7 +2309,7 @@ const AbsentToday = () => {
           <div className="p-8 text-center bg-white rounded-lg shadow-md">
             <div className="flex items-center justify-center">
               <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-              <span className="ml-2 text-gray-500">Loading absent employees...</span>
+              <span className="ml-2 text-gray-500">Loading absent records...</span>
             </div>
           </div>
         </div>
@@ -1661,11 +2330,9 @@ const AbsentToday = () => {
   return (
     <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="mx-auto max-w-9xl">
-        {/* Filters - Same as TodayAttendance */}
         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
             
-            {/* ID/Name Search */}
             <div className="relative flex-1 min-w-[180px]">
               <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
               <input
@@ -1677,13 +2344,12 @@ const AbsentToday = () => {
               />
             </div>
 
-            {/* Department Filter Button */}
             <div className="relative" ref={departmentFilterRef}>
               <button
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDepartment 
-                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -1719,13 +2385,12 @@ const AbsentToday = () => {
               )}
             </div>
 
-            {/* Designation Filter Button */}
             <div className="relative" ref={designationFilterRef}>
               <button
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDesignation 
-                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -1761,7 +2426,6 @@ const AbsentToday = () => {
               )}
             </div>
 
-            {/* From Date */}
             <div className="relative w-[150px]">
               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
                 From:
@@ -1774,7 +2438,6 @@ const AbsentToday = () => {
               />
             </div>
 
-            {/* To Date */}
             <div className="relative w-[150px]">
               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
                 To:
@@ -1787,9 +2450,8 @@ const AbsentToday = () => {
               />
             </div>
 
-            {/* Month Selector */}
             <div className="relative w-[150px]">
-              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="month"
                 value={selectedMonth}
@@ -1798,19 +2460,17 @@ const AbsentToday = () => {
               />
             </div>
 
-            {/* Apply Button */}
             <button
-              onClick={fetchAbsentEmployees}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-900 bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
+              onClick={fetchAbsentRecords}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
             >
               <FaSearch className="text-xs" /> Apply
             </button>
 
-            {/* Clear Filters Button */}
-            {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate) && (
+            {(searchTerm || filterDepartment || filterDesignation || fromDate !== getTodayDate() || toDate !== getTodayDate() || selectedMonth) && (
               <button
                 onClick={clearFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                className="h-8 px-3 text-xs font-medium text-gray-700 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
               >
                 Clear
               </button>
@@ -1818,171 +2478,123 @@ const AbsentToday = () => {
           </div>
         </div>
 
-        {filteredEmployees.length === 0 ? (
+        {filteredRecords.length === 0 ? (
           <div className="p-8 text-center bg-white rounded-lg shadow-md">
             <p className="text-lg font-semibold text-blue-700">
-              {fromDate && toDate 
-                ? `No absent employees from ${fromDate} to ${toDate} 🎉` 
-                : fromDate && !toDate
-                ? `No absent employees on ${fromDate} 🎉`
+              {fromDate && toDate && fromDate === toDate 
+                ? `No absent employees on ${formatDateForDisplay(fromDate)} 🎉` 
+                : fromDate && toDate && fromDate !== toDate
+                ? `No absent employees from ${formatDateForDisplay(fromDate)} to ${formatDateForDisplay(toDate)} 🎉`
                 : selectedMonth 
-                ? `No absent days in ${selectedMonth} 🎉`
-                : "No absent employees found 🎉"}
+                ? `No absent employees in ${selectedMonth} 🎉`
+                : "No absent employees found for today 🎉"}
             </p>
             <p className="mt-2 text-sm text-gray-500">
               {(searchTerm || filterDepartment || filterDesignation) && " - Try clearing filters"}
             </p>
           </div>
         ) : (
-          <>
-            {/* Activities Table - Same as TodayAttendance style */}
-            <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-              <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
-                <table className="min-w-full">
-                  <thead className="text-xs text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
-                    <tr>
-                      <th className="px-2 py-2 text-center">Employee ID</th>
-                      <th className="px-2 py-2 text-center">Name</th>
-                      <th className="px-2 py-2 text-center">Department</th>
-                      <th className="px-2 py-2 text-center">Designation</th>
-                      <th className="px-2 py-2 text-center">Date/Month</th>
+          <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-gradient-to-r from-green-500 to-blue-600">
+                  <tr>
+                    <th className="px-2 py-2 text-center text-white">Employee ID</th>
+                    <th className="px-2 py-2 text-center text-white">Name</th>
+                    <th className="px-2 py-2 text-center text-white">Department</th>
+                    <th className="px-2 py-2 text-center text-white">Designation</th>
+                    <th className="px-2 py-2 text-center text-white">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {currentRows.map((rec) => (
+                    <tr key={rec._id} className="text-xs transition-colors hover:bg-gray-50">
+                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+                        {rec.employeeId}
+                      </td>
+                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+                        {rec.employeeName}
+                      </td>
+                      <td className="px-2 py-2 text-center text-gray-700">
+                        {rec.department}
+                      </td>
+                      <td className="px-2 py-2 text-center text-gray-700">
+                        {rec.designation}
+                      </td>
+                      <td className="px-2 py-2 text-center text-gray-700 whitespace-nowrap">
+                        {formatDateForDisplay(rec.date)}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {currentRows.map((emp) => (
-                      <tr
-                        key={emp.employeeId}
-                        className="text-xs transition-colors hover:bg-white"
-                      >
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                          {emp.employeeId}
-                        </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                          {emp.name}
-                        </td>
-                        <td className="px-2 py-2 text-center text-gray-500">
-                          {emp.department}
-                        </td>
-                        <td className="px-2 py-2 text-center text-gray-500">
-                          {emp.designation}
-                        </td>
-                        <td className="px-2 py-2 text-center text-gray-500 text-[10px]">
-                          {emp.date}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination - Same as TodayAttendance */}
-              {filteredEmployees.length > 0 && (
-                <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-white">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-gray-700">
-                    <span>Showing</span>
-                    <span className="font-medium">
-                      {(pagination.currentPage - 1) * pagination.limit + 1}
-                    </span>
-                    <span>to</span>
-                    <span className="font-medium">
-                      {Math.min(
-                        pagination.currentPage * pagination.limit,
-                        pagination.totalCount
-                      )}
-                    </span>
-                    <span>of</span>
-                    <span className="font-medium">
-                      {pagination.totalCount}
-                    </span>
-                    <span>results</span>
-
-                    <select
-                      value={pagination.limit}
-                      onChange={(e) => {
-                        const newLimit = Number(e.target.value);
-                        handleItemsPerPageChange(newLimit);
-                      }}
-                      className="p-1 ml-1 text-xs border rounded-lg"
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                    </select>
-                  </div>
-
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() =>
-                        setPagination((prev) => ({
-                          ...prev,
-                          currentPage: prev.currentPage - 1,
-                        }))
-                      }
-                      disabled={pagination.currentPage === 1}
-                      className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Previous
-                    </button>
-
-                    <div className="flex items-center gap-0.5">
-                      {[...Array(pagination.totalPages)].map((_, index) => {
-                        const page = index + 1;
-                        if (
-                          page === 1 ||
-                          page === pagination.totalPages ||
-                          (page >= pagination.currentPage - 1 &&
-                            page <= pagination.currentPage + 1)
-                        ) {
-                          return (
-                            <button
-                              key={page}
-                              onClick={() =>
-                                setPagination((prev) => ({
-                                  ...prev,
-                                  currentPage: page,
-                                }))
-                              }
-                              className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
-                                pagination.currentPage === page
-                                  ? "bg-blue-600 text-gray-900"
-                                  : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          );
-                        } else if (
-                          page === pagination.currentPage - 2 ||
-                          page === pagination.currentPage + 2
-                        ) {
-                          return (
-                            <span key={page} className="px-1 text-xs text-gray-500">
-                              ...
-                            </span>
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-
-                    <button
-                      onClick={() =>
-                        setPagination((prev) => ({
-                          ...prev,
-                          currentPage: prev.currentPage + 1,
-                        }))
-                      }
-                      disabled={pagination.currentPage === pagination.totalPages}
-                      className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </>
+
+            {filteredRecords.length > 0 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-white">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-700">
+                  <span>Showing</span>
+                  <span className="font-medium">
+                    {(pagination.currentPage - 1) * pagination.limit + 1}
+                  </span>
+                  <span>to</span>
+                  <span className="font-medium">
+                    {Math.min(
+                      pagination.currentPage * pagination.limit,
+                      pagination.totalCount
+                    )}
+                  </span>
+                  <span>of</span>
+                  <span className="font-medium">
+                    {pagination.totalCount}
+                  </span>
+                  <span>results</span>
+
+                  <select
+                    value={pagination.limit}
+                    onChange={(e) => {
+                      const newLimit = Number(e.target.value);
+                      handleItemsPerPageChange(newLimit);
+                    }}
+                    className="p-1 ml-1 text-xs border rounded-lg"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-1">
+                  <button
+                    onClick={() =>
+                      setPagination((prev) => ({
+                        ...prev,
+                        currentPage: prev.currentPage - 1,
+                      }))
+                    }
+                    disabled={pagination.currentPage === 1}
+                    className="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      setPagination((prev) => ({
+                        ...prev,
+                        currentPage: prev.currentPage + 1,
+                      }))
+                    }
+                    disabled={pagination.currentPage === pagination.totalPages}
+                    className="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
