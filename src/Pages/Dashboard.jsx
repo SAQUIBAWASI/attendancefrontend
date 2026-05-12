@@ -980,9 +980,10 @@
 
 import axios from 'axios';
 import { useEffect, useState } from "react";
-import { FiClock, FiTrendingUp, FiUserCheck, FiUserX, FiUsers } from "react-icons/fi";
+import { FiClock, FiTrendingUp, FiUserCheck, FiUserX, FiUsers, FiX } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import StatCard from "../Components/StatCard";
+import CelebrationCard from "../Components/CelebrationCard";
 import { isEmployeeHidden } from "../utils/employeeStatus";
 
 import {
@@ -1016,6 +1017,10 @@ const AttendanceDashboard = () => {
   const [absentMonth, setAbsentMonth] = useState(new Date().toISOString().slice(0, 7));
   const [attendanceMonth, setAttendanceMonth] = useState(new Date().toISOString().slice(0, 7));
   const [topLateMonth, setTopLateMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [birthdaysToday, setBirthdaysToday] = useState([]);
+  const [anniversariesToday, setAnniversariesToday] = useState([]);
+  const [leavesToday, setLeavesToday] = useState([]);
+  const [celebModal, setCelebModal] = useState({ show: false, type: '' });
 
   const reactNavigate = useNavigate();
 
@@ -1071,6 +1076,24 @@ const AttendanceDashboard = () => {
       const leavesRes = await axios.get(`${API_BASE_URL}/leaves/leaves?status=approved`);
       const leavesResult = leavesRes.data;
       setLeavesData(Array.isArray(leavesResult) ? leavesResult : leavesResult.records || leavesResult.leaves || []);
+
+      // 7. Fetch Today's Birthdays (company-wide)
+      try {
+        const bdayRes = await axios.get(`${API_BASE_URL}/employees/birthdays-today`);
+        setBirthdaysToday(bdayRes.data.data || []);
+      } catch (e) { console.warn("Birthdays fetch failed", e); }
+
+      // 8. Fetch Today's Work Anniversaries (company-wide)
+      try {
+        const annivRes = await axios.get(`${API_BASE_URL}/employees/anniversaries-today`);
+        setAnniversariesToday(annivRes.data.data || []);
+      } catch (e) { console.warn("Anniversaries fetch failed", e); }
+
+      // 9. Fetch Employees on Leave Today (company-wide)
+      try {
+        const leaveRes = await axios.get(`${API_BASE_URL}/leaves/on-leave-today`);
+        setLeavesToday(leaveRes.data.data || []);
+      } catch (e) { console.warn("Leaves today fetch failed", e); }
 
       setLoading(false);
     } catch (err) {
@@ -1658,6 +1681,9 @@ const AttendanceDashboard = () => {
 
   return (
     <div className="min-h-screen p-2 lg:p-6 bg-white text-gray-900">
+
+
+
       {/* 1. Top Summary Stats - Updated Cards */}
       <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard

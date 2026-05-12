@@ -14,6 +14,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
 import { subscribeToPushNotifications } from "../utils/pushNotification";
 import { FaBirthdayCake, FaGift, FaSmile, FaAward } from "react-icons/fa";
+import CelebrationCard from "../Components/CelebrationCard";
 
 // Recharts imports
 import {
@@ -525,7 +526,7 @@ const EmployeeDashboard = () => {
           </div>
         </div>
 
-        {/* Birthday Special Section */}
+        {/* Celebrations & Announcements Row */}
         {(() => {
           const isMyBirthday = birthdaysToday.some(b => b.email === email);
           const myAnniversary = anniversariesToday.find(a => a.email === email);
@@ -536,152 +537,64 @@ const EmployeeDashboard = () => {
           if (!isMyBirthday && !myAnniversary && deptBirthdays.length === 0 && deptAnniversaries.length === 0 && deptLeaves.length === 0) return null;
 
           return (
-            <div className="mb-8 space-y-4">
-              {/* Personal Celebration Banners */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {isMyBirthday && (
-                  <div className="relative overflow-hidden p-6 rounded-2xl bg-gradient-to-r from-rose-500 to-indigo-600 text-gray-900 shadow-lg animate-in fade-in slide-in-from-bottom duration-500">
-                    <div className="relative z-10 flex items-center gap-4">
-                      <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm border border-white/30">
-                        <FaBirthdayCake className="text-3xl text-gray-900" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-bold">Happy Birthday, {profile.name.split(' ')[0]}! 🎊</h2>
-                        <p className="text-gray-900/80 text-xs font-medium">Wishing you a fantastic day and a wonderful year ahead!</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {myAnniversary && (
-                  <div className="relative overflow-hidden p-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-700 text-gray-900 shadow-lg animate-in fade-in slide-in-from-bottom duration-500">
-                    <div className="relative z-10 flex items-center gap-4">
-                      <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm border border-white/30">
-                        <FaAward className="text-3xl text-gray-900" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-bold">Happy {myAnniversary.yearsOfService}{myAnniversary.yearsOfService === 1 ? 'st' : myAnniversary.yearsOfService === 2 ? 'nd' : myAnniversary.yearsOfService === 3 ? 'rd' : 'th'} Work Anniversary! 🏆</h2>
-                        <p className="text-gray-900/80 text-xs font-medium">Thank you for your dedication and brilliant work over the past {myAnniversary.yearsOfService} year{myAnniversary.yearsOfService > 1 ? 's' : ''}!</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4 px-1">
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                  <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
+                  Today's Celebrations
+                </h3>
               </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Personal Birthday */}
+                {isMyBirthday && (
+                  <CelebrationCard 
+                    type="birthday"
+                    name={profile.name}
+                    isPersonal={true}
+                    onAction={() => alert("Happy Birthday! 🎂")}
+                  />
+                )}
 
-              {/* Departmental Celebrations & Leaves */}
-              <div className="grid grid-cols-1 gap-3">
+                {/* Personal Anniversary */}
+                {myAnniversary && (
+                  <CelebrationCard 
+                    type="anniversary"
+                    name={profile.name}
+                    detail={`${myAnniversary.yearsOfService} Year${myAnniversary.yearsOfService > 1 ? 's' : ''}`}
+                    isPersonal={true}
+                    onAction={() => alert("Congratulations! 🏆")}
+                  />
+                )}
+
+                {/* Departmental Birthdays */}
                 {deptBirthdays.length > 0 && (
-                  <div 
-                    className="flex items-center justify-between p-3 bg-white border border-rose-100 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
-                    onClick={() => { setModalType("birthday"); setShowModal(true); }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex -space-x-2 overflow-hidden">
-                        {deptBirthdays.slice(0, 3).map((b, i) => (
-                          <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-blue-50 flex items-center justify-center text-xs font-bold text-blue-600 border border-blue-100" title={b.name}>
-                            {b.name.split(' ').map(n => n[0]).join('')}
-                          </div>
-                        ))}
-                        {deptBirthdays.length > 3 && (
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-slate-500 ring-2 ring-white">
-                            +{deptBirthdays.length - 3}
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs font-medium text-slate-500">
-                        <span className="font-bold text-slate-900">
-                          {deptBirthdays.length === 1 
-                            ? deptBirthdays[0].name 
-                            : `${deptBirthdays[0].name} and ${deptBirthdays.length - 1} other${deptBirthdays.length > 2 ? 's' : ''}`
-                          }
-                        </span> from your department are celebrating their Birthday today! 🎂
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-xs font-bold text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">View All</div>
-                      <button 
-                        className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                        onClick={(e) => { e.stopPropagation(); alert(`Departmental wishes sent! 🎊`); }}
-                      >
-                        Send Wishes
-                      </button>
-                    </div>
-                  </div>
+                  <CelebrationCard 
+                    type="birthday"
+                    name={`${deptBirthdays.length} Colleague${deptBirthdays.length > 1 ? 's' : ''}`}
+                    detail="Birthday"
+                    onAction={() => { setModalType("birthday"); setShowModal(true); }}
+                  />
                 )}
 
+                {/* Departmental Anniversaries */}
                 {deptAnniversaries.length > 0 && (
-                  <div 
-                    className="flex items-center justify-between p-3 bg-white border border-emerald-100 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
-                    onClick={() => { setModalType("anniversary"); setShowModal(true); }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex -space-x-2 overflow-hidden">
-                        {deptAnniversaries.slice(0, 3).map((a, i) => (
-                          <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-emerald-50 flex items-center justify-center text-xs font-bold text-blue-700 border border-emerald-100" title={a.name}>
-                            {a.name.split(' ').map(n => n[0]).join('')}
-                          </div>
-                        ))}
-                        {deptAnniversaries.length > 3 && (
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-[10px] font-bold text-slate-500 ring-2 ring-white">
-                            +{deptAnniversaries.length - 3}
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs font-medium text-slate-500">
-                        <span className="font-bold text-slate-900">
-                          {deptAnniversaries.length === 1 
-                            ? deptAnniversaries[0].name 
-                            : `${deptAnniversaries[0].name} and ${deptAnniversaries.length - 1} other${deptAnniversaries.length > 2 ? 's' : ''}`
-                          }
-                        </span> from your department are celebrating their Work Anniversary! 🏆
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-[10px] font-bold text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity">View All</div>
-                      <button 
-                        className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                        onClick={(e) => { e.stopPropagation(); alert(`Anniversary congratulations sent! 🎊`); }}
-                      >
-                        Celebrate
-                      </button>
-                    </div>
-                  </div>
+                  <CelebrationCard 
+                    type="anniversary"
+                    name={`${deptAnniversaries.length} Colleague${deptAnniversaries.length > 1 ? 's' : ''}`}
+                    detail="Anniversary"
+                    onAction={() => { setModalType("anniversary"); setShowModal(true); }}
+                  />
                 )}
 
+                {/* Departmental Leaves */}
                 {deptLeaves.length > 0 && (
-                  <div 
-                    className="flex items-center justify-between p-3 bg-white border border-amber-100 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
-                    onClick={() => { setModalType("leave"); setShowModal(true); }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex -space-x-2 overflow-hidden">
-                        {deptLeaves.slice(0, 3).map((l, i) => (
-                          <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-amber-50 flex items-center justify-center text-xs font-bold text-amber-600 border border-amber-100" title={l.employeeName}>
-                            {l.employeeName.split(' ').map(n => n[0]).join('')}
-                          </div>
-                        ))}
-                        {deptLeaves.length > 3 && (
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-[10px] font-bold text-slate-500 ring-2 ring-white">
-                            +{deptLeaves.length - 3}
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs font-medium text-slate-500">
-                        <span className="font-bold text-slate-900">
-                          {deptLeaves.length === 1 
-                            ? deptLeaves[0].employeeName 
-                            : `${deptLeaves[0].employeeName} and ${deptLeaves.length - 1} other${deptLeaves.length > 2 ? 's' : ''}`
-                          }
-                        </span> from your department {deptLeaves.length === 1 ? 'is' : 'are'} on Leave today. 🏠
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-[10px] font-bold text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity">View Details</div>
-                      <div className="text-xs font-bold uppercase text-amber-500 bg-amber-50 px-2 py-1 rounded-md tracking-widest">
-                        Out of Office
-                      </div>
-                    </div>
-                  </div>
+                  <CelebrationCard 
+                    type="leave"
+                    name={`${deptLeaves.length} Colleague${deptLeaves.length > 1 ? 's' : ''}`}
+                    detail="Leave"
+                    onAction={() => { setModalType("leave"); setShowModal(true); }}
+                  />
                 )}
               </div>
 
