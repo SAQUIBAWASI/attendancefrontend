@@ -1643,6 +1643,705 @@
 
 
 
+// import axios from "axios";
+// import { useEffect, useRef, useState } from "react";
+// import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag } from "react-icons/fa";
+// import { API_BASE_URL } from "../config";
+// import "../index.css";
+// import { isEmployeeHidden } from "../utils/employeeStatus";
+
+// const BASE_URL = API_BASE_URL;
+
+// const LateToday = () => {
+//   const [records, setRecords] = useState([]);
+//   const [filteredRecords, setFilteredRecords] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState("");
+  
+//   const [fromDate, setFromDate] = useState("");
+//   const [toDate, setToDate] = useState("");
+//   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  
+//   const [searchTerm, setSearchTerm] = useState("");
+  
+//   const [filterDepartment, setFilterDepartment] = useState("");
+//   const [filterDesignation, setFilterDesignation] = useState("");
+//   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
+//   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
+  
+//   const [uniqueDepartments, setUniqueDepartments] = useState([]);
+//   const [uniqueDesignations, setUniqueDesignations] = useState([]);
+  
+//   const departmentFilterRef = useRef(null);
+//   const designationFilterRef = useRef(null);
+  
+//   const [pagination, setPagination] = useState({
+//     currentPage: 1,
+//     totalPages: 1,
+//     totalCount: 0,
+//     limit: 10,
+//   });
+
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       if (departmentFilterRef.current && !departmentFilterRef.current.contains(event.target)) {
+//         setShowDepartmentFilter(false);
+//       }
+//       if (designationFilterRef.current && !designationFilterRef.current.contains(event.target)) {
+//         setShowDesignationFilter(false);
+//       }
+//     };
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () => document.removeEventListener("mousedown", handleClickOutside);
+//   }, []);
+
+//   const extractUniqueValues = (employees) => {
+//     const depts = new Set();
+//     const designations = new Set();
+    
+//     employees.forEach(emp => {
+//       if (emp.department) depts.add(emp.department);
+//       if (emp.role || emp.designation) designations.add(emp.role || emp.designation);
+//     });
+    
+//     setUniqueDepartments(Array.from(depts).sort());
+//     setUniqueDesignations(Array.from(designations).sort());
+//   };
+
+//   // ✅ Fetch when date filters change
+//   useEffect(() => {
+//     fetchLateAttendance();
+//   }, [fromDate, toDate, selectedMonth]);
+
+//   useEffect(() => {
+//     filterRecords();
+//   }, [records, searchTerm, filterDepartment, filterDesignation]);
+
+//   useEffect(() => {
+//     setPagination(prev => ({ ...prev, currentPage: 1 }));
+//   }, [searchTerm, filterDepartment, filterDesignation]);
+
+//   const filterRecords = () => {
+//     let filtered = [...records];
+    
+//     if (searchTerm.trim()) {
+//       const term = searchTerm.toLowerCase().trim();
+//       filtered = filtered.filter(rec => 
+//         rec.employeeId?.toString().toLowerCase().includes(term) ||
+//         rec.employeeName?.toLowerCase().includes(term)
+//       );
+//     }
+    
+//     if (filterDepartment) {
+//       filtered = filtered.filter(rec => rec.department === filterDepartment);
+//     }
+    
+//     if (filterDesignation) {
+//       filtered = filtered.filter(rec => rec.designation === filterDesignation);
+//     }
+    
+//     setFilteredRecords(filtered);
+//     setPagination(prev => ({
+//       ...prev,
+//       totalCount: filtered.length,
+//       totalPages: Math.ceil(filtered.length / prev.limit)
+//     }));
+//   };
+
+//   const indexOfLastRow = pagination.currentPage * pagination.limit;
+//   const indexOfFirstRow = indexOfLastRow - pagination.limit;
+//   const currentRows = filteredRecords.slice(indexOfFirstRow, indexOfLastRow);
+
+//   const handleItemsPerPageChange = (limit) => {
+//     setPagination({
+//       currentPage: 1,
+//       limit: limit,
+//       totalCount: filteredRecords.length,
+//       totalPages: Math.ceil(filteredRecords.length / limit)
+//     });
+//   };
+
+//   // ✅ Modified fetch with date parameters
+//   const fetchLateAttendance = async () => {
+//     try {
+//       setLoading(true);
+
+//       const params = new URLSearchParams();
+//       if (fromDate && toDate) {
+//         params.append('fromDate', fromDate);
+//         params.append('toDate', toDate);
+//       } else if (fromDate && !toDate) {
+//         params.append('fromDate', fromDate);
+//       } else if (selectedMonth) {
+//         params.append('month', selectedMonth);
+//       }
+
+//       const [empResp, shiftsResp, masterShiftsResp, attendanceResp] = await Promise.all([
+//         axios.get(`${BASE_URL}/employees/get-employees`),
+//         axios.get(`${BASE_URL}/shifts/assignments`),
+//         axios.get(`${BASE_URL}/shifts/master`),
+//         axios.get(`${BASE_URL}/attendance/allattendance${params.toString() ? `?${params.toString()}` : ''}`)
+//       ]);
+
+//       const employees = empResp.data || [];
+//       const activeEmployees = employees.filter(emp => !isEmployeeHidden(emp));
+//       const activeEmployeeIds = new Set(activeEmployees.map(emp => emp.employeeId || emp._id));
+      
+//       extractUniqueValues(activeEmployees);
+
+//       const shiftsData = shiftsResp.data.success ? shiftsResp.data.data || [] : [];
+//       const masterShifts = masterShiftsResp.data.success ? masterShiftsResp.data.data || [] : [];
+
+//       const attendanceData = attendanceResp.data || [];
+//       const allAttendance = Array.isArray(attendanceData)
+//         ? attendanceData
+//         : attendanceData.records || attendanceData.allAttendance || [];
+
+//       const lateRecords = processLateRecords(allAttendance, employees, activeEmployeeIds, shiftsData, masterShifts);
+//       setRecords(lateRecords);
+
+//     } catch (err) {
+//       console.error("Error fetching data:", err);
+//       setError("Failed to fetch data. Please ensure backend is running.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const getEmployeeShift = (employeeId, shiftsData, masterShifts) => {
+//     const shiftAssignment = shiftsData.find(s =>
+//       s.employeeAssignment?.employeeId === employeeId ||
+//       s.employeeId === employeeId
+//     );
+
+//     if (!shiftAssignment) return null;
+
+//     const shiftType = shiftAssignment.shiftType;
+//     const masterShift = masterShifts.find(shift => shift.shiftType === shiftType);
+
+//     if (!masterShift) {
+//       const shiftTimes = {
+//         "A": { start: "10:00", end: "19:00", grace: 5, isBrakeShift: false },
+//         "B": { start: "14:00", end: "22:00", grace: 5, isBrakeShift: false },
+//         "C": { start: "18:00", end: "21:00", grace: 5, isBrakeShift: false },
+//         "D": { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false },
+//         "E": { start: "10:00", end: "21:00", grace: 5, isBrakeShift: false },
+//         "F": { start: "14:00", end: "23:00", grace: 5, isBrakeShift: false },
+//         "G": { start: "09:00", end: "21:00", grace: 5, isBrakeShift: false },
+//         "H": { start: "09:00", end: "21:00", grace: 5, isBrakeShift: false },
+//         "I": { start: "07:00", end: "17:00", grace: 5, isBrakeShift: false },
+//         "BR": { start: "07:00", end: "21:30", grace: 5, isBrakeShift: true },
+//       };
+
+//       return shiftTimes[shiftType] || { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
+//     }
+
+//     if (masterShift.isBrakeShift && masterShift.timeSlots && masterShift.timeSlots.length >= 2) {
+//       return {
+//         start: masterShift.timeSlots[0]?.timeRange?.split('-')[0]?.trim() || "07:00",
+//         end: masterShift.timeSlots[1]?.timeRange?.split('-')[1]?.trim() || "21:30",
+//         grace: 5,
+//         isBrakeShift: true
+//       };
+//     }
+
+//     if (masterShift.timeSlots && masterShift.timeSlots.length > 0) {
+//       const timeSlot = masterShift.timeSlots[0];
+//       if (timeSlot.timeRange) {
+//         const [start, end] = timeSlot.timeRange.split('-').map(s => s.trim());
+//         return {
+//           start: start || "09:00",
+//           end: end || "18:00",
+//           grace: 5,
+//           isBrakeShift: false
+//         };
+//       }
+//     }
+
+//     return { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
+//   };
+
+//   const calculateLateMinutes = (employeeId, checkInTime, shiftsData, masterShifts) => {
+//     const shift = getEmployeeShift(employeeId, shiftsData, masterShifts);
+//     if (!shift || !checkInTime) return 0;
+
+//     const checkInDateTime = new Date(checkInTime);
+//     const [hours, minutes] = shift.start.split(':').map(Number);
+
+//     const shiftStartTime = new Date(checkInDateTime);
+//     shiftStartTime.setHours(hours, minutes, 0, 0);
+
+//     const graceTime = new Date(shiftStartTime);
+//     graceTime.setMinutes(graceTime.getMinutes() + shift.grace);
+
+//     if (checkInDateTime > graceTime) {
+//       const diffMs = checkInDateTime - graceTime;
+//       return Math.floor(diffMs / (1000 * 60));
+//     }
+
+//     return 0;
+//   };
+
+//   const processLateRecords = (attendanceData, employees, activeEmployeeIds, shiftsData, masterShifts) => {
+//     const lateRecords = [];
+//     const lateByEmployee = {};
+
+//     attendanceData.forEach(record => {
+//       if (!record.checkInTime) return;
+
+//       const recordDate = new Date(record.checkInTime);
+//       const recordDateStr = recordDate.toISOString().split('T')[0];
+
+//       const id = (typeof record.employeeId === 'object' 
+//         ? record.employeeId?.employeeId || record.employeeId?._id
+//         : record.employeeId);
+      
+//       if (!id) return;
+//       if (!activeEmployeeIds.has(id)) return;
+
+//       const lateMinutes = calculateLateMinutes(id, record.checkInTime, shiftsData, masterShifts);
+//       if (lateMinutes > 0) {
+//         const emp = employees.find(e => (e.employeeId === id || e._id === id));
+//         const shift = getEmployeeShift(id, shiftsData, masterShifts);
+
+//         const recordObj = {
+//           _id: record._id || id + Date.now() + Math.random(),
+//           employeeId: id,
+//           employeeName: emp?.name || "Unknown",
+//           department: emp?.department || emp?.departmentName || "N/A",
+//           designation: emp?.designation || emp?.role || "N/A",
+//           shiftStart: shift?.start || "Not set",
+//           checkInTime: record.checkInTime,
+//           lateByMinutes: lateMinutes,
+//           shiftType: shift?.shiftType || "Unknown",
+//           isBrakeShift: shift?.isBrakeShift || false,
+//           expectedTime: shift?.start || "Not set",
+//           actualTime: new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+//           date: recordDateStr
+//         };
+
+//         lateRecords.push(recordObj);
+
+//         const key = id;
+//         if (!lateByEmployee[key]) {
+//           lateByEmployee[key] = {
+//             ...recordObj,
+//             lateByMinutes: lateMinutes,
+//             totalLateDays: 1,
+//             totalLateMinutes: lateMinutes
+//           };
+//         } else {
+//           lateByEmployee[key].totalLateDays++;
+//           lateByEmployee[key].totalLateMinutes += lateMinutes;
+//           lateByEmployee[key].lateByMinutes = lateByEmployee[key].totalLateMinutes;
+//         }
+//       }
+//     });
+
+//     if (selectedMonth && !fromDate && !toDate) {
+//       return Object.values(lateByEmployee).map(rec => ({
+//         ...rec,
+//         displayValue: `${rec.totalLateDays} day(s) (${rec.totalLateMinutes} mins)`
+//       })).sort((a, b) => b.lateByMinutes - a.lateByMinutes);
+//     }
+
+//     return lateRecords.sort((a, b) => b.lateByMinutes - a.lateByMinutes);
+//   };
+
+//   const getLateColor = (minutes) => {
+//     if (minutes <= 5) return 'text-blue-700 bg-blue-100';
+//     if (minutes <= 10) return 'text-lime-600 bg-lime-100';
+//     if (minutes <= 20) return 'text-yellow-600 bg-yellow-100';
+//     if (minutes <= 30) return 'text-orange-600 bg-orange-100';
+//     if (minutes <= 45) return 'text-red-600 bg-red-100';
+//     if (minutes <= 55) return 'text-red-700 bg-red-200';
+//     if (minutes <= 65) return 'text-red-800 bg-red-300';
+//     return 'text-red-900 bg-red-400';
+//   };
+
+//   const clearFilters = () => {
+//     setSearchTerm("");
+//     setFilterDepartment("");
+//     setFilterDesignation("");
+//     setFromDate("");
+//     setToDate("");
+//     setSelectedMonth(new Date().toISOString().slice(0, 7));
+//   };
+
+//   if (loading)
+//     return (
+//       <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+//         <div className="mx-auto max-w-9xl">
+//           <div className="p-8 text-center bg-white rounded-lg shadow-md">
+//             <div className="flex items-center justify-center">
+//               <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
+//               <span className="ml-2 text-gray-500">Loading late attendance...</span>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     );
+    
+//   if (error)
+//     return (
+//       <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+//         <div className="mx-auto max-w-9xl">
+//           <div className="p-8 text-center bg-white rounded-lg shadow-md">
+//             <p className="text-red-600">{error}</p>
+//           </div>
+//         </div>
+//       </div>
+//     );
+
+//   return (
+//     <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+//       <div className="mx-auto max-w-9xl">
+//         {/* Filters - Same as TodayAttendance */}
+//         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+//           <div className="flex flex-wrap items-center gap-2">
+            
+//             {/* ID/Name Search */}
+//             <div className="relative flex-1 min-w-[180px]">
+//               <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
+//               <input
+//                 type="text"
+//                 placeholder="Search by ID or Name..."
+//                 value={searchTerm}
+//                 onChange={(e) => setSearchTerm(e.target.value)}
+//                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* Department Filter Button */}
+//             <div className="relative" ref={departmentFilterRef}>
+//               <button
+//                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+//                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
+//                   filterDepartment 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
+//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+//                 }`}
+//               >
+//                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
+//               </button>
+              
+//               {showDepartmentFilter && (
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                   <div 
+//                     onClick={() => {
+//                       setFilterDepartment('');
+//                       setShowDepartmentFilter(false);
+//                     }}
+//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
+//                   >
+//                     All Departments
+//                   </div>
+//                   {uniqueDepartments.map(dept => (
+//                     <div 
+//                       key={dept}
+//                       onClick={() => {
+//                         setFilterDepartment(dept);
+//                         setShowDepartmentFilter(false);
+//                       }}
+//                       className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
+//                         filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''
+//                       }`}
+//                     >
+//                       {dept}
+//                     </div>
+//                   ))}
+//                 </div>
+//               )}
+//             </div>
+
+//             {/* Designation Filter Button */}
+//             <div className="relative" ref={designationFilterRef}>
+//               <button
+//                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
+//                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
+//                   filterDesignation 
+//                     ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
+//                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+//                 }`}
+//               >
+//                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
+//               </button>
+              
+//               {showDesignationFilter && (
+//                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+//                   <div 
+//                     onClick={() => {
+//                       setFilterDesignation('');
+//                       setShowDesignationFilter(false);
+//                     }}
+//                     className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
+//                   >
+//                     All Designations
+//                   </div>
+//                   {uniqueDesignations.map(des => (
+//                     <div 
+//                       key={des}
+//                       onClick={() => {
+//                         setFilterDesignation(des);
+//                         setShowDesignationFilter(false);
+//                       }}
+//                       className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
+//                         filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''
+//                       }`}
+//                     >
+//                       {des}
+//                     </div>
+//                   ))}
+//                 </div>
+//               )}
+//             </div>
+
+//             {/* From Date */}
+//             <div className="relative w-[150px]">
+//               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
+//                 From:
+//               </span>
+//               <input
+//                 type="date"
+//                 value={fromDate}
+//                 onChange={(e) => setFromDate(e.target.value)}
+//                 className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* To Date */}
+//             <div className="relative w-[150px]">
+//               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
+//                 To:
+//               </span>
+//               <input
+//                 type="date"
+//                 value={toDate}
+//                 onChange={(e) => setToDate(e.target.value)}
+//                 className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* Month Selector */}
+//             <div className="relative w-[150px]">
+//               <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
+//               <input
+//                 type="month"
+//                 value={selectedMonth}
+//                 onChange={(e) => setSelectedMonth(e.target.value)}
+//                 className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* Apply Button */}
+//             <button
+//               onClick={fetchLateAttendance}
+//               className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-900 bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
+//             >
+//               <FaSearch className="text-xs" /> Apply
+//             </button>
+
+//             {/* Clear Filters Button */}
+//             {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate) && (
+//               <button
+//                 onClick={clearFilters}
+//                 className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+//               >
+//                 Clear
+//               </button>
+//             )}
+//           </div>
+//         </div>
+
+//         {filteredRecords.length === 0 ? (
+//           <div className="p-8 text-center bg-white rounded-lg shadow-md">
+//             <p className="text-lg text-gray-500">No late arrivals found</p>
+//             <p className="mt-2 text-sm text-gray-500">
+//               {fromDate && toDate 
+//                 ? `From ${fromDate} to ${toDate}` 
+//                 : selectedMonth 
+//                 ? `For month: ${selectedMonth}`
+//                 : "Try selecting a date range or month"}
+//               {(searchTerm || filterDepartment || filterDesignation) && " - Try clearing filters"}
+//             </p>
+//           </div>
+//         ) : (
+//           <>
+//             {/* Activities Table - Same as TodayAttendance style */}
+//             <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+//               <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+//                 <table className="min-w-full">
+//                   <thead className="text-xs text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
+//                     <tr>
+//                       <th className="px-2 py-2 text-center">Employee ID</th>
+//                       <th className="px-2 py-2 text-center">Name</th>
+//                       <th className="px-2 py-2 text-center">Department</th>
+//                       <th className="px-2 py-2 text-center">Designation</th>
+//                       <th className="px-2 py-2 text-center">Expected Time</th>
+//                       <th className="px-2 py-2 text-center">Actual Time</th>
+//                       <th className="px-2 py-2 text-center">Date</th>
+//                       <th className="px-2 py-2 text-center">Late By</th>
+//                       <th className="px-2 py-2 text-center">Status</th>
+//                     </tr>
+//                   </thead>
+//                   <tbody className="bg-white divide-y divide-gray-200">
+//                     {currentRows.map((rec) => (
+//                       <tr key={rec._id} className="text-xs transition-colors hover:bg-white">
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+//                           {rec.employeeId}
+//                         </td>
+//                         <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+//                           {rec.employeeName || "-"}
+//                         </td>
+//                         <td className="px-2 py-2 text-center text-gray-500">
+//                           {rec.department}
+//                         </td>
+//                         <td className="px-2 py-2 text-center text-gray-500">
+//                           {rec.designation}
+//                         </td>
+//                         <td className="px-2 py-2 font-medium text-center text-blue-600">
+//                           {rec.expectedTime || "-"}
+//                         </td>
+//                         <td className="px-2 py-2 font-medium text-center text-orange-600">
+//                           {rec.actualTime || "-"}
+//                         </td>
+//                         <td className="px-2 py-2 text-center text-gray-500">
+//                           {rec.date || (rec.checkInTime ? new Date(rec.checkInTime).toLocaleDateString() : '-')}
+//                         </td>
+//                         <td className="px-2 py-2 text-center">
+//                           <span className={`px-2 py-1 rounded-full text-[10px] font-semibold ${getLateColor(rec.lateByMinutes)}`}>
+//                             {selectedMonth && !fromDate && !toDate && rec.totalLateDays 
+//                               ? `${rec.totalLateDays} day(s)` 
+//                               : `${rec.lateByMinutes} mins`}
+//                           </span>
+//                         </td>
+//                         <td className="px-2 py-2 text-center">
+//                           <span className="px-2 py-1 text-[10px] font-semibold text-yellow-700 bg-yellow-100 rounded-full">
+//                             Late
+//                           </span>
+//                         </td>
+//                       </tr>
+//                     ))}
+//                   </tbody>
+//                 </table>
+//               </div>
+
+//               {/* Pagination - Same as TodayAttendance */}
+//               {filteredRecords.length > 0 && (
+//                 <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-white">
+//                   <div className="flex flex-wrap items-center gap-2 text-xs text-gray-700">
+//                     <span>Showing</span>
+//                     <span className="font-medium">
+//                       {(pagination.currentPage - 1) * pagination.limit + 1}
+//                     </span>
+//                     <span>to</span>
+//                     <span className="font-medium">
+//                       {Math.min(
+//                         pagination.currentPage * pagination.limit,
+//                         pagination.totalCount
+//                       )}
+//                     </span>
+//                     <span>of</span>
+//                     <span className="font-medium">
+//                       {pagination.totalCount}
+//                     </span>
+//                     <span>results</span>
+
+//                     <select
+//                       value={pagination.limit}
+//                       onChange={(e) => {
+//                         const newLimit = Number(e.target.value);
+//                         handleItemsPerPageChange(newLimit);
+//                       }}
+//                       className="p-1 ml-1 text-xs border rounded-lg"
+//                     >
+//                       <option value={5}>5</option>
+//                       <option value={10}>10</option>
+//                       <option value={20}>20</option>
+//                       <option value={50}>50</option>
+//                     </select>
+//                   </div>
+
+//                   <div className="flex gap-1">
+//                     <button
+//                       onClick={() =>
+//                         setPagination((prev) => ({
+//                           ...prev,
+//                           currentPage: prev.currentPage - 1,
+//                         }))
+//                       }
+//                       disabled={pagination.currentPage === 1}
+//                       className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+//                     >
+//                       Previous
+//                     </button>
+
+//                     <div className="flex items-center gap-0.5">
+//                       {[...Array(pagination.totalPages)].map((_, index) => {
+//                         const page = index + 1;
+//                         if (
+//                           page === 1 ||
+//                           page === pagination.totalPages ||
+//                           (page >= pagination.currentPage - 1 &&
+//                             page <= pagination.currentPage + 1)
+//                         ) {
+//                           return (
+//                             <button
+//                               key={page}
+//                               onClick={() =>
+//                                 setPagination((prev) => ({
+//                                   ...prev,
+//                                   currentPage: page,
+//                                 }))
+//                               }
+//                               className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+//                                 pagination.currentPage === page
+//                                   ? "bg-blue-600 text-gray-900"
+//                                   : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
+//                               }`}
+//                             >
+//                               {page}
+//                             </button>
+//                           );
+//                         } else if (
+//                           page === pagination.currentPage - 2 ||
+//                           page === pagination.currentPage + 2
+//                         ) {
+//                           return (
+//                             <span key={page} className="px-1 text-xs text-gray-500">
+//                               ...
+//                             </span>
+//                           );
+//                         }
+//                         return null;
+//                       })}
+//                     </div>
+
+//                     <button
+//                       onClick={() =>
+//                         setPagination((prev) => ({
+//                           ...prev,
+//                           currentPage: prev.currentPage + 1,
+//                         }))
+//                       }
+//                       disabled={pagination.currentPage === pagination.totalPages}
+//                       className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+//                     >
+//                       Next
+//                     </button>
+//                   </div>
+//                 </div>
+//               )}
+//             </div>
+//           </>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default LateToday;
+
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag } from "react-icons/fa";
@@ -1658,9 +2357,18 @@ const LateToday = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  // Sirf ye change kiya hai - default date today set ki hai
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const [fromDate, setFromDate] = useState(getTodayDate());
+  const [toDate, setToDate] = useState(getTodayDate());
+  const [selectedMonth, setSelectedMonth] = useState("");
   
   const [searchTerm, setSearchTerm] = useState("");
   
@@ -1708,7 +2416,7 @@ const LateToday = () => {
     setUniqueDesignations(Array.from(designations).sort());
   };
 
-  // ✅ Fetch when date filters change
+  // Fetch when date filters change
   useEffect(() => {
     fetchLateAttendance();
   }, [fromDate, toDate, selectedMonth]);
@@ -1761,19 +2469,177 @@ const LateToday = () => {
     });
   };
 
-  // ✅ Modified fetch with date parameters
+  const getEmployeeShift = (employeeId, shiftsData, masterShifts) => {
+    const shiftAssignment = shiftsData.find(s => {
+      const empId = s.employeeAssignment?.employeeId || s.employeeId;
+      return empId === employeeId || 
+             empId?.toString() === employeeId?.toString() ||
+             (s.employeeId && s.employeeId === employeeId);
+    });
+
+    if (!shiftAssignment) {
+      return { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false, shiftType: "DEFAULT" };
+    }
+
+    const shiftType = shiftAssignment.shiftType || shiftAssignment.shift?.shiftType;
+    
+    if (!shiftType) {
+      return { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
+    }
+    
+    const masterShift = masterShifts.find(shift => shift.shiftType === shiftType);
+
+    if (!masterShift) {
+      const shiftTimes = {
+        "A": { start: "10:00", end: "19:00", grace: 5, isBrakeShift: false },
+        "B": { start: "14:00", end: "22:00", grace: 5, isBrakeShift: false },
+        "C": { start: "18:00", end: "21:00", grace: 5, isBrakeShift: false },
+        "D": { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false },
+        "E": { start: "10:00", end: "21:00", grace: 5, isBrakeShift: false },
+        "F": { start: "14:00", end: "23:00", grace: 5, isBrakeShift: false },
+        "G": { start: "09:00", end: "21:00", grace: 5, isBrakeShift: false },
+        "H": { start: "09:00", end: "21:00", grace: 5, isBrakeShift: false },
+        "I": { start: "07:00", end: "17:00", grace: 5, isBrakeShift: false },
+        "BR": { start: "07:00", end: "21:30", grace: 5, isBrakeShift: true },
+      };
+
+      return shiftTimes[shiftType] || { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
+    }
+
+    if (masterShift.isBrakeShift && masterShift.timeSlots && masterShift.timeSlots.length >= 2) {
+      const startTime = masterShift.timeSlots[0]?.timeRange?.split('-')[0]?.trim() || "07:00";
+      return {
+        start: startTime,
+        end: masterShift.timeSlots[1]?.timeRange?.split('-')[1]?.trim() || "21:30",
+        grace: masterShift.graceMinutes || 5,
+        isBrakeShift: true,
+        shiftType: shiftType
+      };
+    }
+
+    if (masterShift.timeSlots && masterShift.timeSlots.length > 0) {
+      const timeSlot = masterShift.timeSlots[0];
+      if (timeSlot.timeRange) {
+        const [start, end] = timeSlot.timeRange.split('-').map(s => s.trim());
+        return {
+          start: start || "09:00",
+          end: end || "18:00",
+          grace: masterShift.graceMinutes || 5,
+          isBrakeShift: false,
+          shiftType: shiftType
+        };
+      }
+    }
+
+    return { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false, shiftType: shiftType };
+  };
+
+  const calculateLateMinutes = (employeeId, checkInTime, shiftsData, masterShifts) => {
+    if (!checkInTime) return 0;
+    
+    const shift = getEmployeeShift(employeeId, shiftsData, masterShifts);
+    if (!shift || !shift.start) return 0;
+
+    const checkInDateTime = new Date(checkInTime);
+    
+    let shiftHours = 9, shiftMinutes = 0;
+    if (shift.start) {
+      const timeMatch = shift.start.match(/(\d{1,2}):(\d{2})/);
+      if (timeMatch) {
+        shiftHours = parseInt(timeMatch[1]);
+        shiftMinutes = parseInt(timeMatch[2]);
+      }
+    }
+
+    const shiftStartTime = new Date(checkInDateTime);
+    shiftStartTime.setHours(shiftHours, shiftMinutes, 0, 0);
+
+    const graceMinutes = shift.grace || 5;
+    const graceTime = new Date(shiftStartTime);
+    graceTime.setMinutes(graceTime.getMinutes() + graceMinutes);
+
+    if (checkInDateTime > graceTime) {
+      const diffMs = checkInDateTime - graceTime;
+      return Math.floor(diffMs / (1000 * 60));
+    }
+
+    return 0;
+  };
+
+  const processLateRecords = (attendanceData, employees, activeEmployeeIds, shiftsData, masterShifts) => {
+    const lateRecords = [];
+
+    attendanceData.forEach(record => {
+      if (!record.checkInTime) return;
+
+      const recordDate = new Date(record.checkInTime);
+      const recordDateStr = recordDate.toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+
+      const id = (typeof record.employeeId === 'object' 
+        ? record.employeeId?.employeeId || record.employeeId?._id
+        : record.employeeId);
+      
+      if (!id) return;
+      if (!activeEmployeeIds.has(id)) return;
+
+      const lateMinutes = calculateLateMinutes(id, record.checkInTime, shiftsData, masterShifts);
+      
+      if (lateMinutes > 0) {
+        const emp = employees.find(e => (e.employeeId === id || e._id === id));
+        const shift = getEmployeeShift(id, shiftsData, masterShifts);
+
+        const recordObj = {
+          _id: record._id || `${id}_${recordDateStr}_${Date.now()}_${Math.random()}`,
+          employeeId: id,
+          employeeName: emp?.name || "Unknown",
+          department: emp?.department || emp?.departmentName || "N/A",
+          designation: emp?.designation || emp?.role || "N/A",
+          shiftStart: shift?.start || "Not set",
+          checkInTime: record.checkInTime,
+          lateByMinutes: lateMinutes,
+          shiftType: shift?.shiftType || "Unknown",
+          isBrakeShift: shift?.isBrakeShift || false,
+          expectedTime: shift?.start || "Not set",
+          actualTime: new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          date: recordDateStr,
+          checkInTimeFull: record.checkInTime
+        };
+
+        lateRecords.push(recordObj);
+      }
+    });
+
+    return lateRecords.sort((a, b) => new Date(b.checkInTimeFull) - new Date(a.checkInTimeFull));
+  };
+
   const fetchLateAttendance = async () => {
     try {
       setLoading(true);
 
       const params = new URLSearchParams();
-      if (fromDate && toDate) {
-        params.append('fromDate', fromDate);
-        params.append('toDate', toDate);
-      } else if (fromDate && !toDate) {
-        params.append('fromDate', fromDate);
-      } else if (selectedMonth) {
-        params.append('month', selectedMonth);
+      
+      // Sirf ye change - agar koi date filter nahi hai to today's date use karo
+      let startDate = fromDate;
+      let endDate = toDate;
+      
+      if (selectedMonth) {
+        const [year, month] = selectedMonth.split('-');
+        const firstDay = `${year}-${month}-01`;
+        const lastDay = new Date(parseInt(year), parseInt(month), 0).toISOString().split('T')[0];
+        startDate = firstDay;
+        endDate = lastDay;
+      }
+      
+      if (startDate && endDate) {
+        params.append('fromDate', startDate);
+        params.append('toDate', endDate);
+      } else if (startDate) {
+        params.append('fromDate', startDate);
+        params.append('toDate', startDate);
       }
 
       const [empResp, shiftsResp, masterShiftsResp, attendanceResp] = await Promise.all([
@@ -1798,6 +2664,7 @@ const LateToday = () => {
         : attendanceData.records || attendanceData.allAttendance || [];
 
       const lateRecords = processLateRecords(allAttendance, employees, activeEmployeeIds, shiftsData, masterShifts);
+      
       setRecords(lateRecords);
 
     } catch (err) {
@@ -1806,146 +2673,6 @@ const LateToday = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getEmployeeShift = (employeeId, shiftsData, masterShifts) => {
-    const shiftAssignment = shiftsData.find(s =>
-      s.employeeAssignment?.employeeId === employeeId ||
-      s.employeeId === employeeId
-    );
-
-    if (!shiftAssignment) return null;
-
-    const shiftType = shiftAssignment.shiftType;
-    const masterShift = masterShifts.find(shift => shift.shiftType === shiftType);
-
-    if (!masterShift) {
-      const shiftTimes = {
-        "A": { start: "10:00", end: "19:00", grace: 5, isBrakeShift: false },
-        "B": { start: "14:00", end: "22:00", grace: 5, isBrakeShift: false },
-        "C": { start: "18:00", end: "21:00", grace: 5, isBrakeShift: false },
-        "D": { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false },
-        "E": { start: "10:00", end: "21:00", grace: 5, isBrakeShift: false },
-        "F": { start: "14:00", end: "23:00", grace: 5, isBrakeShift: false },
-        "G": { start: "09:00", end: "21:00", grace: 5, isBrakeShift: false },
-        "H": { start: "09:00", end: "21:00", grace: 5, isBrakeShift: false },
-        "I": { start: "07:00", end: "17:00", grace: 5, isBrakeShift: false },
-        "BR": { start: "07:00", end: "21:30", grace: 5, isBrakeShift: true },
-      };
-
-      return shiftTimes[shiftType] || { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
-    }
-
-    if (masterShift.isBrakeShift && masterShift.timeSlots && masterShift.timeSlots.length >= 2) {
-      return {
-        start: masterShift.timeSlots[0]?.timeRange?.split('-')[0]?.trim() || "07:00",
-        end: masterShift.timeSlots[1]?.timeRange?.split('-')[1]?.trim() || "21:30",
-        grace: 5,
-        isBrakeShift: true
-      };
-    }
-
-    if (masterShift.timeSlots && masterShift.timeSlots.length > 0) {
-      const timeSlot = masterShift.timeSlots[0];
-      if (timeSlot.timeRange) {
-        const [start, end] = timeSlot.timeRange.split('-').map(s => s.trim());
-        return {
-          start: start || "09:00",
-          end: end || "18:00",
-          grace: 5,
-          isBrakeShift: false
-        };
-      }
-    }
-
-    return { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
-  };
-
-  const calculateLateMinutes = (employeeId, checkInTime, shiftsData, masterShifts) => {
-    const shift = getEmployeeShift(employeeId, shiftsData, masterShifts);
-    if (!shift || !checkInTime) return 0;
-
-    const checkInDateTime = new Date(checkInTime);
-    const [hours, minutes] = shift.start.split(':').map(Number);
-
-    const shiftStartTime = new Date(checkInDateTime);
-    shiftStartTime.setHours(hours, minutes, 0, 0);
-
-    const graceTime = new Date(shiftStartTime);
-    graceTime.setMinutes(graceTime.getMinutes() + shift.grace);
-
-    if (checkInDateTime > graceTime) {
-      const diffMs = checkInDateTime - graceTime;
-      return Math.floor(diffMs / (1000 * 60));
-    }
-
-    return 0;
-  };
-
-  const processLateRecords = (attendanceData, employees, activeEmployeeIds, shiftsData, masterShifts) => {
-    const lateRecords = [];
-    const lateByEmployee = {};
-
-    attendanceData.forEach(record => {
-      if (!record.checkInTime) return;
-
-      const recordDate = new Date(record.checkInTime);
-      const recordDateStr = recordDate.toISOString().split('T')[0];
-
-      const id = (typeof record.employeeId === 'object' 
-        ? record.employeeId?.employeeId || record.employeeId?._id
-        : record.employeeId);
-      
-      if (!id) return;
-      if (!activeEmployeeIds.has(id)) return;
-
-      const lateMinutes = calculateLateMinutes(id, record.checkInTime, shiftsData, masterShifts);
-      if (lateMinutes > 0) {
-        const emp = employees.find(e => (e.employeeId === id || e._id === id));
-        const shift = getEmployeeShift(id, shiftsData, masterShifts);
-
-        const recordObj = {
-          _id: record._id || id + Date.now() + Math.random(),
-          employeeId: id,
-          employeeName: emp?.name || "Unknown",
-          department: emp?.department || emp?.departmentName || "N/A",
-          designation: emp?.designation || emp?.role || "N/A",
-          shiftStart: shift?.start || "Not set",
-          checkInTime: record.checkInTime,
-          lateByMinutes: lateMinutes,
-          shiftType: shift?.shiftType || "Unknown",
-          isBrakeShift: shift?.isBrakeShift || false,
-          expectedTime: shift?.start || "Not set",
-          actualTime: new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          date: recordDateStr
-        };
-
-        lateRecords.push(recordObj);
-
-        const key = id;
-        if (!lateByEmployee[key]) {
-          lateByEmployee[key] = {
-            ...recordObj,
-            lateByMinutes: lateMinutes,
-            totalLateDays: 1,
-            totalLateMinutes: lateMinutes
-          };
-        } else {
-          lateByEmployee[key].totalLateDays++;
-          lateByEmployee[key].totalLateMinutes += lateMinutes;
-          lateByEmployee[key].lateByMinutes = lateByEmployee[key].totalLateMinutes;
-        }
-      }
-    });
-
-    if (selectedMonth && !fromDate && !toDate) {
-      return Object.values(lateByEmployee).map(rec => ({
-        ...rec,
-        displayValue: `${rec.totalLateDays} day(s) (${rec.totalLateMinutes} mins)`
-      })).sort((a, b) => b.lateByMinutes - a.lateByMinutes);
-    }
-
-    return lateRecords.sort((a, b) => b.lateByMinutes - a.lateByMinutes);
   };
 
   const getLateColor = (minutes) => {
@@ -1963,9 +2690,9 @@ const LateToday = () => {
     setSearchTerm("");
     setFilterDepartment("");
     setFilterDesignation("");
-    setFromDate("");
-    setToDate("");
-    setSelectedMonth(new Date().toISOString().slice(0, 7));
+    setFromDate(getTodayDate());
+    setToDate(getTodayDate());
+    setSelectedMonth("");
   };
 
   if (loading)
@@ -1996,11 +2723,9 @@ const LateToday = () => {
   return (
     <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="mx-auto max-w-9xl">
-        {/* Filters - Same as TodayAttendance */}
         <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
             
-            {/* ID/Name Search */}
             <div className="relative flex-1 min-w-[180px]">
               <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
               <input
@@ -2012,13 +2737,12 @@ const LateToday = () => {
               />
             </div>
 
-            {/* Department Filter Button */}
             <div className="relative" ref={departmentFilterRef}>
               <button
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDepartment 
-                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -2054,13 +2778,12 @@ const LateToday = () => {
               )}
             </div>
 
-            {/* Designation Filter Button */}
             <div className="relative" ref={designationFilterRef}>
               <button
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
                 className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
                   filterDesignation 
-                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                 }`}
               >
@@ -2096,7 +2819,6 @@ const LateToday = () => {
               )}
             </div>
 
-            {/* From Date */}
             <div className="relative w-[150px]">
               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
                 From:
@@ -2109,7 +2831,6 @@ const LateToday = () => {
               />
             </div>
 
-            {/* To Date */}
             <div className="relative w-[150px]">
               <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
                 To:
@@ -2122,9 +2843,8 @@ const LateToday = () => {
               />
             </div>
 
-            {/* Month Selector */}
             <div className="relative w-[150px]">
-              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="month"
                 value={selectedMonth}
@@ -2133,19 +2853,17 @@ const LateToday = () => {
               />
             </div>
 
-            {/* Apply Button */}
             <button
               onClick={fetchLateAttendance}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-900 bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
             >
               <FaSearch className="text-xs" /> Apply
             </button>
 
-            {/* Clear Filters Button */}
-            {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate) && (
+            {(searchTerm || filterDepartment || filterDesignation || fromDate !== getTodayDate() || toDate !== getTodayDate() || selectedMonth) && (
               <button
                 onClick={clearFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                className="h-8 px-3 text-xs font-medium text-gray-700 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
               >
                 Clear
               </button>
@@ -2157,183 +2875,138 @@ const LateToday = () => {
           <div className="p-8 text-center bg-white rounded-lg shadow-md">
             <p className="text-lg text-gray-500">No late arrivals found</p>
             <p className="mt-2 text-sm text-gray-500">
-              {fromDate && toDate 
-                ? `From ${fromDate} to ${toDate}` 
+              {fromDate && toDate && fromDate === toDate 
+                ? `For date: ${new Date(fromDate).toLocaleDateString('en-IN')}` 
+                : fromDate && toDate && fromDate !== toDate
+                ? `From ${new Date(fromDate).toLocaleDateString('en-IN')} to ${new Date(toDate).toLocaleDateString('en-IN')}`
                 : selectedMonth 
                 ? `For month: ${selectedMonth}`
-                : "Try selecting a date range or month"}
+                : "Today's date"}
               {(searchTerm || filterDepartment || filterDesignation) && " - Try clearing filters"}
             </p>
           </div>
         ) : (
-          <>
-            {/* Activities Table - Same as TodayAttendance style */}
-            <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-              <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
-                <table className="min-w-full">
-                  <thead className="text-xs text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
-                    <tr>
-                      <th className="px-2 py-2 text-center">Employee ID</th>
-                      <th className="px-2 py-2 text-center">Name</th>
-                      <th className="px-2 py-2 text-center">Department</th>
-                      <th className="px-2 py-2 text-center">Designation</th>
-                      <th className="px-2 py-2 text-center">Expected Time</th>
-                      <th className="px-2 py-2 text-center">Actual Time</th>
-                      <th className="px-2 py-2 text-center">Date</th>
-                      <th className="px-2 py-2 text-center">Late By</th>
-                      <th className="px-2 py-2 text-center">Status</th>
+          <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-gradient-to-r from-green-500 to-blue-600">
+                  <tr>
+                    <th className="px-2 py-2 text-center text-white">Employee ID</th>
+                    <th className="px-2 py-2 text-center text-white">Name</th>
+                    <th className="px-2 py-2 text-center text-white">Department</th>
+                    <th className="px-2 py-2 text-center text-white">Designation</th>
+                    <th className="px-2 py-2 text-center text-white">Date</th>
+                    <th className="px-2 py-2 text-center text-white">Expected Time</th>
+                    <th className="px-2 py-2 text-center text-white">Actual Time</th>
+                    <th className="px-2 py-2 text-center text-white">Late By</th>
+                    <th className="px-2 py-2 text-center text-white">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {currentRows.map((rec) => (
+                    <tr key={rec._id} className="text-xs transition-colors hover:bg-gray-50">
+                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+                        {rec.employeeId}
+                      </td>
+                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
+                        {rec.employeeName || "-"}
+                      </td>
+                      <td className="px-2 py-2 text-center text-gray-700">
+                        {rec.department}
+                      </td>
+                      <td className="px-2 py-2 text-center text-gray-700">
+                        {rec.designation}
+                      </td>
+                      <td className="px-2 py-2 text-center text-gray-700 whitespace-nowrap">
+                        {rec.date}
+                      </td>
+                      <td className="px-2 py-2 font-medium text-center text-blue-600">
+                        {rec.expectedTime || "-"}
+                      </td>
+                      <td className="px-2 py-2 font-medium text-center text-orange-600">
+                        {rec.actualTime || "-"}
+                      </td>
+                      <td className="px-2 py-2 text-center">
+                        <span className={`px-2 py-1 rounded-full text-[10px] font-semibold ${getLateColor(rec.lateByMinutes)}`}>
+                          {rec.lateByMinutes} mins
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-center">
+                        <span className="px-2 py-1 text-[10px] font-semibold text-yellow-700 bg-yellow-100 rounded-full">
+                          Late
+                        </span>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {currentRows.map((rec) => (
-                      <tr key={rec._id} className="text-xs transition-colors hover:bg-white">
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                          {rec.employeeId}
-                        </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                          {rec.employeeName || "-"}
-                        </td>
-                        <td className="px-2 py-2 text-center text-gray-500">
-                          {rec.department}
-                        </td>
-                        <td className="px-2 py-2 text-center text-gray-500">
-                          {rec.designation}
-                        </td>
-                        <td className="px-2 py-2 font-medium text-center text-blue-600">
-                          {rec.expectedTime || "-"}
-                        </td>
-                        <td className="px-2 py-2 font-medium text-center text-orange-600">
-                          {rec.actualTime || "-"}
-                        </td>
-                        <td className="px-2 py-2 text-center text-gray-500">
-                          {rec.date || (rec.checkInTime ? new Date(rec.checkInTime).toLocaleDateString() : '-')}
-                        </td>
-                        <td className="px-2 py-2 text-center">
-                          <span className={`px-2 py-1 rounded-full text-[10px] font-semibold ${getLateColor(rec.lateByMinutes)}`}>
-                            {selectedMonth && !fromDate && !toDate && rec.totalLateDays 
-                              ? `${rec.totalLateDays} day(s)` 
-                              : `${rec.lateByMinutes} mins`}
-                          </span>
-                        </td>
-                        <td className="px-2 py-2 text-center">
-                          <span className="px-2 py-1 text-[10px] font-semibold text-yellow-700 bg-yellow-100 rounded-full">
-                            Late
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination - Same as TodayAttendance */}
-              {filteredRecords.length > 0 && (
-                <div className="flex items-center justify-between px-2 py-2 border-t border-gray-200 bg-white">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-gray-700">
-                    <span>Showing</span>
-                    <span className="font-medium">
-                      {(pagination.currentPage - 1) * pagination.limit + 1}
-                    </span>
-                    <span>to</span>
-                    <span className="font-medium">
-                      {Math.min(
-                        pagination.currentPage * pagination.limit,
-                        pagination.totalCount
-                      )}
-                    </span>
-                    <span>of</span>
-                    <span className="font-medium">
-                      {pagination.totalCount}
-                    </span>
-                    <span>results</span>
-
-                    <select
-                      value={pagination.limit}
-                      onChange={(e) => {
-                        const newLimit = Number(e.target.value);
-                        handleItemsPerPageChange(newLimit);
-                      }}
-                      className="p-1 ml-1 text-xs border rounded-lg"
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                    </select>
-                  </div>
-
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() =>
-                        setPagination((prev) => ({
-                          ...prev,
-                          currentPage: prev.currentPage - 1,
-                        }))
-                      }
-                      disabled={pagination.currentPage === 1}
-                      className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Previous
-                    </button>
-
-                    <div className="flex items-center gap-0.5">
-                      {[...Array(pagination.totalPages)].map((_, index) => {
-                        const page = index + 1;
-                        if (
-                          page === 1 ||
-                          page === pagination.totalPages ||
-                          (page >= pagination.currentPage - 1 &&
-                            page <= pagination.currentPage + 1)
-                        ) {
-                          return (
-                            <button
-                              key={page}
-                              onClick={() =>
-                                setPagination((prev) => ({
-                                  ...prev,
-                                  currentPage: page,
-                                }))
-                              }
-                              className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
-                                pagination.currentPage === page
-                                  ? "bg-blue-600 text-gray-900"
-                                  : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          );
-                        } else if (
-                          page === pagination.currentPage - 2 ||
-                          page === pagination.currentPage + 2
-                        ) {
-                          return (
-                            <span key={page} className="px-1 text-xs text-gray-500">
-                              ...
-                            </span>
-                          );
-                        }
-                        return null;
-                      })}
-                    </div>
-
-                    <button
-                      onClick={() =>
-                        setPagination((prev) => ({
-                          ...prev,
-                          currentPage: prev.currentPage + 1,
-                        }))
-                      }
-                      disabled={pagination.currentPage === pagination.totalPages}
-                      className="px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </>
+
+            {filteredRecords.length > 0 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-white">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-700">
+                  <span>Showing</span>
+                  <span className="font-medium">
+                    {(pagination.currentPage - 1) * pagination.limit + 1}
+                  </span>
+                  <span>to</span>
+                  <span className="font-medium">
+                    {Math.min(
+                      pagination.currentPage * pagination.limit,
+                      pagination.totalCount
+                    )}
+                  </span>
+                  <span>of</span>
+                  <span className="font-medium">
+                    {pagination.totalCount}
+                  </span>
+                  <span>results</span>
+
+                  <select
+                    value={pagination.limit}
+                    onChange={(e) => {
+                      const newLimit = Number(e.target.value);
+                      handleItemsPerPageChange(newLimit);
+                    }}
+                    className="p-1 ml-1 text-xs border rounded-lg"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-1">
+                  <button
+                    onClick={() =>
+                      setPagination((prev) => ({
+                        ...prev,
+                        currentPage: prev.currentPage - 1,
+                      }))
+                    }
+                    disabled={pagination.currentPage === 1}
+                    className="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      setPagination((prev) => ({
+                        ...prev,
+                        currentPage: prev.currentPage + 1,
+                      }))
+                    }
+                    disabled={pagination.currentPage === pagination.totalPages}
+                    className="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
