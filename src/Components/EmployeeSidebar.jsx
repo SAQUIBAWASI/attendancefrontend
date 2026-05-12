@@ -1261,7 +1261,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                           <Link
                             to={sub.path}
                             onClick={() => handleDropdownItemClick(sub.path)}
-                            className={`block py-1 text-[13px] transition-colors pl-8 ${
+                            className={`block py-1 text-[13px] transition-colors ${
                               isActive(sub.path)
                                 ? "text-white font-semibold"
                                 : "text-white hover:text-white"
