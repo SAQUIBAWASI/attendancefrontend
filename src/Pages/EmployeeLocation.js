@@ -173,9 +173,7 @@
 //   );
 // };
 
-// export default EmployeeLocation;
-
-
+// export default Employe
 import axios from "axios";
 import { useEffect, useState } from "react";
 
@@ -184,13 +182,15 @@ const EmployeeLocation = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Get employee ID from localStorage
+  // Get employee data from localStorage
   const employeeDataRaw = localStorage.getItem("employeeData");
   let employeeId = null;
+  let employeeName = "N/A";
   if (employeeDataRaw) {
     try {
       const employeeData = JSON.parse(employeeDataRaw);
       employeeId = employeeData.employeeId;
+      employeeName = employeeData.name || employeeData.employeeName || "N/A";
     } catch (err) {
       console.error("Invalid employee data in localStorage.");
     }
@@ -211,9 +211,12 @@ const EmployeeLocation = () => {
           `https://api.timelyhealth.in/api/employees/mylocation/${employeeId}`
         );
 
+        // API returns: { success: true, data: { location: {...} } }
         if (res.data && res.data.success && res.data.data) {
-          const locationData = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
-          setLocations(locationData);
+          const rawData = res.data.data;
+          // Normalize: could be array or single object with { location }
+          const dataArray = Array.isArray(rawData) ? rawData : [rawData];
+          setLocations(dataArray);
         } else {
           setError("❌ No locations assigned yet. Please contact admin.");
         }
@@ -251,47 +254,44 @@ const EmployeeLocation = () => {
               <table className="min-w-full">
                 <thead className="text-left text-sm text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                   <tr>
-                    <th className="hidden sm:table-cell py-2 text-center">Employee ID</th>
-                    <th className="hidden sm:table-cell py-2 text-center"> Name</th>
-                    <th className=" py-2 text-center">Location </th>
-                    <th className=" py-2 text-center">Full Address</th>
-                    <th className="hidden sm:table-cell py-2 text-center">Latitude</th>
-                    <th className="hidden sm:table-cell py-2 text-center">Longitude</th>
-                    {/* <th className="px-2 py-2 text-center">Assigned Date</th> */}
+                    <th className="hidden sm:table-cell py-2 px-3 text-center">Employee ID</th>
+                    <th className="hidden sm:table-cell py-2 px-3 text-center">Name</th>
+                    <th className="py-2 px-3 text-center">Location</th>
+                    <th className="py-2 px-3 text-center">Full Address</th>
+                    <th className="hidden sm:table-cell py-2 px-3 text-center">Latitude</th>
+                    <th className="hidden sm:table-cell py-2 px-3 text-center">Longitude</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {locations.map((location, index) => (
-                    <tr
-                      key={location._id || index}
-                      className="border-b hover:bg-white"
-                    >
-                      <td className="hidden sm:table-cell p-2 border text-center">
-                        {location?.employee?.employeeId || "N/A"}
-                      </td>
-                      <td className="hidden sm:table-cell p-2 border text-center">
-                        {location?.employee?.name || "N/A"}
-                      </td>
-                      <td className="p-2 border text-center">
-                        {location?.location?.name || "N/A"}
-                      </td>
-                      <td className="p-2 text-sm border">
-                        {location?.location?.fullAddress || "N/A"}
-                      </td>
-                      <td className="hidden sm:table-cell p-2 border text-center">
-                        {location?.location?.latitude ?? "N/A"}
-                      </td>
-                      <td className="hidden sm:table-cell p-2 border text-center">
-                        {location?.location?.longitude ?? "N/A"}
-                      </td>
-                      {/* <td className="p-2 border">
-                        {location.assignDate || location.createdAt 
-                          ? new Date(location.assignDate || location.createdAt).toLocaleDateString()
-                          : "N/A"
-                        }
-                      </td> */}
-                    </tr>
-                  ))}
+                  {locations.map((item, index) => {
+                    // API returns { location: {...} } — employee info comes from localStorage
+                    const loc = item?.location || item;
+                    return (
+                      <tr
+                        key={loc?._id || index}
+                        className="border-b hover:bg-gray-50"
+                      >
+                        <td className="hidden sm:table-cell p-2 border text-center">
+                          {employeeId || "N/A"}
+                        </td>
+                        <td className="hidden sm:table-cell p-2 border text-center">
+                          {employeeName}
+                        </td>
+                        <td className="p-2 border text-center">
+                          {loc?.name || "N/A"}
+                        </td>
+                        <td className="p-2 text-sm border">
+                          {loc?.fullAddress || "N/A"}
+                        </td>
+                        <td className="hidden sm:table-cell p-2 border text-center">
+                          {loc?.latitude ?? "N/A"}
+                        </td>
+                        <td className="hidden sm:table-cell p-2 border text-center">
+                          {loc?.longitude ?? "N/A"}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -303,4 +303,4 @@ const EmployeeLocation = () => {
   );
 };
 
-export default EmployeeLocation;
+export default EmployeeLocation;

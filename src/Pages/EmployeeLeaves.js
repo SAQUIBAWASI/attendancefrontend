@@ -16,6 +16,7 @@ const EmployeeLeaves = () => {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [leaveBalances, setLeaveBalances] = useState(null);
+  const [publicHolidays, setPublicHolidays] = useState([]);
 
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
@@ -89,7 +90,20 @@ const EmployeeLeaves = () => {
     fetchLeaves(employeeId);
     fetchLeaveBalances(employeeId);
     fetchCompOffRequests(employeeId);
+    fetchPublicHolidays();
   }, []);
+
+
+  
+  // ✅ Fetch public holidays
+  const fetchPublicHolidays = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/holidays/all`);
+      setPublicHolidays(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error("Error fetching public holidays:", err);
+    }
+  };
 
   // ✅ Fetch leave balances
   const fetchLeaveBalances = async (employeeId) => {
@@ -519,10 +533,16 @@ const EmployeeLeaves = () => {
 
         {/* Leave Balances Cards */}
         {leaveBalances && (
-          <div className="grid grid-cols-3 gap-2 mb-3 sm:grid-cols-3">
-            <StatCard icon={FiFileText} label={`Casual Leave (Total: ${leaveBalances.CL.total} | Used: ${leaveBalances.CL.used})`} value={`${leaveBalances.CL.available} Left`} color="blue" />
-            <StatCard icon={FiFileText} label={`Sick Leave (Total: ${leaveBalances.SL.total} | Used: ${leaveBalances.SL.used})`} value={`${leaveBalances.SL.available} Left`} color="red" />
-            <StatCard icon={FiFileText} label={`Earned Leave (Total: ${leaveBalances.EL.total} | Used: ${leaveBalances.EL.used})`} value={`${leaveBalances.EL.available} Left`} color="green" />
+          <div className="grid grid-cols-2 gap-2 mb-3 sm:grid-cols-4">
+            <StatCard icon={FiFileText} label={`Casual Leave (Total: ${leaveBalances?.CL?.total || 0} | Used: ${leaveBalances?.CL?.used || 0})`} value={`${leaveBalances?.CL?.available || 0} Left`} color="blue" />
+            <StatCard icon={FiFileText} label={`Sick Leave (Total: ${leaveBalances?.SL?.total || 0} | Used: ${leaveBalances?.SL?.used || 0})`} value={`${leaveBalances?.SL?.available || 0} Left`} color="red" />
+            <StatCard icon={FiFileText} label={`Earned Leave (Total: ${leaveBalances?.EL?.total || 0} | Used: ${leaveBalances?.EL?.used || 0})`} value={`${leaveBalances?.EL?.available || 0} Left`} color="green" />
+            <StatCard 
+              icon={FiFileText} 
+              label={`Public Holidays (Total: ${publicHolidays.length})`} 
+              value={`${publicHolidays.filter(h => h.type === "National Holiday").length} National`} 
+              color="green" 
+            />
           </div>
         )}
 
