@@ -440,13 +440,855 @@
 
 // src/pages/MyAttendance.jsx
 // src/pages/MyAttendance.jsx
+// import { useEffect, useRef, useState } from "react";
+// import { FaCalendarAlt } from "react-icons/fa";
+// import { useNavigate } from "react-router-dom";
+// import { API_BASE_URL } from "../config";
+// import CountUp from "react-countup";
+// import { FiFileText, FiMapPin, FiCheckCircle, FiCheckSquare } from "react-icons/fi";
+// import StatCard from "../Components/StatCard";
+
+// export default function MyAttendance() {
+//   const navigate = useNavigate();
+//   const [records, setRecords] = useState([]);
+//   const [filteredRecords, setFilteredRecords] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState("");
+
+//   // Search and Filter States
+//   const [searchDate, setSearchDate] = useState("");
+//   const [dateFrom, setDateFrom] = useState("");
+//   const [dateTo, setDateTo] = useState("");
+//   const [selectedMonth, setSelectedMonth] = useState("");
+//   const [statusFilter, setStatusFilter] = useState("all");
+//   const [onsiteFilter, setOnsiteFilter] = useState("all");
+
+//   // Department and Designation filters (from employee data)
+//   const [filterDepartment, setFilterDepartment] = useState("");
+//   const [filterDesignation, setFilterDesignation] = useState("");
+//   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
+//   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
+//   const [employeeData, setEmployeeData] = useState(null);
+
+//   // Refs for click outside
+//   const departmentFilterRef = useRef(null);
+//   const designationFilterRef = useRef(null);
+
+//   // Pagination States
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+//   // Edit Request States
+//   const [showEditModal, setShowEditModal] = useState(false);
+//   const [requestDate, setRequestDate] = useState("");
+//   const [selectedRequestDates, setSelectedRequestDates] = useState([]);
+//   const [requestComment, setRequestComment] = useState("");
+//   const [submittingRequest, setSubmittingRequest] = useState(false);
+
+//   // Click outside handlers for filter dropdowns
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       if (departmentFilterRef.current && !departmentFilterRef.current.contains(event.target)) {
+//         setShowDepartmentFilter(false);
+//       }
+//       if (designationFilterRef.current && !designationFilterRef.current.contains(event.target)) {
+//         setShowDesignationFilter(false);
+//       }
+//     };
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () => document.removeEventListener("mousedown", handleClickOutside);
+//   }, []);
+
+//   useEffect(() => {
+//     const fetchAttendance = async () => {
+//       try {
+//         const employeeData = JSON.parse(localStorage.getItem("employeeData"));
+//         setEmployeeData(employeeData);
+//         const employeeId = employeeData?.employeeId;
+
+//         if (!employeeId) {
+//           setError("❌ Employee ID not found. Please log in again.");
+//           setLoading(false);
+//           return;
+//         }
+
+//         const res = await fetch(`${API_BASE_URL}/attendance/myattendance/${employeeId}`);
+//         const data = await res.json();
+//         if (!res.ok) throw new Error(data.message || "Failed to fetch attendance");
+
+//         // Sort records by checkInTime descending (newest first)
+//         const sortedRecords = (data.records || []).sort((a, b) =>
+//           new Date(b.checkInTime) - new Date(a.checkInTime)
+//         );
+
+//         setRecords(sortedRecords);
+//         setFilteredRecords(sortedRecords);
+//       } catch (err) {
+//         console.error("Attendance fetch error:", err);
+//         setError(err.message);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchAttendance();
+//   }, []);
+
+//   // Apply filters and search
+//   useEffect(() => {
+//     let filtered = records;
+
+//     // Single date filter
+//     if (searchDate) {
+//       filtered = filtered.filter(rec => {
+//         const recordDate = new Date(rec.checkInTime || rec.createdAt).toISOString().split("T")[0];
+//         return recordDate === searchDate;
+//       });
+//     }
+
+//     // Date range filter (from - to)
+//     if (dateFrom && dateTo) {
+//       filtered = filtered.filter(rec => {
+//         const recordDate = new Date(rec.checkInTime || rec.createdAt);
+//         recordDate.setHours(0, 0, 0, 0);
+//         const fromDate = new Date(dateFrom);
+//         fromDate.setHours(0, 0, 0, 0);
+//         const toDate = new Date(dateTo);
+//         toDate.setHours(23, 59, 59, 999);
+//         return recordDate >= fromDate && recordDate <= toDate;
+//       });
+//     } else if (dateFrom) {
+//       filtered = filtered.filter(rec => {
+//         const recordDate = new Date(rec.checkInTime || rec.createdAt);
+//         recordDate.setHours(0, 0, 0, 0);
+//         const fromDate = new Date(dateFrom);
+//         fromDate.setHours(0, 0, 0, 0);
+//         return recordDate >= fromDate;
+//       });
+//     } else if (dateTo) {
+//       filtered = filtered.filter(rec => {
+//         const recordDate = new Date(rec.checkInTime || rec.createdAt);
+//         recordDate.setHours(0, 0, 0, 0);
+//         const toDate = new Date(dateTo);
+//         toDate.setHours(23, 59, 59, 999);
+//         return recordDate <= toDate;
+//       });
+//     }
+
+//     // Month filter
+//     if (selectedMonth) {
+//       const [year, month] = selectedMonth.split("-").map(Number);
+//       filtered = filtered.filter((rec) => {
+//         const d = new Date(rec.checkInTime || rec.createdAt);
+//         return d.getFullYear() === year && d.getMonth() + 1 === month;
+//       });
+//     }
+
+//     // Status filter
+//     if (statusFilter !== "all") {
+//       filtered = filtered.filter(rec => rec.status === statusFilter);
+//     }
+
+//     // Onsite filter
+//     if (onsiteFilter !== "all") {
+//       filtered = filtered.filter(rec =>
+//         onsiteFilter === "yes" ? rec.onsite : !rec.onsite
+//       );
+//     }
+
+//     setFilteredRecords(filtered);
+//     setCurrentPage(1); // Reset to first page when filters change
+//   }, [searchDate, dateFrom, dateTo, selectedMonth, statusFilter, onsiteFilter, records]);
+
+//   // Pagination logic
+//   const indexOfLastItem = currentPage * itemsPerPage;
+//   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+//   const currentRecords = filteredRecords.slice(indexOfFirstItem, indexOfLastItem);
+//   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+
+//   // Format time for display with blinking animation
+//   const formatTimeWithStatus = (checkInTime, checkOutTime) => {
+//     const checkIn = checkInTime ? new Date(checkInTime).toLocaleTimeString('en-IN', {
+//       hour: '2-digit',
+//       minute: '2-digit',
+//       hour12: true
+//     }) : null;
+
+//     const checkOut = checkOutTime ? new Date(checkOutTime).toLocaleTimeString('en-IN', {
+//       hour: '2-digit',
+//       minute: '2-digit',
+//       hour12: true
+//     }) : null;
+
+//     if (checkIn && !checkOut) {
+//       // Still checked in - show with green blinking
+//       return (
+//         <div className="flex items-center justify-center gap-1">
+//           <span className="relative flex w-2 h-2">
+//             <span className="absolute inline-flex w-full h-full bg-blue-500 rounded-full opacity-75 animate-ping"></span>
+//             <span className="relative inline-flex w-2 h-2 bg-blue-600 rounded-full"></span>
+//           </span>
+//           <span className="font-semibold text-blue-700">{checkIn}</span>
+//           <span className="text-xs text-gray-500">/ --:--</span>
+//         </div>
+//       );
+//     } else if (checkIn && checkOut) {
+//       // Completed - show in red
+//       return (
+//         <div className="flex items-center justify-center gap-1">
+//           <span className="inline-flex w-2 h-2 bg-red-500 rounded-full"></span>
+//           <span className="font-semibold text-gray-700">{checkIn}</span>
+//           <span className="text-xs text-gray-500">/</span>
+//           <span className="font-semibold text-red-600">{checkOut}</span>
+//         </div>
+//       );
+//     } else {
+//       return <span className="text-gray-500">-</span>;
+//     }
+//   };
+
+//   // Format date for display
+//   const formatDate = (dateString) => {
+//     return new Date(dateString).toLocaleDateString('en-IN', {
+//       day: '2-digit',
+//       month: 'short',
+//       year: 'numeric'
+//     });
+//   };
+
+//   // Clear all filters
+//   const clearFilters = () => {
+//     setSearchDate("");
+//     setDateFrom("");
+//     setDateTo("");
+//     setSelectedMonth("");
+//     setStatusFilter("all");
+//     setOnsiteFilter("all");
+//   };
+
+//   // Handle date change - clear other date filters when using specific filter
+//   const handleSearchDateChange = (e) => {
+//     setSearchDate(e.target.value);
+//     setDateFrom("");
+//     setDateTo("");
+//     setSelectedMonth("");
+//   };
+
+//   const handleDateFromChange = (e) => {
+//     setDateFrom(e.target.value);
+//     setSearchDate("");
+//     setSelectedMonth("");
+//   };
+
+//   const handleDateToChange = (e) => {
+//     setDateTo(e.target.value);
+//     setSearchDate("");
+//     setSelectedMonth("");
+//   };
+
+//   const handleMonthChange = (e) => {
+//     setSelectedMonth(e.target.value);
+//     setSearchDate("");
+//     setDateFrom("");
+//     setDateTo("");
+//   };
+
+//   // Handle items per page change
+//   const handleItemsPerPageChange = (e) => {
+//     setItemsPerPage(Number(e.target.value));
+//     setCurrentPage(1);
+//   };
+
+//   // Pagination handlers
+//   const handlePrevPage = () => {
+//     if (currentPage > 1) setCurrentPage(currentPage - 1);
+//   };
+
+//   const handleNextPage = () => {
+//     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+//   };
+
+//   const handlePageClick = (page) => {
+//     setCurrentPage(page);
+//   };
+
+//   const getPageNumbers = () => {
+//     const pageNumbers = [];
+//     for (let i = 1; i <= totalPages; i++) {
+//       if (
+//         i === 1 ||
+//         i === totalPages ||
+//         (i >= currentPage - 2 && i <= currentPage + 2)
+//       ) {
+//         pageNumbers.push(i);
+//       } else if (i === currentPage - 3 || i === currentPage + 3) {
+//         pageNumbers.push("...");
+//       }
+//     }
+//     return pageNumbers;
+//   };
+
+//   // Handle Edit Request Submission
+//   const handleAddRequestDate = () => {
+//     if (!requestDate) return alert("Please select a date first");
+//     if (selectedRequestDates.includes(requestDate)) return alert("Date already added");
+//     setSelectedRequestDates([...selectedRequestDates, requestDate]);
+//     setRequestDate("");
+//   };
+
+//   const handleRemoveRequestDate = (dateToRemove) => {
+//     setSelectedRequestDates(selectedRequestDates.filter(d => d !== dateToRemove));
+//   };
+
+//   const handleSubmitEditRequest = async (e) => {
+//     e.preventDefault();
+//     if (selectedRequestDates.length === 0) return alert("Please select at least one date");
+//     if (!requestComment.trim()) return alert("Please enter a comment");
+
+//     try {
+//       setSubmittingRequest(true);
+//       const payload = {
+//         employeeId: employeeData.employeeId,
+//         employeeName: employeeData.name || "Employee",
+//         selectedDates: selectedRequestDates,
+//         comment: requestComment
+//       };
+
+//       const res = await fetch(`${API_BASE_URL}/attendance-edit-requests/create`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify(payload)
+//       });
+
+//       const data = await res.json();
+//       if (!res.ok) throw new Error(data.message || "Failed to submit request");
+
+//       alert("✅ Attendance edit request submitted successfully!");
+//       setShowEditModal(false);
+//       setSelectedRequestDates([]);
+//       setRequestComment("");
+//     } catch (err) {
+//       console.error("Submit request error:", err);
+//       alert("❌ Error: " + err.message);
+//     } finally {
+//       setSubmittingRequest(false);
+//     }
+//   };
+
+//   // Download CSV function
+//   const downloadCSV = () => {
+//     if (filteredRecords.length === 0) {
+//       alert("No data available to download!");
+//       return;
+//     }
+
+//     const headers = [
+//       "Date",
+//       "Check-In Time",
+//       "Check-Out Time",
+//       "Total Hours",
+//       "Distance (m)",
+//       "Onsite",
+//       "Reason",
+//       "Status"
+//     ];
+
+//     const csvRows = [
+//       headers.join(","),
+//       ...filteredRecords.map((rec) => [
+//         `"${formatDate(rec.checkInTime || rec.createdAt)}"`,
+//         `"${rec.checkInTime ? new Date(rec.checkInTime).toLocaleString() : "-"}"`,
+//         `"${rec.checkOutTime ? new Date(rec.checkOutTime).toLocaleString() : "-"}"`,
+//         rec.totalHours?.toFixed(2) || "0.00",
+//         rec.distance?.toFixed(2) || "0.00",
+//         rec.onsite ? "Yes" : "No",
+//         `"${rec.reason || "Not specified"}"`,
+//         rec.status
+//       ].join(",")),
+//     ];
+
+//     const csvData = csvRows.join("\n");
+//     const blob = new Blob([csvData], { type: "text/csv" });
+//     const url = URL.createObjectURL(blob);
+
+//     const a = document.createElement("a");
+//     a.href = url;
+//     a.download = `my_attendance_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
+//     a.click();
+//     URL.revokeObjectURL(url);
+//   };
+
+
+//   if (loading) {
+//     return (
+//       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+//         <div className="text-center">
+//           <div className="w-16 h-16 mx-auto mb-4 border-b-2 border-blue-600 rounded-full animate-spin"></div>
+//           <p className="text-lg font-semibold text-gray-700">Loading your attendance records...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+//         <div className="max-w-md p-8 text-center bg-white border border-red-200 shadow-lg rounded-2xl">
+//           <div className="mb-4 text-4xl text-red-500">❌</div>
+//           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
+//           <button
+//             onClick={() => window.location.reload()}
+//             className="px-6 py-2 font-semibold text-gray-900 transition bg-red-600 rounded-lg hover:bg-red-700"
+//           >
+//             🔄 Retry
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="min-h-screen px-2 py-2 bg-gradient-to-br from-purple-50 to-blue-100 sm:px-3 sm:py-3">
+//       <div className="mx-auto max-w-9xl">
+
+//         {/* Header Section */}
+//         {/* <div className="mb-2">
+//           <h1 className="text-lg font-bold text-gray-700 sm:text-xl md:text-2xl">📅 My Attendance Records</h1>
+//           <p className="text-xs text-gray-500 sm:text-sm">View and manage your attendance history</p>
+//         </div> */}
+
+//         {/* Stats Cards - Dashboard Style */}
+//         <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-4">
+//           <StatCard
+//             label="Total Records"
+//             value={records.length}
+//             color="indigo"
+//             icon={FiFileText}
+//           />
+//           <StatCard
+//             label="Onsite Days"
+//             value={records.filter(r => r.onsite).length}
+//             color="emerald"
+//             icon={FiMapPin}
+//           />
+//           <StatCard
+//             label="Checked In"
+//             value={records.filter(r => r.status === "checked-in").length}
+//             color="amber"
+//             icon={FiCheckCircle}
+//           />
+//           <StatCard
+//             label="Full Days"
+//             value={records.filter(r => r.totalHours >= 8).length}
+//             color="purple"
+//             icon={FiCheckSquare}
+//           />
+//         </div>
+
+//         {/* Filters Section */}
+//         <div className="p-2 mb-3 bg-white rounded-lg shadow-md sm:p-3">
+//           <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+
+//             {/* Single Date Filter */}
+//             <div className="relative w-[110px] sm:w-[130px]">
+//               <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
+//               <input
+//                 type="date"
+//                 value={searchDate}
+//                 onChange={handleSearchDateChange}
+//                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
+//                 placeholder="Date"
+//                 className="w-full pl-8 pr-1 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* Date From */}
+//             <div className="relative w-[110px] sm:w-[130px]">
+//               <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
+//               <input
+//                 type="date"
+//                 value={dateFrom}
+//                 onChange={handleDateFromChange}
+//                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
+//                 placeholder="From"
+//                 className="w-full pl-8 pr-1 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* Date To */}
+//             <div className="relative w-[110px] sm:w-[130px]">
+//               <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
+//               <input
+//                 type="date"
+//                 value={dateTo}
+//                 onChange={handleDateToChange}
+//                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
+//                 placeholder="To"
+//                 className="w-full pl-8 pr-1 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* Month Filter */}
+//             <div className="relative w-[110px] sm:w-[130px]">
+//               <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
+//               <input
+//                 type="month"
+//                 value={selectedMonth}
+//                 onChange={handleMonthChange}
+//                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
+//                 placeholder="Month"
+//                 className="w-full pl-8 pr-1 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {/* Status Filter */}
+//             <select
+//               value={statusFilter}
+//               onChange={(e) => setStatusFilter(e.target.value)}
+//               className="h-8 px-1 py-1 text-xs border border-gray-300 rounded-lg w-[90px] sm:w-[100px] focus:ring-1 focus:ring-blue-500"
+//             >
+//               <option value="all">All Status</option>
+//               <option value="checked-in">Checked In</option>
+//               <option value="checked-out">Checked Out</option>
+//             </select>
+
+//             {/* Onsite Filter */}
+//             <select
+//               value={onsiteFilter}
+//               onChange={(e) => setOnsiteFilter(e.target.value)}
+//               className="h-8 px-1 py-1 text-xs border border-gray-300 rounded-lg w-[90px] sm:w-[100px] focus:ring-1 focus:ring-blue-500"
+//             >
+//               <option value="all">All Locations</option>
+//               <option value="yes">Onsite Only</option>
+//               <option value="no">Remote Only</option>
+//             </select>
+
+//             {/* CSV Button */}
+//             <button
+//               onClick={downloadCSV}
+//               className="h-8 px-2 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md sm:px-3 hover:bg-blue-800"
+//             >
+//               📥 CSV
+//             </button>
+
+//             {/* Request Edit Button */}
+//             {/* <button
+//               onClick={() => setShowEditModal(true)}
+//               className="h-8 px-2 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md sm:px-3 hover:bg-blue-700"
+//             >
+//               📝 Req to Edit
+//             </button> */}
+
+//             {/* Clear Button */}
+//             {(searchDate || dateFrom || dateTo || selectedMonth || statusFilter !== "all" || onsiteFilter !== "all") && (
+//               <button
+//                 onClick={clearFilters}
+//                 className="h-8 px-2 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md sm:px-3 hover:bg-gray-200"
+//               >
+//                 Clear
+//               </button>
+//             )}
+//           </div>
+
+//           {/* Results Count */}
+//           <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+//             <span>
+//               Showing <strong>{filteredRecords.length}</strong> of <strong>{records.length}</strong> records
+//             </span>
+//             {filteredRecords.length !== records.length && (
+//               <span className="font-semibold text-orange-600">
+//                 🔍 Filters applied
+//               </span>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Table Section */}
+//         <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
+//           {filteredRecords.length === 0 ? (
+//             <div className="py-12 text-center sm:py-16">
+//               <div className="mb-3 text-5xl sm:text-6xl">📭</div>
+//               <p className="mb-3 text-base font-semibold text-gray-500 sm:text-lg">
+//                 {records.length === 0 ? "No attendance records found." : "No records match your filters."}
+//               </p>
+//               {records.length > 0 && (
+//                 <button
+//                   onClick={clearFilters}
+//                   className="px-4 py-1.5 text-sm font-semibold text-gray-900 transition bg-blue-600 rounded-lg sm:px-6 sm:py-2 hover:bg-blue-700"
+//                 >
+//                   🔄 Clear Filters
+//                 </button>
+//               )}
+//             </div>
+//           ) : (
+//             <>
+//               <div className="overflow-x-auto">
+//                 <table className="min-w-full">
+//                   <thead className="text-xs text-left text-gray-900 sm:text-sm bg-gradient-to-r from-green-500 to-blue-600">
+//                     <tr>
+//                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Date</th>
+//                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Check-In/Out</th>
+//                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Hours</th>
+//                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Distance</th>
+//                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Onsite</th>
+//                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Reason</th>
+//                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Status</th>
+//                     </tr>
+//                   </thead>
+//                   <tbody>
+//                     {currentRecords.map((rec, idx) => (
+//                       <tr
+//                         key={rec._id || idx}
+//                         className={`${idx % 2 === 0 ? "bg-white" : "bg-white"} hover:bg-blue-50 hover:shadow-sm transition-all duration-200 text-xs sm:text-sm`}
+//                       >
+//                         {/* Date */}
+//                         <td className="px-2 py-1.5 font-medium text-center text-gray-900 whitespace-nowrap sm:px-3 sm:py-2">
+//                           {formatDate(rec.checkInTime || rec.createdAt)}
+//                         </td>
+
+//                         {/* Check-In/Out with Blinking */}
+//                         <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+//                           {formatTimeWithStatus(rec.checkInTime, rec.checkOutTime)}
+//                         </td>
+
+//                         {/* Hours */}
+//                         <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+//                           <span className={`font-semibold ${rec.totalHours >= 8 ? 'text-blue-700' :
+//                             rec.totalHours >= 4 ? 'text-orange-600' : 'text-red-600'
+//                             }`}>
+//                             {rec.totalHours ? rec.totalHours.toFixed(1) : "0.0"}h
+//                           </span>
+//                         </td>
+
+//                         {/* Distance */}
+//                         <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+//                           <span className="px-1.5 py-0.5 font-mono text-gray-700 bg-gray-100 rounded sm:px-2 sm:py-1">
+//                             {rec.distance?.toFixed(0) || "0"}m
+//                           </span>
+//                         </td>
+
+//                         {/* Onsite */}
+//                         <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+//                           <span
+//                             className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${rec.onsite
+//                               ? "bg-emerald-50 text-emerald-700 border border-green-300"
+//                               : "bg-red-50 text-red-700 border border-red-300"
+//                               }`}
+//                           >
+//                             {rec.onsite ? "🏢 Yes" : "🏠 No"}
+//                           </span>
+//                         </td>
+
+//                         {/* Reason */}
+//                         <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+//                           <span className="text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded max-w-[80px] truncate block sm:max-w-[100px]">
+//                             {rec.reason || "-"}
+//                           </span>
+//                         </td>
+
+//                         {/* Status */}
+//                         <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+//                           <span
+//                             className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${rec.status === "checked-in"
+//                               ? "bg-blue-50 text-blue-700 border border-blue-300 animate-pulse"
+//                               : "bg-purple-100 text-purple-800 border border-purple-300"
+//                               }`}
+//                           >
+//                             {rec.status === "checked-in" ? "In" : "Out"}
+//                           </span>
+//                         </td>
+//                       </tr>
+//                     ))}
+//                   </tbody>
+//                 </table>
+//               </div>
+
+//               {/* Pagination Section */}
+//               {filteredRecords.length > 0 && (
+//                 <div className="flex flex-col items-center justify-between gap-3 p-3 border-t sm:flex-row sm:p-4 bg-white">
+//                   <div className="flex flex-wrap items-center gap-3">
+//                     <div className="flex items-center gap-1.5">
+//                       <label className="text-xs font-medium text-gray-700">
+//                         Show:
+//                       </label>
+//                       <select
+//                         value={itemsPerPage}
+//                         onChange={handleItemsPerPageChange}
+//                         className="p-1 text-xs border rounded-lg"
+//                       >
+//                         <option value={5}>5</option>
+//                         <option value={10}>10</option>
+//                         <option value={20}>20</option>
+//                         <option value={50}>50</option>
+//                       </select>
+//                       <span className="text-xs text-gray-500">entries</span>
+//                     </div>
+//                     <div className="text-xs text-gray-500">
+//                       <span className="hidden sm:inline">Showing </span>
+//                       <strong>{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredRecords.length)}</strong> of{" "}
+//                       <strong>{filteredRecords.length}</strong>
+//                     </div>
+//                   </div>
+
+//                   <div className="flex items-center gap-1">
+//                     <button
+//                       onClick={handlePrevPage}
+//                       disabled={currentPage === 1}
+//                       className={`px-2 py-1 text-xs font-semibold rounded-lg transition ${currentPage === 1
+//                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+//                         : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
+//                         }`}
+//                     >
+//                       ←
+//                     </button>
+
+//                     {getPageNumbers().map((page, index) => (
+//                       <button
+//                         key={index}
+//                         onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
+//                         disabled={page === "..."}
+//                         className={`px-2 py-1 text-xs font-semibold rounded-lg transition min-w-[24px] ${page === "..."
+//                           ? "bg-gray-200 text-gray-500 cursor-default"
+//                           : currentPage === page
+//                             ? "bg-gradient-to-r from-blue-600 to-purple-600 text-gray-900 shadow-lg"
+//                             : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+//                           }`}
+//                       >
+//                         {page}
+//                       </button>
+//                     ))}
+
+//                     <button
+//                       onClick={handleNextPage}
+//                       disabled={currentPage === totalPages}
+//                       className={`px-2 py-1 text-xs font-semibold rounded-lg transition ${currentPage === totalPages
+//                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+//                         : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
+//                         }`}
+//                     >
+//                       →
+//                     </button>
+//                   </div>
+//                 </div>
+//               )}
+//             </>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* Attendance Edit Request Modal */}
+//       {showEditModal && (
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
+//           <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in duration-200">
+//             <div className="p-6 border-b border-gray-200">
+//               <div className="flex items-center justify-between">
+//                 <h2 className="text-xl font-bold text-gray-700">Request Record Edit</h2>
+//                 <button 
+//                   onClick={() => setShowEditModal(false)}
+//                   className="p-1 text-gray-500 transition hover:text-gray-500"
+//                 >
+//                   ✕
+//                 </button>
+//               </div>
+//               <p className="mt-1 text-xs text-gray-500">Raise a request to admin to edit your attendance records</p>
+//             </div>
+
+//             <div className="p-6 space-y-4">
+//               <div>
+//                 <label className="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-wider">Employee ID & Name</label>
+//                 <div className="flex gap-2">
+//                   <input 
+//                     type="text" 
+//                     value={employeeData?.employeeId || ""} 
+//                     disabled 
+//                     className="w-1/3 px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg cursor-not-allowed"
+//                   />
+//                   <input 
+//                     type="text" 
+//                     value={employeeData?.name || ""} 
+//                     disabled 
+//                     className="w-2/3 px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg cursor-not-allowed"
+//                   />
+//                 </div>
+//               </div>
+
+//               <div>
+//                 <label className="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-wider">Select Dates</label>
+//                 <div className="flex gap-2">
+//                   <input
+//                     type="date"
+//                     value={requestDate}
+//                     onChange={(e) => setRequestDate(e.target.value)}
+//                     className="flex-1 px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
+//                   />
+//                   <button
+//                     type="button"
+//                     onClick={handleAddRequestDate}
+//                     className="px-3 py-1 text-xs font-bold text-gray-900 transition bg-indigo-600 rounded-lg hover:bg-indigo-700"
+//                   >
+//                     + Add
+//                   </button>
+//                 </div>
+
+//                 {selectedRequestDates.length > 0 && (
+//                   <div className="flex flex-wrap gap-1 mt-2">
+//                     {selectedRequestDates.map(date => (
+//                       <span key={date} className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-blue-700 bg-blue-100 border border-blue-200 rounded-full">
+//                         {date}
+//                         <button 
+//                           onClick={() => handleRemoveRequestDate(date)}
+//                           className="text-blue-600 hover:text-blue-700"
+//                         >
+//                           ×
+//                         </button>
+//                       </span>
+//                     ))}
+//                   </div>
+//                 )}
+//               </div>
+
+//               <div>
+//                 <label className="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-wider">Comment / Reason</label>
+//                 <textarea
+//                   value={requestComment}
+//                   onChange={(e) => setRequestComment(e.target.value)}
+//                   placeholder="Explain why you need to edit these records..."
+//                   className="w-full h-24 px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
+//                 />
+//               </div>
+
+//               <div className="flex gap-2 pt-2">
+//                 <button
+//                   onClick={() => setShowEditModal(false)}
+//                   className="flex-1 px-4 py-2 text-xs font-bold text-gray-500 transition bg-gray-100 rounded-lg hover:bg-gray-200"
+//                 >
+//                   Cancel
+//                 </button>
+//                 <button
+//                   onClick={handleSubmitEditRequest}
+//                   disabled={submittingRequest}
+//                   className={`flex-1 px-4 py-2 text-xs font-bold text-gray-900 transition rounded-lg shadow-lg ${
+//                     submittingRequest ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+//                   }`}
+//                 >
+//                   {submittingRequest ? "Submitting..." : "Submit Request"}
+//                 </button>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+
 import { useEffect, useRef, useState } from "react";
 import { FaCalendarAlt } from "react-icons/fa";
+import { FiCheckCircle, FiCheckSquare, FiFileText, FiMapPin } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../config";
-import CountUp from "react-countup";
-import { FiFileText, FiMapPin, FiCheckCircle, FiCheckSquare } from "react-icons/fi";
 import StatCard from "../Components/StatCard";
+import { API_BASE_URL } from "../config";
 
 export default function MyAttendance() {
   const navigate = useNavigate();
@@ -484,6 +1326,17 @@ export default function MyAttendance() {
   const [selectedRequestDates, setSelectedRequestDates] = useState([]);
   const [requestComment, setRequestComment] = useState("");
   const [submittingRequest, setSubmittingRequest] = useState(false);
+
+  // ✅ Helper function to format decimal hours to HH:MM
+  const formatDecimalHours = (decimalHours) => {
+    if (!decimalHours && decimalHours !== 0) return "0h 0m";
+    const hours = Math.floor(decimalHours);
+    const minutes = Math.round((decimalHours - hours) * 60);
+    if (minutes === 60) {
+      return `${hours + 1}h 0m`;
+    }
+    return `${hours}h ${minutes}m`;
+  };
 
   // Click outside handlers for filter dropdowns
   useEffect(() => {
@@ -621,7 +1474,7 @@ export default function MyAttendance() {
     }) : null;
 
     if (checkIn && !checkOut) {
-      // Still checked in - show with green blinking
+      // Still checked in - show with blue blinking
       return (
         <div className="flex items-center justify-center gap-1">
           <span className="relative flex w-2 h-2">
@@ -795,16 +1648,19 @@ export default function MyAttendance() {
 
     const csvRows = [
       headers.join(","),
-      ...filteredRecords.map((rec) => [
-        `"${formatDate(rec.checkInTime || rec.createdAt)}"`,
-        `"${rec.checkInTime ? new Date(rec.checkInTime).toLocaleString() : "-"}"`,
-        `"${rec.checkOutTime ? new Date(rec.checkOutTime).toLocaleString() : "-"}"`,
-        rec.totalHours?.toFixed(2) || "0.00",
-        rec.distance?.toFixed(2) || "0.00",
-        rec.onsite ? "Yes" : "No",
-        `"${rec.reason || "Not specified"}"`,
-        rec.status
-      ].join(",")),
+      ...filteredRecords.map((rec) => {
+        const formattedHours = formatDecimalHours(rec.totalHours);
+        return [
+          `"${formatDate(rec.checkInTime || rec.createdAt)}"`,
+          `"${rec.checkInTime ? new Date(rec.checkInTime).toLocaleString() : "-"}"`,
+          `"${rec.checkOutTime ? new Date(rec.checkOutTime).toLocaleString() : "-"}"`,
+          formattedHours,
+          rec.distance?.toFixed(2) || "0.00",
+          rec.onsite ? "Yes" : "No",
+          `"${rec.reason || "Not specified"}"`,
+          rec.status
+        ].join(",");
+      }),
     ];
 
     const csvData = csvRows.join("\n");
@@ -817,7 +1673,6 @@ export default function MyAttendance() {
     a.click();
     URL.revokeObjectURL(url);
   };
-
 
   if (loading) {
     return (
@@ -838,7 +1693,7 @@ export default function MyAttendance() {
           <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-2 font-semibold text-gray-900 transition bg-red-600 rounded-lg hover:bg-red-700"
+            className="px-6 py-2 font-semibold text-white transition bg-red-600 rounded-lg hover:bg-red-700"
           >
             🔄 Retry
           </button>
@@ -850,12 +1705,6 @@ export default function MyAttendance() {
   return (
     <div className="min-h-screen px-2 py-2 bg-gradient-to-br from-purple-50 to-blue-100 sm:px-3 sm:py-3">
       <div className="mx-auto max-w-9xl">
-
-        {/* Header Section */}
-        {/* <div className="mb-2">
-          <h1 className="text-lg font-bold text-gray-700 sm:text-xl md:text-2xl">📅 My Attendance Records</h1>
-          <p className="text-xs text-gray-500 sm:text-sm">View and manage your attendance history</p>
-        </div> */}
 
         {/* Stats Cards - Dashboard Style */}
         <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-4">
@@ -891,7 +1740,7 @@ export default function MyAttendance() {
 
             {/* Single Date Filter */}
             <div className="relative w-[110px] sm:w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="date"
                 value={searchDate}
@@ -904,7 +1753,7 @@ export default function MyAttendance() {
 
             {/* Date From */}
             <div className="relative w-[110px] sm:w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="date"
                 value={dateFrom}
@@ -917,7 +1766,7 @@ export default function MyAttendance() {
 
             {/* Date To */}
             <div className="relative w-[110px] sm:w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="date"
                 value={dateTo}
@@ -930,7 +1779,7 @@ export default function MyAttendance() {
 
             {/* Month Filter */}
             <div className="relative w-[110px] sm:w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
+              <FaCalendarAlt className="absolute text-xs text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
               <input
                 type="month"
                 value={selectedMonth}
@@ -966,24 +1815,16 @@ export default function MyAttendance() {
             {/* CSV Button */}
             <button
               onClick={downloadCSV}
-              className="h-8 px-2 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md sm:px-3 hover:bg-blue-800"
+              className="h-8 px-2 text-xs font-medium text-white transition bg-green-600 rounded-md sm:px-3 hover:bg-green-700"
             >
               📥 CSV
             </button>
-
-            {/* Request Edit Button */}
-            {/* <button
-              onClick={() => setShowEditModal(true)}
-              className="h-8 px-2 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md sm:px-3 hover:bg-blue-700"
-            >
-              📝 Req to Edit
-            </button> */}
 
             {/* Clear Button */}
             {(searchDate || dateFrom || dateTo || selectedMonth || statusFilter !== "all" || onsiteFilter !== "all") && (
               <button
                 onClick={clearFilters}
-                className="h-8 px-2 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md sm:px-3 hover:bg-gray-200"
+                className="h-8 px-2 text-xs font-medium text-gray-700 transition bg-gray-100 border border-gray-300 rounded-md sm:px-3 hover:bg-gray-200"
               >
                 Clear
               </button>
@@ -1014,7 +1855,7 @@ export default function MyAttendance() {
               {records.length > 0 && (
                 <button
                   onClick={clearFilters}
-                  className="px-4 py-1.5 text-sm font-semibold text-gray-900 transition bg-blue-600 rounded-lg sm:px-6 sm:py-2 hover:bg-blue-700"
+                  className="px-4 py-1.5 text-sm font-semibold text-white transition bg-blue-600 rounded-lg sm:px-6 sm:py-2 hover:bg-blue-700"
                 >
                   🔄 Clear Filters
                 </button>
@@ -1024,7 +1865,7 @@ export default function MyAttendance() {
             <>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
-                  <thead className="text-xs text-left text-gray-900 sm:text-sm bg-gradient-to-r from-green-500 to-blue-600">
+                  <thead className="text-xs text-left text-white sm:text-sm bg-gradient-to-r from-green-500 to-blue-600">
                     <tr>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Date</th>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Check-In/Out</th>
@@ -1036,69 +1877,75 @@ export default function MyAttendance() {
                     </tr>
                   </thead>
                   <tbody>
-                    {currentRecords.map((rec, idx) => (
-                      <tr
-                        key={rec._id || idx}
-                        className={`${idx % 2 === 0 ? "bg-white" : "bg-white"} hover:bg-blue-50 hover:shadow-sm transition-all duration-200 text-xs sm:text-sm`}
-                      >
-                        {/* Date */}
-                        <td className="px-2 py-1.5 font-medium text-center text-gray-900 whitespace-nowrap sm:px-3 sm:py-2">
-                          {formatDate(rec.checkInTime || rec.createdAt)}
-                        </td>
+                    {currentRecords.map((rec, idx) => {
+                      // Determine color based on total hours
+                      let hoursColorClass = 'text-red-600';
+                      if (rec.totalHours >= 8) hoursColorClass = 'text-blue-700';
+                      else if (rec.totalHours >= 4) hoursColorClass = 'text-orange-600';
+                      else hoursColorClass = 'text-red-600';
+                      
+                      return (
+                        <tr
+                          key={rec._id || idx}
+                          className={`${idx % 2 === 0 ? "bg-white" : "bg-white"} hover:bg-blue-50 hover:shadow-sm transition-all duration-200 text-xs sm:text-sm`}
+                        >
+                          {/* Date */}
+                          <td className="px-2 py-1.5 font-medium text-center text-gray-900 whitespace-nowrap sm:px-3 sm:py-2">
+                            {formatDate(rec.checkInTime || rec.createdAt)}
+                          </td>
 
-                        {/* Check-In/Out with Blinking */}
-                        <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                          {formatTimeWithStatus(rec.checkInTime, rec.checkOutTime)}
-                        </td>
+                          {/* Check-In/Out with Blinking */}
+                          <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+                            {formatTimeWithStatus(rec.checkInTime, rec.checkOutTime)}
+                          </td>
 
-                        {/* Hours */}
-                        <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                          <span className={`font-semibold ${rec.totalHours >= 8 ? 'text-blue-700' :
-                            rec.totalHours >= 4 ? 'text-orange-600' : 'text-red-600'
-                            }`}>
-                            {rec.totalHours ? rec.totalHours.toFixed(1) : "0.0"}h
-                          </span>
-                        </td>
+                          {/* Hours - NOW IN HH:MM FORMAT */}
+                          <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+                            <span className={`font-semibold ${hoursColorClass}`}>
+                              {formatDecimalHours(rec.totalHours)}
+                            </span>
+                          </td>
 
-                        {/* Distance */}
-                        <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                          <span className="px-1.5 py-0.5 font-mono text-gray-700 bg-gray-100 rounded sm:px-2 sm:py-1">
-                            {rec.distance?.toFixed(0) || "0"}m
-                          </span>
-                        </td>
+                          {/* Distance */}
+                          <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+                            <span className="px-1.5 py-0.5 font-mono text-gray-700 bg-gray-100 rounded sm:px-2 sm:py-1">
+                              {rec.distance?.toFixed(0) || "0"}m
+                            </span>
+                          </td>
 
-                        {/* Onsite */}
-                        <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                          <span
-                            className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${rec.onsite
-                              ? "bg-emerald-50 text-emerald-700 border border-green-300"
-                              : "bg-red-50 text-red-700 border border-red-300"
+                          {/* Onsite */}
+                          <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+                            <span
+                              className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${rec.onsite
+                                ? "bg-emerald-50 text-emerald-700 border border-green-300"
+                                : "bg-red-50 text-red-700 border border-red-300"
                               }`}
-                          >
-                            {rec.onsite ? "🏢 Yes" : "🏠 No"}
-                          </span>
-                        </td>
+                            >
+                              {rec.onsite ? "🏢 Yes" : "🏠 No"}
+                            </span>
+                          </td>
 
-                        {/* Reason */}
-                        <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                          <span className="text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded max-w-[80px] truncate block sm:max-w-[100px]">
-                            {rec.reason || "-"}
-                          </span>
-                        </td>
+                          {/* Reason */}
+                          <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+                            <span className="text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded max-w-[80px] truncate block sm:max-w-[100px]">
+                              {rec.reason || "-"}
+                            </span>
+                          </td>
 
-                        {/* Status */}
-                        <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                          <span
-                            className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${rec.status === "checked-in"
-                              ? "bg-blue-50 text-blue-700 border border-blue-300 animate-pulse"
-                              : "bg-purple-100 text-purple-800 border border-purple-300"
+                          {/* Status */}
+                          <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+                            <span
+                              className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${rec.status === "checked-in"
+                                ? "bg-blue-50 text-blue-700 border border-blue-300 animate-pulse"
+                                : "bg-purple-100 text-purple-800 border border-purple-300"
                               }`}
-                          >
-                            {rec.status === "checked-in" ? "In" : "Out"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                            >
+                              {rec.status === "checked-in" ? "In" : "Out"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1136,8 +1983,8 @@ export default function MyAttendance() {
                       disabled={currentPage === 1}
                       className={`px-2 py-1 text-xs font-semibold rounded-lg transition ${currentPage === 1
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
-                        }`}
+                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                      }`}
                     >
                       ←
                     </button>
@@ -1150,9 +1997,9 @@ export default function MyAttendance() {
                         className={`px-2 py-1 text-xs font-semibold rounded-lg transition min-w-[24px] ${page === "..."
                           ? "bg-gray-200 text-gray-500 cursor-default"
                           : currentPage === page
-                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-gray-900 shadow-lg"
+                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
                             : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                          }`}
+                        }`}
                       >
                         {page}
                       </button>
@@ -1163,8 +2010,8 @@ export default function MyAttendance() {
                       disabled={currentPage === totalPages}
                       className={`px-2 py-1 text-xs font-semibold rounded-lg transition ${currentPage === totalPages
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
-                        }`}
+                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+                      }`}
                     >
                       →
                     </button>
@@ -1178,14 +2025,14 @@ export default function MyAttendance() {
 
       {/* Attendance Edit Request Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
           <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in duration-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-700">Request Record Edit</h2>
+                <h2 className="text-xl font-bold text-gray-800">Request Record Edit</h2>
                 <button 
                   onClick={() => setShowEditModal(false)}
-                  className="p-1 text-gray-500 transition hover:text-gray-500"
+                  className="p-1 text-gray-500 transition hover:text-gray-700"
                 >
                   ✕
                 </button>
@@ -1201,13 +2048,13 @@ export default function MyAttendance() {
                     type="text" 
                     value={employeeData?.employeeId || ""} 
                     disabled 
-                    className="w-1/3 px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg cursor-not-allowed"
+                    className="w-1/3 px-3 py-2 text-xs bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed"
                   />
                   <input 
                     type="text" 
                     value={employeeData?.name || ""} 
                     disabled 
-                    className="w-2/3 px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg cursor-not-allowed"
+                    className="w-2/3 px-3 py-2 text-xs bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -1224,7 +2071,7 @@ export default function MyAttendance() {
                   <button
                     type="button"
                     onClick={handleAddRequestDate}
-                    className="px-3 py-1 text-xs font-bold text-gray-900 transition bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                    className="px-3 py-1 text-xs font-bold text-white transition bg-indigo-600 rounded-lg hover:bg-indigo-700"
                   >
                     + Add
                   </button>
@@ -1260,14 +2107,14 @@ export default function MyAttendance() {
               <div className="flex gap-2 pt-2">
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 px-4 py-2 text-xs font-bold text-gray-500 transition bg-gray-100 rounded-lg hover:bg-gray-200"
+                  className="flex-1 px-4 py-2 text-xs font-bold text-gray-700 transition bg-gray-100 rounded-lg hover:bg-gray-200"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmitEditRequest}
                   disabled={submittingRequest}
-                  className={`flex-1 px-4 py-2 text-xs font-bold text-gray-900 transition rounded-lg shadow-lg ${
+                  className={`flex-1 px-4 py-2 text-xs font-bold text-white transition rounded-lg shadow-lg ${
                     submittingRequest ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   }`}
                 >
