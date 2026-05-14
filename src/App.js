@@ -272,6 +272,8 @@ function App() {
       <Route path="/emp-absent-today" element={<EmployeeLayout><AbsentToday /></EmployeeLayout>} />
       <Route path="/emp-leaves" element={<EmployeeLayout><LeavesList /></EmployeeLayout>} />
       <Route path="/emp-pending-leaves" element={<EmployeeLayout><PendingLeaves /></EmployeeLayout>} />
+      <Route path="/emp-approved-leaves" element={<EmployeeLayout><ApprovedLeaves /></EmployeeLayout>} />
+      <Route path="/emp-rejected-leaves" element={<EmployeeLayout><RejectedLeaves /></EmployeeLayout>} />
       <Route path="/emp-add-holiday" element={<EmployeeLayout><HolidaysCalendar /></EmployeeLayout>} />
       <Route path="/emp-payroll" element={<EmployeeLayout><PayRoll /></EmployeeLayout>} />
       <Route path="/emp-reports" element={<EmployeeLayout><LeavesReport /></EmployeeLayout>} />
@@ -292,6 +294,7 @@ function App() {
       <Route path="/emp-holidays-calendar" element={<EmployeeLayout><HolidaysCalendar /></EmployeeLayout>} />
       <Route path="/emp-all-expensives-management" element={<EmployeeLayout><AllExpensives /></EmployeeLayout>} />
       <Route path="/my-medical-certificate" element={<EmployeeLayout><MyMedicalCertificate /></EmployeeLayout>} />
+      <Route path="/emp-events" element={<EmployeeLayout><Events /></EmployeeLayout>} />
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"

@@ -724,6 +724,1312 @@
 // export default EmployeeSidebar;
 
 
+// import axios from "axios";
+// import { useCallback, useEffect, useState } from "react";
+// import { FaChevronDown } from "react-icons/fa";
+// import { Link, useLocation, useNavigate } from "react-router-dom";
+// import { API_BASE_URL } from "../config";
+
+// const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => {
+//   const [openDropdown, setOpenDropdown] = useState(null);
+//   const [currentPage, setCurrentPage] = useState("Dashboard");
+//   const [activeItem, setActiveItem] = useState("/employeedashboard");
+  
+//   // View state
+//   const [isAdminView, setIsAdminView] = useState(() => {
+//     const saved = localStorage.getItem("isAdminView");
+//     return saved === "true";
+//   });
+  
+//   const [permissions, setPermissions] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [hasAnyAdminPermission, setHasAnyAdminPermission] = useState(false);
+  
+//   const navigate = useNavigate();
+//   const location = useLocation();
+
+//   const ADMIN_PERMISSIONS = [
+//     "dashboard_view", "attendance_view_all", "shifts_manage", "leave_approve",
+//     "leave_approve_manager", "reports_view", "payroll_manage", "employee_view_all", "employee_add",
+//     "user_activity_view", "user_access_manage", "expenses_manage", "expense_manage",
+//     "locations_manage", "job_posts_view", "job_applicants_view", "score_board_view",
+//     "assessments_view", "documents_view", "job_recruitment_manage", "holidays_view"
+//   ];
+
+//   useEffect(() => {
+//     const path = location.pathname;
+//     setActiveItem(path);
+//     setCurrentPage(getPageNameFromPath(path));
+//   }, [location]);
+
+//   const getPageNameFromPath = (path) => {
+//     const pathMap = {
+//       "/employeedashboard": "Dashboard",
+//       "/leave-application": "Leave Application",
+//       "/attendance-capture": "Check In",
+//       "/myattendance": "Attendance Report",
+//       "/my-shift": "My Shift",
+//       "/mylocation": "My Assigned Location",
+//       "/mysalary": "My Salary",
+//       "/mypermissions": "My Permissions",
+//       "/myleaves": "My Leaves",
+//       "/emp-admin-dashboard": "Dashboard",
+//       "/emp-employees": "Employees",
+//       "/emp-add-employee": "Add Employee",
+//       "/emp-attendance-summary": "Attendance Summary",
+//       "/emp-attendance-records": "Attendance Records",
+//       "/emp-today-attendance": "Today Attendance",
+//       "/emp-absent-today": "Absent Today",
+//       "/emp-leaves": "Leaves",
+//       "/emp-pending-leaves": "Manager Approve",
+//       "/emp-payroll": "Payroll",
+//       "/emp-reports": "Reports",
+//       "/emp-locations": "Locations",
+//       "/emp-shifts": "Shifts",
+//       "/emp-user-activity": "User Activity",
+//       "/emp-user-access": "User Access",
+//       "/emp-all-expensives-management": "Expenses",
+//       "/emp-job-posts": "Job Posts",
+//       "/emp-job-applicants": "Job Applicants",
+//       "/emp-score-board": "Score Board",
+//       "/emp-assessments": "Assessments",
+//       "/emp-documents": "Documents",
+//       "/emp-my-jobs": "My Jobs",
+//       "/emp-personal-documents": "Personal Documents",
+//       "/emp-letters": "My Letters",
+//       "/my-medical-certificate": "My Certificate",
+//       "/emp-holidays-calendar": "Holidays Calendar",
+//       "/emp-permissions": "Permissions",
+//     };
+//     return pathMap[path] || "Dashboard";
+//   };
+
+//   // Desktop Hover Expand/Collapse
+//   const handleMouseEnterSidebar = () => {
+//     if (!isMobile && setIsCollapsed && isCollapsed) {
+//       setIsCollapsed(false);
+//     }
+//   };
+
+//   const handleMouseLeaveSidebar = () => {
+//     if (!isMobile && setIsCollapsed && !openDropdown) {
+//       setIsCollapsed(true);
+//     }
+//   };
+
+//   const toggleDropdown = (e, name) => {
+//     e.stopPropagation();
+//     e.preventDefault();
+    
+//     if (openDropdown !== name) {
+//       if (!isMobile && isCollapsed && setIsCollapsed) {
+//         setIsCollapsed(false);
+//       }
+//       setOpenDropdown(name);
+//     } else {
+//       setOpenDropdown(null);
+//     }
+//   };
+
+//   const handleItemClick = (path, action) => {
+//     if (path) {
+//       navigate(path);
+//     }
+//     if (action) {
+//       action();
+//     }
+//     setOpenDropdown(null);
+//     if (isMobile && setIsCollapsed) {
+//       setIsCollapsed(true);
+//     }
+//     if (onClose) {
+//       onClose();
+//     }
+//   };
+
+//   const handleDropdownItemClick = (path) => {
+//     navigate(path);
+//     setOpenDropdown(null);
+//     if (isMobile && setIsCollapsed) {
+//       setIsCollapsed(true);
+//     }
+//     if (onClose) {
+//       onClose();
+//     }
+//   };
+
+//   const handleLogout = async () => {
+//     try {
+//       await axios.post(`${API_BASE_URL}/employees/logout`, {}, { withCredentials: true });
+//       localStorage.clear();
+//       localStorage.removeItem("isAdminView");
+//       navigate("/employee-login");
+//       handleItemClick(null, null);
+//     } catch (error) {
+//       localStorage.clear();
+//       navigate("/employee-login");
+//     }
+//   };
+
+//   // Toggle view - switches between Employee and Admin view
+//   const toggleView = useCallback((e) => {
+//     if (e) {
+//       e.stopPropagation();
+//       e.preventDefault();
+//     }
+//     if (!hasAnyAdminPermission) return;
+    
+//     const newView = !isAdminView;
+//     setIsAdminView(newView);
+//     localStorage.setItem("isAdminView", newView);
+//     setOpenDropdown(null);
+//     window.dispatchEvent(new CustomEvent('viewChanged', { detail: { isAdminView: newView } }));
+    
+//     if (newView) {
+//       const adminMenu = buildAdminMenu();
+//       const firstNavigableItem = adminMenu.find(item => item.path && item.name !== "Logout");
+//       const firstDropdownItem = adminMenu.find(item => item.dropdown && item.dropdown.length > 0)?.dropdown[0];
+//       const targetPath = firstNavigableItem ? firstNavigableItem.path : (firstDropdownItem ? firstDropdownItem.path : "/emp-admin-dashboard");
+//       navigate(targetPath);
+//     } else {
+//       navigate("/employeedashboard");
+//     }
+//   }, [hasAnyAdminPermission, isAdminView, navigate]);
+
+//   const isActive = (path) => activeItem === path;
+//   const isDropdownActive = (dropdownItems) => dropdownItems?.some(item => isActive(item.path));
+
+//   useEffect(() => {
+//     const fetchPermissions = async () => {
+//       const storedId = localStorage.getItem("employeeId");
+//       if (!storedId || storedId === "undefined") {
+//         setLoading(false);
+//         setHasAnyAdminPermission(false);
+//         setIsAdminView(false);
+//         localStorage.setItem("isAdminView", "false");
+//         return;
+//       }
+
+//       const checkManagerStatus = (data) => {
+//         if (!data) return false;
+//         const role = (data.role || data.designation || "").toLowerCase();
+//         return role === "manager" || role === "team lead" || role === "hr";
+//       };
+
+//       const checkHRManagementStatus = (data) => {
+//         if (!data) return false;
+//         const role = (data.role || data.designation || "").toLowerCase();
+//         const dept = (data.department || "").toLowerCase();
+//         return dept.includes("management") || role.includes("hr") || role.includes("admin");
+//       };
+
+//       try {
+//         const response = await axios.get(`${API_BASE_URL}/employees/get-employee?employeeId=${storedId}&t=${new Date().getTime()}`);
+//         let fetchedPermissions = [];
+        
+//         if (response.data.data?.permissions) fetchedPermissions = response.data.data.permissions;
+//         else if (response.data.permissions) fetchedPermissions = response.data.permissions;
+        
+//         const empLocal = JSON.parse(localStorage.getItem("employeeData") || "{}");
+//         const dataToUse = response.data.data || response.data || empLocal;
+        
+//         const isManager = checkManagerStatus(dataToUse);
+//         const isHRManagement = checkHRManagementStatus(dataToUse);
+        
+//         if (isHRManagement) {
+//           // Grant all admin permissions if they are HR/Management except manager approve
+//           const allPerms = new Set([...fetchedPermissions, ...ADMIN_PERMISSIONS.filter(p => p !== "leave_approve_manager")]);
+//           fetchedPermissions = Array.from(allPerms);
+//         } else if (isManager) {
+//           // Grant manager basics if they are Manager
+//           if (!fetchedPermissions.includes("leave_approve_manager")) fetchedPermissions.push("leave_approve_manager");
+//           if (!fetchedPermissions.includes("shifts_manage")) fetchedPermissions.push("shifts_manage");
+//         }
+
+//         setPermissions(fetchedPermissions);
+//         localStorage.setItem("employeePermissions", JSON.stringify(fetchedPermissions));
+        
+//         const hasAdminPerm = fetchedPermissions.some(perm => ADMIN_PERMISSIONS.includes(perm));
+//         setHasAnyAdminPermission(hasAdminPerm);
+        
+//         if (!hasAdminPerm) {
+//           setIsAdminView(false);
+//           localStorage.setItem("isAdminView", "false");
+//         }
+//       } catch (error) {
+//         let localPermissions = JSON.parse(localStorage.getItem("employeePermissions") || "[]");
+//         const empLocal = JSON.parse(localStorage.getItem("employeeData") || "{}");
+//         const isManager = checkManagerStatus(empLocal);
+//         const isHRManagement = checkHRManagementStatus(empLocal);
+
+//         if (isHRManagement) {
+//           const allPerms = new Set([...localPermissions, ...ADMIN_PERMISSIONS.filter(p => p !== "leave_approve_manager")]);
+//           localPermissions = Array.from(allPerms);
+//         } else if (isManager) {
+//           if (!localPermissions.includes("leave_approve_manager")) localPermissions.push("leave_approve_manager");
+//           if (!localPermissions.includes("shifts_manage")) localPermissions.push("shifts_manage");
+//         }
+
+//         setPermissions(localPermissions);
+//         const hasAdminPerm = localPermissions.some(perm => ADMIN_PERMISSIONS.includes(perm));
+//         setHasAnyAdminPermission(hasAdminPerm);
+//         if (!hasAdminPerm) {
+//           setIsAdminView(false);
+//           localStorage.setItem("isAdminView", "false");
+//         }
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+//     fetchPermissions();
+//   }, []);
+
+//   const hasPermission = (permission) => {
+//     if (permission === "ALLOW_ALWAYS") return true;
+//     if (loading) return false;
+//     return permissions.includes(permission);
+//   };
+
+//   // Employee Menu - Same as before
+//   const buildEmployeeMenu = () => {
+//     return [
+//       { icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/employeedashboard" },
+//       // { icon: <i className="ri-shield-keyhole-fill"></i>, name: "My Permissions", path: "/mypermissions" },
+//       {
+//         icon: <i className="ri-calendar-fill"></i>,
+//         name: "Attendance",
+//         dropdown: [
+//           { name: "Check In", path: "/attendance-capture" },
+//           { name: "Attendance Report", path: "/myattendance" },
+//           { name: "My Shift", path: "/my-shift" },
+//           { name: "My Assigned Location", path: "/mylocation" },
+//         ]
+//       },
+//       {
+//         icon: <i className="ri-calendar-fill"></i>,name: "Leave", path: "/myleaves" },
+//       {
+//         icon: <i className="ri-profile-fill"></i>,
+//         name: "Profile",
+//         dropdown: [
+//           { name: "My Jobs", path: "/emp-my-jobs" },
+//           { name: "Personal Docs", path: "/emp-personal-documents" },
+//           { name: "My Letters", path: "/emp-letters" },
+//           { name: "My Certificate", path: "/my-medical-certificate" }
+//         ]
+//       },
+//       { icon: <i className="ri-money-dollar-box-fill"></i>, name: "My Salary", path: "/mysalary" },
+//       { icon: <i className="ri-calendar-fill"></i>, name: "Holidays", path: "/HolidayList" },
+//       { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
+//     ];
+//   };
+
+//   // Admin Menu - Same as Sidebar component
+//   const buildAdminMenu = () => {
+//     const menu = [];
+
+//     // Dashboard
+//     if (hasPermission("dashboard_view")) {
+//       menu.push({ icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/emp-admin-dashboard" });
+//     }
+
+//     // Employees
+//     if (hasPermission("employee_view_all")) {
+//       menu.push({ icon: <i className="ri-user-fill"></i>, name: "Employees", path: "/emp-employees" });
+//     }
+
+//     // Attendance with dropdown
+//     const attendanceDropdown = [];
+//     if (hasPermission("attendance_view_all")) {
+//       attendanceDropdown.push({ name: "Attendance Summary", path: "/emp-attendance-summary" });
+//       attendanceDropdown.push({ name: "Attendance Records", path: "/emp-attendance-records" });
+//       attendanceDropdown.push({ name: "Today Attendance", path: "/emp-today-attendance" });
+//       attendanceDropdown.push({ name: "Absent Today", path: "/emp-absent-today" });
+//     }
+//     if (attendanceDropdown.length > 0) {
+//       menu.push({
+//         icon: <i className="ri-calendar-fill"></i>,
+//         name: "Attendance",
+//         dropdown: attendanceDropdown
+//       });
+//     }
+
+//     // Leave Approval (for HR/Admin)
+//     if (hasPermission("leave_approve")) {
+//       menu.push({ icon: <i className="ri-calendar-fill"></i>, name: "Leaves", path: "/emp-leaves" });
+//     }
+    
+//     // Manager Approve (for Manager/Team Lead) - Different icon
+//     if (hasPermission("leave_approve_manager")) {
+//       menu.push({ icon: <i className="ri-user-star-fill"></i>, name: "Manager Approve", path: "/emp-pending-leaves" });
+//     }
+
+//     // Holidays
+//     if (hasPermission("holidays_view") || hasPermission("user_access_manage") || hasPermission("employee_view_all")) {
+//       menu.push({ icon: <i className="ri-calendar-fill"></i>, name: "Holidays", path: "/emp-holidays-calendar" });
+//     }
+
+//     // Permissions
+//     if (hasPermission("user_access_manage")) {
+//       menu.push({ icon: <i className="ri-shield-keyhole-fill"></i>, name: "Permissions", path: "/emp-permissions" });
+//     }
+
+//     // Payroll
+//     if (hasPermission("payroll_manage")) {
+//       menu.push({ icon: <i className="ri-money-dollar-box-fill"></i>, name: "Payroll", path: "/emp-payroll" });
+//     }
+
+//     // Expenses
+//     if (hasPermission("expenses_manage") || hasPermission("expense_manage")) {
+//       menu.push({ icon: <i className="ri-money-dollar-circle-fill"></i>, name: "Expenses", path: "/emp-all-expensives-management" });
+//     }
+
+//     // User Activity
+//     if (hasPermission("user_activity_view")) {
+//       menu.push({ icon: <i className="ri-history-fill"></i>, name: "User Activity", path: "/emp-user-activity" });
+//     }
+
+//     // User Access
+//     if (hasPermission("user_access_manage")) {
+//       menu.push({ icon: <i className="ri-shield-user-fill"></i>, name: "User Access", path: "/emp-user-access" });
+//     }
+
+//     // Recruitment with dropdown
+//     const recruitmentDropdown = [];
+//     if (hasPermission("job_posts_view")) recruitmentDropdown.push({ name: "Job Posts", path: "/emp-job-posts" });
+//     if (hasPermission("job_applicants_view")) recruitmentDropdown.push({ name: "Job Applicants", path: "/emp-job-applicants" });
+//     if (hasPermission("score_board_view")) recruitmentDropdown.push({ name: "Score Board", path: "/emp-score-board" });
+//     if (hasPermission("assessments_view")) recruitmentDropdown.push({ name: "Assessments", path: "/emp-assessments" });
+//     if (hasPermission("documents_view")) recruitmentDropdown.push({ name: "Documents", path: "/emp-documents" });
+    
+//     if (recruitmentDropdown.length > 0) {
+//       menu.push({
+//         icon: <i className="ri-briefcase-fill"></i>,
+//         name: "Recruitment",
+//         dropdown: recruitmentDropdown
+//       });
+//     }
+
+//     // Locations
+//     if (hasPermission("locations_manage")) {
+//       menu.push({ icon: <i className="ri-map-pin-2-fill"></i>, name: "Locations", path: "/emp-locations" });
+//     }
+
+//     // Shifts
+//     if (hasPermission("shifts_manage")) {
+//       menu.push({ icon: <i className="ri-time-fill"></i>, name: "Shifts", path: "/emp-shifts" });
+//     }
+
+//     // Logout
+//     menu.push({ icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout });
+
+//     return menu;
+//   };
+
+//   const getCurrentMenu = () => {
+//     if (!hasAnyAdminPermission) return buildEmployeeMenu();
+//     return isAdminView ? buildAdminMenu() : buildEmployeeMenu();
+//   };
+
+//   const menuItems = getCurrentMenu();
+
+//   if (loading) {
+//     return (
+//       <div className="fixed top-0 left-0 h-full bg-[#1D4ED8] text-white z-40 w-52 flex items-center justify-center">
+//         <div className="w-6 h-6 border-blue-500 rounded-full animate-spin"></div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <>
+//       {isMobile && !isCollapsed && (
+//         <div
+//           className="fixed inset-0 z-30 bg-[#1E3A8A] "
+//           onClick={() => {
+//             if (setIsCollapsed) setIsCollapsed(true);
+//             setOpenDropdown(null);
+//           }}
+//         />
+//       )}
+
+//       <div
+//         onMouseEnter={handleMouseEnterSidebar}
+//         onMouseLeave={handleMouseLeaveSidebar}
+//         className={`fixed top-0 left-0 h-full bg-[#1D4ED8] text-white z-40 transition-all duration-300 border-blue-500 border-blue-500
+//         ${
+//           isMobile
+//             ? isCollapsed
+//               ? "-translate-x-full w-52"
+//               : "translate-x-0 w-52"
+//             : isCollapsed
+//             ? "w-16"
+//             : "w-52"
+//         }`}
+//       >
+//         {/* Header */}
+//         <div className="flex items-center justify-center px-3 font-bold tracking-tight bg-blue-700 border-blue-500 h-14">
+//           {isCollapsed && !isMobile ? (
+//             <span className="text-xl text-white">TM</span>
+//           ) : (
+//             <div className="flex flex-col w-full">
+//               <span className="text-xs uppercase tracking-[0.2em] font-medium text-white mb-0.5">
+//                 {hasAnyAdminPermission && isAdminView ? 'Admin Portal' : 'Employee Portal'}
+//               </span>
+//               <div className="flex items-center gap-1.5">
+//                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></div>
+//                 <span className="text-xs font-medium truncate text-white/80">
+//                   {currentPage}
+//                 </span>
+//               </div>
+//             </div>
+//           )}
+//         </div>
+
+//         {/* Menu */}
+//         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto no-scrollbar">
+//           {menuItems.map((item, idx) => (
+//             <div key={idx}>
+//               {item.dropdown ? (
+//                 <>
+//                   <div
+//                     className={`group flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
+//                       isDropdownActive(item.dropdown)
+//                         ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
+//                         : openDropdown === item.name
+//                         ? "bg-[#1E3A8A]"
+//                         : "hover:bg-blue-600"
+//                     }`}
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       if (item.dropdown && item.dropdown.length > 0) {
+//                         navigate(item.dropdown[0].path);
+//                         setOpenDropdown(null);
+//                         if (isMobile && setIsCollapsed) {
+//                           setIsCollapsed(true);
+//                         }
+//                         if (onClose) onClose();
+//                       }
+//                     }}
+//                   >
+//                     <div className="flex items-center gap-2.5">
+//                       <span className={`text-lg transition-colors duration-200 ${
+//                         isDropdownActive(item.dropdown)
+//                           ? "text-white"
+//                           : openDropdown === item.name
+//                           ? "text-white"
+//                           : "text-white group-hover:text-white"
+//                       }`}>
+//                         {item.icon}
+//                       </span>
+//                       {!isCollapsed && (
+//                         <span className="text-[14px] font-medium leading-none">
+//                           {item.name}
+//                         </span>
+//                       )}
+//                     </div>
+
+//                     {!isCollapsed && (
+//                       <div className="flex items-center gap-1">
+//                         {isDropdownActive(item.dropdown) && (
+//                           <div className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></div>
+//                         )}
+//                         <FaChevronDown
+//                           onClick={(e) => toggleDropdown(e, item.name)}
+//                           className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600 rounded cursor-pointer ${
+//                             isDropdownActive(item.dropdown)
+//                               ? "text-white"
+//                               : openDropdown === item.name
+//                               ? "text-white"
+//                               : "text-white"
+//                           } ${openDropdown === item.name ? "rotate-180" : ""}`}
+//                           style={{
+//                             width: '20px',
+//                             height: '20px',
+//                             minWidth: '20px',
+//                             minHeight: '20px'
+//                           }}
+//                         />
+//                       </div>
+//                     )}
+//                   </div>
+
+//                   {/* DROPDOWN ITEMS */}
+//                   {openDropdown === item.name && !isCollapsed && (
+//                     <ul className="mt-0.5 space-y-0.5">
+//                       {item.dropdown.map((sub, i) => (
+//                         <li key={i}>
+//                           <Link
+//                             to={sub.path}
+//                             onClick={() => handleDropdownItemClick(sub.path)}
+//                             className={`block py-1 text-[13px] transition-colors ${
+//                               isActive(sub.path)
+//                                 ? "text-white font-semibold"
+//                                 : "text-white hover:text-white"
+//                             }`}
+//                           >
+//                             <div className="flex items-center gap-2">
+//                               {isActive(sub.path) && (
+//                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+//                               )}
+//                               {sub.name}
+//                             </div>
+//                           </Link>
+//                         </li>
+//                       ))}
+//                     </ul>
+//                   )}
+//                 </>
+//               ) : (
+//                 <div
+//                   onClick={() => handleItemClick(item.path, item.action)}
+//                   className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
+//                     isActive(item.path)
+//                       ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
+//                       : "hover:bg-blue-600"
+//                   }`}
+//                 >
+//                   <span className={`text-lg transition-colors duration-200 ${
+//                     isActive(item.path)
+//                       ? "text-white"
+//                       : "text-white group-hover:text-white"
+//                   }`}>
+//                     {item.icon}
+//                   </span>
+//                   {!isCollapsed && (
+//                     <div className="flex items-center flex-1 min-w-0 gap-2">
+//                       <span className="text-[14px] font-medium leading-none truncate">
+//                         {item.name}
+//                       </span>
+//                       {isActive(item.path) && (
+//                         <div className="w-2 h-2 ml-auto rounded-full bg-emerald-300 animate-pulse"></div>
+//                       )}
+//                     </div>
+//                   )}
+//                 </div>
+//               )}
+//             </div>
+//           ))}
+//         </nav>
+
+//         {/* Footer with View Toggle Button */}
+//         <div className="px-4 py-3 text-[10px] text-white border-blue-500 border-blue-500 bg-blue-700">
+//           {!isCollapsed ? (
+//             <div className="flex flex-col gap-2">
+//               {hasAnyAdminPermission && (
+//                 <button 
+//                   onClick={toggleView} 
+//                   className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-white transition-all bg-blue-600 rounded-lg hover:bg-blue-600"
+//                 >
+//                   <span className="flex items-center gap-2">
+//                     <i className={`${isAdminView ? 'ri-admin-fill' : 'ri-user-fill'}`}></i>
+//                     {isAdminView ? 'Switch to Employee View' : 'Switch to Admin View'}
+//                   </span>
+//                   <i className="ri-swap-line"></i>
+//                 </button>
+//               )}
+//               <div className="flex flex-col gap-0.5">
+//                 <div className="flex items-center justify-between">
+//                   <p className="font-semibold tracking-wider text-white uppercase">
+//                     {hasAnyAdminPermission && isAdminView ? 'Admin Portal v1.0' : 'Employee Portal v1.0'}
+//                   </p>
+//                   <div className={`flex items-center gap-1 px-2 py-0.5 rounded ${hasAnyAdminPermission && isAdminView ? 'bg-purple-600/20' : 'bg-blue-600/20'}`}>
+//                     <div className={`w-1.5 h-1.5 rounded-full ${hasAnyAdminPermission && isAdminView ? 'bg-purple-400' : 'bg-blue-400'}`}></div>
+//                     <span className={`text-[9px] font-medium ${hasAnyAdminPermission && isAdminView ? 'text-purple-300' : 'text-white'}`}>
+//                       {hasAnyAdminPermission && isAdminView ? 'Admin Mode' : 'Employee Mode'}
+//                     </span>
+//                   </div>
+//                 </div>
+//                 <p>© {new Date().getFullYear()} Timely Health</p>
+//               </div>
+//             </div>
+//           ) : (
+//             <div className="text-center">
+//               {hasAnyAdminPermission && (
+//                 <button 
+//                   onClick={toggleView} 
+//                   className="p-1 transition-colors rounded hover:bg-[#1D4ED8]/60/70/70/50" 
+//                   title={isAdminView ? 'Switch to Employee View' : 'Switch to Admin View'}
+//                 >
+//                   <i className={`text-lg ${isAdminView ? 'ri-admin-fill' : 'ri-user-fill'}`}></i>
+//                 </button>
+//               )}
+//               <div className="w-3 h-3 mx-auto mt-1 mb-1 bg-blue-400 rounded-full animate-pulse"></div>
+//               <span>©</span>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+//     </>
+//   );
+// };
+
+// export default EmployeeSidebar;
+
+
+// import axios from "axios";
+// import { useCallback, useEffect, useState } from "react";
+// import { FaChevronDown } from "react-icons/fa";
+// import { Link, useLocation, useNavigate } from "react-router-dom";
+// import { API_BASE_URL } from "../config";
+
+// const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => {
+//   const [openDropdown, setOpenDropdown] = useState(null);
+//   const [currentPage, setCurrentPage] = useState("Dashboard");
+//   const [activeItem, setActiveItem] = useState("/employeedashboard");
+  
+//   // View state
+//   const [isAdminView, setIsAdminView] = useState(() => {
+//     const saved = localStorage.getItem("isAdminView");
+//     return saved === "true";
+//   });
+  
+//   const [permissions, setPermissions] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [hasAnyAdminPermission, setHasAnyAdminPermission] = useState(false);
+  
+//   const navigate = useNavigate();
+//   const location = useLocation();
+
+//   const ADMIN_PERMISSIONS = [
+//     "dashboard_view", "attendance_view_all", "shifts_manage", "leave_approve",
+//     "leave_approve_manager", "reports_view", "payroll_manage", "employee_view_all", "employee_add",
+//     "user_activity_view", "user_access_manage", "expenses_manage", "expense_manage",
+//     "locations_manage", "job_posts_view", "job_applicants_view", "score_board_view",
+//     "assessments_view", "documents_view", "job_recruitment_manage", "holidays_view",
+//     // ✅ EVENTS PERMISSIONS
+//     "events_manage", "events_create", "events_edit", "events_delete", 
+//     "events_view_all", "events_register_participants"
+//   ];
+
+//   useEffect(() => {
+//     const path = location.pathname;
+//     setActiveItem(path);
+//     setCurrentPage(getPageNameFromPath(path));
+//   }, [location]);
+
+//   const getPageNameFromPath = (path) => {
+//     const pathMap = {
+//       "/employeedashboard": "Dashboard",
+//       "/leave-application": "Leave Application",
+//       "/attendance-capture": "Check In",
+//       "/myattendance": "Attendance Report",
+//       "/my-shift": "My Shift",
+//       "/mylocation": "My Assigned Location",
+//       "/mysalary": "My Salary",
+//       "/mypermissions": "My Permissions",
+//       "/myleaves": "My Leaves",
+//       "/emp-admin-dashboard": "Dashboard",
+//       "/emp-employees": "Employees",
+//       "/emp-add-employee": "Add Employee",
+//       "/emp-attendance-summary": "Attendance Summary",
+//       "/emp-attendance-records": "Attendance Records",
+//       "/emp-today-attendance": "Today Attendance",
+//       "/emp-absent-today": "Absent Today",
+//       "/emp-leaves": "Leaves",
+//       "/emp-pending-leaves": "Manager Approve",
+//       "/emp-payroll": "Payroll",
+//       "/emp-reports": "Reports",
+//       "/emp-locations": "Locations",
+//       "/emp-shifts": "Shifts",
+//       "/emp-user-activity": "User Activity",
+//       "/emp-user-access": "User Access",
+//       "/emp-all-expensives-management": "Expenses",
+//       "/emp-job-posts": "Job Posts",
+//       "/emp-job-applicants": "Job Applicants",
+//       "/emp-score-board": "Score Board",
+//       "/emp-assessments": "Assessments",
+//       "/emp-documents": "Documents",
+//       "/emp-my-jobs": "My Jobs",
+//       "/emp-personal-documents": "Personal Documents",
+//       "/emp-letters": "My Letters",
+//       "/my-medical-certificate": "My Certificate",
+//       "/emp-holidays-calendar": "Holidays Calendar",
+//       "/emp-permissions": "Permissions",
+//       // ✅ EVENTS PAGES
+//       "/emp-events": "Events",
+//       "/emp-events-manage": "Manage Events",
+//       "/emp-events-create": "Create Event",
+//       "/emp-events-registrations": "Event Registrations"
+//     };
+//     return pathMap[path] || "Dashboard";
+//   };
+
+//   // Desktop Hover Expand/Collapse
+//   const handleMouseEnterSidebar = () => {
+//     if (!isMobile && setIsCollapsed && isCollapsed) {
+//       setIsCollapsed(false);
+//     }
+//   };
+
+//   const handleMouseLeaveSidebar = () => {
+//     if (!isMobile && setIsCollapsed && !openDropdown) {
+//       setIsCollapsed(true);
+//     }
+//   };
+
+//   const toggleDropdown = (e, name) => {
+//     e.stopPropagation();
+//     e.preventDefault();
+    
+//     if (openDropdown !== name) {
+//       if (!isMobile && isCollapsed && setIsCollapsed) {
+//         setIsCollapsed(false);
+//       }
+//       setOpenDropdown(name);
+//     } else {
+//       setOpenDropdown(null);
+//     }
+//   };
+
+//   const handleItemClick = (path, action) => {
+//     if (path) {
+//       navigate(path);
+//     }
+//     if (action) {
+//       action();
+//     }
+//     setOpenDropdown(null);
+//     if (isMobile && setIsCollapsed) {
+//       setIsCollapsed(true);
+//     }
+//     if (onClose) {
+//       onClose();
+//     }
+//   };
+
+//   const handleDropdownItemClick = (path) => {
+//     navigate(path);
+//     setOpenDropdown(null);
+//     if (isMobile && setIsCollapsed) {
+//       setIsCollapsed(true);
+//     }
+//     if (onClose) {
+//       onClose();
+//     }
+//   };
+
+//   const handleLogout = async () => {
+//     try {
+//       await axios.post(`${API_BASE_URL}/employees/logout`, {}, { withCredentials: true });
+//       localStorage.clear();
+//       localStorage.removeItem("isAdminView");
+//       navigate("/employee-login");
+//       handleItemClick(null, null);
+//     } catch (error) {
+//       localStorage.clear();
+//       navigate("/employee-login");
+//     }
+//   };
+
+//   // Toggle view - switches between Employee and Admin view
+//   const toggleView = useCallback((e) => {
+//     if (e) {
+//       e.stopPropagation();
+//       e.preventDefault();
+//     }
+//     if (!hasAnyAdminPermission) return;
+    
+//     const newView = !isAdminView;
+//     setIsAdminView(newView);
+//     localStorage.setItem("isAdminView", newView);
+//     setOpenDropdown(null);
+//     window.dispatchEvent(new CustomEvent('viewChanged', { detail: { isAdminView: newView } }));
+    
+//     if (newView) {
+//       const adminMenu = buildAdminMenu();
+//       const firstNavigableItem = adminMenu.find(item => item.path && item.name !== "Logout");
+//       const firstDropdownItem = adminMenu.find(item => item.dropdown && item.dropdown.length > 0)?.dropdown[0];
+//       const targetPath = firstNavigableItem ? firstNavigableItem.path : (firstDropdownItem ? firstDropdownItem.path : "/emp-admin-dashboard");
+//       navigate(targetPath);
+//     } else {
+//       navigate("/employeedashboard");
+//     }
+//   }, [hasAnyAdminPermission, isAdminView, navigate]);
+
+//   const isActive = (path) => activeItem === path;
+//   const isDropdownActive = (dropdownItems) => dropdownItems?.some(item => isActive(item.path));
+
+//   useEffect(() => {
+//     const fetchPermissions = async () => {
+//       const storedId = localStorage.getItem("employeeId");
+//       if (!storedId || storedId === "undefined") {
+//         setLoading(false);
+//         setHasAnyAdminPermission(false);
+//         setIsAdminView(false);
+//         localStorage.setItem("isAdminView", "false");
+//         return;
+//       }
+
+//       const checkManagerStatus = (data) => {
+//         if (!data) return false;
+//         const role = (data.role || data.designation || "").toLowerCase();
+//         return role === "manager" || role === "team lead" || role === "hr";
+//       };
+
+//       const checkHRManagementStatus = (data) => {
+//         if (!data) return false;
+//         const role = (data.role || data.designation || "").toLowerCase();
+//         const dept = (data.department || "").toLowerCase();
+//         return dept.includes("management") || role.includes("hr") || role.includes("admin");
+//       };
+
+//       try {
+//         const response = await axios.get(`${API_BASE_URL}/employees/get-employee?employeeId=${storedId}&t=${new Date().getTime()}`);
+//         let fetchedPermissions = [];
+        
+//         if (response.data.data?.permissions) fetchedPermissions = response.data.data.permissions;
+//         else if (response.data.permissions) fetchedPermissions = response.data.permissions;
+        
+//         const empLocal = JSON.parse(localStorage.getItem("employeeData") || "{}");
+//         const dataToUse = response.data.data || response.data || empLocal;
+        
+//         const isManager = checkManagerStatus(dataToUse);
+//         const isHRManagement = checkHRManagementStatus(dataToUse);
+        
+//         if (isHRManagement) {
+//           // Grant all admin permissions if they are HR/Management except manager approve
+//           const allPerms = new Set([...fetchedPermissions, ...ADMIN_PERMISSIONS.filter(p => p !== "leave_approve_manager")]);
+//           fetchedPermissions = Array.from(allPerms);
+//         } else if (isManager) {
+//           // Grant manager basics if they are Manager
+//           if (!fetchedPermissions.includes("leave_approve_manager")) fetchedPermissions.push("leave_approve_manager");
+//           if (!fetchedPermissions.includes("shifts_manage")) fetchedPermissions.push("shifts_manage");
+//         }
+
+//         setPermissions(fetchedPermissions);
+//         localStorage.setItem("employeePermissions", JSON.stringify(fetchedPermissions));
+        
+//         const hasAdminPerm = fetchedPermissions.some(perm => ADMIN_PERMISSIONS.includes(perm));
+//         setHasAnyAdminPermission(hasAdminPerm);
+        
+//         if (!hasAdminPerm) {
+//           setIsAdminView(false);
+//           localStorage.setItem("isAdminView", "false");
+//         }
+//       } catch (error) {
+//         let localPermissions = JSON.parse(localStorage.getItem("employeePermissions") || "[]");
+//         const empLocal = JSON.parse(localStorage.getItem("employeeData") || "{}");
+//         const isManager = checkManagerStatus(empLocal);
+//         const isHRManagement = checkHRManagementStatus(empLocal);
+
+//         if (isHRManagement) {
+//           const allPerms = new Set([...localPermissions, ...ADMIN_PERMISSIONS.filter(p => p !== "leave_approve_manager")]);
+//           localPermissions = Array.from(allPerms);
+//         } else if (isManager) {
+//           if (!localPermissions.includes("leave_approve_manager")) localPermissions.push("leave_approve_manager");
+//           if (!localPermissions.includes("shifts_manage")) localPermissions.push("shifts_manage");
+//         }
+
+//         setPermissions(localPermissions);
+//         const hasAdminPerm = localPermissions.some(perm => ADMIN_PERMISSIONS.includes(perm));
+//         setHasAnyAdminPermission(hasAdminPerm);
+//         if (!hasAdminPerm) {
+//           setIsAdminView(false);
+//           localStorage.setItem("isAdminView", "false");
+//         }
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+//     fetchPermissions();
+//   }, []);
+
+//   const hasPermission = (permission) => {
+//     if (permission === "ALLOW_ALWAYS") return true;
+//     if (loading) return false;
+//     return permissions.includes(permission);
+//   };
+
+//   // Employee Menu - Same as before
+//   const buildEmployeeMenu = () => {
+//     return [
+//       { icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/employeedashboard" },
+//       // { icon: <i className="ri-shield-keyhole-fill"></i>, name: "My Permissions", path: "/mypermissions" },
+//       {
+//         icon: <i className="ri-calendar-fill"></i>,
+//         name: "Attendance",
+//         dropdown: [
+//           { name: "Check In", path: "/attendance-capture" },
+//           { name: "Attendance Report", path: "/myattendance" },
+//           { name: "My Shift", path: "/my-shift" },
+//           { name: "My Assigned Location", path: "/mylocation" },
+//         ]
+//       },
+//       {
+//         icon: <i className="ri-calendar-fill"></i>,name: "Leave", path: "/myleaves" },
+//       {
+//         icon: <i className="ri-profile-fill"></i>,
+//         name: "Profile",
+//         dropdown: [
+//           { name: "My Jobs", path: "/emp-my-jobs" },
+//           { name: "Personal Docs", path: "/emp-personal-documents" },
+//           { name: "My Letters", path: "/emp-letters" },
+//           { name: "My Certificate", path: "/my-medical-certificate" }
+//         ]
+//       },
+//       { icon: <i className="ri-money-dollar-box-fill"></i>, name: "My Salary", path: "/mysalary" },
+//       { icon: <i className="ri-calendar-fill"></i>, name: "Holidays", path: "/HolidayList" },
+//       { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
+//     ];
+//   };
+
+//   // Admin Menu - Updated with Events section
+//   const buildAdminMenu = () => {
+//     const menu = [];
+
+//     // Dashboard
+//     if (hasPermission("dashboard_view")) {
+//       menu.push({ icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/emp-admin-dashboard" });
+//     }
+
+//     // Employees
+//     if (hasPermission("employee_view_all")) {
+//       menu.push({ icon: <i className="ri-user-fill"></i>, name: "Employees", path: "/emp-employees" });
+//     }
+
+//     // Attendance with dropdown
+//     const attendanceDropdown = [];
+//     if (hasPermission("attendance_view_all")) {
+//       attendanceDropdown.push({ name: "Attendance Summary", path: "/emp-attendance-summary" });
+//       attendanceDropdown.push({ name: "Attendance Records", path: "/emp-attendance-records" });
+//       attendanceDropdown.push({ name: "Today Attendance", path: "/emp-today-attendance" });
+//       attendanceDropdown.push({ name: "Absent Today", path: "/emp-absent-today" });
+//     }
+//     if (attendanceDropdown.length > 0) {
+//       menu.push({
+//         icon: <i className="ri-calendar-fill"></i>,
+//         name: "Attendance",
+//         dropdown: attendanceDropdown
+//       });
+//     }
+
+//     // Leave Approval (for HR/Admin)
+//     if (hasPermission("leave_approve")) {
+//       menu.push({ icon: <i className="ri-calendar-fill"></i>, name: "Leaves", path: "/emp-leaves" });
+//     }
+    
+//     // Manager Approve (for Manager/Team Lead) - Different icon
+//     if (hasPermission("leave_approve_manager")) {
+//       menu.push({ icon: <i className="ri-user-star-fill"></i>, name: "Manager Approve", path: "/emp-pending-leaves" });
+//     }
+
+//     // Holidays
+//     if (hasPermission("holidays_view") || hasPermission("user_access_manage") || hasPermission("employee_view_all")) {
+//       menu.push({ icon: <i className="ri-calendar-fill"></i>, name: "Holidays", path: "/emp-holidays-calendar" });
+//     }
+
+//     // Permissions
+//     if (hasPermission("user_access_manage")) {
+//       menu.push({ icon: <i className="ri-shield-keyhole-fill"></i>, name: "Permissions", path: "/emp-permissions" });
+//     }
+
+//     // Payroll
+//     if (hasPermission("payroll_manage")) {
+//       menu.push({ icon: <i className="ri-money-dollar-box-fill"></i>, name: "Payroll", path: "/emp-payroll" });
+//     }
+
+//     // Expenses
+//     if (hasPermission("expenses_manage") || hasPermission("expense_manage")) {
+//       menu.push({ icon: <i className="ri-money-dollar-circle-fill"></i>, name: "Expenses", path: "/emp-all-expensives-management" });
+//     }
+
+//     // User Activity
+//     if (hasPermission("user_activity_view")) {
+//       menu.push({ icon: <i className="ri-history-fill"></i>, name: "User Activity", path: "/emp-user-activity" });
+//     }
+
+//     // User Access
+//     if (hasPermission("user_access_manage")) {
+//       menu.push({ icon: <i className="ri-shield-user-fill"></i>, name: "User Access", path: "/emp-user-access" });
+//     }
+
+//     // Recruitment with dropdown
+//     const recruitmentDropdown = [];
+//     if (hasPermission("job_posts_view")) recruitmentDropdown.push({ name: "Job Posts", path: "/emp-job-posts" });
+//     if (hasPermission("job_applicants_view")) recruitmentDropdown.push({ name: "Job Applicants", path: "/emp-job-applicants" });
+//     if (hasPermission("score_board_view")) recruitmentDropdown.push({ name: "Score Board", path: "/emp-score-board" });
+//     if (hasPermission("assessments_view")) recruitmentDropdown.push({ name: "Assessments", path: "/emp-assessments" });
+//     if (hasPermission("documents_view")) recruitmentDropdown.push({ name: "Documents", path: "/emp-documents" });
+    
+//     if (recruitmentDropdown.length > 0) {
+//       menu.push({
+//         icon: <i className="ri-briefcase-fill"></i>,
+//         name: "Recruitment",
+//         dropdown: recruitmentDropdown
+//       });
+//     }
+
+//     // ✅ EVENTS SECTION
+// if (
+//   hasPermission("events_view_all") ||
+//   hasPermission("events_manage") ||
+//   hasPermission("events_create") ||
+//   hasPermission("events_register_participants")
+// ) {
+//   menu.push({
+//     icon: <i className="ri-calendar-event-fill"></i>,
+//     name: "Events",
+//     path: "/events",
+//   });
+// }
+
+//     // Locations
+//     if (hasPermission("locations_manage")) {
+//       menu.push({ icon: <i className="ri-map-pin-2-fill"></i>, name: "Locations", path: "/emp-locations" });
+//     }
+
+//     // Shifts
+//     if (hasPermission("shifts_manage")) {
+//       menu.push({ icon: <i className="ri-time-fill"></i>, name: "Shifts", path: "/emp-shifts" });
+//     }
+
+//     // Logout
+//     menu.push({ icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout });
+
+//     return menu;
+//   };
+
+//   const getCurrentMenu = () => {
+//     if (!hasAnyAdminPermission) return buildEmployeeMenu();
+//     return isAdminView ? buildAdminMenu() : buildEmployeeMenu();
+//   };
+
+//   const menuItems = getCurrentMenu();
+
+//   if (loading) {
+//     return (
+//       <div className="fixed top-0 left-0 h-full bg-[#1D4ED8] text-white z-40 w-52 flex items-center justify-center">
+//         <div className="w-6 h-6 border-blue-500 rounded-full animate-spin"></div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <>
+//       {isMobile && !isCollapsed && (
+//         <div
+//           className="fixed inset-0 z-30 bg-[#1E3A8A] "
+//           onClick={() => {
+//             if (setIsCollapsed) setIsCollapsed(true);
+//             setOpenDropdown(null);
+//           }}
+//         />
+//       )}
+
+//       <div
+//         onMouseEnter={handleMouseEnterSidebar}
+//         onMouseLeave={handleMouseLeaveSidebar}
+//         className={`fixed top-0 left-0 h-full bg-[#1D4ED8] text-white z-40 transition-all duration-300 border-blue-500 border-blue-500
+//         ${
+//           isMobile
+//             ? isCollapsed
+//               ? "-translate-x-full w-52"
+//               : "translate-x-0 w-52"
+//             : isCollapsed
+//             ? "w-16"
+//             : "w-52"
+//         }`}
+//       >
+//         {/* Header */}
+//         <div className="flex items-center justify-center px-3 font-bold tracking-tight bg-blue-700 border-blue-500 h-14">
+//           {isCollapsed && !isMobile ? (
+//             <span className="text-xl text-white">TM</span>
+//           ) : (
+//             <div className="flex flex-col w-full">
+//               <span className="text-xs uppercase tracking-[0.2em] font-medium text-white mb-0.5">
+//                 {hasAnyAdminPermission && isAdminView ? 'Admin Portal' : 'Employee Portal'}
+//               </span>
+//               <div className="flex items-center gap-1.5">
+//                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></div>
+//                 <span className="text-xs font-medium truncate text-white/80">
+//                   {currentPage}
+//                 </span>
+//               </div>
+//             </div>
+//           )}
+//         </div>
+
+//         {/* Menu */}
+//         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto no-scrollbar">
+//           {menuItems.map((item, idx) => (
+//             <div key={idx}>
+//               {item.dropdown ? (
+//                 <>
+//                   <div
+//                     className={`group flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
+//                       isDropdownActive(item.dropdown)
+//                         ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
+//                         : openDropdown === item.name
+//                         ? "bg-[#1E3A8A]"
+//                         : "hover:bg-blue-600"
+//                     }`}
+//                     onClick={(e) => {
+//                       e.stopPropagation();
+//                       if (item.dropdown && item.dropdown.length > 0) {
+//                         navigate(item.dropdown[0].path);
+//                         setOpenDropdown(null);
+//                         if (isMobile && setIsCollapsed) {
+//                           setIsCollapsed(true);
+//                         }
+//                         if (onClose) onClose();
+//                       }
+//                     }}
+//                   >
+//                     <div className="flex items-center gap-2.5">
+//                       <span className={`text-lg transition-colors duration-200 ${
+//                         isDropdownActive(item.dropdown)
+//                           ? "text-white"
+//                           : openDropdown === item.name
+//                           ? "text-white"
+//                           : "text-white group-hover:text-white"
+//                       }`}>
+//                         {item.icon}
+//                       </span>
+//                       {!isCollapsed && (
+//                         <span className="text-[14px] font-medium leading-none">
+//                           {item.name}
+//                         </span>
+//                       )}
+//                     </div>
+
+//                     {!isCollapsed && (
+//                       <div className="flex items-center gap-1">
+//                         {isDropdownActive(item.dropdown) && (
+//                           <div className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></div>
+//                         )}
+//                         <FaChevronDown
+//                           onClick={(e) => toggleDropdown(e, item.name)}
+//                           className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600 rounded cursor-pointer ${
+//                             isDropdownActive(item.dropdown)
+//                               ? "text-white"
+//                               : openDropdown === item.name
+//                               ? "text-white"
+//                               : "text-white"
+//                           } ${openDropdown === item.name ? "rotate-180" : ""}`}
+//                           style={{
+//                             width: '20px',
+//                             height: '20px',
+//                             minWidth: '20px',
+//                             minHeight: '20px'
+//                           }}
+//                         />
+//                       </div>
+//                     )}
+//                   </div>
+
+//                   {/* DROPDOWN ITEMS */}
+//                   {openDropdown === item.name && !isCollapsed && (
+//                     <ul className="mt-0.5 space-y-0.5">
+//                       {item.dropdown.map((sub, i) => (
+//                         <li key={i}>
+//                           <Link
+//                             to={sub.path}
+//                             onClick={() => handleDropdownItemClick(sub.path)}
+//                             className={`block py-1 text-[13px] transition-colors ${
+//                               isActive(sub.path)
+//                                 ? "text-white font-semibold"
+//                                 : "text-white hover:text-white"
+//                             }`}
+//                           >
+//                             <div className="flex items-center gap-2">
+//                               {isActive(sub.path) && (
+//                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+//                               )}
+//                               {sub.name}
+//                             </div>
+//                           </Link>
+//                         </li>
+//                       ))}
+//                     </ul>
+//                   )}
+//                 </>
+//               ) : (
+//                 <div
+//                   onClick={() => handleItemClick(item.path, item.action)}
+//                   className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
+//                     isActive(item.path)
+//                       ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
+//                       : "hover:bg-blue-600"
+//                   }`}
+//                 >
+//                   <span className={`text-lg transition-colors duration-200 ${
+//                     isActive(item.path)
+//                       ? "text-white"
+//                       : "text-white group-hover:text-white"
+//                   }`}>
+//                     {item.icon}
+//                   </span>
+//                   {!isCollapsed && (
+//                     <div className="flex items-center flex-1 min-w-0 gap-2">
+//                       <span className="text-[14px] font-medium leading-none truncate">
+//                         {item.name}
+//                       </span>
+//                       {isActive(item.path) && (
+//                         <div className="w-2 h-2 ml-auto rounded-full bg-emerald-300 animate-pulse"></div>
+//                       )}
+//                     </div>
+//                   )}
+//                 </div>
+//               )}
+//             </div>
+//           ))}
+//         </nav>
+
+//         {/* Footer with View Toggle Button */}
+//         <div className="px-4 py-3 text-[10px] text-white border-blue-500 border-blue-500 bg-blue-700">
+//           {!isCollapsed ? (
+//             <div className="flex flex-col gap-2">
+//               {hasAnyAdminPermission && (
+//                 <button 
+//                   onClick={toggleView} 
+//                   className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-white transition-all bg-blue-600 rounded-lg hover:bg-blue-600"
+//                 >
+//                   <span className="flex items-center gap-2">
+//                     <i className={`${isAdminView ? 'ri-admin-fill' : 'ri-user-fill'}`}></i>
+//                     {isAdminView ? 'Switch to Employee View' : 'Switch to Admin View'}
+//                   </span>
+//                   <i className="ri-swap-line"></i>
+//                 </button>
+//               )}
+//               <div className="flex flex-col gap-0.5">
+//                 <div className="flex items-center justify-between">
+//                   <p className="font-semibold tracking-wider text-white uppercase">
+//                     {hasAnyAdminPermission && isAdminView ? 'Admin Portal v1.0' : 'Employee Portal v1.0'}
+//                   </p>
+//                   <div className={`flex items-center gap-1 px-2 py-0.5 rounded ${hasAnyAdminPermission && isAdminView ? 'bg-purple-600/20' : 'bg-blue-600/20'}`}>
+//                     <div className={`w-1.5 h-1.5 rounded-full ${hasAnyAdminPermission && isAdminView ? 'bg-purple-400' : 'bg-blue-400'}`}></div>
+//                     <span className={`text-[9px] font-medium ${hasAnyAdminPermission && isAdminView ? 'text-purple-300' : 'text-white'}`}>
+//                       {hasAnyAdminPermission && isAdminView ? 'Admin Mode' : 'Employee Mode'}
+//                     </span>
+//                   </div>
+//                 </div>
+//                 <p>© {new Date().getFullYear()} Timely Health</p>
+//               </div>
+//             </div>
+//           ) : (
+//             <div className="text-center">
+//               {hasAnyAdminPermission && (
+//                 <button 
+//                   onClick={toggleView} 
+//                   className="p-1 transition-colors rounded hover:bg-[#1D4ED8]/60/70/70/50" 
+//                   title={isAdminView ? 'Switch to Employee View' : 'Switch to Admin View'}
+//                 >
+//                   <i className={`text-lg ${isAdminView ? 'ri-admin-fill' : 'ri-user-fill'}`}></i>
+//                 </button>
+//               )}
+//               <div className="w-3 h-3 mx-auto mt-1 mb-1 bg-blue-400 rounded-full animate-pulse"></div>
+//               <span>©</span>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+//     </>
+//   );
+// };
+
+// export default EmployeeSidebar;
+
+
 import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
@@ -744,6 +2050,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasAnyAdminPermission, setHasAnyAdminPermission] = useState(false);
+  const [isManager, setIsManager] = useState(false);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -753,7 +2060,9 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     "leave_approve_manager", "reports_view", "payroll_manage", "employee_view_all", "employee_add",
     "user_activity_view", "user_access_manage", "expenses_manage", "expense_manage",
     "locations_manage", "job_posts_view", "job_applicants_view", "score_board_view",
-    "assessments_view", "documents_view", "job_recruitment_manage", "holidays_view"
+    "assessments_view", "documents_view", "job_recruitment_manage", "holidays_view",
+    "events_manage", "events_create", "events_edit", "events_delete", 
+    "events_view_all", "events_register_participants"
   ];
 
   useEffect(() => {
@@ -800,6 +2109,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/my-medical-certificate": "My Certificate",
       "/emp-holidays-calendar": "Holidays Calendar",
       "/emp-permissions": "Permissions",
+      "/emp-events": "Events"
     };
     return pathMap[path] || "Dashboard";
   };
@@ -913,7 +2223,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       const checkManagerStatus = (data) => {
         if (!data) return false;
         const role = (data.role || data.designation || "").toLowerCase();
-        return role === "manager" || role === "team lead" || role === "hr";
+        return role === "manager" || role === "team lead";
       };
 
       const checkHRManagementStatus = (data) => {
@@ -933,17 +2243,21 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         const empLocal = JSON.parse(localStorage.getItem("employeeData") || "{}");
         const dataToUse = response.data.data || response.data || empLocal;
         
-        const isManager = checkManagerStatus(dataToUse);
+        const isManagerUser = checkManagerStatus(dataToUse);
         const isHRManagement = checkHRManagementStatus(dataToUse);
         
+        setIsManager(isManagerUser);
+        
         if (isHRManagement) {
-          // Grant all admin permissions if they are HR/Management except manager approve
-          const allPerms = new Set([...fetchedPermissions, ...ADMIN_PERMISSIONS.filter(p => p !== "leave_approve_manager")]);
+          // Grant all admin permissions if they are HR/Management
+          const allPerms = new Set([...fetchedPermissions, ...ADMIN_PERMISSIONS]);
           fetchedPermissions = Array.from(allPerms);
-        } else if (isManager) {
-          // Grant manager basics if they are Manager
+        } else if (isManagerUser) {
+          // Grant manager permissions automatically
           if (!fetchedPermissions.includes("leave_approve_manager")) fetchedPermissions.push("leave_approve_manager");
           if (!fetchedPermissions.includes("shifts_manage")) fetchedPermissions.push("shifts_manage");
+          if (!fetchedPermissions.includes("events_view_all")) fetchedPermissions.push("events_view_all");
+          if (!fetchedPermissions.includes("events_manage")) fetchedPermissions.push("events_manage");
         }
 
         setPermissions(fetchedPermissions);
@@ -959,15 +2273,19 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       } catch (error) {
         let localPermissions = JSON.parse(localStorage.getItem("employeePermissions") || "[]");
         const empLocal = JSON.parse(localStorage.getItem("employeeData") || "{}");
-        const isManager = checkManagerStatus(empLocal);
+        const isManagerUser = checkManagerStatus(empLocal);
         const isHRManagement = checkHRManagementStatus(empLocal);
 
+        setIsManager(isManagerUser);
+
         if (isHRManagement) {
-          const allPerms = new Set([...localPermissions, ...ADMIN_PERMISSIONS.filter(p => p !== "leave_approve_manager")]);
+          const allPerms = new Set([...localPermissions, ...ADMIN_PERMISSIONS]);
           localPermissions = Array.from(allPerms);
-        } else if (isManager) {
+        } else if (isManagerUser) {
           if (!localPermissions.includes("leave_approve_manager")) localPermissions.push("leave_approve_manager");
           if (!localPermissions.includes("shifts_manage")) localPermissions.push("shifts_manage");
+          if (!localPermissions.includes("events_view_all")) localPermissions.push("events_view_all");
+          if (!localPermissions.includes("events_manage")) localPermissions.push("events_manage");
         }
 
         setPermissions(localPermissions);
@@ -994,7 +2312,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
   const buildEmployeeMenu = () => {
     return [
       { icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/employeedashboard" },
-      // { icon: <i className="ri-shield-keyhole-fill"></i>, name: "My Permissions", path: "/mypermissions" },
       {
         icon: <i className="ri-calendar-fill"></i>,
         name: "Attendance",
@@ -1005,8 +2322,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
           { name: "My Assigned Location", path: "/mylocation" },
         ]
       },
-      {
-        icon: <i className="ri-calendar-fill"></i>,name: "Leave", path: "/myleaves" },
+      { icon: <i className="ri-calendar-fill"></i>, name: "Leave", path: "/myleaves" },
       {
         icon: <i className="ri-profile-fill"></i>,
         name: "Profile",
@@ -1023,7 +2339,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     ];
   };
 
-  // Admin Menu - Same as Sidebar component
+  // Admin Menu - Same as before with Events added
   const buildAdminMenu = () => {
     const menu = [];
 
@@ -1035,6 +2351,11 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     // Employees
     if (hasPermission("employee_view_all")) {
       menu.push({ icon: <i className="ri-user-fill"></i>, name: "Employees", path: "/emp-employees" });
+    }
+
+    // Add Employee
+    if (hasPermission("employee_add")) {
+      menu.push({ icon: <i className="ri-user-add-fill"></i>, name: "Add Employee", path: "/emp-add-employee" });
     }
 
     // Attendance with dropdown
@@ -1058,7 +2379,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       menu.push({ icon: <i className="ri-calendar-fill"></i>, name: "Leaves", path: "/emp-leaves" });
     }
     
-    // Manager Approve (for Manager/Team Lead) - Different icon
+    // Manager Approve (for Manager/Team Lead) - Automatically shows for managers
     if (hasPermission("leave_approve_manager")) {
       menu.push({ icon: <i className="ri-user-star-fill"></i>, name: "Manager Approve", path: "/emp-pending-leaves" });
     }
@@ -1109,12 +2430,22 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       });
     }
 
+    // Events - Shows automatically for managers
+    if (hasPermission("events_view_all") || hasPermission("events_manage") || 
+        hasPermission("events_create") || hasPermission("events_register_participants")) {
+      menu.push({
+        icon: <i className="ri-calendar-event-fill"></i>,
+        name: "Events",
+        path: "/emp-events",
+      });
+    }
+
     // Locations
     if (hasPermission("locations_manage")) {
       menu.push({ icon: <i className="ri-map-pin-2-fill"></i>, name: "Locations", path: "/emp-locations" });
     }
 
-    // Shifts
+    // Shifts - Shows automatically for managers
     if (hasPermission("shifts_manage")) {
       menu.push({ icon: <i className="ri-time-fill"></i>, name: "Shifts", path: "/emp-shifts" });
     }
