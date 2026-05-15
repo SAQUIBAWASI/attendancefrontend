@@ -2435,7 +2435,7 @@ import { useEffect, useRef, useState } from "react";
 import CountUp from "react-countup";
 import { FaBuilding, FaExchangeAlt, FaSearch, FaUserTag } from "react-icons/fa";
 import { FiCheckCircle, FiClock, FiList, FiXCircle } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
 
@@ -2844,6 +2844,7 @@ const LeavesList = () => {
   };
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -2906,7 +2907,7 @@ const LeavesList = () => {
             label="Pending"
             value={leaves.filter((l) => l.status === "pending").length}
             color="border-yellow-500"
-            onClick={() => navigate("/pending-leaves")}
+            onClick={() => navigate(location.pathname.startsWith("/emp-") ? "/emp-pending-leaves" : "/pending-leaves")}
           />
           <StatCard
             icon={FiClock}
@@ -2919,14 +2920,14 @@ const LeavesList = () => {
             label="Approved"
             value={leaves.filter((l) => l.status === "approved").length}
             color="border-green-500"
-            onClick={() => navigate("/approved-leaves")}
+            onClick={() => navigate(location.pathname.startsWith("/emp-") ? "/emp-approved-leaves" : "/approved-leaves")}
           />
           <StatCard
             icon={FiXCircle}
             label="Rejected"
             value={leaves.filter((l) => l.status === "rejected").length}
             color="border-red-500"
-            onClick={() => navigate("/rejected-leaves")}
+            onClick={() => navigate(location.pathname.startsWith("/emp-") ? "/emp-rejected-leaves" : "/rejected-leaves")}
           />
         </div>
 
