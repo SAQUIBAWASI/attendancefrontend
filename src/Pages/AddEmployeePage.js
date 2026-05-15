@@ -10783,6 +10783,14 @@ const AddEmployeePage = () => {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
   
+  // Autofill from Selected Candidates
+  const [selectedCandidates, setSelectedCandidates] = useState([]);
+  const [fetchingCandidates, setFetchingCandidates] = useState(false);
+  const [selectedCandidateId, setSelectedCandidateId] = useState("");
+  const [emailSuggestions, setEmailSuggestions] = useState([]);
+  const [phoneSuggestions, setPhoneSuggestions] = useState([]);
+  const [allEmployees, setAllEmployees] = useState([]);
+  
   const [createShiftForm, setCreateShiftForm] = useState({ shiftType: '', shiftName: '', timeRange: '', description: '' });
   const [deptForm, setDeptForm] = useState({ name: '', description: '' });
   const [roleForm, setRoleForm] = useState({ name: '', description: '' });
@@ -10849,7 +10857,49 @@ const AddEmployeePage = () => {
     fetchAllShifts();
     fetchLocations();
     fetchManagers();
+    fetchSelectedCandidates();
   }, []);
+
+  const fetchSelectedCandidates = async () => {
+    try {
+      setFetchingCandidates(true);
+      // Using the user-specified API for selected candidates
+      const response = await axios.get("http://localhost:7000/api/applications/selected");
+      if (response.data.success || Array.isArray(response.data)) {
+        const candidates = Array.isArray(response.data) ? response.data : response.data.data || [];
+        setSelectedCandidates(candidates);
+      }
+    } catch (error) {
+      console.error("Error fetching selected candidates:", error);
+    } finally {
+      setFetchingCandidates(false);
+    }
+  };
+
+  const handleCandidateSelect = (candidateId) => {
+    setSelectedCandidateId(candidateId);
+    if (!candidateId) return;
+
+    const candidate = selectedCandidates.find(c => c._id === candidateId);
+    if (candidate) {
+      // Auto-fill fields based on candidate data
+      const fullName = candidate.name || candidate.fullName || "";
+      const nameParts = fullName.trim().split(' ');
+      setFirstName(nameParts[0] || "");
+      setLastName(nameParts.slice(1).join(' ') || "");
+      setEmail(candidate.email || "");
+      setPhone(candidate.phone || candidate.phoneNumber || "");
+      
+      // Optionally fill other fields if they exist in the candidate model
+      if (candidate.address) setAddressLine1(candidate.address);
+      if (candidate.dob) setDob(new Date(candidate.dob).toISOString().split('T')[0]);
+      
+      setEmailSuggestions([]);
+      setPhoneSuggestions([]);
+      setSuccessMessage(`Form pre-filled with ${fullName}'s details!`);
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
+  };
 
   useEffect(() => {
     if (editingEmployee) {
@@ -11063,6 +11113,7 @@ const AddEmployeePage = () => {
       const response = await axios.get(`${API_BASE_URL}/employees/get-employees`);
       if (response.data.success || Array.isArray(response.data)) {
         const employees = Array.isArray(response.data) ? response.data : response.data.data || [];
+        setAllEmployees(employees);
         setManagers(employees.filter(emp => emp.role?.toLowerCase().includes('manager')));
       }
     } catch (error) { console.error(error); }
@@ -11085,7 +11136,69 @@ const AddEmployeePage = () => {
   const handlePhoneChange = (e) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 10);
     setPhone(value);
+    
+    // Update suggestions
+    if (value.length > 2) {
+      const candidateMatches = selectedCandidates.filter(c => 
+        (c.phone || c.phoneNumber || "").includes(value)
+      ).map(c => ({ ...c, type: 'candidate' }));
+
+      const employeeMatches = allEmployees.filter(emp => 
+        (emp.phone || "").includes(value)
+      ).map(emp => ({ ...emp, type: 'employee' }));
+
+      setPhoneSuggestions([...candidateMatches, ...employeeMatches]);
+    } else {
+      setPhoneSuggestions([]);
+    }
+
+    // Autofill from selected candidates if 10 digits
+    if (value.length === 10) {
+      const candidate = selectedCandidates.find(c => (c.phone || c.phoneNumber) === value);
+      if (candidate) {
+        handleCandidateSelect(candidate._id);
+        setPhoneSuggestions([]);
+      }
+    }
+
     if (value.length < 10) { setSearchedPhone(""); setEmployeeFound(false); }
+  };
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+    
+    // Update suggestions
+    if (value.length > 2) {
+      const candidateMatches = selectedCandidates.filter(c => 
+        c.email?.toLowerCase().includes(value.toLowerCase())
+      ).map(c => ({ ...c, type: 'candidate' }));
+
+      const employeeMatches = allEmployees.filter(emp => 
+        emp.email?.toLowerCase().includes(value.toLowerCase())
+      ).map(emp => ({ ...emp, type: 'employee' }));
+
+      setEmailSuggestions([...candidateMatches, ...employeeMatches]);
+    } else {
+      setEmailSuggestions([]);
+    }
+
+    // Autofill from selected candidates/employees if exact match found
+    if (value && value.includes('@')) {
+      const candidate = selectedCandidates.find(c => c.email?.toLowerCase() === value.toLowerCase());
+      if (candidate) {
+        handleCandidateSelect(candidate._id);
+        setEmailSuggestions([]);
+        return;
+      }
+      
+      const employee = allEmployees.find(emp => emp.email?.toLowerCase() === value.toLowerCase());
+      if (employee) {
+        loadEmployeeData(employee);
+        setEmployeeFound(true);
+        setEmailSuggestions([]);
+      }
+    }
   };
 
   const handleShiftChange = (selectedShiftType) => {
@@ -11360,6 +11473,44 @@ const AddEmployeePage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           
+          {/* ==================== AUTOFILL SECTION ==================== */}
+          <div className="p-4 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50/50">
+            <div className="flex flex-col md:flex-row md:items-center gap-4">
+              <div className="flex-1">
+                <label className="block mb-1 text-sm font-semibold text-blue-800">
+                  <FaUser className="inline mr-1" /> Autofill from Selected Candidates
+                </label>
+                <select 
+                  value={selectedCandidateId}
+                  onChange={(e) => handleCandidateSelect(e.target.value)}
+                  className="w-full p-2.5 border border-blue-200 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500"
+                  disabled={fetchingCandidates}
+                >
+                  <option value="">-- Select a Candidate to Autofill --</option>
+                  {selectedCandidates.map(can => (
+                    <option key={can._id} value={can._id}>
+                      {can.name || can.fullName} ({can.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-end">
+                <button 
+                  type="button"
+                  onClick={fetchSelectedCandidates}
+                  className="px-4 py-2.5 text-sm font-medium text-blue-700 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+                  disabled={fetchingCandidates}
+                >
+                  {fetchingCandidates ? <FaSpinner className="animate-spin inline mr-1" /> : "Refresh List"}
+                </button>
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-blue-600">
+              💡 Selecting a candidate will automatically fill their Name, Email, and Phone.
+            </p>
+          </div>
+
+          
           {/* ==================== SECTION 1: BASIC DETAILS ==================== */}
           <div className="border rounded-lg overflow-hidden">
             <div className="bg-blue-50 px-4 py-3 border-b">
@@ -11375,6 +11526,39 @@ const AddEmployeePage = () => {
                     <input value={phone} onChange={handlePhoneChange} className="w-full p-2.5 border rounded-lg text-gray-900" placeholder="10-digit phone" required />
                     {searching && <FaSpinner className="absolute right-3 top-3 animate-spin text-blue-600" />}
                     {employeeFound && !searching && <FaCheck className="absolute right-3 top-3 text-blue-600" />}
+                    
+                    {/* Phone Suggestions Dropdown */}
+                    {phoneSuggestions.length > 0 && (
+                      <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+                        {phoneSuggestions.map(can => (
+                          <li 
+                            key={can._id} 
+                            onClick={() => {
+                              if (can.type === 'employee') {
+                                loadEmployeeData(can);
+                                setEmployeeFound(true);
+                                setPhoneSuggestions([]);
+                              } else {
+                                handleCandidateSelect(can._id);
+                                setPhoneSuggestions([]);
+                              }
+                            }}
+                            className="px-4 py-3 cursor-pointer hover:bg-blue-50 border-b last:border-b-0 transition-colors"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="font-bold text-blue-900 text-sm">{can.name || can.fullName}</div>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${can.type === 'employee' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                {can.type}
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              {can.phone || can.phoneNumber} | {can.email || 'No email'}
+                              {can.employeeId && ` | ID: ${can.employeeId}`}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                   <p className="mt-1 text-xs text-gray-500">Enter 10 digits to search existing employee</p>
                 </div>
@@ -11385,7 +11569,44 @@ const AddEmployeePage = () => {
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div><label className="block mb-1 text-sm font-medium text-gray-700">First Name *</label><input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required /></div>
                 <div><label className="block mb-1 text-sm font-medium text-gray-700">Last Name</label><input value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
-                <div><label className="block mb-1 text-sm font-medium text-gray-700">Email *</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required /></div>
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Email *</label>
+                  <div className="relative">
+                    <input type="email" value={email} onChange={handleEmailChange} className="w-full p-2.5 border rounded-lg text-gray-900" required />
+                    
+                    {/* Email Suggestions Dropdown */}
+                    {emailSuggestions.length > 0 && (
+                      <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+                        {emailSuggestions.map(can => (
+                          <li 
+                            key={can._id} 
+                            onClick={() => {
+                              if (can.type === 'employee') {
+                                loadEmployeeData(can);
+                                setEmployeeFound(true);
+                                setEmailSuggestions([]);
+                              } else {
+                                handleCandidateSelect(can._id);
+                                setEmailSuggestions([]);
+                              }
+                            }}
+                            className="px-4 py-3 cursor-pointer hover:bg-blue-50 border-b last:border-b-0 transition-colors"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="font-bold text-blue-900 text-sm">{can.name || can.fullName}</div>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${can.type === 'employee' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                {can.type}
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              {can.email} | {can.phone || can.phoneNumber}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
