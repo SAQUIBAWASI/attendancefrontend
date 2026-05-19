@@ -19611,22 +19611,16 @@ export default function AttendanceSummary() {
       setLoading(true);
       let successCount = 0;
 
-      // Filter only Half Days for bulk update
-      const halfDayKeys = editedKeys.filter(dateKey => {
-         const edited = editedRows[dateKey];
-         if (!edited) return false;
-         const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
-         const currentHours = edited.hours !== undefined ? edited.hours : (rec ? (rec.totalHours || rec.hours) : 0);
-         return calculateDayType(selectedEmployee, currentHours) === "half";
-      });
+      // Bulk update all edited rows
+      const keysToSave = editedKeys.filter(dateKey => editedRows[dateKey] && editedRows[dateKey].edited);
 
-      if (halfDayKeys.length === 0) {
+      if (keysToSave.length === 0) {
         setLoading(false);
-        showSaveStatus("No Half Days to update in bulk.", "error");
+        showSaveStatus("No records to update in bulk.", "error");
         return;
       }
 
-      for (const dateKey of halfDayKeys) {
+      for (const dateKey of keysToSave) {
         const edited = editedRows[dateKey];
         if (edited) {
           const rec = employeeDetails.find(r =>
@@ -20379,18 +20373,136 @@ export default function AttendanceSummary() {
           const monthDates = getAllDatesOfMonth(activeMonth);
 
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="relative w-full max-w-7xl">
-                <div className="absolute top-[-44px] right-0 flex items-center space-x-3">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4">
+              <div className="relative w-full max-w-7xl flex flex-col max-h-[90vh]">
+                <div className="flex flex-wrap items-center justify-end gap-2 w-full mb-2">
+                  {/* Bulk Set Half Days */}
+                  <div className="flex items-center px-2 sm:px-3 py-1 space-x-1 sm:space-x-2 bg-white border border-gray-300 rounded-full shadow-lg text-xs sm:text-sm whitespace-nowrap overflow-hidden">
+                    <span className="text-sm font-bold text-gray-700">Half Days ({(() => {
+                      return monthDates.filter(date => {
+                        const dateKey = date.toLocaleDateString('en-CA');
+                        const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
+                        const originalHours = rec ? (rec.totalHours || rec.hours) : 0;
+                        return calculateDayType(selectedEmployee, originalHours) === "half";
+                      }).length;
+                    })()}) ➔</span>
+                    <input 
+                      type="number" 
+                      id="bulkHalfDayHours"
+                      defaultValue="9" 
+                      className="w-10 sm:w-14 px-1 py-0.5 text-gray-900 bg-white border border-gray-600 rounded text-xs sm:text-sm text-center"
+                      step="0.25"
+                    />
+                    <span className="text-sm text-gray-700">Hrs</span>
+                    <button
+                      onClick={() => {
+                        const val = parseFloat(document.getElementById('bulkHalfDayHours').value) || 9;
+                        const newEdited = { ...editedRows };
+                        let count = 0;
+                        monthDates.forEach(date => {
+                           const dateKey = date.toLocaleDateString('en-CA');
+                           const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
+                           const originalHours = rec ? (rec.totalHours || rec.hours) : 0;
+                           
+                           if (calculateDayType(selectedEmployee, originalHours) === "half") {
+                              newEdited[dateKey] = {
+                                ...newEdited[dateKey],
+                                hours: val,
+                                edited: true,
+                                timestamp: Date.now()
+                              };
+                              count++;
+                           }
+                        });
+                        setEditedRows(newEdited);
+                        if (count > 0) {
+                          showSaveStatus(`✅ Applied ${val} hrs to ${count} Half Days! Click 'Save Half Days' to confirm.`);
+                        } else {
+                          showSaveStatus(`❌ No Half Days found to update.`, "error");
+                        }
+                      }}
+                      className="px-3 py-0.5 text-sm font-bold text-white transition-colors bg-purple-600 rounded shadow hover:bg-purple-700"
+                    >
+                      Apply
+                    </button>
+                  </div>
+
+                  {/* Bulk Set Full Day Leaves */}
+                  <div className="flex items-center px-2 sm:px-3 py-1 space-x-1 sm:space-x-2 bg-white border border-gray-300 rounded-full shadow-lg text-xs sm:text-sm whitespace-nowrap overflow-hidden">
+                    <span className="text-sm font-bold text-gray-700">Full Day Leaves ({(() => {
+                      return monthDates.filter(date => {
+                        const dateKey = date.toLocaleDateString('en-CA');
+                        const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
+                        const originalHours = rec ? (rec.totalHours || rec.hours) : 0;
+                        return rec && calculateDayType(selectedEmployee, originalHours) === "full_leave";
+                      }).length;
+                    })()}) ➔</span>
+                    <input 
+                      type="number" 
+                      id="bulkFullLeaveHours"
+                      defaultValue="9" 
+                      className="w-10 sm:w-14 px-1 py-0.5 text-gray-900 bg-white border border-gray-600 rounded text-xs sm:text-sm text-center"
+                      step="0.25"
+                    />
+                    <span className="text-sm text-gray-700">Hrs</span>
+                    <button
+                      onClick={() => {
+                        const val = parseFloat(document.getElementById('bulkFullLeaveHours').value) || 9;
+                        const newEdited = { ...editedRows };
+                        let count = 0;
+                        monthDates.forEach(date => {
+                           const dateKey = date.toLocaleDateString('en-CA');
+                           const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
+                           const originalHours = rec ? (rec.totalHours || rec.hours) : 0;
+                           
+                           if (rec && calculateDayType(selectedEmployee, originalHours) === "full_leave") {
+                              newEdited[dateKey] = {
+                                ...newEdited[dateKey],
+                                hours: val,
+                                edited: true,
+                                timestamp: Date.now()
+                              };
+                              count++;
+                           }
+                        });
+                        setEditedRows(newEdited);
+                        if (count > 0) {
+                          showSaveStatus(`✅ Applied ${val} hrs to ${count} Full Day Leaves! Click 'Save Bulk Edits' to confirm.`);
+                        } else {
+                          showSaveStatus(`❌ No Full Day Leaves found to update.`, "error");
+                        }
+                      }}
+                      className="px-3 py-0.5 text-sm font-bold text-white transition-colors bg-purple-600 rounded shadow hover:bg-purple-700"
+                    >
+                      Apply
+                    </button>
+                  </div>
+
+                  {(() => {
+                    const editedCount = Object.keys(editedRows).filter(key => editedRows[key].edited).length;
+                    
+                    if (editedCount > 0) {
+                      return (
+                        <button
+                          onClick={handleBulkSaveAttendance}
+                          className="px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold text-white transition-colors bg-blue-600 rounded-full shadow-lg hover:bg-blue-700 whitespace-nowrap"
+                        >
+                          Save Bulk Edits ({editedCount})
+                        </button>
+                      );
+                    }
+                    return null;
+                  })()}
+
                   <button
                     onClick={closeModal}
-                    className="px-3 py-1 text-lg font-bold text-white transition-colors bg-red-600 rounded-full shadow-lg hover:bg-red-700"
+                    className="px-2 sm:px-3 py-1 text-sm sm:text-lg font-bold text-white transition-colors bg-red-600 rounded shadow-lg hover:bg-red-700 shrink-0"
                   >
                     ✖
                   </button>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-xl max-h-[80vh] overflow-y-auto border border-gray-200">
+                <div className="bg-white p-2 sm:p-6 rounded-xl shadow-xl flex-1 overflow-y-auto border border-gray-200">
                   <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
                     <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
                       <table className="min-w-full">
