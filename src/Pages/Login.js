@@ -436,9 +436,18 @@ const LoginPage = () => {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
+              <div className="flex justify-between items-center">
+                <label className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  Forgot Password?
+                </button>
+              </div>
               <div className="relative mt-1">
                 <input
                   type={showPassword ? "text" : "password"}

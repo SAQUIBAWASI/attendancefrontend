@@ -2,6 +2,8 @@ import { Route, Routes } from "react-router-dom";
 import './index.css'; // ✅ YEH BHI ADD KAR DO
 // Import your components
 import Login from "../src/Pages/Login.js";
+import ForgotPassword from "./Pages/ForgotPassword.js";
+import ResetPassword from "./Pages/ResetPassword.js";
 import CompanySidebar from "./Components/CompanySidebar.js";
 import DepartmentList from "./Components/department";
 import Recruitment from "./Components/recruitment.js";
@@ -217,6 +219,8 @@ function App() {
       <Route path="/productlist" element={<ProductList />} />
       <Route path="/productselection" element={<ProductSelectionPage />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route path="/admin-login" element={<Login />} />
       <Route path="/employee-login" element={<Login />} />
       <Route path="/candidate-login" element={<CandidateLogin />} />
