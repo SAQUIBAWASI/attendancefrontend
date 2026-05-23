@@ -2465,6 +2465,7 @@ const LeavesList = () => {
   const [leaveTypeFilter, setLeaveTypeFilter] = useState("all");
   const [startDateFilter, setStartDateFilter] = useState("");
   const [endDateFilter, setEndDateFilter] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
 
   // Department and Designation filter states
   const [filterDepartment, setFilterDepartment] = useState("");
@@ -2829,9 +2830,18 @@ const LeavesList = () => {
     if (endDateFilter) filtered = filtered.filter(l => new Date(l.endDate) <= new Date(endDateFilter));
     if (filterDepartment) filtered = filtered.filter(l => getEmployeeDetails(l.employeeId).department === filterDepartment);
     if (filterDesignation) filtered = filtered.filter(l => getEmployeeDetails(l.employeeId).designation === filterDesignation);
+    
+    if (selectedMonth) {
+      const [year, monthNum] = selectedMonth.split("-").map(Number);
+      filtered = filtered.filter(l => {
+        const d = new Date(l.startDate);
+        return d.getFullYear() === year && d.getMonth() + 1 === monthNum;
+      });
+    }
+
     setFilteredLeaves(filtered);
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, leaveTypeFilter, startDateFilter, endDateFilter, filterDepartment, filterDesignation, leaves]);
+  }, [searchTerm, statusFilter, leaveTypeFilter, startDateFilter, endDateFilter, filterDepartment, filterDesignation, selectedMonth, leaves]);
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -2841,6 +2851,7 @@ const LeavesList = () => {
     setEndDateFilter("");
     setFilterDepartment("");
     setFilterDesignation("");
+    setSelectedMonth("");
   };
 
   const navigate = useNavigate();
@@ -2939,10 +2950,11 @@ const LeavesList = () => {
             <select value={leaveTypeFilter} onChange={(e) => setLeaveTypeFilter(e.target.value)} className="h-8 px-2 text-xs border border-gray-300 rounded-lg min-w-[100px]"><option value="all">All Types</option><option value="sick">Sick Leave</option><option value="casual">Casual Leave</option><option value="earned">Earned Leave</option></select>
             <div className="relative" ref={departmentFilterRef}><button onClick={() => setShowDepartmentFilter(!showDepartmentFilter)} className={`h-8 px-3 text-xs font-medium rounded-md flex items-center gap-1 ${filterDepartment ? 'bg-blue-600 text-gray-900' : 'bg-gray-100 text-gray-700 border border-gray-300'}`}><FaBuilding /> Dept{filterDepartment && `: ${filterDepartment}`}</button>{showDepartmentFilter && (<div className="absolute z-50 w-48 mt-1 bg-white border rounded-md shadow-lg max-h-60"><div onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); }} className="px-3 py-2 text-xs cursor-pointer hover:bg-blue-50">All Departments</div>{uniqueDepartments.map(dept => (<div key={dept} onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDepartment === dept ? 'bg-blue-50 text-blue-700' : ''}`}>{dept}</div>))}</div>)}</div>
             <div className="relative" ref={designationFilterRef}><button onClick={() => setShowDesignationFilter(!showDesignationFilter)} className={`h-8 px-3 text-xs font-medium rounded-md flex items-center gap-1 ${filterDesignation ? 'bg-blue-600 text-gray-900' : 'bg-gray-100 text-gray-700 border border-gray-300'}`}><FaUserTag /> Desig{filterDesignation && `: ${filterDesignation}`}</button>{showDesignationFilter && (<div className="absolute z-50 w-48 mt-1 bg-white border rounded-md shadow-lg max-h-60"><div onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); }} className="px-3 py-2 text-xs cursor-pointer hover:bg-blue-50">All Designations</div>{uniqueDesignations.map(des => (<div key={des} onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${filterDesignation === des ? 'bg-blue-50 text-blue-700' : ''}`}>{des}</div>))}</div>)}</div>
-            <div className="relative w-[130px]"><span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500">From:</span><input type="date" value={startDateFilter} onChange={(e) => setStartDateFilter(e.target.value)} className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg" /></div>
-            <div className="relative w-[130px]"><span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500">To:</span><input type="date" value={endDateFilter} onChange={(e) => setEndDateFilter(e.target.value)} className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg" /></div>
+            <div className="relative w-[130px]"><span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500">From:</span><input type="date" value={startDateFilter} onChange={(e) => { setStartDateFilter(e.target.value); setSelectedMonth(""); }} className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg" /></div>
+            <div className="relative w-[130px]"><span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500">To:</span><input type="date" value={endDateFilter} onChange={(e) => { setEndDateFilter(e.target.value); setSelectedMonth(""); }} className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg" /></div>
+            <div className="relative w-[130px]"><span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500">Month:</span><input type="month" value={selectedMonth} onChange={(e) => { setSelectedMonth(e.target.value); setStartDateFilter(""); setEndDateFilter(""); }} className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg" /></div>
             <button onClick={() => setShowCompOffRequests(!showCompOffRequests)} className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md ${showCompOffRequests ? 'bg-purple-600 text-gray-900' : 'bg-gray-100 text-gray-700 border border-gray-300'}`}><FaExchangeAlt /> {showCompOffRequests ? 'Hide Comp-off' : `Comp-off (${compOffRequests.length})`}</button>
-            {(searchTerm || filterDepartment || filterDesignation || statusFilter !== "all" || leaveTypeFilter !== "all" || startDateFilter || endDateFilter) && <button onClick={clearFilters} className="h-8 px-3 text-xs font-medium text-gray-500 bg-gray-100 border rounded-md hover:bg-gray-200">Clear</button>}
+            {(searchTerm || filterDepartment || filterDesignation || statusFilter !== "all" || leaveTypeFilter !== "all" || startDateFilter || endDateFilter || selectedMonth) && <button onClick={clearFilters} className="h-8 px-3 text-xs font-medium text-gray-500 bg-gray-100 border rounded-md hover:bg-gray-200">Clear</button>}
             <button onClick={() => navigate("/leaves-report")} className="h-8 px-3 text-xs font-medium text-gray-900 bg-blue-600 rounded-md hover:bg-blue-700">📊 Report</button>
           </div>
         </div>

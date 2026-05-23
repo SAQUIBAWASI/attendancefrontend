@@ -1084,7 +1084,11 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
   const tableListed = yearFilteredHolidays
     .filter((h) => tableFilter === "All" || h.type === tableFilter)
     .filter((h) => !tableSearch || h.name?.toLowerCase().includes(tableSearch.toLowerCase()))
-    .filter((h) => monthFilter === "" || new Date(h.fromDate).getMonth().toString() === monthFilter)
+    .filter((h) => {
+      if (!monthFilter) return true;
+      const [, monthStr] = monthFilter.split("-");
+      return new Date(h.fromDate).getMonth() + 1 === parseInt(monthStr, 10);
+    })
     .filter((h) => !isEmployeeView || h.isActive === true || (!h.isPreset && h.isActive !== false));
 
   const totalDays = form.fromDate && form.toDate
@@ -1471,16 +1475,17 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
               </div>
 
               {/* Month Filter */}
-              <select
-                value={monthFilter}
-                onChange={(e) => setMonthFilter(e.target.value)}
-                className="h-9 px-3 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white text-gray-700 transition"
-              >
-                <option value="">All Months</option>
-                {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((m, i) => (
-                  <option key={i} value={i}>{m}</option>
-                ))}
-              </select>
+              <div className="relative w-[140px]">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">
+                  Month:
+                </span>
+                <input
+                  type="month"
+                  value={monthFilter}
+                  onChange={(e) => setMonthFilter(e.target.value)}
+                  className="w-full pl-12 pr-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white text-gray-700 transition"
+                />
+              </div>
 
               {/* Category filter tabs */}
               <div className="flex flex-wrap items-center gap-1.5">

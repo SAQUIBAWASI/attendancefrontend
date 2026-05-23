@@ -22,6 +22,7 @@ const Events = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('All');
+  const [selectedMonth, setSelectedMonth] = useState('');
 
   useEffect(() => {
     fetchEmployees();
@@ -111,6 +112,10 @@ const Events = () => {
     let result = [...events];
     if (activeTab === 'Birthdays') result = result.filter(e => e.type === 'Birthday');
     else if (activeTab === 'Anniversaries') result = result.filter(e => e.type === 'Work Anniversary');
+    if (selectedMonth) {
+      const [year, monthNum] = selectedMonth.split('-').map(Number);
+      result = result.filter(e => e.date.getMonth() + 1 === monthNum);
+    }
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       result = result.filter(e =>
@@ -119,7 +124,7 @@ const Events = () => {
       );
     }
     setFilteredEvents(result);
-  }, [searchTerm, activeTab, events]);
+  }, [searchTerm, activeTab, selectedMonth, events]);
 
   const formatDate = (date) =>
     new Date(date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -181,6 +186,27 @@ const Events = () => {
                 </button>
               ))}
             </div>
+
+            {/* Month Filter */}
+            <div className="relative w-[130px]">
+              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
+                Month:
+              </span>
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+            {selectedMonth && (
+              <button
+                onClick={() => setSelectedMonth('')}
+                className="h-9 px-3 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Clear Month
+              </button>
+            )}
 
             {/* Month Info */}
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium">

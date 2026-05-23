@@ -2323,16 +2323,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         ]
       },
       { icon: <i className="ri-calendar-fill"></i>, name: "Leave", path: "/myleaves" },
-      {
-        icon: <i className="ri-profile-fill"></i>,
-        name: "Profile",
-        dropdown: [
-          { name: "My Jobs", path: "/emp-my-jobs" },
-          { name: "Personal Docs", path: "/emp-personal-documents" },
-          { name: "My Letters", path: "/emp-letters" },
-          { name: "My Certificate", path: "/my-medical-certificate" }
-        ]
-      },
+      { icon: <i className="ri-profile-fill"></i>, name: "Profile", path: "/emp-profile" },
       { icon: <i className="ri-money-dollar-box-fill"></i>, name: "My Salary", path: "/mysalary" },
       { icon: <i className="ri-calendar-fill"></i>, name: "Holidays", path: "/HolidayList" },
       { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }

@@ -497,12 +497,12 @@ ${name}`;
             </div>
 
             {/* Add Experience Button - Inside Filters */}
-            <button
+            {/* <button
               onClick={() => setIsModalOpen(true)}
               className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-800"
             >
               <FaPlus className="text-xs" /> Add Experience
-            </button>
+            </button> */}
 
             {/* Resign Button */}
             {window.location.pathname.includes('/emp-') && (

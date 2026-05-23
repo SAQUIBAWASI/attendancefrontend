@@ -113,10 +113,13 @@ const CandidateLayout = () => {
             const token = localStorage.getItem("candidateToken");
             const headers = { Authorization: `Bearer ${token}` };
             const res = await axios.put(`${API_BASE_URL}/candidate/profile`, editForm, { headers });
-            if (res.data) {
-                setProfile(prev => ({ ...prev, ...res.data.candidate }));
+            if (res.data && res.data.candidate) {
+                // Refresh profile data to ensure UI reflects latest state
+                await fetchDashboardData();
                 setIsEditingProfile(false);
                 toast.success("Profile updated successfully!");
+            } else {
+                toast.error("Unexpected response from server.");
             }
         } catch (err) {
             console.error("Update profile error:", err);
