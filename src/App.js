@@ -205,7 +205,7 @@ import ApprovedResignations from "./Pages/ApprovedResignations.jsx";
 import RejectedResignations from "./Pages/RejectedResignations.jsx";
 import PendingResignations from "./Pages/PendingResignations.jsx";
 import Events from "./Pages/Events.jsx";
-
+import EmployeeProfileCombined from "./Pages/EmployeeProfileCombined.jsx";
 
 
 function App() {
@@ -235,6 +235,7 @@ function App() {
       <Route path="/mypermissions" element={<EmployeeLayout><MyPermission /></EmployeeLayout>} />
       {/* <Route path="/expense-management" element={<ExpenseManagement />} />   */}
       <Route path="/expense-management" element={<EmployeeLayout><ExpenseManagement /></EmployeeLayout>} />
+      <Route path="/emp-profile" element={<EmployeeLayout><EmployeeProfileCombined /></EmployeeLayout>} />
       <Route path="/emp-my-jobs" element={<EmployeeLayout><MyJobs /></EmployeeLayout>} />
       <Route path="/emp-personal-documents" element={<EmployeeLayout><EmployeePersonalDocuments /></EmployeeLayout>} />
       <Route path="/emp-letters" element={<EmployeeLayout><EmployeeLetters /></EmployeeLayout>} />

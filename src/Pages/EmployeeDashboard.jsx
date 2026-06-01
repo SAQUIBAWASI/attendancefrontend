@@ -759,77 +759,45 @@ const EmployeeDashboard = () => {
             {/* Profile Card */}
             <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
               <div className="flex items-center gap-3 pb-3 mb-3 border-b border-gray-100">
-                <div className="relative group w-14 h-14">
-                  <input 
-                    type="file" 
-                    id="profile-upload" 
-                    className="hidden" 
-                    accept="image/*"
-                    onChange={handleImageChange}
-                  />
+                <div className="relative w-14 h-14">
                   {(() => {
                     const imgPath = profile.profileImage || profile.profile_image || profile.image;
                     const name = profile.name || "User";
                     const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-                    
                     if (imgPath) {
-                      const fullUrl = imgPath.startsWith('http') ? 
-                        imgPath : 
-                        `${API_BASE_URL.replace(/\/api$/, '')}/${imgPath.replace(/^\//, '')}`;
-                        
+                      const fullUrl = imgPath.startsWith('http')
+                        ? imgPath
+                        : `${API_BASE_URL.replace(/\/api$/, '')}/${imgPath.replace(/^\/+/, '')}`;
                       return (
-                        <div className="relative w-full h-full">
-                          <img 
-                            src={`${fullUrl}${fullUrl.includes('?') ? '&' : '?'}t=${new Date().getTime()}`} 
-                            alt={name} 
-                            className="w-full h-full rounded-xl object-cover border-2 border-blue-100 shadow-sm transition-all group-hover:border-blue-400"
-                            onError={(e) => { 
-                              e.target.onerror = null;
-                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=f0f7ff&color=2563eb&bold=true&size=128`; 
-                            }}
-                          />
-                          {/* Persistent Edit Indicator */}
-                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-600 rounded-full border-2 border-white flex items-center justify-center text-white shadow-sm z-20">
-                            <FiCamera className="text-[10px]" />
-                          </div>
-                          
-                          {/* Hover Overlay - Edit/Delete */}
-                          <div className="absolute inset-0 bg-black/60 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center gap-3 z-30">
-                            <label 
-                              htmlFor="profile-upload" 
-                              className="p-2 bg-white/20 hover:bg-white/40 rounded-lg cursor-pointer text-white transition-colors"
-                              title="Change Photo"
-                            >
-                              <FiCamera className="text-sm" />
-                            </label>
-                            <button 
-                              onClick={handleImageDelete} 
-                              className="p-2 bg-white/20 hover:bg-red-500/60 rounded-lg text-white transition-colors"
-                              title="Remove Photo"
-                            >
-                              <FiTrash2 className="text-sm" />
-                            </button>
-                          </div>
+                        <img
+                          src={`${fullUrl}${fullUrl.includes('?') ? '&' : '?'}t=${new Date().getTime()}`}
+                          alt={name}
+                          className="w-14 h-14 rounded-xl object-cover border-2 border-blue-100 shadow-sm"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=f0f7ff&color=2563eb&bold=true&size=128`;
+                          }}
+                        />
+                      );
+                    } else {
+                      return (
+                        <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
+                          {initials}
                         </div>
                       );
                     }
-                    
-                    return (
-                      <div className="relative w-full h-full flex items-center justify-center text-base font-bold text-blue-600 rounded-xl bg-blue-50 border-2 border-blue-100 group-hover:border-blue-400 transition-all shadow-sm">
-                        {initials}
-                        <label 
-                          htmlFor="profile-upload" 
-                          className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-xl transition-all cursor-pointer flex items-center justify-center z-30"
-                          title="Add Photo"
-                        >
-                          <FiPlus className="text-blue-600 opacity-0 group-hover:opacity-100 text-lg" />
-                        </label>
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full border-2 border-white flex items-center justify-center text-white shadow-sm">
-                          <FiPlus className="text-[10px]" />
-                        </div>
-                      </div>
-                    );
                   })()}
+                  {/* Upload button */}
+                  <label htmlFor="profileImageUpload" className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-30 rounded-xl cursor-pointer transition">
+                    <FiCamera className="text-white opacity-0 hover:opacity-100 transition" size={20} />
+                  </label>
+                  <input id="profileImageUpload" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                  {/* Delete button */}
+                  {profile.profileImage && (
+                    <button onClick={handleImageDelete} className="absolute top-0 right-0 bg-white rounded-full p-1 shadow-md hover:bg-gray-100">
+                      <FiX className="text-red-500" size={12} />
+                    </button>
+                  )}
                 </div>
                 <div>
                   <h2 className="text-sm font-bold leading-none text-gray-900">{profile.name}</h2>

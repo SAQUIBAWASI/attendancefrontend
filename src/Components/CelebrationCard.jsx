@@ -32,7 +32,7 @@ const CelebrationCard = ({ type, name, detail, onAction, isPersonal = false }) =
     },
     leave: {
       icon: <FaWalking className="text-sm" />,
-      title: "Out of Office",
+      title: "Employees on Leave",
       gradient: "from-amber-500 to-orange-500",
       lightBg: "bg-amber-50",
       textColor: "text-amber-600",
