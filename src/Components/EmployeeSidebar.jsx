@@ -2322,11 +2322,20 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
           { name: "My Assigned Location", path: "/mylocation" },
         ]
       },
-      { icon: <i className="ri-calendar-fill"></i>, name: "Leave", path: "/myleaves" },
-      { icon: <i className="ri-profile-fill"></i>, name: "Profile", path: "/emp-profile" },
-      { icon: <i className="ri-money-dollar-box-fill"></i>, name: "My Salary", path: "/mysalary" },
-      { icon: <i className="ri-calendar-fill"></i>, name: "Holidays", path: "/HolidayList" },
-      { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
+      // { icon: <i className="ri-calendar-fill"></i>, name: "Leave", path: "/myleaves" },
+      // { icon: <i className="ri-profile-fill"></i>, name: "Profile", path: "/emp-profile" },
+      // { icon: <i className="ri-money-dollar-box-fill"></i>, name: "My Salary", path: "/mysalary" },
+      // { icon: <i className="ri-money-dollar-box-fill"></i>, name: "Expenses", path: "/expense-management" },
+      // { icon: <i className="ri-calendar-fill"></i>, name: "Holidays", path: "/HolidayList" },
+      // { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
+
+      { icon: <i className="ri-calendar-check-fill"></i>, name: "Leave", path: "/myleaves" },
+{ icon: <i className="ri-account-circle-fill"></i>, name: "Profile", path: "/emp-profile" },
+// { icon: <i className="ri-bank-card-fill"></i>, name: "My Salary", path: "/mysalary" },
+{ icon: <i className="ri-money-rupee-circle-fill"></i>, name: "My Salary", path: "/mysalary" },
+{ icon: <i className="ri-funds-fill"></i>, name: "Expenses", path: "/expense-management" },
+{ icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/HolidayList" },
+{ icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
     ];
   };
 
