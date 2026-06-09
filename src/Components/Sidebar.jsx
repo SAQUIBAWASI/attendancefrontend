@@ -1366,6 +1366,11 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       name: "Payroll",
       path: "/payroll",
     },
+    {
+      icon: <i className="ri-money-dollar-box-fill"></i>,
+      name: "OverTime",
+      path: "/over-time",
+    },
 
     {
   icon: <i className="ri-user-unfollow-line"></i>,

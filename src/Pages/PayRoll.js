@@ -1,18 +1,18 @@
-// import axios from "axios";
-// import { useCallback, useEffect, useRef, useState } from "react";
-// import {
-//   FaBuilding,
-//   FaCalendarAlt,
-//   FaSearch,
-//   FaTimes,
-//   FaUserTag
-// } from "react-icons/fa";
+import axios from "axios";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  FaBuilding,
+  FaCalendarAlt,
+  FaSearch,
+  FaTimes,
+  FaUserTag
+} from "react-icons/fa";
 
-// import { useNavigate } from "react-router-dom";
-// import StatCard from "../Components/StatCard";
-// import { API_BASE_URL } from "../config";
-// import logo from "../Images/Timely-Health-Logo.png";
-// import { isEmployeeHidden } from "../utils/employeeStatus";
+import { useNavigate } from "react-router-dom";
+import StatCard from "../Components/StatCard";
+import { API_BASE_URL } from "../config";
+import logo from "../Images/Timely-Health-Logo.png";
+import { isEmployeeHidden } from "../utils/employeeStatus";
 
 // const PayRoll = () => {
 //   const [records, setRecords] = useState([]);
@@ -129,6 +129,12 @@
 //     if (!monthStr) return new Date().getDate();
 //     const [year, month] = monthStr.split('-').map(Number);
 //     return new Date(year, month, 0).getDate();
+//   };
+//
+//   const calculateHourlyRate = (salaryPerMonth, shiftHours, daysInMonth) => {
+//     if (!salaryPerMonth || !shiftHours || !daysInMonth) return 0;
+//     const dailyRate = salaryPerMonth / (shiftHours * daysInMonth);
+//     return dailyRate;
 //   };
 
 //   const wasEmployeeEmployedInMonth = (employee, monthStr) => {
@@ -3202,19 +3208,8 @@
     
 //     const getEmployeeShiftHours = (employeeId) => employeesMasterData[employeeId]?.shiftHours || 8;
 
-//     const getAllDatesOfMonth = (month, employeeId) => {
-//       if (!month) return [];
-//       const [year, monthNum] = month.split('-').map(Number);
-//       const startDate = new Date(year, monthNum - 1, 1);
-//       const endDate = new Date(year, monthNum, 0);
-//       const dates = [];
-//       for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-//         dates.push(new Date(d));
-//       }
-//       return dates;
-//     };
 
-//     const monthDates = getAllDatesOfMonth(selectedMonth, selectedEmployee?.employeeId);
+
 
 //     const isLeaveDay = (date, employeeId, employeeLeavesData) => {
 //       if (!date || !employeeId) return false;
@@ -3294,7 +3289,7 @@
 //       return weekOffDatesSet.has(date.toLocaleDateString('en-CA'));
 //     };
 
-//     let weekOffCount = 0, leaveCount = 0, absentCount = 0, presentCount = 0;
+//     let weekOffCount = 0, leaveCount = 0, absentCount = 0, presentCount = 0, lateCount = 0;
 
 //     monthDates.forEach(date => {
 //       const dateKey = date.toLocaleDateString('en-CA');
@@ -3302,10 +3297,22 @@
 //       const isWO = isWeekOffDay(date, selectedEmployee?.employeeId);
 //       const isLV = !isWO && isLeaveDay(date, selectedEmployee?.employeeId, employeeLeaves);
       
-//       if (isWO) weekOffCount++;
-//       else if (isLV) leaveCount++;
-//       else if (!record) absentCount++;
-//       else presentCount++;
+//       if (isWO) {
+//         weekOffCount++;
+//       } else if (isLV) {
+//         leaveCount++;
+//       } else if (!record) {
+//         absentCount++;
+//       } else {
+//         presentCount++;
+//         // Late check based on check-in time > 10:00 AM
+//         const checkIn = new Date(record.checkInTime);
+//         const hours = checkIn.getHours();
+//         const minutes = checkIn.getMinutes();
+//         if (hours > 10 || (hours === 10 && minutes > 0)) {
+//           lateCount++;
+//         }
+//       }
 //     });
 
 //     return (
@@ -3315,6 +3322,7 @@
 //             <div>
 //               <h2 className="text-lg font-bold text-gray-700">Attendance Records - {selectedEmployee?.name}</h2>
 //               <p className="text-xs text-gray-500">ID: {selectedEmployee?.employeeId} | Shift: {shiftHours} hrs/day | Week-offs: {targetWeekOffCount} days</p>
+//               <p className="text-xs text-gray-500">Hourly Rate: ₹{hourlyRate.toFixed(2)}/h</p>
 //             </div>
 //             <button onClick={() => setShowAttendancePopup(false)} className="text-gray-500 hover:text-gray-700">
 //               <FaTimes className="w-5 h-5" />
@@ -10138,21 +10146,9 @@
 
 
 
-import axios from "axios";
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  FaBuilding,
-  FaCalendarAlt,
-  FaSearch,
-  FaTimes,
-  FaUserTag
-} from "react-icons/fa";
+// Duplicate import block removed
 
-import { useNavigate } from "react-router-dom";
-import StatCard from "../Components/StatCard";
-import { API_BASE_URL } from "../config";
-import logo from "../Images/Timely-Health-Logo.png";
-import { isEmployeeHidden } from "../utils/employeeStatus";
+
 
 const PayRoll = () => {
   const [records, setRecords] = useState([]);
@@ -10989,9 +10985,12 @@ const PayRoll = () => {
         const savedOTEmpsString = localStorage.getItem("payrollSelectedOTEmployees");
         const savedOTEmps = savedOTEmpsString ? new Set(JSON.parse(savedOTEmpsString)) : new Set();
 
-        if (totalOTHours > 0 && savedOTEmps.has(emp.employeeId)) {
+        const isApprovedInOTPage = localStorage.getItem(`otStatus_${emp.employeeId}_${targetMonth}`) === "approved";
+
+        if (totalOTHours > 0 && (savedOTEmps.has(emp.employeeId) || isApprovedInOTPage)) {
+          const multiplier = Number(localStorage.getItem(`otMultiplier_${emp.employeeId}_${targetMonth}`)) || 2;
           const otRatePerHour = dailyRate / (emp.shiftHours || 8);
-          const otAmount = totalOTHours * otRatePerHour;
+          const otAmount = totalOTHours * otRatePerHour * multiplier;
           salaryObj.calculatedSalary = Math.round(salaryObj.calculatedSalary + otAmount);
           salaryObj.otAmount = Math.round(otAmount);
         }
@@ -11024,11 +11023,13 @@ const PayRoll = () => {
       prevRecords.map(record => {
         let newCalculatedSalary = record.baseCalculatedSalary;
         let otAmount = 0;
-        if (record.overTimeHours > 0 && selectedOTEmployees.has(record.employeeId)) {
+        const isApprovedInOTPage = localStorage.getItem(`otStatus_${record.employeeId}_${selectedMonth}`) === "approved";
+        if (record.overTimeHours > 0 && (selectedOTEmployees.has(record.employeeId) || isApprovedInOTPage)) {
           const dailyRate = record.salaryPerDay || 0;
           const shiftHours = record.shiftHours || 8;
+          const multiplier = Number(localStorage.getItem(`otMultiplier_${record.employeeId}_${selectedMonth}`)) || 2;
           const otRatePerHour = dailyRate / shiftHours;
-          otAmount = record.overTimeHours * otRatePerHour;
+          otAmount = record.overTimeHours * otRatePerHour * multiplier;
           newCalculatedSalary += otAmount;
         }
         return {
@@ -11804,9 +11805,10 @@ const PayRoll = () => {
       const dateKey = date.toLocaleDateString('en-CA');
       const record = attendanceMap.get(dateKey);
       const isWO = isWeekOffDay(date);
+      const hasAttendance = !!record;
       const isLV = !isWO && isLeaveDay(date, selectedEmployee?.employeeId, employeeLeaves);
       
-      if (isWO) weekOffCount++;
+      if (isWO && !hasAttendance) weekOffCount++;
       else if (isLV) leaveCount++;
       else if (!record) absentCount++;
       else presentCount++;
@@ -11836,7 +11838,7 @@ const PayRoll = () => {
               <span className="text-orange-600">Week Off: <strong>{weekOffCount}</strong></span>
               <span className="text-red-600">Leaves: <strong>{leaveCount}</strong></span>
               <span className="text-gray-500">Absent: <strong>{absentCount}</strong></span>
-              <span className="text-blue-700">Present: <strong>{presentCount}</strong></span>
+              <span className="text-green-600">Present: <strong>{presentCount}</strong></span>
             </div>
             <div className="flex gap-3 text-xs">
               <div className="flex items-center gap-1"><div className="w-3 h-3 bg-orange-100 border border-orange-300 rounded"></div><span>Week Off</span></div>
@@ -11860,12 +11862,12 @@ const PayRoll = () => {
                   <thead className="sticky top-0 text-white bg-gradient-to-r from-green-500 to-blue-600">
                     <tr>
                       <th className="px-2 py-1.5 text-center text-xs font-medium">Date</th>
-                      <th className="px-2 py-1.5 text-center text-xs font-medium">Day</th>
-                      <th className="px-2 py-1.5 text-center text-xs font-medium">In</th>
-                      <th className="px-2 py-1.5 text-center text-xs font-medium">Out</th>
-                      <th className="px-2 py-1.5 text-center text-xs font-medium">Hrs</th>
-                      <th className="px-2 py-1.5 text-center text-xs font-medium">Type</th>
+                      <th className="px-2 py-1.5 text-center text-xs font-medium">Check-In</th>
+                      <th className="px-2 py-1.5 text-center text-xs font-medium">Check-Out</th>
+                      <th className="px-2 py-1.5 text-center text-xs font-medium">Reason</th>
+                      <th className="px-2 py-1.5 text-center text-xs font-medium">Hours</th>
                       <th className="px-2 py-1.5 text-center text-xs font-medium">Status</th>
+                      <th className="px-2 py-1.5 text-center text-xs font-medium">Admin Comment</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -11879,13 +11881,14 @@ const PayRoll = () => {
                       const isWeekOff = isWeekOffDay(date);
                       const isLeave = !isWeekOff && isLeaveDay(date, selectedEmployee?.employeeId, employeeLeaves);
                       
-                      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                      // If it’s a scheduled week‑off but there is attendance, treat it as a normal work day.
+                      const effectiveWeekOff = isWeekOff && !hasAttendance;
                       
                       let bgColor = '';
                       let dayType = '';
                       let statusText = '';
                       
-                      if (isWeekOff) {
+                      if (effectiveWeekOff) {
                         bgColor = 'bg-orange-50';
                         dayType = 'Week Off';
                         statusText = 'Week Off';
@@ -11909,12 +11912,12 @@ const PayRoll = () => {
                       return (
                         <tr key={dateKey} className={`${bgColor} hover:bg-gray-50 transition-colors`}>
                           <td className="px-2 py-1 text-xs text-center">{date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
-                          <td className="px-2 py-1 text-xs text-center">{dayName}</td>
-                          <td className="px-2 py-1 text-xs text-center">{!isWeekOff && !isLeave && hasAttendance ? formatTime(record?.checkInTime) : '-'}</td>
-                          <td className="px-2 py-1 text-xs text-center">{!isWeekOff && !isLeave && hasAttendance ? formatTime(record?.checkOutTime) : '-'}</td>
-                          <td className="px-2 py-1 text-xs text-center">{!isWeekOff && !isLeave && hasAttendance && workHours ? `${workHours}h` : '-'}</td>
+                          <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && hasAttendance ? formatTime(record?.checkInTime) : '-'}</td>
+                          <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && hasAttendance ? formatTime(record?.checkOutTime) : '-'}</td>
+                          <td className="px-2 py-1 text-xs text-center">{record?.status || '-'}</td>
+                          <td className="px-2 py-1 text-xs text-center">{!effectiveWeekOff && !isLeave && hasAttendance && workHours ? `${workHours}h` : '-'}</td>
                           <td className="px-2 py-1 text-center">
-                            <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full ${isWeekOff ? 'bg-orange-100 text-orange-700' : isLeave ? 'bg-red-100 text-red-700' : !hasAttendance ? 'bg-gray-100 text-gray-500' : dayType === 'Full Day' ? 'bg-green-100 text-green-700' : dayType === 'Half Day' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>{dayType}</span>
+                            <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full ${effectiveWeekOff ? 'bg-orange-100 text-orange-700' : isLeave ? 'bg-red-100 text-red-700' : !hasAttendance ? 'bg-gray-100 text-gray-500' : dayType === 'Full Day' ? 'bg-green-100 text-green-700' : dayType === 'Half Day' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>{dayType}</span>
                           </td>
                           <td className="px-2 py-1 text-xs text-center">{statusText}</td>
                         </tr>

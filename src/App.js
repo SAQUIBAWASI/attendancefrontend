@@ -206,6 +206,7 @@ import RejectedResignations from "./Pages/RejectedResignations.jsx";
 import PendingResignations from "./Pages/PendingResignations.jsx";
 import Events from "./Pages/Events.jsx";
 import EmployeeProfileCombined from "./Pages/EmployeeProfileCombined.jsx";
+import OverTime from "./Pages/OverTime.jsx";
 
 
 function App() {
@@ -461,6 +462,7 @@ function App() {
               <Route path="/rejected-resignations" element={<RejectedResignations />} />
               <Route path="/pending-resignations" element={<PendingResignations />} />
               <Route path="/events" element={<Events />} />
+              <Route path="/over-time" element={<OverTime />} />
            
            
 

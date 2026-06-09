@@ -1,0 +1,80 @@
+/* OverTime.css - Premium styling for the Over Time summary page */
+
+/* Container centering and background gradient */
+.ot-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, hsl(210, 30%, 95%), hsl(260, 30%, 93%));
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+.ot-title {
+  text-align: center;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: hsl(260, 70%, 40%);
+  margin-bottom: 1.5rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+/* Table wrapper for horizontal scroll on small screens */
+.ot-table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+}
+
+.ot-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px; /* vertical spacing between rows */
+  min-width: 800px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.ot-table th {
+  background: linear-gradient(90deg, hsl(260, 70%, 40%), hsl(210, 70%, 45%));
+  color: #fff;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.ot-table td {
+  background: #fff;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* Row hover effect with subtle elevation */
+.ot-row:hover td {
+  background: hsl(210, 20%, 97%);
+  transform: translateY(-2px);
+  transition: all 0.2s ease;
+}
+
+/* Loading / error states */
+.ot-loading,
+.ot-error {
+  text-align: center;
+  font-size: 1.2rem;
+  color: hsl(210, 15%, 40%);
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .ot-title {
+    font-size: 1.8rem;
+  }
+  .ot-table th,
+  .ot-table td {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+}
