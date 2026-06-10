@@ -1285,7 +1285,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { FaCalendarAlt } from "react-icons/fa";
-import { FiCheckCircle, FiCheckSquare, FiFileText, FiMapPin } from "react-icons/fi";
+import { FiCheckCircle, FiCheckSquare, FiFileText, FiMapPin, FiCoffee } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import StatCard from "../Components/StatCard";
 import { API_BASE_URL } from "../config";
@@ -1336,6 +1336,21 @@ export default function MyAttendance() {
       return `${hours + 1}h 0m`;
     }
     return `${hours}h ${minutes}m`;
+  };
+
+  // ✅ Format break minutes to readable format
+  const formatBreakMinutes = (minutes) => {
+    if (!minutes || minutes === 0) return "-";
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) return `${hours}h ${mins}m`;
+    return `${mins}m`;
+  };
+
+  // ✅ Calculate total break minutes from breaks array
+  const calculateTotalBreakMinutes = (breaks) => {
+    if (!breaks || breaks.length === 0) return 0;
+    return breaks.reduce((total, b) => total + (b.breakMinutes || 0), 0);
   };
 
   // Click outside handlers for filter dropdowns
@@ -1640,6 +1655,7 @@ export default function MyAttendance() {
       "Check-In Time",
       "Check-Out Time",
       "Total Hours",
+      "Break Time",
       "Distance (m)",
       "Onsite",
       "Reason",
@@ -1649,12 +1665,15 @@ export default function MyAttendance() {
     const csvRows = [
       headers.join(","),
       ...filteredRecords.map((rec) => {
+        const breakMinutes = rec.totalBreakMinutes || calculateTotalBreakMinutes(rec.breaks);
+        const formattedBreak = formatBreakMinutes(breakMinutes);
         const formattedHours = formatDecimalHours(rec.totalHours);
         return [
           `"${formatDate(rec.checkInTime || rec.createdAt)}"`,
           `"${rec.checkInTime ? new Date(rec.checkInTime).toLocaleString() : "-"}"`,
           `"${rec.checkOutTime ? new Date(rec.checkOutTime).toLocaleString() : "-"}"`,
           formattedHours,
+          formattedBreak,
           rec.distance?.toFixed(2) || "0.00",
           rec.onsite ? "Yes" : "No",
           `"${rec.reason || "Not specified"}"`,
@@ -1707,7 +1726,7 @@ export default function MyAttendance() {
       <div className="mx-auto max-w-9xl">
 
         {/* Stats Cards - Dashboard Style */}
-        <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-5">
           <StatCard
             label="Total Records"
             value={records.length}
@@ -1731,6 +1750,12 @@ export default function MyAttendance() {
             value={records.filter(r => r.totalHours >= 8).length}
             color="purple"
             icon={FiCheckSquare}
+          />
+          <StatCard
+            label="Total Break"
+            value={records.reduce((sum, r) => sum + (r.totalBreakMinutes || calculateTotalBreakMinutes(r.breaks)), 0)}
+            color="orange"
+            icon={FiCoffee}
           />
         </div>
 
@@ -1870,6 +1895,7 @@ export default function MyAttendance() {
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Date</th>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Check-In/Out</th>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Hours</th>
+                      <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Break Time</th>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Distance</th>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Onsite</th>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Reason</th>
@@ -1884,6 +1910,10 @@ export default function MyAttendance() {
                       else if (rec.totalHours >= 4) hoursColorClass = 'text-orange-600';
                       else hoursColorClass = 'text-red-600';
                       
+                      // Get break minutes from API or calculate from breaks array
+                      const breakMinutes = rec.totalBreakMinutes || calculateTotalBreakMinutes(rec.breaks);
+                      const breakColorClass = breakMinutes > 0 ? 'text-orange-600' : 'text-gray-400';
+                      
                       return (
                         <tr
                           key={rec._id || idx}
@@ -1892,26 +1922,41 @@ export default function MyAttendance() {
                           {/* Date */}
                           <td className="px-2 py-1.5 font-medium text-center text-gray-900 whitespace-nowrap sm:px-3 sm:py-2">
                             {formatDate(rec.checkInTime || rec.createdAt)}
-                          </td>
+                           </td>
 
                           {/* Check-In/Out with Blinking */}
                           <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
                             {formatTimeWithStatus(rec.checkInTime, rec.checkOutTime)}
-                          </td>
+                           </td>
 
-                          {/* Hours - NOW IN HH:MM FORMAT */}
+                          {/* Hours */}
                           <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
                             <span className={`font-semibold ${hoursColorClass}`}>
                               {formatDecimalHours(rec.totalHours)}
                             </span>
-                          </td>
+                           </td>
+
+                          {/* Break Time - NEW COLUMN */}
+                          <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+                            <div className="flex items-center justify-center gap-1">
+                              <FiCoffee className={`w-3 h-3 ${breakColorClass}`} />
+                              <span className={`font-medium ${breakColorClass}`}>
+                                {formatBreakMinutes(breakMinutes)}
+                              </span>
+                            </div>
+                            {rec.breaks && rec.breaks.length > 0 && rec.breaks[0].reason && (
+                              <div className="text-[9px] text-gray-400">
+                                {rec.breaks[0].reason}
+                              </div>
+                            )}
+                           </td>
 
                           {/* Distance */}
                           <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
                             <span className="px-1.5 py-0.5 font-mono text-gray-700 bg-gray-100 rounded sm:px-2 sm:py-1">
                               {rec.distance?.toFixed(0) || "0"}m
                             </span>
-                          </td>
+                           </td>
 
                           {/* Onsite */}
                           <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
@@ -1923,14 +1968,14 @@ export default function MyAttendance() {
                             >
                               {rec.onsite ? "🏢 Yes" : "🏠 No"}
                             </span>
-                          </td>
+                           </td>
 
                           {/* Reason */}
                           <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
                             <span className="text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded max-w-[80px] truncate block sm:max-w-[100px]">
                               {rec.reason || "-"}
                             </span>
-                          </td>
+                           </td>
 
                           {/* Status */}
                           <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
@@ -1942,8 +1987,8 @@ export default function MyAttendance() {
                             >
                               {rec.status === "checked-in" ? "In" : "Out"}
                             </span>
-                          </td>
-                        </tr>
+                           </td>
+                         </tr>
                       );
                     })}
                   </tbody>

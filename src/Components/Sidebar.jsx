@@ -1269,7 +1269,14 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/assessment-manager": "Assessments",
       "/documents": "Documents",
       "/all-expensives": "Expenses",
-      "/events": "Events"
+      "/events": "Events",
+      "/over-time": "Over Time",
+      "/comp-off-settings": "Comp Off Settings",
+      "/employee-resignation": "Resignation",
+      "/holidays-calendar": "Holidays",
+      "/recruitment-dashboard": "Recruitment Dashboard",
+      "/personaldocuments": "Personal Documents",
+      "/employee-journey": "Employee Journey"
     };
     return pathMap[path] || "Dashboard";
   };
@@ -1338,7 +1345,6 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         { name: "Today Attendance", path: "/today-attendance" },
         { name: "Absent Today", path: "/absent-today" },
         { name: "Regularization", path: "/regularization" },
-        // { name: "Medical Certificates", path: "/all-medical-certificates" },
       ],
     },
     {
@@ -1367,48 +1373,45 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       path: "/payroll",
     },
     {
-      icon: <i className="ri-money-dollar-box-fill"></i>,
+      icon: <i className="ri-time-fill"></i>,  // Changed icon to clock for OverTime
       name: "OverTime",
       path: "/over-time",
     },
-
     {
-  icon: <i className="ri-user-unfollow-line"></i>,
-  name: "Resignation",
-  path: "/employee-resignation",
-},
-
-      {
+      icon: <i className="ri-settings-3-fill"></i>,  // Settings icon for Comp Off
+      name: "Comp Off",
+      path: "/comp-off-settings",
+    },
+    {
+      icon: <i className="ri-user-unfollow-line"></i>,
+      name: "Resignation",
+      path: "/employee-resignation",
+    },
+    {
       icon: <i className="ri-money-dollar-box-fill"></i>,
       name: "Expensives",
       path: "/all-expensives"
     },
-
-
     {
       icon: <i className="ri-history-fill"></i>,
       name: "User Activity",
       path: "/useractivity",
     },
-    
     {
       icon: <i className="ri-shield-user-fill"></i>,
       name: "User Access",
       path: "/useraccess",
     },
-
     {
-  icon: <i className="ri-stethoscope-fill"></i>,
-  name: "Medical Certificates",
-  path: "/all-medical-certificates",
-},
-
-  
+      icon: <i className="ri-stethoscope-fill"></i>,
+      name: "Medical Certificates",
+      path: "/all-medical-certificates",
+    },
     {
       icon: <i className="ri-briefcase-fill"></i>,
       name: "Recruitment",
       dropdown: [
-        {name:  "Dashboard", path:"/recruitment-dashboard"},
+        { name: "Dashboard", path: "/recruitment-dashboard" },
         { name: "Job Posts", path: "/jobpost" },
         { name: "Job Applicants", path: "/job-applicants" },
         { name: "Score Board", path: "/score" },
