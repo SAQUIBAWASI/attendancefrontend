@@ -575,71 +575,71 @@ const EmployeeLeaves = () => {
   }
 
   return (
-    <div className="min-h-screen p-4">
+    <div className="min-h-screen p-2 sm:p-4">
       <div className="mx-auto max-w-9xl">
         
-        {/* Glassmorphism Stats Cards */}
-        <div className="grid grid-cols-2 gap-3 mb-5 sm:grid-cols-5">
-          <div className="relative overflow-hidden bg-white/20 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 p-4 transition-all hover:scale-105 hover:shadow-xl">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/20 rounded-full -mr-10 -mt-10"></div>
-            <FiFileText className="text-2xl text-purple-600 mb-2" />
-            <p className="text-2xl font-bold text-gray-800">{leaves.length}</p>
-            <p className="text-xs text-gray-600 font-medium">Total Leaves</p>
-          </div>
-          <div className="relative overflow-hidden bg-white/20 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 p-4 transition-all hover:scale-105 hover:shadow-xl">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/20 rounded-full -mr-10 -mt-10"></div>
-            <FiCheckCircle className="text-2xl text-emerald-600 mb-2" />
-            <p className="text-2xl font-bold text-gray-800">{leaves.filter(l => l.status === "approved").length}</p>
-            <p className="text-xs text-gray-600 font-medium">Approved</p>
-          </div>
-          <div className="relative overflow-hidden bg-white/20 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 p-4 transition-all hover:scale-105 hover:shadow-xl">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/20 rounded-full -mr-10 -mt-10"></div>
-            <FiClock className="text-2xl text-amber-600 mb-2" />
-            <p className="text-2xl font-bold text-gray-800">{leaves.filter(l => l.status === "pending").length}</p>
-            <p className="text-xs text-gray-600 font-medium">Pending</p>
-          </div>
-          <div className="relative overflow-hidden bg-white/20 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 p-4 transition-all hover:scale-105 hover:shadow-xl">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-rose-500/20 rounded-full -mr-10 -mt-10"></div>
-            <FiXCircle className="text-2xl text-rose-600 mb-2" />
-            <p className="text-2xl font-bold text-gray-800">{leaves.filter(l => l.status === "rejected").length}</p>
-            <p className="text-xs text-gray-600 font-medium">Rejected</p>
-          </div>
-          <div className="relative overflow-hidden bg-gradient-to-br from-purple-500/20 to-blue-500/20 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 p-4 transition-all hover:scale-105 hover:shadow-xl">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/20 rounded-full -mr-10 -mt-10"></div>
-            <FaExchangeAlt className="text-2xl text-purple-600 mb-2" />
-            <p className="text-2xl font-bold text-gray-800">{requestStatus.pending + requestStatus.approved}/{maxCompOffRequests}</p>
-            <p className="text-xs text-gray-600 font-medium">Comp-off</p>
-          </div>
+        {/* Stats Cards — same as Dashboard */}
+        <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-5">
+          <StatCard
+            icon={FiFileText}
+            label="Total Leaves"
+            value={leaves.length}
+            color="indigo"
+          />
+          <StatCard
+            icon={FiCheckCircle}
+            label="Approved"
+            value={leaves.filter(l => l.status === "approved").length}
+            color="emerald"
+          />
+          <StatCard
+            icon={FiClock}
+            label="Pending"
+            value={leaves.filter(l => l.status === "pending").length}
+            color="amber"
+          />
+          <StatCard
+            icon={FiXCircle}
+            label="Rejected"
+            value={leaves.filter(l => l.status === "rejected").length}
+            color="rose"
+          />
+          <StatCard
+            icon={FaExchangeAlt}
+            label="Comp-off"
+            value={`${requestStatus.pending + requestStatus.approved}/${maxCompOffRequests}`}
+            color="cyan"
+          />
         </div>
 
-        {/* Leave Balances Glass Cards */}
+        {/* Leave Balances */}
         {leaveBalances && (
-          <div className="grid grid-cols-2 gap-3 mb-5 sm:grid-cols-4">
-            <div className="bg-white/20 backdrop-blur-xl rounded-xl shadow-lg border border-white/30 p-3">
-              <p className="text-xs text-gray-600 font-medium">Casual Leave</p>
-              <p className="text-xl font-bold text-gray-800">{leaveBalances?.CL?.available || 0} <span className="text-xs font-normal text-gray-500">/ {leaveBalances?.CL?.total || 0}</span></p>
-              <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${((leaveBalances?.CL?.used || 0) / (leaveBalances?.CL?.total || 1)) * 100}%` }}></div>
+          <div className="grid grid-cols-2 gap-1.5 mb-4 sm:grid-cols-4 sm:gap-2">
+            <div className="bg-white border border-gray-200 rounded-md shadow-sm px-2 py-1.5">
+              <p className="text-[9px] text-gray-500 font-medium truncate leading-tight">Casual Leave</p>
+              <p className="text-xs font-bold text-gray-800 leading-tight">{leaveBalances?.CL?.available || 0}<span className="text-[9px] font-normal text-gray-400"> / {leaveBalances?.CL?.total || 0}</span></p>
+              <div className="w-full bg-gray-100 rounded-full h-0.5 mt-0.5">
+                <div className="bg-blue-500 h-0.5 rounded-full" style={{ width: `${((leaveBalances?.CL?.used || 0) / (leaveBalances?.CL?.total || 1)) * 100}%` }}></div>
               </div>
             </div>
-            <div className="bg-white/20 backdrop-blur-xl rounded-xl shadow-lg border border-white/30 p-3">
-              <p className="text-xs text-gray-600 font-medium">Sick Leave</p>
-              <p className="text-xl font-bold text-gray-800">{leaveBalances?.SL?.available || 0} <span className="text-xs font-normal text-gray-500">/ {leaveBalances?.SL?.total || 0}</span></p>
-              <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                <div className="bg-red-500 h-1.5 rounded-full" style={{ width: `${((leaveBalances?.SL?.used || 0) / (leaveBalances?.SL?.total || 1)) * 100}%` }}></div>
+            <div className="bg-white border border-gray-200 rounded-md shadow-sm px-2 py-1.5">
+              <p className="text-[9px] text-gray-500 font-medium truncate leading-tight">Sick Leave</p>
+              <p className="text-xs font-bold text-gray-800 leading-tight">{leaveBalances?.SL?.available || 0}<span className="text-[9px] font-normal text-gray-400"> / {leaveBalances?.SL?.total || 0}</span></p>
+              <div className="w-full bg-gray-100 rounded-full h-0.5 mt-0.5">
+                <div className="bg-red-500 h-0.5 rounded-full" style={{ width: `${((leaveBalances?.SL?.used || 0) / (leaveBalances?.SL?.total || 1)) * 100}%` }}></div>
               </div>
             </div>
-            <div className="bg-white/20 backdrop-blur-xl rounded-xl shadow-lg border border-white/30 p-3">
-              <p className="text-xs text-gray-600 font-medium">Earned Leave</p>
-              <p className="text-xl font-bold text-gray-800">{leaveBalances?.EL?.available || 0} <span className="text-xs font-normal text-gray-500">/ {leaveBalances?.EL?.total || 0}</span></p>
-              <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                <div className="bg-green-500 h-1.5 rounded-full" style={{ width: `${((leaveBalances?.EL?.used || 0) / (leaveBalances?.EL?.total || 1)) * 100}%` }}></div>
+            <div className="bg-white border border-gray-200 rounded-md shadow-sm px-2 py-1.5">
+              <p className="text-[9px] text-gray-500 font-medium truncate leading-tight">Earned Leave</p>
+              <p className="text-xs font-bold text-gray-800 leading-tight">{leaveBalances?.EL?.available || 0}<span className="text-[9px] font-normal text-gray-400"> / {leaveBalances?.EL?.total || 0}</span></p>
+              <div className="w-full bg-gray-100 rounded-full h-0.5 mt-0.5">
+                <div className="bg-green-500 h-0.5 rounded-full" style={{ width: `${((leaveBalances?.EL?.used || 0) / (leaveBalances?.EL?.total || 1)) * 100}%` }}></div>
               </div>
             </div>
-            <div className="bg-white/20 backdrop-blur-xl rounded-xl shadow-lg border border-white/30 p-3">
-              <p className="text-xs text-gray-600 font-medium">Public Holidays</p>
-              <p className="text-xl font-bold text-gray-800">{publicHolidays.length}</p>
-              <p className="text-[10px] text-gray-500">{publicHolidays.filter(h => h.type === "National Holiday").length} National</p>
+            <div className="bg-white border border-gray-200 rounded-md shadow-sm px-2 py-1.5">
+              <p className="text-[9px] text-gray-500 font-medium truncate leading-tight">Public Holidays</p>
+              <p className="text-xs font-bold text-gray-800 leading-tight">{publicHolidays.length}</p>
+              <p className="text-[8px] text-gray-400 truncate leading-tight">{publicHolidays.filter(h => h.type === "National Holiday").length} National</p>
             </div>
           </div>
         )}
@@ -679,18 +679,18 @@ const EmployeeLeaves = () => {
             </div>
           )}
           
-          <div className="grid grid-cols-3 gap-3 mt-3">
-            <div className="text-center bg-white/20 backdrop-blur-sm rounded-xl py-2">
-              <div className="text-2xl font-bold text-purple-700">{compOffSummary.totalCompOff || 0}</div>
-              <div className="text-[10px] text-gray-600">Total Allowed</div>
+          <div className="grid grid-cols-3 gap-2 mt-2.5 sm:gap-2.5">
+            <div className="text-center bg-white/20 backdrop-blur-sm rounded-lg py-1.5 sm:py-2 px-1">
+              <div className="text-base sm:text-lg font-bold text-purple-700">{compOffSummary.totalCompOff || 0}</div>
+              <div className="text-[9px] sm:text-[10px] text-gray-600 leading-tight">Total Allowed</div>
             </div>
-            <div className="text-center bg-white/20 backdrop-blur-sm rounded-xl py-2">
-              <div className="text-2xl font-bold text-orange-600">{compOffSummary.usedCompOffCount || 0}</div>
-              <div className="text-[10px] text-gray-600">Used / Pending</div>
+            <div className="text-center bg-white/20 backdrop-blur-sm rounded-lg py-1.5 sm:py-2 px-1">
+              <div className="text-base sm:text-lg font-bold text-orange-600">{compOffSummary.usedCompOffCount || 0}</div>
+              <div className="text-[9px] sm:text-[10px] text-gray-600 leading-tight">Used / Pending</div>
             </div>
-            <div className="text-center bg-white/20 backdrop-blur-sm rounded-xl py-2">
-              <div className="text-2xl font-bold text-green-600">{compOffSummary.remainingCompOffCount || 0}</div>
-              <div className="text-[10px] text-gray-600">Remaining</div>
+            <div className="text-center bg-white/20 backdrop-blur-sm rounded-lg py-1.5 sm:py-2 px-1">
+              <div className="text-base sm:text-lg font-bold text-green-600">{compOffSummary.remainingCompOffCount || 0}</div>
+              <div className="text-[9px] sm:text-[10px] text-gray-600 leading-tight">Remaining</div>
             </div>
           </div>
           

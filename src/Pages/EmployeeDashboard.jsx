@@ -658,8 +658,6 @@ const EmployeeDashboard = () => {
                     onAction={() => alert("Congratulations! 🏆")}
                   />
                 )}
-<<<<<<< HEAD
-
                 {/* Upcoming Shift Change */}
                 {upcomingShift && (
                   <CelebrationCard
@@ -672,8 +670,6 @@ const EmployeeDashboard = () => {
                 )}
 
                 {/* Departmental Birthdays */}
-=======
->>>>>>> f8e00199d87c37cfe5a72ec35304fea8da9f9d3e
                 {deptBirthdays.length > 0 && (
                   <CelebrationCard 
                     type="birthday"
@@ -702,31 +698,19 @@ const EmployeeDashboard = () => {
 
               {showModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-<<<<<<< HEAD
-                  <div className={`w-full overflow-hidden bg-white shadow-2xl rounded-xl animate-in zoom-in-95 duration-200 ${modalType === 'shift' ? 'max-w-sm' : 'max-w-md'}`}>
+                  <div className={`w-full overflow-hidden bg-white shadow-2xl animate-in zoom-in-95 duration-200 ${modalType === 'shift' ? 'max-w-sm rounded-xl' : 'max-w-md rounded-2xl'}`}>
                     <div className={`flex items-center justify-between border-b ${modalType === 'shift' ? 'px-3 py-2 border-slate-100' : 'p-4 border-gray-50'}`}>
-                        <h3 className={`font-semibold text-gray-800 ${modalType === 'shift' ? 'text-sm' : 'text-lg font-bold text-gray-700'}`}>
-                          {modalType === 'birthday' ? `Today's Birthdays` : 
-                           modalType === 'anniversary' ? `Work Anniversaries` :
-                           modalType === 'shift' ? `Upcoming Shift Change` :
-                           `Employees on Leave`}
-                        </h3>
-                      <button 
-                        onClick={() => setShowModal(false)}
-                        className={`text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-all ${modalType === 'shift' ? 'p-1' : 'p-2 rounded-xl'}`}
-                      >
-                        <FiX className={modalType === 'shift' ? 'text-base' : 'text-xl'} />
-=======
-                  <div className="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl animate-in zoom-in-95 duration-200">
-                    <div className="flex items-center justify-between p-4 border-b border-gray-50">
-                      <h3 className="text-lg font-bold text-gray-700">
+                      <h3 className={`font-semibold text-gray-800 ${modalType === 'shift' ? 'text-sm' : 'text-lg font-bold text-gray-700'}`}>
                         {modalType === 'birthday' ? `Today's Birthdays` : 
                          modalType === 'anniversary' ? `Work Anniversaries` :
+                         modalType === 'shift' ? `Upcoming Shift Change` :
                          `Employees on Leave`}
                       </h3>
-                      <button onClick={() => setShowModal(false)} className="p-2 text-slate-500 hover:text-slate-500 hover:bg-white rounded-xl transition-all">
-                        <FiX className="text-xl" />
->>>>>>> f8e00199d87c37cfe5a72ec35304fea8da9f9d3e
+                      <button
+                        onClick={() => setShowModal(false)}
+                        className={`transition-all ${modalType === 'shift' ? 'p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg' : 'p-2 text-slate-500 hover:text-slate-500 hover:bg-white rounded-xl'}`}
+                      >
+                        <FiX className={modalType === 'shift' ? 'text-base' : 'text-xl'} />
                       </button>
                     </div>
                     <div className={`overflow-y-auto ${modalType === 'shift' ? 'p-3' : 'p-2 max-h-[60vh]'}`}>
@@ -816,31 +800,24 @@ const EmployeeDashboard = () => {
                       </div>
                       )}
                     </div>
-<<<<<<< HEAD
                     <div className={`bg-white border-t border-gray-200 flex ${modalType === 'shift' ? 'justify-between gap-2 px-3 py-2' : 'justify-end p-4'}`}>
-                       {modalType === 'shift' && (
-                         <button
-                           onClick={() => {
-                             setShowModal(false);
-                             navigate("/my-shift");
-                           }}
-                           className="px-3 py-1.5 text-[10px] font-semibold text-violet-700 border border-violet-200 rounded-md hover:bg-violet-50 transition-all"
-                         >
-                           View Schedule
-                         </button>
-                       )}
-                       <button 
-                         onClick={() => setShowModal(false)}
-                         className={`bg-gray-100 text-gray-700 rounded-md text-xs font-semibold hover:bg-gray-200 transition-all ${modalType === 'shift' ? 'px-3 py-1.5 text-[10px] ml-auto' : 'px-5 py-2 font-bold shadow-md shadow-gray-200'}`}
-                       >
-                         Close
-                       </button>
-=======
-                    <div className="p-4 bg-white border-t border-gray-200 flex justify-end">
-                      <button onClick={() => setShowModal(false)} className="px-5 py-2 bg-gray-100 text-gray-900 rounded-lg text-xs font-bold hover:bg-gray-100 transition-all shadow-md shadow-gray-200">
+                      {modalType === 'shift' && (
+                        <button
+                          onClick={() => {
+                            setShowModal(false);
+                            navigate("/my-shift");
+                          }}
+                          className="px-3 py-1.5 text-[10px] font-semibold text-violet-700 border border-violet-200 rounded-md hover:bg-violet-50 transition-all"
+                        >
+                          View Schedule
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setShowModal(false)}
+                        className={`bg-gray-100 text-xs font-bold transition-all shadow-md shadow-gray-200 ${modalType === 'shift' ? 'px-3 py-1.5 text-[10px] text-gray-700 font-semibold hover:bg-gray-200 rounded-md ml-auto' : 'px-5 py-2 text-gray-900 rounded-lg hover:bg-gray-100'}`}
+                      >
                         Close
                       </button>
->>>>>>> f8e00199d87c37cfe5a72ec35304fea8da9f9d3e
                     </div>
                   </div>
                 </div>
