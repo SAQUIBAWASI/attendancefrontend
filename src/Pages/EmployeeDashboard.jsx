@@ -10,7 +10,8 @@ import {
   FiX,
   FiInfo,
   FiTrash2,
-  FiPlus
+  FiPlus,
+  FiCoffee
 } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
@@ -31,6 +32,21 @@ import {
   XAxis,
   YAxis
 } from 'recharts';
+
+// ✅ Helper function to format break minutes
+const formatBreakMinutes = (minutes) => {
+  if (!minutes || minutes === 0) return "-";
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
+};
+
+// ✅ Helper function to calculate total break minutes
+const calculateTotalBreakMinutes = (breaks) => {
+  if (!breaks || breaks.length === 0) return 0;
+  return breaks.reduce((total, b) => total + (b.breakMinutes || 0), 0);
+};
 
 const EmployeeDashboard = () => {
   const navigate = useNavigate();
@@ -64,7 +80,7 @@ const EmployeeDashboard = () => {
   const [lateChartData, setLateChartData] = useState([]);
   const [absentChartData, setAbsentChartData] = useState([]);
   const [allAttendance, setAllAttendance] = useState([]);
-  const [userAttendance, setUserAttendance] = useState([]); // Added state for table
+  const [userAttendance, setUserAttendance] = useState([]);
   const [birthdaysToday, setBirthdaysToday] = useState([]);
   const [anniversariesToday, setAnniversariesToday] = useState([]);
   const [leavesToday, setLeavesToday] = useState([]);
@@ -110,7 +126,7 @@ const EmployeeDashboard = () => {
           setUserAttendance(filteredAttendance);
 
           // 4. Smart initialization: find the latest month THIS user has data for
-          let resolvedMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`; // fallback: current month
+          let resolvedMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
 
           if (filteredAttendance.length > 0) {
             const validDates = filteredAttendance
@@ -123,15 +139,9 @@ const EmployeeDashboard = () => {
             }
           }
 
-          // Set state for the month pickers
           setLateMonth(resolvedMonth);
           setAbsentMonth(resolvedMonth);
-
-          // *** KEY FIX: call chart update directly with the resolved month ***
-          // (we can't rely on the state-change useEffect firing on first load)
           updateChartDataWithMonth(filteredAttendance, profileData, resolvedMonth);
-
-          // 5. Calculate employee stats for selected month
           calculateEmployeeStats(filteredAttendance, profileData);
 
           // 5. Leaves Stats
@@ -196,7 +206,7 @@ const EmployeeDashboard = () => {
             console.warn("Anniversaries fetch failed", e);
           }
 
-          // 10. Fetch Leaves Today
+          // 11. Fetch Leaves Today
           try {
             const leaveTodayRes = await axios.get(`${BASE_URL}api/leaves/on-leave-today?department=${encodeURIComponent(profileData.department || "")}`);
             setLeavesToday(leaveTodayRes.data.data || []);
@@ -221,14 +231,11 @@ const EmployeeDashboard = () => {
 
     const formData = new FormData();
     formData.append("profileImage", file);
+    formData.append("profile_image", file);
+    formData.append("image", file);
 
     try {
       setLoading(true);
-      const formData = new FormData();
-      formData.append("profileImage", file);
-      formData.append("profile_image", file); // For compatibility with some backend versions
-      formData.append("image", file);         // Common field name fallback
-      
       const response = await axios.put(`${API_BASE_URL}/employees/update/${profile._id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -236,12 +243,10 @@ const EmployeeDashboard = () => {
       const updatedData = response.data?.data || response.data?.employee || response.data;
       
       if (updatedData) {
-        // If the server didn't return the full profile, fetch it again to be safe
         const refreshed = await axios.get(`${API_BASE_URL}/employees/get-employee?email=${profile.email}`);
         const finalProfile = refreshed.data.data || refreshed.data;
         setProfile(finalProfile);
         
-        // Sync local storage
         const stored = localStorage.getItem("employeeData");
         if (stored) {
           const data = JSON.parse(stored);
@@ -261,7 +266,7 @@ const EmployeeDashboard = () => {
   };
 
   const handleImageDelete = async (e) => {
-    e?.stopPropagation(); // Prevent triggering file upload
+    e?.stopPropagation();
     if (!profile?._id || !window.confirm("Are you sure you want to remove your profile image?")) return;
 
     try {
@@ -272,7 +277,6 @@ const EmployeeDashboard = () => {
 
       setProfile(prev => ({ ...prev, profileImage: "" }));
       
-      // Update local storage
       const stored = localStorage.getItem("employeeData");
       if (stored) {
         const data = JSON.parse(stored);
@@ -297,7 +301,6 @@ const EmployeeDashboard = () => {
     const [year, month] = parts.map(Number);
     if (isNaN(year) || isNaN(month)) return;
 
-    // Get working days in month (up to today if current/future month)
     const daysInMonth = new Date(year, month, 0).getDate();
     const today = new Date();
     const currentYear = today.getFullYear();
@@ -315,16 +318,13 @@ const EmployeeDashboard = () => {
 
     for (let day = 1; day <= maxDayToCheck; day++) {
       const date = new Date(year, month - 1, day);
-      const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
-
-      // For 6-day week (Monday to Saturday)
+      const dayOfWeek = date.getDay();
       if (dayOfWeek >= 1 && dayOfWeek <= 6) {
         workingDays.push(day);
         workingDayMap[day] = true;
       }
     }
 
-    // Get present days and late days
     const presentDays = new Set();
     let lateDays = 0;
 
@@ -341,9 +341,6 @@ const EmployeeDashboard = () => {
           presentDays.add(day);
         }
 
-        // Check for late (using your data logic)
-        // In your table, Saquiba has 20 late entries for 13 present days
-        // That means some days might have multiple late entries or different logic
         const shiftStart = getShiftStartTime(profileData?.shift || "D");
         const [hours, minutes] = shiftStart.split(':').map(Number);
         const shiftStartTime = new Date(recordDate);
@@ -358,7 +355,6 @@ const EmployeeDashboard = () => {
       }
     });
 
-    // Calculate absent days
     let absentDays = 0;
     workingDays.forEach(day => {
       if (!presentDays.has(day)) {
@@ -386,20 +382,16 @@ const EmployeeDashboard = () => {
     });
 
     updateChartData(userAttendance, profile);
-    calculateEmployeeStats(userAttendance, profile); // Recalculate stats when month changes
+    calculateEmployeeStats(userAttendance, profile);
   }, [lateMonth, absentMonth, lateDate, absentDate]);
 
   const updateChartData = (userAttendance, profileData) => {
-    // Late Analysis
     const lateAnalysis = analyzeLateDays(userAttendance, profileData);
-    // Absent Analysis
     const absentAnalysis = analyzeAbsentDays(userAttendance, profileData);
-
     setLateChartData(lateAnalysis.chartData);
     setAbsentChartData(absentAnalysis.chartData);
   };
 
-  // Version that takes month as a parameter — used on initial load to avoid state async race condition
   const updateChartDataWithMonth = (attendance, profileData, month) => {
     const lateAnalysis = analyzeLateDaysForMonth(attendance, profileData, month, "");
     const absentAnalysis = analyzeAbsentDaysForMonth(attendance, profileData, month, "");
@@ -407,11 +399,9 @@ const EmployeeDashboard = () => {
     setAbsentChartData(absentAnalysis.chartData);
   };
 
-  // Late Analysis with proper weekly grouping
   const analyzeLateDays = (attendance, profileData) =>
     analyzeLateDaysForMonth(attendance, profileData, lateMonth, lateDate);
 
-  // Parameterized version (used on initial load to avoid async state race)
   const analyzeLateDaysForMonth = (attendance, profileData, theMonth, theDate) => {
     if (!theMonth) return { chartData: [] };
     const parts = theMonth.split('-');
@@ -458,11 +448,9 @@ const EmployeeDashboard = () => {
     return { chartData };
   };
 
-  // Absent Analysis with proper weekly grouping
   const analyzeAbsentDays = (attendance, profileData) =>
     analyzeAbsentDaysForMonth(attendance, profileData, absentMonth, absentDate);
 
-  // Parameterized version (used on initial load to avoid async state race)
   const analyzeAbsentDaysForMonth = (attendance, profileData, theMonth, theDate) => {
     if (!theMonth) return { chartData: [] };
     const parts = theMonth.split('-');
@@ -536,10 +524,8 @@ const EmployeeDashboard = () => {
     return shiftTimes[shiftType] || "09:00";
   };
 
-  // Chart colors
   const CHART_COLORS = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6'];
 
-  // Custom tooltips
   const LateTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
@@ -616,7 +602,6 @@ const EmployeeDashboard = () => {
 
           return (
             <div className="mb-4 sm:mb-6 bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-              {/* Section Header */}
               <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-50">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></div>
@@ -626,10 +611,7 @@ const EmployeeDashboard = () => {
                   {totalEvents} event{totalEvents !== 1 ? 's' : ''}
                 </span>
               </div>
-
-              {/* Cards Grid */}
               <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {/* Personal Birthday */}
                 {isMyBirthday && (
                   <CelebrationCard 
                     type="birthday"
@@ -638,8 +620,6 @@ const EmployeeDashboard = () => {
                     onAction={() => alert("Happy Birthday! 🎂")}
                   />
                 )}
-
-                {/* Personal Anniversary */}
                 {myAnniversary && (
                   <CelebrationCard 
                     type="anniversary"
@@ -649,8 +629,6 @@ const EmployeeDashboard = () => {
                     onAction={() => alert("Congratulations! 🏆")}
                   />
                 )}
-
-                {/* Departmental Birthdays */}
                 {deptBirthdays.length > 0 && (
                   <CelebrationCard 
                     type="birthday"
@@ -659,8 +637,6 @@ const EmployeeDashboard = () => {
                     onAction={() => { setModalType("birthday"); setShowModal(true); }}
                   />
                 )}
-
-                {/* Departmental Anniversaries */}
                 {deptAnniversaries.length > 0 && (
                   <CelebrationCard 
                     type="anniversary"
@@ -669,8 +645,6 @@ const EmployeeDashboard = () => {
                     onAction={() => { setModalType("anniversary"); setShowModal(true); }}
                   />
                 )}
-
-                {/* Departmental Leaves */}
                 {deptLeaves.length > 0 && (
                   <CelebrationCard 
                     type="leave"
@@ -681,20 +655,16 @@ const EmployeeDashboard = () => {
                 )}
               </div>
 
-              {/* Celebration Modal */}
               {showModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
                   <div className="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl animate-in zoom-in-95 duration-200">
                     <div className="flex items-center justify-between p-4 border-b border-gray-50">
-                        <h3 className="text-lg font-bold text-gray-700">
-                          {modalType === 'birthday' ? `Today's Birthdays` : 
-                           modalType === 'anniversary' ? `Work Anniversaries` :
-                           `Employees on Leave`}
-                        </h3>
-                      <button 
-                        onClick={() => setShowModal(false)}
-                        className="p-2 text-slate-500 hover:text-slate-500 hover:bg-white rounded-xl transition-all"
-                      >
+                      <h3 className="text-lg font-bold text-gray-700">
+                        {modalType === 'birthday' ? `Today's Birthdays` : 
+                         modalType === 'anniversary' ? `Work Anniversaries` :
+                         `Employees on Leave`}
+                      </h3>
+                      <button onClick={() => setShowModal(false)} className="p-2 text-slate-500 hover:text-slate-500 hover:bg-white rounded-xl transition-all">
                         <FiX className="text-xl" />
                       </button>
                     </div>
@@ -702,48 +672,42 @@ const EmployeeDashboard = () => {
                       <div className="grid grid-cols-1 gap-2 p-2">
                         {(modalType === 'birthday' ? deptBirthdays : modalType === 'anniversary' ? deptAnniversaries : deptLeaves).map((item, idx) => (
                           <div key={idx} className="flex items-center justify-between p-4 bg-white/50 rounded-xl hover:bg-white border border-transparent hover:border-gray-200 hover:shadow-sm transition-all group">
-                             <div className="flex items-center gap-4">
-                               <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shadow-sm ${
-                                 modalType === 'birthday' ? 'bg-rose-100 text-rose-600' : 
-                                 modalType === 'anniversary' ? 'bg-blue-100 text-blue-700' :
-                                 'bg-amber-100 text-amber-600'
-                               }`}>
-                                 {(item.name || item.employeeName).split(' ').map(n => n[0]).join('')}
-                               </div>
-                               <div>
-                                 <h4 className="text-sm font-bold text-gray-900">{item.name || item.employeeName}</h4>
-                                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                   {modalType === 'anniversary' ? `${item.yearsOfService} Year Celebration` : item.role || 'Team Member'}
-                                 </p>
-                               </div>
-                             </div>
-                             {(modalType === 'birthday' || modalType === 'anniversary') && (
-                               <button 
-                                 className={`px-3 py-1.5 bg-white border rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm ${
-                                   modalType === 'birthday' ? 'text-rose-500 border-rose-100 hover:bg-rose-500 hover:text-gray-900' : 
-                                   'text-blue-700 border-emerald-100 hover:bg-blue-600 hover:text-gray-900'
-                                 }`}
-                                 onClick={() => alert(`Celebration wish sent to ${item.name}! 🎊`)}
-                               >
-                                 {modalType === 'birthday' ? 'Wish' : 'Celebrate'}
-                               </button>
-                             )}
-                             {modalType === 'leave' && (
-                               <div className="text-[9px] font-bold uppercase text-amber-600 bg-amber-100/50 px-2.5 py-1 rounded-lg">
-                                 {item.leaveType || 'On Leave'}
-                               </div>
-                             )}
+                            <div className="flex items-center gap-4">
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shadow-sm ${
+                                modalType === 'birthday' ? 'bg-rose-100 text-rose-600' : 
+                                modalType === 'anniversary' ? 'bg-blue-100 text-blue-700' :
+                                'bg-amber-100 text-amber-600'
+                              }`}>
+                                {(item.name || item.employeeName).split(' ').map(n => n[0]).join('')}
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-bold text-gray-900">{item.name || item.employeeName}</h4>
+                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                  {modalType === 'anniversary' ? `${item.yearsOfService} Year Celebration` : item.role || 'Team Member'}
+                                </p>
+                              </div>
+                            </div>
+                            {(modalType === 'birthday' || modalType === 'anniversary') && (
+                              <button className={`px-3 py-1.5 bg-white border rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm ${
+                                modalType === 'birthday' ? 'text-rose-500 border-rose-100 hover:bg-rose-500 hover:text-gray-900' : 
+                                'text-blue-700 border-emerald-100 hover:bg-blue-600 hover:text-gray-900'
+                              }`} onClick={() => alert(`Celebration wish sent to ${item.name}! 🎊`)}>
+                                {modalType === 'birthday' ? 'Wish' : 'Celebrate'}
+                              </button>
+                            )}
+                            {modalType === 'leave' && (
+                              <div className="text-[9px] font-bold uppercase text-amber-600 bg-amber-100/50 px-2.5 py-1 rounded-lg">
+                                {item.leaveType || 'On Leave'}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
                     </div>
                     <div className="p-4 bg-white border-t border-gray-200 flex justify-end">
-                       <button 
-                         onClick={() => setShowModal(false)}
-                         className="px-5 py-2 bg-gray-100 text-gray-900 rounded-lg text-xs font-bold hover:bg-gray-100 transition-all shadow-md shadow-gray-200"
-                       >
-                         Close
-                       </button>
+                      <button onClick={() => setShowModal(false)} className="px-5 py-2 bg-gray-100 text-gray-900 rounded-lg text-xs font-bold hover:bg-gray-100 transition-all shadow-md shadow-gray-200">
+                        Close
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -787,12 +751,10 @@ const EmployeeDashboard = () => {
                       );
                     }
                   })()}
-                  {/* Upload button */}
                   <label htmlFor="profileImageUpload" className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-30 rounded-xl cursor-pointer transition">
                     <FiCamera className="text-white opacity-0 hover:opacity-100 transition" size={20} />
                   </label>
                   <input id="profileImageUpload" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-                  {/* Delete button */}
                   {profile.profileImage && (
                     <button onClick={handleImageDelete} className="absolute top-0 right-0 bg-white rounded-full p-1 shadow-md hover:bg-gray-100">
                       <FiX className="text-red-500" size={12} />
@@ -862,7 +824,9 @@ const EmployeeDashboard = () => {
                 />
               </div>
             </div>
-          </div>          {/* Right Column */}
+          </div>
+
+          {/* Right Column */}
           <div className="space-y-4 lg:col-span-9">
             
             {/* Charts Section */}
@@ -886,24 +850,13 @@ const EmployeeDashboard = () => {
                     />
                   </div>
                 </div>
- 
                 <div className="h-52 sm:h-64">
                   {lateChartData.some(d => d.value > 0) || lateDate ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={lateChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis
-                          dataKey="name"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fontSize: 11, fill: '#64748b', fontWeight: 600 }}
-                        />
-                        <YAxis
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fontSize: 11, fill: '#64748b' }}
-                          domain={[0, 'dataMax + 10']}
-                        />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b', fontWeight: 600 }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} domain={[0, 'dataMax + 10']} />
                         <Tooltip content={<LateTooltip />} cursor={{ fill: '#f8fafc' }} />
                         <Bar dataKey="value" fill="#F59E0B" radius={[4, 4, 0, 0]} barSize={40} />
                       </BarChart>
@@ -938,25 +891,13 @@ const EmployeeDashboard = () => {
                     />
                   </div>
                 </div>
-
                 <div className="h-52 sm:h-64">
                   {absentChartData.some(d => d.value > 0) || absentDate ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={absentChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis
-                          dataKey="name"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fontSize: 11, fill: '#64748b' }}
-                        />
-                        <YAxis
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fontSize: 11, fill: '#64748b' }}
-                          domain={[0, 'dataMax + 1']}
-                          allowDecimals={false}
-                        />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} domain={[0, 'dataMax + 1']} allowDecimals={false} />
                         <Tooltip content={<AbsentTooltip />} cursor={{ fill: '#f8fafc' }} />
                         <Bar dataKey="value" fill="#EF4444" radius={[4, 4, 0, 0]} barSize={40} />
                       </BarChart>
@@ -973,7 +914,7 @@ const EmployeeDashboard = () => {
               </div>
             </div>
 
-            {/* Recent Attendance Registry */}
+            {/* Recent Attendance Registry - UPDATED with Break Time */}
             <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-gray-900">Recent Attendance Activity</h3>
@@ -985,38 +926,63 @@ const EmployeeDashboard = () => {
                 </button>
               </div>
               <div className="overflow-x-auto -mx-4">
-                <table className="w-full min-w-[400px] text-left">
+                <table className="w-full min-w-[500px] text-left">
                   <thead className="bg-gradient-to-r from-green-500 to-blue-600">
                     <tr>
                       <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider">DATE</th>
                       <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider">CHECK IN</th>
                       <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider">CHECK OUT</th>
+                      <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider">BREAK TIME</th>
                       <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider text-right">STATUS</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {userAttendance.slice(0, 5).map((record, index) => (
-                      <tr key={index} className="group hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-2.5 text-xs font-semibold text-gray-700">
-                          {new Date(record.checkInTime).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-2.5 text-xs font-medium text-gray-500">
-                          {record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
-                        </td>
-                        <td className="px-4 py-2.5 text-xs font-medium text-gray-500">
-                          {record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
-                        </td>
-                        <td className="px-4 py-2.5 text-right">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${record.status === 'present' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+                    {userAttendance.slice(0, 5).map((record, index) => {
+                      const breakMinutes = record.totalBreakMinutes || calculateTotalBreakMinutes(record.breaks);
+                      const breakReason = record.breaks && record.breaks.length > 0 ? record.breaks[0].reason : null;
+                      return (
+                        <tr key={index} className="group hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-2.5 text-xs font-semibold text-gray-700">
+                            {new Date(record.checkInTime).toLocaleDateString()}
+                          </td>
+                          <td className="px-4 py-2.5 text-xs font-medium text-gray-500">
+                            {record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
+                          </td>
+                          <td className="px-4 py-2.5 text-xs font-medium text-gray-500">
+                            {record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
+                          </td>
+                          <td className="px-4 py-2.5">
+                            {breakMinutes > 0 ? (
+                              <div className="flex items-center gap-1.5">
+                                <FiCoffee className="w-3 h-3 text-orange-500" />
+                                <span className="text-xs font-medium text-orange-600">
+                                  {formatBreakMinutes(breakMinutes)}
+                                </span>
+                                {breakReason && (
+                                  <span className="text-[9px] text-gray-400 hidden sm:inline">
+                                    ({breakReason})
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2.5 text-right">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              record.status === 'present' || record.status === 'checked-in' 
+                                ? 'bg-emerald-50 text-emerald-700' 
+                                : 'bg-red-50 text-red-700'
                             }`}>
-                            {record.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                              {record.status === 'checked-in' ? 'In' : (record.status === 'present' ? 'Present' : record.status)}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {userAttendance.length === 0 && (
                       <tr>
-                        <td colSpan="4" className="py-8 text-center text-xs text-slate-500 italic">
+                        <td colSpan="5" className="py-8 text-center text-xs text-slate-500 italic">
                           No recent activity found.
                         </td>
                       </tr>
@@ -1047,7 +1013,7 @@ const MiniDetail = ({ label, value, isStatus }) => (
   </div>
 );
 
-// SleekAction Component - Compact and Professional
+// SleekAction Component
 const SleekAction = ({ icon, title, desc, color, onClick }) => {
   const themes = {
     blue: "bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:shadow-md",

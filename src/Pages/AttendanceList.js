@@ -3398,11 +3398,26 @@
 
 import { useEffect, useRef, useState } from "react";
 import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag } from "react-icons/fa";
-import { FiFilter, FiMapPin, FiUserCheck, FiUsers } from "react-icons/fi";
+import { FiCoffee, FiFilter, FiMapPin, FiUserCheck, FiUsers } from "react-icons/fi";
 import StatCard from "../Components/StatCard";
 import { filterActiveRecords, isEmployeeHidden } from "../utils/employeeStatus";
 
 const BASE_URL = "https://api.timelyhealth.in/api";
+
+// ✅ Helper function to format break minutes
+const formatBreakMinutes = (minutes) => {
+  if (!minutes || minutes === 0) return "-";
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
+};
+
+// ✅ Helper function to calculate total break minutes from breaks array
+const calculateTotalBreakMinutes = (breaks) => {
+  if (!breaks || breaks.length === 0) return 0;
+  return breaks.reduce((total, b) => total + (b.breakMinutes || 0), 0);
+};
 
 export default function AttendanceList() {
   const [allAttendanceData, setAllAttendanceData] = useState([]);
@@ -3716,7 +3731,7 @@ export default function AttendanceList() {
     const headers = [
       "Employee ID", "Employee Name", "Department", "Designation",
       "Date", "Day", "Check-In Time", "Check-Out Time", "Total Hours", 
-      "Distance (m)", "Onsite", "Reason", "Status"
+      "Break Time", "Distance (m)", "Onsite", "Reason", "Status"
     ];
 
     const csvRows = [
@@ -3725,6 +3740,8 @@ export default function AttendanceList() {
         const empDetails = getEmployeeDetails(rec.employeeId);
         const recordDate = rec.checkInTime ? new Date(rec.checkInTime) : null;
         const formattedHours = formatDecimalHours(rec.totalHours);
+        const breakMinutes = rec.totalBreakMinutes || calculateTotalBreakMinutes(rec.breaks);
+        const formattedBreak = formatBreakMinutes(breakMinutes);
         return [
           `"${rec.employeeId}"`,
           `"${empDetails.name}"`,
@@ -3735,6 +3752,7 @@ export default function AttendanceList() {
           `"${rec.checkInTime ? new Date(rec.checkInTime).toLocaleString() : "-"}"`,
           `"${rec.checkOutTime ? new Date(rec.checkOutTime).toLocaleString() : "-"}"`,
           formattedHours,
+          formattedBreak,
           rec.distance?.toFixed(2) || "0.00",
           rec.onsite ? "Yes" : "No",
           `"${rec.reason || "Not specified"}"`,
@@ -3825,7 +3843,7 @@ export default function AttendanceList() {
       <div className="mx-auto max-w-9xl">
 
         {/* Stats */}
-        <div className="grid grid-cols-1 gap-3 mb-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 mb-4 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard
             icon={FiUsers}
             label="Total Records"
@@ -3849,6 +3867,12 @@ export default function AttendanceList() {
             label="Filtered Records"
             value={filteredRecords.length}
             color="rose"
+          />
+          <StatCard
+            icon={FiCoffee}
+            label="Total Break"
+            value={records.reduce((sum, r) => sum + (r.totalBreakMinutes || calculateTotalBreakMinutes(r.breaks)), 0)}
+            color="orange"
           />
         </div>
 
@@ -4057,6 +4081,7 @@ export default function AttendanceList() {
                       <th className="py-2 text-center">Day</th>
                       <th className="py-2 text-center">Check-In/Out</th>
                       <th className="py-2 text-center">Hours</th>
+                      <th className="py-2 text-center">Break</th>
                       <th className="py-2 text-center">Distance</th>
                       <th className="py-2 text-center">Onsite</th>
                       <th className="py-2 text-center">Status</th>
@@ -4066,6 +4091,8 @@ export default function AttendanceList() {
                     {currentRecords.map((rec, idx) => {
                       const empDetails = getEmployeeDetails(rec.employeeId);
                       const recordDate = rec.checkInTime ? new Date(rec.checkInTime) : null;
+                      const breakMinutes = rec.totalBreakMinutes || calculateTotalBreakMinutes(rec.breaks);
+                      const breakReason = rec.breaks && rec.breaks.length > 0 ? rec.breaks[0].reason : null;
                       
                       let hoursColorClass = 'text-red-600';
                       if (rec.totalHours >= 8) hoursColorClass = 'text-blue-700';
@@ -4104,6 +4131,24 @@ export default function AttendanceList() {
                             <span className={`font-medium ${hoursColorClass}`}>
                               {formatDecimalHours(rec.totalHours)}
                             </span>
+                          </td>
+                          {/* Break Time Column */}
+                          <td className="px-2 py-2 text-center">
+                            {breakMinutes > 0 ? (
+                              <div className="flex items-center justify-center gap-1">
+                                <FiCoffee className="w-3 h-3 text-orange-500" />
+                                <span className="text-xs font-medium text-orange-600">
+                                  {formatBreakMinutes(breakMinutes)}
+                                </span>
+                                {breakReason && (
+                                  <span className="text-[9px] text-gray-400 hidden sm:inline">
+                                    ({breakReason})
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">-</span>
+                            )}
                           </td>
                           <td className="px-2 py-2 text-center">
                             <span className="px-2 py-1 font-mono text-gray-700 bg-gray-100 rounded">
