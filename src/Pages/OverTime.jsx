@@ -1,6 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { API_BASE_URL } from '../config';
 import { isEmployeeHidden } from '../utils/employeeStatus';
+import { saveAs } from 'file-saver';
+import JSZip from 'jszip';
+import { FaBuilding, FaUserTag } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
 
 function OverTime() {
   const [employees, setEmployees]           = useState([]);
@@ -14,6 +18,20 @@ function OverTime() {
   const [otMultipliers, setOtMultipliers]   = useState({});
   const [saveStatus, setSaveStatus]         = useState('');
   const [searchTerm, setSearchTerm]         = useState('');
+
+  // Department and Designation filter states
+  const [filterDepartment, setFilterDepartment] = useState('');
+  const [filterDesignation, setFilterDesignation] = useState('');
+  const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
+  const [showDesignationFilter, setShowDesignationFilter] = useState(false);
+
+  // Unique departments and designations
+  const [uniqueDepartments, setUniqueDepartments] = useState([]);
+  const [uniqueDesignations, setUniqueDesignations] = useState([]);
+
+  // Refs for click outside
+  const departmentFilterRef = useRef(null);
+  const designationFilterRef = useRef(null);
 
   // Pagination
   const [currentPage, setCurrentPage]     = useState(1);
@@ -84,6 +102,35 @@ function OverTime() {
     setOtStatus(initialStatus);
     setOtMultipliers(initialMultipliers);
   }, [employees, selectedMonth]);
+
+  // ── Click outside handlers for filter dropdowns ──────────────────────────────
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (departmentFilterRef.current && !departmentFilterRef.current.contains(event.target)) {
+        setShowDepartmentFilter(false);
+      }
+      if (designationFilterRef.current && !designationFilterRef.current.contains(event.target)) {
+        setShowDesignationFilter(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // ── Extract unique departments and designations from employees ───────────────
+  useEffect(() => {
+    if (!employees || employees.length === 0) return;
+    const depts = new Set();
+    const designations = new Set();
+    
+    employees.forEach(emp => {
+      if (emp.department) depts.add(emp.department);
+      if (emp.role || emp.designation) designations.add(emp.role || emp.designation);
+    });
+    
+    setUniqueDepartments(Array.from(depts).sort());
+    setUniqueDesignations(Array.from(designations).sort());
+  }, [employees]);
 
   // ── Shift helpers ────────────────────────────────────────────────────────────
   const parseTimeStr = (timeStr) => {
@@ -216,9 +263,338 @@ function OverTime() {
     showSaveStatus(`❌ OT Rejected for ${emp.name}`);
   };
 
+  // ── Helper functions for Department & Designation ─────────────────────────
+  const getEmployeeDepartment = (employeeId) => {
+    const employee = employees.find(emp => emp.employeeId === employeeId);
+    return employee?.department || '-';
+  };
+
+  const getEmployeeDesignation = (employeeId) => {
+    const employee = employees.find(emp => emp.employeeId === employeeId);
+    return employee?.role || employee?.designation || '-';
+  };
+
+  // New getter for Role (same as designation but ensures role field)
+  const getEmployeeRole = (employeeId) => {
+    const employee = employees.find(emp => emp.employeeId === employeeId);
+    return employee?.role || '-';
+  };
+
+  const formatDate = (dateString) =>
+    dateString
+      ? new Date(dateString).toLocaleString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+      : "-";
+
+  // ── Download Single Employee Excel ──────────────────────────────────────────
+  const downloadSingleEmployeeExcel = async (employeeId) => {
+    try {
+      const employee = employees.find(emp => emp.employeeId === employeeId);
+      if (!employee) {
+        alert("Employee not found");
+        return;
+      }
+
+      let empAttendance = [...attendance].filter(rec => rec.employeeId === employeeId);
+
+      if (selectedMonth) {
+        empAttendance = empAttendance.filter(r => {
+          if (!r.checkInTime) return false;
+          const recordMonth = new Date(r.checkInTime).toISOString().slice(0, 7);
+          return recordMonth === selectedMonth;
+        });
+      }
+
+      if (empAttendance.length === 0) {
+        alert("No attendance records found for this employee for the selected month");
+        return;
+      }
+
+      const sortedAttendance = empAttendance.sort((a, b) => {
+        return new Date(a.checkInTime) - new Date(b.checkInTime);
+      });
+
+      const zip = new JSZip();
+
+      const shift = getEmployeeShift(employeeId);
+      const shiftInfo = shift ? `${shift.start} - ${shift.end}` : "Not Assigned";
+      const shiftHours = getEmployeeShiftHours(employeeId);
+      const otHours = computeOT(employeeId);
+      const hourlyRateVal = computeHourlyRateNumeric(employee);
+      const mult = otMultipliers[employeeId] ?? 2;
+      const approved = otStatus[employeeId] ?? true;
+      const otPayVal = (hourlyRateVal && otHours && approved) ? (hourlyRateVal * mult * otHours) : 0;
+
+      // Summary Sheet
+      const summaryWorkbook = XLSX.utils.book_new();
+      const summaryData = [{
+        "Employee ID": employeeId,
+        "Name": employee.name,
+        "Department": getEmployeeDepartment(employeeId),
+        "Designation": getEmployeeDesignation(employeeId),
+        "Month": selectedMonth,
+        "Shift Time": shiftInfo,
+        "Shift Hours": `${shiftHours}h`,
+        "Hourly Rate": hourlyRateVal ? `₹${hourlyRateVal.toFixed(2)}` : "-",
+        "OT Multiplier": `${mult}x`,
+        "OT Rate (₹/h)": hourlyRateVal ? `₹${(hourlyRateVal * mult).toFixed(2)}` : "-",
+        "Over Time Hours": formatDecimalHours(otHours),
+        "OT Pay (₹)": approved ? `₹${otPayVal.toFixed(2)}` : "0.00",
+        "Status": approved === true ? "Approved" : (approved === false ? "Rejected" : "Pending")
+      }];
+
+      const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(summaryWorkbook, summarySheet, "Summary");
+
+      const summaryExcelBuffer = XLSX.write(summaryWorkbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      let summaryFileName = `${employeeId}_${employee.name || "Employee"}_OT_Summary_${selectedMonth}.xlsx`;
+      zip.file(summaryFileName, summaryExcelBuffer, { binary: true });
+
+      // Detail Sheet
+      const detailWorkbook = XLSX.utils.book_new();
+      const detailData = sortedAttendance.map(rec => {
+        const checkIn = new Date(rec.checkInTime);
+        const checkOut = rec.checkOutTime ? new Date(rec.checkOutTime) : null;
+        const hours = rec.totalHours || rec.hours ||
+          (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
+
+        const dayOtHours = calculateOT(employeeId, hours);
+        const dayOtPay = (hourlyRateVal && dayOtHours && approved) ? (hourlyRateVal * mult * dayOtHours) : 0;
+
+        return {
+          "Date": checkIn.toLocaleDateString("en-IN"),
+          "Day": checkIn.toLocaleDateString("en-IN", { weekday: 'short' }),
+          "Department": getEmployeeDepartment(employeeId),
+          "Designation": getEmployeeDesignation(employeeId),
+          "Check-In": formatDate(rec.checkInTime),
+          "Check-Out": rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
+          "Shift Hours": `${shiftHours}h`,
+          "Actual Hours": formatDecimalHours(parseFloat(hours)),
+          "Over Time": formatDecimalHours(dayOtHours),
+          "OT Pay (₹)": approved ? dayOtPay.toFixed(2) : "0.00",
+          "Reason": rec.reason || "",
+          "Admin Comment": rec.comment || ""
+        };
+      });
+
+      const detailSheet = XLSX.utils.json_to_sheet(detailData);
+      XLSX.utils.book_append_sheet(detailWorkbook, detailSheet, "Attendance");
+
+      const detailExcelBuffer = XLSX.write(detailWorkbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      let detailFileName = `${employeeId}_${employee.name || "Employee"}_Detailed_OT_${selectedMonth}.xlsx`;
+      zip.file(detailFileName, detailExcelBuffer, { binary: true });
+
+      const zipContent = await zip.generateAsync({ type: "blob" });
+      let zipFileName = `${employeeId}_${employee.name || "Employee"}_OT_Report_${selectedMonth}.zip`;
+      saveAs(zipContent, zipFileName);
+      showSaveStatus(`✅ Downloaded ${employee.name}'s OT report (ZIP)`);
+
+    } catch (err) {
+      console.error("Error downloading single employee report:", err);
+      showSaveStatus("❌ Failed to download report");
+    }
+  };
+
+  // ── Download Combined CSV (OT Summary) ───────────────────────────────────────
+  const downloadAllOTCSV = () => {
+    if (!visibleEmployees.length) return;
+    const header = [
+      "Employee ID",
+      "Name",
+      "Role",
+      "Department",
+      "Salary (₹/mo)",
+      "Shift Hrs",
+      "Hourly Rate",
+      "Over Time Hours",
+      "OT Rate (₹/h)",
+      "OT Pay (₹)",
+      "Status"
+    ];
+    const rows = visibleEmployees.map(emp => {
+      const shiftHours = getEmployeeShiftHours(emp.employeeId);
+      const rate = computeHourlyRateNumeric(emp);
+      const mult = otMultipliers[emp.employeeId] ?? 2;
+      const otHours = computeOT(emp.employeeId);
+      const otRateVal = rate ? rate * mult : null;
+      const otPay = computeOTPay(emp.employeeId);
+      const approved = otStatus[emp.employeeId];
+      let status = "Pending";
+      if (approved === true) status = "Approved";
+      else if (approved === false) status = "Rejected";
+      return [
+        emp.employeeId,
+        emp.name,
+        getEmployeeRole(emp.employeeId),
+        getEmployeeDepartment(emp.employeeId),
+        emp.salaryPerMonth ? emp.salaryPerMonth : "-",
+        `${shiftHours}h`,
+        rate ? `₹${rate.toFixed(2)}` : "-",
+        formatDecimalHours(otHours),
+        otRateVal ? `₹${otRateVal.toFixed(2)}` : "-",
+        otPay,
+        status
+      ];
+    });
+    const csvContent = "data:text/csv;charset=utf-8," + [header, ...rows].map(e => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `OT_Summary_${selectedMonth}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // ── Download Combined Excel ──────────────────────────────────────────────────
+  const downloadCombinedExcel = async () => {
+    if (visibleEmployees.length === 0) {
+      alert("No data available to download");
+      return;
+    }
+
+    try {
+      showSaveStatus("📦 Preparing ZIP file...");
+      const zip = new JSZip();
+
+      // Combined Summary File
+      const summaryWorkbook = XLSX.utils.book_new();
+      const summaryData = visibleEmployees.map(emp => {
+        const shift = getEmployeeShift(emp.employeeId);
+        const shiftInfo = shift ? `${shift.start} - ${shift.end}` : "Not Assigned";
+        const shiftHours = getEmployeeShiftHours(emp.employeeId);
+        const otHours = computeOT(emp.employeeId);
+        const hourlyRateVal = computeHourlyRateNumeric(emp);
+        const mult = otMultipliers[emp.employeeId] ?? 2;
+        const approved = otStatus[emp.employeeId];
+        const otPay = computeOTPay(emp.employeeId);
+        
+        let statusStr = "Pending";
+        if (approved === true) statusStr = "Approved";
+        else if (approved === false) statusStr = "Rejected";
+
+        return {
+          "Employee ID": emp.employeeId,
+          "Name": emp.name,
+          "Department": getEmployeeDepartment(emp.employeeId),
+          "Designation": getEmployeeDesignation(emp.employeeId),
+          "Salary (₹/mo)": emp.salaryPerMonth || 0,
+          "Shift Time": shiftInfo,
+          "Shift Hours": `${shiftHours}h`,
+          "Hourly Rate": hourlyRateVal ? `₹${hourlyRateVal.toFixed(2)}` : "-",
+          "OT Multiplier": `${mult}x`,
+          "OT Rate (₹/h)": hourlyRateVal ? `₹${(hourlyRateVal * mult).toFixed(2)}` : "-",
+          "Over Time Hours": formatDecimalHours(otHours),
+          "OT Pay (₹)": otPay,
+          "Status": statusStr
+        };
+      });
+
+      const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(summaryWorkbook, summarySheet, "Summary");
+
+      const summaryExcelBuffer = XLSX.write(summaryWorkbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      let summaryFileName = `All_Employees_OT_Summary_${selectedMonth}.xlsx`;
+      zip.file(summaryFileName, summaryExcelBuffer, { binary: true });
+
+      // Individual reports folder
+      const employeesFolder = zip.folder("Individual_Reports");
+      for (const emp of visibleEmployees) {
+        try {
+          const empRecords = attendance.filter(rec => rec.employeeId === emp.employeeId);
+          let filteredEmpRecords = empRecords;
+          if (selectedMonth) {
+            filteredEmpRecords = empRecords.filter(r => {
+              if (!r.checkInTime) return false;
+              const recordMonth = new Date(r.checkInTime).toISOString().slice(0, 7);
+              return recordMonth === selectedMonth;
+            });
+          }
+          if (filteredEmpRecords.length === 0) continue;
+
+          const sortedEmpRecords = filteredEmpRecords.sort((a, b) => {
+            return new Date(a.checkInTime) - new Date(b.checkInTime);
+          });
+
+          const empWorkbook = XLSX.utils.book_new();
+          const shiftHours = getEmployeeShiftHours(emp.employeeId);
+          const hourlyRateVal = computeHourlyRateNumeric(emp);
+          const mult = otMultipliers[emp.employeeId] ?? 2;
+          const approved = otStatus[emp.employeeId] ?? true;
+
+          const detailData = sortedEmpRecords.map(rec => {
+            const checkIn = new Date(rec.checkInTime);
+            const checkOut = rec.checkOutTime ? new Date(rec.checkOutTime) : null;
+            const hours = rec.totalHours || rec.hours ||
+              (checkOut ? ((checkOut - checkIn) / (1000 * 60 * 60)).toFixed(2) : "0");
+
+            const dayOtHours = calculateOT(emp.employeeId, hours);
+            const dayOtPay = (hourlyRateVal && dayOtHours && approved) ? (hourlyRateVal * mult * dayOtHours) : 0;
+
+            return {
+              "Date": checkIn.toLocaleDateString("en-IN"),
+              "Day": checkIn.toLocaleDateString("en-IN", { weekday: 'short' }),
+              "Department": getEmployeeDepartment(emp.employeeId),
+              "Designation": getEmployeeDesignation(emp.employeeId),
+              "Check-In": formatDate(rec.checkInTime),
+              "Check-Out": rec.checkOutTime ? formatDate(rec.checkOutTime) : "-",
+              "Shift Hours": `${shiftHours}h`,
+              "Actual Hours": formatDecimalHours(parseFloat(hours)),
+              "Over Time": formatDecimalHours(dayOtHours),
+              "OT Pay (₹)": approved ? dayOtPay.toFixed(2) : "0.00",
+              "Reason": rec.reason || "",
+              "Admin Comment": rec.comment || ""
+            };
+          });
+
+          const empSheet = XLSX.utils.json_to_sheet(detailData);
+          XLSX.utils.book_append_sheet(empWorkbook, empSheet, "Attendance");
+
+          const empExcelBuffer = XLSX.write(empWorkbook, {
+            bookType: "xlsx",
+            type: "array",
+          });
+
+          let empFileName = `${emp.employeeId}_${emp.name || "Employee"}_OT_${selectedMonth}.xlsx`;
+          employeesFolder.file(empFileName, empExcelBuffer, { binary: true });
+
+        } catch (err) {
+          console.error(`Error creating file for employee ${emp.employeeId}:`, err);
+          continue;
+        }
+      }
+
+      const zipContent = await zip.generateAsync({ type: "blob" });
+      let zipFileName = `Complete_OT_Report_${selectedMonth}.zip`;
+      saveAs(zipContent, zipFileName);
+      showSaveStatus(`✅ Downloaded complete OT report (${visibleEmployees.length} employees)`);
+
+    } catch (err) {
+      console.error("Error downloading combined report:", err);
+      showSaveStatus("❌ Failed to download combined report");
+    }
+  };
+
   // ── Filtered + paginated list ─────────────────────────────────────────────
   const visibleEmployees = employees.filter(emp => {
     if (isEmployeeHidden(emp)) return false;
+    if (filterDepartment && emp.department !== filterDepartment) return false;
+    const empDesig = emp.role || emp.designation;
+    if (filterDesignation && empDesig !== filterDesignation) return false;
     if (!searchTerm) return true;
     const q = searchTerm.toLowerCase();
     return (
@@ -290,6 +666,96 @@ function OverTime() {
               />
             </div>
 
+            {/* Department Filter Button */}
+            <div className="relative" ref={departmentFilterRef}>
+              <button
+                onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
+                  filterDepartment 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    : 'bg-white text-gray-900 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
+              </button>
+              
+              {/* Department Filter Dropdown */}
+              {showDepartmentFilter && (
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                  <div 
+                    onClick={() => {
+                      setFilterDepartment('');
+                      setShowDepartmentFilter(false);
+                      setCurrentPage(1);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Departments
+                  </div>
+                  {uniqueDepartments.map(dept => (
+                    <div 
+                      key={dept}
+                      onClick={() => {
+                        setFilterDepartment(dept);
+                        setShowDepartmentFilter(false);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
+                        filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                      }`}
+                    >
+                      {dept}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Designation Filter Button */}
+            <div className="relative" ref={designationFilterRef}>
+              <button
+                onClick={() => setShowDesignationFilter(!showDesignationFilter)}
+                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
+                  filterDesignation 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    : 'bg-white text-gray-900 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
+              </button>
+              
+              {/* Designation Filter Dropdown */}
+              {showDesignationFilter && (
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                  <div 
+                    onClick={() => {
+                      setFilterDesignation('');
+                      setShowDesignationFilter(false);
+                      setCurrentPage(1);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Designations
+                  </div>
+                  {uniqueDesignations.map(des => (
+                    <div 
+                      key={des}
+                      onClick={() => {
+                        setFilterDesignation(des);
+                        setShowDesignationFilter(false);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
+                        filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                      }`}
+                    >
+                      {des}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Month selector */}
             <div className="relative min-w-[130px]">
               <input
@@ -303,13 +769,35 @@ function OverTime() {
 
             {/* Clear */}
             <button
-              onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
+              onClick={() => {
+                setSearchTerm('');
+                setFilterDepartment('');
+                setFilterDesignation('');
+                setCurrentPage(1);
+              }}
               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 whitespace-nowrap"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
               Clear
+            </button>
+
+            {/* Download Button */}
+            <button
+              onClick={downloadCombinedExcel}
+              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-white bg-green-600 rounded-lg shadow-sm hover:bg-green-700 whitespace-nowrap"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download ZIP
+            </button>
+            <button
+              onClick={downloadAllOTCSV}
+              className="ml-2 flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded-lg shadow-sm hover:bg-indigo-700 whitespace-nowrap"
+            >
+              CSV
             </button>
           </div>
         </div>
@@ -322,6 +810,9 @@ function OverTime() {
                 <tr>
                   <th className="py-2 px-3 text-center">Employee ID</th>
                   <th className="py-2 px-3 text-center">Name</th>
+                  <th className="py-2 px-3 text-center">Department</th>
+                  <th className="py-2 px-3 text-center">Designation</th>
+                  <th className="py-2 px-3 text-center">Role</th>
                   <th className="py-2 px-3 text-center">Salary (₹/mo)</th>
                   <th className="py-2 px-3 text-center">Shift Hrs</th>
                   <th className="py-2 px-3 text-center">Hourly Rate</th>
@@ -330,6 +821,7 @@ function OverTime() {
                   <th className="py-2 px-3 text-center">OT Pay (₹)</th>
                   <th className="py-2 px-3 text-center">Status</th>
                   <th className="py-2 px-3 text-center">Actions</th>
+                  <th className="py-2 px-3 text-center">Download</th>
                 </tr>
               </thead>
 
@@ -356,6 +848,19 @@ function OverTime() {
                         {emp.name}
                       </td>
 
+                      {/* Department */}
+                      <td className="px-2 py-2 text-center text-gray-600 whitespace-nowrap">
+                        {getEmployeeDepartment(emp.employeeId)}
+                      </td>
+
+                      {/* Designation */}
+                      <td className="px-2 py-2 text-center text-gray-600 whitespace-nowrap">
+                        {getEmployeeDesignation(emp.employeeId)}
+                      </td>
+                      {/* Role */}
+                      <td className="px-2 py-2 text-center text-gray-600 whitespace-nowrap">
+                        {getEmployeeRole(emp.employeeId)}
+                      </td>
                       {/* Salary */}
                       <td className="px-2 py-2 text-center text-gray-600">
                         {emp.salaryPerMonth ? `₹${emp.salaryPerMonth.toLocaleString()}` : '-'}
@@ -445,6 +950,17 @@ function OverTime() {
                             }`}
                           >❌</button>
                         </div>
+                      </td>
+
+                      {/* Download */}
+                      <td className="px-2 py-2 text-center">
+                        <button
+                          onClick={() => downloadSingleEmployeeExcel(emp.employeeId)}
+                          className="inline-flex items-center justify-center px-4 py-1 font-medium text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
+                          title={`Download ${emp.name}'s report (ZIP)`}
+                        >
+                          ⬇
+                        </button>
                       </td>
                     </tr>
                   );

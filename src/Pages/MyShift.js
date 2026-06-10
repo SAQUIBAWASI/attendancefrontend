@@ -453,13 +453,73 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "../config";
 
+const parseTimeParts = (timeStr) => {
+  if (!timeStr) return [10, 0];
+  const trimmed = timeStr.trim();
+  const ampmMatch = trimmed.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (ampmMatch) {
+    let hours = Number(ampmMatch[1]);
+    const minutes = Number(ampmMatch[2]);
+    const period = ampmMatch[3].toUpperCase();
+    if (period === "PM" && hours !== 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
+    return [hours, minutes];
+  }
+  const [hours, minutes] = trimmed.split(":").map(Number);
+  return [hours || 10, minutes || 0];
+};
+
+const formatDate = (dateValue) => {
+  if (!dateValue) return "Daily";
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "Daily";
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const buildShiftList = (shiftData) => {
+  if (!shiftData) return [];
+
+  const shiftsList = [
+    {
+      ...shiftData,
+      shiftPeriod: "Current",
+      date: shiftData.effectiveFrom || shiftData.assignedDate || null,
+    },
+  ];
+
+  const scheduled = shiftData.scheduledChange;
+  if (scheduled?.shiftType) {
+    const timeRange = scheduled.selectedTimeRange || "";
+    const [startTime, endTime] = timeRange.split(" - ");
+    shiftsList.push({
+      _id: `${shiftData._id}-upcoming`,
+      shiftType: scheduled.shiftType,
+      shiftName: scheduled.shiftName || `Shift ${scheduled.shiftType}`,
+      shiftCategory: scheduled.shiftCategory || shiftData.shiftCategory,
+      startTime: startTime?.trim() || "",
+      endTime: endTime?.trim() || "",
+      timeRange,
+      description: scheduled.selectedDescription,
+      date: scheduled.effectiveFrom,
+      isBrakeShift: scheduled.isBrakeShift,
+      shiftPeriod: "Upcoming",
+      isScheduled: true,
+    });
+  }
+
+  return shiftsList;
+};
+
 const EmployeeShift = () => {
   const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [statusUpdates, setStatusUpdates] = useState({});
 
-  // Get employee ID from localStorage
   const employeeDataRaw = localStorage.getItem("employeeData");
   let employeeId = null;
   if (employeeDataRaw) {
@@ -471,7 +531,6 @@ const EmployeeShift = () => {
     }
   }
 
-  // Fetch shifts data
   useEffect(() => {
     const fetchShifts = async () => {
       if (!employeeId) {
@@ -486,11 +545,9 @@ const EmployeeShift = () => {
           `${API_BASE_URL}/shifts/employee/${employeeId}`
         );
 
-        if (res.data && res.data.success && res.data.data) {
-          const shiftData = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
-          setShifts(shiftData);
-          console.log("✅ Shift data loaded:", shiftData);
-        } else if (res.data && res.data.success === false) {
+        if (res.data?.success && res.data.data) {
+          setShifts(buildShiftList(res.data.data));
+        } else if (res.data?.success === false) {
           setError(res.data.message || "❌ No shifts assigned yet.");
         } else {
           setError("❌ Invalid response from server");
@@ -506,19 +563,18 @@ const EmployeeShift = () => {
     fetchShifts();
   }, [employeeId]);
 
-  // Determine shift status for each shift
   const determineShiftStatus = (shift) => {
     if (!shift) return "Not Available";
+    if (shift.isScheduled) return "Scheduled";
 
     const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    const shiftDate = shift.date || today;
+    const today = now.toISOString().split("T")[0];
+    const shiftDate = shift.date
+      ? new Date(shift.date).toISOString().split("T")[0]
+      : today;
 
-    const startTimeStr = shift.startTime || "10:00";
-    const endTimeStr = shift.endTime || "19:00";
-
-    const [startH, startM] = startTimeStr.split(":").map(Number);
-    const [endH, endM] = endTimeStr.split(":").map(Number);
+    const [startH, startM] = parseTimeParts(shift.startTime);
+    const [endH, endM] = parseTimeParts(shift.endTime);
 
     let startTime = new Date(shiftDate);
     startTime.setHours(startH, startM, 0, 0);
@@ -530,16 +586,11 @@ const EmployeeShift = () => {
       endTime.setDate(endTime.getDate() + 1);
     }
 
-    if (now >= startTime && now <= endTime) {
-      return "Ongoing";
-    } else if (now < startTime) {
-      return "Upcoming";
-    } else {
-      return "Completed";
-    }
+    if (now >= startTime && now <= endTime) return "Ongoing";
+    if (now < startTime) return "Upcoming";
+    return "Completed";
   };
 
-  // Update status for all shifts
   useEffect(() => {
     if (shifts.length === 0) return;
 
@@ -560,6 +611,12 @@ const EmployeeShift = () => {
     return () => clearInterval(interval);
   }, [shifts]);
 
+  const getStatusClass = (status) => {
+    if (status === "Ongoing") return "bg-green-200 text-green-800";
+    if (status === "Upcoming" || status === "Scheduled") return "bg-blue-200 text-blue-800";
+    return "bg-gray-200 text-gray-700";
+  };
+
   if (loading) return <p className="p-4">Loading...</p>;
   if (error) return <p className="p-4 text-red-600">{error}</p>;
 
@@ -567,12 +624,6 @@ const EmployeeShift = () => {
     <div className="flex flex-col min-h-screen bg-gray-100">
       <main className="flex-1 p-0 sm:p-0 lg:p-8">
         <div className="max-w-9xl p-0 mx-auto bg-white rounded-lg shadow-md">
-          <div className="mb-0">
-            {/* <h2 className="text-2xl font-bold text-blue-900">
-              My Shift Schedule
-            </h2> */}
-          </div>
-
           {shifts.length === 0 ? (
             <div className="py-8 text-center">
               <div className="mb-4 text-5xl text-gray-700">⏰</div>
@@ -586,9 +637,10 @@ const EmployeeShift = () => {
               <table className="min-w-full">
                 <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
                   <tr>
+                    <th className="px-4 py-2">Period</th>
                     <th className="px-4 py-2">Shift Type</th>
                     <th className="px-4 py-2">Shift Name</th>
-                    <th className="px-4 py-2">Date</th>
+                    <th className="px-4 py-2">Effective From</th>
                     <th className="px-4 py-2">Time Range</th>
                     <th className="px-4 py-2">Start Time</th>
                     <th className="px-4 py-2">End Time</th>
@@ -599,13 +651,24 @@ const EmployeeShift = () => {
                   {shifts.map((shift, index) => (
                     <tr
                       key={shift._id || index}
-                      className="border-b hover:bg-white"
+                      className={`border-b hover:bg-gray-50 ${
+                        shift.shiftPeriod === "Upcoming" ? "bg-purple-50" : ""
+                      }`}
                     >
+                      <td className="p-2 border">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-semibold ${
+                            shift.shiftPeriod === "Upcoming"
+                              ? "bg-purple-100 text-purple-800"
+                              : "bg-emerald-100 text-emerald-800"
+                          }`}
+                        >
+                          {shift.shiftPeriod}
+                        </span>
+                      </td>
                       <td className="p-2 capitalize border">{shift.shiftType}</td>
                       <td className="p-2 border">{shift.shiftName}</td>
-                      <td className="p-2 border">
-                        {shift.date ? new Date(shift.date).toLocaleDateString() : "Daily"}
-                      </td>
+                      <td className="p-2 border">{formatDate(shift.date)}</td>
                       <td className="p-2 font-medium border">
                         {shift.timeRange || `${shift.startTime} - ${shift.endTime}`}
                       </td>
@@ -613,12 +676,9 @@ const EmployeeShift = () => {
                       <td className="p-2 border">{shift.endTime}</td>
                       <td className="p-2 border">
                         <span
-                          className={`px-2 py-1 rounded text-xs font-semibold ${statusUpdates[index] === "Ongoing"
-                            ? "bg-green-200 text-green-800"
-                            : statusUpdates[index] === "Upcoming"
-                              ? "bg-blue-200 text-blue-800"
-                              : "bg-gray-200 text-gray-700"
-                            }`}
+                          className={`px-2 py-1 rounded text-xs font-semibold ${getStatusClass(
+                            statusUpdates[index]
+                          )}`}
                         >
                           {statusUpdates[index] || "Checking..."}
                         </span>
@@ -636,3 +696,7 @@ const EmployeeShift = () => {
 };
 
 export default EmployeeShift;
+
+
+
+

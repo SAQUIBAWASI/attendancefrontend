@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaBirthdayCake, FaAward, FaWalking } from 'react-icons/fa';
+import { FaBirthdayCake, FaAward, FaWalking, FaClock } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
 const CelebrationCard = ({ type, name, detail, onAction, isPersonal = false }) => {
@@ -40,6 +40,19 @@ const CelebrationCard = ({ type, name, detail, onAction, isPersonal = false }) =
       badgeBg: "bg-amber-500",
       buttonText: "View Details",
       message: `${name} ${name.endsWith('s') ? 'are' : 'is'} on ${detail || 'leave'} today.`
+    },
+    shift: {
+      icon: <FaClock className="text-xs" />,
+      title: isPersonal ? "Upcoming Shift" : "Upcoming Shift",
+      gradient: "from-violet-500 to-purple-600",
+      lightBg: "bg-violet-50",
+      textColor: "text-violet-600",
+      borderColor: "border-violet-100",
+      badgeBg: "bg-violet-500",
+      buttonText: "Details",
+      message: isPersonal
+        ? `Changing to ${name} · ${detail}`
+        : `${name} changes on ${detail}`
     }
   };
 

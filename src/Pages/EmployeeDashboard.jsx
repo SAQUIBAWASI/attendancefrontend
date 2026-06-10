@@ -68,9 +68,11 @@ const EmployeeDashboard = () => {
   const [birthdaysToday, setBirthdaysToday] = useState([]);
   const [anniversariesToday, setAnniversariesToday] = useState([]);
   const [leavesToday, setLeavesToday] = useState([]);
+  const [upcomingShift, setUpcomingShift] = useState(null);
+  const [currentShift, setCurrentShift] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState(""); // "birthday" or "leave"
+  const [modalType, setModalType] = useState(""); // "birthday", "leave", or "shift"
 
   useEffect(() => {
     if (!email) return;
@@ -164,20 +166,38 @@ const EmployeeDashboard = () => {
             setAssignedLocation("Not Assigned");
           }
 
-          // 8. Shift Timing
-          const fetchShift = async (url) => {
-            const res = await axios.get(`${url}api/shifts/employee/${targetId}`);
-            const data = res.data?.data || res.data;
-            if (data?.startTime) return `${data.startTime} - ${data.endTime}`;
-            if (data?.employeeAssignment?.startTime) return `${data.employeeAssignment.startTime} - ${data.employeeAssignment.endTime}`;
-            return null;
-          };
-
+          // 8. Shift Timing & Upcoming Shift
           try {
-            let shiftTime = await fetchShift(API_5000);
-            setShiftTiming(shiftTime || "No Shift Assigned");
+            const shiftRes = await axios.get(`${API_5000}api/shifts/employee/${targetId}`);
+            const shiftData = shiftRes.data?.data || shiftRes.data;
+
+            if (shiftData?.startTime) {
+              setShiftTiming(`${shiftData.startTime} - ${shiftData.endTime}`);
+            } else if (shiftData?.employeeAssignment?.startTime) {
+              setShiftTiming(`${shiftData.employeeAssignment.startTime} - ${shiftData.employeeAssignment.endTime}`);
+            } else {
+              setShiftTiming("No Shift Assigned");
+            }
+
+            setCurrentShift(shiftData || null);
+
+            const scheduled = shiftData?.scheduledChange;
+            if (scheduled?.shiftType) {
+              setUpcomingShift({
+                shiftType: scheduled.shiftType,
+                shiftName: scheduled.shiftName || `Shift ${scheduled.shiftType}`,
+                timeRange: scheduled.selectedTimeRange || "Not specified",
+                description: scheduled.selectedDescription || "Shift timing",
+                effectiveFrom: scheduled.effectiveFrom,
+                shiftCategory: scheduled.shiftCategory || shiftData?.shiftCategory || "Regular",
+              });
+            } else {
+              setUpcomingShift(null);
+            }
           } catch (e) {
             setShiftTiming("Not Assigned");
+            setUpcomingShift(null);
+            setCurrentShift(null);
           }
 
           // 9. Fetch Birthdays
@@ -610,9 +630,18 @@ const EmployeeDashboard = () => {
           const deptAnniversaries = anniversariesToday.filter(a => a.email !== email);
           const deptLeaves = leavesToday.filter(l => l.email !== email);
 
-          if (!isMyBirthday && !myAnniversary && deptBirthdays.length === 0 && deptAnniversaries.length === 0 && deptLeaves.length === 0) return null;
+          if (!isMyBirthday && !myAnniversary && !upcomingShift && deptBirthdays.length === 0 && deptAnniversaries.length === 0 && deptLeaves.length === 0) return null;
 
-          const totalEvents = (isMyBirthday ? 1 : 0) + (myAnniversary ? 1 : 0) + (deptBirthdays.length > 0 ? 1 : 0) + (deptAnniversaries.length > 0 ? 1 : 0) + (deptLeaves.length > 0 ? 1 : 0);
+          const totalEvents = (isMyBirthday ? 1 : 0) + (myAnniversary ? 1 : 0) + (upcomingShift ? 1 : 0) + (deptBirthdays.length > 0 ? 1 : 0) + (deptAnniversaries.length > 0 ? 1 : 0) + (deptLeaves.length > 0 ? 1 : 0);
+
+          const formatShiftDate = (dateValue) => {
+            if (!dateValue) return "soon";
+            return new Date(dateValue).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            });
+          };
 
           return (
             <div className="mb-4 sm:mb-6 bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
@@ -650,6 +679,17 @@ const EmployeeDashboard = () => {
                   />
                 )}
 
+                {/* Upcoming Shift Change */}
+                {upcomingShift && (
+                  <CelebrationCard
+                    type="shift"
+                    name={`Shift ${upcomingShift.shiftType}`}
+                    detail={formatShiftDate(upcomingShift.effectiveFrom)}
+                    isPersonal={true}
+                    onAction={() => { setModalType("shift"); setShowModal(true); }}
+                  />
+                )}
+
                 {/* Departmental Birthdays */}
                 {deptBirthdays.length > 0 && (
                   <CelebrationCard 
@@ -684,21 +724,72 @@ const EmployeeDashboard = () => {
               {/* Celebration Modal */}
               {showModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-                  <div className="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl animate-in zoom-in-95 duration-200">
-                    <div className="flex items-center justify-between p-4 border-b border-gray-50">
-                        <h3 className="text-lg font-bold text-gray-700">
+                  <div className={`w-full overflow-hidden bg-white shadow-2xl rounded-xl animate-in zoom-in-95 duration-200 ${modalType === 'shift' ? 'max-w-sm' : 'max-w-md'}`}>
+                    <div className={`flex items-center justify-between border-b ${modalType === 'shift' ? 'px-3 py-2 border-slate-100' : 'p-4 border-gray-50'}`}>
+                        <h3 className={`font-semibold text-gray-800 ${modalType === 'shift' ? 'text-sm' : 'text-lg font-bold text-gray-700'}`}>
                           {modalType === 'birthday' ? `Today's Birthdays` : 
                            modalType === 'anniversary' ? `Work Anniversaries` :
+                           modalType === 'shift' ? `Upcoming Shift Change` :
                            `Employees on Leave`}
                         </h3>
                       <button 
                         onClick={() => setShowModal(false)}
-                        className="p-2 text-slate-500 hover:text-slate-500 hover:bg-white rounded-xl transition-all"
+                        className={`text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-all ${modalType === 'shift' ? 'p-1' : 'p-2 rounded-xl'}`}
                       >
-                        <FiX className="text-xl" />
+                        <FiX className={modalType === 'shift' ? 'text-base' : 'text-xl'} />
                       </button>
                     </div>
-                    <div className="p-2 max-h-[60vh] overflow-y-auto">
+                    <div className={`overflow-y-auto ${modalType === 'shift' ? 'p-3' : 'p-2 max-h-[60vh]'}`}>
+                      {modalType === 'shift' && upcomingShift ? (
+                        <div className="space-y-2.5">
+                          <div className="flex items-center justify-between px-2.5 py-1.5 rounded-md bg-slate-50 border border-slate-100">
+                            <span className="text-[10px] font-medium text-slate-500">Effective from</span>
+                            <span className="text-[11px] font-semibold text-slate-800">
+                              {formatShiftDate(upcomingShift.effectiveFrom)}
+                            </span>
+                          </div>
+
+                          <div className="overflow-hidden border rounded-lg border-slate-200">
+                            <div className="grid grid-cols-[1fr_auto_1fr] items-stretch">
+                              <div className="px-2.5 py-2">
+                                <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 mb-1">Current</p>
+                                <p className="text-[11px] font-semibold text-slate-800 leading-tight">
+                                  {currentShift?.shiftType ? `Shift ${currentShift.shiftType}` : "Not assigned"}
+                                </p>
+                                <p className="text-[10px] text-slate-500 truncate mt-0.5">
+                                  {currentShift?.shiftName || "—"}
+                                </p>
+                                <p className="text-[10px] font-medium text-emerald-600 mt-1">
+                                  {currentShift?.timeRange || shiftTiming}
+                                </p>
+                              </div>
+
+                              <div className="flex items-center justify-center px-1 border-x border-slate-100 bg-slate-50/80">
+                                <span className="text-[10px] font-semibold text-slate-400">→</span>
+                              </div>
+
+                              <div className="px-2.5 py-2 bg-violet-50/40">
+                                <p className="text-[9px] font-semibold uppercase tracking-wide text-violet-500 mb-1">Upcoming</p>
+                                <p className="text-[11px] font-semibold text-slate-800 leading-tight">
+                                  Shift {upcomingShift.shiftType}
+                                </p>
+                                <p className="text-[10px] text-slate-500 truncate mt-0.5">
+                                  {upcomingShift.shiftName}
+                                </p>
+                                <p className="text-[10px] font-medium text-violet-600 mt-1">
+                                  {upcomingShift.timeRange}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {(upcomingShift.shiftCategory || upcomingShift.description) && (
+                            <p className="px-0.5 text-[10px] leading-snug text-slate-500">
+                              {[upcomingShift.shiftCategory, upcomingShift.description].filter(Boolean).join(" · ")}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
                       <div className="grid grid-cols-1 gap-2 p-2">
                         {(modalType === 'birthday' ? deptBirthdays : modalType === 'anniversary' ? deptAnniversaries : deptLeaves).map((item, idx) => (
                           <div key={idx} className="flex items-center justify-between p-4 bg-white/50 rounded-xl hover:bg-white border border-transparent hover:border-gray-200 hover:shadow-sm transition-all group">
@@ -736,11 +827,23 @@ const EmployeeDashboard = () => {
                           </div>
                         ))}
                       </div>
+                      )}
                     </div>
-                    <div className="p-4 bg-white border-t border-gray-200 flex justify-end">
+                    <div className={`bg-white border-t border-gray-200 flex ${modalType === 'shift' ? 'justify-between gap-2 px-3 py-2' : 'justify-end p-4'}`}>
+                       {modalType === 'shift' && (
+                         <button
+                           onClick={() => {
+                             setShowModal(false);
+                             navigate("/my-shift");
+                           }}
+                           className="px-3 py-1.5 text-[10px] font-semibold text-violet-700 border border-violet-200 rounded-md hover:bg-violet-50 transition-all"
+                         >
+                           View Schedule
+                         </button>
+                       )}
                        <button 
                          onClick={() => setShowModal(false)}
-                         className="px-5 py-2 bg-gray-100 text-gray-900 rounded-lg text-xs font-bold hover:bg-gray-100 transition-all shadow-md shadow-gray-200"
+                         className={`bg-gray-100 text-gray-700 rounded-md text-xs font-semibold hover:bg-gray-200 transition-all ${modalType === 'shift' ? 'px-3 py-1.5 text-[10px] ml-auto' : 'px-5 py-2 font-bold shadow-md shadow-gray-200'}`}
                        >
                          Close
                        </button>

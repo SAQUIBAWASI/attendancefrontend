@@ -11886,7 +11886,9 @@ const ShiftManagement = () => {
   const [assignForm, setAssignForm] = useState({
     employeeId: '',
     employeeName: '',
-    shiftType: ''
+    shiftType: '',
+    effectiveFromMonth: '',
+    effectiveFromDate: ''
   });
 
   // Filter states
@@ -12361,6 +12363,57 @@ const ShiftManagement = () => {
     return employee?.department || '-';
   };
 
+  const formatMonthInputValue = (dateValue) => {
+    if (!dateValue) return '';
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return '';
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${date.getFullYear()}-${month}`;
+  };
+
+  const formatDateInputValue = (dateValue) => {
+    if (!dateValue) return '';
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return '';
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${date.getFullYear()}-${month}-${day}`;
+  };
+
+  const formatScheduledDate = (dateValue) => {
+    if (!dateValue) return '';
+    return new Date(dateValue).toLocaleDateString('en-GB');
+  };
+
+  const getDefaultFutureMonth = () => {
+    const date = new Date();
+    date.setMonth(date.getMonth() + 1, 1);
+    return formatMonthInputValue(date);
+  };
+
+  const getDefaultFutureDate = () => {
+    const date = new Date();
+    date.setMonth(date.getMonth() + 1, 1);
+    return formatDateInputValue(date);
+  };
+
+  const openEditAssignment = (assignment) => {
+    const scheduled = assignment.employeeAssignment?.scheduledChange;
+    const effectiveDate = scheduled?.effectiveFrom
+      ? formatDateInputValue(scheduled.effectiveFrom)
+      : getDefaultFutureDate();
+
+    setEditingAssignment(assignment);
+    setAssignForm({
+      employeeId: assignment.employeeAssignment?.employeeId || assignment.employeeId,
+      employeeName: assignment.employeeAssignment?.employeeName || assignment.employeeName,
+      shiftType: scheduled?.shiftType || assignment.shiftType,
+      effectiveFromMonth: effectiveDate ? effectiveDate.slice(0, 7) : getDefaultFutureMonth(),
+      effectiveFromDate: effectiveDate
+    });
+    setShowAssignModal(true);
+  };
+
   const getEmployeeDesignation = (employeeId) => {
     const employee = allEmployees.find(emp => 
       emp.employeeId === employeeId || emp._id === employeeId
@@ -12403,7 +12456,9 @@ const ShiftManagement = () => {
         setAssignForm({
           employeeId: '',
           employeeName: '',
-          shiftType: ''
+          shiftType: '',
+          effectiveFromMonth: '',
+          effectiveFromDate: ''
         });
       } else {
         setError(response.data.message || 'Failed to assign shift');
@@ -12420,30 +12475,41 @@ const ShiftManagement = () => {
     setSuccess('');
 
     try {
-      const { employeeName, shiftType } = assignForm;
+      const { employeeName, shiftType, effectiveFromMonth, effectiveFromDate } = assignForm;
 
       if (!employeeName || !shiftType) {
         setError('Please fill all required fields');
         return;
       }
 
+      if (!effectiveFromDate && !effectiveFromMonth) {
+        setError('Please select an effective from date');
+        return;
+      }
+
+      const payload = { employeeName, shiftType };
+      if (effectiveFromDate) {
+        payload.effectiveFrom = effectiveFromDate;
+      } else if (effectiveFromMonth) {
+        payload.effectiveFrom = `${effectiveFromMonth}-01`;
+      }
+
       const response = await axios.put(
         `${API_BASE_URL}/shifts/assignments/${editingAssignment._id}`,
-        {
-          employeeName,
-          shiftType
-        }
+        payload
       );
 
       if (response.data.success) {
-        setSuccess('✅ Assignment updated successfully!');
+        setSuccess(response.data.message || '✅ Assignment updated successfully!');
         fetchData();
         setShowAssignModal(false);
         setEditingAssignment(null);
         setAssignForm({
           employeeId: '',
           employeeName: '',
-          shiftType: ''
+          shiftType: '',
+          effectiveFromMonth: '',
+          effectiveFromDate: ''
         });
       } else {
         setError(response.data.message || 'Failed to update assignment');
@@ -12981,6 +13047,7 @@ const ShiftManagement = () => {
                           <th className="px-2 py-1.5 text-center text-[10px]">Desig</th>
                           <th className="px-2 py-1.5 text-center text-[10px]">Shift</th>
                           <th className="px-2 py-1.5 text-center text-[10px]">Time</th>
+                          <th className="px-2 py-1.5 text-center text-[10px]">Upcoming</th>
                           <th className="px-2 py-1.5 text-center text-[10px]">Actions</th>
                         </tr>
                       </thead>
@@ -12995,6 +13062,7 @@ const ShiftManagement = () => {
                             const shift = masterShifts.find(s => s.shiftType === assignment.shiftType);
                             const isBrakeShift = shift?.isBrakeShift || false;
                             const rowColor = getShiftRowColor(assignment.shiftType);
+                            const scheduled = assignment.employeeAssignment?.scheduledChange;
 
                             return (
                               <tr key={assignment._id} className={`${rowColor} border-b hover:bg-white`}>
@@ -13010,18 +13078,19 @@ const ShiftManagement = () => {
                                 <td className="px-2 py-1.5 text-[10px] text-center">
                                   {isBrakeShift ? getBrakeShiftTimeDisplay(shift) : getEmployeeTimeRange(assignment)}
                                 </td>
+                                <td className="px-2 py-1.5 text-[10px] text-center">
+                                  {scheduled?.shiftType ? (
+                                    <span className="px-1.5 py-0.5 text-[9px] font-medium text-purple-700 bg-purple-100 rounded-full">
+                                      Shift {scheduled.shiftType} from {formatScheduledDate(scheduled.effectiveFrom)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-400">—</span>
+                                  )}
+                                </td>
                                 <td className="px-2 py-1.5 text-center">
                                   <div className="flex justify-center gap-1">
                                     <button
-                                      onClick={() => {
-                                        setEditingAssignment(assignment);
-                                        setAssignForm({
-                                          employeeId: assignment.employeeAssignment?.employeeId || assignment.employeeId,
-                                          employeeName: assignment.employeeAssignment?.employeeName || assignment.employeeName,
-                                          shiftType: assignment.shiftType
-                                        });
-                                        setShowAssignModal(true);
-                                      }}
+                                      onClick={() => openEditAssignment(assignment)}
                                       className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                                       title="Edit"
                                     >
@@ -13041,7 +13110,7 @@ const ShiftManagement = () => {
                           })
                         ) : (
                           <tr>
-                            <td colSpan="7" className="py-4 text-center text-gray-500 text-xs">
+                            <td colSpan="8" className="py-4 text-center text-gray-500 text-xs">
                               No assignments found
                             </td>
                           </tr>
@@ -13627,7 +13696,9 @@ const ShiftManagement = () => {
                   setAssignForm({
                     employeeId: '',
                     employeeName: '',
-                    shiftType: ''
+                    shiftType: '',
+                    effectiveFromMonth: '',
+                    effectiveFromDate: ''
                   });
                 }} className="text-lg text-gray-500 hover:text-gray-500">
                   &times;
@@ -13636,6 +13707,11 @@ const ShiftManagement = () => {
 
               <form onSubmit={editingAssignment ? handleUpdateAssignment : handleAssignShift} className="p-3">
                 <div className="space-y-2">
+                  {editingAssignment && (
+                    <div className="p-2 mb-1 text-[10px] text-blue-800 bg-blue-50 border border-blue-100 rounded-md">
+                      Current shift stays active until the selected date. Use month for quick selection, or pick an exact date below.
+                    </div>
+                  )}
                   <div>
                     <label className="block mb-1 text-xs text-gray-700">
                       Employee ID {editingAssignment && '(Cannot change)'}
@@ -13702,6 +13778,55 @@ const ShiftManagement = () => {
                       })}
                     </select>
                   </div>
+
+                  {editingAssignment && (
+                    <>
+                      <div>
+                        <label className="block mb-1 text-xs text-gray-700">
+                          Effective From (Month)
+                        </label>
+                        <input
+                          type="month"
+                          value={assignForm.effectiveFromMonth}
+                          onChange={(e) => {
+                            const month = e.target.value;
+                            setAssignForm((prev) => ({
+                              ...prev,
+                              effectiveFromMonth: month,
+                              effectiveFromDate: month ? `${month}-01` : prev.effectiveFromDate,
+                            }));
+                          }}
+                          className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
+                        />
+                        <p className="mt-1 text-[10px] text-gray-500">
+                          Quick select: sets the date to the 1st of the chosen month.
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block mb-1 text-xs text-gray-700">
+                          Effective From (Date) *
+                        </label>
+                        <input
+                          type="date"
+                          value={assignForm.effectiveFromDate}
+                          onChange={(e) => {
+                            const date = e.target.value;
+                            setAssignForm((prev) => ({
+                              ...prev,
+                              effectiveFromDate: date,
+                              effectiveFromMonth: date ? date.slice(0, 7) : prev.effectiveFromMonth,
+                            }));
+                          }}
+                          className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500"
+                          required
+                        />
+                        <p className="mt-1 text-[10px] text-gray-500">
+                          Pick the exact date the new shift should start. Today applies immediately; a future date schedules the change.
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-2 pt-3 mt-3 border-t">
@@ -13713,7 +13838,9 @@ const ShiftManagement = () => {
                       setAssignForm({
                         employeeId: '',
                         employeeName: '',
-                        shiftType: ''
+                        shiftType: '',
+                        effectiveFromMonth: '',
+                        effectiveFromDate: ''
                       });
                     }}
                     className="px-3 py-1.5 text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
@@ -13792,13 +13919,7 @@ const ShiftManagement = () => {
                               <button
                                 onClick={() => {
                                   setShowViewModal(false);
-                                  setEditingAssignment(emp);
-                                  setAssignForm({
-                                    employeeId: emp.employeeAssignment?.employeeId || emp.employeeId,
-                                    employeeName: emp.employeeAssignment?.employeeName || emp.employeeName,
-                                    shiftType: emp.shiftType
-                                  });
-                                  setShowAssignModal(true);
+                                  openEditAssignment(emp);
                                 }}
                                 className="px-2 py-1 text-[8px] bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200"
                               >
