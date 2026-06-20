@@ -2793,18 +2793,10 @@ export default function AttendanceCapture() {
   const [allLocations, setAllLocations] = useState([]);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // Break related states
-  const [onBreak, setOnBreak] = useState(false);
-  const [breakStartTime, setBreakStartTime] = useState(null);
-  const [breakReason, setBreakReason] = useState("");
-  const [showBreakModal, setShowBreakModal] = useState(false);
-  const [currentAttendanceId, setCurrentAttendanceId] = useState(null);
-  const [currentBreakId, setCurrentBreakId] = useState(null);
-  const [totalBreakMinutes, setTotalBreakMinutes] = useState(0);
 
   // Current time state
   const [currentTime, setCurrentTime] = useState("");
+  const [currentDate, setCurrentDate] = useState("");
 
   // Get employeeId & email from navigation state or localStorage
   useEffect(() => {
@@ -2939,30 +2931,8 @@ export default function AttendanceCapture() {
         
         if (todayRecord) {
           setCheckedIn(true);
-          setCurrentAttendanceId(todayRecord._id);
-          setTotalBreakMinutes(todayRecord.totalBreakMinutes || 0);
-          
-          const isOnBreakStatus = todayRecord.status === "on-break";
-          setOnBreak(isOnBreakStatus);
-          
-          if (isOnBreakStatus && todayRecord.breaks && todayRecord.breaks.length > 0) {
-            const lastBreak = todayRecord.breaks[todayRecord.breaks.length - 1];
-            if (lastBreak.breakIn && !lastBreak.breakOut) {
-              setBreakStartTime(lastBreak.breakIn);
-              setCurrentBreakId(lastBreak._id);
-              setBreakReason(lastBreak.reason || "");
-            }
-          } else {
-            setBreakStartTime(null);
-            setCurrentBreakId(null);
-          }
         } else {
           setCheckedIn(false);
-          setOnBreak(false);
-          setBreakStartTime(null);
-          setCurrentAttendanceId(null);
-          setCurrentBreakId(null);
-          setTotalBreakMinutes(0);
         }
       } catch (err) {
         console.error("Error fetching attendance:", err);
@@ -2971,14 +2941,15 @@ export default function AttendanceCapture() {
     if (employeeId) fetchTodayAttendance();
   }, [employeeId]);
 
-  // Update current time
+  // Update current time and date
   useEffect(() => {
-    const updateTime = () => {
+    const updateDateTime = () => {
       const now = new Date();
       setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setCurrentDate(now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }));
     };
-    updateTime();
-    const interval = setInterval(updateTime, 60000);
+    updateDateTime();
+    const interval = setInterval(updateDateTime, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -3005,50 +2976,7 @@ export default function AttendanceCapture() {
     );
   };
 
-  // Handle Break-In
-  const handleBreakIn = async () => {
-    if (!employeeId) return alert("Employee data missing.");
-    if (!breakReason.trim()) return alert("Please select a reason for break.");
-
-    setSubmitting(true);
-    try {
-      await axios.post(`${cleanBaseUrl}/api/attendance/break-in`, {
-        employeeId,
-        reason: breakReason
-      });
-      
-      alert("Break started successfully!");
-      window.location.reload();
-    } catch (err) {
-      console.error("Break-in error:", err);
-      alert(err.response?.data?.message || "Break-in failed.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Handle Break-Out
-  const handleBreakOut = async () => {
-    if (!employeeId) return alert("Employee data missing.");
-    if (!onBreak) return alert("You are not on a break!");
-
-    setSubmitting(true);
-    try {
-      await axios.post(`${cleanBaseUrl}/api/attendance/break-out`, {
-        employeeId
-      });
-      
-      alert("Break ended successfully!");
-      window.location.reload();
-    } catch (err) {
-      console.error("Break-out error:", err);
-      alert(err.response?.data?.message || "Break-out failed.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Handle Check-In - WITH LOCATION VALIDATION
+  // Handle Check-In
   const handleCheckIn = async () => {
     if (!position) return alert("Please capture your current location first.");
     if (!employeeId || !employeeEmail) return alert("Employee data missing.");
@@ -3080,10 +3008,9 @@ export default function AttendanceCapture() {
     }
   };
 
-  // Handle Check-Out - WITH LOCATION (because backend expects it)
+  // Handle Check-Out
   const handleCheckOut = async () => {
     if (!employeeId) return alert("Employee data missing.");
-    if (onBreak) return alert("Please end your break before checking out.");
     
     // Get location if available, otherwise use last known position
     let lat = null;
@@ -3120,11 +3047,7 @@ export default function AttendanceCapture() {
 
     setSubmitting(true);
     try {
-      const payload = {
-        employeeId
-      };
-      
-      // Add location if available
+      const payload = { employeeId };
       if (lat && lng) {
         payload.latitude = lat;
         payload.longitude = lng;
@@ -3163,8 +3086,6 @@ export default function AttendanceCapture() {
         setTimeout(() => {
           if (!checkedIn) {
             handleCheckIn();
-          } else if (onBreak) {
-            handleBreakOut();
           } else {
             handleCheckOut();
           }
@@ -3209,11 +3130,7 @@ export default function AttendanceCapture() {
       if (!checkedIn && diff >= minSwipeDistance) {
         handleCheckIn();
       } else if (checkedIn && diff <= -minSwipeDistance) {
-        if (onBreak) {
-          handleBreakOut();
-        } else {
-          handleCheckOut();
-        }
+        handleCheckOut();
       }
       setTimeout(() => {
         setSwipeProgress(0);
@@ -3243,98 +3160,112 @@ export default function AttendanceCapture() {
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [checkedIn, onBreak, submitting, position, employeeId, assignedLocation]);
-
-  // Calculate break duration
-  const getBreakDuration = () => {
-    if (!breakStartTime) return null;
-    const start = new Date(breakStartTime);
-    const now = new Date();
-    const diffMins = Math.floor((now - start) / 60000);
-    const hours = Math.floor(diffMins / 60);
-    const mins = diffMins % 60;
-    if (hours > 0) return `${hours}h ${mins}m`;
-    return `${mins}m`;
-  };
-
-  // Format total break minutes
-  const formatTotalBreakMinutes = (minutes) => {
-    if (!minutes || minutes === 0) return "0 min";
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) return `${hours}h ${mins}m`;
-    return `${mins} min`;
-  };
+  }, [checkedIn, submitting, position, employeeId, assignedLocation]);
 
   const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-0">
-      {/* Header */}
-      <div className="flex justify-between items-center p-2 bg-white shadow-sm">
-        <div><h1 className="text-xl font-bold text-gray-900">Attendance</h1></div>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-blue-600">{currentTime}</div>
-          <div className="text-xs text-gray-500">Current Time</div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
+      <div className="max-w-md mx-auto">
+        {/* Header with Time */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-white/50">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+            <span className="text-xs font-medium text-gray-600">Live</span>
+            <div className="w-px h-4 bg-gray-300"></div>
+            <span className="text-xs font-medium text-gray-700">{currentDate}</span>
+            <div className="w-px h-4 bg-gray-300"></div>
+            <span className="text-sm font-bold text-indigo-600">{currentTime}</span>
+          </div>
         </div>
-      </div>
 
-      <div className="p-3 max-w-md mx-auto">
-        {/* Employee Info Card */}
-        <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <span className="text-gray-900 font-bold">{employeeName ? employeeName.charAt(0).toUpperCase() : "U"}</span>
+        {/* Employee Info Card - Glassmorphism */}
+        <div className="relative overflow-hidden bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 p-5 mb-4">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-cyan-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+          
+          <div className="relative flex items-center gap-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+              <span className="text-2xl font-bold text-white">
+                {employeeName ? employeeName.charAt(0).toUpperCase() : "U"}
+              </span>
             </div>
             <div className="flex-1 min-w-0">
-              {employeeName && <h2 className="text-base font-bold text-gray-900 truncate">{employeeName}</h2>}
-              {employeeDepartment && <p className="text-xs text-purple-600 font-medium">{employeeDepartment}</p>}
-              {employeeId && <p className="text-xs text-gray-500">ID: {employeeId}</p>}
-              {employeeEmail && <p className="text-xs text-gray-500 truncate">{employeeEmail}</p>}
+              <h2 className="text-lg font-bold text-gray-900 truncate">{employeeName || "Employee"}</h2>
+              <p className="text-sm text-indigo-600 font-medium">{employeeDepartment || "Department"}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-xs text-gray-500">ID: {employeeId || "N/A"}</span>
+                <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                <span className="text-xs text-gray-500 truncate">{employeeEmail || "email"}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Location Card */}
-        <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-sm font-semibold text-gray-900">Location Status</h3>
-            <button onClick={() => setIsLocationModalOpen(true)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Select Location</button>
-            <div className={`px-2 py-1 rounded-full text-xs font-medium ${position ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-700'}`}>
-              {position ? 'Captured ✓' : 'Required for check-in'}
+        {/* Location Card - Glassmorphism */}
+        <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 p-4 mb-4">
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-indigo-100 rounded-xl flex items-center justify-center">
+                <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                </svg>
+              </div>
+              <h3 className="text-sm font-semibold text-gray-900">Location</h3>
             </div>
+            <button onClick={() => setIsLocationModalOpen(true)} className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+              Change Location
+            </button>
           </div>
 
           {loadingLocation ? (
-            <div className="animate-pulse"><div className="h-3 bg-gray-200 rounded w-3/4 mb-1"></div><div className="h-3 bg-gray-200 rounded w-1/2"></div></div>
+            <div className="animate-pulse space-y-2">
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+            </div>
           ) : assignedLocation ? (
             <div>
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center flex-shrink-0">
-                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              <div className="flex items-center gap-2 p-2 bg-indigo-50/50 rounded-xl">
+                <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                   </svg>
                 </div>
                 <div className="min-w-0">
                   <h4 className="text-sm font-medium text-gray-900 truncate">{assignedLocation.name || 'Unnamed Location'}</h4>
                   <p className="text-xs text-gray-500">Radius: {ONSITE_RADIUS_M}m</p>
                 </div>
-              </div>
-              {position && distance != null && !checkedIn && (
-                <div className="mt-2 p-2 bg-gray-50 rounded-lg">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs text-gray-700">Distance:</span>
-                    <span className={`text-sm font-bold ${distance <= ONSITE_RADIUS_M ? 'text-green-600' : 'text-red-600'}`}>{distance}m</span>
+                {position && (
+                  <div className={`ml-auto px-2.5 py-1 rounded-full text-xs font-medium ${distance <= ONSITE_RADIUS_M ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {distance}m
                   </div>
-                  <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
-                    <div className={`h-full ${distance <= ONSITE_RADIUS_M ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: `${Math.min((distance / ONSITE_RADIUS_M) * 100, 100)}%` }}></div>
+                )}
+              </div>
+
+              {position && distance != null && !checkedIn && (
+                <div className="mt-3 p-3 bg-gray-50/80 rounded-xl">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-xs text-gray-600">Distance from office</span>
+                    <span className={`text-sm font-bold ${distance <= ONSITE_RADIUS_M ? 'text-green-600' : 'text-red-600'}`}>
+                      {distance}m
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-500 ${distance <= ONSITE_RADIUS_M ? 'bg-gradient-to-r from-green-400 to-green-500' : 'bg-gradient-to-r from-red-400 to-red-500'}`} 
+                      style={{ width: `${Math.min((distance / ONSITE_RADIUS_M) * 100, 100)}%` }}
+                    ></div>
                   </div>
                   {distance > ONSITE_RADIUS_M && !isOnsiteOnlyDepartment && (
-                    <p className="text-xs text-red-500 mt-1">⚠️ Outside office radius - Reason required for check-in</p>
+                    <p className="text-xs text-red-500 mt-1.5">⚠️ Outside office radius - Reason required</p>
                   )}
                 </div>
               )}
-              <button onClick={fetchLocation} className="w-full mt-2 py-2 px-3 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-1">
+
+              <button 
+                onClick={fetchLocation} 
+                className="w-full mt-3 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg shadow-indigo-500/25 transition-all duration-200 flex items-center justify-center gap-2"
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                 </svg>
@@ -3342,184 +3273,193 @@ export default function AttendanceCapture() {
               </button>
             </div>
           ) : (
-            <div className="text-center py-2">
-              <p className="text-xs text-gray-500">No location assigned. Contact admin.</p>
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-500">No location assigned. Contact admin.</p>
             </div>
           )}
         </div>
 
-        {/* Break Status Card */}
-        {checkedIn && (
-          <div className={`rounded-xl shadow-sm p-3 mb-2 ${onBreak ? 'bg-orange-50 border border-orange-200' : 'bg-white'}`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${onBreak ? 'bg-orange-500' : 'bg-green-100'}`}>
-                  <svg className={`w-4 h-4 ${onBreak ? 'text-white' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{onBreak ? "On Break" : "Working"}</p>
-                  {onBreak && breakStartTime && (
-                    <p className="text-xs text-orange-600">Current break: {getBreakDuration()}</p>
-                  )}
-                  {totalBreakMinutes > 0 && !onBreak && (
-                    <p className="text-xs text-green-600">Total break today: {formatTotalBreakMinutes(totalBreakMinutes)}</p>
-                  )}
-                  {totalBreakMinutes > 0 && onBreak && (
-                    <p className="text-xs text-orange-600 mt-0.5">Total break today: {formatTotalBreakMinutes(totalBreakMinutes)}</p>
-                  )}
-                </div>
-              </div>
-              {!onBreak ? (
-                <button onClick={() => setShowBreakModal(true)} disabled={submitting} className="px-3 py-1.5 text-xs font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600">Take Break</button>
-              ) : (
-                <button onClick={handleBreakOut} disabled={submitting} className="px-3 py-1.5 text-xs font-medium text-white bg-green-500 rounded-lg hover:bg-green-600">End Break</button>
-              )}
-            </div>
-          </div>
-        )}
-
         {/* Reason Selection - Only for check-in when outside radius */}
         {!checkedIn && !isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && (
-          <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Reason Required</h3>
-            <select value={reason} onChange={(e) => setReason(e.target.value)} className="w-full p-2 text-sm border border-gray-300 rounded-lg">
+          <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 p-4 mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <svg className="w-3.5 h-3.5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-gray-900">Reason Required</span>
+              <span className="ml-auto text-xs text-red-500">Outside: {distance}m</span>
+            </div>
+            <select 
+              value={reason} 
+              onChange={(e) => setReason(e.target.value)} 
+              className="w-full p-2.5 text-sm border border-gray-200 rounded-xl bg-white/50 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            >
               <option value="">-- Select Reason --</option>
-              <option value="Field Work">Field Work</option>
-              <option value="Work From Home">Work From Home</option>
-              <option value="Client Meeting">Client Meeting</option>
-              <option value="Other">Other</option>
+              <option value="Field Work">📋 Field Work</option>
+              <option value="Work From Home">🏠 Work From Home</option>
+              <option value="Client Meeting">🤝 Client Meeting</option>
+              <option value="Other">📝 Other</option>
             </select>
-            <p className="text-xs text-gray-500 mt-1">You're outside the assigned area ({distance}m)</p>
           </div>
         )}
 
-        {/* Show message for onsite-only departments when outside radius */}
+        {/* Onsite-only department warning */}
         {!checkedIn && isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && (
-          <div className="bg-red-50 rounded-xl shadow-sm p-3 mb-2 border border-red-200">
-            <div className="flex items-center space-x-2">
-              <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-              </svg>
-              <p className="text-sm text-red-800 font-medium">
-                {employeeDepartment} department must be within {ONSITE_RADIUS_M}m to mark attendance.
-                <br />
-                <span className="text-xs">Current distance: {distance}m</span>
-              </p>
+          <div className="bg-red-50/80 backdrop-blur-sm rounded-2xl shadow-xl border border-red-200/50 p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-red-800">
+                  {employeeDepartment} department must be within {ONSITE_RADIUS_M}m
+                </p>
+                <p className="text-xs text-red-600 mt-0.5">Current distance: {distance}m</p>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Attendance Card */}
-        <div className="bg-white rounded-xl shadow-sm p-3">
-          <div className="flex items-center justify-between mb-3">
+        {/* Attendance Swipe Card */}
+        <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 p-5">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-semibold text-gray-900">Today's Attendance</h3>
               <p className="text-xs text-gray-500">
-                {!checkedIn ? "Ready to check in" : (onBreak ? "On break - swipe to end break" : "Checked in - swipe to check out")}
+                {!checkedIn ? "Ready to check in" : "Checked in - swipe to check out"}
               </p>
             </div>
-            <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-              !checkedIn ? 'bg-blue-50 text-blue-700' : (onBreak ? 'bg-orange-50 text-orange-700' : 'bg-emerald-50 text-emerald-700')
+            <div className={`px-3 py-1.5 rounded-xl text-xs font-medium ${
+              !checkedIn ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'
             }`}>
-              {!checkedIn ? "Not Checked In" : (onBreak ? "On Break" : "Checked In")}
+              {!checkedIn ? "Not Checked In" : "Checked In ✅"}
             </div>
           </div>
 
           <div className="text-center mb-3">
-            <p className="text-sm text-gray-700 font-medium">
-              {!checkedIn ? "Swipe right → to check in" : (onBreak ? "Swipe left ← to end break" : "Swipe left ← to check out")}
+            <p className="text-sm text-gray-600 font-medium">
+              {!checkedIn ? "Swipe right → to check in" : "Swipe left ← to check out"}
             </p>
           </div>
 
           <div className="mb-3">
-            <div ref={swipeAreaRef} className={`relative overflow-hidden rounded-lg ${(submitting) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`} onClick={handleManualSwipe}>
+            <div 
+              ref={swipeAreaRef} 
+              className={`relative overflow-hidden rounded-xl ${submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              onClick={handleManualSwipe}
+            >
               {!checkedIn ? (
-                <div className="relative bg-gradient-to-r from-blue-500 to-blue-600 h-12">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500" style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? 'none' : 'width 0.2s ease-out' }}></div>
-                  <div className="absolute inset-0 flex items-center justify-between px-3">
-                    <div className="flex items-center gap-1 text-white"><span className="text-sm font-bold">CHECK IN</span></div>
-                    <div className="flex items-center gap-1 text-white"><span className="text-xs">Swipe →</span>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                <div className="relative bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-14">
+                  <div 
+                    className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400" 
+                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? 'none' : 'width 0.2s ease-out' }}
+                  ></div>
+                  <div className="absolute inset-0 flex items-center justify-between px-4">
+                    <div className="flex items-center gap-2 text-white">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      <span className="text-sm font-bold">CHECK IN</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-white/90">
+                      <span className="text-xs">Swipe →</span>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                      </svg>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className={`relative h-12 ${onBreak ? 'bg-gradient-to-r from-orange-500 to-orange-600' : 'bg-gradient-to-r from-red-500 to-red-600'}`}>
-                  <div className="absolute right-0 top-0 bottom-0 bg-gradient-to-r from-red-400 to-red-500" style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? 'none' : 'width 0.2s ease-out' }}></div>
-                  <div className="absolute inset-0 flex items-center justify-between px-3">
-                    <div className="flex items-center gap-1 text-white"><span className="text-xs">← Swipe</span>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                <div className="relative bg-gradient-to-r from-red-500 to-orange-500 h-14">
+                  <div 
+                    className="absolute right-0 top-0 bottom-0 bg-gradient-to-r from-red-400 to-orange-400" 
+                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? 'none' : 'width 0.2s ease-out' }}
+                  ></div>
+                  <div className="absolute inset-0 flex items-center justify-between px-4">
+                    <div className="flex items-center gap-1 text-white/90">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                      </svg>
+                      <span className="text-xs">Swipe</span>
                     </div>
-                    <div className="flex items-center gap-1 text-white"><span className="text-sm font-bold">{onBreak ? "END BREAK" : "CHECK OUT"}</span></div>
+                    <div className="flex items-center gap-2 text-white">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                      <span className="text-sm font-bold">CHECK OUT</span>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
-            <p className="text-center text-xs text-gray-500 mt-1">
-              {!checkedIn ? "Need location to check in" : "Swipe to check out or end break"}
+            <p className="text-center text-xs text-gray-500 mt-2">
+              {!checkedIn ? "📍 Need location to check in" : "👆 Swipe or tap to check out"}
             </p>
           </div>
 
           {submitting && (
             <div className="text-center py-2">
-              <div className="inline-flex items-center gap-1"><div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div><span className="text-xs">Processing...</span></div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-xl">
+                <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm text-indigo-600 font-medium">Processing...</span>
+              </div>
             </div>
           )}
         </div>
 
-        <div className="text-center text-gray-500 text-xs mt-2 pt-2 border-t border-gray-200">
-          <p>Location required for check-in</p>
-          {isOnsiteOnlyDepartment && (
-            <p className="text-xs text-blue-600 mt-1">
-              {employeeDepartment} department: Must be within {ONSITE_RADIUS_M}m for check-in
-            </p>
-          )}
+        {/* Footer */}
+        <div className="text-center mt-4">
+          <p className="text-xs text-gray-400">
+            Location required for check-in • {isOnsiteOnlyDepartment ? `${employeeDepartment} department: Within ${ONSITE_RADIUS_M}m required` : 'Outside radius requires reason'}
+          </p>
         </div>
       </div>
 
-      {/* Break Reason Modal */}
-      {showBreakModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="w-full max-w-sm bg-white rounded-xl shadow-lg">
-            <div className="p-4 border-b"><h3 className="text-lg font-bold text-gray-900">Take a Break</h3><p className="text-xs text-gray-500">Select reason</p></div>
-            <div className="p-4">
-              <select value={breakReason} onChange={(e) => setBreakReason(e.target.value)} className="w-full p-2 text-sm border border-gray-300 rounded-lg" autoFocus>
-                <option value="">-- Select Reason --</option>
-                <option value="Lunch Break">🍽️ Lunch Break</option>
-                <option value="Tea Break">☕ Tea Break</option>
-                <option value="Bathroom Break">🚽 Bathroom Break</option>
-                <option value="Short Break">⏸️ Short Break</option>
-                <option value="Meeting">📋 Meeting</option>
-                <option value="Other">📝 Other</option>
-              </select>
-            </div>
-            <div className="flex gap-2 p-4 border-t">
-              <button onClick={() => { setShowBreakModal(false); setBreakReason(""); }} className="flex-1 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg">Cancel</button>
-              <button onClick={handleBreakIn} disabled={!breakReason.trim() || submitting} className="flex-1 py-2 text-sm text-white bg-orange-500 rounded-lg disabled:opacity-50">Start Break</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Location Selection Modal */}
+      {/* Location Selection Modal - Styled */}
       {isLocationModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col animate-scale-in">
             <div className="p-4 border-b flex justify-between items-center">
               <h3 className="text-lg font-bold text-gray-900">Select Location</h3>
-              <button onClick={() => setIsLocationModalOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+              <button onClick={() => setIsLocationModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700">
+                ✕
+              </button>
             </div>
-            <div className="p-4">
-              <input type="text" placeholder="Search location..." className="w-full p-2 mb-3 border border-gray-300 rounded-lg" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} autoFocus />
+            <div className="p-4 flex-1 overflow-hidden">
+              <div className="relative mb-3">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input 
+                  type="text" 
+                  placeholder="Search location..." 
+                  className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" 
+                  value={searchQuery} 
+                  onChange={(e) => setSearchQuery(e.target.value)} 
+                  autoFocus 
+                />
+              </div>
               <div className="overflow-y-auto max-h-[50vh] space-y-2">
-                {filteredLocations.map((loc) => (
-                  <div key={loc._id} onClick={() => handleSelectLocation(loc)} className="p-3 border rounded-xl hover:bg-blue-50 cursor-pointer">
-                    <h4 className="font-medium">{loc.name}</h4>
-                    <p className="text-xs text-gray-500">{loc.fullAddress || "No address"}</p>
+                {filteredLocations.length > 0 ? (
+                  filteredLocations.map((loc) => (
+                    <div 
+                      key={loc._id} 
+                      onClick={() => handleSelectLocation(loc)} 
+                      className="p-3 border border-gray-100 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/50 cursor-pointer transition-all"
+                    >
+                      <h4 className="font-medium text-gray-900">{loc.name}</h4>
+                      <p className="text-xs text-gray-500 mt-0.5">{loc.fullAddress || "No address"}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p className="text-sm">No locations found</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>

@@ -855,7 +855,7 @@
 //   const toggleDropdown = (e, name) => {
 //     e.stopPropagation();
 //     e.preventDefault();
-    
+
 //     if (openDropdown !== name) {
 //       if (!isMobile && isCollapsed) {
 //         setIsCollapsed(false);
@@ -973,21 +973,21 @@
 //     if (path) {
 //       navigate(path);
 //     }
-    
+
 //     if (action) {
 //       action();
 //     }
-    
+
 //     setOpenDropdown(null);
-    
+
 //     if (isMobile) {
 //       setIsCollapsed(true);
 //     }
-    
+
 //     if (onLinkClick) {
 //       onLinkClick();
 //     }
-    
+
 //     setHoveredItem(null);
 //   };
 
@@ -995,11 +995,11 @@
 //   const handleDropdownItemClick = (path) => {
 //     navigate(path);
 //     setOpenDropdown(null);
-    
+
 //     if (isMobile) {
 //       setIsCollapsed(true);
 //     }
-    
+
 //     if (onLinkClick) {
 //       onLinkClick();
 //     }
@@ -1297,7 +1297,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
   const toggleDropdown = (e, name) => {
     e.stopPropagation();
     e.preventDefault();
-    
+
     if (openDropdown !== name) {
       if (!isMobile && isCollapsed) {
         setIsCollapsed(false);
@@ -1315,7 +1315,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         {},
         { withCredentials: true }
       );
-    } catch (error) {}
+    } catch (error) { }
     localStorage.clear();
     navigate("/admin-login");
   };
@@ -1351,6 +1351,11 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       icon: <i className="ri-calendar-fill"></i>,
       name: "Leaves",
       path: "/leavelist",
+    },
+    {
+      icon: <i className="ri-exchange-fill"></i>,
+      name: "Comp Off Requests",
+      path: "/comp-off-requests",
     },
     {
       icon: <i className="ri-calendar-fill"></i>,
@@ -1442,31 +1447,31 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
     if (path) {
       navigate(path);
     }
-    
+
     if (action) {
       action();
     }
-    
+
     setOpenDropdown(null);
-    
+
     if (isMobile) {
       setIsCollapsed(true);
     }
-    
+
     if (onLinkClick) {
       onLinkClick();
     }
   };
 
   // Handle dropdown item click
-  const handleDropdownItemClick = (path) => { 
+  const handleDropdownItemClick = (path) => {
     navigate(path);
     setOpenDropdown(null);
-    
+
     if (isMobile) {
       setIsCollapsed(true);
     }
-    
+
     if (onLinkClick) {
       onLinkClick();
     }
@@ -1488,15 +1493,14 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         onMouseEnter={handleMouseEnterSidebar}
         onMouseLeave={handleMouseLeaveSidebar}
         className={`fixed top-0 left-0 h-full bg-[#1D4ED8] text-white z-50 transition-all duration-300 border-blue-500 border-blue-500
-        ${
-          isMobile
+        ${isMobile
             ? isCollapsed
               ? "-translate-x-full w-52"
               : "translate-x-0 w-52"
             : isCollapsed
-            ? "w-16"
-            : "w-52"
-        }`}
+              ? "w-16"
+              : "w-52"
+          }`}
       >
         {/* Header */}
         <div className="flex items-center justify-center px-3 font-bold tracking-tight bg-blue-700 border-blue-500 h-14">
@@ -1524,13 +1528,12 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
               {item.dropdown ? (
                 <>
                   <div
-                    className={`group flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
-                      isDropdownActive(item.dropdown)
+                    className={`group flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${isDropdownActive(item.dropdown)
                         ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
                         : openDropdown === item.name
-                        ? "bg-[#1E3A8A]"
-                        : "hover:bg-blue-600"
-                    }`}
+                          ? "bg-[#1E3A8A]"
+                          : "hover:bg-blue-600"
+                      }`}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (item.dropdown && item.dropdown.length > 0) {
@@ -1544,13 +1547,12 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                     }}
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className={`text-lg transition-colors duration-200 ${
-                        isDropdownActive(item.dropdown)
+                      <span className={`text-lg transition-colors duration-200 ${isDropdownActive(item.dropdown)
                           ? "text-white"
                           : openDropdown === item.name
-                          ? "text-white"
-                          : "text-white group-hover:text-white"
-                      }`}>
+                            ? "text-white"
+                            : "text-white group-hover:text-white"
+                        }`}>
                         {item.icon}
                       </span>
                       {!isCollapsed && (
@@ -1567,13 +1569,12 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                         )}
                         <FaChevronDown
                           onClick={(e) => toggleDropdown(e, item.name)}
-                          className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600 rounded cursor-pointer ${
-                            isDropdownActive(item.dropdown)
+                          className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600 rounded cursor-pointer ${isDropdownActive(item.dropdown)
                               ? "text-white"
                               : openDropdown === item.name
-                              ? "text-white"
-                              : "text-white"
-                          } ${openDropdown === item.name ? "rotate-180" : ""}`}
+                                ? "text-white"
+                                : "text-white"
+                            } ${openDropdown === item.name ? "rotate-180" : ""}`}
                           style={{
                             width: '20px',
                             height: '20px',
@@ -1593,11 +1594,10 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                           <Link
                             to={sub.path}
                             onClick={() => handleDropdownItemClick(sub.path)}
-                            className={`block py-1 text-[13px] transition-colors  ${
-                              isActive(sub.path)
+                            className={`block py-1 text-[13px] transition-colors  ${isActive(sub.path)
                                 ? "text-white font-semibold"
                                 : "text-white hover:text-white"
-                            }`}
+                              }`}
                           >
                             <div className="flex items-center gap-2">
                               {isActive(sub.path) && (
@@ -1614,17 +1614,15 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
               ) : (
                 <div
                   onClick={() => handleItemClick(item.path, item.action)}
-                  className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
-                    isActive(item.path)
+                  className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${isActive(item.path)
                       ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
                       : "hover:bg-blue-600"
-                  }`}
+                    }`}
                 >
-                  <span className={`text-lg transition-colors duration-200 ${
-                    isActive(item.path)
+                  <span className={`text-lg transition-colors duration-200 ${isActive(item.path)
                       ? "text-white"
                       : "text-white group-hover:text-white"
-                  }`}>
+                    }`}>
                     {item.icon}
                   </span>
                   {!isCollapsed && (

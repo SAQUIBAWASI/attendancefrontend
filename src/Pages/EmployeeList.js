@@ -2277,10 +2277,11 @@
 
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
-import { FaBuilding, FaEdit, FaEye, FaFileExcel, FaMapMarkerAlt, FaSearch, FaTrash, FaUserTag } from "react-icons/fa";
+import { FaBuilding, FaEdit, FaEye, FaFileExcel, FaMapMarkerAlt, FaSearch, FaTrash, FaUserTag, FaChartLine } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import "../index.css";
+
 const EmployeeList = () => {
   const [employees, setEmployees] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -2313,6 +2314,17 @@ const EmployeeList = () => {
     totalCount: 0,
     limit: 10,
   });
+
+  // ============================================
+  // HIKE MODULE STATES
+  // ============================================
+  const [showHikeModal, setShowHikeModal] = useState(false);
+  const [selectedEmployeeForHike, setSelectedEmployeeForHike] = useState(null);
+  const [hikeType, setHikeType] = useState("percentage");
+  const [hikeValue, setHikeValue] = useState("");
+  const [hikeReason, setHikeReason] = useState("");
+  const [hikeEffectiveDate, setHikeEffectiveDate] = useState("");
+  const [submittingHike, setSubmittingHike] = useState(false);
   
   const navigate = useNavigate();
 
@@ -2381,9 +2393,8 @@ const EmployeeList = () => {
     setUniqueDesignations(Array.from(designations).sort());
   };
 
-  // ✅ SIMPLE FIX: Check if employee is active based on isActive field or status
+  // Check if employee is active
   const isEmployeeHidden = (emp) => {
-    // Check multiple possible fields
     if (emp.isActive === false) return true;
     if (emp.status === 'inactive') return true;
     if (emp.status === false) return true;
@@ -2393,14 +2404,13 @@ const EmployeeList = () => {
   const activeEmployees = employees.filter(emp => !isEmployeeHidden(emp));
   const inactiveEmployees = employees.filter(emp => isEmployeeHidden(emp));
 
-  // Filter employees based on search and filters
+  // Filter employees
   const filteredEmployees = employees.filter((emp) => {
     if (showInactiveOnly && !isEmployeeHidden(emp)) return false;
     if (!showInactiveOnly && isEmployeeHidden(emp)) return false;
     
     const searchTermLower = searchTerm.toLowerCase().trim();
     
-    // Search by multiple fields
     const matchesSearch = searchTerm === "" || (
       emp.name?.toLowerCase().includes(searchTermLower) ||
       emp.email?.toLowerCase().includes(searchTermLower) ||
@@ -2410,10 +2420,7 @@ const EmployeeList = () => {
       emp.role?.toLowerCase().includes(searchTermLower)
     );
     
-    // Filter by Department
     const matchesDept = filterDepartment === "" || emp.department === filterDepartment;
-    
-    // Filter by Designation
     const matchesDesig = filterDesignation === "" || (emp.role || emp.designation) === filterDesignation;
     
     return matchesSearch && matchesDept && matchesDesig;
@@ -2426,7 +2433,6 @@ const EmployeeList = () => {
     return aHidden ? 1 : -1;
   });
 
-  // Update pagination when filtered results change
   useEffect(() => {
     setPagination(prev => ({
       ...prev,
@@ -2444,7 +2450,99 @@ const EmployeeList = () => {
   const handleCloseModal = () => setSelectedEmployee(null);
   const handleEdit = (employee) => navigate(`/addemployee`, { state: { employee } });
 
-  // ✅ FIXED: Status toggle with switch
+  // ============================================
+  // HIKE FUNCTIONS
+  // ============================================
+  const handleOpenHikeModal = (employee) => {
+    setSelectedEmployeeForHike(employee);
+    setHikeType("percentage");
+    setHikeValue("");
+    setHikeReason("");
+    setHikeEffectiveDate(new Date().toISOString().split('T')[0]);
+    setShowHikeModal(true);
+  };
+
+  const handleCloseHikeModal = () => {
+    setShowHikeModal(false);
+    setSelectedEmployeeForHike(null);
+    setHikeType("percentage");
+    setHikeValue("");
+    setHikeReason("");
+    setHikeEffectiveDate("");
+    setSubmittingHike(false);
+  };
+
+  const calculateNewSalary = () => {
+    if (!selectedEmployeeForHike) return null;
+    const currentSalary = selectedEmployeeForHike.salaryPerMonth || 0;
+    const value = parseFloat(hikeValue) || 0;
+    
+    if (hikeType === "percentage") {
+      return Math.round(currentSalary * (1 + value / 100));
+    } else {
+      return Math.round(currentSalary + value);
+    }
+  };
+
+  const handleSubmitHike = async () => {
+    if (!selectedEmployeeForHike) return;
+    if (!hikeValue || parseFloat(hikeValue) <= 0) {
+      alert("Please enter a valid hike value");
+      return;
+    }
+    if (!hikeEffectiveDate) {
+      alert("Please select effective date");
+      return;
+    }
+
+    setSubmittingHike(true);
+    try {
+      const payload = {
+        incrementType: hikeType,
+        incrementValue: parseFloat(hikeValue),
+        effectiveDate: hikeEffectiveDate,
+        reason: hikeReason || "Salary hike",
+        newComponents: {
+          basicPay: selectedEmployeeForHike.basicPay || 0,
+          hra: selectedEmployeeForHike.hra || 0,
+          conveyanceAllowance: selectedEmployeeForHike.conveyanceAllowance || 0,
+          medicalAllowance: selectedEmployeeForHike.medicalAllowance || 0,
+          performanceAllowance: selectedEmployeeForHike.performanceAllowance || 0,
+          specialAllowance: selectedEmployeeForHike.specialAllowance || 0,
+          ctc: selectedEmployeeForHike.ctc || 0,
+          ptax: selectedEmployeeForHike.ptax || 0,
+          gmcAmount: selectedEmployeeForHike.gmcAmount || 0,
+          otherDeductions: selectedEmployeeForHike.otherDeductions || 0
+        }
+      };
+
+      const response = await axios.put(
+        `http://localhost:5001/api/employees/applysalary-increment/${selectedEmployeeForHike._id}`,
+        payload
+      );
+
+      if (response.data && response.data.success) {
+        alert(`✅ Salary hike applied successfully!\nNew Salary: ₹${response.data.employee?.salaryPerMonth?.toLocaleString() || 'Updated'}`);
+        
+        const refreshResponse = await axios.get(
+          `${API_BASE_URL}/employees/get-employees`
+        );
+        setEmployees(refreshResponse.data);
+        extractUniqueValues(refreshResponse.data);
+        
+        handleCloseHikeModal();
+      } else {
+        alert("Failed to apply hike");
+      }
+    } catch (error) {
+      console.error("Error applying hike:", error);
+      alert(error.response?.data?.message || "Failed to apply salary hike");
+    } finally {
+      setSubmittingHike(false);
+    }
+  };
+
+  // Status toggle
   const handleToggleStatus = async (emp) => {
     const isCurrentlyHidden = isEmployeeHidden(emp);
     const newStatus = isCurrentlyHidden ? 'active' : 'inactive';
@@ -2455,20 +2553,13 @@ const EmployeeList = () => {
     setLoading(true);
     
     try {
-      // Try with status field
-      const updateData = {
-        status: newStatus
-      };
-
-      console.log("Updating status for:", emp._id, "Data:", updateData);
-
+      const updateData = { status: newStatus };
       const response = await axios.put(
         `${API_BASE_URL}/employees/update/${emp._id}`,
         updateData
       );
 
       if (response.data.success) {
-        // Update local state
         setEmployees(employees.map(e => 
           e._id === emp._id 
             ? { ...e, status: newStatus } 
@@ -2480,18 +2571,12 @@ const EmployeeList = () => {
       }
     } catch (error) {
       console.error("Error updating employee status:", error);
-      
-      // If backend doesn't accept 'status' field, try 'isActive'
       try {
-        const updateData2 = {
-          isActive: !isCurrentlyHidden
-        };
-        
+        const updateData2 = { isActive: !isCurrentlyHidden };
         const retryResponse = await axios.put(
           `${API_BASE_URL}/employees/update/${emp._id}`,
           updateData2
         );
-        
         if (retryResponse.data.success) {
           setEmployees(employees.map(e => 
             e._id === emp._id 
@@ -2587,7 +2672,6 @@ const EmployeeList = () => {
     return pageNumbers;
   };
 
-  // ✅ FIXED: Assign location - Use correct endpoint
   const assignLocation = async () => {
     if (!selectedLocationId) {
       alert("Please select a location");
@@ -2596,35 +2680,27 @@ const EmployeeList = () => {
 
     setLoading(true);
     try {
-      console.log("Assigning location for employee:", selectedEmployeeForLocation.employeeId);
-      
-      // Method 1: Use the dedicated assign-location endpoint
       const response = await axios.put(
         `${API_BASE_URL}/employees/assign-location/${selectedEmployeeForLocation.employeeId}`,
         { locationId: selectedLocationId }
       );
 
       if (response.data.success) {
-        // Update local state
         setEmployees(employees.map((emp) =>
           emp._id === selectedEmployeeForLocation._id
             ? { ...emp, location: selectedLocationId }
             : emp
         ));
-
         alert("✅ Location assigned successfully!");
         handleCloseLocationModal();
       }
     } catch (error) {
       console.error("Error assigning location:", error);
-      
-      // Method 2: Fallback to general update
       try {
         const fallbackResponse = await axios.put(
           `${API_BASE_URL}/employees/update/${selectedEmployeeForLocation._id}`,
           { location: selectedLocationId }
         );
-
         if (fallbackResponse.data.success) {
           setEmployees(employees.map((emp) =>
             emp._id === selectedEmployeeForLocation._id
@@ -2717,7 +2793,6 @@ const EmployeeList = () => {
         {/* Filters - Single Row */}
         <div className="p-2 mb-3 bg-white rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
-            {/* ID/Name Search */}
             <div className="relative flex-1 min-w-[200px]">
               <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
               <input
@@ -2729,7 +2804,6 @@ const EmployeeList = () => {
               />
             </div>
 
-            {/* Department Filter Button */}
             <div className="relative" ref={departmentFilterRef}>
               <button
                 onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
@@ -2742,7 +2816,6 @@ const EmployeeList = () => {
                 <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
               </button>
               
-              {/* Department Filter Dropdown */}
               {showDepartmentFilter && (
                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
                   <div 
@@ -2772,7 +2845,6 @@ const EmployeeList = () => {
               )}
             </div>
 
-            {/* Designation Filter Button */}
             <div className="relative" ref={designationFilterRef}>
               <button
                 onClick={() => setShowDesignationFilter(!showDesignationFilter)}
@@ -2785,7 +2857,6 @@ const EmployeeList = () => {
                 <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
               </button>
               
-              {/* Designation Filter Dropdown */}
               {showDesignationFilter && (
                 <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
                   <div 
@@ -2815,7 +2886,6 @@ const EmployeeList = () => {
               )}
             </div>
 
-            {/* Status Filter Tabs */}
             <div className="flex items-center gap-1 p-0.5 bg-gray-100 rounded-lg">
               <button
                 onClick={() => {
@@ -2845,7 +2915,6 @@ const EmployeeList = () => {
               </button>
             </div>
 
-            {/* Export Excel Button */}
             <button
               onClick={exportToExcel}
               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-800 whitespace-nowrap"
@@ -2854,7 +2923,6 @@ const EmployeeList = () => {
               <span>Export</span>
             </button>
 
-            {/* Add Employee Button */}
             <button
               onClick={() => navigate("/addemployee")}
               className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
@@ -2865,7 +2933,6 @@ const EmployeeList = () => {
               <span>Add</span>
             </button>
 
-            {/* Clear Filters Button */}
             {(filterDepartment || filterDesignation || searchTerm) && (
               <button
                 onClick={() => {
@@ -2953,7 +3020,15 @@ const EmployeeList = () => {
                               <FaEdit size={14} />
                             </button>
                             
-                            {/* Location Button */}
+                            {/* Hike Button */}
+                            <button 
+                              className="p-1 text-purple-600 transition-colors hover:text-purple-700" 
+                              onClick={() => handleOpenHikeModal(emp)} 
+                              title="Add Salary Hike"
+                            >
+                              <FaChartLine size={14} />
+                            </button>
+                            
                             <button 
                               className="p-1 text-blue-600 transition-colors hover:text-green-700" 
                               onClick={() => handleAssignLocation(emp)} 
@@ -2962,7 +3037,6 @@ const EmployeeList = () => {
                               <FaMapMarkerAlt size={14} />
                             </button>
                             
-                            {/* Status Toggle Switch */}
                             <div className="flex items-center gap-1">
                               <ToggleSwitch 
                                 isActive={!isHidden} 
@@ -3000,7 +3074,6 @@ const EmployeeList = () => {
           {/* Pagination */}
           {filteredEmployees.length > 0 && (
             <div className="bg-white px-2 py-1.5 flex flex-wrap items-center justify-between gap-2 border-t border-gray-200">
-              {/* Left Side - Showing Info + Select */}
               <div className="flex flex-wrap items-center gap-1 text-xs text-gray-700">
                 <span>Showing</span>
                 <span className="font-medium">{indexOfFirst + 1}</span>
@@ -3010,7 +3083,6 @@ const EmployeeList = () => {
                 <span className="font-medium">{filteredEmployees.length}</span>
                 <span>results</span>
 
-                {/* Select Dropdown */}
                 <select
                   value={pagination.limit}
                   onChange={(e) => {
@@ -3026,7 +3098,6 @@ const EmployeeList = () => {
                 </select>
               </div>
 
-              {/* Pagination buttons */}
               <div className="flex items-center gap-1">
                 <button
                   onClick={handlePrevPage}
@@ -3075,32 +3146,165 @@ const EmployeeList = () => {
           )}
         </div>
 
-        {/* View Modal */}
+        {/* ============================================ */}
+        {/* VIEW MODAL - IMPROVED WITH FULL DETAILS */}
+        {/* ============================================ */}
         {selectedEmployee && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-white ">
-            <div className="relative w-full max-w-md p-4 bg-white rounded-lg">
-              <button className="absolute text-sm text-gray-500 top-2 right-3 hover:text-gray-700" onClick={handleCloseModal}>✕</button>
-              <h3 className="mb-2 text-base font-bold">Employee Details</h3>
-              {isEmployeeHidden(selectedEmployee) && (
-                <div className="p-1.5 mb-2 bg-red-100 border border-red-200 rounded">
-                  <p className="text-xs font-medium text-red-800">⚠️ This employee is INACTIVE</p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <div className="w-full max-w-3xl max-h-[90vh] overflow-auto bg-white rounded-2xl shadow-2xl">
+              {/* Header */}
+              <div className="sticky top-0 flex justify-between items-center p-5 border-b bg-white rounded-t-2xl z-10">
+                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <FaEye className="text-blue-600" /> Employee Details
+                </h3>
+                <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600 text-2xl leading-none transition-colors">×</button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-4">
+                {/* Status Warning */}
+                {isEmployeeHidden(selectedEmployee) && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
+                    <p className="text-sm font-medium text-red-800">⚠️ This employee is INACTIVE</p>
+                  </div>
+                )}
+
+                {/* Personal Info Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Personal Information</p>
+                    <div className="mt-3 space-y-2 text-sm">
+                      <div className="flex justify-between"><span className="text-gray-600">Employee ID:</span><span className="font-medium text-gray-900">{selectedEmployee.employeeId}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Name:</span><span className="font-medium text-gray-900">{selectedEmployee.name}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Email:</span><span className="font-medium text-gray-900">{selectedEmployee.email}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Phone:</span><span className="font-medium text-gray-900">{selectedEmployee.phone}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Alternate:</span><span className="font-medium text-gray-900">{selectedEmployee.alternateNumber || "N/A"}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Parents Name:</span><span className="font-medium text-gray-900">{selectedEmployee.parentsName || "N/A"}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">DOB:</span><span className="font-medium text-gray-900">{selectedEmployee.dob ? new Date(selectedEmployee.dob).toLocaleDateString() : "N/A"}</span></div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Office Details</p>
+                    <div className="mt-3 space-y-2 text-sm">
+                      <div className="flex justify-between"><span className="text-gray-600">Department:</span><span className="font-medium text-gray-900">{selectedEmployee.department || "N/A"}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Designation:</span><span className="font-medium text-gray-900">{selectedEmployee.role || selectedEmployee.designation || "N/A"}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Join Date:</span><span className="font-medium text-gray-900">{selectedEmployee.joinDate ? new Date(selectedEmployee.joinDate).toLocaleDateString() : "N/A"}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Shift Hours:</span><span className="font-medium text-gray-900">{selectedEmployee.shiftHours || 8}h</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Week Off/Month:</span><span className="font-medium text-gray-900">{selectedEmployee.weekOffPerMonth || 0}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Assigned Working Days:</span><span className="font-medium text-gray-900">{selectedEmployee.assignedWorkingDays || 26}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-600">Status:</span>
+                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${isEmployeeHidden(selectedEmployee) ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                          {isEmployeeHidden(selectedEmployee) ? 'INACTIVE' : 'ACTIVE'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              )}
-              <div className="space-y-1 text-sm">
-                <p><b>Employee ID:</b> {selectedEmployee.employeeId}</p>
-                <p><b>Name:</b> {selectedEmployee.name}</p>
-                <p><b>Email:</b> {selectedEmployee.email}</p>
-                <p><b>Phone:</b> {selectedEmployee.phone}</p>
-                <p><b>Department:</b> {selectedEmployee.department || "N/A"}</p>
-                <p><b>Designation:</b> {selectedEmployee.role || selectedEmployee.designation || "N/A"}</p>
-                <p><b>Join Date:</b> {selectedEmployee.joinDate ? new Date(selectedEmployee.joinDate).toLocaleDateString() : 'N/A'}</p>
-                <p><b>Status:</b> <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${isEmployeeHidden(selectedEmployee) ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
-                  {isEmployeeHidden(selectedEmployee) ? 'INACTIVE' : 'ACTIVE'}
-                </span></p>
-                <p><b>Salary Per Month:</b> ₹{selectedEmployee.salaryPerMonth || 'N/A'}</p>
-                <p><b>Shift Hours:</b> {selectedEmployee.shiftHours || 'N/A'}</p>
-                <p><b>Week Off Per Month:</b> {selectedEmployee.weekOffPerMonth || 'N/A'}</p>
-                <p><b>Location:</b> {getLocationName(selectedEmployee.location)}</p>
+
+                {/* Address */}
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Address</p>
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                    <div><span className="text-gray-600">Address Line 1:</span> <span className="font-medium text-gray-900">{selectedEmployee.addressLine1 || "N/A"}</span></div>
+                    <div><span className="text-gray-600">Address Line 2:</span> <span className="font-medium text-gray-900">{selectedEmployee.addressLine2 || "N/A"}</span></div>
+                    <div><span className="text-gray-600">City:</span> <span className="font-medium text-gray-900">{selectedEmployee.city || "N/A"}</span></div>
+                    <div><span className="text-gray-600">State:</span> <span className="font-medium text-gray-900">{selectedEmployee.state || "N/A"}</span></div>
+                    <div><span className="text-gray-600">Pin Code:</span> <span className="font-medium text-gray-900">{selectedEmployee.pinCode || "N/A"}</span></div>
+                    <div><span className="text-gray-600">Country:</span> <span className="font-medium text-gray-900">{selectedEmployee.country || "N/A"}</span></div>
+                    <div className="md:col-span-2"><span className="text-gray-600">Location:</span> <span className="font-medium text-gray-900">{getLocationName(selectedEmployee.location)}</span></div>
+                  </div>
+                </div>
+
+                {/* Bank Details */}
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Bank & Documents</p>
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                    <div><span className="text-gray-600">Bank Name:</span> <span className="font-medium text-gray-900">{selectedEmployee.bankName || "N/A"}</span></div>
+                    <div><span className="text-gray-600">Account No:</span> <span className="font-medium text-gray-900">{selectedEmployee.bankAccountNo || "N/A"}</span></div>
+                    <div><span className="text-gray-600">IFSC:</span> <span className="font-medium text-gray-900">{selectedEmployee.ifscCode || "N/A"}</span></div>
+                    <div><span className="text-gray-600">PAN:</span> <span className="font-medium text-gray-900">{selectedEmployee.panNumber || "N/A"}</span></div>
+                    <div><span className="text-gray-600">UAN:</span> <span className="font-medium text-gray-900">{selectedEmployee.uanNumber || "N/A"}</span></div>
+                    <div><span className="text-gray-600">PF:</span> <span className="font-medium text-gray-900">{selectedEmployee.pfNumber || "N/A"}</span></div>
+                  </div>
+                </div>
+
+                {/* Salary Details */}
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Salary Details</p>
+                  <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                    <div><span className="text-gray-600">Basic Pay:</span> <span className="font-medium text-gray-900">₹{selectedEmployee.basicPay || 0}</span></div>
+                    <div><span className="text-gray-600">HRA:</span> <span className="font-medium text-gray-900">₹{selectedEmployee.hra || 0}</span></div>
+                    <div><span className="text-gray-600">Conveyance:</span> <span className="font-medium text-gray-900">₹{selectedEmployee.conveyanceAllowance || 0}</span></div>
+                    <div><span className="text-gray-600">Medical:</span> <span className="font-medium text-gray-900">₹{selectedEmployee.medicalAllowance || 0}</span></div>
+                    <div><span className="text-gray-600">Performance:</span> <span className="font-medium text-gray-900">₹{selectedEmployee.performanceAllowance || 0}</span></div>
+                    <div><span className="text-gray-600">Special:</span> <span className="font-medium text-gray-900">₹{selectedEmployee.specialAllowance || 0}</span></div>
+                    <div className="col-span-2"><span className="text-gray-600">Total Salary Per Month:</span> <span className="font-bold text-blue-700">₹{selectedEmployee.salaryPerMonth?.toLocaleString() || 0}</span></div>
+                  </div>
+                </div>
+
+                {/* Salary Increments History */}
+                {selectedEmployee.salaryIncrements && selectedEmployee.salaryIncrements.length > 0 && (
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Salary Increment History</p>
+                    <div className="mt-3 overflow-x-auto">
+                      <table className="min-w-full text-xs">
+                        <thead className="bg-purple-100">
+                          <tr>
+                            <th className="px-3 py-2 text-left text-purple-800">Type</th>
+                            <th className="px-3 py-2 text-left text-purple-800">Value</th>
+                            <th className="px-3 py-2 text-left text-purple-800">Old Salary</th>
+                            <th className="px-3 py-2 text-left text-purple-800">New Salary</th>
+                            <th className="px-3 py-2 text-left text-purple-800">Effective From</th>
+                            <th className="px-3 py-2 text-left text-purple-800">Reason</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {selectedEmployee.salaryIncrements.map((inc, idx) => (
+                            <tr key={idx} className="hover:bg-gray-50">
+                              <td className="px-3 py-2 font-medium capitalize">{inc.incrementType}</td>
+                              <td className="px-3 py-2">{inc.incrementType === 'percentage' ? `${inc.incrementValue}%` : `₹${inc.incrementValue}`}</td>
+                              <td className="px-3 py-2">₹{inc.oldSalaryPerMonth}</td>
+                              <td className="px-3 py-2 font-bold text-green-700">₹{inc.newSalaryPerMonth}</td>
+                              <td className="px-3 py-2">{inc.effectiveFrom ? new Date(inc.effectiveFrom).toLocaleDateString() : "N/A"}</td>
+                              <td className="px-3 py-2">{inc.reason || "N/A"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Permissions */}
+                {selectedEmployee.permissions && selectedEmployee.permissions.length > 0 && (
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Permissions</p>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {selectedEmployee.permissions.map((perm, idx) => (
+                        <span key={idx} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full">{perm}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Leave Limits */}
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Leave Limits</p>
+                  <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                    <div><span className="text-gray-600">Casual Leave (CL):</span> <span className="font-medium text-gray-900">{selectedEmployee.maxCL || 0}</span></div>
+                    <div><span className="text-gray-600">Sick Leave (SL):</span> <span className="font-medium text-gray-900">{selectedEmployee.maxSL || 0}</span></div>
+                    <div><span className="text-gray-600">Earned Leave (EL):</span> <span className="font-medium text-gray-900">{selectedEmployee.maxEL || 0}</span></div>
+                    <div><span className="text-gray-600">Comp Off:</span> <span className="font-medium text-gray-900">{selectedEmployee.maxCompOff || 0}</span></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="sticky bottom-0 p-4 bg-white border-t rounded-b-2xl">
+                <button onClick={handleCloseModal} className="w-full px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">
+                  Close
+                </button>
               </div>
             </div>
           </div>
@@ -3110,9 +3314,7 @@ const EmployeeList = () => {
         {showLocationModal && selectedEmployeeForLocation && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-white ">
             <div className="relative w-full max-w-md p-4 bg-white rounded-lg">
-              <button className="absolute text-sm text-gray-500 top-2 right-3 hover:text-gray-700" onClick={handleCloseLocationModal}>
-                ✕
-              </button>
+              <button className="absolute text-sm text-gray-500 top-2 right-3 hover:text-gray-700" onClick={handleCloseLocationModal}>✕</button>
               <h3 className="mb-3 text-base font-bold">Assign Location</h3>
               <p className="mb-2 text-xs text-gray-500">Assigning location for: {selectedEmployeeForLocation.name}</p>
 
@@ -3142,6 +3344,150 @@ const EmployeeList = () => {
                   className="flex-1 py-2 text-xs font-medium text-gray-900 transition-colors bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
                   {loading ? 'Assigning...' : 'Assign Location'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ============================================ */}
+        {/* HIKE MODAL - NO OVERFLOW */}
+        {/* ============================================ */}
+        {showHikeModal && selectedEmployeeForHike && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl max-h-[90vh] flex flex-col">
+              {/* Header - Fixed */}
+              <div className="flex justify-between items-center p-5 border-b bg-white rounded-t-2xl sticky top-0 z-10">
+                <h3 className="text-xl font-bold text-purple-700 flex items-center gap-2">
+                  <FaChartLine className="text-purple-600" /> Salary Hike
+                </h3>
+                <button 
+                  onClick={handleCloseHikeModal} 
+                  className="text-gray-400 hover:text-gray-600 text-2xl leading-none transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                {/* Employee Info */}
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200">
+                  <p className="text-xs text-gray-500">Employee</p>
+                  <p className="text-sm font-semibold text-gray-900">{selectedEmployeeForHike.name}</p>
+                  <p className="text-xs text-gray-500 mt-2">Current Salary</p>
+                  <p className="text-xl font-bold text-blue-700">₹{selectedEmployeeForHike.salaryPerMonth?.toLocaleString() || 0}</p>
+                  <p className="text-xs text-gray-500 mt-1">Employee ID: {selectedEmployeeForHike.employeeId}</p>
+                </div>
+
+                {/* Form Fields */}
+                <div className="space-y-3">
+                  {/* Hike Type */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Hike Type *</label>
+                    <select
+                      value={hikeType}
+                      onChange={(e) => setHikeType(e.target.value)}
+                      className="w-full p-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    >
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="amount">Fixed Amount (₹)</option>
+                    </select>
+                  </div>
+
+                  {/* Hike Value */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      {hikeType === 'percentage' ? 'Percentage % *' : 'Amount (₹) *'}
+                    </label>
+                    <input
+                      type="number"
+                      value={hikeValue}
+                      onChange={(e) => setHikeValue(e.target.value)}
+                      className="w-full p-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                      placeholder={hikeType === 'percentage' ? 'e.g., 10' : 'e.g., 5000'}
+                      min="0"
+                      step={hikeType === 'percentage' ? '0.1' : '1'}
+                    />
+                  </div>
+
+                  {/* Effective Date */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Effective From *</label>
+                    <input
+                      type="date"
+                      value={hikeEffectiveDate}
+                      onChange={(e) => setHikeEffectiveDate(e.target.value)}
+                      className="w-full p-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    />
+                  </div>
+
+                  {/* Reason */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Reason</label>
+                    <input
+                      type="text"
+                      value={hikeReason}
+                      onChange={(e) => setHikeReason(e.target.value)}
+                      className="w-full p-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                      placeholder="e.g., Performance bonus, Promotion"
+                    />
+                  </div>
+
+                  {/* Preview */}
+                  {hikeValue && parseFloat(hikeValue) > 0 && (
+                    <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200">
+                      <p className="text-xs font-semibold text-purple-700 mb-2">📊 Preview</p>
+                      <div className="space-y-1.5 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Current Salary:</span>
+                          <span className="font-medium text-gray-900">₹{selectedEmployeeForHike.salaryPerMonth?.toLocaleString() || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Increment:</span>
+                          <span className="font-medium text-blue-700">
+                            {hikeType === 'percentage' 
+                              ? `${hikeValue}%` 
+                              : `₹${parseFloat(hikeValue).toLocaleString()}`
+                            }
+                          </span>
+                        </div>
+                        <div className="flex justify-between pt-1 border-t border-purple-200">
+                          <span className="text-gray-600 font-medium">New Salary:</span>
+                          <span className="font-bold text-green-700 text-lg">₹{calculateNewSalary()?.toLocaleString() || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer - Fixed */}
+              <div className="flex gap-3 p-5 border-t bg-gray-50 rounded-b-2xl sticky bottom-0">
+                <button
+                  onClick={handleCloseHikeModal}
+                  className="flex-1 py-2.5 text-sm font-semibold text-gray-700 bg-gray-200 rounded-xl hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitHike}
+                  disabled={submittingHike || !hikeValue || !hikeEffectiveDate}
+                  className={`flex-1 py-2.5 text-sm font-semibold text-white rounded-xl transition-colors ${
+                    submittingHike || !hikeValue || !hikeEffectiveDate
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-purple-500 hover:bg-purple-600'
+                  }`}
+                >
+                  {submittingHike ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Applying...
+                    </span>
+                  ) : 'Apply Hike'}
                 </button>
               </div>
             </div>

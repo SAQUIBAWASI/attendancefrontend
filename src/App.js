@@ -208,6 +208,7 @@ import Events from "./Pages/Events.jsx";
 import EmployeeProfileCombined from "./Pages/EmployeeProfileCombined.jsx";
 import OverTime from "./Pages/OverTime.jsx";
 import CompOffSettings from "./Pages/CompOffSettings.js";
+import AdminCompOffRequests from "./Pages/AdminCompOffRequests.js";
 
 
 function App() {
@@ -465,6 +466,7 @@ function App() {
               <Route path="/events" element={<Events />} />
               <Route path="/over-time" element={<OverTime />} />
               <Route path="/comp-off-settings" element={<CompOffSettings />} />
+              <Route path="/comp-off-requests" element={<AdminCompOffRequests />} />
            
            
 

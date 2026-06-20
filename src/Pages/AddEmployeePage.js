@@ -11057,21 +11057,21 @@ const AddEmployeePage = () => {
         const employees = Array.isArray(response.data) ? response.data : response.data.data || [];
         const ids = employees
           .map(emp => emp.employeeId)
-          .filter(id => id && id.toUpperCase().startsWith('EMP'))
+          .filter(id => id && id.toUpperCase().startsWith('TH'))
           .map(id => parseInt(id.replace(/[^0-9]/g, '')))
           .filter(num => !isNaN(num));
         
         if (ids.length > 0) {
           const maxId = Math.max(...ids);
-          setEmployeeId(`EMP${maxId + 1}`);
+          setEmployeeId(`TH${maxId + 1}`);
         } else {
-          setEmployeeId('EMP100');
+          setEmployeeId('TH100');
         }
       }
     } catch (error) {
       console.error(error);
       const randomNum = Math.floor(Math.random() * 900) + 100;
-      setEmployeeId(`EMP${randomNum}`);
+      setEmployeeId(`TH${randomNum}`);
     }
   };
 
