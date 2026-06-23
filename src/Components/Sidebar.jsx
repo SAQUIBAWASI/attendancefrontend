@@ -1380,13 +1380,13 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
     {
       icon: <i className="ri-time-fill"></i>,  // Changed icon to clock for OverTime
       name: "OverTime",
-      path: "/over-time",
+      path: "/ot-claims",
     },
-    {
-      icon: <i className="ri-settings-3-fill"></i>,  // Settings icon for Comp Off
-      name: "Comp Off",
-      path: "/comp-off-settings",
-    },
+    // {
+    //   icon: <i className="ri-settings-3-fill"></i>,  // Settings icon for Comp Off
+    //   name: "Comp Off",
+    //   path: "/comp-off-settings",
+    // },
     {
       icon: <i className="ri-user-unfollow-line"></i>,
       name: "Resignation",

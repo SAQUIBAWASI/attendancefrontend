@@ -1726,24 +1726,8 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag } from "react-icons/fa";
-import { FiCoffee } from "react-icons/fi";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
-
-// Helper function to format break minutes
-const formatBreakMinutes = (minutes) => {
-  if (!minutes || minutes === 0) return "-";
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (hours > 0) return `${hours}h ${mins}m`;
-  return `${mins}m`;
-};
-
-// Helper function to calculate total break minutes from breaks array
-const calculateTotalBreakMinutes = (breaks) => {
-  if (!breaks || breaks.length === 0) return 0;
-  return breaks.reduce((total, b) => total + (b.breakMinutes || 0), 0);
-};
 
 const TodayAttendance = () => {
   const [todayRecords, setTodayRecords] = useState([]);
@@ -1947,6 +1931,28 @@ const TodayAttendance = () => {
     return 'bg-orange-100 text-orange-700';
   };
 
+  // ✅ Format time with AM/PM
+  const formatTimeWithAMPM = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+  };
+
+  // ✅ Format date
+  const formatDateDisplay = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
   if (loading)
     return (
       <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -2104,50 +2110,58 @@ const TodayAttendance = () => {
                     <th className="px-2 py-2 text-center text-white text-xs sm:text-sm">Check In</th>
                     <th className="px-2 py-2 text-center text-white text-xs sm:text-sm">Check Out</th>
                     <th className="px-2 py-2 text-center text-white text-xs sm:text-sm">Total Hours</th>
-                    <th className="px-2 py-2 text-center text-white text-xs sm:text-sm">Break Time</th>
                     <th className="px-2 py-2 text-center text-white text-xs sm:text-sm">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentRows.map((rec) => {
-                    const breakMinutes = rec.totalBreakMinutes || calculateTotalBreakMinutes(rec.breaks);
-                    const breakReason = rec.breaks && rec.breaks.length > 0 ? rec.breaks[0].reason : null;
+                    const status = rec.status || "-";
+                    const isCheckedIn = status.toLowerCase() === "checked-in";
                     
                     return (
-                      <tr key={rec._id} className="border-t hover:bg-gray-50">
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap text-xs">{rec.employeeId || "-"}</td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap text-xs">{rec.name}</td>
-                        <td className="px-2 py-2 text-center text-gray-700 text-xs">{rec.department}</td>
-                        <td className="px-2 py-2 text-center text-gray-700 text-xs">{rec.designation}</td>
-                        <td className="px-2 py-2 text-center text-gray-700 whitespace-nowrap text-xs">{rec.attendanceDate || "-"}</td>
-                        <td className="px-2 py-2 text-center text-gray-700 text-xs">{rec.checkInTime ? new Date(rec.checkInTime).toLocaleTimeString() : "-"}</td>
-                        <td className="px-2 py-2 text-center text-gray-700 text-xs">{rec.checkOutTime ? new Date(rec.checkOutTime).toLocaleTimeString() : "-"}</td>
+                      <tr key={rec._id} className="border-t hover:bg-gray-50 transition-colors">
+                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap text-xs">
+                          {rec.employeeId || "-"}
+                        </td>
+                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap text-xs">
+                          {rec.name}
+                        </td>
+                        <td className="px-2 py-2 text-center text-gray-700 text-xs">
+                          {rec.department}
+                        </td>
+                        <td className="px-2 py-2 text-center text-gray-700 text-xs">
+                          {rec.designation}
+                        </td>
+                        <td className="px-2 py-2 text-center text-gray-700 whitespace-nowrap text-xs">
+                          {formatDateDisplay(rec.checkInTime)}
+                        </td>
+                        <td className="px-2 py-2 text-center text-gray-700 text-xs">
+                          {rec.checkInTime ? formatTimeWithAMPM(rec.checkInTime) : "-"}
+                        </td>
+                        <td className="px-2 py-2 text-center text-gray-700 text-xs">
+                          {rec.checkOutTime ? formatTimeWithAMPM(rec.checkOutTime) : "-"}
+                        </td>
                         <td className="px-2 py-2 text-center">
                           <span className={`px-2 py-1 text-xs rounded-full ${getHoursColor(rec.totalHours)}`}>
                             {rec.totalHours?.toFixed(2) || "0.00"}h
                           </span>
                         </td>
                         <td className="px-2 py-2 text-center">
-                          {breakMinutes > 0 ? (
-                            <div className="flex items-center justify-center gap-1">
-                              <FiCoffee className="w-3 h-3 text-orange-500" />
-                              <span className="text-xs font-medium text-orange-600">
-                                {formatBreakMinutes(breakMinutes)}
+                          {isCheckedIn ? (
+                            <div className="flex items-center justify-center gap-1.5">
+                              <span className="relative flex w-2 h-2">
+                                <span className="absolute inline-flex w-full h-full bg-emerald-500 rounded-full opacity-75 animate-ping"></span>
+                                <span className="relative inline-flex w-2 h-2 bg-emerald-600 rounded-full"></span>
                               </span>
-                              {breakReason && (
-                                <span className="text-[9px] text-gray-400 hidden sm:inline">
-                                  ({breakReason})
-                                </span>
-                              )}
+                              <span className="px-2 py-1 text-xs font-medium rounded-full bg-emerald-50 text-emerald-700">
+                                Checked In
+                              </span>
                             </div>
                           ) : (
-                            <span className="text-xs text-gray-400">-</span>
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(status)}`}>
+                              {status === "checked-out" ? "Checked Out" : status}
+                            </span>
                           )}
-                        </td>
-                        <td className="px-2 py-2 text-center">
-                          <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(rec.status)}`}>
-                            {rec.status || "-"}
-                          </span>
                         </td>
                       </tr>
                     );
@@ -2157,7 +2171,7 @@ const TodayAttendance = () => {
             </div>
 
             {filteredRecords.length > 0 && (
-              <div className="flex justify-between items-center px-4 py-3 border-t">
+              <div className="flex flex-col sm:flex-row justify-between items-center px-4 py-3 border-t gap-2">
                 <div className="text-xs text-gray-700">
                   Showing {indexOfFirstRow + 1} to {Math.min(indexOfLastRow, filteredRecords.length)} of {filteredRecords.length} results
                   <select 
@@ -2175,14 +2189,17 @@ const TodayAttendance = () => {
                   <button 
                     onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))} 
                     disabled={pagination.currentPage === 1} 
-                    className="px-3 py-1 text-xs border rounded disabled:opacity-50 hover:bg-gray-50"
+                    className={`px-3 py-1 text-xs border rounded ${pagination.currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
                   >
                     Previous
                   </button>
+                  <span className="px-3 py-1 text-xs">
+                    Page {pagination.currentPage} of {pagination.totalPages || 1}
+                  </span>
                   <button 
                     onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))} 
                     disabled={pagination.currentPage === pagination.totalPages} 
-                    className="px-3 py-1 text-xs border rounded disabled:opacity-50 hover:bg-gray-50"
+                    className={`px-3 py-1 text-xs border rounded ${pagination.currentPage === pagination.totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
                   >
                     Next
                   </button>

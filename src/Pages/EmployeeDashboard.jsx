@@ -10,8 +10,7 @@ import {
   FiX,
   FiInfo,
   FiTrash2,
-  FiPlus,
-  FiCoffee
+  FiPlus
 } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
@@ -32,21 +31,6 @@ import {
   XAxis,
   YAxis
 } from 'recharts';
-
-// ✅ Helper function to format break minutes
-const formatBreakMinutes = (minutes) => {
-  if (!minutes || minutes === 0) return "-";
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (hours > 0) return `${hours}h ${mins}m`;
-  return `${mins}m`;
-};
-
-// ✅ Helper function to calculate total break minutes
-const calculateTotalBreakMinutes = (breaks) => {
-  if (!breaks || breaks.length === 0) return 0;
-  return breaks.reduce((total, b) => total + (b.breakMinutes || 0), 0);
-};
 
 const EmployeeDashboard = () => {
   const navigate = useNavigate();
@@ -88,7 +72,7 @@ const EmployeeDashboard = () => {
   const [currentShift, setCurrentShift] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState(""); // "birthday", "leave", or "shift"
+  const [modalType, setModalType] = useState("");
 
   useEffect(() => {
     if (!email) return;
@@ -1024,7 +1008,7 @@ const EmployeeDashboard = () => {
               </div>
             </div>
 
-            {/* Recent Attendance Registry - UPDATED with Break Time */}
+            {/* Recent Attendance Registry - WITHOUT Break Time */}
             <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-gray-900">Recent Attendance Activity</h3>
@@ -1042,57 +1026,35 @@ const EmployeeDashboard = () => {
                       <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider">DATE</th>
                       <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider">CHECK IN</th>
                       <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider">CHECK OUT</th>
-                      <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider">BREAK TIME</th>
                       <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider text-right">STATUS</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {userAttendance.slice(0, 5).map((record, index) => {
-                      const breakMinutes = record.totalBreakMinutes || calculateTotalBreakMinutes(record.breaks);
-                      const breakReason = record.breaks && record.breaks.length > 0 ? record.breaks[0].reason : null;
-                      return (
-                        <tr key={index} className="group hover:bg-gray-50 transition-colors">
-                          <td className="px-4 py-2.5 text-xs font-semibold text-gray-700">
-                            {new Date(record.checkInTime).toLocaleDateString()}
-                          </td>
-                          <td className="px-4 py-2.5 text-xs font-medium text-gray-500">
-                            {record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
-                          </td>
-                          <td className="px-4 py-2.5 text-xs font-medium text-gray-500">
-                            {record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
-                          </td>
-                          <td className="px-4 py-2.5">
-                            {breakMinutes > 0 ? (
-                              <div className="flex items-center gap-1.5">
-                                <FiCoffee className="w-3 h-3 text-orange-500" />
-                                <span className="text-xs font-medium text-orange-600">
-                                  {formatBreakMinutes(breakMinutes)}
-                                </span>
-                                {breakReason && (
-                                  <span className="text-[9px] text-gray-400 hidden sm:inline">
-                                    ({breakReason})
-                                  </span>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-xs text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-2.5 text-right">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                              record.status === 'present' || record.status === 'checked-in' 
-                                ? 'bg-emerald-50 text-emerald-700' 
-                                : 'bg-red-50 text-red-700'
-                            }`}>
-                              {record.status === 'checked-in' ? 'In' : (record.status === 'present' ? 'Present' : record.status)}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {userAttendance.slice(0, 5).map((record, index) => (
+                      <tr key={index} className="group hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-2.5 text-xs font-semibold text-gray-700">
+                          {new Date(record.checkInTime).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-2.5 text-xs font-medium text-gray-500">
+                          {record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
+                        </td>
+                        <td className="px-4 py-2.5 text-xs font-medium text-gray-500">
+                          {record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
+                        </td>
+                        <td className="px-4 py-2.5 text-right">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            record.status === 'present' || record.status === 'checked-in' 
+                              ? 'bg-emerald-50 text-emerald-700' 
+                              : 'bg-red-50 text-red-700'
+                          }`}>
+                            {record.status === 'checked-in' ? 'In' : (record.status === 'present' ? 'Present' : record.status)}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
                     {userAttendance.length === 0 && (
                       <tr>
-                        <td colSpan="5" className="py-8 text-center text-xs text-slate-500 italic">
+                        <td colSpan="4" className="py-8 text-center text-xs text-slate-500 italic">
                           No recent activity found.
                         </td>
                       </tr>

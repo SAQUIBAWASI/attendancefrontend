@@ -10150,6 +10150,10 @@ import { isEmployeeHidden } from "../utils/employeeStatus";
 
 
 
+// PayRoll.jsx - Complete Code with Calculated (Base) and Final Pay (Base + OT)
+
+
+
 const PayRoll = () => {
   const [records, setRecords] = useState([]);
   const [allEmployees, setAllEmployees] = useState([]);
@@ -10220,7 +10224,11 @@ const PayRoll = () => {
     logo: logo
   });
 
-  // ✅ Medical roles list - inko extra week off nahi milega May 2026 mein
+  // ✅ State for approved OT claims from API
+  const [approvedOTClaims, setApprovedOTClaims] = useState([]);
+  const [approvedOTMap, setApprovedOTMap] = useState({});
+
+  // ✅ Medical roles list
   const medicalRoles = [
     "Phlebotomist", "Staff Nurse", "Consultant", "Pharmacist",
     "Nurse", "Doctor", "Lab Technician", "Medical Officer", 
@@ -10228,7 +10236,6 @@ const PayRoll = () => {
     "Therapist", "Healthcare", "Medical", "Clinical"
   ];
 
-  // ✅ Function to check if employee has medical role
   const isMedicalRole = (role) => {
     if (!role) return false;
     return medicalRoles.some(medRole => 
@@ -10260,6 +10267,54 @@ const PayRoll = () => {
     }
     return 0;
   };
+
+  // ✅ Fetch approved OT claims for the selected month
+  const fetchApprovedOTClaims = useCallback(async (month) => {
+    try {
+      const [year, monthNum] = month.split('-').map(Number);
+      const startDate = new Date(year, monthNum - 1, 1);
+      const endDate = new Date(year, monthNum, 0);
+      
+      const response = await fetch(`${API_BASE_URL}/employees/allotclaimed?status=approved`);
+      const data = await response.json();
+      
+      if (data.success) {
+        const monthClaims = data.claims.filter(claim => {
+          const claimDate = new Date(claim.date);
+          return claimDate >= startDate && claimDate <= endDate;
+        });
+        
+        setApprovedOTClaims(monthClaims);
+        
+        const otMap = {};
+        monthClaims.forEach(claim => {
+          const empId = claim.employeeId;
+          if (!otMap[empId]) {
+            otMap[empId] = {
+              totalOTHours: 0,
+              totalOTAmount: 0,
+              count: 0,
+              claims: []
+            };
+          }
+          otMap[empId].totalOTHours += claim.otHours || 0;
+          otMap[empId].totalOTAmount += claim.otAmount || 0;
+          otMap[empId].count += 1;
+          otMap[empId].claims.push(claim);
+        });
+        
+        setApprovedOTMap(otMap);
+      }
+    } catch (error) {
+      console.error("Error fetching approved OT claims:", error);
+    }
+  }, [API_BASE_URL]);
+
+  useEffect(() => {
+    if (selectedMonth) {
+      fetchApprovedOTClaims(selectedMonth);
+    }
+  }, [selectedMonth, fetchApprovedOTClaims]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -10354,21 +10409,16 @@ const PayRoll = () => {
 
   const shouldIncludeWeekOffInSalary = (month) => {
     if (!month) return false;
-    
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth() + 1;
     const currentDay = today.getDate();
-    
     const [year, monthNum] = month.split('-').map(Number);
-    
     if (year < currentYear) return true;
     if (year === currentYear && monthNum < currentMonth) return true;
-    
     if (year === currentYear && monthNum === currentMonth) {
       return currentDay >= 26;
     }
-    
     return false;
   };
 
@@ -10757,7 +10807,6 @@ const PayRoll = () => {
         
         let targetWeekOffCount = emp.weekOffPerMonth || 4;
         
-        // ✅ Get employee role from summary
         const employeeRole = summary.role || emp.role || emp.designation || '';
         const isMedicalStaff = isMedicalRole(employeeRole);
         
@@ -10789,16 +10838,13 @@ const PayRoll = () => {
           }
         });
         
-        // ✅ MAIN LOGIC: For May 2026, only NON-MEDICAL employees with weekOffPerMonth = 4 get +1
         let finalWeekOffDays = targetWeekOffCount;
         let isSpecialMay2026 = false;
         
         if (targetMonth === "2026-05" && targetWeekOffCount === 4 && !isMedicalStaff) {
-          // NON-MEDICAL employee with 4 week-offs gets +1
           finalWeekOffDays = targetWeekOffCount + 1;
           isSpecialMay2026 = true;
         } else {
-          // Normal calculation for other months or medical employees
           finalWeekOffDays = targetWeekOffCount;
         }
         
@@ -10931,6 +10977,37 @@ const PayRoll = () => {
         totalOTHours = Number(totalOTHours.toFixed(2));
         const formattedOTHours = formatDecimalHours(totalOTHours);
         
+        // ✅ Get approved OT amount from API
+        const approvedOTData = approvedOTMap[emp.employeeId] || { totalOTAmount: 0, totalOTHours: 0 };
+        const approvedOTAmount = approvedOTData.totalOTAmount || 0;
+        const approvedOTHours = approvedOTData.totalOTHours || 0;
+        
+        // ✅ Base calculated salary (WITHOUT OT)
+        const baseCalculatedSalary = Math.round(calculatedSalary);
+        
+        // ✅ Final OT Amount and Final Pay
+        let finalOTAmount = 0;
+        let finalPay = baseCalculatedSalary;
+        
+        // ✅ Check for approved OT from API
+        if (approvedOTAmount > 0) {
+          finalOTAmount = approvedOTAmount;
+          finalPay = Math.round(baseCalculatedSalary + approvedOTAmount);
+        } else {
+          // Check for manually selected OT
+          const savedOTEmpsString = localStorage.getItem("payrollSelectedOTEmployees");
+          const savedOTEmps = savedOTEmpsString ? new Set(JSON.parse(savedOTEmpsString)) : new Set();
+          const isApprovedInOTPage = localStorage.getItem(`otStatus_${emp.employeeId}_${targetMonth}`) === "approved";
+          
+          if (totalOTHours > 0 && (savedOTEmps.has(emp.employeeId) || isApprovedInOTPage)) {
+            const multiplier = Number(localStorage.getItem(`otMultiplier_${emp.employeeId}_${targetMonth}`)) || 2;
+            const otRatePerHour = dailyRate / (emp.shiftHours || 8);
+            const otAmount = totalOTHours * otRatePerHour * multiplier;
+            finalOTAmount = otAmount;
+            finalPay = Math.round(baseCalculatedSalary + otAmount);
+          }
+        }
+        
         const salaryObj = {
           employeeId: emp.employeeId,
           name: emp.name,
@@ -10939,8 +11016,8 @@ const PayRoll = () => {
           totalWorkingDays: summary.totalWorkingDays ?? 0,
           halfDayWorking: halfDaysCount,
           fullDayNotWorking: summary.fullDayNotWorking ?? 0,
-          calculatedSalary: Math.round(calculatedSalary),
-          baseCalculatedSalary: Math.round(calculatedSalary),
+          calculatedSalary: baseCalculatedSalary, // ✅ Base salary WITHOUT OT (pehle jaisa)
+          baseCalculatedSalary: baseCalculatedSalary,
           salaryPerMonth: salaryForMonth,
           currentSalary: emp.salaryPerMonth,
           originalSalary: originalSalary,
@@ -10979,21 +11056,15 @@ const PayRoll = () => {
           overTimeHoursFormatted: formattedOTHours,
           shiftHours: emp.shiftHours || 8,
           role: employeeRole,
-          isMedicalStaff: isMedicalStaff
+          isMedicalStaff: isMedicalStaff,
+          // ✅ OT fields
+          finalOTAmount: Math.round(finalOTAmount),
+          finalPay: finalPay,
+          otAmount: Math.round(finalOTAmount),
+          hasApprovedOT: approvedOTAmount > 0,
+          approvedOTAmount: approvedOTAmount,
+          approvedOTHours: approvedOTHours
         };
-
-        const savedOTEmpsString = localStorage.getItem("payrollSelectedOTEmployees");
-        const savedOTEmps = savedOTEmpsString ? new Set(JSON.parse(savedOTEmpsString)) : new Set();
-
-        const isApprovedInOTPage = localStorage.getItem(`otStatus_${emp.employeeId}_${targetMonth}`) === "approved";
-
-        if (totalOTHours > 0 && (savedOTEmps.has(emp.employeeId) || isApprovedInOTPage)) {
-          const multiplier = Number(localStorage.getItem(`otMultiplier_${emp.employeeId}_${targetMonth}`)) || 2;
-          const otRatePerHour = dailyRate / (emp.shiftHours || 8);
-          const otAmount = totalOTHours * otRatePerHour * multiplier;
-          salaryObj.calculatedSalary = Math.round(salaryObj.calculatedSalary + otAmount);
-          salaryObj.otAmount = Math.round(otAmount);
-        }
 
         processedSalaries.push(salaryObj);
       }
@@ -11014,34 +11085,43 @@ const PayRoll = () => {
         setIsLoadingMonth(false);
       }
     }
-  }, [EMPLOYEES_API_URL, LEAVES_API_URL, API_BASE_URL, ATTENDANCE_SUMMARY_API_URL, ATTENDANCE_DETAILS_API_URL, processLeavesData, filterInactiveEmployees, filterEmployeesByJoiningDate, processCompOffData, selectedMonth]);
+  }, [EMPLOYEES_API_URL, LEAVES_API_URL, API_BASE_URL, ATTENDANCE_SUMMARY_API_URL, ATTENDANCE_DETAILS_API_URL, processLeavesData, filterInactiveEmployees, filterEmployeesByJoiningDate, processCompOffData, selectedMonth, approvedOTMap]);
 
   useEffect(() => {
     if (records.length === 0) return;
 
     const processRecordsWithAdditions = (prevRecords) => 
       prevRecords.map(record => {
-        let newCalculatedSalary = record.baseCalculatedSalary;
+        let baseSalary = record.baseCalculatedSalary || record.calculatedSalary || 0;
         let otAmount = 0;
-        const isApprovedInOTPage = localStorage.getItem(`otStatus_${record.employeeId}_${selectedMonth}`) === "approved";
-        if (record.overTimeHours > 0 && (selectedOTEmployees.has(record.employeeId) || isApprovedInOTPage)) {
-          const dailyRate = record.salaryPerDay || 0;
-          const shiftHours = record.shiftHours || 8;
-          const multiplier = Number(localStorage.getItem(`otMultiplier_${record.employeeId}_${selectedMonth}`)) || 2;
-          const otRatePerHour = dailyRate / shiftHours;
-          otAmount = record.overTimeHours * otRatePerHour * multiplier;
-          newCalculatedSalary += otAmount;
+        
+        // ✅ Check for approved OT from API
+        if (record.hasApprovedOT) {
+          otAmount = record.approvedOTAmount || 0;
+        } else {
+          const isApprovedInOTPage = localStorage.getItem(`otStatus_${record.employeeId}_${selectedMonth}`) === "approved";
+          if (record.overTimeHours > 0 && (selectedOTEmployees.has(record.employeeId) || isApprovedInOTPage)) {
+            const dailyRate = record.salaryPerDay || 0;
+            const shiftHours = record.shiftHours || 8;
+            const multiplier = Number(localStorage.getItem(`otMultiplier_${record.employeeId}_${selectedMonth}`)) || 2;
+            const otRatePerHour = dailyRate / shiftHours;
+            otAmount = record.overTimeHours * otRatePerHour * multiplier;
+          }
         }
+        
         return {
           ...record,
+          calculatedSalary: Math.round(baseSalary), // ✅ Base salary WITHOUT OT
           otAmount: Math.round(otAmount),
-          calculatedSalary: Math.round(newCalculatedSalary)
+          finalOTAmount: Math.round(otAmount),
+          finalPay: Math.round(baseSalary + otAmount) // ✅ Base + OT
         };
       });
 
-    setRecords(processRecordsWithAdditions);
-    setFilteredRecords(processRecordsWithAdditions);
-  }, [employeeCompOffs, employeeLeaves, employeesMasterData, monthDays, selectedMonth, selectedOTEmployees]);
+    const updatedRecords = processRecordsWithAdditions(records);
+    setRecords(updatedRecords);
+    setFilteredRecords(updatedRecords);
+  }, [employeeCompOffs, employeeLeaves, employeesMasterData, monthDays, selectedMonth, selectedOTEmployees, approvedOTMap]);
 
   useEffect(() => {
     fetchData(selectedMonth);
@@ -11178,7 +11258,6 @@ const PayRoll = () => {
     };
   };
 
-  // ✅ Display function for table - shows "4 + 1 (Special)" only for non-medical May 2026 employees
   const getWeekOffDaysForDisplay = (employee) => {
     if (employee.isSpecialMay2026) {
       return `${employee.originalWeekOffPerMonth} + 1 (Special)`;
@@ -11504,7 +11583,7 @@ const PayRoll = () => {
     }
     
     if (otAmount > 0) {
-      earningsItems.push({ label: `Overtime (${employee.overTimeHoursFormatted || formatDecimalHours(employee.overTimeHours)})`, amount: otAmount });
+      earningsItems.push({ label: `Overtime`, amount: otAmount });
     }
     
     if (compOffPay > 0) {
@@ -11709,7 +11788,6 @@ const PayRoll = () => {
     return `${monthNames[parseInt(monthNum) - 1]} ${year}`;
   };
 
-  // ✅ POPUP - BILKUL SAME, KOI CHANGE NAHI
   const AttendancePopupModal = () => {
     if (!showAttendancePopup) return null;
     
@@ -11881,7 +11959,6 @@ const PayRoll = () => {
                       const isWeekOff = isWeekOffDay(date);
                       const isLeave = !isWeekOff && isLeaveDay(date, selectedEmployee?.employeeId, employeeLeaves);
                       
-                      // If it’s a scheduled week‑off but there is attendance, treat it as a normal work day.
                       const effectiveWeekOff = isWeekOff && !hasAttendance;
                       
                       let bgColor = '';
@@ -12080,7 +12157,9 @@ const PayRoll = () => {
                   <th className="py-2 text-xs text-center">Half</th>
                   <th className="py-2 text-xs text-center">Week Off</th>
                   <th className="py-2 text-xs text-center">Monthly Salary</th>
+                  <th className="py-2 text-xs text-center">OT Amount</th>
                   <th className="py-2 text-xs text-center">Calculated</th>
+                  <th className="py-2 text-xs text-center">Final Pay</th>
                   <th className="py-2 text-xs text-center">Actions</th>
                 </tr>
               </thead>
@@ -12108,7 +12187,19 @@ const PayRoll = () => {
                         <div className="text-[8px] text-blue-600">w.e.f {new Date(item.historicalEffectiveFrom).toLocaleDateString()}</div>
                       )}
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs"><span className="font-bold text-green-700">₹{calculateSalary(item).toLocaleString()}</span></td>
+                    <td className="px-2 py-1.5 text-center text-xs">
+                      {item.finalOTAmount > 0 ? (
+                        <span className="font-semibold text-green-600">₹{item.finalOTAmount.toFixed(0)}</span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-2 py-1.5 text-center text-xs">
+                      <span className="font-semibold text-blue-700">₹{calculateSalary(item).toLocaleString()}</span>
+                    </td>
+                    <td className="px-2 py-1.5 text-center text-xs">
+                      <span className="font-bold text-green-700">₹{(item.finalPay || item.calculatedSalary || 0).toLocaleString()}</span>
+                    </td>
                     <td className="px-2 py-1.5 text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-center gap-1">
                         <button onClick={(e) => { e.stopPropagation(); handleView(item); }} className="p-1 text-blue-600 rounded hover:bg-blue-50" title="View">
@@ -12193,8 +12284,9 @@ const PayRoll = () => {
                 </div>
               </div>
               <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Daily Rate</span><span className="font-semibold text-gray-700">₹{calculateDailyRate(selectedEmployee)}/day</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">OT Amount</span><span className="font-semibold text-green-600">₹{(selectedEmployee.finalOTAmount || 0).toFixed(0)}</span></div>
               <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Calculated Salary</span><span className="font-semibold text-blue-700">₹{Math.round(selectedEmployee.calculatedSalary || 0)}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">OT Pay ({selectedEmployee.overTimeHoursFormatted || formatDecimalHours(selectedEmployee.overTimeHours)})</span><span className="font-semibold text-blue-600">₹{selectedEmployee.otAmount || 0}</span></div>
+              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Final Pay</span><span className="font-semibold text-green-700">₹{Math.round(selectedEmployee.finalPay || selectedEmployee.calculatedSalary || 0)}</span></div>
               <div className="flex flex-col pb-2 border-b sm:col-span-2">
                 <div className="flex justify-between mb-2"><span className="font-medium text-gray-500">Approved Leaves</span><span className="font-semibold text-red-600">{getLeaveTypes(selectedEmployee) || "0"}</span></div>
               </div>

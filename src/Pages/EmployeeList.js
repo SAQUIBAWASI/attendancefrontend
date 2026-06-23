@@ -2501,28 +2501,16 @@ const EmployeeList = () => {
         incrementType: hikeType,
         incrementValue: parseFloat(hikeValue),
         effectiveDate: hikeEffectiveDate,
-        reason: hikeReason || "Salary hike",
-        newComponents: {
-          basicPay: selectedEmployeeForHike.basicPay || 0,
-          hra: selectedEmployeeForHike.hra || 0,
-          conveyanceAllowance: selectedEmployeeForHike.conveyanceAllowance || 0,
-          medicalAllowance: selectedEmployeeForHike.medicalAllowance || 0,
-          performanceAllowance: selectedEmployeeForHike.performanceAllowance || 0,
-          specialAllowance: selectedEmployeeForHike.specialAllowance || 0,
-          ctc: selectedEmployeeForHike.ctc || 0,
-          ptax: selectedEmployeeForHike.ptax || 0,
-          gmcAmount: selectedEmployeeForHike.gmcAmount || 0,
-          otherDeductions: selectedEmployeeForHike.otherDeductions || 0
-        }
+        reason: hikeReason || "Salary hike"
       };
 
       const response = await axios.put(
-        `http://localhost:5001/api/employees/applysalary-increment/${selectedEmployeeForHike._id}`,
+        `${API_BASE_URL}/employees/applysalary-increment/${selectedEmployeeForHike._id}`,
         payload
       );
 
       if (response.data && response.data.success) {
-        alert(`✅ Salary hike applied successfully!\nNew Salary: ₹${response.data.employee?.salaryPerMonth?.toLocaleString() || 'Updated'}`);
+        alert(`✅ Salary hike record added successfully!`);
         
         const refreshResponse = await axios.get(
           `${API_BASE_URL}/employees/get-employees`
@@ -2722,20 +2710,28 @@ const EmployeeList = () => {
   // Excel Export Function
   const exportToExcel = () => {
     try {
-      const excelData = filteredEmployees.map(emp => ({
-        'Emp ID': emp.employeeId || '',
-        'Name': emp.name || '',
-        'Email': emp.email || '',
-        'Department': emp.department || '',
-        'Designation': emp.role || emp.designation || '',
-        'Join Date': emp.joinDate ? new Date(emp.joinDate).toLocaleDateString() : '',
-        'Phone': emp.phone || '',
-        'Location': getLocationName(emp.location),
-        'Salary Per Month': `₹${emp.salaryPerMonth || ''}`,
-        'Shift Hours': emp.shiftHours || '',
-        'Week Off Per Month': emp.weekOffPerMonth || '',
-        'Status': isEmployeeHidden(emp) ? 'INACTIVE' : 'ACTIVE'
-      }));
+      const excelData = filteredEmployees.map(emp => {
+        // Get latest increment's new salary
+        const increments = emp.salaryIncrements || [];
+        const latestInc = increments.length > 0 ? increments[increments.length - 1] : null;
+        const newSalary = latestInc ? latestInc.newSalaryPerMonth : emp.salaryPerMonth;
+        
+        return {
+          'Emp ID': emp.employeeId || '',
+          'Name': emp.name || '',
+          'Email': emp.email || '',
+          'Department': emp.department || '',
+          'Designation': emp.role || emp.designation || '',
+          'Join Date': emp.joinDate ? new Date(emp.joinDate).toLocaleDateString() : '',
+          'Phone': emp.phone || '',
+          'Location': getLocationName(emp.location),
+          'Current Salary': `₹${emp.salaryPerMonth || ''}`,
+          'New Salary': `₹${newSalary || ''}`,
+          'Shift Hours': emp.shiftHours || '',
+          'Week Off Per Month': emp.weekOffPerMonth || '',
+          'Status': isEmployeeHidden(emp) ? 'INACTIVE' : 'ACTIVE'
+        };
+      });
 
       const ws = XLSX.utils.json_to_sheet(excelData);
       
@@ -2785,6 +2781,14 @@ const EmployeeList = () => {
         />
       </button>
     );
+  };
+
+  // Get new salary from latest increment
+  const getNewSalary = (employee) => {
+    const increments = employee.salaryIncrements || [];
+    if (increments.length === 0) return null;
+    const latestInc = increments[increments.length - 1];
+    return latestInc.newSalaryPerMonth;
   };
 
   return (
@@ -2960,7 +2964,8 @@ const EmployeeList = () => {
                   <th className="px-2 py-2 text-center">Dept</th>
                   <th className="px-2 py-2 text-center">Desig</th>
                   <th className="px-2 py-2 text-center">Join Date</th>
-                  <th className="px-2 py-2 text-center">Salary</th>
+                  <th className="px-2 py-2 text-center">Current Salary</th>
+                  <th className="px-2 py-2 text-center">New Salary</th>
                   <th className="px-2 py-2 text-center">Shift</th>
                   <th className="px-2 py-2 text-center">Week Off</th>
                   <th className="px-2 py-2 text-center">Location</th>
@@ -2973,6 +2978,9 @@ const EmployeeList = () => {
                 {currentEmployees.length > 0 ? (
                   currentEmployees.map((emp) => {
                     const isHidden = isEmployeeHidden(emp);
+                    const newSalary = getNewSalary(emp);
+                    const hasIncrement = newSalary !== null && newSalary !== emp.salaryPerMonth;
+                    
                     return (
                       <tr 
                         key={emp._id} 
@@ -2990,7 +2998,16 @@ const EmployeeList = () => {
                         <td className="px-2 py-2 text-center text-gray-500 ">
                           {emp.joinDate ? new Date(emp.joinDate).toLocaleDateString() : "-"}
                         </td>
-                        <td className="px-2 py-2 text-center text-gray-500 ">₹{emp.salaryPerMonth || 0}</td>
+                        <td className="px-2 py-2 text-center text-gray-500 ">
+                          ₹{emp.salaryPerMonth || 0}
+                        </td>
+                        <td className="px-2 py-2 text-center">
+                          {hasIncrement ? (
+                            <span className="font-semibold text-green-600">₹{newSalary}</span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
                         <td className="px-2 py-2 text-center text-gray-500 ">{emp.shiftHours || 8}h</td>
                         <td className="px-2 py-2 text-center text-gray-500 ">{emp.weekOffPerMonth || 0}</td>
                         <td className="px-2 py-2 text-center text-gray-500 ">{getLocationName(emp.location)}</td>
@@ -3062,7 +3079,7 @@ const EmployeeList = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan="12" className="px-2 py-4 text-xs text-center text-gray-500">
+                    <td colSpan="13" className="px-2 py-4 text-xs text-center text-gray-500">
                       {showInactiveOnly ? 'No inactive employees found.' : 'No active employees found.'}
                     </td>
                   </tr>
@@ -3146,13 +3163,10 @@ const EmployeeList = () => {
           )}
         </div>
 
-        {/* ============================================ */}
-        {/* VIEW MODAL - IMPROVED WITH FULL DETAILS */}
-        {/* ============================================ */}
+        {/* View Modal */}
         {selectedEmployee && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
             <div className="w-full max-w-3xl max-h-[90vh] overflow-auto bg-white rounded-2xl shadow-2xl">
-              {/* Header */}
               <div className="sticky top-0 flex justify-between items-center p-5 border-b bg-white rounded-t-2xl z-10">
                 <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                   <FaEye className="text-blue-600" /> Employee Details
@@ -3160,16 +3174,13 @@ const EmployeeList = () => {
                 <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600 text-2xl leading-none transition-colors">×</button>
               </div>
 
-              {/* Content */}
               <div className="p-6 space-y-4">
-                {/* Status Warning */}
                 {isEmployeeHidden(selectedEmployee) && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
                     <p className="text-sm font-medium text-red-800">⚠️ This employee is INACTIVE</p>
                   </div>
                 )}
 
-                {/* Personal Info Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                     <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Personal Information</p>
@@ -3202,7 +3213,6 @@ const EmployeeList = () => {
                   </div>
                 </div>
 
-                {/* Address */}
                 <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Address</p>
                   <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
@@ -3216,7 +3226,6 @@ const EmployeeList = () => {
                   </div>
                 </div>
 
-                {/* Bank Details */}
                 <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Bank & Documents</p>
                   <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
@@ -3229,7 +3238,6 @@ const EmployeeList = () => {
                   </div>
                 </div>
 
-                {/* Salary Details */}
                 <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Salary Details</p>
                   <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
@@ -3243,7 +3251,6 @@ const EmployeeList = () => {
                   </div>
                 </div>
 
-                {/* Salary Increments History */}
                 {selectedEmployee.salaryIncrements && selectedEmployee.salaryIncrements.length > 0 && (
                   <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                     <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Salary Increment History</p>
@@ -3276,7 +3283,6 @@ const EmployeeList = () => {
                   </div>
                 )}
 
-                {/* Permissions */}
                 {selectedEmployee.permissions && selectedEmployee.permissions.length > 0 && (
                   <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                     <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Permissions</p>
@@ -3288,7 +3294,6 @@ const EmployeeList = () => {
                   </div>
                 )}
 
-                {/* Leave Limits */}
                 <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Leave Limits</p>
                   <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
@@ -3300,7 +3305,6 @@ const EmployeeList = () => {
                 </div>
               </div>
 
-              {/* Footer */}
               <div className="sticky bottom-0 p-4 bg-white border-t rounded-b-2xl">
                 <button onClick={handleCloseModal} className="w-full px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">
                   Close
@@ -3350,13 +3354,10 @@ const EmployeeList = () => {
           </div>
         )}
 
-        {/* ============================================ */}
-        {/* HIKE MODAL - NO OVERFLOW */}
-        {/* ============================================ */}
+        {/* Hike Modal */}
         {showHikeModal && selectedEmployeeForHike && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
             <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl max-h-[90vh] flex flex-col">
-              {/* Header - Fixed */}
               <div className="flex justify-between items-center p-5 border-b bg-white rounded-t-2xl sticky top-0 z-10">
                 <h3 className="text-xl font-bold text-purple-700 flex items-center gap-2">
                   <FaChartLine className="text-purple-600" /> Salary Hike
@@ -3369,9 +3370,7 @@ const EmployeeList = () => {
                 </button>
               </div>
 
-              {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto p-5 space-y-4">
-                {/* Employee Info */}
                 <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200">
                   <p className="text-xs text-gray-500">Employee</p>
                   <p className="text-sm font-semibold text-gray-900">{selectedEmployeeForHike.name}</p>
@@ -3380,9 +3379,7 @@ const EmployeeList = () => {
                   <p className="text-xs text-gray-500 mt-1">Employee ID: {selectedEmployeeForHike.employeeId}</p>
                 </div>
 
-                {/* Form Fields */}
                 <div className="space-y-3">
-                  {/* Hike Type */}
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Hike Type *</label>
                     <select
@@ -3395,7 +3392,6 @@ const EmployeeList = () => {
                     </select>
                   </div>
 
-                  {/* Hike Value */}
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       {hikeType === 'percentage' ? 'Percentage % *' : 'Amount (₹) *'}
@@ -3411,7 +3407,6 @@ const EmployeeList = () => {
                     />
                   </div>
 
-                  {/* Effective Date */}
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Effective From *</label>
                     <input
@@ -3422,7 +3417,6 @@ const EmployeeList = () => {
                     />
                   </div>
 
-                  {/* Reason */}
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Reason</label>
                     <input
@@ -3434,7 +3428,6 @@ const EmployeeList = () => {
                     />
                   </div>
 
-                  {/* Preview */}
                   {hikeValue && parseFloat(hikeValue) > 0 && (
                     <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200">
                       <p className="text-xs font-semibold text-purple-700 mb-2">📊 Preview</p>
@@ -3462,7 +3455,6 @@ const EmployeeList = () => {
                 </div>
               </div>
 
-              {/* Footer - Fixed */}
               <div className="flex gap-3 p-5 border-t bg-gray-50 rounded-b-2xl sticky bottom-0">
                 <button
                   onClick={handleCloseHikeModal}

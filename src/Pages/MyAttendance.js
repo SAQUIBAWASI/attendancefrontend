@@ -1284,8 +1284,8 @@
 
 
 import { useEffect, useRef, useState } from "react";
-import { FaCalendarAlt } from "react-icons/fa";
-import { FiCheckCircle, FiCheckSquare, FiFileText, FiMapPin, FiCoffee } from "react-icons/fi";
+import { FaCalendarAlt, FaClock, FaCheckSquare, FaSquare, FaTrash, FaTimes } from "react-icons/fa";
+import { FiCheckCircle, FiCheckSquare, FiFileText, FiMapPin, FiClock } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import StatCard from "../Components/StatCard";
 import { API_BASE_URL } from "../config";
@@ -1305,14 +1305,13 @@ export default function MyAttendance() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [onsiteFilter, setOnsiteFilter] = useState("all");
 
-  // Department and Designation filters (from employee data)
+  // Department and Designation filters
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterDesignation, setFilterDesignation] = useState("");
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
   const [employeeData, setEmployeeData] = useState(null);
 
-  // Refs for click outside
   const departmentFilterRef = useRef(null);
   const designationFilterRef = useRef(null);
 
@@ -1327,6 +1326,14 @@ export default function MyAttendance() {
   const [requestComment, setRequestComment] = useState("");
   const [submittingRequest, setSubmittingRequest] = useState(false);
 
+  // Claim OT States
+  const [showOTClaimModal, setShowOTClaimModal] = useState(false);
+  const [selectedOTRecords, setSelectedOTRecords] = useState([]);
+  const [otClaimReason, setOTClaimReason] = useState("");
+  const [submittingOTClaim, setSubmittingOTClaim] = useState(false);
+  const [claimedOTRecords, setClaimedOTRecords] = useState([]);
+  const [selectedOTIds, setSelectedOTIds] = useState([]);
+
   // ✅ Helper function to format decimal hours to HH:MM
   const formatDecimalHours = (decimalHours) => {
     if (!decimalHours && decimalHours !== 0) return "0h 0m";
@@ -1338,19 +1345,107 @@ export default function MyAttendance() {
     return `${hours}h ${minutes}m`;
   };
 
-  // ✅ Format break minutes to readable format
-  const formatBreakMinutes = (minutes) => {
-    if (!minutes || minutes === 0) return "-";
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) return `${hours}h ${mins}m`;
-    return `${mins}m`;
+  // ✅ Get shift hours directly from attendance record
+  const getCorrectShiftHours = (record) => {
+    return record.assignedShiftHours || 9;
   };
 
-  // ✅ Calculate total break minutes from breaks array
-  const calculateTotalBreakMinutes = (breaks) => {
-    if (!breaks || breaks.length === 0) return 0;
-    return breaks.reduce((total, b) => total + (b.breakMinutes || 0), 0);
+  // ✅ Calculate OT Hours
+  const calculateOTHoursFromRecord = (record) => {
+    const totalHours = record.totalHours || record.hours || 0;
+    if (totalHours === 0) return 0;
+    
+    const assignedShiftHours = getCorrectShiftHours(record);
+    if (!assignedShiftHours || assignedShiftHours === 0) return 0;
+    
+    const ot = totalHours - assignedShiftHours;
+    
+    // 30 MINUTES THRESHOLD (0.5 hours)
+    if (ot > 0.5) {
+      return Math.round(ot * 100) / 100;
+    }
+    
+    return 0;
+  };
+
+  // ✅ Check if OT is already claimed for a record
+  const isOTClaimed = (recordId) => {
+    return claimedOTRecords.some(r => r.attendanceId === recordId);
+  };
+
+  // ✅ Get claimed OT status for a record
+  const getOTClaimStatus = (recordId) => {
+    return claimedOTRecords.find(r => r.attendanceId === recordId);
+  };
+
+  // ✅ Check if OT is available for a record
+  const hasOTAvailable = (record) => {
+    const otHours = calculateOTHoursFromRecord(record);
+    return otHours > 0 && !isOTClaimed(record._id);
+  };
+
+  // ✅ FIX: Don't filter out 0 hours records
+  const isValidRecord = (record) => {
+    const totalHours = record.totalHours || record.hours || 0;
+    // Only filter out > 24 hours records
+    if (totalHours > 24) return false;
+    return true;
+  };
+
+  // ✅ Format time with status - WITH BLINKING DOT
+  const formatTimeWithStatus = (record) => {
+    const checkInTime = record?.checkInTime;
+    const checkOutTime = record?.checkOutTime;
+    const totalHours = record?.totalHours || record?.hours || 0;
+    const assignedShift = getCorrectShiftHours(record);
+    const status = record?.status;
+
+    const checkIn = checkInTime ? new Date(checkInTime).toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }) : null;
+
+    const checkOut = checkOutTime ? new Date(checkOutTime).toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }) : null;
+
+    const formattedHours = formatDecimalHours(totalHours);
+
+    // ✅ Blinking dot for checked-in status
+    if (checkIn && !checkOut) {
+      return (
+        <div className="flex flex-col items-center justify-center">
+          <div className="flex items-center justify-center gap-1">
+            <span className="relative flex w-2 h-2">
+              <span className="absolute inline-flex w-full h-full bg-blue-500 rounded-full opacity-75 animate-ping"></span>
+              <span className="relative inline-flex w-2 h-2 bg-blue-600 rounded-full"></span>
+            </span>
+            <span className="font-semibold text-blue-700">{checkIn}</span>
+            <span className="text-xs text-gray-500">/ --:--</span>
+          </div>
+          <span className="text-[10px] text-gray-400">{formattedHours}</span>
+          <span className="text-[8px] text-gray-400">Shift: {assignedShift}h</span>
+        </div>
+      );
+    } else if (checkIn && checkOut) {
+      return (
+        <div className="flex flex-col items-center justify-center">
+          <div className="flex items-center justify-center gap-1">
+            <span className="inline-flex w-2 h-2 bg-red-500 rounded-full"></span>
+            <span className="font-semibold text-gray-700">{checkIn}</span>
+            <span className="text-xs text-gray-500">/</span>
+            <span className="font-semibold text-red-600">{checkOut}</span>
+          </div>
+          <span className="text-[10px] text-gray-400">{formattedHours}</span>
+          <span className="text-[8px] text-gray-400">Shift: {assignedShift}h</span>
+        </div>
+      );
+    } else {
+      return <span className="text-gray-500">-</span>;
+    }
   };
 
   // Click outside handlers for filter dropdowns
@@ -1384,13 +1479,18 @@ export default function MyAttendance() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to fetch attendance");
 
-        // Sort records by checkInTime descending (newest first)
-        const sortedRecords = (data.records || []).sort((a, b) =>
+        const allRecords = data.records || [];
+        const validRecords = allRecords.filter(isValidRecord);
+        
+        // ✅ SORT: Latest first (newest on top)
+        const sortedRecords = validRecords.sort((a, b) =>
           new Date(b.checkInTime) - new Date(a.checkInTime)
         );
 
         setRecords(sortedRecords);
         setFilteredRecords(sortedRecords);
+
+        await fetchClaimedOT(employeeId);
       } catch (err) {
         console.error("Attendance fetch error:", err);
         setError(err.message);
@@ -1402,11 +1502,143 @@ export default function MyAttendance() {
     fetchAttendance();
   }, []);
 
+  const fetchClaimedOT = async (employeeId) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/employees/employeeotclaimed/${employeeId}`);
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const transformedRecords = data.claims.map(claim => ({
+          attendanceId: claim.attendanceId,
+          status: claim.status,
+          otHours: claim.otHours,
+          otAmount: claim.otAmount,
+          multiplier: claim.multiplier,
+          date: claim.date,
+          reason: claim.reason,
+          approvedBy: claim.approvedBy,
+          approvedAt: claim.approvedAt,
+          employeeDetails: claim.employeeDetails,
+          attendanceDetails: claim.attendanceDetails,
+          formattedDate: claim.formattedDate,
+          formattedOTHours: claim.formattedOTHours,
+          formattedOTAmount: claim.formattedOTAmount,
+          statusBadge: claim.statusBadge
+        }));
+        setClaimedOTRecords(transformedRecords);
+      }
+    } catch (err) {
+      console.error("Error fetching claimed OT:", err);
+    }
+  };
+
+  // Handle checkbox selection
+  const handleOTCheckboxChange = (recordId) => {
+    setSelectedOTIds(prev => {
+      if (prev.includes(recordId)) {
+        return prev.filter(id => id !== recordId);
+      } else {
+        return [...prev, recordId];
+      }
+    });
+  };
+
+  const handleUnselectFromPopup = (recordId) => {
+    setSelectedOTRecords(prev => prev.filter(r => r._id !== recordId));
+    setSelectedOTIds(prev => prev.filter(id => id !== recordId));
+  };
+
+  const handleSelectAllOT = () => {
+    const availableOTIds = records
+      .filter(r => hasOTAvailable(r))
+      .map(r => r._id);
+    
+    if (selectedOTIds.length === availableOTIds.length && availableOTIds.length > 0) {
+      setSelectedOTIds([]);
+    } else {
+      setSelectedOTIds(availableOTIds);
+    }
+  };
+
+  const handleBulkOTClaim = () => {
+    if (selectedOTIds.length === 0) {
+      alert("Please select at least one record with OT to claim.");
+      return;
+    }
+
+    const selectedRecords = records.filter(r => selectedOTIds.includes(r._id));
+    const validRecords = selectedRecords.filter(r => hasOTAvailable(r));
+
+    if (validRecords.length === 0) {
+      alert("Selected records are either already claimed or have no OT.");
+      return;
+    }
+
+    setSelectedOTRecords(validRecords);
+    setOTClaimReason("");
+    setShowOTClaimModal(true);
+  };
+
+  const handleSubmitBulkOTClaim = async (e) => {
+    e.preventDefault();
+    if (!otClaimReason.trim()) {
+      alert("Please provide a reason for claiming OT.");
+      return;
+    }
+
+    setSubmittingOTClaim(true);
+    try {
+      const claims = selectedOTRecords.map(record => ({
+        employeeId: employeeData.employeeId,
+        employeeName: employeeData.name || "Employee",
+        attendanceId: record._id,
+        date: record.checkInTime,
+        otHours: calculateOTHoursFromRecord(record),
+        reason: otClaimReason
+      }));
+
+      const payload = {
+        claims: claims,
+        totalOTHours: claims.reduce((sum, c) => sum + c.otHours, 0)
+      };
+
+      const res = await fetch(`${API_BASE_URL}/employees/claimot`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to claim OT");
+
+      alert(`✅ ${claims.length} OT claims submitted successfully!`);
+      setShowOTClaimModal(false);
+      setSelectedOTRecords([]);
+      setSelectedOTIds([]);
+      setOTClaimReason("");
+
+      await fetchClaimedOT(employeeData.employeeId);
+      
+      const refreshRes = await fetch(`${API_BASE_URL}/attendance/myattendance/${employeeData.employeeId}`);
+      const refreshData = await refreshRes.json();
+      if (refreshRes.ok) {
+        const sortedRecords = (refreshData.records || []).sort((a, b) =>
+          new Date(b.checkInTime) - new Date(a.checkInTime)
+        );
+        setRecords(sortedRecords);
+        setFilteredRecords(sortedRecords);
+      }
+    } catch (err) {
+      console.error("Submit OT claim error:", err);
+      alert("❌ Error: " + err.message);
+    } finally {
+      setSubmittingOTClaim(false);
+    }
+  };
+
   // Apply filters and search
   useEffect(() => {
     let filtered = records;
 
-    // Single date filter
     if (searchDate) {
       filtered = filtered.filter(rec => {
         const recordDate = new Date(rec.checkInTime || rec.createdAt).toISOString().split("T")[0];
@@ -1414,7 +1646,6 @@ export default function MyAttendance() {
       });
     }
 
-    // Date range filter (from - to)
     if (dateFrom && dateTo) {
       filtered = filtered.filter(rec => {
         const recordDate = new Date(rec.checkInTime || rec.createdAt);
@@ -1443,7 +1674,6 @@ export default function MyAttendance() {
       });
     }
 
-    // Month filter
     if (selectedMonth) {
       const [year, month] = selectedMonth.split("-").map(Number);
       filtered = filtered.filter((rec) => {
@@ -1452,12 +1682,10 @@ export default function MyAttendance() {
       });
     }
 
-    // Status filter
     if (statusFilter !== "all") {
       filtered = filtered.filter(rec => rec.status === statusFilter);
     }
 
-    // Onsite filter
     if (onsiteFilter !== "all") {
       filtered = filtered.filter(rec =>
         onsiteFilter === "yes" ? rec.onsite : !rec.onsite
@@ -1465,7 +1693,7 @@ export default function MyAttendance() {
     }
 
     setFilteredRecords(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   }, [searchDate, dateFrom, dateTo, selectedMonth, statusFilter, onsiteFilter, records]);
 
   // Pagination logic
@@ -1474,48 +1702,6 @@ export default function MyAttendance() {
   const currentRecords = filteredRecords.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
 
-  // Format time for display with blinking animation
-  const formatTimeWithStatus = (checkInTime, checkOutTime) => {
-    const checkIn = checkInTime ? new Date(checkInTime).toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    }) : null;
-
-    const checkOut = checkOutTime ? new Date(checkOutTime).toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    }) : null;
-
-    if (checkIn && !checkOut) {
-      // Still checked in - show with blue blinking
-      return (
-        <div className="flex items-center justify-center gap-1">
-          <span className="relative flex w-2 h-2">
-            <span className="absolute inline-flex w-full h-full bg-blue-500 rounded-full opacity-75 animate-ping"></span>
-            <span className="relative inline-flex w-2 h-2 bg-blue-600 rounded-full"></span>
-          </span>
-          <span className="font-semibold text-blue-700">{checkIn}</span>
-          <span className="text-xs text-gray-500">/ --:--</span>
-        </div>
-      );
-    } else if (checkIn && checkOut) {
-      // Completed - show in red
-      return (
-        <div className="flex items-center justify-center gap-1">
-          <span className="inline-flex w-2 h-2 bg-red-500 rounded-full"></span>
-          <span className="font-semibold text-gray-700">{checkIn}</span>
-          <span className="text-xs text-gray-500">/</span>
-          <span className="font-semibold text-red-600">{checkOut}</span>
-        </div>
-      );
-    } else {
-      return <span className="text-gray-500">-</span>;
-    }
-  };
-
-  // Format date for display
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
       day: '2-digit',
@@ -1524,7 +1710,6 @@ export default function MyAttendance() {
     });
   };
 
-  // Clear all filters
   const clearFilters = () => {
     setSearchDate("");
     setDateFrom("");
@@ -1534,7 +1719,6 @@ export default function MyAttendance() {
     setOnsiteFilter("all");
   };
 
-  // Handle date change - clear other date filters when using specific filter
   const handleSearchDateChange = (e) => {
     setSearchDate(e.target.value);
     setDateFrom("");
@@ -1561,13 +1745,11 @@ export default function MyAttendance() {
     setDateTo("");
   };
 
-  // Handle items per page change
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value));
     setCurrentPage(1);
   };
 
-  // Pagination handlers
   const handlePrevPage = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
@@ -1654,8 +1836,12 @@ export default function MyAttendance() {
       "Date",
       "Check-In Time",
       "Check-Out Time",
+      "Assigned Shift",
       "Total Hours",
-      "Break Time",
+      "OT Hours",
+      "Claimed OT",
+      "OT Amount",
+      "Multiplier",
       "Distance (m)",
       "Onsite",
       "Reason",
@@ -1665,19 +1851,30 @@ export default function MyAttendance() {
     const csvRows = [
       headers.join(","),
       ...filteredRecords.map((rec) => {
-        const breakMinutes = rec.totalBreakMinutes || calculateTotalBreakMinutes(rec.breaks);
-        const formattedBreak = formatBreakMinutes(breakMinutes);
-        const formattedHours = formatDecimalHours(rec.totalHours);
+        const totalHours = rec.totalHours || rec.hours || 0;
+        const assignedShift = getCorrectShiftHours(rec);
+        const formattedHours = formatDecimalHours(totalHours);
+        const otHours = calculateOTHoursFromRecord(rec);
+        const formattedOT = formatDecimalHours(otHours);
+        const claimed = isOTClaimed(rec._id);
+        const claimStatus = getOTClaimStatus(rec._id);
+        const otAmount = claimStatus?.otAmount || 0;
+        const multiplier = claimStatus?.multiplier || 0;
+        const status = claimed ? (claimStatus?.status || "Claimed") : "Pending";
         return [
           `"${formatDate(rec.checkInTime || rec.createdAt)}"`,
           `"${rec.checkInTime ? new Date(rec.checkInTime).toLocaleString() : "-"}"`,
           `"${rec.checkOutTime ? new Date(rec.checkOutTime).toLocaleString() : "-"}"`,
+          `${assignedShift}h`,
           formattedHours,
-          formattedBreak,
+          otHours > 0 ? formattedOT : "0h 0m",
+          claimed ? "Yes" : "No",
+          claimed ? `₹${otAmount.toFixed(2)}` : "-",
+          claimed ? `${multiplier}x` : "-",
           rec.distance?.toFixed(2) || "0.00",
           rec.onsite ? "Yes" : "No",
           `"${rec.reason || "Not specified"}"`,
-          rec.status
+          status
         ].join(",");
       }),
     ];
@@ -1692,6 +1889,17 @@ export default function MyAttendance() {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  // Calculate total OT available
+  const totalOTAvailable = records.reduce((sum, r) => {
+    if (!isOTClaimed(r._id)) {
+      const ot = calculateOTHoursFromRecord(r);
+      return sum + (ot > 0 ? ot : 0);
+    }
+    return sum;
+  }, 0);
+
+  const availableOTCount = records.filter(r => hasOTAvailable(r)).length;
 
   if (loading) {
     return (
@@ -1725,8 +1933,17 @@ export default function MyAttendance() {
     <div className="min-h-screen px-2 py-2 bg-gradient-to-br from-purple-50 to-blue-100 sm:px-3 sm:py-3">
       <div className="mx-auto max-w-9xl">
 
+        {/* OT Info Banner */}
+        <div className="p-3 mb-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-700">
+            ⏱️ <strong>OT Calculation:</strong> OT hours are calculated when total hours exceed <strong>Assigned Shift Hours</strong> by more than <strong>30 minutes (0.5 hours)</strong>.
+            <br />
+            <span className="text-xs text-blue-600">💡 Example: If shift is 9h, OT starts after 9h 30m of work.</span>
+          </p>
+        </div>
+
         {/* Stats Cards - Dashboard Style */}
-        <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-6">
           <StatCard
             label="Total Records"
             value={records.length}
@@ -1747,17 +1964,61 @@ export default function MyAttendance() {
           />
           <StatCard
             label="Full Days"
-            value={records.filter(r => r.totalHours >= 8).length}
+            value={records.filter(r => (r.totalHours || r.hours || 0) >= 8).length}
             color="purple"
             icon={FiCheckSquare}
           />
           <StatCard
-            label="Total Break"
-            value={records.reduce((sum, r) => sum + (r.totalBreakMinutes || calculateTotalBreakMinutes(r.breaks)), 0)}
+            label="OT Hours"
+            value={records.reduce((sum, r) => {
+              const ot = calculateOTHoursFromRecord(r);
+              return sum + ot;
+            }, 0)}
             color="orange"
-            icon={FiCoffee}
+            icon={FiClock}
+          />
+          <StatCard
+            label="Claimed OT"
+            value={claimedOTRecords.length}
+            color="teal"
+            icon={FiCheckCircle}
           />
         </div>
+
+        {/* Available OT Banner */}
+        {availableOTCount > 0 && (
+          <div className="p-3 mb-3 bg-orange-50 border border-orange-200 rounded-lg flex flex-wrap items-center justify-between">
+            <div>
+              <span className="text-sm font-medium text-orange-700">
+                🕐 {availableOTCount} record(s) have OT available ({formatDecimalHours(totalOTAvailable)} total OT hours)
+              </span>
+            </div>
+            {selectedOTIds.length > 0 && (
+              <span className="text-xs text-orange-600 font-medium">
+                {selectedOTIds.length} selected
+              </span>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={handleSelectAllOT}
+                className="px-3 py-1 text-xs font-medium text-orange-700 bg-white border border-orange-300 rounded-lg hover:bg-orange-100 transition"
+              >
+                {selectedOTIds.length === availableOTCount && availableOTCount > 0 ? 'Deselect All' : 'Select All'}
+              </button>
+              <button
+                onClick={handleBulkOTClaim}
+                disabled={selectedOTIds.length === 0}
+                className={`px-3 py-1 text-xs font-medium text-white rounded-lg transition ${
+                  selectedOTIds.length === 0 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-orange-500 hover:bg-orange-600'
+                }`}
+              >
+                Claim Selected ({selectedOTIds.length})
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Filters Section */}
         <div className="p-2 mb-3 bg-white rounded-lg shadow-md sm:p-3">
@@ -1892,10 +2153,22 @@ export default function MyAttendance() {
                 <table className="min-w-full">
                   <thead className="text-xs text-left text-white sm:text-sm bg-gradient-to-r from-green-500 to-blue-600">
                     <tr>
+                      <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+                        <input
+                          type="checkbox"
+                          checked={records.filter(r => hasOTAvailable(r)).length > 0 && selectedOTIds.length === records.filter(r => hasOTAvailable(r)).length}
+                          onChange={handleSelectAllOT}
+                          className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                          disabled={records.filter(r => hasOTAvailable(r)).length === 0}
+                        />
+                      </th>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Date</th>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Check-In/Out</th>
+                      <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Assigned Shift</th>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Hours</th>
-                      <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Break Time</th>
+                      <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">OT Hours</th>
+                      <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Claimed OT</th>
+                      <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">OT Amount</th>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Distance</th>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Onsite</th>
                       <th className="px-2 py-1.5 text-center sm:px-3 sm:py-2">Reason</th>
@@ -1904,91 +2177,125 @@ export default function MyAttendance() {
                   </thead>
                   <tbody>
                     {currentRecords.map((rec, idx) => {
-                      // Determine color based on total hours
+                      const totalHours = rec.totalHours || rec.hours || 0;
+                      const assignedShift = getCorrectShiftHours(rec);
                       let hoursColorClass = 'text-red-600';
-                      if (rec.totalHours >= 8) hoursColorClass = 'text-blue-700';
-                      else if (rec.totalHours >= 4) hoursColorClass = 'text-orange-600';
+                      if (totalHours >= assignedShift) hoursColorClass = 'text-blue-700';
+                      else if (totalHours >= assignedShift * 0.5) hoursColorClass = 'text-orange-600';
                       else hoursColorClass = 'text-red-600';
                       
-                      // Get break minutes from API or calculate from breaks array
-                      const breakMinutes = rec.totalBreakMinutes || calculateTotalBreakMinutes(rec.breaks);
-                      const breakColorClass = breakMinutes > 0 ? 'text-orange-600' : 'text-gray-400';
+                      const otHours = calculateOTHoursFromRecord(rec);
+                      const hasOT = otHours > 0;
+                      const claimed = isOTClaimed(rec._id);
+                      const claimStatus = getOTClaimStatus(rec._id);
+                      const isAvailable = hasOT && !claimed;
+                      
+                      let statusDisplay = "Pending";
+                      let statusColor = "text-gray-400";
+                      let bgColor = "bg-gray-50";
+                      let borderColor = "border-gray-200";
+                      
+                      if (claimed && claimStatus) {
+                        if (claimStatus.status === 'approved') {
+                          statusDisplay = "Approved";
+                          statusColor = "text-green-600";
+                          bgColor = "bg-green-50";
+                          borderColor = "border-green-200";
+                        } else if (claimStatus.status === 'rejected') {
+                          statusDisplay = "Rejected";
+                          statusColor = "text-red-600";
+                          bgColor = "bg-red-50";
+                          borderColor = "border-red-200";
+                        } else {
+                          statusDisplay = "Pending";
+                          statusColor = "text-yellow-600";
+                          bgColor = "bg-yellow-50";
+                          borderColor = "border-yellow-200";
+                        }
+                      }
+                      
+                      let otAmountDisplay = "-";
+                      let otAmountColor = "text-gray-400";
+                      if (claimed && claimStatus && claimStatus.otAmount) {
+                        otAmountDisplay = `₹${claimStatus.otAmount.toFixed(2)}`;
+                        otAmountColor = "text-green-600 font-semibold";
+                      }
                       
                       return (
                         <tr
                           key={rec._id || idx}
                           className={`${idx % 2 === 0 ? "bg-white" : "bg-white"} hover:bg-blue-50 hover:shadow-sm transition-all duration-200 text-xs sm:text-sm`}
                         >
-                          {/* Date */}
+                          <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+                            {isAvailable && (
+                              <input
+                                type="checkbox"
+                                checked={selectedOTIds.includes(rec._id)}
+                                onChange={() => handleOTCheckboxChange(rec._id)}
+                                className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                              />
+                            )}
+                          </td>
                           <td className="px-2 py-1.5 font-medium text-center text-gray-900 whitespace-nowrap sm:px-3 sm:py-2">
                             {formatDate(rec.checkInTime || rec.createdAt)}
-                           </td>
-
-                          {/* Check-In/Out with Blinking */}
+                          </td>
                           <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                            {formatTimeWithStatus(rec.checkInTime, rec.checkOutTime)}
-                           </td>
-
-                          {/* Hours */}
+                            {formatTimeWithStatus(rec)}
+                          </td>
+                          <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+                            <span className="font-semibold text-purple-600">
+                              {assignedShift}h
+                            </span>
+                          </td>
                           <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
                             <span className={`font-semibold ${hoursColorClass}`}>
-                              {formatDecimalHours(rec.totalHours)}
+                              {formatDecimalHours(totalHours)}
                             </span>
-                           </td>
-
-                          {/* Break Time - NEW COLUMN */}
+                          </td>
                           <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                            <div className="flex items-center justify-center gap-1">
-                              <FiCoffee className={`w-3 h-3 ${breakColorClass}`} />
-                              <span className={`font-medium ${breakColorClass}`}>
-                                {formatBreakMinutes(breakMinutes)}
+                            {hasOT ? (
+                              <span className="font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200">
+                                +{formatDecimalHours(otHours)}
                               </span>
-                            </div>
-                            {rec.breaks && rec.breaks.length > 0 && rec.breaks[0].reason && (
-                              <div className="text-[9px] text-gray-400">
-                                {rec.breaks[0].reason}
-                              </div>
+                            ) : (
+                              <span className="text-gray-400">0h 0m</span>
                             )}
-                           </td>
-
-                          {/* Distance */}
+                          </td>
+                          <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+                            {claimed ? (
+                              <span className={`font-semibold ${statusColor} ${bgColor} px-2 py-0.5 rounded-full border ${borderColor}`}>
+                                {statusDisplay}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">Pending</span>
+                            )}
+                          </td>
+                          <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
+                            <span className={otAmountColor}>
+                              {otAmountDisplay}
+                            </span>
+                          </td>
                           <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
                             <span className="px-1.5 py-0.5 font-mono text-gray-700 bg-gray-100 rounded sm:px-2 sm:py-1">
                               {rec.distance?.toFixed(0) || "0"}m
                             </span>
-                           </td>
-
-                          {/* Onsite */}
+                          </td>
                           <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                            <span
-                              className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${rec.onsite
-                                ? "bg-emerald-50 text-emerald-700 border border-green-300"
-                                : "bg-red-50 text-red-700 border border-red-300"
-                              }`}
-                            >
+                            <span className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${rec.onsite ? "bg-emerald-50 text-emerald-700 border border-green-300" : "bg-red-50 text-red-700 border border-red-300"}`}>
                               {rec.onsite ? "🏢 Yes" : "🏠 No"}
                             </span>
-                           </td>
-
-                          {/* Reason */}
+                          </td>
                           <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
                             <span className="text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded max-w-[80px] truncate block sm:max-w-[100px]">
                               {rec.reason || "-"}
                             </span>
-                           </td>
-
-                          {/* Status */}
+                          </td>
                           <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                            <span
-                              className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${rec.status === "checked-in"
-                                ? "bg-blue-50 text-blue-700 border border-blue-300 animate-pulse"
-                                : "bg-purple-100 text-purple-800 border border-purple-300"
-                              }`}
-                            >
+                            <span className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${rec.status === "checked-in" ? "bg-blue-50 text-blue-700 border border-blue-300 animate-pulse" : "bg-purple-100 text-purple-800 border border-purple-300"}`}>
                               {rec.status === "checked-in" ? "In" : "Out"}
                             </span>
-                           </td>
-                         </tr>
+                          </td>
+                        </tr>
                       );
                     })}
                   </tbody>
@@ -2026,10 +2333,7 @@ export default function MyAttendance() {
                     <button
                       onClick={handlePrevPage}
                       disabled={currentPage === 1}
-                      className={`px-2 py-1 text-xs font-semibold rounded-lg transition ${currentPage === 1
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
-                      }`}
+                      className={`px-2 py-1 text-xs font-semibold rounded-lg transition ${currentPage === 1 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"}`}
                     >
                       ←
                     </button>
@@ -2039,12 +2343,7 @@ export default function MyAttendance() {
                         key={index}
                         onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                         disabled={page === "..."}
-                        className={`px-2 py-1 text-xs font-semibold rounded-lg transition min-w-[24px] ${page === "..."
-                          ? "bg-gray-200 text-gray-500 cursor-default"
-                          : currentPage === page
-                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                        }`}
+                        className={`px-2 py-1 text-xs font-semibold rounded-lg transition min-w-[24px] ${page === "..." ? "bg-gray-200 text-gray-500 cursor-default" : currentPage === page ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
                       >
                         {page}
                       </button>
@@ -2053,10 +2352,7 @@ export default function MyAttendance() {
                     <button
                       onClick={handleNextPage}
                       disabled={currentPage === totalPages}
-                      className={`px-2 py-1 text-xs font-semibold rounded-lg transition ${currentPage === totalPages
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
-                      }`}
+                      className={`px-2 py-1 text-xs font-semibold rounded-lg transition ${currentPage === totalPages ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"}`}
                     >
                       →
                     </button>
@@ -2075,12 +2371,7 @@ export default function MyAttendance() {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-800">Request Record Edit</h2>
-                <button 
-                  onClick={() => setShowEditModal(false)}
-                  className="p-1 text-gray-500 transition hover:text-gray-700"
-                >
-                  ✕
-                </button>
+                <button onClick={() => setShowEditModal(false)} className="p-1 text-gray-500 transition hover:text-gray-700">✕</button>
               </div>
               <p className="mt-1 text-xs text-gray-500">Raise a request to admin to edit your attendance records</p>
             </div>
@@ -2089,50 +2380,23 @@ export default function MyAttendance() {
               <div>
                 <label className="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-wider">Employee ID & Name</label>
                 <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    value={employeeData?.employeeId || ""} 
-                    disabled 
-                    className="w-1/3 px-3 py-2 text-xs bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed"
-                  />
-                  <input 
-                    type="text" 
-                    value={employeeData?.name || ""} 
-                    disabled 
-                    className="w-2/3 px-3 py-2 text-xs bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed"
-                  />
+                  <input type="text" value={employeeData?.employeeId || ""} disabled className="w-1/3 px-3 py-2 text-xs bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed" />
+                  <input type="text" value={employeeData?.name || ""} disabled className="w-2/3 px-3 py-2 text-xs bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed" />
                 </div>
               </div>
 
               <div>
                 <label className="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-wider">Select Dates</label>
                 <div className="flex gap-2">
-                  <input
-                    type="date"
-                    value={requestDate}
-                    onChange={(e) => setRequestDate(e.target.value)}
-                    className="flex-1 px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddRequestDate}
-                    className="px-3 py-1 text-xs font-bold text-white transition bg-indigo-600 rounded-lg hover:bg-indigo-700"
-                  >
-                    + Add
-                  </button>
+                  <input type="date" value={requestDate} onChange={(e) => setRequestDate(e.target.value)} className="flex-1 px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500" />
+                  <button type="button" onClick={handleAddRequestDate} className="px-3 py-1 text-xs font-bold text-white transition bg-indigo-600 rounded-lg hover:bg-indigo-700">+ Add</button>
                 </div>
-
                 {selectedRequestDates.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
                     {selectedRequestDates.map(date => (
                       <span key={date} className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold text-blue-700 bg-blue-100 border border-blue-200 rounded-full">
                         {date}
-                        <button 
-                          onClick={() => handleRemoveRequestDate(date)}
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          ×
-                        </button>
+                        <button onClick={() => handleRemoveRequestDate(date)} className="text-blue-600 hover:text-blue-700">×</button>
                       </span>
                     ))}
                   </div>
@@ -2141,29 +2405,102 @@ export default function MyAttendance() {
 
               <div>
                 <label className="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-wider">Comment / Reason</label>
+                <textarea value={requestComment} onChange={(e) => setRequestComment(e.target.value)} placeholder="Explain why you need to edit these records..." className="w-full h-24 px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500" />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button onClick={() => setShowEditModal(false)} className="flex-1 px-4 py-2 text-xs font-bold text-gray-700 transition bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                <button onClick={handleSubmitEditRequest} disabled={submittingRequest} className={`flex-1 px-4 py-2 text-xs font-bold text-white transition rounded-lg shadow-lg ${submittingRequest ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"}`}>
+                  {submittingRequest ? "Submitting..." : "Submit Request"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk OT Claim Modal */}
+      {showOTClaimModal && selectedOTRecords.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl animate-in fade-in zoom-in duration-200">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-orange-700 flex items-center gap-2">
+                  <FaClock className="text-orange-500" /> Claim OT ({selectedOTRecords.length} records)
+                </h2>
+                <button onClick={() => setShowOTClaimModal(false)} className="p-1 text-gray-500 transition hover:text-gray-700">✕</button>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Claim overtime for selected records</p>
+              <p className="text-xs text-orange-600 mt-1">
+                💡 Click <span className="font-bold">✕</span> on any record to remove it from claim
+              </p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="max-h-40 overflow-y-auto space-y-1">
+                {selectedOTRecords.map((record, idx) => {
+                  const otHours = calculateOTHoursFromRecord(record);
+                  return (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-orange-50 rounded-lg border border-orange-200 text-xs">
+                      <div className="flex-1 flex justify-between items-center mr-2">
+                        <span className="font-medium text-gray-700">{formatDate(record.checkInTime)}</span>
+                        <span className="font-bold text-orange-600">+{formatDecimalHours(otHours)}</span>
+                      </div>
+                      <button
+                        onClick={() => handleUnselectFromPopup(record._id)}
+                        className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition flex-shrink-0"
+                        title="Remove from selection"
+                      >
+                        <FaTimes size={14} />
+                      </button>
+                    </div>
+                  );
+                })}
+                
+                {/* Total OT Hours */}
+                <div className="p-2 mt-1 bg-orange-100 rounded-lg border border-orange-300">
+                  <div className="flex justify-between font-semibold">
+                    <span>Total OT Hours</span>
+                    <span className="text-orange-700">
+                      {formatDecimalHours(selectedOTRecords.reduce((sum, r) => 
+                        sum + calculateOTHoursFromRecord(r), 0
+                      ))}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Remove All button */}
+                {selectedOTRecords.length > 1 && (
+                  <button
+                    onClick={() => {
+                      if (window.confirm("Remove all records from selection?")) {
+                        setSelectedOTRecords([]);
+                        setSelectedOTIds([]);
+                        setShowOTClaimModal(false);
+                      }
+                    }}
+                    className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 mt-1"
+                  >
+                    <FaTrash size={10} /> Remove All
+                  </button>
+                )}
+              </div>
+
+              <div>
+                <label className="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-wider">Reason for OT Claim</label>
                 <textarea
-                  value={requestComment}
-                  onChange={(e) => setRequestComment(e.target.value)}
-                  placeholder="Explain why you need to edit these records..."
-                  className="w-full h-24 px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500"
+                  value={otClaimReason}
+                  onChange={(e) => setOTClaimReason(e.target.value)}
+                  placeholder="Why are you claiming overtime for these days?"
+                  className="w-full h-24 px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-orange-500"
+                  required
                 />
               </div>
 
               <div className="flex gap-2 pt-2">
-                <button
-                  onClick={() => setShowEditModal(false)}
-                  className="flex-1 px-4 py-2 text-xs font-bold text-gray-700 transition bg-gray-100 rounded-lg hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSubmitEditRequest}
-                  disabled={submittingRequest}
-                  className={`flex-1 px-4 py-2 text-xs font-bold text-white transition rounded-lg shadow-lg ${
-                    submittingRequest ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                  }`}
-                >
-                  {submittingRequest ? "Submitting..." : "Submit Request"}
+                <button onClick={() => setShowOTClaimModal(false)} className="flex-1 px-4 py-2 text-xs font-bold text-gray-700 transition bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                <button onClick={handleSubmitBulkOTClaim} disabled={submittingOTClaim} className={`flex-1 px-4 py-2 text-xs font-bold text-white transition rounded-lg shadow-lg ${submittingOTClaim ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"}`}>
+                  {submittingOTClaim ? "Submitting..." : `Claim ${selectedOTRecords.length} OT`}
                 </button>
               </div>
             </div>
