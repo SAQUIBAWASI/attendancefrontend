@@ -1118,36 +1118,18 @@ const EmployeeLeaves = () => {
   const [isViewCompOffModalOpen, setIsViewCompOffModalOpen] = useState(false);
   const [viewCompOffData, setViewCompOffData] = useState(null);
 
-  // DUMMY DATA - FALLBACK
-  const dummyExtraDaysData = {
-    employeeId: "DEMO001",
-    employeeName: "Demo Employee",
-    month: "2026-08",
-    assignedWorkingDays: 26,
-    presentDays: 28,
+  // Real data states
+  const [extraDaysData, setExtraDaysData] = useState({
+    employeeId: "",
+    employeeName: "",
+    month: "",
+    assignedWorkingDays: 0,
+    presentDays: 0,
     extraDays: {
-      count: 2,
-      list: [
-        {
-          sr: 1,
-          date: "2026-08-27T00:00:00.000Z",
-          day: "Thursday, 27 August 2026",
-          totalHours: 9,
-          extraHours: 1
-        },
-        {
-          sr: 2,
-          date: "2026-08-28T00:00:00.000Z",
-          day: "Friday, 28 August 2026",
-          totalHours: 10,
-          extraHours: 2
-        }
-      ]
+      count: 0,
+      list: []
     }
-  };
-
-  const [extraDaysData, setExtraDaysData] = useState(dummyExtraDaysData);
-  const [realExtraDaysData, setRealExtraDaysData] = useState(null);
+  });
   
   const [isCompOffRequestsModalOpen, setIsCompOffRequestsModalOpen] = useState(false);
   const [extraDayCompOffRequests, setExtraDayCompOffRequests] = useState([]);
@@ -1243,30 +1225,40 @@ const EmployeeLeaves = () => {
   const fetchExtraDaysData = async (employeeId, month) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/attendance/extra-days/${employeeId}?month=${month}`);
-      console.log("API Response:", response.data);
+      console.log("Extra Days API Response:", response.data);
       
       if (response.data && response.data.success) {
-        setRealExtraDaysData(response.data);
+        setExtraDaysData(response.data);
         if (response.data.extraDays && response.data.extraDays.count > 0) {
-          setExtraDaysData(response.data);
-        } else {
-          setExtraDaysData(prev => ({
-            ...prev,
-            month: month || prev.month
-          }));
+          // Fetch comp-off requests for these extra days
+          fetchExtraDayCompOffRequests(employeeId, month);
         }
       } else {
-        setExtraDaysData(prev => ({
-          ...prev,
-          month: month || prev.month
-        }));
+        setExtraDaysData({
+          employeeId: employeeId,
+          employeeName: "",
+          month: month,
+          assignedWorkingDays: 0,
+          presentDays: 0,
+          extraDays: {
+            count: 0,
+            list: []
+          }
+        });
       }
     } catch (error) {
       console.error("Error fetching extra days data:", error);
-      setExtraDaysData(prev => ({
-        ...prev,
-        month: month || prev.month
-      }));
+      setExtraDaysData({
+        employeeId: employeeId,
+        employeeName: "",
+        month: month,
+        assignedWorkingDays: 0,
+        presentDays: 0,
+        extraDays: {
+          count: 0,
+          list: []
+        }
+      });
     }
   };
 
@@ -1297,13 +1289,17 @@ const EmployeeLeaves = () => {
     const month = e.target.value;
     setSelectedMonth(month);
     
-    if (realExtraDaysData && realExtraDaysData.month === month) {
-      setExtraDaysData(realExtraDaysData);
-    } else {
-      setExtraDaysData(prev => ({
-        ...prev,
-        month: month
-      }));
+    const employeeDataRaw = localStorage.getItem("employeeData");
+    if (employeeDataRaw) {
+      try {
+        const employeeData = JSON.parse(employeeDataRaw);
+        const employeeId = employeeData.employeeId;
+        if (employeeId) {
+          fetchExtraDaysData(employeeId, month);
+        }
+      } catch (err) {
+        console.error("Error parsing employee data:", err);
+      }
     }
   };
 
@@ -1715,11 +1711,13 @@ const EmployeeLeaves = () => {
     );
   }
 
-  const displayData = (realExtraDaysData && realExtraDaysData.extraDays && realExtraDaysData.extraDays.count > 0) 
-    ? realExtraDaysData 
-    : extraDaysData;
-    
-  const hasExtraDays = displayData.extraDays && displayData.extraDays.count > 0 && displayData.extraDays.list.length > 0;
+  const hasExtraDays = extraDaysData.extraDays && extraDaysData.extraDays.count > 0 && extraDaysData.extraDays.list.length > 0;
+
+  // Calculate leave stats from real data
+  const totalLeaves = leaves.length;
+  const approvedLeaves = leaves.filter(l => l.status === "approved").length;
+  const pendingLeaves = leaves.filter(l => l.status === "pending").length;
+  const rejectedLeaves = leaves.filter(l => l.status === "rejected").length;
 
   return (
     <div className="min-h-screen p-2 sm:p-4">
@@ -1732,43 +1730,43 @@ const EmployeeLeaves = () => {
         )}
 
         <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-5">
-          <StatCard icon={FiFileText} label="Total Leaves" value={leaves.length || 8} color="indigo" />
-          <StatCard icon={FiCheckCircle} label="Approved" value={leaves.filter(l => l.status === "approved").length || 5} color="emerald" />
-          <StatCard icon={FiClock} label="Pending" value={leaves.filter(l => l.status === "pending").length || 2} color="amber" />
-          <StatCard icon={FiXCircle} label="Rejected" value={leaves.filter(l => l.status === "rejected").length || 1} color="rose" />
-          <StatCard icon={FaExchangeAlt} label="Comp-off" value={`${extraDayCompOffRequests.length}/5`} color="cyan" />
+          <StatCard icon={FiFileText} label="Total Leaves" value={totalLeaves} color="indigo" />
+          <StatCard icon={FiCheckCircle} label="Approved" value={approvedLeaves} color="emerald" />
+          <StatCard icon={FiClock} label="Pending" value={pendingLeaves} color="amber" />
+          <StatCard icon={FiXCircle} label="Rejected" value={rejectedLeaves} color="rose" />
+          <StatCard icon={FaExchangeAlt} label="Comp-off" value={extraDayCompOffRequests.length} color="cyan" />
         </div>
 
         <div className="grid grid-cols-2 gap-1.5 mb-4 sm:grid-cols-4 sm:gap-2">
           <div className="bg-white border border-gray-200 rounded-md shadow-sm px-2 py-1.5">
             <p className="text-[9px] text-gray-500 font-medium">Casual Leave</p>
-            <p className="text-xs font-bold text-gray-800">8<span className="text-[9px] font-normal text-gray-400"> / 12</span></p>
+            <p className="text-xs font-bold text-gray-800">{leaveBalances?.casual?.used || 0}<span className="text-[9px] font-normal text-gray-400"> / {leaveBalances?.casual?.total || 12}</span></p>
             <div className="w-full bg-gray-100 rounded-full h-0.5 mt-0.5">
-              <div className="bg-blue-500 h-0.5 rounded-full" style={{ width: "33%" }}></div>
+              <div className="bg-blue-500 h-0.5 rounded-full" style={{ width: `${(leaveBalances?.casual?.used / leaveBalances?.casual?.total) * 100 || 0}%` }}></div>
             </div>
           </div>
           <div className="bg-white border border-gray-200 rounded-md shadow-sm px-2 py-1.5">
             <p className="text-[9px] text-gray-500 font-medium">Sick Leave</p>
-            <p className="text-xs font-bold text-gray-800">5<span className="text-[9px] font-normal text-gray-400"> / 10</span></p>
+            <p className="text-xs font-bold text-gray-800">{leaveBalances?.sick?.used || 0}<span className="text-[9px] font-normal text-gray-400"> / {leaveBalances?.sick?.total || 10}</span></p>
             <div className="w-full bg-gray-100 rounded-full h-0.5 mt-0.5">
-              <div className="bg-red-500 h-0.5 rounded-full" style={{ width: "50%" }}></div>
+              <div className="bg-red-500 h-0.5 rounded-full" style={{ width: `${(leaveBalances?.sick?.used / leaveBalances?.sick?.total) * 100 || 0}%` }}></div>
             </div>
           </div>
           <div className="bg-white border border-gray-200 rounded-md shadow-sm px-2 py-1.5">
             <p className="text-[9px] text-gray-500 font-medium">Earned Leave</p>
-            <p className="text-xs font-bold text-gray-800">3<span className="text-[9px] font-normal text-gray-400"> / 15</span></p>
+            <p className="text-xs font-bold text-gray-800">{leaveBalances?.earned?.used || 0}<span className="text-[9px] font-normal text-gray-400"> / {leaveBalances?.earned?.total || 15}</span></p>
             <div className="w-full bg-gray-100 rounded-full h-0.5 mt-0.5">
-              <div className="bg-green-500 h-0.5 rounded-full" style={{ width: "20%" }}></div>
+              <div className="bg-green-500 h-0.5 rounded-full" style={{ width: `${(leaveBalances?.earned?.used / leaveBalances?.earned?.total) * 100 || 0}%` }}></div>
             </div>
           </div>
           <div className="bg-white border border-gray-200 rounded-md shadow-sm px-2 py-1.5">
             <p className="text-[9px] text-gray-500 font-medium">Public Holidays</p>
-            <p className="text-xs font-bold text-gray-800">8</p>
-            <p className="text-[8px] text-gray-400">3 National</p>
+            <p className="text-xs font-bold text-gray-800">{publicHolidays.length}</p>
+            <p className="text-[8px] text-gray-400">{publicHolidays.filter(h => h.type === "national").length} National</p>
           </div>
         </div>
 
-        {/* Extra Days Details - Without View Requests Button */}
+        {/* Extra Days Details */}
         <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-xl rounded-2xl shadow-xl border border-white/40 p-4 mb-5">
           <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
             <div className="flex items-center gap-2">
@@ -1778,28 +1776,28 @@ const EmployeeLeaves = () => {
               <h3 className="text-base font-bold text-gray-800">Extra Days Details</h3>
             </div>
             <div className="flex items-center gap-2">
-              <input type="month" value={displayData.month || getCurrentMonth()} onChange={handleMonthChange} className="px-2 py-1 text-xs bg-white/50 border border-white/30 rounded-lg" />
+              <input type="month" value={extraDaysData.month || getCurrentMonth()} onChange={handleMonthChange} className="px-2 py-1 text-xs bg-white/50 border border-white/30 rounded-lg" />
             </div>
           </div>
           
           <p className="text-center text-sm font-semibold text-gray-700 mb-2">
-            {displayData.month ? new Date(displayData.month + "-01").toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : getCurrentMonth()}
+            {extraDaysData.month ? new Date(extraDaysData.month + "-01").toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : getCurrentMonth()}
           </p>
           
           <div className="grid grid-cols-2 gap-2 mt-2 mb-4">
             <div className="text-center bg-white/20 rounded-lg py-3 px-1">
-              <div className="text-2xl font-bold text-purple-700">{displayData.assignedWorkingDays || 26}</div>
+              <div className="text-2xl font-bold text-purple-700">{extraDaysData.assignedWorkingDays || 0}</div>
               <div className="text-[10px] text-gray-600">Assigned Days</div>
             </div>
             <div className="text-center bg-white/20 rounded-lg py-3 px-1">
-              <div className="text-2xl font-bold text-orange-600">{displayData.presentDays || 0}</div>
+              <div className="text-2xl font-bold text-orange-600">{extraDaysData.presentDays || 0}</div>
               <div className="text-[10px] text-gray-600">Present Days</div>
             </div>
           </div>
           
           <div className="mt-3 text-center mb-3">
             <div className={`text-sm font-bold rounded-lg py-2 ${hasExtraDays ? "bg-green-500/30 text-green-700" : "bg-gray-500/30 text-gray-600"}`}>
-              {hasExtraDays ? `Extra Days Worked: ${displayData.extraDays.count} day(s)` : `No Extra Days`}
+              {hasExtraDays ? `Extra Days Worked: ${extraDaysData.extraDays.count} day(s)` : `No Extra Days`}
             </div>
           </div>
           
@@ -1820,14 +1818,12 @@ const EmployeeLeaves = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/20">
-                    {displayData.extraDays.list.map((day, idx) => {
+                    {extraDaysData.extraDays.list.map((day, idx) => {
                       const compOffRequest = getCompOffRequestForExtraDay(day.date);
                       const requestStatus = getRequestStatusDisplay(compOffRequest);
-                      const isExpired = compOffRequest && compOffRequest.status === "approved" && isCompOffExpired(compOffRequest.workDate);
                       const applyBeforeDate = getApplyBeforeDate(day.date, 15);
                       const canApply = isApplyWindowOpen(day.date, 15);
                       const dayStatus = day.status || 'active';
-                      const statusText = dayStatus.charAt(0).toUpperCase() + dayStatus.slice(1);
                       const statusColors = {
                         active: "bg-green-100 text-green-700",
                         expired: "bg-red-100 text-red-700",
@@ -1840,7 +1836,7 @@ const EmployeeLeaves = () => {
                           <td className="px-3 py-2 text-xs text-gray-700">{formatDateDisplay(day.date)}</td>
                           <td className="px-3 py-2 text-xs text-gray-700">{day.day || formatDateDisplay(day.date)}</td>
                           <td className="px-3 py-2 text-xs text-gray-700">{day.totalHours || 8} hrs</td>
-                          <td className="px-3 py-2 text-xs text-green-600 font-semibold">+{day.extraHours || 1} hrs</td>
+                          <td className="px-3 py-2 text-xs text-green-600 font-semibold">+{day.extraHours || 0} hrs</td>
                           <td className="px-3 py-2 text-xs">
                             <span className={`px-2 py-1 rounded-full text-xs ${canApply ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"}`}>
                               {applyBeforeDate}
@@ -1853,7 +1849,7 @@ const EmployeeLeaves = () => {
                               </span>
                             ) : (
                               <span className={`px-2 py-1 text-xs rounded-full ${statusColors[dayStatus] || 'bg-gray-300 text-gray-600'}`}>
-                                {statusText}
+                                {dayStatus.charAt(0).toUpperCase() + dayStatus.slice(1)}
                               </span>
                             )}
                           </td>
@@ -1914,8 +1910,8 @@ const EmployeeLeaves = () => {
                     const canApplyCompOff = leave.status === "approved";
                     const compOffInfo = getCompOffStatusForLeave(leave._id);
                     
-                    const availableExtraDays = displayData.extraDays && displayData.extraDays.list 
-                      ? displayData.extraDays.list.filter(day => {
+                    const availableExtraDays = extraDaysData.extraDays && extraDaysData.extraDays.list 
+                      ? extraDaysData.extraDays.list.filter(day => {
                           const compOffRequest = getCompOffRequestForExtraDay(day.date);
                           return !compOffRequest || compOffRequest.status !== "approved";
                         })

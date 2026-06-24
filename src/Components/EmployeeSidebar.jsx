@@ -2062,7 +2062,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     "locations_manage", "job_posts_view", "job_applicants_view", "score_board_view",
     "assessments_view", "documents_view", "job_recruitment_manage", "holidays_view",
     "events_manage", "events_create", "events_edit", "events_delete", 
-    "events_view_all", "events_register_participants"
+    "events_view_all", "events_register_participants", "issues_view", "issues_manage"
   ];
 
   useEffect(() => {
@@ -2109,7 +2109,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/my-medical-certificate": "My Certificate",
       "/emp-holidays-calendar": "Holidays Calendar",
       "/emp-permissions": "Permissions",
-      "/emp-events": "Events"
+      "/emp-events": "Events",
+      "/emp-issues": "Issues"
     };
     return pathMap[path] || "Dashboard";
   };
@@ -2249,15 +2250,15 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         setIsManager(isManagerUser);
         
         if (isHRManagement) {
-          // Grant all admin permissions if they are HR/Management
           const allPerms = new Set([...fetchedPermissions, ...ADMIN_PERMISSIONS]);
           fetchedPermissions = Array.from(allPerms);
         } else if (isManagerUser) {
-          // Grant manager permissions automatically
           if (!fetchedPermissions.includes("leave_approve_manager")) fetchedPermissions.push("leave_approve_manager");
           if (!fetchedPermissions.includes("shifts_manage")) fetchedPermissions.push("shifts_manage");
           if (!fetchedPermissions.includes("events_view_all")) fetchedPermissions.push("events_view_all");
           if (!fetchedPermissions.includes("events_manage")) fetchedPermissions.push("events_manage");
+          if (!fetchedPermissions.includes("issues_view")) fetchedPermissions.push("issues_view");
+          if (!fetchedPermissions.includes("issues_manage")) fetchedPermissions.push("issues_manage");
         }
 
         setPermissions(fetchedPermissions);
@@ -2286,6 +2287,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
           if (!localPermissions.includes("shifts_manage")) localPermissions.push("shifts_manage");
           if (!localPermissions.includes("events_view_all")) localPermissions.push("events_view_all");
           if (!localPermissions.includes("events_manage")) localPermissions.push("events_manage");
+          if (!localPermissions.includes("issues_view")) localPermissions.push("issues_view");
+          if (!localPermissions.includes("issues_manage")) localPermissions.push("issues_manage");
         }
 
         setPermissions(localPermissions);
@@ -2308,9 +2311,9 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     return permissions.includes(permission);
   };
 
-  // Employee Menu - Same as before
+  // Employee Menu - Added Issues
   const buildEmployeeMenu = () => {
-    return [
+    const menu = [
       { icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/employeedashboard" },
       {
         icon: <i className="ri-calendar-fill"></i>,
@@ -2322,24 +2325,24 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
           { name: "My Assigned Location", path: "/mylocation" },
         ]
       },
-      // { icon: <i className="ri-calendar-fill"></i>, name: "Leave", path: "/myleaves" },
-      // { icon: <i className="ri-profile-fill"></i>, name: "Profile", path: "/emp-profile" },
-      // { icon: <i className="ri-money-dollar-box-fill"></i>, name: "My Salary", path: "/mysalary" },
-      // { icon: <i className="ri-money-dollar-box-fill"></i>, name: "Expenses", path: "/expense-management" },
-      // { icon: <i className="ri-calendar-fill"></i>, name: "Holidays", path: "/HolidayList" },
-      // { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
-
       { icon: <i className="ri-calendar-check-fill"></i>, name: "Leave", path: "/myleaves" },
-{ icon: <i className="ri-account-circle-fill"></i>, name: "Profile", path: "/emp-profile" },
-// { icon: <i className="ri-bank-card-fill"></i>, name: "My Salary", path: "/mysalary" },
-{ icon: <i className="ri-money-rupee-circle-fill"></i>, name: "My Salary", path: "/mysalary" },
-{ icon: <i className="ri-funds-fill"></i>, name: "Expenses", path: "/expense-management" },
-{ icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/HolidayList" },
-{ icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
+      { icon: <i className="ri-account-circle-fill"></i>, name: "Profile", path: "/emp-profile" },
+      { icon: <i className="ri-money-rupee-circle-fill"></i>, name: "My Salary", path: "/mysalary" },
+      { icon: <i className="ri-funds-fill"></i>, name: "Expenses", path: "/expense-management" },
+      { icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/HolidayList" },
+      // Added Issues with "NEW" badge
+      { 
+        icon: <i className="ri-error-warning-fill"></i>, 
+        name: "Issues", 
+        path: "/emp-issues",
+        badge: "NEW"
+      },
+      { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
     ];
+    return menu;
   };
 
-  // Admin Menu - Same as before with Events added
+  // Admin Menu - Added Issues
   const buildAdminMenu = () => {
     const menu = [];
 
@@ -2379,7 +2382,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       menu.push({ icon: <i className="ri-calendar-fill"></i>, name: "Leaves", path: "/emp-leaves" });
     }
     
-    // Manager Approve (for Manager/Team Lead) - Automatically shows for managers
+    // Manager Approve (for Manager/Team Lead)
     if (hasPermission("leave_approve_manager")) {
       menu.push({ icon: <i className="ri-user-star-fill"></i>, name: "Manager Approve", path: "/emp-pending-leaves" });
     }
@@ -2402,6 +2405,16 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     // Expenses
     if (hasPermission("expenses_manage") || hasPermission("expense_manage")) {
       menu.push({ icon: <i className="ri-money-dollar-circle-fill"></i>, name: "Expenses", path: "/emp-all-expensives-management" });
+    }
+
+    // Issues - Added with "NEW" badge
+    if (hasPermission("issues_view") || hasPermission("issues_manage")) {
+      menu.push({ 
+        icon: <i className="ri-error-warning-fill"></i>, 
+        name: "Issues", 
+        path: "/emp-issues",
+        badge: "NEW"
+      });
     }
 
     // User Activity
@@ -2430,7 +2443,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       });
     }
 
-    // Events - Shows automatically for managers
+    // Events
     if (hasPermission("events_view_all") || hasPermission("events_manage") || 
         hasPermission("events_create") || hasPermission("events_register_participants")) {
       menu.push({
@@ -2445,7 +2458,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       menu.push({ icon: <i className="ri-map-pin-2-fill"></i>, name: "Locations", path: "/emp-locations" });
     }
 
-    // Shifts - Shows automatically for managers
+    // Shifts
     if (hasPermission("shifts_manage")) {
       menu.push({ icon: <i className="ri-time-fill"></i>, name: "Shifts", path: "/emp-shifts" });
     }
@@ -2613,7 +2626,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
               ) : (
                 <div
                   onClick={() => handleItemClick(item.path, item.action)}
-                  className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
+                  className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 relative ${
                     isActive(item.path)
                       ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
                       : "hover:bg-blue-600"
@@ -2631,6 +2644,11 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                       <span className="text-[14px] font-medium leading-none truncate">
                         {item.name}
                       </span>
+                      {item.badge && (
+                        <span className="px-1.5 py-0.5 text-[8px] font-bold bg-red-500 text-white rounded-full animate-pulse">
+                          {item.badge}
+                        </span>
+                      )}
                       {isActive(item.path) && (
                         <div className="w-2 h-2 ml-auto rounded-full bg-emerald-300 animate-pulse"></div>
                       )}
