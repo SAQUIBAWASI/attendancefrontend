@@ -980,11 +980,10 @@
 
 import axios from 'axios';
 import { useEffect, useState } from "react";
-import { FiClock, FiTrendingUp, FiUserCheck, FiUserX, FiUsers, FiX } from "react-icons/fi";
+import { FiCalendar, FiClock, FiTrendingUp, FiUserCheck, FiUserX, FiUsers, FiX } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import StatCard from "../Components/StatCard";
-import CelebrationCard from "../Components/CelebrationCard";
 import { isEmployeeHidden } from "../utils/employeeStatus";
+import "./Dashboard.css";
 
 import {
   Bar,
@@ -1578,18 +1577,21 @@ const AttendanceDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[80vh] text-blue-600 font-medium animate-pulse">
-        Initializing Dashboard Analytics...
+      <div className="admin-dash">
+        <div className="admin-dash__loading">
+          <div className="admin-dash__spinner" />
+          <p className="admin-dash__loading-text">Loading dashboard analytics...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-[80vh] text-red-500 bg-red-50 rounded-xl m-6 p-10 shadow-inner border border-red-100">
-        <div className="text-center">
-          <p className="mb-2 text-2xl font-bold">Oops!</p>
-          <p>{error}</p>
+      <div className="admin-dash">
+        <div className="admin-dash__error">
+          <p className="admin-dash__error-title">Oops!</p>
+          <p className="admin-dash__error-message">{error}</p>
         </div>
       </div>
     );
@@ -1611,9 +1613,9 @@ const AttendanceDashboard = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="p-2 text-xs bg-white border border-gray-300 rounded-lg shadow-lg">
-          <p className="font-semibold text-gray-900">{data.name} ({data.id})</p>
-          <p className="text-gray-700">Attendance: {data.count} days</p>
+        <div className="admin-dash__tooltip">
+          <p className="admin-dash__tooltip-title">{data.name} ({data.id})</p>
+          <p className="admin-dash__tooltip-value">Attendance: {data.count} days</p>
         </div>
       );
     }
@@ -1625,9 +1627,9 @@ const AttendanceDashboard = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="p-2 text-xs bg-white border border-gray-300 rounded-lg shadow-lg">
-          <p className="font-semibold text-gray-900">{data.name} ({data.id})</p>
-          <p className="text-gray-700">Leaves: {data.count} days</p>
+        <div className="admin-dash__tooltip">
+          <p className="admin-dash__tooltip-title">{data.name} ({data.id})</p>
+          <p className="admin-dash__tooltip-value">Leaves: {data.count} days</p>
         </div>
       );
     }
@@ -1639,9 +1641,9 @@ const AttendanceDashboard = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="px-3 py-2 text-xs bg-white border border-gray-300 rounded-lg shadow-xl">
-          <p className="font-bold text-gray-900 mb-0.5 leading-none">{data.name}</p>
-          <p className="leading-none text-gray-500">
+        <div className="admin-dash__tooltip">
+          <p className="admin-dash__tooltip-title">{data.name}</p>
+          <p className="admin-dash__tooltip-value">
             {data.type === 'minutes' ? `Late Duration: ${data.value} mins` : `Late Days: ${data.value}`}
           </p>
         </div>
@@ -1655,9 +1657,9 @@ const AttendanceDashboard = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="px-3 py-2 text-xs bg-white border border-gray-300 rounded-lg shadow-xl">
-          <p className="font-bold text-gray-900 mb-0.5 leading-none">{data.name}</p>
-          <p className="leading-none text-gray-500">
+        <div className="admin-dash__tooltip">
+          <p className="admin-dash__tooltip-title">{data.name}</p>
+          <p className="admin-dash__tooltip-value">
             {data.type === 'daysSince' ? `Days Since Last: ${data.value}` : `Absent Days: ${data.value}`}
           </p>
         </div>
@@ -1680,253 +1682,289 @@ const AttendanceDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen p-2 lg:p-6 bg-white text-gray-900">
-
-
-
-      {/* 1. Top Summary Stats - Updated Cards */}
-      <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard
-          icon={FiUsers}
-          label="Total Staff"
-          value={totals.employees || 0}
-          color="indigo"
-          onClick={() => navigate("/employeelist")}
-        />
-        <StatCard
-          icon={FiUserCheck}
-          label="Present Today"
-          value={presentToday || 0}
-          color="emerald"
-          onClick={() => navigate("/today-attendance")}
-        />
-        <StatCard
-          icon={FiUserX}
-          label="Absent Today"
-          value={absentToday || 0}
-          color="rose"
-          onClick={() => navigate("/absent-today")}
-        />
-        <StatCard
-          icon={FiClock}
-          label="Late Arrival"
-          value={lateToday || 0}
-          color="amber"
-          onClick={() => navigate("/late-today")}
-        />
-        <StatCard
-          icon={FiTrendingUp}
-          label="Attendance Rate"
-          value={totals.attendanceRate || 0}
-          isPercentage={true}
-          color="cyan"
-          onClick={() => navigate("/attedancesummary")}
-        />
-      </div>
-
-      {/* 3. Historical Performance */}
-      <div className="grid grid-cols-1 gap-4 mb-4 lg:grid-cols-2">
-        {/* Attendance Performance */}
-        <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[380px]">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h3 className="text-base font-bold text-gray-900">Top Attendance Performance</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="month"
-                value={attendanceMonth}
-                onChange={(e) => setAttendanceMonth(e.target.value)}
-                className="px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded focus:ring-1 focus:ring-indigo-600"
-              />
-              <button onClick={() => navigate("/attedancesummary")} className="font-bold text-indigo-600 transition-colors text-s hover:text-indigo-800 hidden sm:block">View Report →</button>
-            </div>
+    <div className="admin-dash">
+      <main>
+        {/* Header */}
+        <div className="admin-dash__header">
+          <div>
+            <h1 className="admin-dash__greeting">
+              Admin <span>Dashboard</span>
+            </h1>
+            <p className="admin-dash__subtitle">
+              Track attendance, leaves, and team performance in one place.
+            </p>
           </div>
-          <div className="flex-1 w-full">
-            {attendanceChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={attendanceChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis
-                    dataKey="id"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748b', fontSize: 11 }}
-                    angle={-25}
-                    textAnchor="end"
-                    interval={0}
-                    height={60}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748b', fontSize: 11 }}
-                  />
-                  <Tooltip content={<AttendanceTooltip />} cursor={{ fill: '#f8fafc' }} />
-                  <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={20}>
-                    {attendanceChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full text-sm text-gray-500">No attendance data available</div>
-            )}
+          <div className="admin-dash__date-pill">
+            <FiCalendar />
+            <span>
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "short",
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
           </div>
         </div>
 
-        {/* Most Late Comings */}
-        <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[380px]">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h3 className="text-base font-bold text-gray-900">Most Late Comings</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="month"
-                value={topLateMonth}
-                onChange={(e) => setTopLateMonth(e.target.value)}
-                className="px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded focus:ring-1 focus:ring-rose-600"
-              />
-              <button
-                onClick={() => navigate("/late-today")}
-                className="font-bold transition-colors text-s text-rose-600 hover:text-rose-800 hidden sm:block"
-              >
-                View All Lates →
-              </button>
-            </div>
-          </div>
-
-          <div className="flex-1 w-full">
-            {lateComersData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={lateComersData}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#f1f5f9"
-                    vertical={false}
-                  />
-
-                  <XAxis
-                    dataKey="id"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#64748b", fontSize: 11 }}
-                    angle={-25}
-                    textAnchor="end"
-                    interval={0}
-                    height={60}
-                  />
-
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#64748b", fontSize: 11 }}
-                    allowDecimals={false}
-                  />
-
-                  <Tooltip content={<AttendanceTooltip />} cursor={{ fill: '#f8fafc' }} />
-
-                  <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={20}>
-                    {lateComersData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={index >= 3 ? "#F59E0B" : "#EF4444"} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full text-sm text-gray-500">
-                No monthly late data available
+        {/* 1. Top Summary Stats - Updated Cards */}
+        <div className="admin-dash__stats">
+          <div className="admin-dash__stat" onClick={() => navigate("/employeelist")}>
+            <div className="admin-dash__stat-top">
+              <span className="admin-dash__stat-label">Total Staff</span>
+              <div className="admin-dash__stat-icon admin-dash__stat-icon--indigo">
+                <FiUsers />
               </div>
-            )}
+            </div>
+            <div className="admin-dash__stat-value">{totals.employees || 0}</div>
+            <div className="admin-dash__stat-meta">active employees</div>
+          </div>
+          <div className="admin-dash__stat" onClick={() => navigate("/today-attendance")}>
+            <div className="admin-dash__stat-top">
+              <span className="admin-dash__stat-label">Present Today</span>
+              <div className="admin-dash__stat-icon admin-dash__stat-icon--emerald">
+                <FiUserCheck />
+              </div>
+            </div>
+            <div className="admin-dash__stat-value">{presentToday || 0}</div>
+            <div className="admin-dash__stat-meta">employees present</div>
+          </div>
+          <div className="admin-dash__stat" onClick={() => navigate("/absent-today")}>
+            <div className="admin-dash__stat-top">
+              <span className="admin-dash__stat-label">Absent Today</span>
+              <div className="admin-dash__stat-icon admin-dash__stat-icon--rose">
+                <FiUserX />
+              </div>
+            </div>
+            <div className="admin-dash__stat-value">{absentToday || 0}</div>
+            <div className="admin-dash__stat-meta">employees absent</div>
+          </div>
+          <div className="admin-dash__stat" onClick={() => navigate("/late-today")}>
+            <div className="admin-dash__stat-top">
+              <span className="admin-dash__stat-label">Late Arrival</span>
+              <div className="admin-dash__stat-icon admin-dash__stat-icon--amber">
+                <FiClock />
+              </div>
+            </div>
+            <div className="admin-dash__stat-value">{lateToday || 0}</div>
+            <div className="admin-dash__stat-meta">late arrivals</div>
+          </div>
+          <div className="admin-dash__stat" onClick={() => navigate("/attedancesummary")}>
+            <div className="admin-dash__stat-top">
+              <span className="admin-dash__stat-label">Attendance Rate</span>
+              <div className="admin-dash__stat-icon admin-dash__stat-icon--cyan">
+                <FiTrendingUp />
+              </div>
+            </div>
+            <div className="admin-dash__stat-value">{totals.attendanceRate || 0}%</div>
+            <div className="admin-dash__stat-meta">overall rate</div>
           </div>
         </div>
-      </div>
 
-      {/* 3. Late & Absent Analysis */}
-      <div className="grid grid-cols-1 gap-8 mb-8 lg:grid-cols-2">
-        {/* Late Analysis (Pie Chart) */}
-        <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[400px]">
-          <div className="flex flex-col mb-2">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-base font-bold text-gray-900">Late Analysis</h3>
+        {/* 2. Historical Performance */}
+        <div className="admin-dash__charts-grid">
+          {/* Attendance Performance */}
+          <div className="admin-dash__card admin-dash__chart-wrap">
+            <div className="admin-dash__card-header">
+              <div>
+                <h3 className="admin-dash__card-title">Top Attendance Performance</h3>
+              </div>
               <div className="flex items-center gap-2">
-                {/* Month Filter */}
+                <input
+                  type="month"
+                  value={attendanceMonth}
+                  onChange={(e) => setAttendanceMonth(e.target.value)}
+                  className="admin-dash__month-input"
+                />
+                <button onClick={() => navigate("/attedancesummary")} className="admin-dash__card-link hidden sm:block">View Report →</button>
+              </div>
+            </div>
+            <div className="admin-dash__card-body flex-1">
+              {attendanceChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={attendanceChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis
+                      dataKey="id"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#64748b', fontSize: 11 }}
+                      angle={-25}
+                      textAnchor="end"
+                      interval={0}
+                      height={60}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#64748b', fontSize: 11 }}
+                    />
+                    <Tooltip content={<AttendanceTooltip />} cursor={{ fill: '#f8fafc' }} />
+                    <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={20}>
+                      {attendanceChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="admin-dash__empty-chart">No attendance data available</div>
+              )}
+            </div>
+          </div>
+
+          {/* Most Late Comings */}
+          <div className="admin-dash__card admin-dash__chart-wrap">
+            <div className="admin-dash__card-header">
+              <div>
+                <h3 className="admin-dash__card-title">Most Late Comings</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="month"
+                  value={topLateMonth}
+                  onChange={(e) => setTopLateMonth(e.target.value)}
+                  className="admin-dash__month-input"
+                />
+                <button
+                  onClick={() => navigate("/late-today")}
+                  className="admin-dash__card-link hidden sm:block"
+                >
+                  View All Lates →
+                </button>
+              </div>
+            </div>
+
+            <div className="admin-dash__card-body flex-1">
+              {lateComersData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={lateComersData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#f1f5f9"
+                      vertical={false}
+                    />
+
+                    <XAxis
+                      dataKey="id"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b", fontSize: 11 }}
+                      angle={-25}
+                      textAnchor="end"
+                      interval={0}
+                      height={60}
+                    />
+
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b", fontSize: 11 }}
+                      allowDecimals={false}
+                    />
+
+                    <Tooltip content={<AttendanceTooltip />} cursor={{ fill: '#f8fafc' }} />
+
+                    <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={20}>
+                      {lateComersData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={index >= 3 ? "#F59E0B" : "#EF4444"} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="admin-dash__empty-chart">
+                  No monthly late data available
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Late & Absent Analysis */}
+        <div className="admin-dash__charts-grid">
+          {/* Late Analysis (Pie Chart) */}
+          <div className="admin-dash__card admin-dash__chart-wrap admin-dash__chart-wrap--tall">
+            <div className="admin-dash__card-header">
+              <div>
+                <h3 className="admin-dash__card-title">Late Analysis</h3>
+                <p className="admin-dash__card-desc">
+                  {lateDate ? `Late Minutes on ${lateDate}` : `Late Days in ${lateMonth}`}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
                 <input
                   type="month"
                   value={lateMonth}
                   onChange={(e) => {
                     setLateMonth(e.target.value);
-                    setLateDate(""); // Clear date when month changes to default to month view
+                    setLateDate("");
                   }}
-                  className="px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded focus:ring-1 focus:ring-red-600"
+                  className="admin-dash__month-input"
                 />
-                {/* Date Filter */}
                 <input
                   type="date"
                   value={lateDate}
                   onChange={(e) => setLateDate(e.target.value)}
-                  className="px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded focus:ring-1 focus:ring-red-600"
+                  className="admin-dash__month-input"
                 />
                 <button
                   onClick={() => navigate("/late-today")}
-                  className="font-bold text-s text-amber-600 hover:text-amber-800 whitespace-nowrap"
+                  className="admin-dash__card-link whitespace-nowrap"
                 >
                   View Details
                 </button>
               </div>
             </div>
-            <p className="text-xs text-gray-500">
-              {lateDate ? `Late Minutes on ${lateDate}` : `Late Days in ${lateMonth}`}
-            </p>
+
+            <div className="admin-dash__card-body flex-1">
+              {lateChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={lateChartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {lateChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<LateTooltip />} />
+                    <Legend
+                      layout="vertical"
+                      align="right"
+                      verticalAlign="middle"
+                      wrapperStyle={{ fontSize: '10px', maxWidth: '40%' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="admin-dash__empty-chart">
+                  <FiClock />
+                  <p>No late records found</p>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="flex-1 w-full">
-            {lateChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={lateChartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {lateChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<LateTooltip />} />
-                  <Legend
-                    layout="vertical"
-                    align="right"
-                    verticalAlign="middle"
-                    wrapperStyle={{ fontSize: '10px', maxWidth: '40%' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-sm text-gray-500">
-                <FiClock className="w-10 h-10 mb-2 opacity-20" />
-                <p>No late records found</p>
+          {/* Absent Analysis (Pie Chart) */}
+          <div className="admin-dash__card admin-dash__chart-wrap admin-dash__chart-wrap--tall">
+            <div className="admin-dash__card-header">
+              <div>
+                <h3 className="admin-dash__card-title">Absent Analysis</h3>
+                <p className="admin-dash__card-desc">
+                  {absentDate ? `Days Since Last Attendance (as of ${absentDate})` : `Total Absent Days in ${absentMonth}`}
+                </p>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Absent Analysis (Bar Chart) */}
-        <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[400px]">
-          <div className="flex flex-col mb-2">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-base font-bold text-gray-900">Absent Analysis</h3>
               <div className="flex items-center gap-2">
-                {/* Month Filter */}
                 <input
                   type="month"
                   value={absentMonth}
@@ -1934,63 +1972,59 @@ const AttendanceDashboard = () => {
                     setAbsentMonth(e.target.value);
                     setAbsentDate("");
                   }}
-                  className="px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded focus:ring-1 focus:ring-red-600"
+                  className="admin-dash__month-input"
                 />
-                {/* Date Filter */}
                 <input
                   type="date"
                   value={absentDate}
                   onChange={(e) => setAbsentDate(e.target.value)}
-                  className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-red-600"
+                  className="admin-dash__month-input"
                 />
                 <button
                   onClick={() => navigate("/absent-today")}
-                  className="font-bold text-s text-rose-600 hover:text-rose-800 whitespace-nowrap"
+                  className="admin-dash__card-link whitespace-nowrap"
                 >
                   View Details
                 </button>
               </div>
             </div>
-            <p className="text-xs text-gray-500">
-              {absentDate ? `Days Since Last Attendance (as of ${absentDate})` : `Total Absent Days in ${absentMonth}`}
-            </p>
-          </div>
 
-          <div className="flex-1 w-full">
-            {absentChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={absentChartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {absentChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<AbsentTooltip />} />
-                  <Legend
-                    layout="vertical"
-                    align="right"
-                    verticalAlign="middle"
-                    wrapperStyle={{ fontSize: '10px', maxWidth: '40%' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-sm text-gray-500">
-                <FiUserX className="w-8 h-8 mb-2 opacity-20" />
-                <p>No absent records found</p>
-              </div>
-            )}
+            <div className="admin-dash__card-body flex-1">
+              {absentChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={absentChartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {absentChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<AbsentTooltip />} />
+                    <Legend
+                      layout="vertical"
+                      align="right"
+                      verticalAlign="middle"
+                      wrapperStyle={{ fontSize: '10px', maxWidth: '40%' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="admin-dash__empty-chart">
+                  <FiUserX />
+                  <p>No absent records found</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

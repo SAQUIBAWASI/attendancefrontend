@@ -505,43 +505,45 @@ const EmployeeNavbar = ({ isCollapsed, setIsCollapsed }) => {
   };
 
   return (
-    <nav className="bg-[#1D4ED8] border-blue-800/50 border-blue-800/50 text-white sticky top-0 w-full h-14 px-4 flex items-center justify-between  z-40">
-      <div className="flex items-center gap-4">
+    <nav className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-[#e4e7ec] bg-white px-4 shadow-sm">
+      <div className="flex items-center gap-3">
         <button
+          type="button"
           onClick={handleMenuClick}
-          className="text-2xl p-2 rounded-md hover:bg-[#1D4ED8] border border-blue-800/50 text-white transition"
+          className="rounded-lg p-2 text-[#667085] transition hover:bg-[#f0f2f5] hover:text-[#101828]"
         >
-          {isCollapsed ? <RiMenu2Line /> : <RiMenu3Line />}
+          {isCollapsed ? <RiMenu2Line className="text-xl" /> : <RiMenu3Line className="text-xl" />}
         </button>
 
-        <div className="bg-[#1D4ED8] border border-blue-800/50 text-white px-3 py-1 rounded-md">
-          <span className="font-semibold text-sm md:text-base">
+        <div>
+          <span className="text-sm font-semibold text-[#101828] md:text-base">
             {getPageTitle()}
           </span>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <button
+          type="button"
           onClick={handleNotificationClick}
-          className="relative p-2 transition rounded-full hover:bg-[#1D4ED8] border border-blue-800/50 text-white"
+          className="relative rounded-lg p-2 text-[#667085] transition hover:bg-[#f0f2f5] hover:text-[#101828]"
           disabled={isLoading}
         >
-          <MdNotificationsNone className="text-2xl text-white" />
+          <MdNotificationsNone className="text-2xl" />
           {!isLoading && unreadCount > 0 && (
-            <span className="absolute flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-[#1E3A8A] rounded-full -top-1 -right-1 animate-pulse">
+            <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#175cd3] text-xs font-bold text-white">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}
         </button>
 
-        <div className="flex items-center gap-2">
+        <div className="hidden items-center gap-2 sm:flex">
           <img
             src="https://t3.ftcdn.net/jpg/04/72/65/82/360_F_472658260_9eT6d4HzAt7lDZ8d5SAb5opOZikRH7AC.jpg"
             alt="Logo"
-            className="w-10 h-10 object-cover rounded-lg"
+            className="h-9 w-9 rounded-lg object-cover"
           />
-          <span className="font-semibold text-lg hidden sm:block">Attendance</span>
+          <span className="text-sm font-semibold text-[#101828]">Timely Health</span>
         </div>
       </div>
     </nav>

@@ -2306,9 +2306,13 @@
 
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
-import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag } from "react-icons/fa";
+import { FaBuilding, FaSearch, FaUserTag } from "react-icons/fa";
+import { FiCalendar, FiClock, FiCheckCircle, FiUserCheck, FiFilter, FiActivity } from "react-icons/fi";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
+import "../index.css";
+import "./EmployeeDashboard.css";
+import "./EmployeeLeaves.css";
 
 const BASE_URL = API_BASE_URL;
 
@@ -2637,363 +2641,505 @@ export const Permissions = () => {
     );
   }
 
+  const totalCount = filteredPermissions.length;
+  const pendingCount = filteredPermissions.filter(p => p.status === "PENDING").length;
+  const approvedCount = filteredPermissions.filter(p => p.status === "APPROVED").length;
+  const completedCount = filteredPermissions.filter(p => p.status === "COMPLETED").length;
+
   return (
-    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="mx-auto max-w-9xl">
-        {/* Filters */}
-        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
-          <div className="flex flex-wrap items-center gap-2">
-            
-            {/* ID/Name Search */}
-            <div className="relative flex-1 min-w-[180px]">
-              <FaSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm" />
-              <input
-                type="text"
-                placeholder="Search by ID or Name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+    <div className="emp-dash">
+      <main className="p-4 sm:p-6 lg:p-8">
 
-            {/* Department Filter Button */}
-            <div className="relative" ref={departmentFilterRef}>
-              <button
-                onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
-                  filterDepartment 
-                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                }`}
-              >
-                <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
-              </button>
-              
-              {/* Department Filter Dropdown */}
-              {showDepartmentFilter && (
-                <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                  <div 
-                    onClick={() => {
-                      setFilterDepartment('');
-                      setShowDepartmentFilter(false);
-                    }}
-                    className="px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-gray-200 font-medium text-gray-700"
-                  >
-                    All Departments
-                  </div>
-                  {uniqueDepartments.map(dept => (
-                    <div 
-                      key={dept}
-                      onClick={() => {
-                        setFilterDepartment(dept);
-                        setShowDepartmentFilter(false);
-                      }}
-                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                        filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                      }`}
-                    >
-                      {dept}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Designation Filter Button */}
-            <div className="relative" ref={designationFilterRef}>
-              <button
-                onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
-                  filterDesignation 
-                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                }`}
-              >
-                <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
-              </button>
-              
-              {/* Designation Filter Dropdown */}
-              {showDesignationFilter && (
-                <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                  <div 
-                    onClick={() => {
-                      setFilterDesignation('');
-                      setShowDesignationFilter(false);
-                    }}
-                    className="px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-gray-200 font-medium text-gray-700"
-                  >
-                    All Designations
-                  </div>
-                  {uniqueDesignations.map(des => (
-                    <div 
-                      key={des}
-                      onClick={() => {
-                        setFilterDesignation(des);
-                        setShowDesignationFilter(false);
-                      }}
-                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                        filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                      }`}
-                    >
-                      {des}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* From Date */}
-            <div className="relative w-[130px]">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
-                From:
-              </span>
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => {
-                  setFromDate(e.target.value);
-                  if (e.target.value && toDate) {
-                    handleDateRangeFilter();
-                  }
-                }}
-                onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* To Date */}
-            <div className="relative w-[130px]">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
-                To:
-              </span>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => {
-                  setToDate(e.target.value);
-                  if (fromDate && e.target.value) {
-                    handleDateRangeFilter();
-                  }
-                }}
-                onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Month Selector */}
-            <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-900 text-xs" />
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={handleMonthChange}
-                onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Apply Date Range Button */}
-            <button
-              onClick={handleDateRangeFilter}
-              disabled={!fromDate || !toDate}
-              className="h-8 px-3 text-xs font-medium text-gray-900 transition bg-blue-600 rounded-md hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Apply Date Range
-            </button>
-
-            {/* Clear Filters Button */}
-            {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
-              <button
-                onClick={clearFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition"
-              >
-                Clear
-              </button>
-            )}
+        {/* Dashboard Header */}
+        <div className="emp-dash__header">
+          <div>
+            <h1 className="emp-dash__greeting">
+              Employee Permission <span>Requests</span>
+            </h1>
+            <p className="emp-dash__subtitle">
+              Manage and review outbound or personal duty permission requests from employees.
+            </p>
+          </div>
+          <div className="emp-dash__date-pill">
+            <FiCalendar />
+            <span>
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "short",
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
           </div>
         </div>
 
+        {/* Top KPI Stats Grid */}
+        {!loading && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+            <div className="emp-dash__stat">
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Pending Approval</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
+                  <FiClock className="text-orange-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{pendingCount}</div>
+              <div className="emp-dash__stat-meta">awaiting review</div>
+            </div>
+            
+            <div className="emp-dash__stat">
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Active / Approved</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                  <FiCheckCircle className="text-blue-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{approvedCount}</div>
+              <div className="emp-dash__stat-meta">currently active</div>
+            </div>
+
+            <div className="emp-dash__stat">
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Completed / In Duty</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                  <FiUserCheck className="text-green-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{completedCount}</div>
+              <div className="emp-dash__stat-meta">successfully logged</div>
+            </div>
+
+            <div className="emp-dash__stat">
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Total Requests</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                  <FiActivity className="text-indigo-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{totalCount}</div>
+              <div className="emp-dash__stat-meta">in selected filter</div>
+            </div>
+          </div>
+        )}
+
+        {/* Filters Card */}
+        <div className="emp-dash__card mb-6">
+          <div className="emp-dash__card-header">
+            <div>
+              <h3 className="emp-dash__card-title flex items-center gap-2">
+                <FiFilter className="text-blue-600" /> Filter Requests
+              </h3>
+              <p className="emp-dash__card-desc">Search by employee name/ID, filter by department, designation, date range, or month</p>
+            </div>
+          </div>
+          <div className="emp-dash__card-body bg-gray-50/50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
+              
+              {/* Search */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-gray-600">Search Employee</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <FaSearch className="text-xs" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search name or ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Department Filter */}
+              <div className="flex flex-col gap-1.5 relative" ref={departmentFilterRef}>
+                <label className="text-xs font-medium text-gray-600">Department</label>
+                <button
+                  onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
+                    filterDepartment 
+                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-55'
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5 truncate">
+                    <FaBuilding className="text-gray-400" />
+                    {filterDepartment || 'All Departments'}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                
+                {showDepartmentFilter && (
+                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                    <div 
+                      onClick={() => {
+                        setFilterDepartment('');
+                        setShowDepartmentFilter(false);
+                      }}
+                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    >
+                      All Departments
+                    </div>
+                    {uniqueDepartments.map(dept => (
+                      <div 
+                        key={dept}
+                        onClick={() => {
+                          setFilterDepartment(dept);
+                          setShowDepartmentFilter(false);
+                        }}
+                        className={`px-3 py-2 text-xs hover:bg-blue-55 cursor-pointer transition-all ${
+                          filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                        }`}
+                      >
+                        {dept}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Designation Filter */}
+              <div className="flex flex-col gap-1.5 relative" ref={designationFilterRef}>
+                <label className="text-xs font-medium text-gray-600">Designation</label>
+                <button
+                  onClick={() => setShowDesignationFilter(!showDesignationFilter)}
+                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
+                    filterDesignation 
+                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-55'
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5 truncate">
+                    <FaUserTag className="text-gray-400" />
+                    {filterDesignation || 'All Designations'}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                
+                {showDesignationFilter && (
+                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                    <div 
+                      onClick={() => {
+                        setFilterDesignation('');
+                        setShowDesignationFilter(false);
+                      }}
+                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    >
+                      All Designations
+                    </div>
+                    {uniqueDesignations.map(des => (
+                      <div 
+                        key={des}
+                        onClick={() => {
+                          setFilterDesignation(des);
+                          setShowDesignationFilter(false);
+                        }}
+                        className={`px-3 py-2 text-xs hover:bg-blue-55 cursor-pointer transition-all ${
+                          filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                        }`}
+                      >
+                        {des}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* From Date */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-gray-600">From Date</label>
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => {
+                    setFromDate(e.target.value);
+                    if (e.target.value && toDate) {
+                      handleDateRangeFilter();
+                    }
+                  }}
+                  className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+              {/* To Date */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-gray-600">To Date</label>
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => {
+                    setToDate(e.target.value);
+                    if (fromDate && e.target.value) {
+                      handleDateRangeFilter();
+                    }
+                  }}
+                  className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+              {/* Month Filter */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-gray-600">Month</label>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={handleMonthChange}
+                  className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+            </div>
+            
+            <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100">
+              {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
+                <button
+                  onClick={clearFilters}
+                  className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-55 transition-colors shadow-sm"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Requests Table / Card Container */}
         {filteredPermissions.length === 0 ? (
           <div className="p-8 text-center bg-white rounded-lg shadow-md">
             <p className="text-lg text-gray-500">No permission requests found</p>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-gray-550">
               {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate) && "Try clearing search filters"}
             </p>
           </div>
         ) : (
-          <>
-            {/* Permissions Table */}
-            <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-              <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
-                <table className="min-w-full">
-                  <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
-                    <tr>
-                      <th className="py-2 text-center">Employee ID</th>
-                      <th className="py-2 text-center">Name</th>
-                      <th className="py-2 text-center">Department</th>
-                      <th className="py-2 text-center">Designation</th>
-                      <th className="py-2 text-center">Date & Time</th>
-                      <th className="py-2 text-center">Duration</th>
-                      <th className="py-2 text-center">Reason</th>
-                      <th className="py-2 text-center">Status</th>
-                      <th className="py-2 text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {currentItems.map((p) => (
-                      <tr key={p._id} className="transition-colors hover:bg-white">
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                          {p.employeeId || "N/A"}
-                        </td>
-                        <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                          {p.employeeName}
-                        </td>
-                        <td className="px-2 py-2 text-center text-gray-500">
-                          {p.department}
-                        </td>
-                        <td className="px-2 py-2 text-center text-gray-500">
-                          {p.designation}
-                        </td>
-                        <td className="px-3 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                          {new Date(p.createdAt).toLocaleDateString()}
-                          <br />
-                          <span className="text-xs text-gray-500">
-                            {new Date(p.createdAt).toLocaleTimeString()}
-                          </span>
-                        </td>
-                        <td className="px-2 py-2 text-center">
-                          <span className="px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
-                            {p.duration} mins
-                          </span>
-                        </td>
-                        <td className="max-w-xs px-2 py-2 text-sm text-center text-gray-700 truncate">
-                          "{p.reason}"
-                        </td>
-                        <td className="px-2 py-2 text-center">
-                          <span
-                            className={`px-2 py-1 text-xs font-semibold rounded-full uppercase tracking-wider ${
-                              p.status === "APPROVED"
-                                ? "bg-blue-100 text-green-700"
-                                : p.status === "COMPLETED"
-                                ? "bg-blue-100 text-blue-700"
+          <div className="emp-dash__card mb-6">
+            
+            {/* Desktop Table View */}
+            <div className="emp-dash__table-wrap">
+              <table className="emp-dash__table">
+                <thead>
+                  <tr>
+                    <th className="text-center w-28">Employee ID</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Designation</th>
+                    <th>Date &amp; Time</th>
+                    <th className="text-center">Duration</th>
+                    <th>Reason</th>
+                    <th className="text-center">Status</th>
+                    <th className="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentItems.map((p) => (
+                    <tr key={p._id} className="hover:bg-gray-55/60 transition-all">
+                      <td className="text-center font-semibold text-gray-900 whitespace-nowrap">
+                        {p.employeeId || "N/A"}
+                      </td>
+                      <td className="font-semibold text-gray-900 whitespace-nowrap">
+                        {p.employeeName}
+                      </td>
+                      <td className="text-gray-600">
+                        {p.department}
+                      </td>
+                      <td className="text-gray-600">
+                        {p.designation}
+                      </td>
+                      <td className="whitespace-nowrap text-gray-600">
+                        <span className="font-medium">
+                          {new Date(p.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
+                        <br />
+                        <span className="text-[10px] text-gray-400 font-medium">
+                          {new Date(p.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </td>
+                      <td className="text-center whitespace-nowrap">
+                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold">
+                          {p.duration} mins
+                        </span>
+                      </td>
+                      <td className="max-w-xs truncate text-gray-700 italic" title={p.reason}>
+                        "{p.reason}"
+                      </td>
+                      <td className="text-center whitespace-nowrap">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            p.status === "APPROVED"
+                              ? "bg-green-50 text-green-700 border border-green-200"
+                              : p.status === "COMPLETED"
+                                ? "bg-blue-50 text-blue-700 border border-blue-200"
                                 : p.status === "PENDING"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-red-100 text-red-700"
-                            }`}
-                          >
-                            {p.status === "COMPLETED" ? "IN DUTY" : p.status}
-                          </span>
-                        </td>
-                        <td className="px-2 py-2 text-center">
-                          {p.status === "PENDING" ? (
-                            <button
-                              onClick={() => handleApprove(p._id)}
-                              className="px-3 py-1 text-xs font-semibold text-gray-900 transition-all bg-blue-600 rounded-md shadow-sm hover:bg-blue-800"
-                            >
-                              Approve
-                            </button>
-                          ) : p.status === "APPROVED" ? (
-                            <span className="px-2 py-1 text-xs font-semibold text-green-700 bg-blue-100 rounded-md">
-                              Active
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-md">
-                              Processed
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              {filteredPermissions.length > 0 && (
-                <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-white sm:flex-row">
-                  {/* Left Side - Showing Info + Select */}
-                  <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
-                    <span>Showing</span>
-                    <span className="font-medium">
-                      {indexOfFirstItem + 1}
-                    </span>
-                    <span>to</span>
-                    <span className="font-medium">
-                      {Math.min(indexOfLastItem, filteredPermissions.length)}
-                    </span>
-                    <span>of</span>
-                    <span className="font-medium">
-                      {filteredPermissions.length}
-                    </span>
-                    <span>results</span>
-
-                    {/* Select Dropdown */}
-                    <select
-                      value={pagination.limit}
-                      onChange={(e) => {
-                        const newLimit = Number(e.target.value);
-                        handleItemsPerPageChange(newLimit);
-                      }}
-                      className="p-1 ml-2 text-sm border rounded-lg"
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                    </select>
-                  </div>
-
-                  {/* Pagination buttons */}
-                  <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                    <button
-                      onClick={handlePrevPage}
-                      disabled={pagination.currentPage === 1}
-                      className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
-                        pagination.currentPage === 1
-                          ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                          : "bg-white text-gray-700 border-gray-300 hover:bg-white"
-                      }`}
-                    >
-                      Previous
-                    </button>
-
-                    <div className="flex items-center gap-1">
-                      {getPageNumbers().map((page, index) => (
-                        <button
-                          key={index}
-                          onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
-                          disabled={page === "..."}
-                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            page === "..."
-                              ? "text-gray-500 cursor-default"
-                              : pagination.currentPage === page
-                              ? "bg-blue-600 text-gray-900"
-                              : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
+                                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                  : "bg-red-50 text-red-700 border border-red-200"
                           }`}
                         >
-                          {page}
-                        </button>
-                      ))}
-                    </div>
+                          {p.status === "COMPLETED" ? "IN DUTY" : p.status}
+                        </span>
+                        {p.status === "COMPLETED" && p.returnLocation && (
+                          <div className="text-[9px] text-green-600 font-semibold mt-0.5">
+                            In: {new Date(p.returnedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        )}
+                      </td>
+                      <td className="text-right whitespace-nowrap">
+                        {p.status === "PENDING" ? (
+                          <button
+                            onClick={() => handleApprove(p._id)}
+                            className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-all shadow-sm"
+                          >
+                            Approve
+                          </button>
+                        ) : p.status === "APPROVED" ? (
+                          <span className="px-2.5 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 text-[10px] font-semibold">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-semibold">
+                            Processed
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-                    <button
-                      onClick={handleNextPage}
-                      disabled={pagination.currentPage === pagination.totalPages}
-                      className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
-                        pagination.currentPage === pagination.totalPages
-                          ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                          : "bg-white text-gray-700 border-gray-300 hover:bg-white"
+            {/* Mobile Card List View */}
+            <div className="emp-dash__mobile-list divide-y divide-gray-100">
+              {currentItems.map((p) => (
+                <div
+                  key={p._id}
+                  className="p-4 hover:bg-gray-55/60 transition-all"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{p.employeeName}</h4>
+                      <span className="text-xs text-gray-500">{p.employeeId || 'N/A'}</span>
+                    </div>
+                    
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                        p.status === "APPROVED"
+                          ? "bg-green-50 text-green-700 border border-green-200"
+                          : p.status === "COMPLETED"
+                            ? "bg-blue-50 text-blue-700 border border-blue-200"
+                            : p.status === "PENDING"
+                              ? "bg-amber-50 text-amber-700 border border-amber-200"
+                              : "bg-red-50 text-red-700 border border-red-200"
                       }`}
                     >
-                      Next
-                    </button>
+                      {p.status === "COMPLETED" ? "IN DUTY" : p.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs mb-3 text-gray-600">
+                    <div><span className="text-gray-400">Dept:</span> {p.department}</div>
+                    <div><span className="text-gray-400">Desig:</span> {p.designation}</div>
+                    <div><span className="text-gray-400">Duration:</span> {p.duration} mins</div>
+                    <div>
+                      <span className="text-gray-400">Date:</span>{' '}
+                      <span className="font-medium text-gray-800">
+                        {new Date(p.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mb-3 text-xs text-gray-700 italic bg-gray-50 p-2 rounded">
+                    "{p.reason}"
+                  </div>
+
+                  <div className="flex justify-between items-center text-xs">
+                    <div>
+                      {p.status === "COMPLETED" && p.returnedAt && (
+                        <span className="text-green-600 font-semibold text-[10px]">
+                          Returned: {new Date(p.returnedAt).toLocaleTimeString()}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      {p.status === "PENDING" ? (
+                        <button
+                          onClick={() => handleApprove(p._id)}
+                          className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-all shadow-sm"
+                        >
+                          Approve
+                        </button>
+                      ) : (
+                        <span className="text-gray-400 text-[10px]">Processed</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              )}
+              ))}
             </div>
-          </>
+
+            {/* Pagination Controls */}
+            {filteredPermissions.length > 0 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200/50 bg-gray-50/30">
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span>Show</span>
+                  <select
+                    value={pagination.limit}
+                    onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                    className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                  <span>entries per page</span>
+                </div>
+                
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={handlePrevPage}
+                    disabled={pagination.currentPage === 1}
+                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
+                      pagination.currentPage === 1
+                        ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
+                        : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300 shadow-sm"
+                    }`}
+                  >
+                    Prev
+                  </button>
+
+                  {getPageNumbers().map((page, i) => (
+                    <button
+                      key={i}
+                      onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
+                      disabled={page === "..."}
+                      className={`px-3 py-1 text-xs font-semibold border rounded-lg transition-all min-w-[32px] ${
+                        pagination.currentPage === page
+                          ? "text-white bg-blue-600 border-blue-600 shadow-sm"
+                          : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={handleNextPage}
+                    disabled={pagination.currentPage === pagination.totalPages}
+                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
+                      pagination.currentPage === pagination.totalPages
+                        ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
+                        : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300 shadow-sm"
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };
+export default Permissions;

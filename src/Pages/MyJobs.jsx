@@ -3,7 +3,8 @@ import axios from 'axios';
 import { API_BASE_URL, API_DOMAIN } from '../config';
 import { FaPlus, FaSearch, FaCalendarAlt, FaFilePdf, FaTimes, FaSignOutAlt } from 'react-icons/fa';
 import { FiBriefcase, FiCheckCircle, FiHome, FiZap } from "react-icons/fi";
-import StatCard from "../Components/StatCard";
+import "./EmployeeDashboard.css";
+import "./EmployeePageShell.css";
 
 function MyJobs() {
   const [experiences, setExperiences] = useState([]);
@@ -409,11 +410,9 @@ ${name}`;
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-          <p className="text-lg font-semibold text-gray-700">Loading your experiences...</p>
-        </div>
+      <div className="emp-dash__loading">
+        <div className="emp-dash__spinner" />
+        <p className="emp-dash__loading-text">Loading your experiences...</p>
       </div>
     );
   }
@@ -425,76 +424,99 @@ ${name}`;
   const uniqueCompanies = new Set(experiences.map(exp => exp.companyName?.toLowerCase())).size;
 
   return (
-    <div className="min-h-screen px-2 py-2 bg-gray-100 font-sans sm:px-3 sm:py-3">
-      <div className="mx-auto max-w-9xl">
+    <div>
+    <div className="w-full">
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-4">
-          <StatCard
-            label="Total Roles"
-            value={totalExperiences}
-            color="indigo"
-            icon={FiBriefcase}
-          />
-          <StatCard
-            label="Current Roles"
-            value={currentRoles}
-            color="emerald"
-            icon={FiCheckCircle}
-          />
-          <StatCard
-            label="Total Companies"
-            value={uniqueCompanies}
-            color="amber"
-            icon={FiHome}
-          />
-          <StatCard
-            label="Profile Strength"
-            value={experiences.length > 0 ? "Active" : "New"}
-            color="purple"
-            icon={FiZap}
-          />
+        <div className="emp-dash__stats">
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Total Roles</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                <FiBriefcase />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{totalExperiences}</div>
+            <div className="emp-dash__stat-meta">experience records</div>
+          </div>
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Current Roles</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                <FiCheckCircle />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{currentRoles}</div>
+            <div className="emp-dash__stat-meta">active positions</div>
+          </div>
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Companies</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
+                <FiHome />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{uniqueCompanies}</div>
+            <div className="emp-dash__stat-meta">unique employers</div>
+          </div>
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Profile</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
+                <FiZap />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value" style={{ fontSize: "1.15rem" }}>
+              {experiences.length > 0 ? "Active" : "New"}
+            </div>
+            <div className="emp-dash__stat-meta">experience status</div>
+          </div>
         </div>
 
         {/* Filters Section - Synced with UserActivity/EmployeeLetters style */}
-        <div className="p-2 mb-3 bg-white rounded-lg shadow-md border border-gray-200">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="emp-dash__card" style={{ marginBottom: "1rem" }}>
+          <div className="emp-dash__card-header">
+            <div>
+              <h3 className="emp-dash__card-title">Jobs / Experience</h3>
+              <p className="emp-dash__card-desc">Search and review your experience records.</p>
+            </div>
+            <div className="emp-page__pill emp-page__pill--muted">
+              Showing {filteredExperiences.length} / {experiences.length}
+            </div>
+          </div>
+
+          <div className="emp-dash__card-body" style={{ paddingTop: "1rem" }}>
+          <div className="emp-page__filters">
 
             {/* Search */}
-            <div className="relative flex-1 min-w-[300px]">
-              <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
+            <div className="emp-page__search-wrap">
+              <FaSearch className="emp-page__search-icon" />
               <input
                 type="text"
                 placeholder="Search by company, role or location..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="emp-page__search"
               />
             </div>
 
             {/* Date Filter */}
-            <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={handleDateChange}
-                onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={handleDateChange}
+              onClick={(e) => e.target.showPicker && e.target.showPicker()}
+              className="emp-page__field"
+            />
 
             {/* Month Filter */}
-            <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={handleMonthChange}
-                onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+            <input
+              type="month"
+              value={selectedMonth}
+              onChange={handleMonthChange}
+              onClick={(e) => e.target.showPicker && e.target.showPicker()}
+              className="emp-page__field emp-page__field--month"
+            />
 
             {/* Add Experience Button - Inside Filters */}
             {/* <button
@@ -508,7 +530,7 @@ ${name}`;
             {window.location.pathname.includes('/emp-') && (
               <button
                 onClick={openResignationModal}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-900 transition bg-red-600 rounded-md hover:bg-red-700"
+                className="emp-page__danger-btn"
               >
                 <FaSignOutAlt className="text-xs" /> Resign
               </button>
@@ -518,137 +540,101 @@ ${name}`;
             {(searchTerm || selectedDate || selectedMonth) && (
               <button
                 onClick={clearFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                className="emp-page__secondary-btn"
               >
                 Clear
               </button>
             )}
           </div>
 
-          {/* Results Count */}
-          <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-            <span>
-              Showing <strong>{filteredExperiences.length}</strong> of <strong>{experiences.length}</strong> records
-            </span>
-            {filteredExperiences.length !== experiences.length && (
-              <span className="font-semibold text-orange-600">
-                🔍 Filters applied
-              </span>
-            )}
           </div>
         </div>
 
         {/* Table Section */}
-        <div className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
+        <div className="emp-dash__card">
           {filteredExperiences.length === 0 ? (
-            <div className="py-16 text-center">
-              <div className="mb-4 text-6xl">🏢</div>
-              <p className="mb-4 text-lg font-semibold text-gray-500">
-                {experiences.length === 0 ? "No experience records found." : "No records match your filters."}
-              </p>
+            <div className="emp-page__empty">
+              <div className="emp-page__empty-icon">
+                <FiBriefcase />
+              </div>
+              <h3>{experiences.length === 0 ? "No experience records found" : "No records match your filters"}</h3>
+              <p>{experiences.length === 0 ? "Add your first role to start building your profile." : "Try clearing filters or using different search terms."}</p>
               {experiences.length > 0 ? (
                 <button
                   onClick={clearFilters}
-                  className="px-6 py-2 font-semibold text-gray-900 transition bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="emp-page__secondary-btn"
                 >
-                  🔄 Clear Filters
+                  Clear Filters
                 </button>
               ) : (
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="px-6 py-2 font-semibold text-gray-900 transition bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="emp-page__primary-btn"
                 >
-                  ➕ Add Your First Role
+                  Add Your First Role
                 </button>
               )}
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead className="text-sm text-center text-gray-900 bg-blue-600">
-                    <tr className="uppercase tracking-wider text-[11px] font-bold">
-                      <th className="py-2.5 px-6">ROLE & COMPANY</th>
-                      <th className="py-2.5 px-6">LOCATION</th>
-                      <th className="py-2.5 px-6">DURATION</th>
-                      <th className="py-2.5 px-6">SALARY</th>
-                      <th className="py-2.5 px-6">DOCUMENTS</th>
+              <div className="emp-dash__table-wrap">
+                <table className="emp-dash__table">
+                  <thead>
+                    <tr>
+                      <th>Role & Company</th>
+                      <th>Location</th>
+                      <th>Duration</th>
+                      <th>Salary</th>
+                      <th style={{ textAlign: "right" }}>Documents</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody>
                     {/* ── Pinned Current Job Row (Employee view) ── */}
                     {currentJobData && (
-                      <tr className="bg-green-50 border-l-4 border-green-500 hover:bg-blue-100 transition duration-150">
-                        <td className="px-2 py-2 text-center sm:px-3">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <span className="relative flex h-2.5 w-2.5">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600"></span>
-                            </span>
-                            <div>
-                              <span className="block font-bold text-gray-700 text-xs sm:text-sm">
-                                {currentJobData.role}
-                              </span>
-                              <span className="block text-xs text-green-700 font-semibold">
-                                {currentJobData.companyName}
-                              </span>
-                            </div>
+                      <tr style={{ background: "var(--ed-success-soft)" }}>
+                        <td>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+                            <span style={{ fontWeight: 700 }}>{currentJobData.role}</span>
+                            <span style={{ fontSize: "0.75rem", color: "var(--ed-text-secondary)" }}>{currentJobData.companyName}</span>
                           </div>
                         </td>
-                        <td className="px-2 py-2 text-center text-xs sm:text-sm text-gray-500">
-                          {currentJobData.location}
+                        <td>{currentJobData.location}</td>
+                        <td>
+                          {formatDate(currentJobData.startDate)} –{" "}
+                          <span className="emp-page__badge emp-page__badge--success">Current</span>
                         </td>
-                        <td className="px-2 py-2 text-center text-xs sm:text-sm whitespace-nowrap">
-                          {formatDate(currentJobData.startDate)}
-                          {" – "}
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-gray-900 bg-blue-600 rounded-full">
-                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                            Current
-                          </span>
+                        <td>
+                          <span className="emp-page__badge emp-page__badge--primary">{currentJobData.salary}</span>
                         </td>
-                        <td className="px-2 py-2 text-center">
-                          <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-blue-100 rounded-full">
-                            {currentJobData.salary}
-                          </span>
-                        </td>
-                        <td className="px-2 py-2 text-center">
-                          <span className="text-[10px] text-blue-700 font-semibold italic">Active Employee</span>
+                        <td style={{ textAlign: "right" }}>
+                          <span className="emp-page__badge emp-page__badge--primary">Active Employee</span>
                         </td>
                       </tr>
                     )}
                     {/* ── Past Experience Rows ── */}
                     {currentRecords.map((exp, index) => (
-                      <tr
-                        key={exp._id || index}
-                        className={`${index % 2 === 0 ? "bg-white" : "bg-white"} hover:bg-blue-50 transition duration-150`}
-                      >
-                        <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                          <span className="block font-semibold text-gray-700 text-xs sm:text-sm">
-                            {exp.role}
-                          </span>
-                          <span className="block text-xs text-gray-500">
-                            {exp.companyName}
-                          </span>
+                      <tr key={exp._id || index}>
+                        <td>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+                            <span style={{ fontWeight: 700 }}>{exp.role}</span>
+                            <span style={{ fontSize: "0.75rem", color: "var(--ed-text-secondary)" }}>{exp.companyName}</span>
+                          </div>
                         </td>
-                        <td className="px-2 py-1.5 text-center text-xs sm:text-sm">
-                          {exp.location}
-                        </td>
-                        <td className="px-2 py-1.5 text-center text-xs sm:text-sm whitespace-nowrap">
+                        <td>{exp.location}</td>
+                        <td>
                           {formatDate(exp.startDate)} - {formatDate(exp.endDate)}
                         </td>
-                        <td className="px-2 py-1.5 text-center">
-                          <span className="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full">
-                            {exp.salary}
-                          </span>
+                        <td>
+                          <span className="emp-page__badge emp-page__badge--primary">{exp.salary}</span>
                         </td>
-                        <td className="px-2 py-1.5 text-center">
-                          <div className="flex items-center justify-center gap-2">
+                        <td style={{ textAlign: "right" }}>
+                          <div style={{ display: "inline-flex", gap: "0.5rem", alignItems: "center" }}>
                             {exp.offerLetter && (
                               <a
                                 href={getDocumentUrl(exp.offerLetter)}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-blue-600 hover:text-blue-700 transition"
+                                className="emp-page__icon-btn"
                                 title="Offer Letter"
                               >
                                 <FaFilePdf size={16} />
@@ -659,14 +645,14 @@ ${name}`;
                                 href={getDocumentUrl(exp.payslip)}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-blue-600 hover:text-blue-700 transition"
+                                className="emp-page__icon-btn"
                                 title="Payslip"
                               >
                                 <FaFilePdf size={16} />
                               </a>
                             )}
                             {!exp.offerLetter && !exp.payslip && (
-                              <span className="text-[10px] text-gray-500 italic">N/A</span>
+                              <span className="emp-page__badge emp-page__badge--primary">N/A</span>
                             )}
                           </div>
                         </td>
@@ -676,42 +662,108 @@ ${name}`;
                 </table>
               </div>
 
+              <div className="emp-dash__mobile-list">
+                {/* Pinned Current Job Card */}
+                {currentJobData && (
+                  <div className="emp-dash__mobile-item" style={{ background: "var(--ed-success-soft)" }}>
+                    <div className="emp-dash__mobile-item-top">
+                      <div className="emp-dash__mobile-date" style={{ fontWeight: 700 }}>{currentJobData.role}</div>
+                      <span className="emp-page__badge emp-page__badge--success">Current</span>
+                    </div>
+                    <div className="emp-dash__mobile-grid">
+                      <div className="emp-dash__mobile-field">
+                        <span>Company</span>
+                        <span>{currentJobData.companyName}</span>
+                      </div>
+                      <div className="emp-dash__mobile-field">
+                        <span>Location</span>
+                        <span>{currentJobData.location}</span>
+                      </div>
+                      <div className="emp-dash__mobile-field">
+                        <span>Duration</span>
+                        <span>{formatDate(currentJobData.startDate)} – Present</span>
+                      </div>
+                      <div className="emp-dash__mobile-field">
+                        <span>Salary</span>
+                        <span>{currentJobData.salary}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {/* Past Experiences Cards */}
+                {currentRecords.map((exp, index) => (
+                  <div key={exp._id || index} className="emp-dash__mobile-item">
+                    <div className="emp-dash__mobile-item-top">
+                      <div className="emp-dash__mobile-date" style={{ fontWeight: 700 }}>{exp.role}</div>
+                      <span className="emp-page__badge emp-page__badge--primary">{exp.salary}</span>
+                    </div>
+                    <div className="emp-dash__mobile-grid">
+                      <div className="emp-dash__mobile-field">
+                        <span>Company</span>
+                        <span>{exp.companyName}</span>
+                      </div>
+                      <div className="emp-dash__mobile-field">
+                        <span>Location</span>
+                        <span>{exp.location}</span>
+                      </div>
+                      <div className="emp-dash__mobile-field">
+                        <span>Duration</span>
+                        <span>{formatDate(exp.startDate)} - {formatDate(exp.endDate)}</span>
+                      </div>
+                      <div className="emp-dash__mobile-field">
+                        <span>Documents</span>
+                        <div style={{ display: "inline-flex", gap: "0.35rem", marginTop: "0.15rem" }}>
+                          {exp.offerLetter && (
+                            <a href={getDocumentUrl(exp.offerLetter)} target="_blank" rel="noreferrer" className="emp-page__icon-btn" style={{ width: "1.75rem", height: "1.75rem", display: "inline-flex", alignItems: "center", justifyContent: "center" }} title="Offer Letter">
+                              <FaFilePdf size={12} />
+                            </a>
+                          )}
+                          {exp.payslip && (
+                            <a href={getDocumentUrl(exp.payslip)} target="_blank" rel="noreferrer" className="emp-page__icon-btn" style={{ width: "1.75rem", height: "1.75rem", display: "inline-flex", alignItems: "center", justifyContent: "center" }} title="Payslip">
+                              <FaFilePdf size={12} />
+                            </a>
+                          )}
+                          {!exp.offerLetter && !exp.payslip && <span style={{ fontSize: "0.75rem" }}>N/A</span>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               {/* Pagination */}
               {filteredExperiences.length > 0 && (
-                <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-gray-200 sm:flex-row">
-                  <div className="flex flex-wrap items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs font-medium text-gray-700">
-                        Show:
-                      </label>
+                <div className="emp-dash__card-body" style={{ borderTop: "1px solid var(--ed-border-light)", display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <label className="emp-dash__card-desc" style={{ margin: 0 }}>Show</label>
                       <select
                         value={itemsPerPage}
                         onChange={handleItemsPerPageChange}
-                        className="p-1 text-xs border rounded-lg"
+                        className="emp-page__select"
+                        style={{ height: "2.25rem" }}
                       >
                         <option value={5}>5</option>
                         <option value={10}>10</option>
                         <option value={20}>20</option>
                         <option value={50}>50</option>
                       </select>
-                      <span className="text-xs text-gray-500">entries</span>
+                      <span className="emp-dash__card-desc" style={{ margin: 0 }}>entries</span>
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="emp-dash__card-desc" style={{ margin: 0 }}>
                       Showing <strong>{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredExperiences.length)}</strong> of{" "}
                       <strong>{filteredExperiences.length}</strong> records
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1">
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
                     <button
                       onClick={handlePrevPage}
                       disabled={currentPage === 1}
-                      className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentPage === 1
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
-                        }`}
+                      className="emp-page__secondary-btn"
+                      style={{ padding: "0.45rem 0.75rem", opacity: currentPage === 1 ? 0.5 : 1 }}
                     >
-                      ← Prev
+                      Prev
                     </button>
 
                     {getPageNumbers().map((page, index) => (
@@ -719,12 +771,8 @@ ${name}`;
                         key={index}
                         onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                         disabled={page === "..."}
-                        className={`px-3 py-1 text-xs font-semibold rounded-lg transition min-w-[28px] ${page === "..."
-                          ? "bg-gray-200 text-gray-500 cursor-default"
-                          : currentPage === page
-                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-gray-900 shadow-lg"
-                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                          }`}
+                        className={`emp-page__chip ${currentPage === page ? "emp-page__chip--active" : ""}`}
+                        style={{ height: "2.25rem", padding: "0 0.75rem", minWidth: "2.25rem", opacity: page === "..." ? 0.6 : 1 }}
                       >
                         {page}
                       </button>
@@ -733,12 +781,10 @@ ${name}`;
                     <button
                       onClick={handleNextPage}
                       disabled={currentPage === totalPages}
-                      className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${currentPage === totalPages
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-gray-900 hover:bg-blue-700 shadow-lg"
-                        }`}
+                      className="emp-page__secondary-btn"
+                      style={{ padding: "0.45rem 0.75rem", opacity: currentPage === totalPages ? 0.5 : 1 }}
                     >
-                      Next →
+                      Next
                     </button>
                   </div>
                 </div>
@@ -748,16 +794,14 @@ ${name}`;
         </div>
       </div>
 
-      {/* Add Experience Modal */}
+    
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
-          <div className="w-full max-w-md p-4 bg-white rounded-lg shadow-xl sm:p-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 emp-dash-modal">
+          <div className="emp-dash__modal-panel bg-white shadow-2xl rounded-2xl" style={{ maxWidth: "740px" }}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-700 sm:text-xl">Add Working Experience</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-700">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <button onClick={() => setIsModalOpen(false)} className="emp-page__icon-btn">
+                <FaTimes />
               </button>
             </div>
 
@@ -767,7 +811,7 @@ ${name}`;
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-3">
+            <form onSubmit={handleSubmit} className="space-y-3" style={{ padding: "0 1.25rem 1.25rem" }}>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block mb-1 text-xs font-medium text-gray-700">Company Name *</label>
@@ -951,7 +995,8 @@ ${name}`;
               </div>
             </form>
           </div>
-        </div>
+          </div>
+      
       )}
     </div>
   );

@@ -200,7 +200,7 @@ export default function EmployeeLayout({ children }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-[#f0f2f5]">
       {/* Sidebar */}
       <div className={`fixed top-0 left-0 h-full z-30 transition-all duration-300 ${
         isMobile 

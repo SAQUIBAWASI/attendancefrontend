@@ -175,7 +175,12 @@
 
 // export default Employe
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { FaCalendarAlt } from "react-icons/fa";
+import { FiMapPin, FiUser, FiNavigation } from "react-icons/fi";
+import { API_BASE_URL } from "../config";
+import "./EmployeeDashboard.css";
+import "./EmployeeLeaves.css";
 
 const EmployeeLocation = () => {
   const [locations, setLocations] = useState([]);
@@ -208,7 +213,7 @@ const EmployeeLocation = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `https://api.timelyhealth.in/api/employees/mylocation/${employeeId}`
+          `${API_BASE_URL}/employees/mylocation/${employeeId}`
         );
 
         // API returns: { success: true, data: { location: {...} } }
@@ -231,71 +236,194 @@ const EmployeeLocation = () => {
     fetchLocations();
   }, [employeeId]);
 
-  if (loading) return <p className="p-4">Loading...</p>;
-  if (error) return <p className="p-4 text-red-600">{error}</p>;
+  const summary = useMemo(() => {
+    const first = locations?.[0]?.location || locations?.[0] || null;
+    return {
+      total: locations.length,
+      primaryName: first?.name || "Not Assigned",
+      coords:
+        first && (first.latitude || first.longitude)
+          ? `${first.latitude ?? "—"}, ${first.longitude ?? "—"}`
+          : "—",
+    };
+  }, [locations]);
+
+  if (loading) {
+    return (
+      <div className="emp-dash">
+        <div className="emp-dash__loading">
+          <div className="emp-dash__spinner" />
+          <p className="emp-dash__loading-text">Loading your location...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="emp-dash">
+        <main style={{ display: "grid", placeItems: "center", minHeight: "60vh", padding: "1rem" }}>
+          <div className="emp-dash__card" style={{ maxWidth: 520, width: "100%" }}>
+            <div className="emp-dash__card-header">
+              <div>
+                <h3 className="emp-dash__card-title">Couldn’t load location</h3>
+                <p className="emp-dash__card-desc">{error}</p>
+              </div>
+              <button type="button" className="emp-dash__card-link" onClick={() => window.location.reload()}>
+                Retry
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
-      <main className="flex-1 p-0 sm:p-0 lg:p-8">
-        <div className="max-w-9xl p-0 mx-auto bg-white rounded-lg shadow-md">
-          <div className="mb-6">
-            {/* <h2 className="text-2xl font-bold text-blue-900">
-              My Assigned Locations
-            </h2> */}
+    <div className="emp-dash">
+      <main>
+        <div className="emp-dash__header">
+          <div>
+            <h1 className="emp-dash__greeting">
+              My <span>Location</span>
+            </h1>
+            <p className="emp-dash__subtitle">View your office assigned location details.</p>
+          </div>
+          <div className="emp-dash__date-pill">
+            <FaCalendarAlt />
+            <span>
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "short",
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
+          </div>
+        </div>
+
+        <div className="emp-dash__stats">
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Employee</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                <FiUser />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value" style={{ fontSize: "1.1rem" }}>
+              {employeeName}
+            </div>
+            <div className="emp-dash__stat-meta">{employeeId || "—"}</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Locations</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                <FiMapPin />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{summary.total}</div>
+            <div className="emp-dash__stat-meta">assigned</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Primary</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
+                <FiMapPin />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value" style={{ fontSize: "1.1rem" }}>
+              {summary.primaryName}
+            </div>
+            <div className="emp-dash__stat-meta">location name</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Coordinates</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
+                <FiNavigation />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value" style={{ fontSize: "1.1rem" }}>
+              {summary.coords}
+            </div>
+            <div className="emp-dash__stat-meta">lat, long</div>
+          </div>
+        </div>
+
+        <div className="emp-dash__card">
+          <div className="emp-dash__card-header">
+            <div>
+              <h3 className="emp-dash__card-title">Assigned Locations</h3>
+              {/* <p className="emp-dash__card-desc">Office location details including address and coordinates</p> */}
+            </div>
           </div>
 
           {locations.length === 0 ? (
-            <p className="py-8 text-center text-gray-500">
-              No location assigned yet. Please contact admin.
-            </p>
+            <div className="emp-dash__card-body" style={{ textAlign: "center" }}>
+              <p style={{ color: "var(--ed-text-muted)", margin: 0 }}>No location assigned yet. Please contact admin.</p>
+            </div>
           ) : (
-            <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-            <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
-              <table className="min-w-full">
-                <thead className="text-left text-sm text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
-                  <tr>
-                    <th className="hidden sm:table-cell py-2 px-3 text-center">Employee ID</th>
-                    <th className="hidden sm:table-cell py-2 px-3 text-center">Name</th>
-                    <th className="py-2 px-3 text-center">Location</th>
-                    <th className="py-2 px-3 text-center">Full Address</th>
-                    <th className="hidden sm:table-cell py-2 px-3 text-center">Latitude</th>
-                    <th className="hidden sm:table-cell py-2 px-3 text-center">Longitude</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {locations.map((item, index) => {
-                    // API returns { location: {...} } — employee info comes from localStorage
-                    const loc = item?.location || item;
-                    return (
-                      <tr
-                        key={loc?._id || index}
-                        className="border-b hover:bg-gray-50"
-                      >
-                        <td className="hidden sm:table-cell p-2 border text-center">
-                          {employeeId || "N/A"}
-                        </td>
-                        <td className="hidden sm:table-cell p-2 border text-center">
-                          {employeeName}
-                        </td>
-                        <td className="p-2 border text-center">
-                          {loc?.name || "N/A"}
-                        </td>
-                        <td className="p-2 text-sm border">
-                          {loc?.fullAddress || "N/A"}
-                        </td>
-                        <td className="hidden sm:table-cell p-2 border text-center">
-                          {loc?.latitude ?? "N/A"}
-                        </td>
-                        <td className="hidden sm:table-cell p-2 border text-center">
-                          {loc?.longitude ?? "N/A"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            </div>
+            <>
+              <div className="emp-dash__table-wrap">
+                <table className="emp-dash__table">
+                  <thead>
+                    <tr>
+                      <th>Location</th>
+                      <th>Full Address</th>
+                      <th>Latitude</th>
+                      <th style={{ textAlign: "right" }}>Longitude</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {locations.map((item, index) => {
+                      const loc = item?.location || item;
+                      return (
+                        <tr key={loc?._id || index}>
+                          <td style={{ fontWeight: 700 }}>{loc?.name || "—"}</td>
+                          <td title={loc?.fullAddress || ""} style={{ maxWidth: 360, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {loc?.fullAddress || "—"}
+                          </td>
+                          <td>{loc?.latitude ?? "—"}</td>
+                          <td style={{ textAlign: "right" }}>{loc?.longitude ?? "—"}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="emp-dash__mobile-list">
+                {locations.map((item, index) => {
+                  const loc = item?.location || item;
+                  return (
+                    <div key={loc?._id || index} className="emp-dash__mobile-item">
+                      <div className="emp-dash__mobile-item-top">
+                        <span className="emp-dash__mobile-date">{loc?.name || "Location"}</span>
+                        <span className="emp-dash__table-status emp-dash__table-status--present">Assigned</span>
+                      </div>
+                      <div className="emp-dash__mobile-grid">
+                        <div className="emp-dash__mobile-field">
+                          <span>Address</span>
+                          <span style={{ textAlign: "right" }}>{loc?.fullAddress || "—"}</span>
+                        </div>
+                        <div className="emp-dash__mobile-field">
+                          <span>Latitude</span>
+                          <span>{loc?.latitude ?? "—"}</span>
+                        </div>
+                        <div className="emp-dash__mobile-field">
+                          <span>Longitude</span>
+                          <span>{loc?.longitude ?? "—"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </main>
@@ -303,4 +431,4 @@ const EmployeeLocation = () => {
   );
 };
 
-export default EmployeeLocation;
+export default EmployeeLocation;

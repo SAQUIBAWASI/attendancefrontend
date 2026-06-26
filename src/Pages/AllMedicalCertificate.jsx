@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
 import CountUp from "react-countup";
 import { FaSearch, FaDownload, FaSync } from "react-icons/fa";
 import { 
@@ -8,8 +9,14 @@ import {
   FiXCircle, 
   FiCalendar, 
   FiTrendingUp,
-  FiActivity
+  FiActivity,
+  FiShield,
+  FiUsers,
+  FiFileText,
+  FiFilter
 } from "react-icons/fi";
+import "../index.css";
+import "./EmployeeDashboard.css";
 import { 
   BarChart, 
   Bar, 
@@ -273,26 +280,111 @@ const AllMedicalCertificate = () => {
   const total = certificates.length;
 
   return (
-    <div className="min-h-screen p-2 lg:p-6 bg-white/50">
-      <div className="max-w-9xl mx-auto">
-        
-        {/* 1. Top Summary Stats - Matching RecruitmentDashboard */}
-        <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-5">
-          <StatCard icon={FiXCircle} label="Critical Risk" value={chartData[0].val + chartData[1].val} color="rose" />
-          <StatCard icon={FiCalendar} label="Expiring (60d)" value={chartData[2].val} color="amber" />
-          <StatCard icon={FiCheckCircle} label="Active" value={chartData[3].val} color="emerald" />
-          <StatCard icon={FiActivity} label="Monitoring" value={total} color="indigo" />
-          <StatCard icon={FiList} label="Total Records" value={total} color="cyan" />
+    <div className="emp-dash">
+      <main className="p-4 sm:p-6 lg:p-8">
+        {/* Dashboard Header */}
+        <div className="emp-dash__header">
+          <div>
+            <h1 className="emp-dash__greeting">
+              Medical <span>Certificates</span>
+            </h1>
+            <p className="emp-dash__subtitle">
+              Monitor and manage employee medical certificate compliance
+            </p>
+          </div>
+          <div className="emp-dash__date-pill">
+            <FiCalendar />
+            <span>
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "short",
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
+          </div>
         </div>
 
-        {/* 2. Charts Section - Matching RecruitmentDashboard layout */}
+        {/* Top KPI Stats Grid */}
+        {!loading && (
+          <div className="emp-dash__stats">
+            <div className="emp-dash__stat">
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Critical Risk</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                  <FiXCircle className="text-rose-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">
+                {chartData[0].val + chartData[1].val}
+              </div>
+              <div className="emp-dash__stat-meta">expired/30d</div>
+            </div>
+
+            <div className="emp-dash__stat">
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Expiring (60d)</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
+                  <FiCalendar className="text-amber-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">
+                {chartData[2].val}
+              </div>
+              <div className="emp-dash__stat-meta">in 2 months</div>
+            </div>
+
+            <div className="emp-dash__stat">
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Active</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                  <FiCheckCircle className="text-green-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">
+                {chartData[3].val}
+              </div>
+              <div className="emp-dash__stat-meta">compliant</div>
+            </div>
+
+            <div className="emp-dash__stat">
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Monitoring</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
+                  <FiActivity className="text-blue-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">
+                {total}
+              </div>
+              <div className="emp-dash__stat-meta">total records</div>
+            </div>
+
+            <div className="emp-dash__stat">
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Compliance Rate</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                  <FiShield className="text-purple-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">
+                {total > 0 ? ((chartData[3].val / total) * 100).toFixed(1) : 0}%
+              </div>
+              <div className="emp-dash__stat-meta">active rate</div>
+            </div>
+          </div>
+        )}
+
+        {/* Charts Section */}
         <div className="grid grid-cols-1 gap-4 mb-4 lg:grid-cols-2">
           {/* Compliance Distribution - Bar Chart */}
-          <div className="bg-white px-2 py-2 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[400px]">
-            <div className="flex items-center justify-between mb-3 px-2">
+          <div className="emp-dash__card">
+            <div className="emp-dash__card-header">
               <div>
-                <h3 className="text-base font-bold text-gray-700">Compliance Health</h3>
-                <p className="text-xs text-gray-500">Medical certificate risk levels</p>
+                <h3 className="emp-dash__card-title flex items-center gap-2">
+                  <FiActivity className="text-blue-600" /> Compliance Health
+                </h3>
+                <p className="emp-dash__card-desc">Medical certificate risk levels</p>
               </div>
               <button 
                 onClick={fetchCertificates}
@@ -302,202 +394,228 @@ const AllMedicalCertificate = () => {
                 <FaSync size={12} className={loading ? 'animate-spin' : ''} />
               </button>
             </div>
-
-            <div className="flex-1 w-full">
-               <ResponsiveContainer width="100%" height="100%">
-                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis 
-                      dataKey="label" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: '#64748b', fontSize: 11 }}
-                      interval={0}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: '#64748b', fontSize: 11 }}
-                    />
-                    <Tooltip content={<StatusTooltip />} cursor={{ fill: '#f8fafc' }} />
-                    <Bar dataKey="val" radius={[4, 4, 0, 0]} barSize={35}>
-                       {chartData.map((entry, index) => (
-                         <Cell key={`cell-${index}`} fill={entry.color} />
-                       ))}
-                    </Bar>
-                 </BarChart>
-               </ResponsiveContainer>
+            <div className="emp-dash__card-body">
+              <div className="flex-1 w-full h-[300px]">
+                 <ResponsiveContainer width="100%" height="100%">
+                   <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis 
+                        dataKey="label" 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#64748b', fontSize: 11 }}
+                        interval={0}
+                      />
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#64748b', fontSize: 11 }}
+                      />
+                      <Tooltip content={<StatusTooltip />} cursor={{ fill: '#f8fafc' }} />
+                      <Bar dataKey="val" radius={[4, 4, 0, 0]} barSize={35}>
+                         {chartData.map((entry, index) => (
+                           <Cell key={`cell-${index}`} fill={entry.color} />
+                         ))}
+                      </Bar>
+                   </BarChart>
+                 </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
           {/* Quality Metrics Breakdown */}
-          <div className="bg-white px-4 py-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[400px]">
-            <div className="flex items-center justify-between mb-4">
+          <div className="emp-dash__card">
+            <div className="emp-dash__card-header">
               <div>
-                <h3 className="text-base font-bold text-gray-700">Risk Metrics</h3>
-                <p className="text-xs text-gray-500">Distribution analysis</p>
+                <h3 className="emp-dash__card-title flex items-center gap-2">
+                  <FiTrendingUp className="text-blue-600" /> Risk Metrics
+                </h3>
+                <p className="emp-dash__card-desc">Distribution analysis</p>
               </div>
-              <FiTrendingUp className="text-2xl text-rose-400 opacity-50" />
             </div>
-
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 mb-4">
-              <QualityCard label="Critical Risk (Expired/30d)" value={chartData[0].val + chartData[1].val} total={total} color="rose" />
-              <QualityCard label="Expiring in 2 Months" value={chartData[2].val} total={total} color="amber" />
-              <QualityCard label="Active Status" value={chartData[3].val} total={total} color="emerald" />
-              <QualityCard label="Monitoring Health" value={chartData[3].val} total={total} color="indigo" />
-            </div>
-
-            <div className="mt-auto pt-3 border-t border-gray-200">
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-500 font-medium">Compliance Rate</span>
-                <span className="font-bold text-blue-700">{total > 0 ? ((chartData[3].val / total) * 100).toFixed(1) : 0}%</span>
+            <div className="emp-dash__card-body">
+              <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 mb-4">
+                <QualityCard label="Critical Risk" value={chartData[0].val + chartData[1].val} total={total} color="rose" />
+                <QualityCard label="Expiring in 2 Months" value={chartData[2].val} total={total} color="amber" />
+                <QualityCard label="Active Status" value={chartData[3].val} total={total} color="emerald" />
+                <QualityCard label="Monitoring Health" value={chartData[3].val} total={total} color="indigo" />
               </div>
-              <div className="flex justify-between text-xs mt-1">
-                <span className="text-gray-500 font-medium">Immediate Action Required</span>
-                <span className="font-bold text-rose-600">{chartData[0].val + chartData[1].val} Records</span>
+
+              <div className="pt-3 border-t border-gray-200">
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500 font-medium">Compliance Rate</span>
+                  <span className="font-bold text-blue-700">{total > 0 ? ((chartData[3].val / total) * 100).toFixed(1) : 0}%</span>
+                </div>
+                <div className="flex justify-between text-xs mt-1">
+                  <span className="text-gray-500 font-medium">Immediate Action Required</span>
+                  <span className="font-bold text-rose-600">{chartData[0].val + chartData[1].val} Records</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Filters Section */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 mb-6 flex flex-wrap items-center gap-3">
-          <div className="relative flex-grow min-w-[240px]">
-            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 text-sm" />
-            <input 
-              type="text" 
-              placeholder="Search Candidate ID or Name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-            />
+        {/* Filter Card */}
+        <div className="emp-dash__card">
+          <div className="emp-dash__card-header">
+            <div>
+              <h3 className="emp-dash__card-title flex items-center gap-2">
+                <FiFilter className="text-blue-600" /> Filter Certificates
+              </h3>
+              <p className="emp-dash__card-desc">Search by name, ID, or filter by status</p>
+            </div>
           </div>
-          <select 
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 bg-white border-0 rounded-xl text-xs font-bold text-gray-700 cursor-pointer"
-          >
-            <option value="all">All Certificates</option>
-            <option value="expired">EXPIRED</option>
-            <option value="next_month">NEXT MONTH</option>
-            <option value="2_months">2 MONTHS</option>
-            <option value="active">ACTIVE</option>
-          </select>
-          <button 
-            onClick={fetchCertificates}
-            className="p-2.5 bg-white text-gray-500 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all border border-gray-200"
-            title="Refresh Data"
-          >
-            <FaSync size={12} className={loading ? 'animate-spin' : ''} />
-          </button>
-          <button 
-            onClick={handleReset}
-            className="px-4 py-2 bg-white text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 transition-all border border-gray-200"
-          >
-            Clear
-          </button>
-          <button onClick={downloadCSV} className="px-6 py-2 bg-gray-100 text-gray-900 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all flex items-center gap-2 ml-auto">
-            <FaDownload /> Export CSV
-          </button>
+          <div className="emp-dash__card-body bg-gray-50/50">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative flex-grow min-w-[240px]">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  <FaSearch className="text-xs" />
+                </span>
+                <input 
+                  type="text" 
+                  placeholder="Search candidate ID or name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+              <select 
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-8 px-3 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none min-w-[140px]"
+              >
+                <option value="all">All Certificates</option>
+                <option value="expired">EXPIRED</option>
+                <option value="next_month">NEXT MONTH</option>
+                <option value="2_months">2 MONTHS</option>
+                <option value="active">ACTIVE</option>
+              </select>
+              <button 
+                onClick={fetchCertificates}
+                className="h-8 px-3 bg-white text-gray-500 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all border border-gray-300"
+                title="Refresh Data"
+              >
+                <FaSync size={12} className={loading ? 'animate-spin' : ''} />
+              </button>
+              <button 
+                onClick={handleReset}
+                className="h-8 px-4 bg-white text-gray-500 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 transition-all border border-gray-300"
+              >
+                Clear
+              </button>
+              <button onClick={downloadCSV} className="h-8 px-4 bg-gray-100 text-gray-900 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all flex items-center gap-2 ml-auto border border-gray-300">
+                <FaDownload /> Export CSV
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Specialized Medical Certificate Table - Kept as requested */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+        {/* Table Card */}
+        <div className="emp-dash__card">
+          <div className="emp-dash__table-wrap">
+            <table className="emp-dash__table">
               <thead>
-                <tr className="bg-white/50">
-                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-200">ID</th>
-                  <th className="px-4 py-4 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-200">Candidate Name</th>
-                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-200">Reg. Date</th>
-                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-200">Exp. Date</th>
-                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-200">Status</th>
-                  <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-200">Action</th>
+                <tr>
+                  <th className="text-center">ID</th>
+                  <th className="text-left">Candidate Name</th>
+                  <th className="text-center">Reg. Date</th>
+                  <th className="text-center">Exp. Date</th>
+                  <th className="text-center">Status</th>
+                  <th className="text-center">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
-                {currentItems.map((c) => {
-                  const info = getStatusInfo(c.expiryDate);
-                  return (
-                    <tr key={c._id} className="hover:bg-white transition-colors">
-                      <td className="px-4 py-3 text-center font-bold text-gray-900 text-xs">
-                        {c.employeeId || c.candidateId || "N/A"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="font-bold text-gray-900 text-sm whitespace-nowrap">{c.employeeName || c.candidateName || "N/A"}</div>
-                      </td>
-                      <td className="px-4 py-3 text-center font-medium text-gray-500 text-xs text-gray-500">
-                        {new Date(c.registrationDate).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-3 text-center font-bold text-gray-500 text-xs text-red-500">
-                        {new Date(c.expiryDate).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-widest ${info.bg} ${info.text} ${info.border}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full`} style={{ backgroundColor: info.color }}></span>
-                          {info.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <a 
-                            href={`${API_DOMAIN}${c.documentUrl ? c.documentUrl.replace(/\\/g, '/').startsWith('/') ? c.documentUrl.replace(/\\/g, '/') : '/' + c.documentUrl.replace(/\\/g, '/') : ''}`} 
-                            target="_blank" 
-                            rel="noreferrer"
-                            className="px-3 py-1.5 bg-blue-600 text-gray-900 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition-colors"
-                          >
-                            View
-                          </a>
-                          {info.label !== "Active" && (
-                            <button 
-                              onClick={() => handleSendReminder(c)}
-                              className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-lg text-[10px] font-black uppercase tracking-tight hover:bg-rose-600 hover:text-gray-900 transition-all shadow-sm active:scale-95 flex items-center gap-1.5"
-                              title="Send Re-upload Reminder"
+              <tbody>
+                <AnimatePresence>
+                  {currentItems.map((c, index) => {
+                    const info = getStatusInfo(c.expiryDate);
+                    return (
+                      <motion.tr
+                        key={c._id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2, delay: index * 0.02 }}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="text-center font-bold text-gray-900 text-xs">
+                          {c.employeeId || c.candidateId || "N/A"}
+                        </td>
+                        <td className="text-left">
+                          <div className="font-bold text-gray-900 text-sm whitespace-nowrap">{c.employeeName || c.candidateName || "N/A"}</div>
+                        </td>
+                        <td className="text-center font-medium text-gray-500 text-xs">
+                          {new Date(c.registrationDate).toLocaleDateString()}
+                        </td>
+                        <td className="text-center font-bold text-gray-500 text-xs">
+                          {new Date(c.expiryDate).toLocaleDateString()}
+                        </td>
+                        <td className="text-center">
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[9px] font-black uppercase tracking-widest ${info.bg} ${info.text} ${info.border}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full`} style={{ backgroundColor: info.color }}></span>
+                            {info.label}
+                          </span>
+                        </td>
+                        <td className="text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <a 
+                              href={`${API_DOMAIN}${c.documentUrl ? c.documentUrl.replace(/\\/g, '/').startsWith('/') ? c.documentUrl.replace(/\\/g, '/') : '/' + c.documentUrl.replace(/\\/g, '/') : ''}`} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              className="px-3 py-1.5 bg-blue-600 text-gray-900 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition-colors"
                             >
-                              <FiActivity size={10} />
-                              Remind
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                              View
+                            </a>
+                            {info.label !== "Active" && (
+                              <button 
+                                onClick={() => handleSendReminder(c)}
+                                className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-lg text-[10px] font-black uppercase tracking-tight hover:bg-rose-600 hover:text-gray-900 transition-all shadow-sm active:scale-95 flex items-center gap-1.5"
+                                title="Send Re-upload Reminder"
+                              >
+                                <FiActivity size={10} />
+                                Remind
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
+                </AnimatePresence>
               </tbody>
             </table>
+            {filteredCertificates.length === 0 && (
+              <div className="p-10 text-center bg-white text-gray-500 text-xs font-bold uppercase">
+                No matching records found
+              </div>
+            )}
           </div>
-          {filteredCertificates.length === 0 && (
-            <div className="p-10 text-center bg-white text-gray-500 text-xs font-bold uppercase">
-              No matching records found
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="emp-dash__table-footer">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-gray-500">PAGE {currentPage} OF {totalPages}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="emp-dash__btn-pagination"
+                >
+                  Prev
+                </button>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="emp-dash__btn-pagination"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
         </div>
-
-        {/* Pagination Section */}
-        {totalPages > 1 && (
-          <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-gray-500">PAGE {currentPage} OF {totalPages}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <button 
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:bg-white disabled:opacity-30"
-              >
-                Prev
-              </button>
-              <button 
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:bg-white disabled:opacity-30"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      </main>
     </div>
   );
 };

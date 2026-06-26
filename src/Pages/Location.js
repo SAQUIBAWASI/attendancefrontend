@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FiMapPin, FiCalendar, FiNavigation } from "react-icons/fi";
 import { API_BASE_URL } from "../config";
+import "../index.css";
+import "./EmployeeDashboard.css";
 
 const AddLocationPage = () => {
   const navigate = useNavigate();
@@ -98,111 +101,156 @@ const AddLocationPage = () => {
   };
 
   return (
-    <div className="max-w-3xl p-6 mx-auto bg-white rounded-lg shadow-lg">
-      <h2 className="mb-6 text-2xl font-semibold text-blue-900">Add New Location</h2>
-
-      {/* Success / Error Message */}
-      {successMessage && (
-        <div className="p-4 mb-4 text-green-700 bg-blue-100 rounded">
-          {successMessage}
-        </div>
-      )}
-      {errorMessage && (
-        <div className="p-4 mb-4 text-red-700 bg-red-100 rounded">
-          {errorMessage}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit}>
-        {/* Location Name */}
-        <div className="mb-4">
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-            Location Name
-          </label>
-          <input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
-            placeholder="Enter location name"
-            required
-          />
+    <div className="emp-dash">
+      <main className="p-4 sm:p-6 lg:p-8">
+        {/* Dashboard Header */}
+        <div className="emp-dash__header">
+          <div>
+            <h1 className="emp-dash__greeting">
+              Add <span>Location</span>
+            </h1>
+            <p className="emp-dash__subtitle">
+              Register a new office location in the system
+            </p>
+          </div>
+          <div className="emp-dash__date-pill">
+            <FiCalendar />
+            <span>
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "short",
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
+          </div>
         </div>
 
-        {/* Auto Detect Location Button */}
-        <div className="flex items-center justify-between mb-3">
-          <label className="block text-sm font-medium text-gray-700">
-            Detect Location Automatically
-          </label>
-          <button
-            type="button"
-            onClick={handleGetCurrentLocation}
-            className="px-4 py-1 text-gray-900 bg-blue-600 rounded hover:bg-blue-800"
-            disabled={loadingLocation}
-          >
-            {loadingLocation ? "Fetching..." : "📍 Get Current Location"}
-          </button>
-        </div>
+        {/* Form Card */}
+        <div className="emp-dash__card">
+          <div className="emp-dash__card-header">
+            <div>
+              <h3 className="emp-dash__card-title flex items-center gap-2">
+                <FiMapPin className="text-blue-600" /> Location Details
+              </h3>
+              <p className="emp-dash__card-desc">Enter location information or use auto-detect</p>
+            </div>
+          </div>
+          <div className="emp-dash__card-body bg-gray-50/50">
+            {/* Success / Error Message */}
+            {successMessage && (
+              <div className="p-4 mb-4 text-green-700 bg-green-100 border border-green-200 rounded-lg">
+                {successMessage}
+              </div>
+            )}
+            {errorMessage && (
+              <div className="p-4 mb-4 text-red-700 bg-red-100 border border-red-200 rounded-lg">
+                {errorMessage}
+              </div>
+            )}
 
-        {/* Latitude */}
-        <div className="mb-4">
-          <label htmlFor="latitude" className="block text-sm font-medium text-gray-700">
-            Latitude
-          </label>
-          <input
-            id="latitude"
-            type="text"
-            value={latitude}
-            onChange={(e) => setLatitude(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
-            placeholder="Enter latitude"
-            required
-          />
-        </div>
+            <form onSubmit={handleSubmit}>
+              {/* Location Name */}
+              <div className="mb-4">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Location Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  placeholder="Enter location name"
+                  required
+                />
+              </div>
 
-        {/* Longitude */}
-        <div className="mb-4">
-          <label htmlFor="longitude" className="block text-sm font-medium text-gray-700">
-            Longitude
-          </label>
-          <input
-            id="longitude"
-            type="text"
-            value={longitude}
-            onChange={(e) => setLongitude(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
-            placeholder="Enter longitude"
-            required
-          />
-        </div>
+              {/* Auto Detect Location Button */}
+              <div className="flex items-center justify-between mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <label className="text-sm font-medium text-gray-700">
+                  Detect Location Automatically
+                </label>
+                <button
+                  type="button"
+                  onClick={handleGetCurrentLocation}
+                  className="h-8 px-4 text-xs font-medium text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+                  disabled={loadingLocation}
+                >
+                  <FiNavigation className="text-xs" />
+                  {loadingLocation ? "Fetching..." : "Get Current Location"}
+                </button>
+              </div>
 
-        {/* Full Address */}
-        <div className="mb-4">
-          <label htmlFor="fullAddress" className="block text-sm font-medium text-gray-700">
-            Full Address
-          </label>
-          <textarea
-            id="fullAddress"
-            value={fullAddress}
-            onChange={(e) => setFullAddress(e.target.value)}
-            className="w-full p-2 mt-1 border border-gray-300 rounded"
-            placeholder="Enter full address or use auto-detect"
-            rows="3"
-            required
-          ></textarea>
-        </div>
+              {/* Latitude */}
+              <div className="mb-4">
+                <label htmlFor="latitude" className="block text-sm font-medium text-gray-700 mb-1">
+                  Latitude
+                </label>
+                <input
+                  id="latitude"
+                  type="text"
+                  value={latitude}
+                  onChange={(e) => setLatitude(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  placeholder="Enter latitude"
+                  required
+                />
+              </div>
 
-        {/* Submit */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="px-6 py-2 text-gray-900 bg-blue-600 rounded hover:bg-blue-700"
-          >
-            Add Location
-          </button>
+              {/* Longitude */}
+              <div className="mb-4">
+                <label htmlFor="longitude" className="block text-sm font-medium text-gray-700 mb-1">
+                  Longitude
+                </label>
+                <input
+                  id="longitude"
+                  type="text"
+                  value={longitude}
+                  onChange={(e) => setLongitude(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  placeholder="Enter longitude"
+                  required
+                />
+              </div>
+
+              {/* Full Address */}
+              <div className="mb-6">
+                <label htmlFor="fullAddress" className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Address
+                </label>
+                <textarea
+                  id="fullAddress"
+                  value={fullAddress}
+                  onChange={(e) => setFullAddress(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  placeholder="Enter full address or use auto-detect"
+                  rows="3"
+                  required
+                ></textarea>
+              </div>
+
+              {/* Submit */}
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate("/locationlist")}
+                  className="emp-dash__btn-outline"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="emp-dash__btn-primary"
+                >
+                  <FiMapPin className="mr-1" size={14} />
+                  Add Location
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </form>
+      </main>
     </div>
   );
 };

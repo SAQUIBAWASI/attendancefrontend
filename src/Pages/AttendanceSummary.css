@@ -1,0 +1,203 @@
+/* AttendanceSummary.css - Premium styling for the Attendance Summary page */
+
+/* Container styling */
+.as-container {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Premium card hover effects */
+.as-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.as-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
+}
+
+/* Table wrapper for horizontal scroll */
+.as-table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+}
+
+.as-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 4px;
+  min-width: 1000px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.as-table thead th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-weight: 600;
+  text-align: left;
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  letter-spacing: 0.025em;
+}
+
+.as-table tbody tr {
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.as-table tbody tr:hover {
+  background: #f8fafc;
+  transform: scale(1.005);
+}
+
+.as-table tbody td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Filter dropdown styling */
+.as-dropdown {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal backdrop blur */
+.as-modal-backdrop {
+  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Button hover effects */
+.as-btn {
+  transition: all 0.2s ease;
+}
+
+.as-btn:hover {
+  transform: translateY(-1px);
+}
+
+.as-btn:active {
+  transform: translateY(0);
+}
+
+/* Loading spinner */
+.as-spinner {
+  border: 3px solid #e2e8f0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Toast notification animation */
+.as-toast {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Status badge animations */
+.as-status-badge {
+  transition: all 0.2s ease;
+}
+
+.as-status-badge:hover {
+  transform: scale(1.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .as-table {
+    min-width: 800px;
+  }
+}
+
+@media (max-width: 768px) {
+  .as-container {
+    padding: 0.5rem;
+  }
+  
+  .as-table {
+    min-width: 700px;
+    font-size: 0.875rem;
+  }
+  
+  .as-table thead th,
+  .as-table tbody td {
+    padding: 0.625rem 0.75rem;
+  }
+}
+
+/* Custom scrollbar for dropdowns */
+.as-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.as-dropdown::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.as-dropdown::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.as-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Modal table styling */
+.as-modal-table {
+  font-size: 0.875rem;
+}
+
+.as-modal-table thead th {
+  background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+  padding: 0.75rem 0.5rem;
+}
+
+.as-modal-table tbody td {
+  padding: 0.625rem 0.5rem;
+}
+
+/* Input field focus effects */
+.as-input:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Bulk action buttons */
+.as-bulk-btn {
+  transition: all 0.2s ease;
+}
+
+.as-bulk-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

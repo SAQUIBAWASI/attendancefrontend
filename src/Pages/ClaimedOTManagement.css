@@ -1,0 +1,175 @@
+/* ClaimedOTManagement.css - Premium styling for the Claimed OT Management page */
+
+/* Container centering and background gradient */
+.cot-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Premium card hover effects */
+.cot-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cot-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
+}
+
+/* Table wrapper for horizontal scroll on small screens */
+.cot-table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+}
+
+.cot-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 4px;
+  min-width: 900px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.cot-table thead th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-weight: 600;
+  text-align: left;
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  letter-spacing: 0.025em;
+}
+
+.cot-table tbody tr {
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.cot-table tbody tr:hover {
+  background: #f8fafc;
+  transform: scale(1.005);
+}
+
+.cot-table tbody td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Status badge animations */
+.cot-status-badge {
+  transition: all 0.2s ease;
+}
+
+.cot-status-badge:hover {
+  transform: scale(1.05);
+}
+
+/* Filter dropdown styling */
+.cot-dropdown {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal backdrop blur */
+.cot-modal-backdrop {
+  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Button hover effects */
+.cot-btn {
+  transition: all 0.2s ease;
+}
+
+.cot-btn:hover {
+  transform: translateY(-1px);
+}
+
+.cot-btn:active {
+  transform: translateY(0);
+}
+
+/* Loading spinner */
+.cot-spinner {
+  border: 3px solid #e2e8f0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Toast notification animation */
+.cot-toast {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .cot-table {
+    min-width: 700px;
+  }
+}
+
+@media (max-width: 768px) {
+  .cot-container {
+    padding: 0.5rem;
+  }
+  
+  .cot-table {
+    min-width: 600px;
+    font-size: 0.875rem;
+  }
+  
+  .cot-table thead th,
+  .cot-table tbody td {
+    padding: 0.625rem 0.75rem;
+  }
+}
+
+/* Custom scrollbar for dropdowns */
+.cot-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cot-dropdown::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.cot-dropdown::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.cot-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

@@ -2035,6 +2035,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
+import "./EmployeeSidebar.css";
 
 const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -2075,10 +2076,10 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     const pathMap = {
       "/employeedashboard": "Dashboard",
       "/leave-application": "Leave Application",
-      "/attendance-capture": "Check In",
-      "/myattendance": "Attendance Report",
+      "/attendance-capture": "Attendance Capture",
+      "/myattendance": "My Attendance",
       "/my-shift": "My Shift",
-      "/mylocation": "My Assigned Location",
+      "/mylocation": "My Location",
       "/mysalary": "My Salary",
       "/mypermissions": "My Permissions",
       "/myleaves": "My Leaves",
@@ -2109,7 +2110,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/my-medical-certificate": "My Certificate",
       "/emp-holidays-calendar": "Holidays Calendar",
       "/emp-permissions": "Permissions",
-      "/emp-events": "Events"
+      "/emp-events": "Events",
+      "/issue-management": "Issue Management"
     };
     return pathMap[path] || "Dashboard";
   };
@@ -2313,29 +2315,23 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     return [
       { icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/employeedashboard" },
       {
-        icon: <i className="ri-calendar-fill"></i>,
+        icon: <i className="ri-calendar-check-fill"></i>,
         name: "Attendance",
         dropdown: [
-          { name: "Check In", path: "/attendance-capture" },
-          { name: "Attendance Report", path: "/myattendance" },
+          { name: "Attendance Capture", path: "/attendance-capture" },
+          { name: "My Attendance", path: "/myattendance" },
           { name: "My Shift", path: "/my-shift" },
-          { name: "My Assigned Location", path: "/mylocation" },
+          { name: "My Location", path: "/mylocation" },
         ]
       },
-      // { icon: <i className="ri-calendar-fill"></i>, name: "Leave", path: "/myleaves" },
-      // { icon: <i className="ri-profile-fill"></i>, name: "Profile", path: "/emp-profile" },
-      // { icon: <i className="ri-money-dollar-box-fill"></i>, name: "My Salary", path: "/mysalary" },
-      // { icon: <i className="ri-money-dollar-box-fill"></i>, name: "Expenses", path: "/expense-management" },
-      // { icon: <i className="ri-calendar-fill"></i>, name: "Holidays", path: "/HolidayList" },
-      // { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
-
-      { icon: <i className="ri-calendar-check-fill"></i>, name: "Leave", path: "/myleaves" },
-{ icon: <i className="ri-account-circle-fill"></i>, name: "Profile", path: "/emp-profile" },
-// { icon: <i className="ri-bank-card-fill"></i>, name: "My Salary", path: "/mysalary" },
-{ icon: <i className="ri-money-rupee-circle-fill"></i>, name: "My Salary", path: "/mysalary" },
-{ icon: <i className="ri-funds-fill"></i>, name: "Expenses", path: "/expense-management" },
-{ icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/HolidayList" },
-{ icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
+      { icon: <i className="ri-calendar-close-fill"></i>, name: "My Leaves", path: "/myleaves" },
+      { icon: <i className="ri-account-circle-line"></i>, name: "Profile", path: "/emp-profile" },
+      { icon: <i className="ri-bank-card-fill"></i>, name: "My Salary", path: "/mysalary" },
+      { icon: <i className="ri-bank-card-fill"></i>, name: "Issues", path: "/issue-management" },
+      { icon: <i className="ri-time-fill"></i>, name: "Claimed OT", path: "/emp-claimed-ot-management" },
+      { icon: <i className="ri-wallet-3-fill"></i>, name: "Expenses", path: "/expense-management" },
+      { icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/HolidayList" },
+      { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
     ];
   };
 
@@ -2358,21 +2354,24 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       menu.push({ icon: <i className="ri-user-add-fill"></i>, name: "Add Employee", path: "/emp-add-employee" });
     }
 
-    // Attendance with dropdown
-    const attendanceDropdown = [];
+    // Attendance with dropdown (personal + admin)
+    const attendanceDropdown = [
+      { name: "Attendance Capture", path: "/attendance-capture" },
+      { name: "My Attendance", path: "/myattendance" },
+      { name: "My Shift", path: "/my-shift" },
+      { name: "My Location", path: "/mylocation" },
+    ];
     if (hasPermission("attendance_view_all")) {
       attendanceDropdown.push({ name: "Attendance Summary", path: "/emp-attendance-summary" });
       attendanceDropdown.push({ name: "Attendance Records", path: "/emp-attendance-records" });
       attendanceDropdown.push({ name: "Today Attendance", path: "/emp-today-attendance" });
       attendanceDropdown.push({ name: "Absent Today", path: "/emp-absent-today" });
     }
-    if (attendanceDropdown.length > 0) {
-      menu.push({
-        icon: <i className="ri-calendar-fill"></i>,
-        name: "Attendance",
-        dropdown: attendanceDropdown
-      });
-    }
+    menu.push({
+      icon: <i className="ri-calendar-check-fill"></i>,
+      name: "Attendance",
+      dropdown: attendanceDropdown
+    });
 
     // Leave Approval (for HR/Admin)
     if (hasPermission("leave_approve")) {
@@ -2445,6 +2444,11 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       menu.push({ icon: <i className="ri-map-pin-2-fill"></i>, name: "Locations", path: "/emp-locations" });
     }
 
+    // Issue Management
+    if (hasPermission("locations_manage") || hasPermission("user_access_manage")) {
+      menu.push({ icon: <i className="ri-error-warning-fill"></i>, name: "Issue Management", path: "/issue-management" });
+    }
+
     // Shifts - Shows automatically for managers
     if (hasPermission("shifts_manage")) {
       menu.push({ icon: <i className="ri-time-fill"></i>, name: "Shifts", path: "/emp-shifts" });
@@ -2465,17 +2469,25 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
 
   if (loading) {
     return (
-      <div className="fixed top-0 left-0 h-full bg-[#1D4ED8] text-white z-40 w-52 flex items-center justify-center">
-        <div className="w-6 h-6 border-blue-500 rounded-full animate-spin"></div>
+      <div className="emp-sidebar emp-sidebar__loading">
+        <div className="emp-sidebar__spinner" />
       </div>
     );
   }
+
+  const sidebarClass = [
+    "emp-sidebar",
+    !isMobile && isCollapsed ? "emp-sidebar--collapsed" : "",
+    isMobile && isCollapsed ? "emp-sidebar--mobile-hidden" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <>
       {isMobile && !isCollapsed && (
         <div
-          className="fixed inset-0 z-30 bg-[#1E3A8A] "
+          className="emp-sidebar__overlay"
           onClick={() => {
             if (setIsCollapsed) setIsCollapsed(true);
             setOpenDropdown(null);
@@ -2486,124 +2498,81 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       <div
         onMouseEnter={handleMouseEnterSidebar}
         onMouseLeave={handleMouseLeaveSidebar}
-        className={`fixed top-0 left-0 h-full bg-[#1D4ED8] text-white z-40 transition-all duration-300 border-blue-500 border-blue-500
-        ${
-          isMobile
-            ? isCollapsed
-              ? "-translate-x-full w-52"
-              : "translate-x-0 w-52"
-            : isCollapsed
-            ? "w-16"
-            : "w-52"
-        }`}
+        className={sidebarClass}
       >
-        {/* Header */}
-        <div className="flex items-center justify-center px-3 font-bold tracking-tight bg-blue-700 border-blue-500 h-14">
+        <div className="emp-sidebar__header">
           {isCollapsed && !isMobile ? (
-            <span className="text-xl text-white">TM</span>
+            <span className="emp-sidebar__brand-mark">TM</span>
           ) : (
-            <div className="flex flex-col w-full">
-              <span className="text-xs uppercase tracking-[0.2em] font-medium text-white mb-0.5">
-                {hasAnyAdminPermission && isAdminView ? 'Admin Portal' : 'Employee Portal'}
-              </span>
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></div>
-                <span className="text-xs font-medium truncate text-white/80">
-                  {currentPage}
-                </span>
+            <div className="w-full min-w-0">
+              <div className="emp-sidebar__brand-label">
+                {hasAnyAdminPermission && isAdminView ? "Admin Portal" : "Employee Portal"}
+              </div>
+              <div className="emp-sidebar__brand-page">
+                <span className="emp-sidebar__brand-dot" />
+                <span className="truncate">{currentPage}</span>
               </div>
             </div>
           )}
         </div>
 
-        {/* Menu */}
-        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto no-scrollbar">
+        <nav className="emp-sidebar__nav">
           {menuItems.map((item, idx) => (
             <div key={idx}>
               {item.dropdown ? (
                 <>
                   <div
-                    className={`group flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
-                      isDropdownActive(item.dropdown)
-                        ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
-                        : openDropdown === item.name
-                        ? "bg-[#1E3A8A]"
-                        : "hover:bg-blue-600"
+                    className={`emp-sidebar__dropdown-trigger ${
+                      isDropdownActive(item.dropdown) || openDropdown === item.name
+                        ? "emp-sidebar__dropdown-trigger--active"
+                        : ""
                     }`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (item.dropdown && item.dropdown.length > 0) {
+                      if (!item.dropdown || item.dropdown.length === 0) return;
+
+                      // When collapsed, we can't show submenu: go to first item.
+                      if (isCollapsed) {
                         navigate(item.dropdown[0].path);
                         setOpenDropdown(null);
-                        if (isMobile && setIsCollapsed) {
-                          setIsCollapsed(true);
-                        }
+                        if (isMobile && setIsCollapsed) setIsCollapsed(true);
                         if (onClose) onClose();
+                        return;
                       }
+
+                      // When expanded, clicking the row toggles the dropdown.
+                      setOpenDropdown((current) => (current === item.name ? null : item.name));
                     }}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <span className={`text-lg transition-colors duration-200 ${
-                        isDropdownActive(item.dropdown)
-                          ? "text-white"
-                          : openDropdown === item.name
-                          ? "text-white"
-                          : "text-white group-hover:text-white"
-                      }`}>
-                        {item.icon}
-                      </span>
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <span className="emp-sidebar__item-icon">{item.icon}</span>
                       {!isCollapsed && (
-                        <span className="text-[14px] font-medium leading-none">
-                          {item.name}
-                        </span>
+                        <span className="emp-sidebar__item-label">{item.name}</span>
                       )}
                     </div>
 
                     {!isCollapsed && (
-                      <div className="flex items-center gap-1">
-                        {isDropdownActive(item.dropdown) && (
-                          <div className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></div>
-                        )}
-                        <FaChevronDown
-                          onClick={(e) => toggleDropdown(e, item.name)}
-                          className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600 rounded cursor-pointer ${
-                            isDropdownActive(item.dropdown)
-                              ? "text-white"
-                              : openDropdown === item.name
-                              ? "text-white"
-                              : "text-white"
-                          } ${openDropdown === item.name ? "rotate-180" : ""}`}
-                          style={{
-                            width: '20px',
-                            height: '20px',
-                            minWidth: '20px',
-                            minHeight: '20px'
-                          }}
-                        />
-                      </div>
+                      <FaChevronDown
+                        onClick={(e) => toggleDropdown(e, item.name)}
+                        className={`emp-sidebar__chevron ${
+                          openDropdown === item.name ? "emp-sidebar__chevron--open" : ""
+                        }`}
+                      />
                     )}
                   </div>
 
-                  {/* DROPDOWN ITEMS */}
                   {openDropdown === item.name && !isCollapsed && (
-                    <ul className="mt-0.5 space-y-0.5">
+                    <ul className="emp-sidebar__submenu">
                       {item.dropdown.map((sub, i) => (
                         <li key={i}>
                           <Link
                             to={sub.path}
                             onClick={() => handleDropdownItemClick(sub.path)}
-                            className={`block py-1 text-[13px] transition-colors ${
-                              isActive(sub.path)
-                                ? "text-white font-semibold"
-                                : "text-white hover:text-white"
+                            className={`emp-sidebar__subitem ${
+                              isActive(sub.path) ? "emp-sidebar__subitem--active" : ""
                             }`}
                           >
-                            <div className="flex items-center gap-2">
-                              {isActive(sub.path) && (
-                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
-                              )}
-                              {sub.name}
-                            </div>
+                            {sub.name}
                           </Link>
                         </li>
                       ))}
@@ -2613,28 +2582,13 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
               ) : (
                 <div
                   onClick={() => handleItemClick(item.path, item.action)}
-                  className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
-                    isActive(item.path)
-                      ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
-                      : "hover:bg-blue-600"
-                  }`}
+                  className={`emp-sidebar__item ${
+                    isActive(item.path) ? "emp-sidebar__item--active" : ""
+                  } ${item.name === "Logout" ? "emp-sidebar__item--logout" : ""}`}
                 >
-                  <span className={`text-lg transition-colors duration-200 ${
-                    isActive(item.path)
-                      ? "text-white"
-                      : "text-white group-hover:text-white"
-                  }`}>
-                    {item.icon}
-                  </span>
+                  <span className="emp-sidebar__item-icon">{item.icon}</span>
                   {!isCollapsed && (
-                    <div className="flex items-center flex-1 min-w-0 gap-2">
-                      <span className="text-[14px] font-medium leading-none truncate">
-                        {item.name}
-                      </span>
-                      {isActive(item.path) && (
-                        <div className="w-2 h-2 ml-auto rounded-full bg-emerald-300 animate-pulse"></div>
-                      )}
-                    </div>
+                    <span className="emp-sidebar__item-label">{item.name}</span>
                   )}
                 </div>
               )}
@@ -2642,50 +2596,46 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
           ))}
         </nav>
 
-        {/* Footer with View Toggle Button */}
-        <div className="px-4 py-3 text-[10px] text-white border-blue-500 border-blue-500 bg-blue-700">
+        <div className="emp-sidebar__footer">
           {!isCollapsed ? (
-            <div className="flex flex-col gap-2">
+            <div className="emp-sidebar__footer-expanded">
               {hasAnyAdminPermission && (
-                <button 
-                  onClick={toggleView} 
-                  className="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-white transition-all bg-blue-600 rounded-lg hover:bg-blue-600"
-                >
+                <button type="button" onClick={toggleView} className="emp-sidebar__toggle">
                   <span className="flex items-center gap-2">
-                    <i className={`${isAdminView ? 'ri-admin-fill' : 'ri-user-fill'}`}></i>
-                    {isAdminView ? 'Switch to Employee View' : 'Switch to Admin View'}
+                    <i className={`emp-sidebar__toggle-icon ${isAdminView ? "ri-admin-fill" : "ri-user-fill"}`} />
+                    {isAdminView ? "Switch to Employee View" : "Switch to Admin View"}
                   </span>
-                  <i className="ri-swap-line"></i>
+                  <i className="ri-swap-line emp-sidebar__toggle-icon" />
                 </button>
               )}
-              <div className="flex flex-col gap-0.5">
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold tracking-wider text-white uppercase">
-                    {hasAnyAdminPermission && isAdminView ? 'Admin Portal v1.0' : 'Employee Portal v1.0'}
-                  </p>
-                  <div className={`flex items-center gap-1 px-2 py-0.5 rounded ${hasAnyAdminPermission && isAdminView ? 'bg-purple-600/20' : 'bg-blue-600/20'}`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${hasAnyAdminPermission && isAdminView ? 'bg-purple-400' : 'bg-blue-400'}`}></div>
-                    <span className={`text-[9px] font-medium ${hasAnyAdminPermission && isAdminView ? 'text-purple-300' : 'text-white'}`}>
-                      {hasAnyAdminPermission && isAdminView ? 'Admin Mode' : 'Employee Mode'}
-                    </span>
-                  </div>
-                </div>
-                <p>© {new Date().getFullYear()} Timely Health</p>
+              <div className="emp-sidebar__meta">
+                <span className="emp-sidebar__meta-title">
+                  {hasAnyAdminPermission && isAdminView ? "Admin Portal v1.0" : "Employee Portal v1.0"}
+                </span>
+                <span
+                  className={`emp-sidebar__meta-badge ${
+                    hasAnyAdminPermission && isAdminView ? "emp-sidebar__meta-badge--admin" : ""
+                  }`}
+                >
+                  <span className="emp-sidebar__meta-badge-dot" />
+                  {hasAnyAdminPermission && isAdminView ? "Admin" : "Employee"}
+                </span>
               </div>
+              <p className="emp-sidebar__copyright">© {new Date().getFullYear()} Timely Health</p>
             </div>
           ) : (
-            <div className="text-center">
+            <div className="emp-sidebar__footer-collapsed">
               {hasAnyAdminPermission && (
-                <button 
-                  onClick={toggleView} 
-                  className="p-1 transition-colors rounded hover:bg-[#1D4ED8]/60/70/70/50" 
-                  title={isAdminView ? 'Switch to Employee View' : 'Switch to Admin View'}
+                <button
+                  type="button"
+                  onClick={toggleView}
+                  className="emp-sidebar__toggle-icon"
+                  title={isAdminView ? "Switch to Employee View" : "Switch to Admin View"}
                 >
-                  <i className={`text-lg ${isAdminView ? 'ri-admin-fill' : 'ri-user-fill'}`}></i>
+                  <i className={isAdminView ? "ri-admin-fill" : "ri-user-fill"} />
                 </button>
               )}
-              <div className="w-3 h-3 mx-auto mt-1 mb-1 bg-blue-400 rounded-full animate-pulse"></div>
-              <span>©</span>
+              <span className="emp-sidebar__copyright">©</span>
             </div>
           )}
         </div>

@@ -5,6 +5,8 @@ import {
     FaAddressCard, FaLock, FaUserShield, FaUserFriends,
     FaSearch, FaUniversity, FaPhoneAlt
 } from "react-icons/fa";
+import "./EmployeeDashboard.css";
+import "./EmployeePageShell.css";
 
 const formatDocumentUrl = (filePath) => {
     if (!filePath) return "";
@@ -103,48 +105,71 @@ const EmployeePersonalDocuments = () => {
     const resetFilters = () => { setStatusFilter(""); setLocalSearch(""); };
 
     if (loading) {
-        return <div className="flex items-center justify-center min-h-screen text-gray-500">Loading documents...</div>;
+        return (
+            <div className="emp-dash__loading">
+                <div className="emp-dash__spinner" />
+                <p className="emp-dash__loading-text">Loading documents...</p>
+            </div>
+        );
     }
 
     if (errorMsg) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen gap-3">
-                <div className="text-red-500 text-lg font-semibold">⚠️ {errorMsg}</div>
-                <button onClick={fetchDashboardData} className="px-4 py-2 text-sm bg-blue-600 text-gray-900 rounded-md hover:bg-blue-700">Retry</button>
+            <div className="emp-page__empty">
+                <div className="emp-page__empty-icon">
+                    <FaSearch size={18} />
+                </div>
+                <h3>Unable to load documents</h3>
+                <p>{errorMsg}</p>
+                <button onClick={fetchDashboardData} className="emp-page__primary-btn" style={{ marginTop: "0.75rem" }}>
+                    Retry
+                </button>
             </div>
         );
     }
 
     if (noCandidate) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen gap-3 p-8 text-center">
-                <div className="text-5xl mb-2">🔗</div>
-                <h2 className="text-xl font-bold text-gray-700">No Candidate Profile Linked</h2>
-                <p className="text-sm text-gray-500 max-w-md">
-                    Your employee account email does not match any candidate profile in the system.
-                    To display your personal documents here, please ensure you have a candidate account registered with the same email address.
+            <div className="emp-page__empty">
+                <div className="emp-page__empty-icon">
+                    <FaUserFriends size={18} />
+                </div>
+                <h3>No candidate profile linked</h3>
+                <p>
+                    Your employee email does not match any candidate profile. Please ensure you have a candidate account registered with the same email address.
                 </p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen p-2 bg-gray-100 font-sans">
-            <div className="mx-auto max-w-9xl">
+        <div className="w-full">
 
                 {/* Filters Box - Synced with UserActivity/EmployeeLetters style */}
-                <div className="p-2 mb-3 bg-white rounded-lg shadow-md border border-gray-200">
-                    <div className="flex flex-wrap items-center gap-2">
+                <div className="emp-dash__card" style={{ marginBottom: "1rem" }}>
+                    <div className="emp-dash__card-header">
+                        <div>
+                            <h3 className="emp-dash__card-title">Personal Documents</h3>
+                            <p className="emp-dash__card-desc">View and access your uploaded identity and education documents.</p>
+                        </div>
+                        <div className="emp-page__pill emp-page__pill--muted">
+                            <FaAddressCard />
+                            {filteredDocs.length} item{filteredDocs.length !== 1 ? "s" : ""}
+                        </div>
+                    </div>
+
+                    <div className="emp-dash__card-body" style={{ paddingTop: "1rem" }}>
+                        <div className="emp-page__filters">
 
                         {/* Search */}
-                        <div className="relative flex-1 min-w-[200px]">
-                            <FaSearch className="absolute text-gray-500 transform -translate-y-1/2 left-3 top-1/2 text-sm" />
+                        <div className="emp-page__search-wrap">
+                            <FaSearch className="emp-page__search-icon" />
                             <input
                                 type="text"
                                 placeholder="Search by name or description..."
                                 value={localSearch}
                                 onChange={(e) => setLocalSearch(e.target.value)}
-                                className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 shadow-sm transition-all"
+                                className="emp-page__search"
                             />
                         </div>
 
@@ -153,92 +178,86 @@ const EmployeePersonalDocuments = () => {
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="w-full h-8 px-3 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 cursor-pointer transition-all appearance-none font-bold text-gray-700"
+                                className="emp-page__select"
                             >
                                 <option value="">All Statuses</option>
                                 <option value="Filed">Asset Filed</option>
                                 <option value="Pending">Pending</option>
                             </select>
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                            </div>
                         </div>
 
                         {/* Reset Button */}
                         {(localSearch || statusFilter) && (
                             <button
                                 onClick={resetFilters}
-                                className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 flex items-center gap-1"
+                                className="emp-page__secondary-btn"
                             >
-                                <FaSearch className="rotate-90 text-[10px]" /> Clear
+                                Clear
                             </button>
                         )}
+                    </div>
                     </div>
                 </div>
 
                 {/* Documents Table */}
-                <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg border border-gray-200">
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full">
-                            <thead className="text-sm text-center text-gray-900 bg-blue-600">
-                                <tr className="uppercase tracking-wider text-[11px] font-bold">
-                                    <th className="py-2.5 px-6">DOCUMENT IDENTITY</th>
-                                    <th className="py-2.5 px-6">CLASSIFICATION</th>
-                                    <th className="py-2.5 px-6">VAULT STATUS</th>
-                                    <th className="py-2.5 px-6">ACCESS</th>
+                <div className="emp-dash__card" style={{ marginBottom: "1.25rem" }}>
+                    <div className="emp-dash__table-wrap">
+                        <table className="emp-dash__table">
+                            <thead>
+                                <tr>
+                                    <th>Document</th>
+                                    <th>Classification</th>
+                                    <th>Status</th>
+                                    <th style={{ textAlign: "right" }}>Access</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
+                            <tbody>
                                 {filteredDocs.length > 0 ? filteredDocs.map((doc) => {
                                     const filed = !!docs[doc.id]?.filePath;
                                     return (
-                                        <tr key={doc.id} className="transition-colors hover:bg-white">
-                                            <td className="px-6 py-2">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`p-1.5 rounded ${filed ? "bg-green-50 text-blue-700" : "bg-orange-50 text-orange-600"} border border-gray-200`}>
+                                        <tr key={doc.id}>
+                                            <td>
+                                                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                                                    <div className={`emp-page__badge ${filed ? "emp-page__badge--success" : "emp-page__badge--warning"}`}>
                                                         <doc.icon size={14} />
                                                     </div>
                                                     <div>
-                                                        <div className="font-bold text-[11px] text-gray-700 uppercase tracking-tight">{doc.label}</div>
-                                                        <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest leading-none">ID: {doc.id.toUpperCase()}</div>
+                                                        <div style={{ fontWeight: 700 }}>{doc.label}</div>
+                                                        <div style={{ fontSize: "0.75rem", color: "#98a2b3" }}>ID: {doc.id.toUpperCase()}</div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-2 text-center text-[10px] font-bold text-gray-500 uppercase tracking-wide">
-                                                {doc.desc}
+                                            <td>{doc.desc}</td>
+                                            <td>
+                                                <span className={`emp-dash__table-status ${filed ? "emp-dash__table-status--present" : "emp-dash__table-status--other"}`}>
+                                                    {filed ? "Filed" : "Pending"}
+                                                </span>
                                             </td>
-                                            <td className="px-6 py-2 text-center">
-                                                <div className="flex flex-col items-center">
-                                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border uppercase tracking-widest shadow-sm transition-all ${filed ? "bg-blue-100 text-emerald-800 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
-                                                        }`}>
-                                                        {filed ? "Verified" : "Pending"}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-2">
-                                                <div className="flex items-center justify-center">
-                                                    {filed ? (
-                                                        <button
-                                                            onClick={() => window.open(formatDocumentUrl(docs[doc.id].filePath), "_blank")}
-                                                            className="px-3 py-1 bg-gray-100 text-gray-900 rounded text-[9px] font-bold uppercase tracking-wider hover:bg-blue-600 transition-all shadow-sm"
-                                                        >
-                                                            VIEW
-                                                        </button>
-                                                    ) : (
-                                                        <span className="text-[9px] font-bold text-gray-700 uppercase tracking-wider bg-white px-2 py-1 rounded border border-gray-200">N/A</span>
-                                                    )}
-                                                </div>
+                                            <td style={{ textAlign: "right" }}>
+                                                {filed ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => window.open(formatDocumentUrl(docs[doc.id].filePath), "_blank")}
+                                                        className="emp-page__primary-btn"
+                                                        style={{ padding: "0.5rem 0.85rem" }}
+                                                    >
+                                                        View
+                                                    </button>
+                                                ) : (
+                                                    <span className="emp-page__badge emp-page__badge--primary">N/A</span>
+                                                )}
                                             </td>
                                         </tr>
                                     );
                                 }) : (
                                     <tr>
-                                        <td colSpan="4" className="py-10 text-center">
-                                            <div className="flex flex-col items-center gap-2">
-                                                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-gray-900 border-2 border-dashed border-gray-200">
+                                        <td colSpan="4">
+                                            <div className="emp-page__empty" style={{ padding: "2rem 1rem" }}>
+                                                <div className="emp-page__empty-icon">
                                                     <FaSearch size={18} />
                                                 </div>
-                                                <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">No matching records</h3>
+                                                <h3>No matching records</h3>
+                                                <p>Try changing the search or status filter.</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -246,22 +265,67 @@ const EmployeePersonalDocuments = () => {
                             </tbody>
                         </table>
                     </div>
+
+                    <div className="emp-dash__mobile-list">
+                        {filteredDocs.length > 0 ? filteredDocs.map((doc) => {
+                            const filed = !!docs[doc.id]?.filePath;
+                            return (
+                                <div key={doc.id} className="emp-dash__mobile-item">
+                                    <div className="emp-dash__mobile-item-top">
+                                        <div className="emp-dash__mobile-date" style={{ fontWeight: 700 }}>{doc.label}</div>
+                                        <span className={`emp-dash__table-status ${filed ? "emp-dash__table-status--present" : "emp-dash__table-status--other"}`}>
+                                            {filed ? "Filed" : "Pending"}
+                                        </span>
+                                    </div>
+                                    <div className="emp-dash__mobile-grid">
+                                        <div className="emp-dash__mobile-field">
+                                            <span>Classification</span>
+                                            <span>{doc.desc}</span>
+                                        </div>
+                                        <div className="emp-dash__mobile-field">
+                                            <span>Doc Code</span>
+                                            <span>{doc.id.toUpperCase()}</span>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.5rem" }}>
+                                        {filed ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => window.open(formatDocumentUrl(docs[doc.id].filePath), "_blank")}
+                                                className="emp-page__primary-btn"
+                                                style={{ padding: "0.35rem 0.75rem", fontSize: "0.75rem" }}
+                                            >
+                                                View Document
+                                            </button>
+                                        ) : (
+                                            <span className="emp-page__badge emp-page__badge--primary">Not Available</span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        }) : (
+                            <div className="emp-page__empty" style={{ padding: "2rem 1rem" }}>
+                                <h3>No matching records</h3>
+                                <p>Try changing the search or status filter.</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Info Cards Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-12">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                     {/* Banking Details Card - Aligned with Apply for Leave Modal */}
-                    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                        <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-gray-700 flex items-center gap-2">
+                    <div className="emp-dash__card">
+                        <div className="emp-dash__card-header">
+                            <h3 className="emp-dash__card-title" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                 <span className="p-2 bg-blue-50 text-blue-600 rounded-lg"><FaUniversity size={18} /></span>
                                 Banking Vault
                             </h3>
                             <button className="text-[10px] font-bold text-blue-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 uppercase">Verified</button>
                         </div>
 
-                        <div className="p-4 sm:p-6 space-y-4">
+                        <div className="emp-dash__card-body">
                             <div>
                                 <label className="block mb-1 text-xs font-medium text-gray-700">Institution Name</label>
                                 <div className="w-full p-2.5 text-sm font-semibold text-gray-700 border border-gray-200 rounded-lg bg-white/50">
@@ -293,16 +357,16 @@ const EmployeePersonalDocuments = () => {
                     </div>
 
                     {/* Emergency Contact Card - Aligned with Apply for Leave Modal */}
-                    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                        <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-gray-700 flex items-center gap-2">
+                    <div className="emp-dash__card">
+                        <div className="emp-dash__card-header">
+                            <h3 className="emp-dash__card-title" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                 <span className="p-2 bg-rose-50 text-rose-600 rounded-lg"><FaPhoneAlt size={16} /></span>
                                 Emergency Hub
                             </h3>
                             <button className="text-[10px] font-bold text-rose-600 bg-rose-50 px-3 py-1 rounded-full border border-rose-100 uppercase underline decoration-rose-300">Priority I</button>
                         </div>
 
-                        <div className="p-4 sm:p-6 space-y-4">
+                        <div className="emp-dash__card-body">
                             <div>
                                 <label className="block mb-1 text-xs font-medium text-gray-700">Contact Identity (Name)</label>
                                 <div className="w-full p-2.5 text-sm font-bold text-gray-700 border border-gray-200 rounded-lg bg-white/50 uppercase">
@@ -334,9 +398,9 @@ const EmployeePersonalDocuments = () => {
                     </div>
 
                 </div>
+                </div>
 
-            </div>
-        </div>
+            
     );
 };
 

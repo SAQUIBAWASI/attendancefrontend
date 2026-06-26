@@ -1986,18 +1986,15 @@
 //         )}
 //       </div>
 //     </div>
-//   );
-// };
-
-// export default AbsentToday;
-
-
+//  import axios from "axios";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag } from "react-icons/fa";
+import { FiUsers, FiFilter, FiUserX, FiPercent, FiCalendar, FiTrash2, FiRefreshCw } from "react-icons/fi";
 import { API_BASE_URL } from "../config";
-import "../index.css";
 import { isEmployeeHidden } from "../utils/employeeStatus";
+import "./EmployeeDashboard.css";
+import "./EmployeeLeaves.css";
 
 const BASE_URL = API_BASE_URL;
 
@@ -2006,12 +2003,14 @@ const AbsentToday = () => {
   const [filteredRecords, setFilteredRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [employees, setEmployees] = useState([]);
+  const [allDatesCount, setAllDatesCount] = useState(1);
   
   // Format date as DD-MM-YYYY for display
   const formatDateForDisplay = (dateStr) => {
     if (!dateStr) return "";
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-GB');
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   };
   
   // Format date as YYYY-MM-DD for API
@@ -2141,6 +2140,7 @@ const AbsentToday = () => {
   const fetchAbsentRecords = async () => {
     try {
       setLoading(true);
+      setError(null);
 
       const params = new URLSearchParams();
       
@@ -2161,16 +2161,15 @@ const AbsentToday = () => {
         params.append('toDate', endDate);
       }
 
-      console.log("Fetching attendance for date range:", startDate, "to", endDate);
-
       // Fetch all employees and attendance for the specific date range
       const [empResp, attResp] = await Promise.all([
         axios.get(`${BASE_URL}/employees/get-employees`),
         axios.get(`${BASE_URL}/attendance/allattendance${params.toString() ? `?${params.toString()}` : ''}`)
       ]);
 
-      const employees = empResp.data || [];
-      const activeEmployees = employees.filter(emp => !isEmployeeHidden(emp));
+      const employeesData = empResp.data || [];
+      const activeEmployees = employeesData.filter(emp => !isEmployeeHidden(emp));
+      setEmployees(activeEmployees);
       
       extractUniqueValues(activeEmployees);
 
@@ -2183,8 +2182,6 @@ const AbsentToday = () => {
       }
       
       const allAttendance = Array.isArray(attendanceData) ? attendanceData : [];
-      
-      console.log("Total attendance records received:", allAttendance.length);
 
       // Create start and end datetime objects
       const startDateTime = new Date(startDate);
@@ -2201,8 +2198,7 @@ const AbsentToday = () => {
         allDatesInRange.push(dateStr);
         currentDate.setDate(currentDate.getDate() + 1);
       }
-      
-      console.log("Dates in range:", allDatesInRange);
+      setAllDatesCount(allDatesInRange.length || 1);
       
       // Create a Map of employee ID -> Set of dates they were present
       const presentDatesByEmployee = new Map();
@@ -2252,8 +2248,6 @@ const AbsentToday = () => {
         }
       });
       
-      console.log("Employees with attendance:", presentDatesByEmployee.size);
-      
       // Find absent records
       const absentRecordsList = [];
       
@@ -2273,12 +2267,11 @@ const AbsentToday = () => {
               date: date,
               department: emp.department || emp.departmentName || "N/A",
               designation: emp.designation || emp.role || "N/A",
+              profilePicture: emp.profilePicture || null
             });
           }
         });
       });
-      
-      console.log("Total absent records found:", absentRecordsList.length);
       
       // Sort by date (newest first)
       absentRecordsList.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -2302,301 +2295,498 @@ const AbsentToday = () => {
     setSelectedMonth("");
   };
 
-  if (loading)
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const totalPages = pagination.totalPages;
+    const currentPage = pagination.currentPage;
+    for (let i = 1; i <= totalPages; i++) {
+      if (
+        i === 1 ||
+        i === totalPages ||
+        (i >= currentPage - 2 && i <= currentPage + 2)
+      ) {
+        pageNumbers.push(i);
+      } else if (i === currentPage - 3 || i === currentPage + 3) {
+        pageNumbers.push("...");
+      }
+    }
+    return pageNumbers;
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="mx-auto max-w-9xl">
-          <div className="p-8 text-center bg-white rounded-lg shadow-md">
-            <div className="flex items-center justify-center">
-              <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-              <span className="ml-2 text-gray-500">Loading absent records...</span>
+      <div className="emp-dash">
+        <div className="emp-dash__loading">
+          <div className="emp-dash__spinner" />
+          <p className="emp-dash__loading-text">Loading absent records...</p>
+        </div>
+      </div>
+    );
+  }
+    
+  if (error) {
+    return (
+      <div className="emp-dash">
+        <main className="grid place-items-center min-h-[60vh] p-4">
+          <div className="emp-dash__card max-w-[520px] w-full">
+            <div className="emp-dash__card-header">
+              <div>
+                <h3 className="emp-dash__card-title">Couldn't load absent records</h3>
+                <p className="emp-dash__card-desc text-red-600 mt-1">{error}</p>
+              </div>
+              <button type="button" className="emp-dash__card-link" onClick={() => window.location.reload()}>
+                Retry
+              </button>
             </div>
           </div>
-        </div>
+        </main>
       </div>
     );
-    
-  if (error)
-    return (
-      <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="mx-auto max-w-9xl">
-          <div className="p-8 text-center bg-white rounded-lg shadow-md">
-            <p className="text-red-600">{error}</p>
-          </div>
-        </div>
-      </div>
-    );
+  }
 
   return (
-    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="mx-auto max-w-9xl">
-        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
-          <div className="flex flex-wrap items-center gap-2">
-            
-            <div className="relative flex-1 min-w-[180px]">
-              <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
-              <input
-                type="text"
-                placeholder="Search by ID or Name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+    <div className="emp-dash">
+      <main className="p-4 sm:p-6 lg:p-8">
 
-            <div className="relative" ref={departmentFilterRef}>
-              <button
-                onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
-                  filterDepartment 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                }`}
-              >
-                <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
-              </button>
-              
-              {showDepartmentFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
-                  <div 
-                    onClick={() => {
-                      setFilterDepartment('');
-                      setShowDepartmentFilter(false);
-                    }}
-                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
-                  >
-                    All Departments
-                  </div>
-                  {uniqueDepartments.map(dept => (
-                    <div 
-                      key={dept}
-                      onClick={() => {
-                        setFilterDepartment(dept);
-                        setShowDepartmentFilter(false);
-                      }}
-                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                        filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                      }`}
-                    >
-                      {dept}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="relative" ref={designationFilterRef}>
-              <button
-                onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
-                  filterDesignation 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                }`}
-              >
-                <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
-              </button>
-              
-              {showDesignationFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
-                  <div 
-                    onClick={() => {
-                      setFilterDesignation('');
-                      setShowDesignationFilter(false);
-                    }}
-                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
-                  >
-                    All Designations
-                  </div>
-                  {uniqueDesignations.map(des => (
-                    <div 
-                      key={des}
-                      onClick={() => {
-                        setFilterDesignation(des);
-                        setShowDesignationFilter(false);
-                      }}
-                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                        filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                      }`}
-                    >
-                      {des}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="relative w-[150px]">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
-                From:
-              </span>
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div className="relative w-[150px]">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
-                To:
-              </span>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div className="relative w-[150px]">
-              <FaCalendarAlt className="absolute text-xs text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <button
-              onClick={fetchAbsentRecords}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
-            >
-              <FaSearch className="text-xs" /> Apply
-            </button>
-
-            {(searchTerm || filterDepartment || filterDesignation || fromDate !== getTodayDate() || toDate !== getTodayDate() || selectedMonth) && (
-              <button
-                onClick={clearFilters}
-                className="h-8 px-3 text-xs font-medium text-gray-700 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-              >
-                Clear
-              </button>
-            )}
+        {/* Dashboard Header */}
+        <div className="emp-dash__header">
+          <div>
+            <h1 className="emp-dash__greeting">
+              Absent <span>Today</span>
+            </h1>
+            <p className="emp-dash__subtitle">
+              Monitor employee absences and tracking rates for selected time periods.
+            </p>
+          </div>
+          <div className="emp-dash__date-pill">
+            <FiCalendar />
+            <span>
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "short",
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
           </div>
         </div>
 
-        {filteredRecords.length === 0 ? (
-          <div className="p-8 text-center bg-white rounded-lg shadow-md">
-            <p className="text-lg font-semibold text-blue-700">
-              {fromDate && toDate && fromDate === toDate 
-                ? `No absent employees on ${formatDateForDisplay(fromDate)} 🎉` 
-                : fromDate && toDate && fromDate !== toDate
-                ? `No absent employees from ${formatDateForDisplay(fromDate)} to ${formatDateForDisplay(toDate)} 🎉`
-                : selectedMonth 
-                ? `No absent employees in ${selectedMonth} 🎉`
-                : "No absent employees found for today 🎉"}
-            </p>
-            <p className="mt-2 text-sm text-gray-500">
-              {(searchTerm || filterDepartment || filterDesignation) && " - Try clearing filters"}
-            </p>
+        {/* Top KPI Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Total Absences</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
+                <FiUserX />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{absentRecords.length}</div>
+            <div className="emp-dash__stat-meta">active in view</div>
           </div>
-        ) : (
-          <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead className="bg-gradient-to-r from-green-500 to-blue-600">
-                  <tr>
-                    <th className="px-2 py-2 text-center text-white">Employee ID</th>
-                    <th className="px-2 py-2 text-center text-white">Name</th>
-                    <th className="px-2 py-2 text-center text-white">Department</th>
-                    <th className="px-2 py-2 text-center text-white">Designation</th>
-                    <th className="px-2 py-2 text-center text-white">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {currentRows.map((rec) => (
-                    <tr key={rec._id} className="text-xs transition-colors hover:bg-gray-50">
-                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                        {rec.employeeId}
-                      </td>
-                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">
-                        {rec.employeeName}
-                      </td>
-                      <td className="px-2 py-2 text-center text-gray-700">
-                        {rec.department}
-                      </td>
-                      <td className="px-2 py-2 text-center text-gray-700">
-                        {rec.designation}
-                      </td>
-                      <td className="px-2 py-2 text-center text-gray-700 whitespace-nowrap">
-                        {formatDateForDisplay(rec.date)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Filtered Absences</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
+                <FiFilter />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{filteredRecords.length}</div>
+            <div className="emp-dash__stat-meta">matching filters</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Active Employees</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                <FiUsers />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{employees.length}</div>
+            <div className="emp-dash__stat-meta">active employees</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Avg Absent Rate</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                <FiPercent />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">
+              {employees.length > 0 ? ((absentRecords.length / (employees.length * allDatesCount)) * 100).toFixed(1) : 0}%
+            </div>
+            <div className="emp-dash__stat-meta">average rate</div>
+          </div>
+        </div>
+
+        {/* Filters Card */}
+        <div className="emp-dash__card mb-6">
+          <div className="emp-dash__card-header flex-col sm:flex-row gap-3">
+            <div>
+              <h3 className="emp-dash__card-title flex items-center gap-2">
+                <FiFilter className="text-blue-600" /> Filters &amp; Actions
+              </h3>
+              {/* <p className="emp-dash__card-desc">Filter records by name, department, date range, or month</p> */}
+            </div>
+            <div className="flex gap-2 flex-wrap w-full sm:w-auto justify-start sm:justify-end">
+              <button
+                onClick={fetchAbsentRecords}
+                className="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all flex items-center gap-1.5 shadow-md"
+              >
+                <FiRefreshCw /> Apply / Refresh
+              </button>
+            </div>
+          </div>
+          
+          <div className="emp-dash__card-body bg-gray-55/50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
+              {/* Search Bar */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-gray-600">Search Employee</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <FaSearch className="w-3.5 h-3.5" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search ID or Name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Department Filter */}
+              <div className="flex flex-col gap-1.5 relative" ref={departmentFilterRef}>
+                <label className="text-xs font-medium text-gray-600">Department</label>
+                <button
+                  onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
+                    filterDepartment 
+                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-55'
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5 truncate">
+                    <FaBuilding className="text-gray-400" />
+                    {filterDepartment || 'All Departments'}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                
+                {showDepartmentFilter && (
+                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                    <div 
+                      onClick={() => {
+                        setFilterDepartment('');
+                        setShowDepartmentFilter(false);
+                      }}
+                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    >
+                      All Departments
+                    </div>
+                    {uniqueDepartments.map(dept => (
+                      <div 
+                        key={dept}
+                        onClick={() => {
+                          setFilterDepartment(dept);
+                          setShowDepartmentFilter(false);
+                        }}
+                        className={`px-3 py-2 text-xs hover:bg-blue-55 cursor-pointer transition-all ${
+                          filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                        }`}
+                      >
+                        {dept}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Designation Filter */}
+              <div className="flex flex-col gap-1.5 relative" ref={designationFilterRef}>
+                <label className="text-xs font-medium text-gray-600">Designation</label>
+                <button
+                  onClick={() => setShowDesignationFilter(!showDesignationFilter)}
+                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
+                    filterDesignation 
+                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-55'
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5 truncate">
+                    <FaUserTag className="text-gray-400" />
+                    {filterDesignation || 'All Designations'}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                
+                {showDesignationFilter && (
+                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                    <div 
+                      onClick={() => {
+                        setFilterDesignation('');
+                        setShowDesignationFilter(false);
+                      }}
+                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    >
+                      All Designations
+                    </div>
+                    {uniqueDesignations.map(des => (
+                      <div 
+                        key={des}
+                        onClick={() => {
+                          setFilterDesignation(des);
+                          setShowDesignationFilter(false);
+                        }}
+                        className={`px-3 py-2 text-xs hover:bg-blue-55 cursor-pointer transition-all ${
+                          filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                        }`}
+                      >
+                        {des}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Date From */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-gray-600">From Date</label>
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+              {/* Date To */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-gray-600">To Date</label>
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+              {/* Month Selector */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-gray-600">Month</label>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
             </div>
 
-            {filteredRecords.length > 0 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-white">
-                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-700">
-                  <span>Showing</span>
-                  <span className="font-medium">
-                    {(pagination.currentPage - 1) * pagination.limit + 1}
-                  </span>
-                  <span>to</span>
-                  <span className="font-medium">
-                    {Math.min(
-                      pagination.currentPage * pagination.limit,
-                      pagination.totalCount
-                    )}
-                  </span>
-                  <span>of</span>
-                  <span className="font-medium">
-                    {pagination.totalCount}
-                  </span>
-                  <span>results</span>
-
-                  <select
-                    value={pagination.limit}
-                    onChange={(e) => {
-                      const newLimit = Number(e.target.value);
-                      handleItemsPerPageChange(newLimit);
-                    }}
-                    className="p-1 ml-1 text-xs border rounded-lg"
+            {/* Filter Actions */}
+            <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200/50">
+              <div className="text-xs text-gray-500 font-medium">
+                Showing <strong>{filteredRecords.length}</strong> of <strong>{absentRecords.length}</strong> absences
+              </div>
+              <div className="flex gap-2">
+                {(searchTerm || filterDepartment || filterDesignation || fromDate !== getTodayDate() || toDate !== getTodayDate() || selectedMonth) && (
+                  <button
+                    onClick={clearFilters}
+                    className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-55 transition-all flex items-center gap-1.5 shadow-sm"
                   >
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                  </select>
+                    <FiTrash2 /> Clear Filters
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Table Section */}
+        <div className="emp-dash__card">
+          <div className="emp-dash__card-header">
+            <div>
+              <h3 className="emp-dash__card-title">Absent Employees List</h3>
+              <p className="emp-dash__card-desc">Employees who have not checked in for the selected date or date range</p>
+            </div>
+          </div>
+
+          {filteredRecords.length === 0 ? (
+            <div className="emp-dash__card-body py-12 text-center text-gray-500">
+              <div className="mb-3 text-5xl">🎉</div>
+              <p className="mb-1 text-base font-bold text-slate-700">
+                {fromDate && toDate && fromDate === toDate 
+                  ? `No absent employees on ${formatDateForDisplay(fromDate)}` 
+                  : fromDate && toDate && fromDate !== toDate
+                  ? `No absent employees from ${formatDateForDisplay(fromDate)} to ${formatDateForDisplay(toDate)}`
+                  : selectedMonth 
+                  ? `No absent employees in ${selectedMonth}`
+                  : "No absent employees found"}
+              </p>
+              <p className="text-xs text-slate-500 mb-5 max-w-xs mx-auto">Everyone has checked in successfully during this period!</p>
+            </div>
+          ) : (
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="emp-dash__table">
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign: "center" }}>Emp ID</th>
+                      <th>Employee Name</th>
+                      <th>Department</th>
+                      <th>Designation</th>
+                      <th style={{ textAlign: "right" }}>Absent Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentRows.map((rec) => (
+                      <tr key={rec._id} className="hover:bg-gray-55/60 transition-all">
+                        <td style={{ textAlign: "center" }} className="font-semibold text-gray-900 whitespace-nowrap">{rec.employeeId}</td>
+                        <td className="font-semibold text-gray-900 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            {rec.profilePicture ? (
+                              <img 
+                                src={rec.profilePicture} 
+                                alt={rec.employeeName} 
+                                className="w-7 h-7 rounded-full border border-gray-200 object-cover shadow-sm"
+                                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                              />
+                            ) : null}
+                            <div 
+                              style={{ display: rec.profilePicture ? 'none' : 'flex' }}
+                              className="items-center justify-center w-7 h-7 text-[10px] font-bold bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-full shadow-inner"
+                            >
+                              {rec.employeeName ? rec.employeeName.charAt(0).toUpperCase() : "?"}
+                            </div>
+                            <span>{rec.employeeName}</span>
+                          </div>
+                        </td>
+                        <td>{rec.department}</td>
+                        <td>{rec.designation}</td>
+                        <td style={{ textAlign: "right" }} className="font-bold text-rose-600 whitespace-nowrap">
+                          {formatDateForDisplay(rec.date)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile View Card List */}
+              <div className="block lg:hidden divide-y divide-gray-100">
+                {currentRows.map((rec) => (
+                  <div key={rec._id} className="p-4 hover:bg-gray-55/60 transition-all">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        {rec.profilePicture ? (
+                          <img 
+                            src={rec.profilePicture} 
+                            alt={rec.employeeName} 
+                            className="w-7 h-7 rounded-full border border-gray-200 object-cover shadow-sm"
+                            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                          />
+                        ) : null}
+                        <div 
+                          style={{ display: rec.profilePicture ? 'none' : 'flex' }}
+                          className="items-center justify-center w-7 h-7 text-[10px] font-bold bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-full shadow-inner"
+                        >
+                          {rec.employeeName ? rec.employeeName.charAt(0).toUpperCase() : "?"}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{rec.employeeName}</h4>
+                          <span className="text-xs text-gray-500">{rec.employeeId}</span>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded bg-red-50 text-red-750 border border-red-200 text-[10px] font-bold">
+                        Absent: {formatDateForDisplay(rec.date)}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs mb-3 text-gray-600 mt-2">
+                      <div><span className="text-gray-400">Dept:</span> {rec.department}</div>
+                      <div><span className="text-gray-400">Desig:</span> {rec.designation}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination Section */}
+              <div className="flex flex-col items-center justify-between gap-4 p-4 border-t border-gray-100 sm:flex-row bg-white rounded-b-xl">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-semibold text-slate-500">
+                      Show:
+                    </label>
+                    <select
+                      value={pagination.limit}
+                      onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                      className="p-1 px-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                    <span className="text-xs text-slate-400">entries</span>
+                  </div>
+                  <div className="text-xs text-slate-500 font-medium">
+                    Showing <strong className="text-slate-700">{(pagination.currentPage - 1) * pagination.limit + 1} - {Math.min(pagination.currentPage * pagination.limit, pagination.totalCount)}</strong> of <strong className="text-slate-700">{pagination.totalCount}</strong> absences
+                  </div>
                 </div>
 
-                <div className="flex gap-1">
+                <div className="flex items-center gap-1.5">
                   <button
-                    onClick={() =>
-                      setPagination((prev) => ({
-                        ...prev,
-                        currentPage: prev.currentPage - 1,
-                      }))
-                    }
+                    onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
                     disabled={pagination.currentPage === 1}
-                    className="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all duration-200 active:scale-95 ${
+                      pagination.currentPage === 1
+                        ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed"
+                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                    }`}
                   >
                     Previous
                   </button>
 
+                  {getPageNumbers().map((page, index) => (
+                    <button
+                      key={index}
+                      onClick={() => typeof page === 'number' ? setPagination(prev => ({ ...prev, currentPage: page })) : null}
+                      disabled={page === "..."}
+                      className={`px-2.5 py-1.5 text-xs font-bold rounded-lg border transition-all duration-150 ${
+                        page === "..."
+                          ? "bg-white text-slate-400 border-none cursor-default"
+                          : pagination.currentPage === page
+                            ? "bg-gradient-to-r from-blue-700 to-indigo-600 text-white border-blue-600 shadow-sm"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
                   <button
-                    onClick={() =>
-                      setPagination((prev) => ({
-                        ...prev,
-                        currentPage: prev.currentPage + 1,
-                      }))
-                    }
+                    onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
                     disabled={pagination.currentPage === pagination.totalPages}
-                    className="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all duration-200 active:scale-95 ${
+                      pagination.currentPage === pagination.totalPages
+                        ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed"
+                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                    }`}
                   >
                     Next
                   </button>
                 </div>
               </div>
-            )}
-          </div>
-        )}
-      </div>
+            </>
+          )}
+        </div>
+      </main>
     </div>
   );
 };

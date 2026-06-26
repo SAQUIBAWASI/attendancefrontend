@@ -4,6 +4,8 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { toast, ToastContainer } from "react-toastify";
 import { jsPDF } from "jspdf";
+import "./EmployeeDashboard.css";
+import "./EmployeePageShell.css";
 
 const EmployeeLetters = () => {
     const [letters, setLetters] = useState([]);
@@ -341,18 +343,29 @@ const EmployeeLetters = () => {
     );
 
     return (
-        <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100 font-sans">
-            <div className="max-w-9xl mx-auto">
+        <div className="w-full">
 
                 {/* Header & Filters Section */}
-                <div className="bg-white p-3 mb-3 rounded-lg shadow-md border border-gray-200">
-                    <div className="flex flex-wrap items-center gap-2">
+                <div className="emp-dash__card" style={{ marginBottom: "1rem" }}>
+                    <div className="emp-dash__card-header">
+                        <div>
+                            <h3 className="emp-dash__card-title">My Letters</h3>
+                            <p className="emp-dash__card-desc">Offer, appraisal, warning, termination and resignation records.</p>
+                        </div>
+                        <div className="emp-page__pill emp-page__pill--muted">
+                            <FaFilePdf />
+                            {filteredLetters.length} record{filteredLetters.length !== 1 ? "s" : ""}
+                        </div>
+                    </div>
+
+                    <div className="emp-dash__card-body" style={{ paddingTop: "1rem" }}>
+                        <div className="emp-page__filters">
                         {/* Search */}
-                        <div className="relative flex-1 min-w-[180px]">
-                            <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
+                        <div className="emp-page__search-wrap">
+                            <FaSearch className="emp-page__search-icon" />
                             <input
                                 type="text"
-                                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 shadow-sm transition-all"
+                                className="emp-page__search"
                                 placeholder="Search role, doc type..."
                                 value={localSearchQuery}
                                 onChange={(e) => setLocalSearchQuery(e.target.value)}
@@ -362,7 +375,7 @@ const EmployeeLetters = () => {
                         {/* Document Type Dropdown */}
                         <div className="relative w-full sm:w-40" ref={typeDropdownRef}>
                             <select
-                                className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 cursor-pointer transition-all appearance-none"
+                                className="emp-page__select"
                                 value={typeFilter}
                                 onChange={(e) => setTypeFilter(e.target.value)}
                             >
@@ -377,24 +390,19 @@ const EmployeeLetters = () => {
                         </div>
 
                         {/* Date Filter */}
-                        <div className="relative w-[130px]">
-                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">
-                                Date:
-                            </span>
-                            <input
-                                type="date"
-                                className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 cursor-pointer transition-all"
-                                value={dateFilter}
-                                onChange={(e) => setDateFilter(e.target.value)}
-                                onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                            />
-                        </div>
+                        <input
+                            type="date"
+                            className="emp-page__field"
+                            value={dateFilter}
+                            onChange={(e) => setDateFilter(e.target.value)}
+                            onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                        />
 
                         {/* Reset */}
                         {hasFilters && (
                             <button
                                 onClick={resetFilters}
-                                className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 flex items-center gap-1"
+                                className="emp-page__secondary-btn"
                             >
                                 <FaSync className="text-[10px]" /> Clear
                             </button>
@@ -425,11 +433,12 @@ ${employeeName}`;
                                     }
                                     setIsResignModalOpen(true);
                                 }}
-                                className="h-8 px-3 text-xs font-bold text-gray-900 transition bg-rose-600 rounded-lg hover:bg-rose-700 flex items-center gap-1 shadow-sm uppercase tracking-wider ml-auto"
+                                className="emp-page__danger-btn emp-page__toolbar-right"
                             >
                                 <FaSignOutAlt className="text-[10px]" /> Resign
                             </button>
                         )}
+                    </div>
                     </div>
                 </div>
 
@@ -442,14 +451,14 @@ ${employeeName}`;
                         const isResignation = type === "Resignation";
 
                         return (
-                            <div key={type} className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
+                            <div key={type} className="emp-dash__card" style={{ marginBottom: "1.25rem" }}>
+                                <div className="emp-dash__card-header">
                                     <div className="flex items-center gap-3">
                                         <div className={`w-8 h-8 ${config.lightBg} rounded-lg flex items-center justify-center ${config.iconText}`}>
                                             <Icon size={14} />
                                         </div>
                                         <div>
-                                            <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">{config.label}</h2>
+                                            <h2 className="emp-dash__card-title">{config.label}</h2>
                                         </div>
                                     </div>
                                     <span className={`px-2 py-1 ${config.lightBg} ${config.text} text-[10px] font-bold rounded-full border ${config.border}`}>
@@ -457,57 +466,57 @@ ${employeeName}`;
                                     </span>
                                 </div>
 
-                                <div className="overflow-x-auto bg-white shadow-lg rounded-b-xl">
-                                    <table className="min-w-full">
-                                        <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
+                                <div className="emp-dash__table-wrap">
+                                    <table className="emp-dash__table">
+                                        <thead>
                                             <tr>
-                                                <th className="py-2.5 px-4 text-center">ROLE</th>
-                                                {isResignation && <th className="py-2.5 px-4 text-center">STATUS</th>}
-                                                <th className="py-2.5 px-4 text-center">{isResignation ? 'FILED ON' : 'ISSUED ON'}</th>
-                                                <th className="py-2.5 px-4 text-center">REF ID</th>
-                                                <th className="py-2.5 px-4 text-center">ACTIONS</th>
+                                                <th>Role</th>
+                                                {isResignation && <th>Status</th>}
+                                                <th>{isResignation ? "Filed On" : "Issued On"}</th>
+                                                <th>Ref ID</th>
+                                                <th style={{ textAlign: "right" }}>Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
+                                        <tbody>
                                             {docs.map((app) => (
-                                                <tr key={app.uniqueId || app._id} className="transition-colors hover:bg-white">
-                                                    <td className="px-4 py-3 text-center whitespace-nowrap">
-                                                        <span className="text-sm font-medium text-gray-900 uppercase">
+                                                <tr key={app.uniqueId || app._id}>
+                                                    <td>
+                                                        <span style={{ fontWeight: 600 }}>
                                                             {app.jobId?.role || app.role || "N/A"}
                                                         </span>
                                                     </td>
                                                     {isResignation && (
-                                                        <td className="px-4 py-3 text-center whitespace-nowrap">
-                                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${app.resignationStatus === "Approved" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                                                        <td>
+                                                            <span className={`emp-page__badge ${app.resignationStatus === "Approved" ? "emp-page__badge--success" : "emp-page__badge--warning"}`}>
                                                                 {app.resignationStatus || "Pending"}
                                                             </span>
                                                         </td>
                                                     )}
-                                                    <td className="px-4 py-3 text-sm font-medium text-center text-gray-900 whitespace-nowrap">
+                                                    <td>
                                                         {new Date(isResignation ? (app.resignationSentAt || app.updatedAt) : (app.offerSentAt || app.updatedAt)).toLocaleDateString("en-IN", {
                                                             dateStyle: "medium",
                                                         })}
                                                     </td>
-                                                    <td className="px-4 py-3 text-center whitespace-nowrap">
-                                                        <span className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 rounded-full">
+                                                    <td>
+                                                        <span className="emp-page__badge emp-page__badge--primary">
                                                             #{app._id.slice(-6).toUpperCase()}
                                                         </span>
                                                     </td>
-                                                    <td className="px-4 py-3 text-center whitespace-nowrap">
-                                                        <div className="flex items-center justify-center gap-2">
+                                                    <td style={{ textAlign: "right" }}>
+                                                        <div style={{ display: "inline-flex", gap: "0.5rem" }}>
                                                             <button
                                                                 onClick={() => {
                                                                     setSelectedOffer(app);
                                                                     setIsModalOpen(true);
                                                                 }}
-                                                                className={`p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-gray-900 rounded-md transition-all`}
+                                                                className="emp-page__icon-btn"
                                                                 title="View Document"
                                                             >
                                                                 <FaEye size={14} />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDownloadOffer(app)}
-                                                                className={`p-1.5 text-blue-700 bg-green-50 hover:bg-blue-600 hover:text-gray-900 rounded-md transition-all`}
+                                                                className="emp-page__icon-btn"
                                                                 title="Download PDF"
                                                             >
                                                                 <FaDownload size={14} />
@@ -519,26 +528,86 @@ ${employeeName}`;
                                         </tbody>
                                     </table>
                                 </div>
+
+                                <div className="emp-dash__mobile-list">
+                                    {docs.map((app) => (
+                                        <div key={app.uniqueId || app._id} className="emp-dash__mobile-item">
+                                            <div className="emp-dash__mobile-item-top">
+                                                <div className="emp-dash__mobile-date" style={{ fontWeight: 700 }}>
+                                                    {app.jobId?.role || app.role || "N/A"}
+                                                </div>
+                                                <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full ${getDocTypeBadge(type)}`}>
+                                                    {type}
+                                                </span>
+                                            </div>
+                                            <div className="emp-dash__mobile-grid">
+                                                <div className="emp-dash__mobile-field">
+                                                    <span>{isResignation ? "Filed On" : "Issued On"}</span>
+                                                    <span>
+                                                        {new Date(isResignation ? (app.resignationSentAt || app.updatedAt) : (app.offerSentAt || app.updatedAt)).toLocaleDateString("en-IN", {
+                                                            dateStyle: "medium"
+                                                        })}
+                                                    </span>
+                                                </div>
+                                                <div className="emp-dash__mobile-field">
+                                                    <span>Ref ID</span>
+                                                    <span style={{ fontFamily: "monospace" }}>#{app._id.slice(-6).toUpperCase()}</span>
+                                                </div>
+                                                {isResignation && (
+                                                    <div className="emp-dash__mobile-field">
+                                                        <span>Status</span>
+                                                        <span className={`emp-page__badge ${app.resignationStatus === "Approved" ? "emp-page__badge--success" : "emp-page__badge--warning"}`}>
+                                                            {app.resignationStatus || "Pending"}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedOffer(app);
+                                                        setIsModalOpen(true);
+                                                    }}
+                                                    className="emp-page__icon-btn"
+                                                    style={{ width: "2rem", height: "2rem", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                                                    title="View"
+                                                >
+                                                    <FaEye size={12} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDownloadOffer(app)}
+                                                    className="emp-page__icon-btn"
+                                                    style={{ width: "2rem", height: "2rem", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                                                    title="Download"
+                                                >
+                                                    <FaDownload size={12} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         );
                     })
                 ) : (
-                    <div className="py-20 bg-white rounded-2xl shadow-sm border border-dashed border-gray-200 text-center max-w-2xl mx-auto my-12">
-                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-gray-700 mx-auto mb-4 border border-gray-200">
-                            <FaInbox size={24} />
+                    <div className="emp-page__empty">
+                        <div className="emp-page__empty-icon">
+                            <FaInbox size={18} />
                         </div>
-                        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">No Documents Found</h3>
-                        <p className="text-xs text-gray-500">Try adjusting your filters or contact HR if you expect letters here.</p>
+                        <h3>No documents found</h3>
+                        <p>Try adjusting your filters or contact HR if you expect letters here.</p>
                         {hasFilters && (
-                            <button onClick={resetFilters} className="mt-4 text-xs font-bold text-blue-600 hover:underline uppercase tracking-tight">Clear all filters</button>
+                            <button onClick={resetFilters} className="emp-page__secondary-btn" style={{ marginTop: "0.75rem" }}>
+                                Clear all filters
+                            </button>
                         )}
                     </div>
                 )}
-            </div>
+            
 
             {/* DOCUMENT VIEWER MODAL */}
             {isModalOpen && selectedOffer && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-white/80 backdrop-blur-md animate-in fade-in duration-200 font-poppins">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 emp-dash-modal">
                     <div className="bg-white w-full max-w-6xl h-[95vh] rounded-2xl shadow-3xl flex flex-col overflow-hidden border border-gray-200">
                         <div className="px-5 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 flex justify-between items-center text-gray-900 shrink-0">
                             <div className="flex items-center gap-3">

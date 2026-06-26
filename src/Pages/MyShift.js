@@ -450,8 +450,12 @@
 // export default EmployeeShift;
 
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { FaCalendarAlt } from "react-icons/fa";
+import { FiClock, FiCalendar, FiCheckCircle } from "react-icons/fi";
 import { API_BASE_URL } from "../config";
+import "./EmployeeDashboard.css";
+import "./EmployeeLeaves.css";
 
 const parseTimeParts = (timeStr) => {
   if (!timeStr) return [10, 0];
@@ -617,77 +621,210 @@ const EmployeeShift = () => {
     return "bg-gray-200 text-gray-700";
   };
 
-  if (loading) return <p className="p-4">Loading...</p>;
-  if (error) return <p className="p-4 text-red-600">{error}</p>;
+  const summary = useMemo(() => {
+    const statuses = Object.values(statusUpdates);
+    const ongoing = statuses.filter((s) => s === "Ongoing").length;
+    const upcoming = shifts.filter((s) => s.shiftPeriod === "Upcoming").length;
+    const scheduled = statuses.filter((s) => s === "Scheduled").length;
+    return { ongoing, upcoming, scheduled };
+  }, [shifts, statusUpdates]);
+
+  if (loading) {
+    return (
+      <div className="emp-dash">
+        <div className="emp-dash__loading">
+          <div className="emp-dash__spinner" />
+          <p className="emp-dash__loading-text">Loading your shifts...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="emp-dash">
+        <main style={{ display: "grid", placeItems: "center", minHeight: "60vh", padding: "1rem" }}>
+          <div className="emp-dash__card" style={{ maxWidth: 520, width: "100%" }}>
+            <div className="emp-dash__card-header">
+              <div>
+                <h3 className="emp-dash__card-title">Couldn’t load shifts</h3>
+                <p className="emp-dash__card-desc">{error}</p>
+              </div>
+              <button type="button" className="emp-dash__card-link" onClick={() => window.location.reload()}>
+                Retry
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
-      <main className="flex-1 p-0 sm:p-0 lg:p-8">
-        <div className="max-w-9xl p-0 mx-auto bg-white rounded-lg shadow-md">
+    <div className="emp-dash">
+      <main>
+        <div className="emp-dash__header">
+          <div>
+            <h1 className="emp-dash__greeting">
+              My <span>Shift</span>
+            </h1>
+            <p className="emp-dash__subtitle">See your current and upcoming shift schedule.</p>
+          </div>
+          <div className="emp-dash__date-pill">
+            <FaCalendarAlt />
+            <span>
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "short",
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
+          </div>
+        </div>
+
+        <div className="emp-dash__stats">
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Total Shifts</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                <FiCalendar />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{shifts.length}</div>
+            <div className="emp-dash__stat-meta">listed</div>
+          </div>
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Ongoing</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                <FiClock />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{summary.ongoing}</div>
+            <div className="emp-dash__stat-meta">right now</div>
+          </div>
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Upcoming</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
+                <FiCalendar />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{summary.upcoming}</div>
+            <div className="emp-dash__stat-meta">next</div>
+          </div>
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Scheduled</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
+                <FiCheckCircle />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{summary.scheduled}</div>
+            <div className="emp-dash__stat-meta">changes</div>
+          </div>
+        </div>
+
+        <div className="emp-dash__card">
+          <div className="emp-dash__card-header">
+            <div>
+              <h3 className="emp-dash__card-title">Shift Schedule</h3>
+              <p className="emp-dash__card-desc">Current assignment and scheduled changes</p>
+            </div>
+          </div>
+
           {shifts.length === 0 ? (
-            <div className="py-8 text-center">
-              <div className="mb-4 text-5xl text-gray-700">⏰</div>
-              <h3 className="mb-2 text-xl font-semibold text-gray-500">No Shifts Assigned</h3>
-              <p className="text-gray-500">
-                You have not been assigned any shifts yet.
-              </p>
+            <div className="emp-dash__card-body" style={{ textAlign: "center" }}>
+              <p style={{ color: "var(--ed-text-muted)", margin: 0 }}>No shifts assigned yet. Please contact admin.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
-              <table className="min-w-full">
-                <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
-                  <tr>
-                    <th className="px-4 py-2">Period</th>
-                    <th className="px-4 py-2">Shift Type</th>
-                    <th className="px-4 py-2">Shift Name</th>
-                    <th className="px-4 py-2">Effective From</th>
-                    <th className="px-4 py-2">Time Range</th>
-                    <th className="px-4 py-2">Start Time</th>
-                    <th className="px-4 py-2">End Time</th>
-                    <th className="px-4 py-2">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {shifts.map((shift, index) => (
-                    <tr
-                      key={shift._id || index}
-                      className={`border-b hover:bg-gray-50 ${
-                        shift.shiftPeriod === "Upcoming" ? "bg-purple-50" : ""
-                      }`}
-                    >
-                      <td className="p-2 border">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-semibold ${
-                            shift.shiftPeriod === "Upcoming"
-                              ? "bg-purple-100 text-purple-800"
-                              : "bg-emerald-100 text-emerald-800"
-                          }`}
-                        >
-                          {shift.shiftPeriod}
-                        </span>
-                      </td>
-                      <td className="p-2 capitalize border">{shift.shiftType}</td>
-                      <td className="p-2 border">{shift.shiftName}</td>
-                      <td className="p-2 border">{formatDate(shift.date)}</td>
-                      <td className="p-2 font-medium border">
-                        {shift.timeRange || `${shift.startTime} - ${shift.endTime}`}
-                      </td>
-                      <td className="p-2 border">{shift.startTime}</td>
-                      <td className="p-2 border">{shift.endTime}</td>
-                      <td className="p-2 border">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-semibold ${getStatusClass(
-                            statusUpdates[index]
-                          )}`}
-                        >
-                          {statusUpdates[index] || "Checking..."}
-                        </span>
-                      </td>
+            <>
+              <div className="emp-dash__table-wrap">
+                <table className="emp-dash__table">
+                  <thead>
+                    <tr>
+                      <th>Period</th>
+                      <th>Shift Type</th>
+                      <th>Shift Name</th>
+                      <th>Effective From</th>
+                      <th>Time Range</th>
+                      <th>Start</th>
+                      <th>End</th>
+                      <th style={{ textAlign: "right" }}>Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {shifts.map((shift, index) => {
+                      const status = statusUpdates[index] || "Checking...";
+                      const statusBadge =
+                        status === "Ongoing" || status === "Completed"
+                          ? "emp-dash__table-status--present"
+                          : "emp-dash__table-status--other";
+
+                      return (
+                        <tr key={shift._id || index}>
+                          <td>
+                            <span
+                              className={`emp-dash__table-status ${
+                                shift.shiftPeriod === "Upcoming" ? "emp-dash__table-status--other" : "emp-dash__table-status--present"
+                              }`}
+                            >
+                              {shift.shiftPeriod}
+                            </span>
+                          </td>
+                          <td style={{ textTransform: "capitalize", fontWeight: 600 }}>{shift.shiftType || "—"}</td>
+                          <td>{shift.shiftName || "—"}</td>
+                          <td>{formatDate(shift.date)}</td>
+                          <td>{shift.timeRange || `${shift.startTime || "—"} - ${shift.endTime || "—"}`}</td>
+                          <td>{shift.startTime || "—"}</td>
+                          <td>{shift.endTime || "—"}</td>
+                          <td style={{ textAlign: "right" }}>
+                            <span className={`emp-dash__table-status ${statusBadge}`}>{status}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="emp-dash__mobile-list">
+                {shifts.map((shift, index) => {
+                  const status = statusUpdates[index] || "Checking...";
+                  return (
+                    <div key={shift._id || index} className="emp-dash__mobile-item">
+                      <div className="emp-dash__mobile-item-top">
+                        <span className="emp-dash__mobile-date">
+                          {shift.shiftPeriod} • {formatDate(shift.date)}
+                        </span>
+                        <span className={`emp-dash__table-status ${status === "Ongoing" ? "emp-dash__table-status--present" : "emp-dash__table-status--other"}`}>
+                          {status}
+                        </span>
+                      </div>
+                      <div className="emp-dash__mobile-grid">
+                        <div className="emp-dash__mobile-field">
+                          <span>Type</span>
+                          <span style={{ textTransform: "capitalize" }}>{shift.shiftType || "—"}</span>
+                        </div>
+                        <div className="emp-dash__mobile-field">
+                          <span>Name</span>
+                          <span>{shift.shiftName || "—"}</span>
+                        </div>
+                        <div className="emp-dash__mobile-field">
+                          <span>Start</span>
+                          <span>{shift.startTime || "—"}</span>
+                        </div>
+                        <div className="emp-dash__mobile-field">
+                          <span>End</span>
+                          <span>{shift.endTime || "—"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </main>

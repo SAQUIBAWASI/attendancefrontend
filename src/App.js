@@ -208,6 +208,9 @@ import Events from "./Pages/Events.jsx";
 import EmployeeProfileCombined from "./Pages/EmployeeProfileCombined.jsx";
 import OverTime from "./Pages/OverTime.jsx";
 import CompOffSettings from "./Pages/CompOffSettings.js";
+import IssueManagement from "./Pages/IssueManagement.js";
+import AdminIssueManagement from "./Pages/AdminIssueManagement.js";
+import ClaimedOTManagement from "./Pages/ClaimedOTManagement.js";
 
 
 function App() {
@@ -232,6 +235,8 @@ function App() {
       <Route path="/myleaves" element={<EmployeeLayout><EmployeeLeaves /></EmployeeLayout>} />
       <Route path="/attendance-capture" element={<EmployeeLayout><AttendanceCapture /></EmployeeLayout>} />
       <Route path="/myattendance" element={<EmployeeLayout><MyAttendance /></EmployeeLayout>} />
+      <Route path="/myattendance" element={<EmployeeLayout><MyAttendance /></EmployeeLayout>} />
+      <Route path="/issue-management" element={<EmployeeLayout><IssueManagement /></EmployeeLayout>} />
    
       <Route path="/my-shift" element={<EmployeeLayout><MyShift /></EmployeeLayout>} />
       <Route path="/mypermissions" element={<EmployeeLayout><MyPermission /></EmployeeLayout>} />
@@ -302,6 +307,7 @@ function App() {
       <Route path="/emp-all-expensives-management" element={<EmployeeLayout><AllExpensives /></EmployeeLayout>} />
       <Route path="/my-medical-certificate" element={<EmployeeLayout><MyMedicalCertificate /></EmployeeLayout>} />
       <Route path="/emp-events" element={<EmployeeLayout><Events /></EmployeeLayout>} />
+      <Route path="/emp-claimed-ot-management" element={<EmployeeLayout><ClaimedOTManagement /></EmployeeLayout>} />
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"
@@ -465,6 +471,7 @@ function App() {
               <Route path="/events" element={<Events />} />
               <Route path="/over-time" element={<OverTime />} />
               <Route path="/comp-off-settings" element={<CompOffSettings />} />
+              <Route path="/admin-issue-management" element={<AdminIssueManagement />} />
            
            
 

@@ -741,6 +741,8 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Legend } from "recharts";
 import { API_BASE_URL } from "../config";
+import "./EmployeeDashboard.css";
+import "./EmployeePageShell.css";
 
 /* ─── Category Config ─── */
 const CATEGORIES = [
@@ -1099,7 +1101,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
 
   /* ─────────── RENDER ─────────── */
   return (
-    <div className="min-h-screen p-2 lg:p-6 bg-white text-gray-900 font-sans">
+    <div className="emp-dash emp-page-shell">
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* ─── Calendar CSS ─── */}
@@ -1134,39 +1136,35 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
       <div className="w-full">
 
         {/* ─── TOP HEADER BAR ─── */}
-        <div className="p-4 mb-4 rounded-2xl bg-white border border-gray-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between">
-          
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
-              <FaCalendarAlt className="text-xl" />
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-xl font-bold text-gray-900">Holiday Calendar</h1>
-              <p className="text-xs text-gray-500">Company Approved Festivals & Occasions</p>
-            </div>
+        <div className="emp-dash__header">
+          <div>
+            <h1 className="emp-dash__greeting">
+              Holiday <span>Calendar</span>
+            </h1>
+            <p className="emp-dash__subtitle">
+              Company approved festivals, public holidays, and observances for employees.
+            </p>
           </div>
-          
-          <div className="hidden sm:flex items-center gap-3 mt-3 sm:mt-0">
-            <div className="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-700 flex items-center gap-2">
-              Year <span className="px-2 py-0.5 rounded text-indigo-600 bg-indigo-50 font-bold">{activeLabelYear}</span>
+
+          <div className="emp-page__toolbar">
+            <div className="emp-dash__date-pill">
+              <FaCalendarAlt />
+              <span>{activeLabelYear}</span>
             </div>
+            <button
+              type="button"
+              onClick={() => { fetchHolidays(); }}
+              className="emp-page__icon-btn"
+              title="Sync Data"
+              disabled={loading}
+            >
+              <FaSync className={loading ? "animate-spin" : ""} />
+            </button>
             {isAdmin && (
-              <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
-                <button
-                  onClick={() => { fetchHolidays(); }}
-                  className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition disabled:opacity-50"
-                  title="Sync Data"
-                  disabled={loading}
-                >
-                  <FaSync className={`text-sm ${loading ? "animate-spin" : ""}`} />
-                </button>
-                <button
-                  onClick={openNewForm}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition shadow-sm flex items-center gap-2"
-                >
-                  <span>+</span> Add Holiday
-                </button>
-              </div>
+              <button type="button" onClick={openNewForm} className="emp-page__primary-btn">
+                <span>+</span>
+                Add Holiday
+              </button>
             )}
           </div>
         </div>
@@ -1179,14 +1177,14 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
 
             {/* Admin tip */}
             {isAdmin && !showForm && (
-              <div className="flex items-center gap-2 px-4 py-3 bg-indigo-50 rounded-xl shadow-sm border border-indigo-100 text-sm text-indigo-700 font-medium">
+              <div className="flex items-center gap-2 px-4 py-3 bg-[#eff4ff] rounded-xl shadow-sm border border-[#dbeafe] text-sm text-[#175cd3] font-medium">
                 <Info size={16} />
                 <span>Click any <strong>date</strong> on the calendar below to mark it as a holiday.</span>
               </div>
             )}
 
             {/* Calendar Card */}
-            <div className="bg-white rounded-2xl shadow-sm p-2 border border-gray-200">
+            <div className="emp-dash__card" style={{ padding: "0.5rem" }}>
               <Calendar
                 onClickDay={onDayClick}
                 value={calDate}
@@ -1200,7 +1198,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                 prev2Label={null}
               />
               {/* Color Legend */}
-              <div className="px-4 pb-3 flex flex-wrap gap-x-4 gap-y-2 border-t border-gray-100 pt-3 mt-2">
+              <div className="px-4 pb-3 flex flex-wrap gap-x-4 gap-y-2 border-t border-[#f0f1f3] pt-3 mt-2">
                 {CATEGORIES.map((c) => (
                   <span key={c.key} className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: c.color }}>
                     <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.color }} />
@@ -1379,21 +1377,33 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
 
             {/* Stats row */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="px-4 py-3 bg-white rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-600">Total Holidays:</span>
-                <span className="text-xl font-bold text-gray-900">{statsHolidays.length}</span>
+              <div className="emp-dash__stat">
+                <div className="emp-dash__stat-top">
+                  <span className="emp-dash__stat-label">Total Holidays</span>
+                  <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                    <FaCalendarAlt />
+                  </div>
+                </div>
+                <div className="emp-dash__stat-value">{statsHolidays.length}</div>
+                <div className="emp-dash__stat-meta">listed for the selected year</div>
               </div>
-              <div className="px-4 py-3 bg-white rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-600">Upcoming:</span>
-                <span className="text-xl font-bold text-indigo-600">
+              <div className="emp-dash__stat">
+                <div className="emp-dash__stat-top">
+                  <span className="emp-dash__stat-label">Upcoming</span>
+                  <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                    <FaSync />
+                  </div>
+                </div>
+                <div className="emp-dash__stat-value" style={{ color: "#175cd3" }}>
                   {statsHolidays.filter((h) => { try { return parseISO(h.fromDate) >= startOfDay(new Date()); } catch { return false; } }).length}
-                </span>
+                </div>
+                <div className="emp-dash__stat-meta">holidays still ahead</div>
               </div>
             </div>
 
             {/* Category breakdown */}
-            <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-200 flex flex-col h-[400px]">
-              <h3 className="text-sm font-bold text-gray-900 mb-4">By Category</h3>
+            <div className="emp-dash__card" style={{ padding: "1.25rem", height: "400px", display: "flex", flexDirection: "column" }}>
+              <h3 className="emp-dash__card-title" style={{ marginBottom: "1rem" }}>By Category</h3>
               <div className="flex-1 w-full relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -1450,45 +1460,40 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
         </div>
 
         {/* ─── HOLIDAY TABLE ─── */}
-        <div className="mb-6 overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-200">
+        <div className="emp-dash__card" style={{ marginBottom: "1.5rem" }}>
 
           {/* Table Filter Bar */}
-          <div className="p-4 border-b border-gray-100 bg-white">
-            <div className="flex flex-wrap items-center gap-3">
+          <div className="emp-dash__card-body" style={{ borderBottom: "1px solid var(--ed-border-light)" }}>
+            <div className="emp-page__filters">
 
               {/* Search */}
-              <div className="relative flex-1 min-w-[200px]">
-                <FaSearch className="absolute text-sm text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+              <div className="emp-page__search-wrap">
+                <FaSearch className="emp-page__search-icon" />
                 <input
                   type="text"
                   placeholder="Search holiday name..."
                   value={tableSearch}
                   onChange={(e) => setTableSearch(e.target.value)}
-                  className="w-full pl-9 pr-8 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                  className="emp-page__search"
                 />
                 {tableSearch && (
                   <FaTimes
-                    className="absolute text-sm text-gray-400 transform -translate-y-1/2 cursor-pointer right-3 top-1/2 hover:text-gray-600"
+                    className="emp-page__search-clear"
                     onClick={() => setTableSearch("")}
                   />
                 )}
               </div>
 
               {/* Month Filter */}
-              <div className="relative w-[140px]">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">
-                  Month:
-                </span>
-                <input
-                  type="month"
-                  value={monthFilter}
-                  onChange={(e) => setMonthFilter(e.target.value)}
-                  className="w-full pl-12 pr-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white text-gray-700 transition"
-                />
-              </div>
+              <input
+                type="month"
+                value={monthFilter}
+                onChange={(e) => setMonthFilter(e.target.value)}
+                className="emp-page__field emp-page__field--month"
+              />
 
               {/* Category filter tabs */}
-              <div className="flex flex-wrap items-center gap-1.5">
+              <div className="emp-page__chip-group">
                 {["All", ...CATEGORIES.map((c) => c.key)].map((key) => {
                   const c = CATEGORIES.find((x) => x.key === key);
                   const active = tableFilter === key;
@@ -1496,11 +1501,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                     <button
                       key={key}
                       onClick={() => setTableFilter(key)}
-                      className={`h-9 px-3 text-xs font-semibold rounded-lg transition border ${
-                        active
-                          ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
-                          : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-                      }`}
+                      className={`emp-page__chip ${active ? "emp-page__chip--active" : ""}`}
                     >
                       {c?.label || "All"}
                     </button>
@@ -1509,16 +1510,16 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
               </div>
 
               {/* Count */}
-              <div className="flex items-center gap-2 border border-indigo-100 bg-indigo-50/50 rounded-lg px-3 h-9 ml-auto">
-                <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Found:</span>
-                <span className="text-sm font-bold text-indigo-700">{tableListed.length}</span>
+              <div className="emp-page__pill emp-page__pill--muted emp-page__toolbar-right">
+                <span>Found:</span>
+                <span>{tableListed.length}</span>
               </div>
 
               {/* Clear filters */}
               {(tableSearch || monthFilter !== "" || tableFilter !== "All") && (
                 <button
                   onClick={() => { setTableSearch(""); setMonthFilter(""); setTableFilter("All"); }}
-                  className="h-9 px-4 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm"
+                  className="emp-page__secondary-btn"
                 >
                   Clear
                 </button>
@@ -1526,9 +1527,9 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left bg-white">
-              <thead className="text-xs font-semibold tracking-wider text-left text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
+          <div className="emp-dash__table-wrap">
+            <table className="emp-dash__table" style={{ minWidth: "820px" }}>
+              <thead>
                 <tr>
                   <th className="px-4 py-3 text-center">#</th>
                   <th className="px-4 py-3">Holiday / Occasion</th>
@@ -1542,7 +1543,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                 </tr>
               </thead>
 
-              <tbody className="bg-white divide-y divide-gray-100">
+              <tbody>
                 {loading ? (
                   <tr>
                     <td colSpan={isAdmin ? 9 : 7} className="px-4 py-8 text-center">
@@ -1556,7 +1557,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
                   tableListed.map((hol, i) => {
                     const c = catOf(hol.type);
                     return (
-                      <tr key={hol._id} className="hover:bg-gray-50 transition-colors text-sm">
+                      <tr key={hol._id} className="text-sm">
                         <td className="px-4 py-3 text-center text-gray-400 font-medium whitespace-nowrap">
                           {String(i + 1).padStart(2, "0")}
                         </td>
@@ -1632,20 +1633,50 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
             </table>
 
             {!loading && tableListed.length === 0 && (
-              <div className="flex flex-col items-center justify-center p-12 bg-white">
-                <div className="w-20 h-20 mb-4 bg-gray-50 rounded-full flex items-center justify-center border border-gray-100">
-                  <span className="text-4xl">🏖️</span>
+              <div className="emp-page__empty">
+                <div className="emp-page__empty-icon">
+                  <FaCalendarAlt />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">
-                  No Holidays Found
-                </h3>
-                <p className="text-sm text-gray-500 text-center max-w-sm">
+                <h3>No Holidays Found</h3>
+                <p>
                   {isAdmin 
                     ? "Click any date on the calendar above to declare a new holiday for your team!"
                     : "No company holidays have been declared at the moment. Please check back later!"}
                 </p>
               </div>
             )}
+          </div>
+
+          <div className="emp-page__mobile-list">
+            {!loading && tableListed.map((hol, i) => {
+              const c = catOf(hol.type);
+              return (
+                <div key={`holiday-mobile-${hol._id || i}`} className="emp-page__mobile-card">
+                  <div className="emp-page__mobile-top">
+                    <div>
+                      <div className="emp-page__mobile-title">{hol.name}</div>
+                      <div className="emp-page__mobile-subtitle">
+                        {format(parseISO(hol.fromDate), "dd MMM yyyy")} to {format(parseISO(hol.toDate), "dd MMM yyyy")}
+                      </div>
+                    </div>
+                    <span className="emp-page__badge" style={{ backgroundColor: c.light, color: c.color }}>
+                      {hol.type}
+                    </span>
+                  </div>
+
+                  <div className="emp-page__mobile-grid">
+                    <div className="emp-page__mobile-field">
+                      <span>State</span>
+                      <span>{hol.state || "All States"}</span>
+                    </div>
+                    <div className="emp-page__mobile-field">
+                      <span>Days</span>
+                      <span>{hol.totalDays}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
