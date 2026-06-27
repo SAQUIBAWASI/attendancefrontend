@@ -1270,6 +1270,7 @@ import {
   FiTrendingUp,
   FiLogIn,
   FiChevronRight
+
 } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
@@ -2409,10 +2410,10 @@ const EmployeeDashboard = () => {
               </div>
             </div>
 
-            {/* Recent Attendance Registry */}
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                <h3 className="text-sm font-semibold text-gray-900">Recent Attendance</h3>
+            {/* Recent Attendance Registry - WITHOUT Break Time */}
+            <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-gray-900">Recent Attendance Activity</h3>
                 <button
                   onClick={() => navigate("/myattendance")}
                   className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1"
@@ -2424,39 +2425,39 @@ const EmployeeDashboard = () => {
                 <table className="w-full min-w-[500px] text-left">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-2.5 text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
-                      <th className="px-4 py-2.5 text-xs font-semibold text-gray-600 uppercase tracking-wider">Check In</th>
-                      <th className="px-4 py-2.5 text-xs font-semibold text-gray-600 uppercase tracking-wider">Check Out</th>
-                      <th className="px-4 py-2.5 text-xs font-semibold text-gray-600 uppercase tracking-wider text-right">Status</th>
+                      <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider">DATE</th>
+                      <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider">CHECK IN</th>
+                      <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider">CHECK OUT</th>
+                      <th className="px-4 py-2 text-[11px] font-bold text-white uppercase tracking-wider text-right">STATUS</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {userAttendance.slice(0, 5).map((record, index) => (
-                      <tr key={index} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                      <tr key={index} className="group hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-2.5 text-xs font-semibold text-gray-700">
                           {new Date(record.checkInTime).toLocaleDateString()}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
+                        <td className="px-4 py-2.5 text-xs font-medium text-gray-500">
                           {record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
+                        <td className="px-4 py-2.5 text-xs font-medium text-gray-500">
                           {record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
                         </td>
-                        <td className="px-4 py-3 text-right">
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                        <td className="px-4 py-2.5 text-right">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                             record.status === 'present' || record.status === 'checked-in' 
                               ? 'bg-emerald-50 text-emerald-700' 
                               : 'bg-red-50 text-red-700'
                           }`}>
-                            {record.status === 'checked-in' ? 'Checked In' : (record.status === 'present' ? 'Present' : record.status)}
+                            {record.status === 'checked-in' ? 'In' : (record.status === 'present' ? 'Present' : record.status)}
                           </span>
                         </td>
                       </tr>
                     ))}
                     {userAttendance.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="py-8 text-center text-sm text-gray-500">
-                          No recent attendance activity found.
+                        <td colSpan="4" className="py-8 text-center text-xs text-slate-500 italic">
+                          No recent activity found.
                         </td>
                       </tr>
                     )}

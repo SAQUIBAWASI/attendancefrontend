@@ -289,547 +289,574 @@ const AdminIssueManagement = () => {
   const stats = getStatusStats();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="p-4 sm:p-6 lg:p-8">
-        {/* Dashboard Header */}
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+    <div className="emp-dash">
+      <main className="p-4 sm:p-6 lg:p-8">
+
+        <div className="emp-dash__header">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
-              Issue <span className="text-blue-600">Management</span>
+            <h1 className="emp-dash__greeting">
+              Issue <span>Management</span>
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Review and manage employee issues and requests
+            <p className="emp-dash__subtitle">
+              View and manage employee issues, track status, and add remarks.
             </p>
           </div>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
-            <FaCalendarAlt className="text-blue-600" />
-            <span className="text-sm font-medium text-gray-600">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fetchAllIssues}
+              className="emp-dash__card-link"
+            >
+              <FaSync className={loading ? 'animate-spin' : ''} /> Refresh
+            </button>
           </div>
         </div>
 
-          {/* Top KPI Stats Grid */}
-          <div className="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-5">
-            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Issues</span>
-                <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                  <FaClipboardList className="text-base" />
-                </div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Total Issues</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                <FaClipboardList />
               </div>
-              <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-              <div className="mt-1 text-xs text-gray-500">all issues</div>
             </div>
-
-            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Open</span>
-                <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-cyan-50 text-cyan-600">
-                  <FaClock className="text-base" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-gray-900">{stats.open}</div>
-              <div className="mt-1 text-xs text-gray-500">awaiting action</div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">In Progress</span>
-                <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-                  <FaSpinner className="text-base" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-gray-900">{stats.inProgress}</div>
-              <div className="mt-1 text-xs text-gray-500">being worked on</div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Resolved</span>
-                <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                  <FaCheckCircle className="text-base" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-gray-900">{stats.resolved}</div>
-              <div className="mt-1 text-xs text-gray-500">completed</div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Closed</span>
-                <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600">
-                  <FaTimesCircle className="text-base" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-gray-900">{stats.closed}</div>
-              <div className="mt-1 text-xs text-gray-500">archived</div>
-            </div>
+            <div className="emp-dash__stat-value">{stats.total}</div>
+            <div className="emp-dash__stat-meta">in system</div>
           </div>
 
-          {/* Filters Card */}
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-gray-100">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                  <FaFilter className="text-blue-600" /> Filters &amp; Actions
-                </h3>
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                <button
-                  onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className="px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 shadow-sm"
-                >
-                  {isFilterOpen ? <FaTimesCircle /> : <FaFilter />} {isFilterOpen ? 'Hide Filters' : 'Show Filters'}
-                </button>
-                <button
-                  onClick={fetchAllIssues}
-                  className="px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 shadow-sm"
-                >
-                  <FaSync className={loading ? 'animate-spin' : ''} /> Refresh
-                </button>
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Open</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                <FaClock />
               </div>
             </div>
-            
-            {isFilterOpen && (
-              <div className="p-4 bg-gray-50/50">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 items-end">
+            <div className="emp-dash__stat-value">{stats.open}</div>
+            <div className="emp-dash__stat-meta">awaiting action</div>
+          </div>
 
-                  {/* Search */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-gray-600">Search</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                        <FaSearch className="w-4 h-4" />
-                      </span>
-                      <input
-                        type="text"
-                        value={filters.searchTerm}
-                        onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                        placeholder="Search issues..."
-                      />
-                    </div>
-                  </div>
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">In Progress</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
+                <FaSpinner />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{stats.inProgress}</div>
+            <div className="emp-dash__stat-meta">being worked on</div>
+          </div>
 
-                  {/* Employee ID */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-gray-600">Employee ID</label>
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Resolved</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                <FaCheckCircle />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{stats.resolved}</div>
+            <div className="emp-dash__stat-meta">completed</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Closed</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
+                <FaTimesCircle />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">{stats.closed}</div>
+            <div className="emp-dash__stat-meta">archived</div>
+          </div>
+        </div>
+
+        {/* Filter Card */}
+        <div className="emp-dash__card">
+          <div className="emp-dash__card-header">
+            <div>
+              <h3 className="emp-dash__card-title">Filters</h3>
+              <p className="emp-dash__card-desc">Filter issues by various criteria</p>
+            </div>
+            <button
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className="emp-dash__card-link"
+            >
+              {isFilterOpen ? 'Hide' : 'Show'}
+            </button>
+          </div>
+          {isFilterOpen && (
+            <div className="emp-dash__card-body">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div className="text-left">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Search</label>
+                  <div className="relative">
+                    <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
-                      value={filters.employeeId}
-                      onChange={(e) => handleFilterChange('employeeId', e.target.value)}
-                      className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                      placeholder="e.g., TH029"
+                      value={filters.searchTerm}
+                      onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
+                      className="emp-dash__month-input w-full pl-8"
+                      placeholder="Search issues..."
                     />
                   </div>
-
-                  {/* Priority */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-gray-600">Priority</label>
-                    <select
-                      value={filters.priority}
-                      onChange={(e) => handleFilterChange('priority', e.target.value)}
-                      className="w-full h-9 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                    >
-                      <option value="">All Priorities</option>
-                      {priorityLevels.map(priority => (
-                        <option key={priority} value={priority}>{priority}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Status */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-gray-600">Status</label>
-                    <select
-                      value={filters.status}
-                      onChange={(e) => handleFilterChange('status', e.target.value)}
-                      className="w-full h-9 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                    >
-                      <option value="">All Status</option>
-                      {statusOptions.map(status => (
-                        <option key={status} value={status}>{status}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Issue Type */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-gray-600">Issue Type</label>
-                    <select
-                      value={filters.issueType}
-                      onChange={(e) => handleFilterChange('issueType', e.target.value)}
-                      className="w-full h-9 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                    >
-                      <option value="">All Types</option>
-                      {issueTypes.map(type => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
-                  </div>
                 </div>
 
-                {/* Filter Actions */}
-                <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200/50">
-                  <div className="text-xs text-gray-500 font-medium">
-                    Showing <strong>{filteredIssues.length}</strong> of <strong>{issues.length}</strong> issues
-                  </div>
-                  <div className="flex gap-2">
-                    {getActiveFilterCount() > 0 && (
-                      <button
-                        onClick={clearFilters}
-                        className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 shadow-sm"
-                      >
-                        <FaTimesCircle /> Clear Filters
-                      </button>
-                    )}
-                  </div>
+                <div className="text-left">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Employee ID</label>
+                  <input
+                    type="text"
+                    value={filters.employeeId}
+                    onChange={(e) => handleFilterChange('employeeId', e.target.value)}
+                    className="emp-dash__month-input w-full"
+                    placeholder="e.g., TH029"
+                  />
                 </div>
-              </div>
-            )}
-          </div>
 
-          {/* Main Issues Container */}
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                  <FaClipboardList className="text-blue-600" /> All Issues
-                </h3>
-                <p className="text-xs text-gray-500 mt-0.5">Manage and track employee issues</p>
-              </div>
-            </div>
-
-            {filteredIssues.length === 0 && !loading ? (
-              <div className="py-12 text-center text-sm text-gray-500 font-medium">
-                {issues.length === 0 ? 'No issues found.' : 'No issues match your filters.'}
-                {issues.length > 0 && (
-                  <button
-                    onClick={clearFilters}
-                    className="mt-4 px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                <div className="text-left">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Priority</label>
+                  <select
+                    value={filters.priority}
+                    onChange={(e) => handleFilterChange('priority', e.target.value)}
+                    className="emp-dash__month-input w-full"
                   >
-                    Clear Filters
-                  </button>
-                )}
-              </div>
-            ) : (
-              <>
-                {/* Desktop Table View */}
-                <div className="hidden lg:block overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200 bg-white">
-                    <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      <tr>
-                        <th style={{ color: 'black' }} className="px-4 py-3 text-left cursor-pointer hover:bg-gray-100" onClick={() => handleSort('issueTitle')}>
-                          <div className="flex items-center gap-2">Issue {getSortIcon('issueTitle')}</div>
-                        </th>
-                        <th style={{ color: 'black' }} className="px-4 py-3 text-left cursor-pointer hover:bg-gray-100" onClick={() => handleSort('employeeId')}>
-                          <div className="flex items-center gap-2">Employee {getSortIcon('employeeId')}</div>
-                        </th>
-                        <th style={{ color: 'black' }} className="px-4 py-3 text-center cursor-pointer hover:bg-gray-100" onClick={() => handleSort('issueType')}>
-                          <div className="flex items-center justify-center gap-2">Type {getSortIcon('issueType')}</div>
-                        </th>
-                        <th style={{ color: 'black' }} className="px-4 py-3 text-center cursor-pointer hover:bg-gray-100" onClick={() => handleSort('priority')}>
-                          <div className="flex items-center justify-center gap-2">Priority {getSortIcon('priority')}</div>
-                        </th>
-                        <th style={{ color: 'black' }} className="px-4 py-3 text-center cursor-pointer hover:bg-gray-100" onClick={() => handleSort('status')}>
-                          <div className="flex items-center justify-center gap-2">Status {getSortIcon('status')}</div>
-                        </th>
-                        <th style={{ color: 'black' }} className="px-4 py-3 text-center cursor-pointer hover:bg-gray-100" onClick={() => handleSort('createdAt')}>
-                          <div className="flex items-center justify-center gap-2">Date {getSortIcon('createdAt')}</div>
-                        </th>
-                        <th style={{ color: 'black' }} className="px-4 py-3 text-center">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 text-xs">
-                      {filteredIssues.map((issue) => (
-                        <tr key={issue._id} className="hover:bg-gray-50 transition-all">
-                          <td className="px-4 py-3">
-                            <div className="flex flex-col">
-                              <span className="font-semibold text-gray-900">{issue.issueTitle}</span>
-                              <span className="text-gray-500 truncate max-w-[180px]">{issue.issueDescription}</span>
-                              {issue.adminRemark && (
-                                <span className="text-[10px] text-blue-600 mt-0.5 flex items-center gap-1">
-                                  <FaComment size={8} /> Admin: {issue.adminRemark}
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex flex-col">
-                              <span className="font-semibold text-gray-900">{issue.employeeId || 'N/A'}</span>
-                              <span className="text-gray-500">{issue.employeeName || ''}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold border border-gray-200">
-                              {issue.issueType}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className={`px-2 py-1 rounded-lg text-xs font-semibold border ${getPriorityColor(issue.priority)}`}>
-                              {issue.priority}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            {getStatusBadge(issue.status)}
-                          </td>
-                          <td className="px-4 py-3 text-center text-gray-600">
-                            {new Date(issue.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button
-                                onClick={() => setSelectedIssue(issue)}
-                                className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-all shadow-sm"
-                                title="View Details"
-                              >
-                                <FaEye className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleUpdateClick(issue)}
-                                className="p-1.5 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-md transition-all shadow-sm"
-                                title="Update Issue"
-                              >
-                                <FaEdit className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(issue._id)}
-                                className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-all shadow-sm"
-                                title="Delete Issue"
-                              >
-                                <FaTrash className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                      {loading && (
-                        <tr>
-                          <td colSpan="7" className="p-8 text-center">
-                            <div className="flex flex-col items-center justify-center gap-2">
-                              <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
-                              <p className="text-gray-500 text-xs font-medium">Loading issues...</p>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                    <option value="">All Priorities</option>
+                    {priorityLevels.map(priority => (
+                      <option key={priority} value={priority}>{priority}</option>
+                    ))}
+                  </select>
                 </div>
-              </>
-            )}
-          </div>
 
+                <div className="text-left">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Status</label>
+                  <select
+                    value={filters.status}
+                    onChange={(e) => handleFilterChange('status', e.target.value)}
+                    className="emp-dash__month-input w-full"
+                  >
+                    <option value="">All Status</option>
+                    {statusOptions.map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="text-left">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Issue Type</label>
+                  <select
+                    value={filters.issueType}
+                    onChange={(e) => handleFilterChange('issueType', e.target.value)}
+                    className="emp-dash__month-input w-full"
+                  >
+                    <option value="">All Types</option>
+                    {issueTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {getActiveFilterCount() > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {filters.employeeId && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 text-indigo-700 rounded-full text-[10px] border border-indigo-200">
+                      Employee: {filters.employeeId}
+                      <button onClick={() => handleFilterChange('employeeId', '')} className="hover:text-indigo-900">
+                        <FaTimes size={8} />
+                      </button>
+                    </span>
+                  )}
+                  {filters.priority && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] border border-blue-200">
+                      Priority: {filters.priority}
+                      <button onClick={() => handleFilterChange('priority', '')} className="hover:text-blue-900">
+                        <FaTimes size={8} />
+                      </button>
+                    </span>
+                  )}
+                  {filters.status && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded-full text-[10px] border border-green-200">
+                      Status: {filters.status}
+                      <button onClick={() => handleFilterChange('status', '')} className="hover:text-green-900">
+                        <FaTimes size={8} />
+                      </button>
+                    </span>
+                  )}
+                  {filters.issueType && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 rounded-full text-[10px] border border-purple-200">
+                      Type: {filters.issueType}
+                      <button onClick={() => handleFilterChange('issueType', '')} className="hover:text-purple-900">
+                        <FaTimes size={8} />
+                      </button>
+                    </span>
+                  )}
+                  {filters.searchTerm && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-[10px] border border-gray-200">
+                      Search: {filters.searchTerm}
+                      <button onClick={() => handleFilterChange('searchTerm', '')} className="hover:text-gray-900">
+                        <FaTimes size={8} />
+                      </button>
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {getActiveFilterCount() > 0 && (
+                <button
+                  onClick={clearFilters}
+                  className="emp-dash__btn-outline"
+                >
+                  Clear All Filters
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Issues Table Card */}
+        <div className="emp-dash__card">
+          <div className="emp-dash__card-header">
+            <div>
+              <h3 className="emp-dash__card-title">All Issues</h3>
+              <p className="emp-dash__card-desc">Detailed list of all employee issues</p>
+            </div>
+          </div>
+          {filteredIssues.length === 0 && !loading ? (
+            <div className="emp-dash__card-body py-12 text-center">
+              <FaExclamationTriangle className="mx-auto text-4xl text-gray-300 mb-4" />
+              <p className="text-sm font-semibold text-gray-800 mb-1">
+                {issues.length === 0 ? 'No issues found.' : 'No issues match your filters.'}
+              </p>
+              <p className="text-xs text-gray-500 mb-4 max-w-xs mx-auto">
+                {issues.length === 0 ? 'There are no issues in the system yet.' : 'Try adjusting your filter criteria to see more results.'}
+              </p>
+              {issues.length > 0 && (
+                <button
+                  onClick={clearFilters}
+                  className="emp-dash__btn-outline"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="emp-dash__table-wrap">
+                <table className="emp-dash__table">
+                  <thead>
+                    <tr>
+                      <th onClick={() => handleSort('issueTitle')} className="cursor-pointer hover:bg-gray-200">
+                        Issue {getSortIcon('issueTitle')}
+                      </th>
+                      <th onClick={() => handleSort('employeeId')} className="cursor-pointer hover:bg-gray-200">
+                        Employee {getSortIcon('employeeId')}
+                      </th>
+                      <th onClick={() => handleSort('issueType')} className="cursor-pointer hover:bg-gray-200">
+                        Type {getSortIcon('issueType')}
+                      </th>
+                      <th onClick={() => handleSort('priority')} className="cursor-pointer hover:bg-gray-200">
+                        Priority {getSortIcon('priority')}
+                      </th>
+                      <th onClick={() => handleSort('status')} className="cursor-pointer hover:bg-gray-200">
+                        Status {getSortIcon('status')}
+                      </th>
+                      <th onClick={() => handleSort('createdAt')} className="cursor-pointer hover:bg-gray-200">
+                        Date {getSortIcon('createdAt')}
+                      </th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredIssues.map((issue) => (
+                      <tr key={issue._id}>
+                        <td>
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-gray-800">{issue.issueTitle}</span>
+                            <span className="text-xs text-gray-500 truncate max-w-[150px]">
+                              {issue.issueDescription}
+                            </span>
+                            {issue.adminRemark && (
+                              <span className="text-[10px] text-blue-600 mt-0.5 flex items-center gap-1">
+                                <FaComment size={8} /> Admin: {issue.adminRemark}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-gray-800">{issue.employeeId || 'N/A'}</span>
+                            <span className="text-xs text-gray-500">{issue.employeeName || ''}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium border border-gray-200">
+                            {issue.issueType}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getPriorityColor(issue.priority)}`}>
+                            {issue.priority}
+                          </span>
+                        </td>
+                        <td>
+                          {getStatusBadge(issue.status)}
+                        </td>
+                        <td>
+                          {new Date(issue.createdAt).toLocaleDateString()}
+                        </td>
+                        <td>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => setSelectedIssue(issue)}
+                              className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100"
+                              title="View Details"
+                            >
+                              <FaEye size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleUpdateClick(issue)}
+                              className="p-1.5 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors border border-purple-100"
+                              title="Update Issue"
+                            >
+                              <FaEdit size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(issue._id)}
+                              className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100"
+                              title="Delete Issue"
+                            >
+                              <FaTrash size={12} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {loading && (
+                      <tr>
+                        <td colSpan="7" className="p-8 text-center">
+                          <div className="emp-dash__spinner mx-auto"></div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {filteredIssues.length > 0 && !loading && (
+                <div className="px-6 py-3 border-t border-gray-200 text-xs text-gray-500">
+                  Showing <strong>{filteredIssues.length}</strong> of <strong>{issues.length}</strong> issues
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </main>
 
       {/* Update Issue Modal */}
       {isUpdateModalOpen && selectedIssue && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-lg p-6 bg-white rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 text-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
-              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                <FaEdit className="text-blue-600" /> Update Issue
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 emp-dash-modal">
+          <div className="w-full max-w-lg emp-dash__modal-panel">
+            <div className="emp-dash__card-header">
+              <div>
+                <h3 className="emp-dash__card-title">Update Issue</h3>
+                <p className="emp-dash__card-desc">Update issue status and add admin remarks</p>
+              </div>
               <button 
                 onClick={() => {
                   setIsUpdateModalOpen(false);
                   setSelectedIssue(null);
                   setUpdateForm({ status: 'Open', adminRemark: '' });
                 }} 
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+                className="emp-dash__card-link"
               >
-                <FaTimes size={16} />
+                <FaTimes />
               </button>
             </div>
 
-            <div className="mb-4 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <span className="text-gray-500 font-medium">Employee</span>
-                  <div className="font-semibold text-gray-800">{selectedIssue.employeeId || 'N/A'}</div>
-                </div>
-                <div>
-                  <span className="text-gray-500 font-medium">Title</span>
-                  <div className="font-semibold text-gray-800 truncate">{selectedIssue.issueTitle}</div>
+            <div className="emp-dash__card-body emp-dash__modal-body">
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-gray-500">Employee:</span>
+                    <span className="font-medium text-gray-700 ml-1">{selectedIssue.employeeId || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Title:</span>
+                    <span className="font-medium text-gray-700 ml-1 truncate">{selectedIssue.issueTitle}</span>
+                  </div>
                 </div>
               </div>
+
+              <form onSubmit={handleUpdateSubmit} className="space-y-3">
+                <div className="text-left">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Status</label>
+                  <select
+                    value={updateForm.status}
+                    onChange={(e) => setUpdateForm(prev => ({ ...prev, status: e.target.value }))}
+                    className="emp-dash__month-input w-full"
+                    required
+                  >
+                    {statusOptions.map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="text-left">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Admin Remark</label>
+                  <textarea
+                    value={updateForm.adminRemark}
+                    onChange={(e) => setUpdateForm(prev => ({ ...prev, adminRemark: e.target.value }))}
+                    className="emp-dash__month-input w-full"
+                    rows="3"
+                    placeholder="Add admin remark or resolution notes..."
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-3 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsUpdateModalOpen(false);
+                      setSelectedIssue(null);
+                      setUpdateForm({ status: 'Open', adminRemark: '' });
+                    }}
+                    className="emp-dash__btn-outline"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="emp-dash__btn-primary-sm"
+                  >
+                    {submitting ? (
+                      <>
+                        <div className="emp-dash__spinner inline-block w-3 h-3 mr-2"></div>
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <FaSave size={10} /> Update Issue
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
-
-            <form onSubmit={handleUpdateSubmit} className="space-y-4">
-              <div className="text-left">
-                <label className="block mb-1.5 text-xs font-semibold text-gray-700">Status</label>
-                <select
-                  value={updateForm.status}
-                  onChange={(e) => setUpdateForm(prev => ({ ...prev, status: e.target.value }))}
-                  className="w-full p-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white transition-all text-xs"
-                  required
-                >
-                  {statusOptions.map(status => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="text-left">
-                <label className="block mb-1.5 text-xs font-semibold text-gray-700">Admin Remark</label>
-                <textarea
-                  value={updateForm.adminRemark}
-                  onChange={(e) => setUpdateForm(prev => ({ ...prev, adminRemark: e.target.value }))}
-                  className="w-full p-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none text-xs"
-                  rows="3"
-                  placeholder="Add admin remark or resolution notes..."
-                />
-              </div>
-
-              <div className="flex gap-3 pt-3 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsUpdateModalOpen(false);
-                    setSelectedIssue(null);
-                    setUpdateForm({ status: 'Open', adminRemark: '' });
-                  }}
-                  className="flex-1 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all font-semibold text-xs"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 py-2.5 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-all font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm"
-                >
-                  {submitting ? (
-                    <>
-                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Updating...
-                    </>
-                  ) : (
-                    <>
-                      <FaSave className="w-3 h-3" /> Update Issue
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
 
       {/* Issue Details Modal */}
       {selectedIssue && !isUpdateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-2xl p-6 bg-white rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 text-sm max-h-[90vh] overflow-y-auto border border-gray-200">
-            <div className="flex items-center justify-between mb-4 sticky top-0 bg-white pb-3 border-b border-gray-100 z-10">
-              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                <FaInfoCircle className="text-blue-600" /> Issue Details
-              </h3>
-              <button onClick={() => setSelectedIssue(null)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
-                <FaTimes size={16} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 emp-dash-modal">
+          <div className="w-full max-w-2xl emp-dash__modal-panel">
+            <div className="emp-dash__card-header">
+              <div>
+                <h3 className="emp-dash__card-title">Issue Details</h3>
+                <p className="emp-dash__card-desc">View complete issue information</p>
+              </div>
+              <button onClick={() => setSelectedIssue(null)} className="emp-dash__card-link">
+                <FaTimes />
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="emp-dash__card-body emp-dash__modal-body space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="md:col-span-2 text-left">
-                  <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Issue Title</label>
-                  <div className="w-full p-2.5 bg-blue-50/50 border border-blue-100 rounded-lg text-gray-800 font-bold">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Issue Title</label>
+                  <div className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-semibold text-xs">
                     {selectedIssue.issueTitle}
                   </div>
                 </div>
 
                 <div className="md:col-span-2 text-left">
-                  <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Description</label>
-                  <div className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 min-h-[60px]">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Description</label>
+                  <div className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 min-h-[60px] text-xs">
                     {selectedIssue.issueDescription}
                   </div>
                 </div>
 
                 <div className="text-left">
-                  <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Employee ID</label>
-                  <div className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 font-semibold">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Employee ID</label>
+                  <div className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 font-medium text-xs">
                     {selectedIssue.employeeId || 'N/A'}
                   </div>
                 </div>
 
                 <div className="text-left">
-                  <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Employee Name</label>
-                  <div className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Employee Name</label>
+                  <div className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 text-xs">
                     {selectedIssue.employeeName || 'N/A'}
                   </div>
                 </div>
 
                 <div className="text-left">
-                  <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Department</label>
-                  <div className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Department</label>
+                  <div className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 text-xs">
                     {selectedIssue.department || 'N/A'}
                   </div>
                 </div>
 
                 <div className="text-left">
-                  <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Issue Type</label>
-                  <div className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg">
-                    <span className="px-2 py-1 bg-gray-100 rounded-lg text-xs font-semibold border border-gray-200">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Issue Type</label>
+                  <div className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg">
+                    <span className="px-2 py-0.5 bg-gray-100 rounded-full text-[10px] font-medium border border-gray-200">
                       {selectedIssue.issueType}
                     </span>
                   </div>
                 </div>
 
                 <div className="text-left">
-                  <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Priority</label>
-                  <div className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg">
-                    <span className={`px-2 py-1 rounded-lg text-xs font-semibold border ${getPriorityColor(selectedIssue.priority)}`}>
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Priority</label>
+                  <div className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getPriorityColor(selectedIssue.priority)}`}>
                       {selectedIssue.priority}
                     </span>
                   </div>
                 </div>
 
                 <div className="text-left">
-                  <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</label>
-                  <div className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Status</label>
+                  <div className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg">
                     {getStatusBadge(selectedIssue.status)}
                   </div>
                 </div>
 
                 <div className="text-left">
-                  <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Raised On</label>
-                  <div className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Raised On</label>
+                  <div className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 text-xs">
                     {new Date(selectedIssue.createdAt).toLocaleString()}
                   </div>
                 </div>
 
                 <div className="text-left">
-                  <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Last Updated</label>
-                  <div className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Last Updated</label>
+                  <div className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 text-xs">
                     {new Date(selectedIssue.updatedAt).toLocaleString()}
                   </div>
                 </div>
 
                 <div className="md:col-span-2 text-left">
-                  <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Admin Remark</label>
-                  <div className="w-full p-2.5 bg-purple-50/50 border border-purple-100 rounded-lg text-gray-700 min-h-[50px]">
+                  <label className="block mb-1 text-xs font-medium text-gray-700">Admin Remark</label>
+                  <div className="w-full p-2 bg-purple-50 border border-purple-200 rounded-lg text-gray-700 min-h-[40px] text-xs">
                     {selectedIssue.adminRemark || 'No admin remark yet.'}
                   </div>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-gray-100 flex gap-3">
+              <div className="pt-3 border-t border-gray-200 flex gap-3">
                 <button
                   onClick={() => {
                     setSelectedIssue(null);
                     handleUpdateClick(selectedIssue);
                   }}
-                  className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all flex items-center justify-center gap-1.5 shadow-sm text-xs"
+                  className="emp-dash__btn-primary-sm"
                 >
-                  <FaEdit className="w-3 h-3" /> Update Issue
+                  <FaEdit size={10} /> Update Issue
                 </button>
                 <button
                   onClick={() => setSelectedIssue(null)}
-                  className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-all text-xs"
+                  className="emp-dash__btn-outline"
                 >
                   Close
                 </button>
@@ -838,7 +865,6 @@ const AdminIssueManagement = () => {
           </div>
         </div>
       )}
-    </div>
     </div>
   );
 };

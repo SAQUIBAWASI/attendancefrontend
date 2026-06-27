@@ -1,11 +1,13 @@
 
 
+// AttendanceSummary.jsx - Complete fixed OT calculation
+
+// AttendanceSummary.jsx - Complete Fixed Code
+
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 import { useEffect, useRef, useState } from "react";
-import CountUp from 'react-countup';
 import { FaBuilding, FaUserTag, FaTimes } from "react-icons/fa";
-import { FiCalendar, FiCheckCircle, FiClock, FiFilter, FiList, FiUsers, FiMapPin, FiHome, FiAlertCircle } from 'react-icons/fi';
 import * as XLSX from "xlsx";
 import { API_BASE_URL } from "../config";
 import "../index.css";
@@ -1518,8 +1520,8 @@ export default function AttendanceSummary() {
   </div>;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="mx-auto max-w-9xl">
         {saveStatus && (
           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${saveStatus.includes("✅") || saveStatus.includes("successfully")
             ? "bg-green-600 border-l-4 border-green-700"
@@ -1529,136 +1531,44 @@ export default function AttendanceSummary() {
           </div>
         )}
 
-        {/* Dashboard Header */}
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
-              Attendance <span className="text-blue-600">Summary</span>
-            </h1>
-            <p className="mt-1 text-sm text-gray-600">
-              View and manage employee attendance records
-            </p>
-          </div>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
-            <FiCalendar className="text-blue-600" />
-            <span className="text-sm font-medium text-gray-600">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
-          </div>
-        </div>
+        <div className="p-2 mb-2 bg-white border border-gray-200 rounded-lg shadow-md">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[180px]">
+              <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search by ID or Name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
 
-        {/* Top KPI Stats Grid */}
-        <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Employees</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                <FiUsers className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={employeeSummary.length || 0} duration={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">active employees</div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Present Days</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-green-50 text-green-600">
-                <FiCheckCircle className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={employeeSummary.reduce((sum, emp) => sum + (emp.presentDays || 0), 0)} duration={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">total present days</div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Late Days</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-orange-50 text-orange-600">
-                <FiClock className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={employeeSummary.reduce((sum, emp) => sum + (calculateEmployeeLateDays(emp.employeeId) || 0), 0)} duration={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">late arrivals</div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Total OT Hours</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-purple-50 text-purple-600">
-                <FiClock className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={employeeSummary.reduce((sum, emp) => sum + (calculateEmployeeOT(emp.employeeId) || 0), 0)} duration={1} decimals={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">overtime hours</div>
-          </div>
-        </div>
-
-        {/* Filters Card */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-gray-100">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <FiFilter className="text-blue-600" /> Filters &amp; Actions
-              </h3>
-            </div>
-          </div>
-          
-          <div className="p-4 bg-gray-50/50">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 items-end">
-              
-              {/* Search */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Search Employee</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Search ID or Name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              {/* Department Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={departmentFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Department</label>
-                <button
-                  onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDepartment 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaBuilding className="text-gray-400" />
-                    {filterDepartment || 'All Departments'}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                
-                {showDepartmentFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+            <div className="relative" ref={departmentFilterRef}>
+              <button
+                onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
+                  filterDepartment 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    : 'bg-white text-gray-900 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
+              </button>
+              {showDepartmentFilter && (
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                  <div 
+                    onClick={() => {
+                      setFilterDepartment('');
+                      setShowDepartmentFilter(false);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Departments
+                  </div>
+                  {uniqueDepartments.map(dept => (
                     <div 
                       onClick={() => {
                         setFilterDepartment('');
@@ -1668,24 +1578,37 @@ export default function AttendanceSummary() {
                     >
                       All Departments
                     </div>
-                    {uniqueDepartments.map(dept => (
-                      <div 
-                        key={dept}
-                        onClick={() => {
-                          setFilterDepartment(dept);
-                          setShowDepartmentFilter(false);
-                        }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
-                          filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
-                      >
-                        {dept}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
+            <div className="relative" ref={designationFilterRef}>
+              <button
+                onClick={() => setShowDesignationFilter(!showDesignationFilter)}
+                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
+                  filterDesignation 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                }`}
+              >
+                <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
+              </button>
+              {showDesignationFilter && (
+                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
+                  <div 
+                    onClick={() => {
+                      setFilterDesignation('');
+                      setShowDesignationFilter(false);
+                    }}
+                    className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
+                  >
+                    All Designations
+                  </div>
+                {/* )} */}
+              </div>
+              )}
+            </div>
               {/* Designation Filter */}
               <div className="flex flex-col gap-1.5 relative" ref={designationFilterRef}>
                 <label className="text-xs font-medium text-gray-600">Designation</label>
@@ -1733,9 +1656,11 @@ export default function AttendanceSummary() {
                 )}
               </div>
 
-              {/* From Date */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">From Date</label>
+            <div className="flex items-center gap-3">
+              <div className="relative w-[200px]">
+                <span className="absolute text-xs text-gray-500 -translate-y-1/2 pointer-events-none left-3 top-1/2">
+                  From:
+                </span>
                 <input
                   type="date"
                   value={fromDate}
@@ -1744,10 +1669,10 @@ export default function AttendanceSummary() {
                   className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
               </div>
-
-              {/* To Date */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">To Date</label>
+              <div className="relative w-[200px]">
+                <span className="absolute text-xs text-gray-500 -translate-y-1/2 pointer-events-none left-3 top-1/2">
+                  To:
+                </span>
                 <input
                   type="date"
                   value={toDate}
@@ -1770,46 +1695,188 @@ export default function AttendanceSummary() {
               </div>
             </div>
 
-            {/* Filter Actions */}
-            <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200/50">
-              <div className="text-xs text-gray-500 font-medium">
-                Showing <strong>{filteredSummary.length || employeeSummary.length}</strong> employees
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleDateRangeFilter}
-                  className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all flex items-center gap-1.5 shadow-sm"
-                >
-                  Apply Filters
-                </button>
-                {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate) && (
-                  <button
-                    onClick={clearFilters}
-                    className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 shadow-sm"
-                  >
-                    Clear Filters
-                  </button>
-                )}
-                <button
-                  onClick={downloadCombinedExcel}
-                  className="px-3 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all flex items-center gap-1.5 shadow-sm"
-                >
-                  Download All
-                </button>
-              </div>
+            <div className="relative min-w-[130px]">
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={handleMonthChange}
+                className="w-full px-2 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+              />
             </div>
+
+            <button
+              onClick={handleDateRangeFilter}
+              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 whitespace-nowrap"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Apply
+            </button>
+
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-100 whitespace-nowrap"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Clear
+            </button>
+
+            <button
+              onClick={downloadCombinedExcel}
+              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-white bg-green-600 rounded-lg shadow-sm hover:bg-green-700 whitespace-nowrap"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download
+            </button>
           </div>
         </div>
 
-        {/* Main Table Container */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="flex items-center justify-between p-4 border-b border-gray-100">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <FiList className="text-blue-600" /> Employee Attendance List
-              </h3>
-              <p className="text-xs text-gray-500 mt-0.5">View and manage employee attendance records</p>
-            </div>
+        <div className="p-0 mb-0 bg-white border border-gray-200 shadow-lg rounded-2xl">
+          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+            <table className="min-w-full">
+              <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+                <tr>
+                  <th className="py-2 text-center">Employee ID</th>
+                  <th className="py-2 text-center">Name</th>
+                  <th className="py-2 text-center">Department</th>
+                  <th className="py-2 text-center">Designation</th>
+                  <th className="py-2 text-center">Month</th>
+                  <th className="py-2 text-center">Present</th>
+                  <th className="py-2 text-center">Late</th>
+                  <th className="py-2 text-center">Onsite</th>
+                  <th className="py-2 text-center">Remote</th>
+                  <th className="py-2 text-center">Half Day</th>
+                  <th className="py-2 text-center">Full Day</th>
+                  <th className="py-2 text-center">Over Time</th>
+                  <th className="py-2 text-center">Working Days</th>
+                  <th className="py-2 text-center">Download</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {currentItems.map((emp) => {
+                  const workingDays = calculateEmployeeWorkingDays(emp.employeeId);
+                  const lateDays = calculateEmployeeLateDays(emp.employeeId);
+                  const onsiteDays = calculateEmployeeOnsiteDays(emp.employeeId);
+                  const department = getEmployeeDepartment(emp.employeeId);
+                  const designation = getEmployeeDesignation(emp.employeeId);
+                  const totalOT = calculateEmployeeOT(emp.employeeId);
+
+                  return (
+                    <tr
+                      key={emp.employeeId}
+                      onClick={() => handleViewDetails(emp.employeeId)}
+                      className="border-t border-gray-200 cursor-pointer hover:bg-blue-50"
+                    >
+                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{emp.employeeId}</td>
+                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{emp.name}</td>
+                      <td className="px-2 py-2 text-center text-gray-600">{department}</td>
+                      <td className="px-2 py-2 text-center text-gray-600">{designation}</td>
+                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{emp.month}</td>
+                      <td className="px-2 py-2 font-medium text-center text-green-600">{emp.presentDays}</td>
+                      <td className="px-2 py-2 font-medium text-center text-orange-600">{lateDays}</td>
+                      <td className="px-2 py-2 font-medium text-center text-blue-600">{onsiteDays}</td>
+                      <td className="px-2 py-2 font-medium text-center text-teal-600">{calculateEmployeeRemoteDays(emp.employeeId)}</td>
+                      <td className="px-2 py-2 font-medium text-center text-yellow-600">
+                        {emp.halfDayWorking ?? 0}
+                       </td>
+                      <td className="px-2 py-2 font-medium text-center text-red-600">
+                        {emp.fullDayNotWorking ?? 0}
+                       </td>
+                      <td className="px-2 py-2 font-medium font-semibold text-center text-indigo-600">
+                        {formatDecimalHours(totalOT)}
+                       </td>
+                      <td className="px-2 py-2 font-medium font-bold text-center text-purple-600">
+                        {workingDays.toFixed(1)}
+                       </td>
+                      <td className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            downloadSingleEmployeeExcel(emp.employeeId);
+                          }}
+                          className="inline-flex items-center justify-center px-4 py-1 font-medium text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
+                          title={`Download ${emp.name}'s report (ZIP)`}
+                        >
+                          ⬇
+                        </button>
+                       </td>
+                     </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {employeeSummary.length > 0 && (
+              <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Show:
+                    </label>
+                    <select
+                      value={itemsPerPage}
+                      onChange={handleItemsPerPageChange}
+                      className="p-2 text-sm border rounded-lg"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                    <span className="text-sm text-gray-500">entries</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
+                      ? "text-gray-500 bg-gray-100 border-gray-200 cursor-not-allowed"
+                      : "text-blue-500 bg-white hover:bg-gray-100 border-gray-300"
+                      }`}
+                  >
+                    Previous
+                  </button>
+
+                  {getPageNumbers().map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageClick(page)}
+                      className={`px-4 py-1 text-sm border rounded-lg ${currentPage === page
+                        ? "text-white bg-blue-600 border-blue-600"
+                        : "text-blue-500 bg-white hover:bg-gray-100 border-gray-300"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
+                      ? "text-gray-500 bg-gray-100 border-gray-200 cursor-not-allowed"
+                      : "text-blue-500 bg-white hover:bg-gray-100 border-gray-300"
+                      }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {employeeSummary.length === 0 && (
+              <div className="py-8 text-center text-gray-500">
+                No records found for {selectedMonth}
+              </div>
+            )}
           </div>
 
           {employeeSummary.length === 0 ? (
@@ -1963,139 +2030,26 @@ export default function AttendanceSummary() {
           const monthDates = getAllDatesOfMonth(activeMonth);
 
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
-              <div className="relative w-full max-w-7xl flex flex-col max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden">
-                {/* Modal Header */}
-                <div className="flex flex-wrap items-center justify-between gap-3 w-full p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-gray-900">Employee Attendance Details</h3>
-                    <span className="px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
-                      {activeMonth}
-                    </span>
-                  </div>
-                  
-                  <div className="flex flex-wrap items-center gap-2">
-                    {/* Half Days Bulk Action */}
-                    <div className="flex items-center px-3 py-1.5 space-x-2 bg-white border border-gray-200 rounded-xl shadow-md text-xs sm:text-sm whitespace-nowrap">
-                      <span className="text-sm font-semibold text-gray-700">Half Days ({(() => {
-                        return monthDates.filter(date => {
-                          const dateKey = date.toLocaleDateString('en-CA');
-                          const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
-                          const originalHours = rec ? (rec.totalHours || rec.hours) : 0;
-                          return calculateDayType(selectedEmployee, originalHours) === "half";
-                        }).length;
-                      })()})</span>
-                      <input 
-                        type="number" 
-                        id="bulkHalfDayHours"
-                        defaultValue="9" 
-                        className="w-12 sm:w-16 px-2 py-1 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg text-xs sm:text-sm text-center focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                        step="0.25"
-                      />
-                      <span className="text-sm text-gray-500">hrs</span>
-                      <button
-                        onClick={() => {
-                          const val = parseFloat(document.getElementById('bulkHalfDayHours').value) || 9;
-                          const newEdited = { ...editedRows };
-                          let count = 0;
-                          monthDates.forEach(date => {
-                             const dateKey = date.toLocaleDateString('en-CA');
-                             const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
-                             const originalHours = rec ? (rec.totalHours || rec.hours) : 0;
-                             
-                             if (calculateDayType(selectedEmployee, originalHours) === "half") {
-                                newEdited[dateKey] = {
-                                  ...newEdited[dateKey],
-                                  hours: val,
-                                  edited: true,
-                                  timestamp: Date.now()
-                                };
-                                count++;
-                             }
-                          });
-                          setEditedRows(newEdited);
-                          if (count > 0) {
-                            showSaveStatus(`✅ Applied ${val} hrs to ${count} Half Days! Click 'Save Bulk Edits' to confirm.`);
-                          } else {
-                            showSaveStatus(`❌ No Half Days found to update.`, "error");
-                          }
-                        }}
-                        className="px-3 py-1 text-xs sm:text-sm font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-all shadow-sm"
-                      >
-                        Apply
-                      </button>
-                    </div>
-
-                    {/* Full Day Leaves Bulk Action */}
-                    <div className="flex items-center px-3 py-1.5 space-x-2 bg-white border border-gray-200 rounded-xl shadow-md text-xs sm:text-sm whitespace-nowrap">
-                      <span className="text-sm font-semibold text-gray-700">Full Day Leaves ({(() => {
-                        return monthDates.filter(date => {
-                          const dateKey = date.toLocaleDateString('en-CA');
-                          const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
-                          const originalHours = rec ? (rec.totalHours || rec.hours) : 0;
-                          return rec && calculateDayType(selectedEmployee, originalHours) === "full_leave";
-                        }).length;
-                      })()})</span>
-                      <input 
-                        type="number" 
-                        id="bulkFullLeaveHours"
-                        defaultValue="9" 
-                        className="w-12 sm:w-16 px-2 py-1 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg text-xs sm:text-sm text-center focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                        step="0.25"
-                      />
-                      <span className="text-sm text-gray-500">hrs</span>
-                      <button
-                        onClick={() => {
-                          const val = parseFloat(document.getElementById('bulkFullLeaveHours').value) || 9;
-                          const newEdited = { ...editedRows };
-                          let count = 0;
-                          monthDates.forEach(date => {
-                             const dateKey = date.toLocaleDateString('en-CA');
-                             const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
-                             const originalHours = rec ? (rec.totalHours || rec.hours) : 0;
-                             
-                             if (rec && calculateDayType(selectedEmployee, originalHours) === "full_leave") {
-                                newEdited[dateKey] = {
-                                  ...newEdited[dateKey],
-                                  hours: val,
-                                  edited: true,
-                                  timestamp: Date.now()
-                                };
-                                count++;
-                             }
-                          });
-                          setEditedRows(newEdited);
-                          if (count > 0) {
-                            showSaveStatus(`✅ Applied ${val} hrs to ${count} Full Day Leaves! Click 'Save Bulk Edits' to confirm.`);
-                          } else {
-                            showSaveStatus(`❌ No Full Day Leaves found to update.`, "error");
-                          }
-                        }}
-                        className="px-3 py-1 text-xs sm:text-sm font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-all shadow-sm"
-                      >
-                        Apply
-                      </button>
-                    </div>
-
-                    {/* Save Bulk Edits Button */}
-                    {(() => {
-                      const editedCount = Object.keys(editedRows).filter(key => editedRows[key].edited).length;
-                      
-                      if (editedCount > 0) {
-                        return (
-                          <button
-                            onClick={handleBulkSaveAttendance}
-                            className="px-4 py-2 text-xs sm:text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md whitespace-nowrap flex items-center gap-2"
-                          >
-                            <span>Save Bulk Edits</span>
-                            <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs">{editedCount}</span>
-                          </button>
-                        );
-                      }
-                      return null;
-                    })()}
-
-                    {/* Close Button */}
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4">
+              <div className="relative w-full max-w-7xl flex flex-col max-h-[90vh]">
+                <div className="flex flex-wrap items-center justify-end gap-2 w-full mb-2">
+                  <div className="flex items-center px-2 sm:px-3 py-1 space-x-1 sm:space-x-2 bg-white border border-gray-300 rounded-full shadow-lg text-xs sm:text-sm whitespace-nowrap overflow-hidden">
+                    <span className="text-sm font-bold text-gray-700">Half Days ({(() => {
+                      return monthDates.filter(date => {
+                        const dateKey = date.toLocaleDateString('en-CA');
+                        const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
+                        const originalHours = rec ? (rec.totalHours || rec.hours) : 0;
+                        return calculateDayType(selectedEmployee, originalHours) === "half";
+                      }).length;
+                    })()}) ➔</span>
+                    <input 
+                      type="number" 
+                      id="bulkHalfDayHours"
+                      defaultValue="9" 
+                      className="w-10 sm:w-14 px-1 py-0.5 text-gray-900 bg-white border border-gray-600 rounded text-xs sm:text-sm text-center"
+                      step="0.25"
+                    />
+                    <span className="text-sm text-gray-700">Hrs</span>
                     <button
                       onClick={closeModal}
                       className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
@@ -2106,6 +2060,79 @@ export default function AttendanceSummary() {
                       </svg>
                     </button>
                   </div>
+
+                  <div className="flex items-center px-2 sm:px-3 py-1 space-x-1 sm:space-x-2 bg-white border border-gray-300 rounded-full shadow-lg text-xs sm:text-sm whitespace-nowrap overflow-hidden">
+                    <span className="text-sm font-bold text-gray-700">Full Day Leaves ({(() => {
+                      return monthDates.filter(date => {
+                        const dateKey = date.toLocaleDateString('en-CA');
+                        const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
+                        const originalHours = rec ? (rec.totalHours || rec.hours) : 0;
+                        return rec && calculateDayType(selectedEmployee, originalHours) === "full_leave";
+                      }).length;
+                    })()}) ➔</span>
+                    <input 
+                      type="number" 
+                      id="bulkFullLeaveHours"
+                      defaultValue="9" 
+                      className="w-10 sm:w-14 px-1 py-0.5 text-gray-900 bg-white border border-gray-600 rounded text-xs sm:text-sm text-center"
+                      step="0.25"
+                    />
+                    <span className="text-sm text-gray-700">Hrs</span>
+                    <button
+                      onClick={() => {
+                        const val = parseFloat(document.getElementById('bulkFullLeaveHours').value) || 9;
+                        const newEdited = { ...editedRows };
+                        let count = 0;
+                        monthDates.forEach(date => {
+                           const dateKey = date.toLocaleDateString('en-CA');
+                           const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
+                           const originalHours = rec ? (rec.totalHours || rec.hours) : 0;
+                           
+                           if (rec && calculateDayType(selectedEmployee, originalHours) === "full_leave") {
+                              newEdited[dateKey] = {
+                                ...newEdited[dateKey],
+                                hours: val,
+                                edited: true,
+                                timestamp: Date.now()
+                              };
+                              count++;
+                           }
+                        });
+                        setEditedRows(newEdited);
+                        if (count > 0) {
+                          showSaveStatus(`✅ Applied ${val} hrs to ${count} Full Day Leaves! Click 'Save Bulk Edits' to confirm.`);
+                        } else {
+                          showSaveStatus(`❌ No Full Day Leaves found to update.`, "error");
+                        }
+                      }}
+                      className="px-3 py-0.5 text-sm font-bold text-white transition-colors bg-purple-600 rounded shadow hover:bg-purple-700"
+                    >
+                      Apply
+                    </button>
+                  </div>
+
+                  {(() => {
+                    const editedCount = Object.keys(editedRows).filter(key => editedRows[key].edited).length;
+                    
+                    if (editedCount > 0) {
+                      return (
+                        <button
+                          onClick={handleBulkSaveAttendance}
+                          className="px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold text-white transition-colors bg-blue-600 rounded-full shadow-lg hover:bg-blue-700 whitespace-nowrap"
+                        >
+                          Save Bulk Edits ({editedCount})
+                        </button>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  <button
+                    onClick={closeModal}
+                    className="px-2 sm:px-3 py-1 text-sm sm:text-lg font-bold text-white transition-colors bg-red-600 rounded shadow-lg hover:bg-red-700 shrink-0"
+                  >
+                    ✖
+                  </button>
                 </div>
 
                 {/* Modal Body */}
@@ -2356,7 +2383,9 @@ export default function AttendanceSummary() {
         })()}
       </div>
 
-      <style>{`
+      <AttendancePopupModal />
+
+      <style jsx>{`
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
@@ -2366,5 +2395,6 @@ export default function AttendanceSummary() {
         }
       `}</style>
     </div>
+    
   );
 }

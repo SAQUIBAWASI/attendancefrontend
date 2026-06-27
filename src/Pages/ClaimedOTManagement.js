@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import CountUp from 'react-countup';
-import { FaEye, FaCheck, FaTimes, FaTrash, FaSearch, FaDownload, FaBuilding, FaUserTag } from 'react-icons/fa';
-import { FiCalendar, FiCheckCircle, FiClock, FiDownload, FiFilter, FiList, FiTrash2, FiXCircle } from 'react-icons/fi';
+// components/ClaimedOTManagement.jsx
+import React, { useState, useEffect } from 'react';
+import { FaEye, FaCheck, FaTimes, FaTrash, FaSearch, FaDownload } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import './ClaimedOTManagement.css';
 
 const API_BASE_URL = 'http://localhost:5001';
 
@@ -58,40 +56,6 @@ export default function ClaimedOTManagement() {
   const [saveStatus, setSaveStatus] = useState('');
   const saveStatusTimeoutRef = React.useRef(null);
 
-  // Refs for click outside
-  const departmentFilterRef = useRef(null);
-  const designationFilterRef = useRef(null);
-
-  // Department and Designation filter states
-  const [filterDepartment, setFilterDepartment] = useState('');
-  const [filterDesignation, setFilterDesignation] = useState('');
-  const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
-  const [showDesignationFilter, setShowDesignationFilter] = useState(false);
-
-  // Unique departments and designations
-  const [uniqueDepartments, setUniqueDepartments] = useState([]);
-  const [uniqueDesignations, setUniqueDesignations] = useState([]);
-
-  const showSaveStatus = (msg) => {
-    setSaveStatus(msg);
-    clearTimeout(saveStatusTimeoutRef.current);
-    saveStatusTimeoutRef.current = setTimeout(() => setSaveStatus(''), 3500);
-  };
-
-  // Click outside handlers for filter dropdowns
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (departmentFilterRef.current && !departmentFilterRef.current.contains(event.target)) {
-        setShowDepartmentFilter(false);
-      }
-      if (designationFilterRef.current && !designationFilterRef.current.contains(event.target)) {
-        setShowDesignationFilter(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   // Fetch claims
   useEffect(() => {
     fetchClaims();
@@ -113,18 +77,6 @@ export default function ClaimedOTManagement() {
       if (data.success) {
         setClaims(data.claims || []);
         setSummary(data.summary || {});
-        
-        // Extract unique departments and designations
-        const depts = new Set();
-        const designations = new Set();
-        data.claims.forEach(claim => {
-          if (claim.employeeDetails?.department) depts.add(claim.employeeDetails.department);
-          if (claim.employeeDetails?.designation || claim.employeeDetails?.role) {
-            designations.add(claim.employeeDetails.designation || claim.employeeDetails.role);
-          }
-        });
-        setUniqueDepartments(Array.from(depts).sort());
-        setUniqueDesignations(Array.from(designations).sort());
         
         // Initialize multipliers from localStorage
         const initialMultipliers = {};
@@ -160,8 +112,6 @@ export default function ClaimedOTManagement() {
       toDate: '',
       search: ''
     });
-    setFilterDepartment('');
-    setFilterDesignation('');
     setCurrentPage(1);
   };
 
@@ -443,8 +393,8 @@ export default function ClaimedOTManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="mx-auto max-w-9xl">
         {/* Toast notification */}
         {saveStatus && (
           <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${
@@ -454,299 +404,131 @@ export default function ClaimedOTManagement() {
           </div>
         )}
 
-        {/* Dashboard Header */}
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
-              OT <span className="text-blue-600">Claims</span>
-            </h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Manage and approve employee overtime claims
-            </p>
+        {/* Header */}
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-gray-800">OT Claims Management</h1>
+          <p className="text-sm text-gray-600">Manage all overtime claims from employees</p>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-5">
+          <div className="p-3 bg-white rounded-lg shadow">
+            <p className="text-xs text-gray-500">Total Claims</p>
+            <p className="text-xl font-bold text-gray-800">{summary.totalClaims}</p>
           </div>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
-            <FiCalendar className="text-blue-600" />
-            <span className="text-sm font-medium text-gray-600">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
+          <div className="p-3 bg-white rounded-lg shadow">
+            <p className="text-xs text-gray-500">OT Hours</p>
+            <p className="text-xl font-bold text-orange-600">{summary.totalOTHours}h</p>
+          </div>
+          <div className="p-3 bg-white rounded-lg shadow">
+            <p className="text-xs text-gray-500">Pending</p>
+            <p className="text-xl font-bold text-yellow-600">{summary.pendingCount}</p>
+          </div>
+          <div className="p-3 bg-white rounded-lg shadow">
+            <p className="text-xs text-gray-500">Approved</p>
+            <p className="text-xl font-bold text-green-600">{summary.approvedCount}</p>
+          </div>
+          <div className="p-3 bg-white rounded-lg shadow">
+            <p className="text-xs text-gray-500">Rejected</p>
+            <p className="text-xl font-bold text-red-600">{summary.rejectedCount}</p>
           </div>
         </div>
 
-        {/* Top KPI Stats Grid */}
-        <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Claims</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                <FiList className="text-base" />
-              </div>
+        {/* Filters */}
+        <div className="p-2 mb-3 bg-white border border-gray-200 rounded-lg shadow-md">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search */}
+            <div className="relative flex-1 min-w-[180px]">
+              <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                name="employeeId"
+                placeholder="Search by Employee ID..."
+                value={filters.employeeId}
+                onChange={handleFilterChange}
+                className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={summary.totalClaims || 0} duration={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">total OT claims</div>
-          </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">OT Hours</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-orange-50 text-orange-600">
-                <FiClock className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={summary.totalOTHours || 0} duration={1} decimals={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">total overtime hours</div>
-          </div>
+            {/* Status Filter */}
+            <select
+              name="status"
+              value={filters.status}
+              onChange={handleFilterChange}
+              className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
 
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Pending</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-                <FiClock className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={summary.pendingCount || 0} duration={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">awaiting approval</div>
-          </div>
+            {/* From Date */}
+            <input
+              type="date"
+              name="fromDate"
+              value={filters.fromDate}
+              onChange={handleFilterChange}
+              className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-1 focus:ring-blue-500"
+              placeholder="From"
+            />
 
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Approved</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-green-50 text-green-600">
-                <FiCheckCircle className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={summary.approvedCount || 0} duration={1} />
-            </div>
-            <div className="mt-1 text-xs text-gray-500">approved claims</div>
-          </div>
-        </div>
+            {/* To Date */}
+            <input
+              type="date"
+              name="toDate"
+              value={filters.toDate}
+              onChange={handleFilterChange}
+              className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-1 focus:ring-blue-500"
+              placeholder="To"
+            />
 
-        {/* Filters Card */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-gray-100">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <FiFilter className="text-blue-600" /> Filters &amp; Actions
-              </h3>
-            </div>
-            <div className="flex gap-2 flex-wrap">
+            {/* Clear Filters */}
+            {(filters.status !== 'all' || filters.employeeId || filters.fromDate || filters.toDate) && (
               <button
-                onClick={exportCSV}
-                disabled={claims.length === 0}
-                className="px-3 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={clearFilters}
+                className="h-8 px-3 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100"
               >
-                <FiDownload className="text-xs" /> Export CSV ({claims.length})
+                Clear
               </button>
-            </div>
-          </div>
-          
-          <div className="p-4 bg-gray-50/50">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 items-end">
-              
-              {/* Search */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Search Employee</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </span>
-                  <input
-                    type="text"
-                    name="employeeId"
-                    placeholder="Search ID or Name..."
-                    value={filters.employeeId}
-                    onChange={handleFilterChange}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
-                </div>
-              </div>
+            )}
 
-              {/* Status Filter */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Status</label>
-                <select
-                  name="status"
-                  value={filters.status}
-                  onChange={handleFilterChange}
-                  className="w-full h-9 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                >
-                  <option value="all">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              </div>
+            {/* Search Button */}
+            <button
+              onClick={fetchClaims}
+              className="h-8 px-3 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center gap-1"
+            >
+              <FaSearch size={12} /> Search
+            </button>
 
-              {/* Department Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={departmentFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Department</label>
-                <button
-                  onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDepartment 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaBuilding className="text-gray-400" />
-                    {filterDepartment || 'All Departments'}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                
-                {showDepartmentFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div 
-                      onClick={() => {
-                        setFilterDepartment('');
-                        setShowDepartmentFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Departments
-                    </div>
-                    {uniqueDepartments.map(dept => (
-                      <div 
-                        key={dept}
-                        onClick={() => {
-                          setFilterDepartment(dept);
-                          setShowDepartmentFilter(false);
-                        }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
-                          filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
-                      >
-                        {dept}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Designation Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={designationFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Designation</label>
-                <button
-                  onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDesignation 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaUserTag className="text-gray-400" />
-                    {filterDesignation || 'All Designations'}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                
-                {showDesignationFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div 
-                      onClick={() => {
-                        setFilterDesignation('');
-                        setShowDesignationFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Designations
-                    </div>
-                    {uniqueDesignations.map(des => (
-                      <div 
-                        key={des}
-                        onClick={() => {
-                          setFilterDesignation(des);
-                          setShowDesignationFilter(false);
-                        }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
-                          filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
-                      >
-                        {des}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* From Date */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">From Date</label>
-                <input
-                  type="date"
-                  name="fromDate"
-                  value={filters.fromDate}
-                  onChange={handleFilterChange}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
-
-              {/* To Date */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">To Date</label>
-                <input
-                  type="date"
-                  name="toDate"
-                  value={filters.toDate}
-                  onChange={handleFilterChange}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            {/* Filter Actions */}
-            <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200/50">
-              <div className="text-xs text-gray-500 font-medium">
-                Showing <strong>{claims.length}</strong> claims
-              </div>
-              <div className="flex gap-2">
-                {(filters.status !== 'all' || filters.employeeId || filters.fromDate || filters.toDate || filterDepartment || filterDesignation) && (
-                  <button
-                    onClick={clearFilters}
-                    className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 shadow-sm"
-                  >
-                    <FiTrash2 /> Clear Filters
-                  </button>
-                )}
-              </div>
-            </div>
+            {/* Export CSV Button */}
+            <button
+              onClick={exportCSV}
+              className="h-8 px-3 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 flex items-center gap-1"
+            >
+              <FaDownload size={12} /> Export CSV
+            </button>
           </div>
         </div>
 
         {/* Bulk Actions */}
         {selectedClaims.length > 0 && (
-          <div className="p-4 mb-6 bg-blue-50 rounded-xl border border-blue-200 flex items-center justify-between shadow-sm">
-            <span className="text-sm font-medium text-blue-700 flex items-center gap-2">
-              <FiList className="text-blue-600" />
+          <div className="p-3 mb-3 bg-blue-50 rounded-lg border border-blue-200 flex items-center justify-between">
+            <span className="text-sm font-medium text-blue-700">
               {selectedClaims.length} claims selected
             </span>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowBulkActionModal(true)}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
               >
                 Bulk Actions
               </button>
               <button
                 onClick={() => setSelectedClaims([])}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
+                className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
               >
                 Clear Selection
               </button>
@@ -754,145 +536,138 @@ export default function ClaimedOTManagement() {
           </div>
         )}
 
-        {/* Main Claims Container */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="flex items-center justify-between p-4 border-b border-gray-100">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <FiList className="text-blue-600" /> OT Claims List
-              </h3>
-              <p className="text-xs text-gray-500 mt-0.5">Manage and approve employee overtime claims</p>
-            </div>
-          </div>
-
-          {claims.length === 0 ? (
-            <div className="py-12 text-center text-sm text-gray-500 font-medium">
-              No OT claims found matching current filter values.
-            </div>
-          ) : (
-            <>
-              {/* Desktop Table View */}
-              <div className="hidden lg:block overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 bg-white">
-                  <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    <tr>
-                      <th className="px-4 py-3 text-center">
+        {/* Table */}
+        <div className="p-0 bg-white border border-gray-200 shadow-lg rounded-2xl">
+          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+            <table className="min-w-full">
+              <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+                <tr>
+                  <th className="py-2 px-3 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 rounded border-gray-300"
+                    />
+                  </th>
+                  <th className="py-2 px-3 text-center">Employee</th>
+                  <th className="py-2 px-3 text-center">Date</th>
+                  <th className="py-2 px-3 text-center">OT Hours</th>
+                  <th className="py-2 px-3 text-center">Multiplier</th>
+                  <th className="py-2 px-3 text-center">OT Amount</th>
+                  <th className="py-2 px-3 text-center">Reason</th>
+                  <th className="py-2 px-3 text-center">Status</th>
+                  <th className="py-2 px-3 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {claims.length === 0 ? (
+                  <tr>
+                    <td colSpan="9" className="px-6 py-12 text-center text-gray-500">
+                      No OT claims found
+                    </td>
+                  </tr>
+                ) : (
+                  claims.map((claim) => (
+                    <tr key={claim._id} className="border-t border-gray-200 hover:bg-blue-50">
+                      <td className="px-3 py-2 text-center">
                         <input
                           type="checkbox"
-                          checked={selectAll}
-                          onChange={handleSelectAll}
+                          checked={selectedClaims.includes(claim._id)}
+                          onChange={() => handleSelectClaim(claim._id)}
                           className="w-4 h-4 rounded border-gray-300"
+                          disabled={claim.status !== 'pending'}
                         />
-                      </th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-left">Employee</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Date</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">OT Hours</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Multiplier</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">OT Amount</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Reason</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Status</th>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 text-xs">
-                    {claims.map((claim) => (
-                      <tr key={claim._id} className="hover:bg-gray-50 transition-all">
-                        <td className="px-4 py-3 text-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedClaims.includes(claim._id)}
-                            onChange={() => handleSelectClaim(claim._id)}
-                            className="w-4 h-4 rounded border-gray-300"
-                            disabled={claim.status !== 'pending'}
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-gray-900">{claim.employeeName}</span>
-                            <span className="text-gray-500">{claim.employeeId}</span>
-                            <span className="text-gray-400 text-[10px]">{claim.employeeDetails?.department || '-'}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="text-gray-900">{formatDate(claim.date)}</div>
-                          <div className="text-gray-500 text-[10px]">{formatTime(claim.date)}</div>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="font-semibold text-orange-600">{claim.otHours}h</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <select
-                            value={getMultiplier(claim._id)}
-                            onChange={(e) => handleMultiplierChange(claim._id, e.target.value)}
-                            className="px-2 py-1 text-xs border border-gray-300 rounded bg-white text-gray-900"
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <div>
+                          <div className="font-medium text-gray-900">{claim.employeeName}</div>
+                          <div className="text-xs text-gray-500">{claim.employeeId}</div>
+                          <div className="text-xs text-gray-400">{claim.employeeDetails?.department || '-'}</div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <div className="text-sm text-gray-900">{formatDate(claim.date)}</div>
+                        <div className="text-xs text-gray-500">{formatTime(claim.date)}</div>
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <span className="font-semibold text-orange-600">{claim.otHours}h</span>
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <select
+                          value={getMultiplier(claim._id)}
+                          onChange={(e) => handleMultiplierChange(claim._id, e.target.value)}
+                          className="px-2 py-1 text-xs border border-gray-300 rounded bg-white text-gray-900"
+                        >
+                          <option value={1}>1x</option>
+                          <option value={1.5}>1.5x</option>
+                          <option value={2}>2x</option>
+                          <option value={2.5}>2.5x</option>
+                          <option value={3}>3x</option>
+                        </select>
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <span className="font-semibold text-green-600">
+                          {calculateOTAmount(claim)}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <div className="max-w-xs text-sm text-gray-600 truncate">
+                          {claim.reason || '-'}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        {getStatusBadge(claim.status)}
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          {/* View Details */}
+                          <button
+                            onClick={() => {
+                              setSelectedClaim(claim);
+                              setShowDetailsModal(true);
+                            }}
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition"
+                            title="View Details"
                           >
-                            <option value={1}>1x</option>
-                            <option value={1.5}>1.5x</option>
-                            <option value={2}>2x</option>
-                            <option value={2.5}>2.5x</option>
-                            <option value={3}>3x</option>
-                          </select>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="font-semibold text-green-600">
-                            {calculateOTAmount(claim)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="max-w-[150px] text-gray-600 truncate">
-                            {claim.reason || '-'}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {getStatusBadge(claim.status)}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
+                            <FaEye size={15} />
+                          </button>
+
+                          {/* Update Status */}
+                          {claim.status === 'pending' && (
                             <button
                               onClick={() => {
                                 setSelectedClaim(claim);
-                                setShowDetailsModal(true);
+                                setStatusUpdate({ status: 'approved', rejectedReason: '', notes: '' });
+                                setShowStatusModal(true);
                               }}
-                              className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-all shadow-sm"
-                              title="View Details"
+                              className="p-1.5 text-green-600 hover:bg-green-50 rounded transition"
+                              title="Update Status"
                             >
-                              <FaEye className="w-4 h-4" />
+                              <FaCheck size={15} />
                             </button>
-                            {claim.status === 'pending' && (
-                              <>
-                                <button
-                                  onClick={() => {
-                                    setSelectedClaim(claim);
-                                    setStatusUpdate({ status: 'approved', rejectedReason: '', notes: '' });
-                                    setShowStatusModal(true);
-                                  }}
-                                  className="p-1.5 text-green-600 bg-green-50 hover:bg-green-100 rounded-md transition-all shadow-sm"
-                                  title="Update Status"
-                                >
-                                  <FaCheck className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setSelectedClaim(claim);
-                                    setShowDeleteModal(true);
-                                  }}
-                                  className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-all shadow-sm"
-                                  title="Delete"
-                                >
-                                  <FaTrash className="w-4 h-4" />
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </div>
+                          )}
+
+                          {/* Delete */}
+                          {claim.status === 'pending' && (
+                            <button
+                              onClick={() => {
+                                setSelectedClaim(claim);
+                                setShowDeleteModal(true);
+                              }}
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
+                              title="Delete"
+                            >
+                              <FaTrash size={15} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
 
             {/* Pagination */}
             {claims.length > 0 && (
@@ -956,7 +731,8 @@ export default function ClaimedOTManagement() {
               </div>
             )}
           </div>
-        
+        </div>
+      </div>
 
       {/* ==================== MODALS ==================== */}
 

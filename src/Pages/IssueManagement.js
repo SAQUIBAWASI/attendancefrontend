@@ -18,8 +18,7 @@ import {
   FaSearch,
   FaTimesCircle,
   FaSortAmountDown,
-  FaSortAmountUp,
-  FaSync
+  FaSortAmountUp
 } from 'react-icons/fa';
 
 const IssueManagement = () => {
@@ -31,7 +30,6 @@ const IssueManagement = () => {
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [error, setError] = useState(null);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -73,29 +71,14 @@ const IssueManagement = () => {
 
   const fetchIssues = async () => {
     setLoading(true);
-    setError(null);
     try {
-      if (!employeeId) {
-        setError("Employee ID not found. Please login again.");
-        setIssues([]);
-        setFilteredIssues([]);
-        return;
-      }
-
       const response = await axios.get(`${API_BASE_URL}/employees/get-employee-issues/${employeeId}`);
       if (response.data.success) {
-        setIssues(response.data.data || []);
-        setFilteredIssues(response.data.data || []);
-      } else {
-        setError(response.data.message || "Failed to fetch issues");
-        setIssues([]);
-        setFilteredIssues([]);
+        setIssues(response.data.data);
+        setFilteredIssues(response.data.data);
       }
     } catch (error) {
       console.error("Error fetching issues:", error);
-      setError("Failed to load issues. Please check your connection.");
-      setIssues([]);
-      setFilteredIssues([]);
     } finally {
       setLoading(false);
     }
@@ -204,44 +187,19 @@ const IssueManagement = () => {
 
       let response;
       if (isEditMode && selectedIssue) {
-        // Try API call first, fallback to mock
-        try {
-          response = await axios.put(`${API_BASE_URL}/employees/update-issue/${selectedIssue._id}`, payload);
-          if (response.data.success) {
-            const updatedIssues = issues.map(issue =>
-              issue._id === selectedIssue._id ? response.data.data : issue
-            );
-            setIssues(updatedIssues);
-            alert("Issue updated successfully!");
-          }
-        } catch (apiError) {
-          console.warn("API not available, using mock update:", apiError);
-          // Mock update
+        response = await axios.put(`${API_BASE_URL}/employees/update-issue/${selectedIssue._id}`, payload);
+        if (response.data.success) {
           const updatedIssues = issues.map(issue =>
-            issue._id === selectedIssue._id ? { ...issue, ...payload } : issue
+            issue._id === selectedIssue._id ? response.data.data : issue
           );
           setIssues(updatedIssues);
-          alert("Issue updated successfully! (Mock Mode)");
+          alert("Issue updated successfully!");
         }
       } else {
-        // Try API call first, fallback to mock
-        try {
-          response = await axios.post(`${API_BASE_URL}/employees/raise-issue/${employeeId}`, payload);
-          if (response.data.success) {
-            setIssues([response.data.data, ...issues]);
-            alert("Issue raised successfully!");
-          }
-        } catch (apiError) {
-          console.warn("API not available, using mock creation:", apiError);
-          // Mock creation
-          const mockIssue = {
-            _id: Date.now().toString(),
-            ...payload,
-            status: 'Open',
-            createdAt: new Date().toISOString()
-          };
-          setIssues([mockIssue, ...issues]);
-          alert("Issue raised successfully! (Mock Mode - Backend not connected)");
+        response = await axios.post(`${API_BASE_URL}/employees/raise-issue/${employeeId}`, payload);
+        if (response.data.success) {
+          setIssues([response.data.data, ...issues]);
+          alert("Issue raised successfully!");
         }
       }
 
@@ -330,242 +288,153 @@ const IssueManagement = () => {
       <FaSortAmountDown className="text-blue-600" />;
   };
 
-  const getStatusStats = () => {
-    const stats = {
-      total: issues.length,
-      open: issues.filter(i => i.status === 'Open').length,
-      inProgress: issues.filter(i => i.status === 'In Progress').length,
-      resolved: issues.filter(i => i.status === 'Resolved').length,
-      closed: issues.filter(i => i.status === 'Closed').length
-    };
-    return stats;
-  };
-
-  const stats = getStatusStats();
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
-      <div className="p-4 sm:p-6 lg:p-8">
-        {/* Dashboard Header */}
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
-              My <span className="text-blue-600">Issues</span>
-            </h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Raise and track your issues and requests
-            </p>
-          </div>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
-            <FaCalendarAlt className="text-blue-600" />
-            <span className="text-sm font-medium text-gray-600">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
-          </div>
-        </div>
-
-        {/* Top KPI Stats Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-5">
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Issues</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                <FaClipboardList className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-            <div className="mt-1 text-xs text-gray-500">all issues</div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Open</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-cyan-50 text-cyan-600">
-                <FaClock className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">{stats.open}</div>
-            <div className="mt-1 text-xs text-gray-500">awaiting action</div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">In Progress</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-                <FaSpinner className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">{stats.inProgress}</div>
-            <div className="mt-1 text-xs text-gray-500">being worked on</div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Resolved</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                <FaCheckCircle className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">{stats.resolved}</div>
-            <div className="mt-1 text-xs text-gray-500">completed</div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Closed</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600">
-                <FaTimesCircle className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">{stats.closed}</div>
-            <div className="mt-1 text-xs text-gray-500">archived</div>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-500">Loading issues...</p>
-            </div>
-          </div>
-        ) : (
-          <div className="w-full p-6 bg-white border border-gray-200 rounded-2xl shadow-lg">
-            {/* Header Actions */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-100">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <FaClipboardList className="text-blue-600" /> My Issues
-                </h3>
-                <p className="text-xs text-gray-500 mt-0.5">Manage and track your issues</p>
-              </div>
-              <div className="flex gap-2 flex-wrap">
+    <div className="flex flex-col min-h-screen bg-gray-100 font-sans">
+      <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <div className="w-full p-6 bg-white rounded-lg shadow-md">
+          <div className="flex flex-col gap-4 mb-6 md:flex-row md:justify-between md:items-center">
+            <div className="flex items-center gap-4 flex-wrap">
+              <h2 className="text-2xl font-bold text-blue-900">
+                My Issues
+              </h2>
+              <button
+                onClick={() => {
+                  resetForm();
+                  setIsModalOpen(true);
+                }}
+                className="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 transition-all flex items-center gap-2"
+              >
+                <FaPlus /> Raise Issue
+              </button>
+              <button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all flex items-center gap-2 relative"
+              >
+                <FaFilter />
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </button>
+              {getActiveFilterCount() > 0 && (
                 <button
-                  onClick={() => {
-                    resetForm();
-                    setIsModalOpen(true);
-                  }}
-                  className="px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all flex items-center gap-2 shadow-sm"
+                  onClick={clearFilters}
+                  className="px-3 py-2 text-sm font-medium text-red-600 hover:text-red-800 transition-all flex items-center gap-1"
                 >
-                  <FaPlus /> Raise Issue
+                  <FaTimesCircle /> Clear
                 </button>
-                <button
-                  onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className="px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 shadow-sm"
-                >
-                  {isFilterOpen ? <FaTimesCircle /> : <FaFilter />} {isFilterOpen ? 'Hide Filters' : 'Show Filters'}
-                </button>
-                <button
-                  onClick={fetchIssues}
-                  className="px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 shadow-sm"
-                >
-                  <FaSync className={loading ? 'animate-spin' : ''} /> Refresh
-                </button>
-              </div>
+              )}
             </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-                <FaExclamationTriangle className="text-red-500 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-red-700">{error}</p>
-                </div>
-                <button
-                  onClick={fetchIssues}
-                  className="px-3 py-1 text-sm font-medium text-red-700 bg-red-100 rounded hover:bg-red-200 transition-colors"
-                >
-                  Retry
-                </button>
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="px-3 py-1.5 bg-gray-100 rounded-lg flex items-center gap-2">
+                <span className="text-xs font-medium text-gray-500">Total Issues:</span>
+                <span className="text-sm font-bold text-blue-600">{filteredIssues.length}</span>
               </div>
-            )}
+            </div>
+          </div>
 
-            {/* Filter Bar */}
-            {isFilterOpen && (
-              <div className="mb-6 p-4 bg-gray-50/50 rounded-xl border border-gray-200">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-gray-600">Search</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                        <FaSearch className="w-4 h-4" />
-                      </span>
-                      <input
-                        type="text"
-                        value={filters.searchTerm}
-                        onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                        placeholder="Search issues..."
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-gray-600">Priority</label>
-                    <select
-                      value={filters.priority}
-                      onChange={(e) => handleFilterChange('priority', e.target.value)}
-                      className="w-full h-9 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                    >
-                      <option value="">All Priorities</option>
-                      {priorityLevels.map(priority => (
-                        <option key={priority} value={priority}>{priority}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-gray-600">Status</label>
-                    <select
-                      value={filters.status}
-                      onChange={(e) => handleFilterChange('status', e.target.value)}
-                      className="w-full h-9 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                    >
-                      <option value="">All Status</option>
-                      {statusOptions.map(status => (
-                        <option key={status} value={status}>{status}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-gray-600">Issue Type</label>
-                    <select
-                      value={filters.issueType}
-                      onChange={(e) => handleFilterChange('issueType', e.target.value)}
-                      className="w-full h-9 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                    >
-                      <option value="">All Types</option>
-                      {issueTypes.map(type => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
+          {/* Filter Bar */}
+          {isFilterOpen && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200 animate-in slide-in-from-top-2 duration-200">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="text-left">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Search</label>
+                  <div className="relative">
+                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      value={filters.searchTerm}
+                      onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Search issues..."
+                    />
                   </div>
                 </div>
 
-                {/* Filter Actions */}
-                <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200/50">
-                  <div className="text-xs text-gray-500 font-medium">
-                    Showing <strong>{filteredIssues.length}</strong> of <strong>{issues.length}</strong> issues
-                  </div>
-                  <div className="flex gap-2">
-                    {getActiveFilterCount() > 0 && (
-                      <button
-                        onClick={clearFilters}
-                        className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 shadow-sm"
-                      >
-                        <FaTimesCircle /> Clear Filters
+                <div className="text-left">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Priority</label>
+                  <select
+                    value={filters.priority}
+                    onChange={(e) => handleFilterChange('priority', e.target.value)}
+                    className="w-full p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="">All Priorities</option>
+                    {priorityLevels.map(priority => (
+                      <option key={priority} value={priority}>{priority}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="text-left">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
+                  <select
+                    value={filters.status}
+                    onChange={(e) => handleFilterChange('status', e.target.value)}
+                    className="w-full p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="">All Status</option>
+                    {statusOptions.map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="text-left">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Issue Type</label>
+                  <select
+                    value={filters.issueType}
+                    onChange={(e) => handleFilterChange('issueType', e.target.value)}
+                    className="w-full p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="">All Types</option>
+                    {issueTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {getActiveFilterCount() > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {filters.priority && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                      Priority: {filters.priority}
+                      <button onClick={() => handleFilterChange('priority', '')} className="hover:text-blue-900">
+                        <FaTimes size={10} />
                       </button>
-                    )}
-                  </div>
+                    </span>
+                  )}
+                  {filters.status && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                      Status: {filters.status}
+                      <button onClick={() => handleFilterChange('status', '')} className="hover:text-green-900">
+                        <FaTimes size={10} />
+                      </button>
+                    </span>
+                  )}
+                  {filters.issueType && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
+                      Type: {filters.issueType}
+                      <button onClick={() => handleFilterChange('issueType', '')} className="hover:text-purple-900">
+                        <FaTimes size={10} />
+                      </button>
+                    </span>
+                  )}
+                  {filters.searchTerm && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-200 text-gray-700 rounded-full text-xs">
+                      Search: {filters.searchTerm}
+                      <button onClick={() => handleFilterChange('searchTerm', '')} className="hover:text-gray-900">
+                        <FaTimes size={10} />
+                      </button>
+                    </span>
+                  )}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+          )}
 
           {filteredIssues.length === 0 && !loading ? (
             <div className="text-center py-12">
@@ -593,75 +462,92 @@ const IssueManagement = () => {
               )}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 bg-white">
-                <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+              <table className="min-w-full">
+                <thead className="text-sm text-left text-white bg-gradient-to-r from-purple-500 to-blue-600">
                   <tr>
-                    <th style={{ color: 'black' }} className="px-4 py-3 text-left cursor-pointer hover:bg-gray-100" onClick={() => handleSort('issueTitle')}>
-                      <div className="flex items-center gap-2">Issue {getSortIcon('issueTitle')}</div>
+                    <th className="px-4 py-3 cursor-pointer hover:bg-blue-700/30 transition-colors" onClick={() => handleSort('issueTitle')}>
+                      <div className="flex items-center gap-2">
+                        Issue Title
+                        {getSortIcon('issueTitle')}
+                      </div>
                     </th>
-                    <th style={{ color: 'black' }} className="px-4 py-3 text-center cursor-pointer hover:bg-gray-100" onClick={() => handleSort('issueType')}>
-                      <div className="flex items-center justify-center gap-2">Type {getSortIcon('issueType')}</div>
+                    <th className="px-4 py-3 text-center cursor-pointer hover:bg-blue-700/30 transition-colors" onClick={() => handleSort('issueType')}>
+                      <div className="flex items-center justify-center gap-2">
+                        Type
+                        {getSortIcon('issueType')}
+                      </div>
                     </th>
-                    <th style={{ color: 'black' }} className="px-4 py-3 text-center cursor-pointer hover:bg-gray-100" onClick={() => handleSort('priority')}>
-                      <div className="flex items-center justify-center gap-2">Priority {getSortIcon('priority')}</div>
+                    <th className="px-4 py-3 text-center cursor-pointer hover:bg-blue-700/30 transition-colors" onClick={() => handleSort('priority')}>
+                      <div className="flex items-center justify-center gap-2">
+                        Priority
+                        {getSortIcon('priority')}
+                      </div>
                     </th>
-                    <th style={{ color: 'black' }} className="px-4 py-3 text-center cursor-pointer hover:bg-gray-100" onClick={() => handleSort('status')}>
-                      <div className="flex items-center justify-center gap-2">Status {getSortIcon('status')}</div>
+                    <th className="px-4 py-3 text-center cursor-pointer hover:bg-blue-700/30 transition-colors" onClick={() => handleSort('status')}>
+                      <div className="flex items-center justify-center gap-2">
+                        Status
+                        {getSortIcon('status')}
+                      </div>
                     </th>
-                    <th style={{ color: 'black' }} className="px-4 py-3 text-center cursor-pointer hover:bg-gray-100" onClick={() => handleSort('createdAt')}>
-                      <div className="flex items-center justify-center gap-2">Date {getSortIcon('createdAt')}</div>
+                    <th className="px-4 py-3 text-center cursor-pointer hover:bg-blue-700/30 transition-colors" onClick={() => handleSort('createdAt')}>
+                      <div className="flex items-center justify-center gap-2">
+                        Date
+                        {getSortIcon('createdAt')}
+                      </div>
                     </th>
-                    <th style={{ color: 'black' }} className="px-4 py-3 text-center">Actions</th>
+                    <th className="px-4 py-3 text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 text-xs">
+                <tbody>
                   {filteredIssues.map((issue) => (
-                    <tr key={issue._id} className="hover:bg-gray-50 transition-all">
-                      <td className="px-4 py-3">
+                    <tr key={issue._id} className="border-b hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-4">
                         <div className="flex flex-col">
-                          <span className="font-semibold text-gray-900">{issue.issueTitle}</span>
-                          <span className="text-gray-500 truncate max-w-[180px]">{issue.issueDescription}</span>
+                          <span className="font-bold text-gray-700">{issue.issueTitle}</span>
+                          <span className="text-xs text-gray-500 truncate max-w-[200px]">
+                            {issue.issueDescription}
+                          </span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold border border-gray-200">
+                      <td className="px-4 py-4 text-center">
+                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium border border-gray-200">
                           {issue.issueType}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`px-2 py-1 rounded-lg text-xs font-semibold border ${getPriorityColor(issue.priority)}`}>
+                      <td className="px-4 py-4 text-center">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(issue.priority)}`}>
                           {issue.priority}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-4 py-4 text-center">
                         {getStatusBadge(issue.status)}
                       </td>
-                      <td className="px-4 py-3 text-center text-gray-600">
+                      <td className="px-4 py-4 text-center text-xs text-gray-500">
                         {new Date(issue.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
+                      <td className="px-4 py-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => setSelectedIssue(issue)}
-                            className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-all shadow-sm"
+                            className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100"
                             title="View Details"
                           >
-                            <FaEye className="w-4 h-4" />
+                            <FaEye />
                           </button>
                           <button
                             onClick={() => handleEdit(issue)}
-                            className="p-1.5 text-green-600 bg-green-50 hover:bg-green-100 rounded-md transition-all shadow-sm"
+                            className="p-2 text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors border border-green-100"
                             title="Edit Issue"
                           >
-                            <FaEdit className="w-4 h-4" />
+                            <FaEdit />
                           </button>
                           <button
                             onClick={() => handleDelete(issue._id)}
-                            className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-all shadow-sm"
+                            className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100"
                             title="Delete Issue"
                           >
-                            <FaTrash className="w-4 h-4" />
+                            <FaTrash />
                           </button>
                         </div>
                       </td>
@@ -670,10 +556,7 @@ const IssueManagement = () => {
                   {loading && (
                     <tr>
                       <td colSpan="6" className="p-8 text-center">
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
-                          <p className="text-gray-500 text-xs font-medium">Loading issues...</p>
-                        </div>
+                        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
                       </td>
                     </tr>
                   )}
@@ -688,74 +571,73 @@ const IssueManagement = () => {
               Showing {filteredIssues.length} of {issues.length} issues
             </div>
           )}
-          </div>
-        )}
-      </div>
+        </div>
+      </main>
 
       {/* Raise/Edit Issue Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-2xl p-8 bg-white border border-blue-200 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 text-sm max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6 sticky top-0 bg-white pb-3 border-b border-gray-100">
-              <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <FaPlus className="text-blue-600" /> {isEditMode ? 'Edit Issue' : 'Raise New Issue'}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-2xl p-6 bg-white rounded-xl shadow-2xl animate-in zoom-in-95 duration-200 text-sm max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4 sticky top-0 bg-white pb-2 border-b">
+              <h3 className="text-xl font-bold text-gray-700">
+                {isEditMode ? 'Edit Issue' : 'Raise New Issue'}
               </h3>
               <button 
                 onClick={() => {
                   setIsModalOpen(false);
                   resetForm();
                 }} 
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+                className="text-gray-500 hover:text-gray-700"
               >
-                <FaTimes size={16} />
+                <FaTimes size={20} />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="text-left">
-                  <label className="block mb-2 text-xs font-semibold text-gray-700">Employee Name</label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Employee Name</label>
                   <input
                     name="employeeName"
                     value={formData.employeeName || employeeName}
                     onChange={handleInputChange}
-                    className="w-full p-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-gray-50 transition-all text-xs"
+                    className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
                     placeholder="Enter your name"
                     disabled={!!employeeName}
                   />
                 </div>
 
                 <div className="text-left">
-                  <label className="block mb-2 text-xs font-semibold text-gray-700">Department</label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Department</label>
                   <input
                     name="department"
                     value={formData.department || department}
                     onChange={handleInputChange}
-                    className="w-full p-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-gray-50 transition-all text-xs"
+                    className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
                     placeholder="Enter your department"
                     disabled={!!department}
                   />
                 </div>
 
                 <div className="md:col-span-2 text-left">
-                  <label className="block mb-2 text-xs font-semibold text-gray-700">Issue Title <span className="text-red-500">*</span></label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Issue Title <span className="text-red-500">*</span></label>
                   <input
                     name="issueTitle"
                     value={formData.issueTitle}
                     onChange={handleInputChange}
-                    className="w-full p-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs"
+                    className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Brief title of the issue"
                     required
                   />
                 </div>
 
                 <div className="md:col-span-2 text-left">
-                  <label className="block mb-2 text-xs font-semibold text-gray-700">Issue Description <span className="text-red-500">*</span></label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Issue Description <span className="text-red-500">*</span></label>
                   <textarea
                     name="issueDescription"
                     value={formData.issueDescription}
                     onChange={handleInputChange}
-                    className="w-full p-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none text-xs"
+                    className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                     rows="4"
                     placeholder="Detailed description of the issue"
                     required
@@ -763,12 +645,12 @@ const IssueManagement = () => {
                 </div>
 
                 <div className="text-left">
-                  <label className="block mb-2 text-xs font-semibold text-gray-700">Issue Type</label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Issue Type</label>
                   <select
                     name="issueType"
                     value={formData.issueType}
                     onChange={handleInputChange}
-                    className="w-full p-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white transition-all text-xs"
+                    className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                   >
                     {issueTypes.map(type => (
                       <option key={type} value={type}>{type}</option>
@@ -777,12 +659,12 @@ const IssueManagement = () => {
                 </div>
 
                 <div className="text-left">
-                  <label className="block mb-2 text-xs font-semibold text-gray-700">Priority</label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Priority</label>
                   <select
                     name="priority"
                     value={formData.priority}
                     onChange={handleInputChange}
-                    className="w-full p-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white transition-all text-xs"
+                    className="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                   >
                     {priorityLevels.map(level => (
                       <option key={level} value={level}>{level}</option>
@@ -791,25 +673,25 @@ const IssueManagement = () => {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-gray-100">
+              <div className="flex gap-4 pt-4 border-t">
                 <button
                   type="button"
                   onClick={() => {
                     setIsModalOpen(false);
                     resetForm();
                   }}
-                  className="flex-1 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all font-semibold text-xs"
+                  className="flex-1 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 py-2.5 text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm"
+                  className="flex-1 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors font-bold flex items-center justify-center gap-2"
                 >
                   {submitting ? (
                     <>
-                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       Processing...
                     </>
                   ) : (

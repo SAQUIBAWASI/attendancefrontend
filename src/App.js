@@ -211,6 +211,11 @@ import CompOffSettings from "./Pages/CompOffSettings.js";
 import IssueManagement from "./Pages/IssueManagement.js";
 import AdminIssueManagement from "./Pages/AdminIssueManagement.js";
 import ClaimedOTManagement from "./Pages/ClaimedOTManagement.js";
+import AdminCompOffRequests from "./Pages/AdminCompOffRequests.js";
+// import ClaimedOTManagement from "./Pages/ClaimedOTManagement.js";
+// import IssueManagement from "./Pages/IssueManagement.js";
+// import AdminIssueManagement from "./Pages/AdminIssueManagement.js";
+
 
 
 function App() {
@@ -307,7 +312,9 @@ function App() {
       <Route path="/emp-all-expensives-management" element={<EmployeeLayout><AllExpensives /></EmployeeLayout>} />
       <Route path="/my-medical-certificate" element={<EmployeeLayout><MyMedicalCertificate /></EmployeeLayout>} />
       <Route path="/emp-events" element={<EmployeeLayout><Events /></EmployeeLayout>} />
+
       <Route path="/emp-claimed-ot-management" element={<EmployeeLayout><ClaimedOTManagement /></EmployeeLayout>} />
+      <Route path="/emp-issues" element={<EmployeeLayout><IssueManagement /></EmployeeLayout>} />
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"
@@ -472,6 +479,10 @@ function App() {
               <Route path="/over-time" element={<OverTime />} />
               <Route path="/comp-off-settings" element={<CompOffSettings />} />
               <Route path="/admin-issue-management" element={<AdminIssueManagement />} />
+              <Route path="/comp-off-requests" element={<AdminCompOffRequests />} />
+              <Route path="/ot-claims" element={<ClaimedOTManagement />} />
+              <Route path="/employeesissues" element={<AdminIssueManagement />} />
+
            
            
 
