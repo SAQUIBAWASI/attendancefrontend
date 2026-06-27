@@ -1,4 +1,3 @@
-
 import { RiMenu2Line, RiMenu3Line } from "react-icons/ri";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -61,31 +60,35 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
   );
 
   // ===== ATTENDANCE MODULE =====
-  // ✅ Fixed paths - Added both spellings and all attendance routes
+  // ✅ Only ONE "Summary" tab that handles both paths
   const attendanceTabs = [
-    // { path: "/attendancesummary", label: "Summary" },
-    { path: "/attedancesummary", label: "Summary" },
+    { path: "/attedancesummary", label: "Summary" },  // Sirf ek Summary
     { path: "/attendancelist", label: "Records" },
     { path: "/today-attendance", label: "Today" },
-    { path: "/absent-today", label: "Absent " },
-    { path: "/late-today", label: "Late " },
+    { path: "/absent-today", label: "Absent" },
+    { path: "/late-today", label: "Late" },
     { path: "/regularization", label: "Regularization" },
   ];
 
   // ✅ Check if current path is ANY attendance related page
   const isAttendanceModule = attendanceTabs.some(
     (tab) => tab.path === location.pathname
-  ) || location.pathname === "/attendancesummary" || location.pathname === "/attedancesummary";
+  ) || location.pathname === "/attendancesummary"; // Also check alternate spelling
 
   // ===== DASHBOARD MODULE CHECK =====
   const isDashboardModule = location.pathname === "/dashboard";
 
-  // ✅ Get current attendance tab to show active state
-  const isActiveTab = (path) => {
-    if (path === "/attendancesummary" || path === "/attedancesummary") {
-      return location.pathname === "/attendancesummary" || location.pathname === "/attedancesummary";
+  // ✅ Navigation handler for attendance tabs
+  const handleAttendanceTabClick = (path) => {
+    navigate(path);
+  };
+
+  // ✅ Check if a tab is active (handles both spellings)
+  const isTabActive = (tabPath) => {
+    if (tabPath === "/attedancesummary") {
+      return location.pathname === "/attedancesummary" || location.pathname === "/attendancesummary";
     }
-    return location.pathname === path;
+    return location.pathname === tabPath;
   };
 
   return (
@@ -104,6 +107,48 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
             {getPageTitle()}
           </span>
         </div>
+
+        {/* ===== ATTENDANCE MODULE TABS - LEFT SIDE ===== */}
+        {isAttendanceModule && (
+          <div className="flex items-center gap-1 ml-4">
+            {attendanceTabs.map((tab) => {
+              const isActive = isTabActive(tab.path);
+              
+              return (
+                <button
+                  key={tab.path}
+                  onClick={() => handleAttendanceTabClick(tab.path)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? "bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-md"
+                      : "bg-[#f0f2f5] text-[#667085] hover:bg-[#e4e7ec] hover:text-[#101828]"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ===== JOB MODULE TABS - LEFT SIDE ===== */}
+        {isJobModule && (
+          <div className="flex items-center gap-1 ml-4">
+            {jobTabs.map((tab) => (
+              <button
+                key={tab.path}
+                onClick={() => navigate(tab.path)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                  location.pathname === tab.path
+                    ? "bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-md"
+                    : "bg-[#f0f2f5] text-[#667085] hover:bg-[#e4e7ec] hover:text-[#101828]"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-3">

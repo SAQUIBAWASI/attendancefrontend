@@ -1,9 +1,9 @@
 // components/ClaimedOTManagement.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaEye, FaCheck, FaTimes, FaTrash, FaSearch, FaDownload } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
-const API_BASE_URL = 'http://localhost:5001';
+const API_BASE_URL = 'https://api.timelyhealth.in';
 
 export default function ClaimedOTManagement() {
   const [claims, setClaims] = useState([]);
@@ -54,7 +54,20 @@ export default function ClaimedOTManagement() {
 
   // Toast notification state
   const [saveStatus, setSaveStatus] = useState('');
-  const saveStatusTimeoutRef = React.useRef(null);
+  const saveStatusTimeoutRef = useRef(null);
+
+  // ====== showSaveStatus function ======
+  const showSaveStatus = (message) => {
+    setSaveStatus(message);
+    // Clear previous timeout if exists
+    if (saveStatusTimeoutRef.current) {
+      clearTimeout(saveStatusTimeoutRef.current);
+    }
+    // Auto-hide after 4 seconds
+    saveStatusTimeoutRef.current = setTimeout(() => {
+      setSaveStatus('');
+    }, 4000);
+  };
 
   // Fetch claims
   useEffect(() => {

@@ -1676,7 +1676,6 @@ import { useEffect, useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-
 const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [currentPage, setCurrentPage] = useState("Dashboard");
@@ -1697,6 +1696,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/dashboard": "Dashboard",
       "/employeelist": "Employees",
       "/attedancesummary": "Attendance Summary",
+      "/attendancesummary": "Attendance Summary",
       "/all-medical-certificates": "Medical Certificates",
       "/attendancelist": "Attendance Records",
       "/today-attendance": "Today Attendance",
@@ -1728,7 +1728,11 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/recruitment-dashboard": "Recruitment Dashboard",
       "/personaldocuments": "Personal Documents",
       "/employee-journey": "Employee Journey",
-      "/employeesissues": "Employee Issues"
+      "/employeesissues": "Employee Issues",
+      "/regularization": "Regularization",
+      "/comp-off-requests": "Comp Off Requests",
+      "/ot-claims": "OverTime",
+      "/admin-issue-management": "Issue Management"
     };
     return pathMap[path] || "Dashboard";
   };
@@ -1796,6 +1800,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         { name: "Attendance Records", path: "/attendancelist" },
         { name: "Today Attendance", path: "/today-attendance" },
         { name: "Absent Today", path: "/absent-today" },
+        { name: "Late Today", path: "/late-today" },
         { name: "Regularization", path: "/regularization" },
       ],
     },
@@ -1834,11 +1839,6 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       name: "OverTime",
       path: "/ot-claims",
     },
-    // {
-    //   icon: <i className="ri-settings-3-fill"></i>,
-    //   name: "Comp Off",
-    //   path: "/comp-off-settings",
-    // },
     {
       icon: <i className="ri-user-unfollow-line"></i>,
       name: "Resignation",
@@ -1867,7 +1867,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       name: "User Access",
       path: "/useraccess",
     },
-      {
+    {
       icon: <i className="ri-shield-user-fill"></i>,
       name: "Issue Management",
       path: "/admin-issue-management",
@@ -1946,7 +1946,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
     <>
       {isMobile && !isCollapsed && (
         <div
-          className="fixed inset-0 z-40 bg-[#1E3A8A] "
+          className="fixed inset-0 z-40 bg-[#1E3A8A] bg-opacity-50"
           onClick={() => {
             setIsCollapsed(true);
             setOpenDropdown(null);
@@ -1957,28 +1957,34 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       <div
         onMouseEnter={handleMouseEnterSidebar}
         onMouseLeave={handleMouseLeaveSidebar}
-        className={`fixed top-0 left-0 h-full  text-white z-50 transition-all duration-300 border-blue-500 border-blue-500
+        className={`fixed top-0 left-0 h-full bg-white text-white z-50 transition-all duration-300 border-r border-gray-200
         ${isMobile
             ? isCollapsed
               ? "-translate-x-full w-52"
               : "translate-x-0 w-52"
             : isCollapsed
-              ? "w-16"
+              ? "w-14"
               : "w-52"
           }`}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          overflow: 'hidden'
+        }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b border-[#e4e7ec] h-14">
+        {/* Header - Fixed */}
+        <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b border-gray-200 h-14 flex-shrink-0 bg-white">
           {isCollapsed && !isMobile ? (
             <span className="text-xl text-[#175cd3]">TM</span>
           ) : (
             <div className="flex flex-col w-full">
-              <span className="text-xs uppercase tracking-[0.2em] font-medium text-[#667085] mb-0.5">
+              <span className="text-[10px] uppercase tracking-[0.2em] font-medium text-[#667085] mb-0.5">
                 Team Management
               </span>
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#175cd3] animate-pulse"></div>
-                <span className="text-xs font-medium truncate text-[#101828]">
+                <span className="text-[11px] font-medium truncate text-[#101828]">
                   {currentPage}
                 </span>
               </div>
@@ -1986,22 +1992,33 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
           )}
         </div>
 
-        {/* Menu */}
-        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto no-scrollbar">
+        {/* Menu - Scrollable */}
+        <nav 
+          className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto no-scrollbar"
+          style={{
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            flex: '1 1 auto',
+            minHeight: 0,
+            maxHeight: 'calc(100vh - 120px)'
+          }}
+        >
           {elements.map((item, idx) => (
             <div key={idx}>
               {item.dropdown ? (
                 <>
                   <div
-                    className={`group flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${isDropdownActive(item.dropdown)
+                    className={`group flex items-center justify-between px-2.5 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
+                      isDropdownActive(item.dropdown)
                         ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
                         : openDropdown === item.name
                           ? "bg-[#1E3A8A]"
-                          : "hover:bg-blue-600"
-                      }`}
+                          : "hover:bg-blue-50"
+                    }`}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (item.dropdown && item.dropdown.length > 0) {
+                        // Navigate to first dropdown item when clicking the parent
                         navigate(item.dropdown[0].path);
                         setOpenDropdown(null);
                         if (isMobile) {
@@ -2011,17 +2028,18 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                       }
                     }}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <span className={`text-lg transition-colors duration-200 ${isDropdownActive(item.dropdown)
+                    <div className="flex items-center gap-2">
+                      <span className={`text-base transition-colors duration-200 ${
+                        isDropdownActive(item.dropdown)
                           ? "text-white"
                           : openDropdown === item.name
                             ? "text-white"
-                            : "text-white group-hover:text-white"
-                        }`}>
+                            : "text-gray-600 group-hover:text-[#175cd3]"
+                      }`}>
                         {item.icon}
                       </span>
                       {!isCollapsed && (
-                        <span className={`text-[14px] font-medium leading-none ${
+                        <span className={`text-[13px] font-medium leading-none ${
                           isDropdownActive(item.dropdown) ? "text-white" : "text-[#101828]"
                         }`}>
                           {item.name}
@@ -2032,45 +2050,50 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                     {!isCollapsed && (
                       <div className="flex items-center gap-1">
                         {isDropdownActive(item.dropdown) && (
-                          <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
                         )}
                         <FaChevronDown
                           onClick={(e) => toggleDropdown(e, item.name)}
-                          className={`text-xs transition-transform duration-300 p-0 hover:bg-blue-600 rounded cursor-pointer ${isDropdownActive(item.dropdown)
+                          className={`text-[10px] transition-transform duration-300 p-0 rounded cursor-pointer ${
+                            isDropdownActive(item.dropdown)
                               ? "text-white"
                               : openDropdown === item.name
                                 ? "text-white"
-                                : "text-white"
-                            } ${openDropdown === item.name ? "rotate-180" : ""}`}
+                                : "text-gray-400"
+                          } ${openDropdown === item.name ? "rotate-180" : ""}`}
                           style={{
-                            width: '20px',
-                            height: '20px',
-                            minWidth: '20px',
-                            minHeight: '20px'
+                            width: '16px',
+                            height: '16px',
+                            minWidth: '16px',
+                            minHeight: '16px'
                           }}
                         />
                       </div>
                     )}
                   </div>
 
-                  {/* DROPDOWN ITEMS */}
+                  {/* DROPDOWN ITEMS - NO UNDERLINE */}
                   {openDropdown === item.name && !isCollapsed && (
-                    <ul className="mt-0.5 space-y-0.5">
+                    <ul className="mt-0.5 space-y-0.5 ml-8">
                       {item.dropdown.map((sub, i) => (
                         <li key={i}>
                           <Link
                             to={sub.path}
                             onClick={() => handleDropdownItemClick(sub.path)}
-                            className={`block py-1 text-[13px] transition-colors  ${isActive(sub.path)
-                                ? "text-white font-semibold"
-                                : "text-white hover:text-white"
-                              }`}
+                            className={`block py-1 text-[12px] transition-colors no-underline ${
+                              isActive(sub.path)
+                                ? "text-[#175cd3] font-semibold"
+                                : "text-gray-600 hover:text-[#175cd3]"
+                            }`}
+                            style={{ textDecoration: 'none' }}
                           >
                             <div className="flex items-center gap-2">
                               {isActive(sub.path) && (
                                 <div className="w-1.5 h-1.5 rounded-full bg-[#175cd3]"></div>
                               )}
-                              {sub.name}
+                              <span className={isActive(sub.path) ? "ml-0" : "ml-[10px]"}>
+                                {sub.name}
+                              </span>
                             </div>
                           </Link>
                         </li>
@@ -2081,32 +2104,34 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
               ) : (
                 <div
                   onClick={() => handleItemClick(item.path, item.action)}
-                  className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 relative ${isActive(item.path)
+                  className={`group flex items-center gap-2 px-2.5 py-1.5 rounded-md cursor-pointer transition-all duration-200 relative ${
+                    isActive(item.path)
                       ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
-                      : "hover:bg-blue-600"
-                    }`}
+                      : "hover:bg-blue-50"
+                  }`}
                 >
-                  <span className={`text-lg transition-colors duration-200 ${isActive(item.path)
+                  <span className={`text-base transition-colors duration-200 ${
+                    isActive(item.path)
                       ? "text-white"
-                      : "text-white group-hover:text-white"
-                    }`}>
+                      : "text-gray-600 group-hover:text-[#175cd3]"
+                  }`}>
                     {item.icon}
                   </span>
                   {!isCollapsed && (
-                    <div className="flex items-center flex-1 min-w-0 gap-2">
-                      <span className={`text-[14px] font-medium leading-none truncate ${
+                    <div className="flex items-center flex-1 min-w-0 gap-1.5">
+                      <span className={`text-[13px] font-medium leading-none truncate ${
                         isActive(item.path) ? "text-white" : "text-[#101828]"
                       }`}>
                         {item.name}
                       </span>
                       {/* Badge with Blink Effect */}
                       {item.badge && (
-                        <span className={`px-1.5 py-0.5 text-[8px] font-bold bg-red-500 text-white rounded-full ${item.blink ? 'animate-pulse' : ''}`}>
+                        <span className={`px-1.5 py-0.5 text-[7px] font-bold bg-red-500 text-white rounded-full ${item.blink ? 'animate-pulse' : ''}`}>
                           {item.badge}
                         </span>
                       )}
                       {isActive(item.path) && (
-                        <div className="w-2 h-2 ml-auto rounded-full bg-white animate-pulse"></div>
+                        <div className="w-1.5 h-1.5 ml-auto rounded-full bg-white animate-pulse"></div>
                       )}
                     </div>
                   )}
@@ -2116,23 +2141,22 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
           ))}
         </nav>
 
-        {/* Footer */}
-        <div className="px-4 py-3 text-[10px] text-[#667085] border-t border-[#e4e7ec] bg-[#f9fafb]">
+        {/* Footer - Fixed */}
+        <div className="px-3 py-2 text-[9px] text-[#667085] border-t border-gray-200 bg-[#f9fafb] flex-shrink-0">
           {!isCollapsed ? (
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center justify-between">
-                <p className="font-semibold tracking-wider text-[#667085] uppercase">System v1.2</p>
-                <div className="flex items-center gap-1 px-2 py-0.5 bg-[#175cd3]/10 rounded">
+                <div className="flex items-center gap-1 px-1.5 py-0.5 bg-[#175cd3]/10 rounded">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#175cd3]"></div>
-                  <span className="text-[9px] text-[#175cd3] font-medium">Active</span>
+                  <span className="text-[8px] text-[#175cd3] font-medium">Active</span>
                 </div>
               </div>
-              <p>© 2026 Timely Health</p>
+              <p className="text-[8px]">© 2026 Timely Health</p>
             </div>
           ) : (
             <div className="text-center">
-              <div className="w-3 h-3 mx-auto mb-1 bg-[#175cd3] rounded-full animate-pulse"></div>
-              <span>©</span>
+              <div className="w-2.5 h-2.5 mx-auto mb-0.5 bg-[#175cd3] rounded-full animate-pulse"></div>
+              <span className="text-[8px]">©</span>
             </div>
           )}
         </div>

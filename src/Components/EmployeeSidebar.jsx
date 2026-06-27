@@ -2063,7 +2063,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     "locations_manage", "job_posts_view", "job_applicants_view", "score_board_view",
     "assessments_view", "documents_view", "job_recruitment_manage", "holidays_view",
     "events_manage", "events_create", "events_edit", "events_delete", 
-    "events_view_all", "events_register_participants", "issues_view", "issues_manage"
+    "events_view_all", "events_register_participants", "issues_view", "issues_manage",
+    "tasks_view", "tasks_manage"
   ];
 
   useEffect(() => {
@@ -2080,7 +2081,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/myattendance": "My Attendance",
       "/my-shift": "My Shift",
       "/mylocation": "My Location",
-      "/mysalary": "My Salary",
+      "/mysalary": "Payslips",
       "/mypermissions": "My Permissions",
       "/myleaves": "My Leaves",
       "/emp-admin-dashboard": "Dashboard",
@@ -2111,7 +2112,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/emp-holidays-calendar": "Holidays Calendar",
       "/emp-permissions": "Permissions",
       "/emp-events": "Events",
-      "/emp-issues": "Issues"
+      "/emp-issues": "Issues",
+      "/emp-tasks": "Tasks"
     };
     return pathMap[path] || "Dashboard";
   };
@@ -2143,8 +2145,10 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     }
   };
 
-  const handleItemClick = (path, action) => {
-    if (path) {
+  const handleItemClick = (path, action, isExternal = false) => {
+    if (isExternal) {
+      window.open(path, '_blank', 'noopener,noreferrer');
+    } else if (path) {
       navigate(path);
     }
     if (action) {
@@ -2159,8 +2163,12 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     }
   };
 
-  const handleDropdownItemClick = (path) => {
-    navigate(path);
+  const handleDropdownItemClick = (path, isExternal = false) => {
+    if (isExternal) {
+      window.open(path, '_blank', 'noopener,noreferrer');
+    } else {
+      navigate(path);
+    }
     setOpenDropdown(null);
     if (isMobile && setIsCollapsed) {
       setIsCollapsed(true);
@@ -2183,7 +2191,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     }
   };
 
-  // Toggle view - switches between Employee and Admin view
+  // Toggle view
   const toggleView = useCallback((e) => {
     if (e) {
       e.stopPropagation();
@@ -2208,7 +2216,11 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     }
   }, [hasAnyAdminPermission, isAdminView, navigate]);
 
-  const isActive = (path) => activeItem === path;
+  const isActive = (path) => {
+    if (path && path.startsWith('http')) return false;
+    return activeItem === path;
+  };
+  
   const isDropdownActive = (dropdownItems) => dropdownItems?.some(item => isActive(item.path));
 
   useEffect(() => {
@@ -2260,6 +2272,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
           if (!fetchedPermissions.includes("events_manage")) fetchedPermissions.push("events_manage");
           if (!fetchedPermissions.includes("issues_view")) fetchedPermissions.push("issues_view");
           if (!fetchedPermissions.includes("issues_manage")) fetchedPermissions.push("issues_manage");
+          if (!fetchedPermissions.includes("tasks_view")) fetchedPermissions.push("tasks_view");
+          if (!fetchedPermissions.includes("tasks_manage")) fetchedPermissions.push("tasks_manage");
         }
 
         setPermissions(fetchedPermissions);
@@ -2290,6 +2304,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
           if (!localPermissions.includes("events_manage")) localPermissions.push("events_manage");
           if (!localPermissions.includes("issues_view")) localPermissions.push("issues_view");
           if (!localPermissions.includes("issues_manage")) localPermissions.push("issues_manage");
+          if (!localPermissions.includes("tasks_view")) localPermissions.push("tasks_view");
+          if (!localPermissions.includes("tasks_manage")) localPermissions.push("tasks_manage");
         }
 
         setPermissions(localPermissions);
@@ -2312,8 +2328,13 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     return permissions.includes(permission);
   };
 
-  // Employee Menu - Added Issues
+  // ─── Employee Menu - Tasks (TH029 wali ID send karo) ───
   const buildEmployeeMenu = () => {
+    const employeeId = localStorage.getItem("employeeId") || ''; // TH029
+    
+    // ─── Sirf employeeId (TH029) pass karo localhost:3001 ───
+    const tasksUrl = `https://taskmanagement.iryax.com?employeeId=${employeeId}`;
+    
     const menu = [
       { icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/employeedashboard" },
       {
@@ -2328,14 +2349,21 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       },
       { icon: <i className="ri-calendar-check-fill"></i>, name: "Leave", path: "/myleaves" },
       { icon: <i className="ri-account-circle-fill"></i>, name: "Profile", path: "/emp-profile" },
-      { icon: <i className="ri-money-rupee-circle-fill"></i>, name: "My Salary", path: "/mysalary" },
+      { icon: <i className="ri-money-rupee-circle-fill"></i>, name: "Payslips", path: "/mysalary" },
       { icon: <i className="ri-funds-fill"></i>, name: "Expenses", path: "/expense-management" },
       { icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/HolidayList" },
-      // Added Issues with "NEW" badge
       { 
         icon: <i className="ri-error-warning-fill"></i>, 
         name: "Issues", 
         path: "/emp-issues",
+        badge: "NEW"
+      },
+      // ─── Tasks - localhost:3001 with employeeId (TH029) ───
+      { 
+        icon: <i className="ri-task-fill"></i>, 
+        name: "Tasks", 
+        path: tasksUrl,
+        isExternal: true,
         badge: "NEW"
       },
       { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
@@ -2343,26 +2371,27 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     return menu;
   };
 
-  // Admin Menu - Added Issues
+  // ─── Admin Menu - Tasks (TH029 wali ID send karo) ───
   const buildAdminMenu = () => {
+    const employeeId = localStorage.getItem("employeeId") || ''; // TH029
+    
+    // ─── Sirf employeeId (TH029) pass karo localhost:3001 ───
+    const tasksUrl = `https://taskmanagement.iryax.com?employeeId=${employeeId}`;
+    
     const menu = [];
 
-    // Dashboard
     if (hasPermission("dashboard_view")) {
       menu.push({ icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/emp-admin-dashboard" });
     }
 
-    // Employees
     if (hasPermission("employee_view_all")) {
       menu.push({ icon: <i className="ri-user-fill"></i>, name: "Employees", path: "/emp-employees" });
     }
 
-    // Add Employee
     if (hasPermission("employee_add")) {
       menu.push({ icon: <i className="ri-user-add-fill"></i>, name: "Add Employee", path: "/emp-add-employee" });
     }
 
-    // Attendance with dropdown (personal + admin)
     const attendanceDropdown = [
       { name: "Attendance Capture", path: "/attendance-capture" },
       { name: "My Attendance", path: "/myattendance" },
@@ -2381,37 +2410,30 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       dropdown: attendanceDropdown
     });
 
-    // Leave Approval (for HR/Admin)
     if (hasPermission("leave_approve")) {
       menu.push({ icon: <i className="ri-calendar-fill"></i>, name: "Leaves", path: "/emp-leaves" });
     }
     
-    // Manager Approve (for Manager/Team Lead)
     if (hasPermission("leave_approve_manager")) {
       menu.push({ icon: <i className="ri-user-star-fill"></i>, name: "Manager Approve", path: "/emp-pending-leaves" });
     }
 
-    // Holidays
     if (hasPermission("holidays_view") || hasPermission("user_access_manage") || hasPermission("employee_view_all")) {
       menu.push({ icon: <i className="ri-calendar-fill"></i>, name: "Holidays", path: "/emp-holidays-calendar" });
     }
 
-    // Permissions
     if (hasPermission("user_access_manage")) {
       menu.push({ icon: <i className="ri-shield-keyhole-fill"></i>, name: "Permissions", path: "/emp-permissions" });
     }
 
-    // Payroll
     if (hasPermission("payroll_manage")) {
       menu.push({ icon: <i className="ri-money-dollar-box-fill"></i>, name: "Payroll", path: "/emp-payroll" });
     }
 
-    // Expenses
     if (hasPermission("expenses_manage") || hasPermission("expense_manage")) {
       menu.push({ icon: <i className="ri-money-dollar-circle-fill"></i>, name: "Expenses", path: "/emp-all-expensives-management" });
     }
 
-    // Issues - Added with "NEW" badge
     if (hasPermission("issues_view") || hasPermission("issues_manage")) {
       menu.push({ 
         icon: <i className="ri-error-warning-fill"></i>, 
@@ -2421,17 +2443,24 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       });
     }
 
-    // User Activity
+    if (hasPermission("tasks_view") || hasPermission("tasks_manage")) {
+      menu.push({ 
+        icon: <i className="ri-task-fill"></i>, 
+        name: "Tasks", 
+        path: tasksUrl,
+        isExternal: true,
+        badge: "NEW"
+      });
+    }
+
     if (hasPermission("user_activity_view")) {
       menu.push({ icon: <i className="ri-history-fill"></i>, name: "User Activity", path: "/emp-user-activity" });
     }
 
-    // User Access
     if (hasPermission("user_access_manage")) {
       menu.push({ icon: <i className="ri-shield-user-fill"></i>, name: "User Access", path: "/emp-user-access" });
     }
 
-    // Recruitment with dropdown
     const recruitmentDropdown = [];
     if (hasPermission("job_posts_view")) recruitmentDropdown.push({ name: "Job Posts", path: "/emp-job-posts" });
     if (hasPermission("job_applicants_view")) recruitmentDropdown.push({ name: "Job Applicants", path: "/emp-job-applicants" });
@@ -2447,7 +2476,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       });
     }
 
-    // Events
     if (hasPermission("events_view_all") || hasPermission("events_manage") || 
         hasPermission("events_create") || hasPermission("events_register_participants")) {
       menu.push({
@@ -2457,17 +2485,14 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       });
     }
 
-    // Locations
     if (hasPermission("locations_manage")) {
       menu.push({ icon: <i className="ri-map-pin-2-fill"></i>, name: "Locations", path: "/emp-locations" });
     }
 
-    // Shifts
     if (hasPermission("shifts_manage")) {
       menu.push({ icon: <i className="ri-time-fill"></i>, name: "Shifts", path: "/emp-shifts" });
     }
 
-    // Logout
     menu.push({ icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout });
 
     return menu;
@@ -2544,16 +2569,19 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                       e.stopPropagation();
                       if (!item.dropdown || item.dropdown.length === 0) return;
 
-                      // When collapsed, we can't show submenu: go to first item.
                       if (isCollapsed) {
-                        navigate(item.dropdown[0].path);
+                        const firstItem = item.dropdown[0];
+                        if (firstItem.isExternal) {
+                          window.open(firstItem.path, '_blank', 'noopener,noreferrer');
+                        } else {
+                          navigate(firstItem.path);
+                        }
                         setOpenDropdown(null);
                         if (isMobile && setIsCollapsed) setIsCollapsed(true);
                         if (onClose) onClose();
                         return;
                       }
 
-                      // When expanded, clicking the row toggles the dropdown.
                       setOpenDropdown((current) => (current === item.name ? null : item.name));
                     }}
                   >
@@ -2578,15 +2606,44 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                     <ul className="emp-sidebar__submenu">
                       {item.dropdown.map((sub, i) => (
                         <li key={i}>
-                          <Link
-                            to={sub.path}
-                            onClick={() => handleDropdownItemClick(sub.path)}
-                            className={`emp-sidebar__subitem ${
-                              isActive(sub.path) ? "emp-sidebar__subitem--active" : ""
-                            }`}
-                          >
-                            {sub.name}
-                          </Link>
+                          {sub.isExternal ? (
+                            <a
+                              href={sub.path}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => {
+                                setOpenDropdown(null);
+                                if (isMobile && setIsCollapsed) setIsCollapsed(true);
+                                if (onClose) onClose();
+                              }}
+                              className={`emp-sidebar__subitem ${
+                                isActive(sub.path) ? "emp-sidebar__subitem--active" : ""
+                              }`}
+                            >
+                              {sub.name}
+                              {sub.badge && (
+                                <span className="ml-2 px-1.5 py-0.5 text-[8px] font-bold bg-red-500 text-white rounded-full animate-pulse">
+                                  {sub.badge}
+                                </span>
+                              )}
+                              <i className="ri-external-link-line ml-1 text-xs" />
+                            </a>
+                          ) : (
+                            <Link
+                              to={sub.path}
+                              onClick={() => handleDropdownItemClick(sub.path)}
+                              className={`emp-sidebar__subitem ${
+                                isActive(sub.path) ? "emp-sidebar__subitem--active" : ""
+                              }`}
+                            >
+                              {sub.name}
+                              {sub.badge && (
+                                <span className="ml-2 px-1.5 py-0.5 text-[8px] font-bold bg-red-500 text-white rounded-full animate-pulse">
+                                  {sub.badge}
+                                </span>
+                              )}
+                            </Link>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -2594,9 +2651,9 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                 </>
               ) : (
                 <div
-                  onClick={() => handleItemClick(item.path, item.action)}
+                  onClick={() => handleItemClick(item.path, item.action, item.isExternal)}
                   className={`group flex items-center gap-2.5 px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 relative ${
-                    isActive(item.path)
+                    isActive(item.path) && !item.isExternal
                       ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
                       : "hover:bg-blue-600"
                   }`}
@@ -2612,7 +2669,10 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                           {item.badge}
                         </span>
                       )}
-                      {isActive(item.path) && (
+                      {item.isExternal && (
+                        <i className="ri-external-link-line text-xs opacity-60" />
+                      )}
+                      {isActive(item.path) && !item.isExternal && (
                         <div className="w-2 h-2 ml-auto rounded-full bg-emerald-300 animate-pulse"></div>
                       )}
                     </div>

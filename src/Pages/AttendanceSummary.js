@@ -56,14 +56,14 @@ export default function AttendanceSummary() {
   const isSavingRef = useRef(false);
   const lastSaveTimestampRef = useRef(0);
 
-  // ✅ Popup states
+  // Popup states
   const [showAttendancePopup, setShowAttendancePopup] = useState(false);
   const [selectedEmployeeAttendance, setSelectedEmployeeAttendance] = useState([]);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [employeeLeaves, setEmployeeLeaves] = useState({});
   const [employeesMasterData, setEmployeesMasterData] = useState({});
 
-  // ✅ Helper function to format decimal hours to HH:MM
+  // Helper function to format decimal hours to HH:MM
   const formatDecimalHours = (decimalHours) => {
     if (!decimalHours && decimalHours !== 0) return "0h 0m";
     const hours = Math.floor(decimalHours);
@@ -74,7 +74,7 @@ export default function AttendanceSummary() {
     return `${hours}h ${minutes}m`;
   };
 
-  // ✅ SAME AS MyAttendance - Calculate OT Hours
+  // Calculate OT Hours
   const calculateOTHours = (totalHours, assignedShiftHours) => {
     if (!totalHours || totalHours === 0) return 0;
     if (!assignedShiftHours || assignedShiftHours === 0) return 0;
@@ -82,7 +82,7 @@ export default function AttendanceSummary() {
     return ot > 0 ? ot : 0;
   };
 
-  // ✅ Calculate work hours
+  // Calculate work hours
   const calculateWorkHours = (checkIn, checkOut) => {
     if (!checkIn || !checkOut) return null;
     const checkInTime = new Date(checkIn);
@@ -91,7 +91,7 @@ export default function AttendanceSummary() {
     return diffHours.toFixed(1);
   };
 
-  // ✅ Format time with AM/PM for popup
+  // Format time with AM/PM for popup
   const formatTimeWithAMPM = (dateString) => {
     if (!dateString) return '--:--';
     const date = new Date(dateString);
@@ -102,7 +102,7 @@ export default function AttendanceSummary() {
     return `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
   };
 
-  // ✅ Format date for popup
+  // Format date for popup
   const formatDateDisplay = (date) => {
     if (!date) return '';
     return date.toLocaleDateString('en-IN', { 
@@ -1298,7 +1298,7 @@ export default function AttendanceSummary() {
     return pageNumbers;
   };
 
-  // ✅ Attendance Popup Modal
+  // Attendance Popup Modal
   const AttendancePopupModal = () => {
     if (!showAttendancePopup) return null;
     
@@ -1531,6 +1531,7 @@ export default function AttendanceSummary() {
           </div>
         )}
 
+        {/* Filters Section */}
         <div className="p-2 mb-2 bg-white border border-gray-200 rounded-lg shadow-md">
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[180px]">
@@ -1570,13 +1571,16 @@ export default function AttendanceSummary() {
                   </div>
                   {uniqueDepartments.map(dept => (
                     <div 
+                      key={dept}
                       onClick={() => {
-                        setFilterDepartment('');
+                        setFilterDepartment(dept);
                         setShowDepartmentFilter(false);
                       }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
+                        filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                      }`}
                     >
-                      All Departments
+                      {dept}
                     </div>
                   ))}
                 </div>
@@ -1605,56 +1609,23 @@ export default function AttendanceSummary() {
                   >
                     All Designations
                   </div>
-                {/* )} */}
-              </div>
-              )}
-            </div>
-              {/* Designation Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={designationFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Designation</label>
-                <button
-                  onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDesignation 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaUserTag className="text-gray-400" />
-                    {filterDesignation || 'All Designations'}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                
-                {showDesignationFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                  {uniqueDesignations.map(des => (
                     <div 
+                      key={des}
                       onClick={() => {
-                        setFilterDesignation('');
+                        setFilterDesignation(des);
                         setShowDesignationFilter(false);
                       }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                      className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
+                        filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                      }`}
                     >
-                      All Designations
+                      {des}
                     </div>
-                    {uniqueDesignations.map(des => (
-                      <div 
-                        key={des}
-                        onClick={() => {
-                          setFilterDesignation(des);
-                          setShowDesignationFilter(false);
-                        }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
-                          filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
-                      >
-                        {des}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <div className="flex items-center gap-3">
               <div className="relative w-[200px]">
@@ -1679,18 +1650,6 @@ export default function AttendanceSummary() {
                   onChange={(e) => setToDate(e.target.value)}
                   onClick={(e) => e.target.showPicker && e.target.showPicker()}
                   className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
-
-              {/* Month */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Month</label>
-                <input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={handleMonthChange}
-                  className="w-full h-9 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
                 />
               </div>
             </div>
@@ -1737,29 +1696,33 @@ export default function AttendanceSummary() {
           </div>
         </div>
 
-        <div className="p-0 mb-0 bg-white border border-gray-200 shadow-lg rounded-2xl">
+        {/* TABLE - With gradient header and bottom table style */}
+        {employeeSummary.length === 0 ? (
+          <div className="py-12 text-center text-sm text-gray-500 font-medium">
+            No attendance records found for the selected period.
+          </div>
+        ) : (
           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
-            <table className="min-w-full">
+            <table className="min-w-full divide-y divide-gray-200">
               <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
                 <tr>
-                  <th className="py-2 text-center">Employee ID</th>
-                  <th className="py-2 text-center">Name</th>
-                  <th className="py-2 text-center">Department</th>
-                  <th className="py-2 text-center">Designation</th>
-                  <th className="py-2 text-center">Month</th>
-                  <th className="py-2 text-center">Present</th>
-                  <th className="py-2 text-center">Late</th>
-                  <th className="py-2 text-center">Onsite</th>
-                  <th className="py-2 text-center">Remote</th>
-                  <th className="py-2 text-center">Half Day</th>
-                  <th className="py-2 text-center">Full Day</th>
-                  <th className="py-2 text-center">Over Time</th>
-                  <th className="py-2 text-center">Working Days</th>
-                  <th className="py-2 text-center">Download</th>
+                  <th className="px-4 py-3 text-left font-medium">Employee ID</th>
+                  <th className="px-4 py-3 text-left font-medium">Name</th>
+                  <th className="px-4 py-3 text-center font-medium">Department</th>
+                  <th className="px-4 py-3 text-center font-medium">Designation</th>
+                  <th className="px-4 py-3 text-center font-medium">Month</th>
+                  <th className="px-4 py-3 text-center font-medium">Present</th>
+                  <th className="px-4 py-3 text-center font-medium">Late</th>
+                  <th className="px-4 py-3 text-center font-medium">Onsite</th>
+                  <th className="px-4 py-3 text-center font-medium">Remote</th>
+                  <th className="px-4 py-3 text-center font-medium">Half Day</th>
+                  <th className="px-4 py-3 text-center font-medium">Full Day</th>
+                  <th className="px-4 py-3 text-center font-medium">Over Time</th>
+                  <th className="px-4 py-3 text-center font-medium">Working Days</th>
+                  <th className="px-4 py-3 text-center font-medium">Download</th>
                 </tr>
               </thead>
-
-              <tbody>
+              <tbody className="divide-y divide-gray-200 text-xs">
                 {currentItems.map((emp) => {
                   const workingDays = calculateEmployeeWorkingDays(emp.employeeId);
                   const lateDays = calculateEmployeeLateDays(emp.employeeId);
@@ -1772,190 +1735,44 @@ export default function AttendanceSummary() {
                     <tr
                       key={emp.employeeId}
                       onClick={() => handleViewDetails(emp.employeeId)}
-                      className="border-t border-gray-200 cursor-pointer hover:bg-blue-50"
+                      className="hover:bg-gray-50 transition-all cursor-pointer"
                     >
-                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{emp.employeeId}</td>
-                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{emp.name}</td>
-                      <td className="px-2 py-2 text-center text-gray-600">{department}</td>
-                      <td className="px-2 py-2 text-center text-gray-600">{designation}</td>
-                      <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{emp.month}</td>
-                      <td className="px-2 py-2 font-medium text-center text-green-600">{emp.presentDays}</td>
-                      <td className="px-2 py-2 font-medium text-center text-orange-600">{lateDays}</td>
-                      <td className="px-2 py-2 font-medium text-center text-blue-600">{onsiteDays}</td>
-                      <td className="px-2 py-2 font-medium text-center text-teal-600">{calculateEmployeeRemoteDays(emp.employeeId)}</td>
-                      <td className="px-2 py-2 font-medium text-center text-yellow-600">
-                        {emp.halfDayWorking ?? 0}
-                       </td>
-                      <td className="px-2 py-2 font-medium text-center text-red-600">
-                        {emp.fullDayNotWorking ?? 0}
-                       </td>
-                      <td className="px-2 py-2 font-medium font-semibold text-center text-indigo-600">
-                        {formatDecimalHours(totalOT)}
-                       </td>
-                      <td className="px-2 py-2 font-medium font-bold text-center text-purple-600">
-                        {workingDays.toFixed(1)}
-                       </td>
-                      <td className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-4 py-3 font-medium text-gray-900">{emp.employeeId}</td>
+                      <td className="px-4 py-3 font-medium text-gray-900">{emp.name}</td>
+                      <td className="px-4 py-3 text-center text-gray-600">{department}</td>
+                      <td className="px-4 py-3 text-center text-gray-600">{designation}</td>
+                      <td className="px-4 py-3 text-center text-gray-900">{emp.month}</td>
+                      <td className="px-4 py-3 text-center font-semibold text-green-600">{emp.presentDays}</td>
+                      <td className="px-4 py-3 text-center font-semibold text-orange-600">{lateDays}</td>
+                      <td className="px-4 py-3 text-center font-semibold text-blue-600">{onsiteDays}</td>
+                      <td className="px-4 py-3 text-center font-semibold text-teal-600">{calculateEmployeeRemoteDays(emp.employeeId)}</td>
+                      <td className="px-4 py-3 text-center font-semibold text-yellow-600">{emp.halfDayWorking ?? 0}</td>
+                      <td className="px-4 py-3 text-center font-semibold text-red-600">{emp.fullDayNotWorking ?? 0}</td>
+                      <td className="px-4 py-3 text-center font-semibold text-indigo-600">{formatDecimalHours(totalOT)}</td>
+                      <td className="px-4 py-3 text-center font-bold text-purple-600">{workingDays.toFixed(1)}</td>
+                      <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             downloadSingleEmployeeExcel(emp.employeeId);
                           }}
-                          className="inline-flex items-center justify-center px-4 py-1 font-medium text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
-                          title={`Download ${emp.name}'s report (ZIP)`}
+                          className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-all shadow-sm"
+                          title={`Download ${emp.name}'s report`}
                         >
                           ⬇
                         </button>
-                       </td>
-                     </tr>
+                      </td>
+                    </tr>
                   );
                 })}
               </tbody>
             </table>
-
-            {employeeSummary.length > 0 && (
-              <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Show:
-                    </label>
-                    <select
-                      value={itemsPerPage}
-                      onChange={handleItemsPerPageChange}
-                      className="p-2 text-sm border rounded-lg"
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                    </select>
-                    <span className="text-sm text-gray-500">entries</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handlePrevPage}
-                    disabled={currentPage === 1}
-                    className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1
-                      ? "text-gray-500 bg-gray-100 border-gray-200 cursor-not-allowed"
-                      : "text-blue-500 bg-white hover:bg-gray-100 border-gray-300"
-                      }`}
-                  >
-                    Previous
-                  </button>
-
-                  {getPageNumbers().map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => handlePageClick(page)}
-                      className={`px-4 py-1 text-sm border rounded-lg ${currentPage === page
-                        ? "text-white bg-blue-600 border-blue-600"
-                        : "text-blue-500 bg-white hover:bg-gray-100 border-gray-300"
-                        }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-
-                  <button
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                    className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages
-                      ? "text-gray-500 bg-gray-100 border-gray-200 cursor-not-allowed"
-                      : "text-blue-500 bg-white hover:bg-gray-100 border-gray-300"
-                      }`}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {employeeSummary.length === 0 && (
-              <div className="py-8 text-center text-gray-500">
-                No records found for {selectedMonth}
-              </div>
-            )}
           </div>
-
-          {employeeSummary.length === 0 ? (
-            <div className="py-12 text-center text-sm text-gray-500 font-medium">
-              No attendance records found for the selected period.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 bg-white">
-                <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Employee ID</th>
-                    <th className="px-4 py-3 text-left">Name</th>
-                    <th className="px-4 py-3 text-center">Department</th>
-                    <th className="px-4 py-3 text-center">Designation</th>
-                    <th className="px-4 py-3 text-center">Month</th>
-                    <th className="px-4 py-3 text-center">Present</th>
-                    <th className="px-4 py-3 text-center">Late</th>
-                    <th className="px-4 py-3 text-center">Onsite</th>
-                    <th className="px-4 py-3 text-center">Remote</th>
-                    <th className="px-4 py-3 text-center">Half Day</th>
-                    <th className="px-4 py-3 text-center">Full Day</th>
-                    <th className="px-4 py-3 text-center">OT Hours</th>
-                    <th className="px-4 py-3 text-center">Working Days</th>
-                    <th className="px-4 py-3 text-center">Download</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 text-xs">
-                  {currentItems.map((emp) => {
-                    const workingDays = calculateEmployeeWorkingDays(emp.employeeId);
-                    const lateDays = calculateEmployeeLateDays(emp.employeeId);
-                    const onsiteDays = calculateEmployeeOnsiteDays(emp.employeeId);
-                    const department = getEmployeeDepartment(emp.employeeId);
-                    const designation = getEmployeeDesignation(emp.employeeId);
-                    const totalOT = calculateEmployeeOT(emp.employeeId);
-
-                    return (
-                      <tr
-                        key={emp.employeeId}
-                        onClick={() => handleViewDetails(emp.employeeId)}
-                        className="hover:bg-gray-50 transition-all cursor-pointer"
-                      >
-                        <td className="px-4 py-3 font-medium text-gray-900">{emp.employeeId}</td>
-                        <td className="px-4 py-3 font-medium text-gray-900">{emp.name}</td>
-                        <td className="px-4 py-3 text-center text-gray-600">{department}</td>
-                        <td className="px-4 py-3 text-center text-gray-600">{designation}</td>
-                        <td className="px-4 py-3 text-center text-gray-900">{emp.month}</td>
-                        <td className="px-4 py-3 text-center font-semibold text-green-600">{emp.presentDays}</td>
-                        <td className="px-4 py-3 text-center font-semibold text-orange-600">{lateDays}</td>
-                        <td className="px-4 py-3 text-center font-semibold text-blue-600">{onsiteDays}</td>
-                        <td className="px-4 py-3 text-center font-semibold text-teal-600">{calculateEmployeeRemoteDays(emp.employeeId)}</td>
-                        <td className="px-4 py-3 text-center font-semibold text-yellow-600">{emp.halfDayWorking ?? 0}</td>
-                        <td className="px-4 py-3 text-center font-semibold text-red-600">{emp.fullDayNotWorking ?? 0}</td>
-                        <td className="px-4 py-3 text-center font-semibold text-indigo-600">{formatDecimalHours(totalOT)}</td>
-                        <td className="px-4 py-3 text-center font-bold text-purple-600">{workingDays.toFixed(1)}</td>
-                        <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              downloadSingleEmployeeExcel(emp.employeeId);
-                            }}
-                            className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-all shadow-sm"
-                            title={`Download ${emp.name}'s report`}
-                          >
-                            ⬇
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Pagination */}
         {employeeSummary.length > 0 && (
-          <div className="flex flex-col items-center justify-between gap-4 mt-2 pb-4 sm:flex-row px-4">
+          <div className="flex flex-col items-center justify-between gap-4 mt-4 pb-4 sm:flex-row px-4">
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-gray-700">Show:</label>

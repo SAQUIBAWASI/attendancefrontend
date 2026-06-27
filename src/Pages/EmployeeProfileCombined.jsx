@@ -3,7 +3,18 @@ import MyJobs from "./MyJobs";
 import EmployeePersonalDocuments from "./EmployeePersonalDocuments";
 import EmployeeLetters from "./EmployeeLetters";
 import MyMedicalCertificate from "./MyMedicalCertificate";
-import { FaBriefcase, FaFolderOpen, FaEnvelopeOpenText, FaFileMedical, FaUser, FaChartLine, FaRupeeSign } from "react-icons/fa";
+import { 
+  FaBriefcase, 
+  FaFolderOpen, 
+  FaEnvelopeOpenText, 
+  FaFileMedical, 
+  FaUser, 
+  FaChartLine, 
+  FaRupeeSign,
+  FaIdBadge,
+  FaUserCircle
+} from "react-icons/fa";
+import { FiUsers, FiUserCheck, FiMail } from "react-icons/fi";
 import axios from "axios";
 
 const API_BASE_URL = "https://api.timelyhealth.in/api";
@@ -46,13 +57,81 @@ const EmployeeProfileCombined = () => {
     }
   };
 
+  // Helper functions to get data
+  const getFirstName = () => {
+    if (!empData) return "Employee";
+    return empData.name?.split(' ')[0] || "Employee";
+  };
+
+  const getInitials = () => {
+    if (!empData || !empData.name) return "?";
+    const nameParts = empData.name.split(' ');
+    if (nameParts.length >= 2) {
+      return (nameParts[0][0] + nameParts[1][0]).toUpperCase();
+    }
+    return empData.name.charAt(0).toUpperCase();
+  };
+
+  const getJoinedOn = () => {
+    if (!empData) return "N/A";
+    const date = empData.createdAt || empData.joinedDate || empData.joiningDate;
+    if (!date) return "N/A";
+    try {
+      return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return "N/A";
+    }
+  };
+
   const tabs = [
-    { id: "experience", label: "Jobs / Experience", icon: <FaBriefcase />, component: <MyJobs /> },
-    { id: "documents", label: "Personal Documents", icon: <FaFolderOpen />, component: <EmployeePersonalDocuments /> },
-    { id: "letters", label: "My Letters", icon: <FaEnvelopeOpenText />, component: <EmployeeLetters /> },
-    { id: "medical", label: "My Medical Certificate", icon: <FaFileMedical />, component: <MyMedicalCertificate /> },
-    { id: "salary", label: "Salary Hike", icon: <FaChartLine />, component: <SalaryHikeComponent employeeData={empData} salaryData={salaryData} loading={loadingSalary} /> }
+    { 
+      id: "experience", 
+      label: "Jobs / Experience", 
+      icon: <FaBriefcase />, 
+      shortDesc: "View your job history",
+      component: <MyJobs /> 
+    },
+    { 
+      id: "documents", 
+      label: "Personal Documents", 
+      icon: <FaFolderOpen />, 
+      shortDesc: "Access your documents",
+      component: <EmployeePersonalDocuments /> 
+    },
+    { 
+      id: "letters", 
+      label: "My Letters", 
+      icon: <FaEnvelopeOpenText />, 
+      shortDesc: "Official correspondence",
+      component: <EmployeeLetters /> 
+    },
+    { 
+      id: "medical", 
+      label: "My Medical Certificate", 
+      icon: <FaFileMedical />, 
+      shortDesc: "Medical records",
+      component: <MyMedicalCertificate /> 
+    },
+    { 
+      id: "salary", 
+      label: "Salary Hike", 
+      icon: <FaChartLine />, 
+      shortDesc: "Salary breakdown & hikes",
+      component: <SalaryHikeComponent employeeData={empData} salaryData={salaryData} loading={loadingSalary} /> 
+    }
   ];
+
+  // Get active tab data
+  const activeTabData = tabs.find(tab => tab.id === activeTab) || tabs[0];
+
+  // Memoized joined date
+  const joinedOn = useMemo(() => getJoinedOn(), [empData]);
+  const firstName = useMemo(() => getFirstName(), [empData]);
+  const initials = useMemo(() => getInitials(), [empData]);
 
   return (
     <div className="max-w-9xl mx-auto p-4 md:p-6 bg-slate-50 min-h-screen rounded-2xl">
@@ -91,163 +170,165 @@ const EmployeeProfileCombined = () => {
             )}
           </div>
         </div>
+      </div>
 
-        <div className="emp-dash__stats">
-          <div className="emp-dash__stat">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Employee ID</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                <FaIdBadge />
-              </div>
-            </div>
-            <div className="emp-dash__stat-value" style={{ fontSize: "1.15rem" }}>
-              {empData.employeeId || "—"}
-            </div>
-            <div className="emp-dash__stat-meta">registered employee code</div>
-          </div>
-
-          <div className="emp-dash__stat">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Department</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
-                <FiUsers />
-              </div>
-            </div>
-            <div className="emp-dash__stat-value" style={{ fontSize: "1.15rem" }}>
-              {empData.department || "—"}
-            </div>
-            <div className="emp-dash__stat-meta">current team or function</div>
-          </div>
-
-          <div className="emp-dash__stat">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Role</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
-                <FiUserCheck />
-              </div>
-            </div>
-            <div className="emp-dash__stat-value" style={{ fontSize: "1.15rem" }}>
-              {empData.role || empData.designation || "Team Member"}
-            </div>
-            <div className="emp-dash__stat-meta">active designation</div>
-          </div>
-
-          <div className="emp-dash__stat">
-            <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Joined On</span>
-              <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
-                <FiMail />
-              </div>
-            </div>
-            <div className="emp-dash__stat-value" style={{ fontSize: "1.15rem" }}>
-              {joinedOn}
-            </div>
-            <div className="emp-dash__stat-meta">
-              {empData.email || "employee email not available"}
+      {/* Stats Section */}
+      <div className="emp-dash__stats">
+        <div className="emp-dash__stat">
+          <div className="emp-dash__stat-top">
+            <span className="emp-dash__stat-label">Employee ID</span>
+            <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+              <FaIdBadge />
             </div>
           </div>
+          <div className="emp-dash__stat-value" style={{ fontSize: "1.15rem" }}>
+            {empData.employeeId || "—"}
+          </div>
+          <div className="emp-dash__stat-meta">registered employee code</div>
         </div>
 
-        <div className="emp-page__hero">
-          <div>
-            <div className="emp-page__hero-eyebrow">Employee workspace</div>
-            <div className="emp-page__hero-title">
-              Welcome back, {firstName}
+        <div className="emp-dash__stat">
+          <div className="emp-dash__stat-top">
+            <span className="emp-dash__stat-label">Department</span>
+            <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+              <FiUsers />
             </div>
-            <p className="emp-page__hero-copy">
-              Keep your profile information and records easy to access. Switch between experience, documents, letters, and medical details from one dashboard-style view.
-            </p>
           </div>
-          <div className="emp-page__hero-actions">
-            <div className="emp-page__hero-btn--ghost" style={{ cursor: "default" }}>
+          <div className="emp-dash__stat-value" style={{ fontSize: "1.15rem" }}>
+            {empData.department || "—"}
+          </div>
+          <div className="emp-dash__stat-meta">current team or function</div>
+        </div>
+
+        <div className="emp-dash__stat">
+          <div className="emp-dash__stat-top">
+            <span className="emp-dash__stat-label">Role</span>
+            <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
+              <FiUserCheck />
+            </div>
+          </div>
+          <div className="emp-dash__stat-value" style={{ fontSize: "1.15rem" }}>
+            {empData.role || empData.designation || "Team Member"}
+          </div>
+          <div className="emp-dash__stat-meta">active designation</div>
+        </div>
+
+        <div className="emp-dash__stat">
+          <div className="emp-dash__stat-top">
+            <span className="emp-dash__stat-label">Joined On</span>
+            <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
               <FiMail />
-              {empData.email || "No email available"}
             </div>
           </div>
+          <div className="emp-dash__stat-value" style={{ fontSize: "1.15rem" }}>
+            {joinedOn}
+          </div>
+          <div className="emp-dash__stat-meta">
+            {empData.email || "employee email not available"}
+          </div>
         </div>
+      </div>
 
-        <div className="emp-dash__grid emp-profile__grid">
-          <aside className="emp-dash__sidebar">
-            <div className="emp-dash__card">
-              <div className="emp-dash__profile">
-                <div className="emp-dash__avatar-wrap">
-                  <div className="emp-dash__avatar-fallback">
-                    {empData.name ? initials : <FaUser size={24} />}
-                  </div>
+      {/* Hero Section */}
+      <div className="emp-page__hero">
+        <div>
+          <div className="emp-page__hero-eyebrow">Employee workspace</div>
+          <div className="emp-page__hero-title">
+            Welcome back, {firstName}
+          </div>
+          <p className="emp-page__hero-copy">
+            Keep your profile information and records easy to access. Switch between experience, documents, letters, and medical details from one dashboard-style view.
+          </p>
+        </div>
+        <div className="emp-page__hero-actions">
+          <div className="emp-page__hero-btn--ghost" style={{ cursor: "default" }}>
+            <FiMail />
+            {empData.email || "No email available"}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Grid */}
+      <div className="emp-dash__grid emp-profile__grid">
+        <aside className="emp-dash__sidebar">
+          <div className="emp-dash__card">
+            <div className="emp-dash__profile">
+              <div className="emp-dash__avatar-wrap">
+                <div className="emp-dash__avatar-fallback">
+                  {empData.name ? initials : <FaUser size={24} />}
                 </div>
-                <h2 className="emp-dash__name">{empData.name || "Employee Profile"}</h2>
-                <span className="emp-dash__role">
-                  {empData.role || empData.designation || "Team Member"}
+              </div>
+              <h2 className="emp-dash__name">{empData.name || "Employee Profile"}</h2>
+              <span className="emp-dash__role">
+                {empData.role || empData.designation || "Team Member"}
+              </span>
+              <p className="emp-dash__emp-id">ID: {empData.employeeId || "Not available"}</p>
+            </div>
+
+            <div className="emp-dash__card-body" style={{ paddingTop: 0 }}>
+              <div className="emp-dash__detail-row">
+                <span className="emp-dash__detail-label">Email</span>
+                <span className="emp-dash__detail-value">{empData.email || "—"}</span>
+              </div>
+              <div className="emp-dash__detail-row">
+                <span className="emp-dash__detail-label">Department</span>
+                <span className="emp-dash__detail-value">{empData.department || "—"}</span>
+              </div>
+              <div className="emp-dash__detail-row">
+                <span className="emp-dash__detail-label">Status</span>
+                <span className="emp-dash__status-badge">
+                  <span className="emp-dash__status-dot" />
+                  Active
                 </span>
-                <p className="emp-dash__emp-id">ID: {empData.employeeId || "Not available"}</p>
               </div>
-
-              <div className="emp-dash__card-body" style={{ paddingTop: 0 }}>
-                <div className="emp-dash__detail-row">
-                  <span className="emp-dash__detail-label">Email</span>
-                  <span className="emp-dash__detail-value">{empData.email || "—"}</span>
-                </div>
-                <div className="emp-dash__detail-row">
-                  <span className="emp-dash__detail-label">Department</span>
-                  <span className="emp-dash__detail-value">{empData.department || "—"}</span>
-                </div>
-                <div className="emp-dash__detail-row">
-                  <span className="emp-dash__detail-label">Status</span>
-                  <span className="emp-dash__status-badge">
-                    <span className="emp-dash__status-dot" />
-                    Active
-                  </span>
-                </div>
-                <div className="emp-dash__detail-row">
-                  <span className="emp-dash__detail-label">Joined</span>
-                  <span className="emp-dash__detail-value">{joinedOn}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="emp-dash__card">
-              <div className="emp-dash__card-header">
-                <div>
-                  <h3 className="emp-dash__card-title">Profile Sections</h3>
-                  <p className="emp-dash__card-desc">Move between your employee records</p>
-                </div>
-              </div>
-              <div className="emp-dash__card-body">
-                <div className="emp-dash__actions">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`emp-dash__action ${activeTab === tab.id ? "emp-dash__action--primary" : ""}`}
-                    >
-                      <div className="emp-dash__action-icon">{tab.icon}</div>
-                      <div>
-                        <div className="emp-dash__action-title">{tab.label}</div>
-                        <div className="emp-dash__action-desc">{tab.shortDesc}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </aside>
-
-          <div className="emp-dash__main">
-            <div className="emp-dash__card">
-              <div className="emp-dash__card-header">
-                <div>
-                  <h3 className="emp-dash__card-title">{activeTabData.label}</h3>
-                  <p className="emp-dash__card-desc">{activeTabData.shortDesc}</p>
-                </div>
-              </div>
-              <div className="emp-dash__card-body">
-                {activeTabData.component}
+              <div className="emp-dash__detail-row">
+                <span className="emp-dash__detail-label">Joined</span>
+                <span className="emp-dash__detail-value">{joinedOn}</span>
               </div>
             </div>
           </div>
+
+          <div className="emp-dash__card">
+            <div className="emp-dash__card-header">
+              <div>
+                <h3 className="emp-dash__card-title">Profile Sections</h3>
+                <p className="emp-dash__card-desc">Move between your employee records</p>
+              </div>
+            </div>
+            <div className="emp-dash__card-body">
+              <div className="emp-dash__actions">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`emp-dash__action ${activeTab === tab.id ? "emp-dash__action--primary" : ""}`}
+                  >
+                    <div className="emp-dash__action-icon">{tab.icon}</div>
+                    <div>
+                      <div className="emp-dash__action-title">{tab.label}</div>
+                      <div className="emp-dash__action-desc">{tab.shortDesc}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <div className="emp-dash__main">
+          <div className="emp-dash__card">
+            <div className="emp-dash__card-header">
+              <div>
+                <h3 className="emp-dash__card-title">{activeTabData.label}</h3>
+                <p className="emp-dash__card-desc">{activeTabData.shortDesc}</p>
+              </div>
+            </div>
+            <div className="emp-dash__card-body">
+              {activeTabData.component}
+            </div>
+          </div>
         </div>
-      {/* </main> */}
       </div>
     </div>
   );
@@ -284,11 +365,15 @@ const SalaryHikeComponent = ({ employeeData, salaryData, loading }) => {
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch {
+      return "N/A";
+    }
   };
 
   if (loading) {

@@ -2743,15 +2743,39 @@ import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
+import {
+  FaStar,
+  FaCalendarAlt,
+  FaClock,
+  FaQuoteLeft,
+  FaQuoteRight,
+  FaRocket,
+  FaTimes,
+  FaVolumeUp,
+  FaUserFriends,
+  FaMapMarkerAlt,
+  FaCheckCircle,
+  FaUserCheck,
+  FaBuilding,
+  FaWifi,
+  FaArrowRight,
+  FaArrowLeft,
+  FaSpinner,
+  FaHome,
+  FaBriefcase,
+  FaUsers,
+} from "react-icons/fa";
+import { MdCelebration, MdLocationOn, MdWork, MdOutlineAttachMoney } from "react-icons/md";
+import { BsStars, BsCalendarCheck, BsClockHistory, BsPersonBadge } from "react-icons/bs";
 
 // FIX: Ensure BASE_URL ends without trailing slash and remove any duplicate 'api'
-const BASE_URL = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-const cleanBaseUrl = BASE_URL.replace(/\/api\/?$/, '');
+const BASE_URL = API_BASE_URL.endsWith("/") ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+const cleanBaseUrl = BASE_URL.replace(/\/api\/?$/, "");
 
 const ONSITE_RADIUS_M = 50;
 
 // List of departments that should ONLY have onsite option
-const ONSITE_ONLY_DEPARTMENTS = ['Laboratory Medicine', 'Medical', 'Nursing'];
+const ONSITE_ONLY_DEPARTMENTS = ["Laboratory Medicine", "Medical", "Nursing"];
 
 // Haversine formula
 function haversineDistance(lat1, lon1, lat2, lon2) {
@@ -2761,12 +2785,295 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
   const dLon = toRad(lon2 - lon1);
   const a =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) *
-    Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) ** 2;
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return Math.round(R * c);
 }
+
+// Motivational thoughts collection with categories
+const MOTIVATIONAL_THOUGHTS = [
+  { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", emoji: "💪", category: "success" },
+  { text: "The only way to do great work is to love what you do.", emoji: "❤️", category: "passion" },
+  { text: "Believe you can and you're halfway there.", emoji: "🌟", category: "belief" },
+  { text: "It does not matter how slowly you go as long as you do not stop.", emoji: "🚀", category: "persistence" },
+  { text: "The future belongs to those who believe in the beauty of their dreams.", emoji: "✨", category: "dreams" },
+  { text: "You are never too old to set another goal or to dream a new dream.", emoji: "🌈", category: "goals" },
+  { text: "The secret of getting ahead is getting started.", emoji: "🏃‍♂️", category: "action" },
+  { text: "Your attitude, not your aptitude, will determine your altitude.", emoji: "📈", category: "attitude" },
+  { text: "The only impossible journey is the one you never begin.", emoji: "🌄", category: "courage" },
+  { text: "Dream big and dare to fail.", emoji: "🎯", category: "ambition" },
+  { text: "Success is not the key to happiness. Happiness is the key to success.", emoji: "😊", category: "happiness" },
+  { text: "The best time to plant a tree was 20 years ago. The second best time is now.", emoji: "🌳", category: "timing" },
+  { text: "You miss 100% of the shots you don't take.", emoji: "🏀", category: "opportunity" },
+  { text: "The only limit to our realization of tomorrow is our doubts of today.", emoji: "🔥", category: "belief" },
+  { text: "Great things never come from comfort zones.", emoji: "🌊", category: "growth" },
+  { text: "The difference between ordinary and extraordinary is that little extra.", emoji: "⭐", category: "excellence" },
+  { text: "Success usually comes to those who are too busy to be looking for it.", emoji: "🎯", category: "focus" },
+  { text: "Don't watch the clock; do what it does. Keep going.", emoji: "⏰", category: "persistence" },
+  { text: "The only person you are destined to become is the person you decide to be.", emoji: "🌟", category: "identity" },
+  { text: "What you get by achieving your goals is not as important as what you become.", emoji: "🌱", category: "growth" },
+  { text: "The journey of a thousand miles begins with a single step.", emoji: "👣", category: "beginning" },
+  { text: "Believe in yourself and all that you are. Know that there is something inside you that is greater than any obstacle.", emoji: "💫", category: "belief" },
+  { text: "Your limitation—it's only your imagination.", emoji: "🧠", category: "imagination" },
+  { text: "Push yourself, because no one else is going to do it for you.", emoji: "💪", category: "motivation" },
+];
+
+// Greetings based on time of day with fun emojis
+const getGreeting = (name) => {
+  const hour = new Date().getHours();
+  let greeting = "";
+  let emoji = "";
+
+  if (hour >= 5 && hour < 12) {
+    greeting = "Good Morning";
+    emoji = "🌅";
+  } else if (hour >= 12 && hour < 17) {
+    greeting = "Good Afternoon";
+    emoji = "☀️";
+  } else if (hour >= 17 && hour < 21) {
+    greeting = "Good Evening";
+    emoji = "🌆";
+  } else {
+    greeting = "Good Night";
+    emoji = "🌙";
+  }
+
+  return { greeting, emoji, name };
+};
+
+// Get Indian date format with day
+const getIndianDate = () => {
+  const now = new Date();
+  const options = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "Asia/Kolkata",
+  };
+  return now.toLocaleDateString("en-IN", options);
+};
+
+// Get Indian time with seconds
+const getIndianTime = () => {
+  const now = new Date();
+  return now.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
+  });
+};
+
+// Get current day and date details
+const getDayDetails = () => {
+  const now = new Date();
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const day = days[now.getDay()];
+  const date = now.getDate();
+  const month = now.toLocaleString("en-US", { month: "long" });
+  const year = now.getFullYear();
+  return { day, date, month, year };
+};
+
+// Get random motivational thought
+const getRandomThought = () => {
+  return MOTIVATIONAL_THOUGHTS[Math.floor(Math.random() * MOTIVATIONAL_THOUGHTS.length)];
+};
+
+// Sound function - Welcome
+const playWelcomeSound = () => {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [523.25, 587.33, 659.25, 783.99];
+    notes.forEach((freq, index) => {
+      setTimeout(() => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.frequency.value = freq;
+        oscillator.type = "sine";
+        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.25);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.25);
+      }, index * 150);
+    });
+  } catch (e) {
+    console.log("Audio not supported");
+  }
+};
+
+// Success sound for Check-in/Check-out
+const playSuccessSound = () => {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+    notes.forEach((freq, index) => {
+      setTimeout(() => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.frequency.value = freq;
+        oscillator.type = "sine";
+        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+      }, index * 120);
+    });
+  } catch (e) {
+    console.log("Audio not supported");
+  }
+};
+
+// Female voice welcome message
+const speakWelcomeMessage = (name, greeting) => {
+  try {
+    if (!("speechSynthesis" in window)) {
+      console.log("Speech synthesis not supported");
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const { day, date, month, year } = getDayDetails();
+    const currentTime = getIndianTime();
+
+    const message = `Hello ${name}! ${greeting}! Today is ${day}, ${date} ${month} ${year}. The current time is ${currentTime} IST. Welcome to your attendance dashboard. Have a wonderful and productive day ahead. Stay motivated and keep shining!`;
+
+    const utterance = new SpeechSynthesisUtterance(message);
+    const voices = window.speechSynthesis.getVoices();
+
+    let femaleVoice = voices.find(
+      (voice) =>
+        voice.name.toLowerCase().includes("female") ||
+        voice.name.toLowerCase().includes("woman") ||
+        voice.name.toLowerCase().includes("girl") ||
+        voice.name.toLowerCase().includes("zira") ||
+        voice.name.toLowerCase().includes("samantha") ||
+        voice.name.toLowerCase().includes("victoria") ||
+        voice.name.toLowerCase().includes("google uk english female")
+    );
+
+    if (!femaleVoice) {
+      femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
+    }
+
+    if (!femaleVoice) {
+      femaleVoice = voices.find((voice) => voice.lang.includes("en"));
+    }
+
+    if (femaleVoice) {
+      utterance.voice = femaleVoice;
+    }
+
+    utterance.lang = "en-IN";
+    utterance.pitch = 1.2;
+    utterance.rate = 0.9;
+    utterance.volume = 1;
+
+    window.speechSynthesis.speak(utterance);
+
+    return true;
+  } catch (error) {
+    console.log("Speech synthesis error:", error);
+    return false;
+  }
+};
+
+// Female voice for Check-in success
+const speakCheckInSuccess = (name) => {
+  try {
+    if (!("speechSynthesis" in window)) return;
+
+    window.speechSynthesis.cancel();
+
+    const currentTime = getIndianTime();
+    const message = `Congratulations ${name}! You have successfully checked in at ${currentTime} IST. Have a great day at work!`;
+
+    const utterance = new SpeechSynthesisUtterance(message);
+    const voices = window.speechSynthesis.getVoices();
+
+    let femaleVoice = voices.find(
+      (voice) =>
+        voice.name.toLowerCase().includes("female") ||
+        voice.name.toLowerCase().includes("woman") ||
+        voice.name.toLowerCase().includes("girl") ||
+        voice.name.toLowerCase().includes("zira") ||
+        voice.name.toLowerCase().includes("samantha")
+    );
+
+    if (!femaleVoice) {
+      femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
+    }
+
+    if (!femaleVoice) {
+      femaleVoice = voices.find((voice) => voice.lang.includes("en"));
+    }
+
+    if (femaleVoice) {
+      utterance.voice = femaleVoice;
+    }
+
+    utterance.lang = "en-IN";
+    utterance.pitch = 1.2;
+    utterance.rate = 0.9;
+    utterance.volume = 1;
+
+    window.speechSynthesis.speak(utterance);
+  } catch (error) {
+    console.log("Speech error:", error);
+  }
+};
+
+// Female voice for Check-out success
+const speakCheckOutSuccess = (name) => {
+  try {
+    if (!("speechSynthesis" in window)) return;
+
+    window.speechSynthesis.cancel();
+
+    const currentTime = getIndianTime();
+    const message = `Goodbye ${name}! You have successfully checked out at ${currentTime} IST. Thank you for your hard work today. See you tomorrow!`;
+
+    const utterance = new SpeechSynthesisUtterance(message);
+    const voices = window.speechSynthesis.getVoices();
+
+    let femaleVoice = voices.find(
+      (voice) =>
+        voice.name.toLowerCase().includes("female") ||
+        voice.name.toLowerCase().includes("woman") ||
+        voice.name.toLowerCase().includes("girl") ||
+        voice.name.toLowerCase().includes("zira") ||
+        voice.name.toLowerCase().includes("samantha")
+    );
+
+    if (!femaleVoice) {
+      femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
+    }
+
+    if (!femaleVoice) {
+      femaleVoice = voices.find((voice) => voice.lang.includes("en"));
+    }
+
+    if (femaleVoice) {
+      utterance.voice = femaleVoice;
+    }
+
+    utterance.lang = "en-IN";
+    utterance.pitch = 1.2;
+    utterance.rate = 0.9;
+    utterance.volume = 1;
+
+    window.speechSynthesis.speak(utterance);
+  } catch (error) {
+    console.log("Speech error:", error);
+  }
+};
 
 export default function AttendanceCapture() {
   const navigate = useNavigate();
@@ -2789,10 +3096,26 @@ export default function AttendanceCapture() {
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(true);
-  const [locationError, setLocationError] = useState("");
   const [allLocations, setAllLocations] = useState([]);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // Success Popup states
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [successEmoji, setSuccessEmoji] = useState("");
+  const [successType, setSuccessType] = useState(""); // "checkin" or "checkout"
+  const [isPopupClosing, setIsPopupClosing] = useState(false);
+
+  // Welcome Popup states
+  const [showWelcomePopup, setShowWelcomePopup] = useState(true);
+  const [greetingMessage, setGreetingMessage] = useState("");
+  const [greetingEmoji, setGreetingEmoji] = useState("");
+  const [currentIndianDate, setCurrentIndianDate] = useState("");
+  const [currentIndianTime, setCurrentIndianTime] = useState("");
+  const [motivationalThought, setMotivationalThought] = useState(null);
+  const [particles, setParticles] = useState([]);
 
   // Current time state
   const [currentTime, setCurrentTime] = useState("");
@@ -2810,12 +3133,15 @@ export default function AttendanceCapture() {
       setEmployeeEmail(stateEmail);
       if (stateName) setEmployeeName(stateName);
       if (stateDepartment) setEmployeeDepartment(stateDepartment);
-      localStorage.setItem("employeeData", JSON.stringify({
-        employeeId: stateId,
-        email: stateEmail,
-        employeeName: stateName,
-        department: stateDepartment
-      }));
+      localStorage.setItem(
+        "employeeData",
+        JSON.stringify({
+          employeeId: stateId,
+          email: stateEmail,
+          employeeName: stateName,
+          department: stateDepartment,
+        })
+      );
     } else {
       const stored = localStorage.getItem("employeeData");
       if (stored) {
@@ -2829,6 +3155,48 @@ export default function AttendanceCapture() {
       }
     }
   }, [routerLocation.state, navigate]);
+
+  // Initialize welcome popup data when employee name is available
+  useEffect(() => {
+    if (employeeName) {
+      const { greeting, emoji } = getGreeting(employeeName);
+      setGreetingMessage(greeting);
+      setGreetingEmoji(emoji);
+      setCurrentIndianDate(getIndianDate());
+      setCurrentIndianTime(getIndianTime());
+      const thought = getRandomThought();
+      setMotivationalThought(thought);
+
+      setTimeout(() => {
+        playWelcomeSound();
+      }, 300);
+
+      setTimeout(() => {
+        speakWelcomeMessage(employeeName, greeting);
+        setIsSpeaking(true);
+      }, 1000);
+
+      generateParticles();
+    }
+  }, [employeeName]);
+
+  // Generate floating particles
+  const generateParticles = () => {
+    const colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD", "#FF9FF3", "#54A0FF"];
+    const newParticles = [];
+    for (let i = 0; i < 20; i++) {
+      newParticles.push({
+        id: i,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: Math.random() * 6 + 3,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        duration: Math.random() * 3 + 2,
+        delay: Math.random() * 2,
+      });
+    }
+    setParticles(newParticles);
+  };
 
   // Fetch Employee's Assigned Location
   useEffect(() => {
@@ -2901,9 +3269,10 @@ export default function AttendanceCapture() {
     alert(`Switched to location: ${loc.name}`);
   };
 
-  const filteredLocations = allLocations.filter(loc =>
-    loc.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    loc.fullAddress?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredLocations = allLocations.filter(
+    (loc) =>
+      loc.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      loc.fullAddress?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Fetch today's attendance
@@ -2913,22 +3282,21 @@ export default function AttendanceCapture() {
       try {
         const url = `${cleanBaseUrl}/api/attendance/myattendance/${employeeId}`;
         const res = await axios.get(url);
-        
+
         if (res.data.employeeName) {
           setEmployeeName(res.data.employeeName);
         }
 
         const records = res.data.records || [];
-        
+
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
-        const todayRecord = records.find(rec => {
+
+        const todayRecord = records.find((rec) => {
           const checkInTime = new Date(rec.checkInTime);
-          return checkInTime >= today && 
-                 (rec.status === "checked-in" || rec.status === "on-break");
+          return checkInTime >= today && (rec.status === "checked-in" || rec.status === "on-break");
         });
-        
+
         if (todayRecord) {
           setCheckedIn(true);
         } else {
@@ -2945,8 +3313,16 @@ export default function AttendanceCapture() {
   useEffect(() => {
     const updateDateTime = () => {
       const now = new Date();
-      setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-      setCurrentDate(now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }));
+      setCurrentTime(now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+      setCurrentDate(
+        now.toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      );
+      setCurrentIndianTime(getIndianTime());
     };
     updateDateTime();
     const interval = setInterval(updateDateTime, 60000);
@@ -2965,8 +3341,10 @@ export default function AttendanceCapture() {
         setPosition(coords);
         if (assignedLocation) {
           const dist = haversineDistance(
-            coords.lat, coords.lng,
-            assignedLocation.latitude, assignedLocation.longitude
+            coords.lat,
+            coords.lng,
+            assignedLocation.latitude,
+            assignedLocation.longitude
           );
           setDistance(dist);
         }
@@ -2982,7 +3360,7 @@ export default function AttendanceCapture() {
     if (!employeeId || !employeeEmail) return alert("Employee data missing.");
 
     const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
-    
+
     if (isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M) {
       return alert(`You are outside the office range (${distance}m). Must be within ${ONSITE_RADIUS_M}m.`);
     }
@@ -2997,10 +3375,21 @@ export default function AttendanceCapture() {
         employeeEmail,
         latitude: position.lat,
         longitude: position.lng,
-        reason: isOnsiteOnlyDepartment ? "Onsite" : (reason || "Onsite"),
+        reason: isOnsiteOnlyDepartment ? "Onsite" : reason || "Onsite",
       });
-      alert("Check-in successful!");
-      window.location.reload();
+
+      // Show success popup - remove alert
+      setSuccessType("checkin");
+      setSuccessMessage(`Congratulations ${employeeName}!`);
+      setSuccessEmoji("🎉");
+      setShowSuccessPopup(true);
+      setIsPopupClosing(false);
+
+      // Play success sound and speak
+      playSuccessSound();
+      setTimeout(() => {
+        speakCheckInSuccess(employeeName);
+      }, 500);
     } catch (err) {
       alert(err.response?.data?.message || "Check-in failed.");
     } finally {
@@ -3011,16 +3400,14 @@ export default function AttendanceCapture() {
   // Handle Check-Out
   const handleCheckOut = async () => {
     if (!employeeId) return alert("Employee data missing.");
-    
-    // Get location if available, otherwise use last known position
+
     let lat = null;
     let lng = null;
-    
+
     if (position) {
       lat = position.lat;
       lng = position.lng;
     } else {
-      // Try to get current location for checkout
       const gotLocation = await new Promise((resolve) => {
         if (!navigator.geolocation) {
           resolve(false);
@@ -3036,13 +3423,13 @@ export default function AttendanceCapture() {
           { enableHighAccuracy: true, timeout: 5000 }
         );
       });
-      
+
       if (!gotLocation) {
         const proceed = window.confirm("Location not available. Check out anyway?");
         if (!proceed) return;
       }
     }
-    
+
     if (!window.confirm("Are you sure you want to check out?")) return;
 
     setSubmitting(true);
@@ -3052,10 +3439,21 @@ export default function AttendanceCapture() {
         payload.latitude = lat;
         payload.longitude = lng;
       }
-      
+
       await axios.post(`${cleanBaseUrl}/api/attendance/checkout`, payload);
-      alert("Check-out successful!");
-      window.location.reload();
+
+      // Show success popup - remove alert
+      setSuccessType("checkout");
+      setSuccessMessage(`Goodbye ${employeeName}!`);
+      setSuccessEmoji("👋");
+      setShowSuccessPopup(true);
+      setIsPopupClosing(false);
+
+      // Play success sound and speak
+      playSuccessSound();
+      setTimeout(() => {
+        speakCheckOutSuccess(employeeName);
+      }, 500);
     } catch (err) {
       console.error("Check-out error:", err);
       alert(err.response?.data?.message || "Check-out failed.");
@@ -3064,18 +3462,29 @@ export default function AttendanceCapture() {
     }
   };
 
+  // Handle close success popup
+  const handleCloseSuccessPopup = () => {
+    if (isPopupClosing) return;
+    setIsPopupClosing(true);
+    setShowSuccessPopup(false);
+    // Reload after popup closes
+    setTimeout(() => {
+      window.location.reload();
+    }, 300);
+  };
+
   // Manual swipe handler
   const handleManualSwipe = () => {
     if (submitting) {
       alert("Please wait, previous action is processing...");
       return;
     }
-    
+
     if (!checkedIn && !position) {
       alert("Please capture your location first.");
       return;
     }
-    
+
     setIsSwiping(true);
     let progress = 0;
     const interval = setInterval(() => {
@@ -3145,45 +3554,245 @@ export default function AttendanceCapture() {
     const handleTouchMove = (e) => onMove(e.touches[0].clientX);
     const handleTouchEnd = (e) => onEnd(e.changedTouches[0]?.clientX || 0);
 
-    swipeArea.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    swipeArea.addEventListener('touchstart', handleTouchStart);
-    document.addEventListener('touchmove', handleTouchMove);
-    document.addEventListener('touchend', handleTouchEnd);
+    swipeArea.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    swipeArea.addEventListener("touchstart", handleTouchStart);
+    document.addEventListener("touchmove", handleTouchMove);
+    document.addEventListener("touchend", handleTouchEnd);
 
     return () => {
-      swipeArea.removeEventListener('mousedown', handleMouseDown);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      swipeArea.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
+      swipeArea.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      swipeArea.removeEventListener("touchstart", handleTouchStart);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
     };
   }, [checkedIn, submitting, position, employeeId, assignedLocation]);
 
   const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
 
+  // Function to replay voice
+  const replayVoice = () => {
+    if (employeeName) {
+      const { greeting } = getGreeting(employeeName);
+      speakWelcomeMessage(employeeName, greeting);
+      setIsSpeaking(true);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 p-4">
       <div className="max-w-md mx-auto">
+        {/* Success Popup - Stays until user clicks OK */}
+        {showSuccessPopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+            <div className="relative bg-gradient-to-br from-white via-green-50/95 to-emerald-50/95 rounded-3xl shadow-2xl max-w-sm w-full p-6 transform animate-scale-up border border-green-200/50">
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-cyan-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+
+              {/* Voice Indicator - Shows while speaking */}
+              <div className="absolute top-3 right-3 flex items-center gap-1">
+                <div className="flex items-center gap-0.5">
+                  <div className="w-1 h-2 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0s" }}></div>
+                  <div className="w-1 h-3 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.2s" }}></div>
+                  <div className="w-1 h-4 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.4s" }}></div>
+                  <div className="w-1 h-3 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.6s" }}></div>
+                  <div className="w-1 h-2 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.8s" }}></div>
+                </div>
+                <span className="text-[10px] font-medium text-green-600">🔊</span>
+              </div>
+
+              <div className="relative text-center">
+                {/* Success Icon */}
+                <div className="flex justify-center mb-3">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full blur-xl opacity-30 animate-pulse"></div>
+                    <div className="relative w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/30">
+                      <span className="text-4xl animate-bounce">{successEmoji}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Success Message */}
+                <h2 className="text-xl font-bold text-gray-900">{successMessage}</h2>
+
+                <p className="text-sm text-gray-600 mt-1">
+                  {successType === "checkin" ? (
+                    <>
+                      You have successfully <span className="text-green-600 font-semibold">checked in</span> at{" "}
+                      {getIndianTime()} IST
+                    </>
+                  ) : (
+                    <>
+                      You have successfully <span className="text-orange-600 font-semibold">checked out</span> at{" "}
+                      {getIndianTime()} IST
+                    </>
+                  )}
+                </p>
+
+                <p className="text-xs text-gray-500 mt-2">
+                  {successType === "checkin" ? "Have a great day at work! 💪" : "Thank you for your hard work today! 🌟"}
+                </p>
+
+                {/* OK Button - Only way to close */}
+                <button
+                  onClick={handleCloseSuccessPopup}
+                  disabled={isPopupClosing}
+                  className="mt-4 w-full py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isPopupClosing ? "Closing..." : "OK 👍"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Small Welcome Popup */}
+        {showWelcomePopup && employeeName && motivationalThought && (
+          <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+            {/* Floating Particles */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {particles.map((particle) => (
+                <div
+                  key={particle.id}
+                  className="absolute rounded-full animate-float"
+                  style={{
+                    left: `${particle.x}%`,
+                    top: `${particle.y}%`,
+                    width: `${particle.size}px`,
+                    height: `${particle.size}px`,
+                    backgroundColor: particle.color,
+                    opacity: 0.5,
+                    animationDuration: `${particle.duration}s`,
+                    animationDelay: `${particle.delay}s`,
+                  }}
+                />
+              ))}
+            </div>
+
+            <div className="relative bg-gradient-to-br from-white via-indigo-50/95 to-purple-50/95 rounded-3xl shadow-2xl max-w-sm w-full p-5 transform animate-scale-up border border-white/30">
+              {/* Close Button (X) */}
+              <button
+                onClick={() => {
+                  setShowWelcomePopup(false);
+                  if (window.speechSynthesis) {
+                    window.speechSynthesis.cancel();
+                  }
+                }}
+                className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full bg-white/80 hover:bg-red-50 hover:text-red-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:rotate-90"
+                aria-label="Close"
+              >
+                <FaTimes className="text-gray-600 hover:text-red-500 transition-colors text-sm" />
+              </button>
+
+              {/* Voice Indicator */}
+              {isSpeaking && (
+                <div className="absolute top-2 right-12 flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
+                    <div className="w-1 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: "0s" }}></div>
+                    <div className="w-1 h-3 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: "0.2s" }}></div>
+                    <div className="w-1 h-4 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: "0.4s" }}></div>
+                    <div className="w-1 h-3 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: "0.6s" }}></div>
+                    <div className="w-1 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: "0.8s" }}></div>
+                  </div>
+                  <span className="text-[10px] font-medium text-purple-600">🔊</span>
+                </div>
+              )}
+
+              <div className="relative">
+                {/* Small Icon */}
+                <div className="flex justify-center mb-3">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl blur-lg opacity-30 animate-pulse"></div>
+                    <div className="relative w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                      <span className="text-3xl animate-bounce" style={{ animationDuration: "2s" }}>
+                        {greetingEmoji || "🌟"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Greeting */}
+                <h2 className="text-xl font-bold text-center text-gray-900">
+                  {greetingMessage}, {employeeName}! 👋
+                </h2>
+
+                {/* Date and Time */}
+                <div className="mt-2 text-center space-y-0.5">
+                  <p className="text-xs text-indigo-600 font-medium flex items-center justify-center gap-1">
+                    <FaCalendarAlt className="text-indigo-500 text-xs" />
+                    {currentIndianDate}
+                  </p>
+                  <p className="text-xs text-purple-600 font-medium flex items-center justify-center gap-1">
+                    <FaClock className="text-purple-500 text-xs" />
+                    {currentIndianTime} IST
+                  </p>
+                </div>
+
+                {/* Motivational Thought - Smaller */}
+                <div className="mt-2 p-2.5 bg-gradient-to-r from-indigo-50/80 to-purple-50/80 rounded-xl border border-indigo-100/50">
+                  <div className="flex items-start gap-1.5">
+                    <FaQuoteLeft className="text-indigo-400 text-xs mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-gray-700 text-center leading-relaxed">
+                      {motivationalThought.emoji} {motivationalThought.text}
+                    </p>
+                    <FaQuoteRight className="text-indigo-400 text-xs mt-0.5 flex-shrink-0" />
+                  </div>
+                </div>
+
+                {/* Replay Voice Button */}
+                <button
+                  onClick={replayVoice}
+                  className="mt-2 w-full py-1.5 rounded-xl text-xs font-medium bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-500/25 transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  <FaVolumeUp className="text-white text-xs" />
+                  <span>🔊 Listen Again</span>
+                </button>
+
+                {/* Get Started Button */}
+                <button
+                  onClick={() => {
+                    setShowWelcomePopup(false);
+                    if (window.speechSynthesis) {
+                      window.speechSynthesis.cancel();
+                    }
+                  }}
+                  className="mt-2 w-full relative group py-2 rounded-xl text-sm font-bold text-white overflow-hidden transition-all duration-300 transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-indigo-500/30"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 group-hover:from-indigo-600 group-hover:via-purple-600 group-hover:to-pink-600 transition-all duration-300"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-all duration-700"></div>
+                  <span className="relative flex items-center justify-center gap-2 text-sm">
+                    <FaRocket className="text-white group-hover:animate-bounce" />
+                    Let's Get Started
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header with Time */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-white/50">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-            <span className="text-xs font-medium text-gray-600">Live</span>
-            <div className="w-px h-4 bg-gray-300"></div>
+          <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md border border-white/50">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+              <span className="text-xs font-medium text-gray-600">Live</span>
+            </div>
+            <div className="w-px h-5 bg-gray-300"></div>
             <span className="text-xs font-medium text-gray-700">{currentDate}</span>
-            <div className="w-px h-4 bg-gray-300"></div>
+            <div className="w-px h-5 bg-gray-300"></div>
             <span className="text-sm font-bold text-indigo-600">{currentTime}</span>
           </div>
         </div>
 
-        {/* Employee Info Card - Glassmorphism */}
-        <div className="relative overflow-hidden bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 p-5 mb-4">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-cyan-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
-          
+        {/* Employee Info Card */}
+        <div className="relative overflow-hidden bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-5 mb-4">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-400/10 to-cyan-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+
           <div className="relative flex items-center gap-4">
             <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
               <span className="text-2xl font-bold text-white">
@@ -3192,28 +3801,38 @@ export default function AttendanceCapture() {
             </div>
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-bold text-gray-900 truncate">{employeeName || "Employee"}</h2>
-              <p className="text-sm text-indigo-600 font-medium">{employeeDepartment || "Department"}</p>
+              <p className="text-sm text-indigo-600 font-medium flex items-center gap-1.5">
+                <FaUsers className="text-indigo-500 text-xs" />
+                {employeeDepartment || "Department"}
+              </p>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-xs text-gray-500">ID: {employeeId || "N/A"}</span>
+                <span className="text-xs text-gray-500 flex items-center gap-1">
+                  <BsPersonBadge className="text-gray-400" />
+                  ID: {employeeId || "N/A"}
+                </span>
                 <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                <span className="text-xs text-gray-500 truncate">{employeeEmail || "email"}</span>
+                <span className="text-xs text-gray-500 truncate flex items-center gap-1">
+                  <span className="text-gray-400">✉️</span>
+                  {employeeEmail || "email"}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Location Card - Glassmorphism */}
-        <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 p-4 mb-4">
+        {/* Location Card */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-4 mb-4">
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-indigo-100 rounded-xl flex items-center justify-center">
-                <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                </svg>
+              <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center">
+                <FaMapMarkerAlt className="w-4 h-4 text-indigo-600" />
               </div>
               <h3 className="text-sm font-semibold text-gray-900">Location</h3>
             </div>
-            <button onClick={() => setIsLocationModalOpen(true)} className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+            <button
+              onClick={() => setIsLocationModalOpen(true)}
+              className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100"
+            >
               Change Location
             </button>
           </div>
@@ -3225,18 +3844,24 @@ export default function AttendanceCapture() {
             </div>
           ) : assignedLocation ? (
             <div>
-              <div className="flex items-center gap-2 p-2 bg-indigo-50/50 rounded-xl">
-                <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                  </svg>
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-indigo-50/80 to-purple-50/80 rounded-xl border border-indigo-100/50">
+                <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FaBuilding className="w-4 h-4 text-indigo-600" />
                 </div>
-                <div className="min-w-0">
-                  <h4 className="text-sm font-medium text-gray-900 truncate">{assignedLocation.name || 'Unnamed Location'}</h4>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-medium text-gray-900 truncate">
+                    {assignedLocation.name || "Unnamed Location"}
+                  </h4>
                   <p className="text-xs text-gray-500">Radius: {ONSITE_RADIUS_M}m</p>
                 </div>
                 {position && (
-                  <div className={`ml-auto px-2.5 py-1 rounded-full text-xs font-medium ${distance <= ONSITE_RADIUS_M ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                  <div
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold ${
+                      distance <= ONSITE_RADIUS_M
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
                     {distance}m
                   </div>
                 )}
@@ -3245,30 +3870,41 @@ export default function AttendanceCapture() {
               {position && distance != null && !checkedIn && (
                 <div className="mt-3 p-3 bg-gray-50/80 rounded-xl">
                   <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-xs text-gray-600">Distance from office</span>
-                    <span className={`text-sm font-bold ${distance <= ONSITE_RADIUS_M ? 'text-green-600' : 'text-red-600'}`}>
+                    <span className="text-xs text-gray-600 flex items-center gap-1">
+                      <FaWifi className="text-gray-400" />
+                      Distance from office
+                    </span>
+                    <span
+                      className={`text-sm font-bold ${
+                        distance <= ONSITE_RADIUS_M ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
                       {distance}m
                     </span>
                   </div>
-                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full transition-all duration-500 ${distance <= ONSITE_RADIUS_M ? 'bg-gradient-to-r from-green-400 to-green-500' : 'bg-gradient-to-r from-red-400 to-red-500'}`} 
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-500 ${
+                        distance <= ONSITE_RADIUS_M
+                          ? "bg-gradient-to-r from-green-400 to-green-500"
+                          : "bg-gradient-to-r from-red-400 to-red-500"
+                      }`}
                       style={{ width: `${Math.min((distance / ONSITE_RADIUS_M) * 100, 100)}%` }}
                     ></div>
                   </div>
                   {distance > ONSITE_RADIUS_M && !isOnsiteOnlyDepartment && (
-                    <p className="text-xs text-red-500 mt-1.5">⚠️ Outside office radius - Reason required</p>
+                    <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                      <span>⚠️</span> Outside office radius - Reason required
+                    </p>
                   )}
                 </div>
               )}
 
-              <button 
-                onClick={fetchLocation} 
+              <button
+                onClick={fetchLocation}
                 className="w-full mt-3 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg shadow-indigo-500/25 transition-all duration-200 flex items-center justify-center gap-2"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                </svg>
+                <FaMapMarkerAlt className="w-4 h-4" />
                 <span>{!position ? "Get Location" : "Update Location"}</span>
               </button>
             </div>
@@ -3279,21 +3915,19 @@ export default function AttendanceCapture() {
           )}
         </div>
 
-        {/* Reason Selection - Only for check-in when outside radius */}
+        {/* Reason Selection */}
         {!checkedIn && !isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && (
-          <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 p-4 mb-4">
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-4 mb-4">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <svg className="w-3.5 h-3.5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                </svg>
+              <div className="w-7 h-7 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <span className="text-sm">⚠️</span>
               </div>
               <span className="text-sm font-medium text-gray-900">Reason Required</span>
-              <span className="ml-auto text-xs text-red-500">Outside: {distance}m</span>
+              <span className="ml-auto text-xs text-red-500 font-medium">Outside: {distance}m</span>
             </div>
-            <select 
-              value={reason} 
-              onChange={(e) => setReason(e.target.value)} 
+            <select
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
               className="w-full p-2.5 text-sm border border-gray-200 rounded-xl bg-white/50 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
             >
               <option value="">-- Select Reason --</option>
@@ -3307,12 +3941,10 @@ export default function AttendanceCapture() {
 
         {/* Onsite-only department warning */}
         {!checkedIn && isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && (
-          <div className="bg-red-50/80 backdrop-blur-sm rounded-2xl shadow-xl border border-red-200/50 p-4 mb-4">
+          <div className="bg-red-50/80 backdrop-blur-sm rounded-3xl shadow-xl border border-red-200/50 p-4 mb-4">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                </svg>
+              <div className="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <span className="text-lg">🚫</span>
               </div>
               <div>
                 <p className="text-sm font-semibold text-red-800">
@@ -3325,72 +3957,81 @@ export default function AttendanceCapture() {
         )}
 
         {/* Attendance Swipe Card */}
-        <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 p-5">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">Today's Attendance</h3>
+              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                <BsCalendarCheck className="text-indigo-500" />
+                Today's Attendance
+              </h3>
               <p className="text-xs text-gray-500">
                 {!checkedIn ? "Ready to check in" : "Checked in - swipe to check out"}
               </p>
             </div>
-            <div className={`px-3 py-1.5 rounded-xl text-xs font-medium ${
-              !checkedIn ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'
-            }`}>
+            <div
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold ${
+                !checkedIn ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"
+              }`}
+            >
               {!checkedIn ? "Not Checked In" : "Checked In ✅"}
             </div>
           </div>
 
           <div className="text-center mb-3">
-            <p className="text-sm text-gray-600 font-medium">
-              {!checkedIn ? "Swipe right → to check in" : "Swipe left ← to check out"}
+            <p className="text-sm text-gray-600 font-medium flex items-center justify-center gap-2">
+              {!checkedIn ? (
+                <>
+                  <FaArrowRight className="text-indigo-500 text-xs" />
+                  Swipe right to check in
+                </>
+              ) : (
+                <>
+                  <FaArrowLeft className="text-red-500 text-xs" />
+                  Swipe left to check out
+                </>
+              )}
             </p>
           </div>
 
           <div className="mb-3">
-            <div 
-              ref={swipeAreaRef} 
-              className={`relative overflow-hidden rounded-xl ${submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            <div
+              ref={swipeAreaRef}
+              className={`relative overflow-hidden rounded-xl ${
+                submitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+              }`}
               onClick={handleManualSwipe}
             >
               {!checkedIn ? (
                 <div className="relative bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-14">
-                  <div 
-                    className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400" 
-                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? 'none' : 'width 0.2s ease-out' }}
+                  <div
+                    className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"
+                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.2s ease-out" }}
                   ></div>
                   <div className="absolute inset-0 flex items-center justify-between px-4">
                     <div className="flex items-center gap-2 text-white">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                      </svg>
+                      <FaCheckCircle className="w-5 h-5" />
                       <span className="text-sm font-bold">CHECK IN</span>
                     </div>
                     <div className="flex items-center gap-1 text-white/90">
                       <span className="text-xs">Swipe →</span>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                      </svg>
+                      <FaArrowRight className="w-5 h-5" />
                     </div>
                   </div>
                 </div>
               ) : (
                 <div className="relative bg-gradient-to-r from-red-500 to-orange-500 h-14">
-                  <div 
-                    className="absolute right-0 top-0 bottom-0 bg-gradient-to-r from-red-400 to-orange-400" 
-                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? 'none' : 'width 0.2s ease-out' }}
+                  <div
+                    className="absolute right-0 top-0 bottom-0 bg-gradient-to-r from-red-400 to-orange-400"
+                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.2s ease-out" }}
                   ></div>
                   <div className="absolute inset-0 flex items-center justify-between px-4">
                     <div className="flex items-center gap-1 text-white/90">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                      </svg>
+                      <FaArrowLeft className="w-5 h-5" />
                       <span className="text-xs">Swipe</span>
                     </div>
                     <div className="flex items-center gap-2 text-white">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                      </svg>
                       <span className="text-sm font-bold">CHECK OUT</span>
+                      <FaTimes className="w-5 h-5" />
                     </div>
                   </div>
                 </div>
@@ -3404,7 +4045,7 @@ export default function AttendanceCapture() {
           {submitting && (
             <div className="text-center py-2">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-xl">
-                <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                <FaSpinner className="w-4 h-4 text-indigo-600 animate-spin" />
                 <span className="text-sm text-indigo-600 font-medium">Processing...</span>
               </div>
             </div>
@@ -3413,42 +4054,63 @@ export default function AttendanceCapture() {
 
         {/* Footer */}
         <div className="text-center mt-4">
-          <p className="text-xs text-gray-400">
-            Location required for check-in • {isOnsiteOnlyDepartment ? `${employeeDepartment} department: Within ${ONSITE_RADIUS_M}m required` : 'Outside radius requires reason'}
+          <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
+            <span>📍</span>
+            Location required for check-in
+            <span className="w-1 h-1 rounded-full bg-gray-300 mx-1"></span>
+            {isOnsiteOnlyDepartment
+              ? `${employeeDepartment} department: Within ${ONSITE_RADIUS_M}m required`
+              : "Outside radius requires reason"}
           </p>
         </div>
       </div>
 
-      {/* Location Selection Modal - Styled */}
+      {/* Location Selection Modal */}
       {isLocationModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col animate-scale-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col animate-scale-in">
             <div className="p-4 border-b flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-900">Select Location</h3>
-              <button onClick={() => setIsLocationModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <FaBuilding className="text-indigo-500" />
+                Select Location
+              </h3>
+              <button
+                onClick={() => setIsLocationModalOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
+              >
                 ✕
               </button>
             </div>
             <div className="p-4 flex-1 overflow-hidden">
               <div className="relative mb-3">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                <svg
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  ></path>
                 </svg>
-                <input 
-                  type="text" 
-                  placeholder="Search location..." 
-                  className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" 
-                  value={searchQuery} 
-                  onChange={(e) => setSearchQuery(e.target.value)} 
-                  autoFocus 
+                <input
+                  type="text"
+                  placeholder="Search location..."
+                  className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
                 />
               </div>
               <div className="overflow-y-auto max-h-[50vh] space-y-2">
                 {filteredLocations.length > 0 ? (
                   filteredLocations.map((loc) => (
-                    <div 
-                      key={loc._id} 
-                      onClick={() => handleSelectLocation(loc)} 
+                    <div
+                      key={loc._id}
+                      onClick={() => handleSelectLocation(loc)}
                       className="p-3 border border-gray-100 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/50 cursor-pointer transition-all"
                     >
                       <h4 className="font-medium text-gray-900">{loc.name}</h4>
@@ -3465,6 +4127,70 @@ export default function AttendanceCapture() {
           </div>
         </div>
       )}
+
+      {/* CSS for animations */}
+      <style jsx>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        @keyframes scale-up {
+          from {
+            opacity: 0;
+            transform: scale(0.9) translateY(15px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+        @keyframes float {
+          0%,
+          100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-15px) rotate(180deg);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+        .animate-scale-up {
+          animation: scale-up 0.35s ease-out;
+        }
+        .animate-scale-in {
+          animation: scale-up 0.25s ease-out;
+        }
+        .animate-float {
+          animation: float infinite ease-in-out;
+        }
+        .animate-bounce {
+          animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+          0%,
+          100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.1);
+          }
+        }
+        @keyframes pulse {
+          0%,
+          100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.5;
+          }
+        }
+      `}</style>
     </div>
   );
 }
