@@ -3583,8 +3583,15 @@ export default function AttendanceCapture() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 p-4">
-      <div className="max-w-md mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/80 to-purple-50/60 p-4 relative overflow-hidden">
+      {/* Animated Background Orbs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-20 -left-20 w-72 h-72 bg-gradient-to-br from-indigo-300/25 to-blue-400/20 rounded-full blur-3xl animate-orb-float" style={{ animationDuration: '8s' }}></div>
+        <div className="absolute top-1/3 -right-16 w-64 h-64 bg-gradient-to-br from-purple-300/20 to-pink-300/15 rounded-full blur-3xl animate-orb-float" style={{ animationDuration: '10s', animationDelay: '2s' }}></div>
+        <div className="absolute -bottom-16 left-1/4 w-56 h-56 bg-gradient-to-br from-cyan-300/20 to-emerald-300/15 rounded-full blur-3xl animate-orb-float" style={{ animationDuration: '12s', animationDelay: '4s' }}></div>
+      </div>
+
+      <div className="max-w-md mx-auto relative z-10">
         {/* Success Popup - Stays until user clicks OK */}
         {showSuccessPopup && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
@@ -3776,43 +3783,52 @@ export default function AttendanceCapture() {
 
         {/* Header with Time */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md border border-white/50">
+          <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg shadow-indigo-500/8 border border-white/70 hover:shadow-xl transition-all duration-300">
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-              <span className="text-xs font-medium text-gray-600">Live</span>
+              <div className="relative">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <div className="absolute inset-0 w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-75"></div>
+              </div>
+              <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider">Live</span>
             </div>
-            <div className="w-px h-5 bg-gray-300"></div>
-            <span className="text-xs font-medium text-gray-700">{currentDate}</span>
-            <div className="w-px h-5 bg-gray-300"></div>
-            <span className="text-sm font-bold text-indigo-600">{currentTime}</span>
+            <div className="w-px h-5 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
+            <span className="text-xs font-semibold text-gray-600">{currentDate}</span>
+            <div className="w-px h-5 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
+            <span className="text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{currentTime}</span>
           </div>
         </div>
 
         {/* Employee Info Card */}
-        <div className="relative overflow-hidden bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-5 mb-4">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-400/10 to-cyan-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+        <div className="relative overflow-hidden bg-white/85 backdrop-blur-2xl rounded-3xl shadow-xl shadow-indigo-500/5 border border-white/60 p-5 mb-4 group hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-indigo-400/15 to-purple-400/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:from-indigo-400/25 group-hover:to-purple-400/25 transition-all duration-700"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-400/10 to-cyan-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
 
           <div className="relative flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
-              <span className="text-2xl font-bold text-white">
-                {employeeName ? employeeName.charAt(0).toUpperCase() : "U"}
-              </span>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl blur-md opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
+              <div className="relative w-16 h-16 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-2 ring-white/50">
+                <span className="text-2xl font-bold text-white drop-shadow-sm">
+                  {employeeName ? employeeName.charAt(0).toUpperCase() : "U"}
+                </span>
+              </div>
+              {/* Online indicator */}
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white shadow-sm">
+                <div className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-50"></div>
+              </div>
             </div>
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-bold text-gray-900 truncate">{employeeName || "Employee"}</h2>
-              <p className="text-sm text-indigo-600 font-medium flex items-center gap-1.5">
+              <p className="text-sm font-semibold flex items-center gap-1.5">
                 <FaUsers className="text-indigo-500 text-xs" />
-                {employeeDepartment || "Department"}
+                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{employeeDepartment || "Department"}</span>
               </p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-xs text-gray-500 flex items-center gap-1">
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[10px] text-gray-500 flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded-full">
                   <BsPersonBadge className="text-gray-400" />
-                  ID: {employeeId || "N/A"}
+                  {employeeId || "N/A"}
                 </span>
-                <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                <span className="text-xs text-gray-500 truncate flex items-center gap-1">
-                  <span className="text-gray-400">✉️</span>
+                <span className="text-[10px] text-gray-500 truncate flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded-full">
+                  <span className="text-gray-400 text-[8px]">✉️</span>
                   {employeeEmail || "email"}
                 </span>
               </div>
@@ -3821,19 +3837,22 @@ export default function AttendanceCapture() {
         </div>
 
         {/* Location Card */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-4 mb-4">
+        <div className="bg-white/85 backdrop-blur-2xl rounded-3xl shadow-xl shadow-indigo-500/5 border border-white/60 p-4 mb-4 hover:shadow-2xl hover:shadow-indigo-500/8 transition-all duration-500">
           <div className="flex justify-between items-center mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center shadow-sm">
                 <FaMapMarkerAlt className="w-4 h-4 text-indigo-600" />
               </div>
-              <h3 className="text-sm font-semibold text-gray-900">Location</h3>
+              <div>
+                <h3 className="text-sm font-bold text-gray-900">Location</h3>
+                <p className="text-[10px] text-gray-400 font-medium">Office geofence tracking</p>
+              </div>
             </div>
             <button
               onClick={() => setIsLocationModalOpen(true)}
-              className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100"
+              className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition-all bg-indigo-50 px-3 py-1.5 rounded-xl hover:bg-indigo-100 border border-indigo-100 shadow-sm uppercase tracking-wider"
             >
-              Change Location
+              Change
             </button>
           </div>
 
@@ -3957,111 +3976,148 @@ export default function AttendanceCapture() {
         )}
 
         {/* Attendance Swipe Card */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-5">
+        <div className="bg-white/85 backdrop-blur-2xl rounded-3xl shadow-xl shadow-indigo-500/5 border border-white/60 p-5 hover:shadow-2xl hover:shadow-indigo-500/8 transition-all duration-500">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
-                <BsCalendarCheck className="text-indigo-500" />
+              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <div className="w-7 h-7 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center">
+                  <BsCalendarCheck className="text-indigo-600 text-xs" />
+                </div>
                 Today's Attendance
               </h3>
-              <p className="text-xs text-gray-500">
-                {!checkedIn ? "Ready to check in" : "Checked in - swipe to check out"}
+              <p className="text-[10px] text-gray-400 font-medium mt-0.5 ml-9">
+                {!checkedIn ? "Ready to mark attendance" : "Currently on duty"}
               </p>
             </div>
             <div
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold ${
-                !checkedIn ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"
+              className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider border shadow-sm ${
+                !checkedIn
+                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                  : "bg-emerald-50 text-emerald-700 border-emerald-200"
               }`}
             >
-              {!checkedIn ? "Not Checked In" : "Checked In ✅"}
+              {!checkedIn ? "Pending" : "Active ✅"}
             </div>
           </div>
 
+          {/* Swipe Instruction */}
           <div className="text-center mb-3">
-            <p className="text-sm text-gray-600 font-medium flex items-center justify-center gap-2">
+            <p className="text-xs text-gray-500 font-medium flex items-center justify-center gap-2">
               {!checkedIn ? (
                 <>
-                  <FaArrowRight className="text-indigo-500 text-xs" />
-                  Swipe right to check in
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 rounded-full text-indigo-600">
+                    <FaArrowRight className="text-[9px] animate-bounce-x" />
+                    <span className="text-[10px] font-semibold">Swipe right to check in</span>
+                  </span>
                 </>
               ) : (
                 <>
-                  <FaArrowLeft className="text-red-500 text-xs" />
-                  Swipe left to check out
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 rounded-full text-red-600">
+                    <FaArrowLeft className="text-[9px] animate-bounce-x-reverse" />
+                    <span className="text-[10px] font-semibold">Swipe left to check out</span>
+                  </span>
                 </>
               )}
             </p>
           </div>
 
+          {/* Premium Swipe Slider */}
           <div className="mb-3">
             <div
               ref={swipeAreaRef}
-              className={`relative overflow-hidden rounded-xl ${
+              className={`relative overflow-hidden rounded-2xl ${
                 submitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
               }`}
               onClick={handleManualSwipe}
             >
               {!checkedIn ? (
-                <div className="relative bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-14">
+                <div className="relative h-16 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-lg shadow-indigo-500/30">
+                  {/* Progress fill */}
                   <div
-                    className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"
-                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.2s ease-out" }}
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 opacity-60"
+                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.3s ease-out" }}
                   ></div>
-                  <div className="absolute inset-0 flex items-center justify-between px-4">
-                    <div className="flex items-center gap-2 text-white">
-                      <FaCheckCircle className="w-5 h-5" />
-                      <span className="text-sm font-bold">CHECK IN</span>
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent animate-shimmer"></div>
+                  {/* Content */}
+                  <div className="absolute inset-0 flex items-center justify-between px-5">
+                    <div className="flex items-center gap-2.5 text-white">
+                      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-inner">
+                        <FaCheckCircle className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-extrabold tracking-wide">CHECK IN</span>
+                        <p className="text-[9px] text-white/70 font-medium">Mark your attendance</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 text-white/90">
-                      <span className="text-xs">Swipe →</span>
-                      <FaArrowRight className="w-5 h-5" />
+                    <div className="flex items-center gap-1.5 text-white/80">
+                      <span className="text-[10px] font-semibold">Swipe</span>
+                      <div className="flex gap-0.5 animate-bounce-x">
+                        <FaArrowRight className="w-3 h-3 opacity-40" />
+                        <FaArrowRight className="w-3 h-3 opacity-70" />
+                        <FaArrowRight className="w-3 h-3" />
+                      </div>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="relative bg-gradient-to-r from-red-500 to-orange-500 h-14">
+                <div className="relative h-16 bg-gradient-to-r from-red-500 via-rose-500 to-orange-500 shadow-lg shadow-red-500/30">
+                  {/* Progress fill */}
                   <div
-                    className="absolute right-0 top-0 bottom-0 bg-gradient-to-r from-red-400 to-orange-400"
-                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.2s ease-out" }}
+                    className="absolute inset-y-0 right-0 bg-gradient-to-r from-red-400 to-orange-400 opacity-60"
+                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.3s ease-out" }}
                   ></div>
-                  <div className="absolute inset-0 flex items-center justify-between px-4">
-                    <div className="flex items-center gap-1 text-white/90">
-                      <FaArrowLeft className="w-5 h-5" />
-                      <span className="text-xs">Swipe</span>
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
+                  {/* Content */}
+                  <div className="absolute inset-0 flex items-center justify-between px-5">
+                    <div className="flex items-center gap-1.5 text-white/80">
+                      <div className="flex gap-0.5 animate-bounce-x-reverse">
+                        <FaArrowLeft className="w-3 h-3" />
+                        <FaArrowLeft className="w-3 h-3 opacity-70" />
+                        <FaArrowLeft className="w-3 h-3 opacity-40" />
+                      </div>
+                      <span className="text-[10px] font-semibold">Swipe</span>
                     </div>
-                    <div className="flex items-center gap-2 text-white">
-                      <span className="text-sm font-bold">CHECK OUT</span>
-                      <FaTimes className="w-5 h-5" />
+                    <div className="flex items-center gap-2.5 text-white">
+                      <div>
+                        <span className="text-sm font-extrabold tracking-wide">CHECK OUT</span>
+                        <p className="text-[9px] text-white/70 font-medium text-right">End your shift</p>
+                      </div>
+                      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-inner">
+                        <FaTimes className="w-5 h-5 text-white" />
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
             </div>
-            <p className="text-center text-xs text-gray-500 mt-2">
-              {!checkedIn ? "📍 Need location to check in" : "👆 Swipe or tap to check out"}
+            <p className="text-center text-[10px] text-gray-400 mt-2 font-medium">
+              {!checkedIn ? "📍 Capture your location first, then swipe to check in" : "👆 Tap or swipe the bar to check out"}
             </p>
           </div>
 
           {submitting && (
-            <div className="text-center py-2">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-xl">
+            <div className="text-center py-3">
+              <div className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 shadow-sm">
                 <FaSpinner className="w-4 h-4 text-indigo-600 animate-spin" />
-                <span className="text-sm text-indigo-600 font-medium">Processing...</span>
+                <span className="text-sm text-indigo-700 font-semibold">Processing...</span>
               </div>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-4">
-          <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
-            <span>📍</span>
-            Location required for check-in
-            <span className="w-1 h-1 rounded-full bg-gray-300 mx-1"></span>
-            {isOnsiteOnlyDepartment
-              ? `${employeeDepartment} department: Within ${ONSITE_RADIUS_M}m required`
-              : "Outside radius requires reason"}
-          </p>
+        <div className="text-center mt-5 space-y-2">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/50 shadow-sm">
+            <span className="text-[10px]">📍</span>
+            <p className="text-[10px] text-gray-500 font-medium">
+              {isOnsiteOnlyDepartment
+                ? `${employeeDepartment}: Must be within ${ONSITE_RADIUS_M}m of office`
+                : "Location required • Outside radius needs reason"}
+            </p>
+          </div>
+          <p className="text-[9px] text-gray-300 font-medium">Powered by Timely Health HRMS</p>
         </div>
       </div>
 
@@ -4131,64 +4187,53 @@ export default function AttendanceCapture() {
       {/* CSS for animations */}
       <style jsx>{`
         @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
         @keyframes scale-up {
-          from {
-            opacity: 0;
-            transform: scale(0.9) translateY(15px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
+          from { opacity: 0; transform: scale(0.9) translateY(15px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
         }
         @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-15px) rotate(180deg);
-          }
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-15px) rotate(180deg); }
         }
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out;
+        @keyframes orb-float {
+          0%, 100% { transform: translateY(0px) translateX(0px) scale(1); }
+          25% { transform: translateY(-20px) translateX(10px) scale(1.05); }
+          50% { transform: translateY(-10px) translateX(-15px) scale(0.95); }
+          75% { transform: translateY(-25px) translateX(5px) scale(1.02); }
         }
-        .animate-scale-up {
-          animation: scale-up 0.35s ease-out;
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
         }
-        .animate-scale-in {
-          animation: scale-up 0.25s ease-out;
+        @keyframes bounce-x {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(4px); }
         }
-        .animate-float {
-          animation: float infinite ease-in-out;
+        @keyframes bounce-x-reverse {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(-4px); }
         }
+        .animate-fade-in { animation: fade-in 0.3s ease-out; }
+        .animate-scale-up { animation: scale-up 0.35s ease-out; }
+        .animate-scale-in { animation: scale-up 0.25s ease-out; }
+        .animate-float { animation: float infinite ease-in-out; }
+        .animate-orb-float { animation: orb-float infinite ease-in-out; }
+        .animate-shimmer { animation: shimmer 2.5s infinite ease-in-out; }
+        .animate-bounce-x { animation: bounce-x 1.5s infinite ease-in-out; }
+        .animate-bounce-x-reverse { animation: bounce-x-reverse 1.5s infinite ease-in-out; }
         .animate-bounce {
           animation: bounce 2s infinite;
         }
         @keyframes bounce {
-          0%,
-          100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.1);
-          }
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
         }
         @keyframes pulse {
-          0%,
-          100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.5;
-          }
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
         }
       `}</style>
     </div>

@@ -2254,12 +2254,16 @@ import {
   FaTimes,
   FaUserTag
 } from "react-icons/fa";
+import { FiFilter, FiMapPin, FiUserCheck, FiUsers, FiCoffee, FiTrendingUp } from "react-icons/fi";
 
 import { useNavigate } from "react-router-dom";
 import StatCard from "../Components/StatCard";
 import { API_BASE_URL } from "../config";
 import logo from "../Images/Timely-Health-Logo.png";
 import { isEmployeeHidden } from "../utils/employeeStatus";
+import "../index.css";
+import "./EmployeeDashboard.css";
+import "./AttendanceSummary.css";
 
 const PayRoll = () => {
   const [records, setRecords] = useState([]);
@@ -4141,81 +4145,299 @@ const PayRoll = () => {
   }
 
   return (
-    <div className="min-h-screen p-2 bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="mx-auto max-w-9xl">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard title="Active Employees" value={filteredRecords.length} icon={FaUserTag} color="border-blue-500" />
-          <StatCard title="Total Salary" value={`₹${filteredRecords.reduce((sum, emp) => sum + (emp.calculatedSalary || 0), 0).toLocaleString()}`} icon={FaBuilding} color="border-green-500" />
-          <StatCard title="Active This Month" value={filteredRecords.filter(emp => !emp.isHistoricalMonth).length} icon={FaCalendarAlt} color="border-purple-500" />
-          <StatCard title="On Leave" value={filteredRecords.filter(emp => (employeeLeaves[emp.employeeId]?.CL > 0 || employeeLeaves[emp.employeeId]?.EL > 0)).length} icon={FaSearch} color="border-red-500" />
+    <div className="emp-dash">
+      <main className="p-4 sm:p-6 lg:p-8">
+        {/* Header */}
+        <div className="emp-dash__header">
+          <div>
+            <h1 className="emp-dash__greeting">
+              Employee <span>Payroll</span>
+            </h1>
+            <p className="emp-dash__subtitle">
+              Monthly payroll computation, overtime adjustments, and payslip generation.
+            </p>
+          </div>
+          <div className="emp-dash__date-pill">
+            <FaCalendarAlt />
+            <span>{formatMonthDisplay(selectedMonth)}</span>
+          </div>
         </div>
 
-        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative flex-1 min-w-[180px]">
-              <FaSearch className="absolute text-sm text-gray-500 transform -translate-y-1/2 left-2 top-1/2" />
-              <input type="text" placeholder="Search by ID or Name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent" />
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Active Employees</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                <FiUsers />
+              </div>
             </div>
+            <div className="emp-dash__stat-value">{filteredRecords.length}</div>
+            <div className="emp-dash__stat-meta">registered & active</div>
+          </div>
 
-            <div className="relative" ref={departmentFilterRef}>
-              <button onClick={() => setShowDepartmentFilter(!showDepartmentFilter)} className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDepartment ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'}`}>
-                <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
-              </button>
-              {showDepartmentFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
-                  <div onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); }} className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50">All Departments</div>
-                  {uniqueDepartments.map(dept => (
-                    <div key={dept} onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }} className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''}`}>{dept}</div>
-                  ))}
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Total Net Pay</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                <FiTrendingUp />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">
+              ₹{filteredRecords.reduce((sum, emp) => sum + (emp.finalPay || emp.calculatedSalary || 0), 0).toLocaleString()}
+            </div>
+            <div className="emp-dash__stat-meta">calculated payout</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">Active This Month</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                <FiUserCheck />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">
+              {filteredRecords.filter(emp => !emp.isHistoricalMonth).length}
+            </div>
+            <div className="emp-dash__stat-meta">current cycle active</div>
+          </div>
+
+          <div className="emp-dash__stat">
+            <div className="emp-dash__stat-top">
+              <span className="emp-dash__stat-label">On Leave</span>
+              <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
+                <FiCoffee />
+              </div>
+            </div>
+            <div className="emp-dash__stat-value">
+              {filteredRecords.filter(emp => (employeeLeaves[emp.employeeId]?.CL > 0 || employeeLeaves[emp.employeeId]?.EL > 0)).length}
+            </div>
+            <div className="emp-dash__stat-meta">approved leave status</div>
+          </div>
+        </div>
+
+        {/* Filters Card */}
+        <div className="emp-dash__card mb-6">
+          <div className="emp-dash__card-header flex-col sm:flex-row gap-3">
+            <div>
+              <h3 className="emp-dash__card-title flex items-center gap-2">
+                <FiFilter className="text-blue-600" /> Filters &amp; Actions
+              </h3>
+              <p className="emp-dash__card-desc">Search and filter employee summary by department, designation and date range.</p>
+            </div>
+          </div>
+
+          <div className="emp-dash__card-body bg-gray-50/50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
+              {/* ID/Name Search */}
+              <div className="flex flex-col gap-1.5 lg:col-span-2">
+                <label className="text-xs font-medium text-gray-600">Search Employee</label>
+                <div className="relative">
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                  <input
+                    type="text"
+                    placeholder="Search ID or Name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
                 </div>
-              )}
+              </div>
+
+              {/* Department Filter */}
+              <div className="flex flex-col gap-1.5 relative" ref={departmentFilterRef}>
+                <label className="text-xs font-medium text-gray-600">Department</label>
+                <button
+                  onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
+                    filterDepartment
+                      ? "border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10"
+                      : "border-gray-300 text-gray-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5 truncate">
+                    <FaBuilding className="text-gray-400" />
+                    {filterDepartment || "All Departments"}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+
+                {showDepartmentFilter && (
+                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                    <div
+                      onClick={() => {
+                        setFilterDepartment("");
+                        setShowDepartmentFilter(false);
+                      }}
+                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    >
+                      All Departments
+                    </div>
+                    {uniqueDepartments.map((dept) => (
+                      <div
+                        key={dept}
+                        onClick={() => {
+                          setFilterDepartment(dept);
+                          setShowDepartmentFilter(false);
+                        }}
+                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
+                          filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                        }`}
+                      >
+                        {dept}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Designation Filter */}
+              <div className="flex flex-col gap-1.5 relative" ref={designationFilterRef}>
+                <label className="text-xs font-medium text-gray-600">Designation</label>
+                <button
+                  onClick={() => setShowDesignationFilter(!showDesignationFilter)}
+                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
+                    filterDesignation
+                      ? "border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10"
+                      : "border-gray-300 text-gray-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5 truncate">
+                    <FaUserTag className="text-gray-400" />
+                    {filterDesignation || "All Designations"}
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+
+                {showDesignationFilter && (
+                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                    <div
+                      onClick={() => {
+                        setFilterDesignation("");
+                        setShowDesignationFilter(false);
+                      }}
+                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                    >
+                      All Designations
+                    </div>
+                    {uniqueDesignations.map((des) => (
+                      <div
+                        key={des}
+                        onClick={() => {
+                          setFilterDesignation(des);
+                          setShowDesignationFilter(false);
+                        }}
+                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
+                          filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                        }`}
+                      >
+                        {des}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Date From */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-gray-600">From Date</label>
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+              {/* Date To */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-gray-600">To Date</label>
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
             </div>
 
-            <div className="relative" ref={designationFilterRef}>
-              <button onClick={() => setShowDesignationFilter(!showDesignationFilter)} className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${filterDesignation ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'}`}>
-                <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
-              </button>
-              {showDesignationFilter && (
-                <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg max-h-60">
-                  <div onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); }} className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50">All Designations</div>
-                  {uniqueDesignations.map(des => (
-                    <div key={des} onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }} className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''}`}>{des}</div>
-                  ))}
+            <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200/50">
+              <div className="flex items-center gap-3">
+                <div className="text-xs text-gray-500 font-medium">
+                  Showing <strong>{filteredRecords.length}</strong> of <strong>{records.length}</strong> employees
                 </div>
-              )}
-            </div>
 
-            <div className="relative w-[130px]">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">From:</span>
-              <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); if (e.target.value && toDate) handleDateRangeFilter(); }} className="w-full pl-12 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent" />
-            </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-gray-500 font-medium">Month:</span>
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={handleMonthChange}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                    className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold"
+                  />
+                </div>
+              </div>
 
-            <div className="relative w-[130px]">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">To:</span>
-              <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); if (fromDate && e.target.value) handleDateRangeFilter(); }} className="w-full pl-10 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent" />
-            </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleDateRangeFilter}
+                  disabled={!fromDate || !toDate}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                >
+                  <FaSearch className="text-xs" /> Apply Dates
+                </button>
 
-            <div className="relative w-[130px]">
-              <FaCalendarAlt className="absolute text-xs text-gray-900 transform -translate-y-1/2 left-2 top-1/2" />
-              <input type="month" value={selectedMonth} onChange={handleMonthChange} className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent" />
-            </div>
+                <button
+                  onClick={() => setShowTemplateModal(true)}
+                  className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  ⚙️ Template
+                </button>
 
-            <button onClick={handleDateRangeFilter} disabled={!fromDate || !toDate} className="h-8 px-3 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">Apply</button>
-            <button onClick={() => setShowTemplateModal(true)} className="h-8 px-3 text-xs font-medium text-gray-700 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">⚙️ Template</button>
-            <button onClick={() => { const currentMonth = new Date().toISOString().slice(0, 7); setSelectedMonth(currentMonth); fetchData(currentMonth); }} className="h-8 px-3 text-xs font-medium text-gray-700 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">Current</button>
-            <button onClick={() => fetchData(selectedMonth)} disabled={isLoadingMonth} className="h-8 px-3 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">{isLoadingMonth ? "⟳" : "⟳ Refresh"}</button>
-            <button onClick={() => navigate("/bank-reports")} className="h-8 px-3 text-xs font-medium text-white transition bg-blue-600 rounded-md hover:bg-blue-700">Bank Reports</button>
-            {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
-              <button onClick={clearFilters} className="h-8 px-3 text-xs font-medium text-gray-500 transition bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">Clear</button>
-            )}
-            
-            <div className="flex items-center ml-auto bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
-              <button 
-                onClick={() => setShowOTModal(true)} 
-                className="flex items-center text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                Manage OT Payments <span className="ml-1 text-[10px]">({selectedOTEmployees.size} selected)</span>
-              </button>
+                <button
+                  onClick={() => {
+                    const currentMonth = new Date().toISOString().slice(0, 7);
+                    setSelectedMonth(currentMonth);
+                    fetchData(currentMonth);
+                  }}
+                  className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  Current Month
+                </button>
+
+                <button
+                  onClick={() => fetchData(selectedMonth)}
+                  className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  ⟳ Refresh
+                </button>
+
+                <button
+                  onClick={() => navigate("/bank-reports")}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  Bank Reports
+                </button>
+
+                {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate) && (
+                  <button
+                    onClick={clearFilters}
+                    className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-55 transition-all flex items-center gap-1.5 shadow-sm"
+                  >
+                    Clear Filters
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setShowOTModal(true)}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-all flex items-center gap-1.5 shadow-md"
+                >
+                  Manage OT Payments ({selectedOTEmployees.size})
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -4250,77 +4472,133 @@ const PayRoll = () => {
           </div>
         )}
 
-        <div className="mb-6 overflow-hidden bg-white rounded-lg shadow-lg">
+        {/* Table Card */}
+        <div className="emp-dash__card mb-6">
+          <div className="emp-dash__card-header">
+            <div>
+              <h3 className="emp-dash__card-title">Payroll Computation</h3>
+              <p className="emp-dash__card-desc">Monthly base salary calculations, overtime pay and final pay summary.</p>
+            </div>
+          </div>
+
           <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="text-sm text-left text-white bg-gradient-to-r from-green-500 to-blue-600">
+            <table className="emp-dash__table">
+              <thead>
                 <tr>
-                  <th className="py-2 text-xs text-center">Emp ID</th>
-                  <th className="py-2 text-xs text-center">Name</th>
-                  <th className="py-2 text-xs text-center">Role</th>
-                  <th className="py-2 text-xs text-center">Dept</th>
-                  <th className="py-2 text-xs text-center">Working</th>
-                  <th className="py-2 text-xs text-center">Present</th>
-                  <th className="py-2 text-xs text-center">Half</th>
-                  <th className="py-2 text-xs text-center">Week Off</th>
-                  <th className="py-2 text-xs text-center">Monthly Salary</th>
-                  <th className="py-2 text-xs text-center">OT Amount</th>
-                  <th className="py-2 text-xs text-center">Calculated</th>
-                  <th className="py-2 text-xs text-center">Final Pay</th>
-                  <th className="py-2 text-xs text-center">Actions</th>
+                  <th>Emp ID</th>
+                  <th>Name</th>
+                  <th style={{ textAlign: "center" }}>Role</th>
+                  <th style={{ textAlign: "center" }}>Dept</th>
+                  <th style={{ textAlign: "center" }}>Working</th>
+                  <th style={{ textAlign: "center" }}>Present</th>
+                  <th style={{ textAlign: "center" }}>Half</th>
+                  <th style={{ textAlign: "center" }}>Week Off</th>
+                  <th style={{ textAlign: "center" }}>Monthly Salary</th>
+                  <th style={{ textAlign: "center" }}>OT Amount</th>
+                  <th style={{ textAlign: "center" }}>Calculated</th>
+                  <th style={{ textAlign: "center" }}>Final Pay</th>
+                  <th style={{ textAlign: "right" }}>Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody>
                 {currentRecords.map((item, index) => (
-                  <tr key={item.employeeId} onClick={() => handleRowClick(item)} className={`cursor-pointer hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                    <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{item.employeeId}</td>
-                    <td className="px-2 py-2 font-medium text-center text-gray-900 whitespace-nowrap">{item.name}</td>
-                    <td className="px-2 py-1.5 text-center text-xs">{item.designation || item.role || '-'}</td>
-                    <td className="px-2 py-1.5 text-center text-xs">{item.department}</td>
-                    <td className="px-2 py-1.5 text-center text-xs"><span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">{item.totalWorkingDays || 0}</span></td>
-                    <td className="px-2 py-1.5 text-center text-xs"><span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded text-xs">{item.presentDays || 0}</span></td>
-                    <td className="px-2 py-1.5 text-center text-xs"><span className="px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded text-xs">{item.halfDayWorking || 0}</span></td>
-                    <td className="px-2 py-1.5 text-center text-xs">
-                      <span className={`px-1.5 py-0.5 rounded text-xs ${item.isSpecialMay2026 ? 'bg-blue-100 text-blue-800 font-semibold' : 'bg-purple-100 text-purple-800'}`}>
+                  <tr
+                    key={item.employeeId}
+                    onClick={() => handleRowClick(item)}
+                    className="transition-colors hover:bg-slate-50/50 cursor-pointer"
+                  >
+                    <td className="font-semibold text-slate-800 text-[11px]">
+                      {item.employeeId}
+                    </td>
+                    <td>
+                      <div className="flex items-center justify-start gap-2">
+                        <div className="flex items-center justify-center w-7 h-7 text-[10px] font-bold bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-full shadow-inner animate-pulse-subtle">
+                          {item.name ? item.name.charAt(0).toUpperCase() : "?"}
+                        </div>
+                        <span className="font-semibold text-slate-800 text-xs whitespace-nowrap">
+                          {item.name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">
+                      {item.designation || item.role || '-'}
+                    </td>
+                    <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">
+                      {item.department}
+                    </td>
+                    <td className="text-center whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                        {item.totalWorkingDays || 0}
+                      </span>
+                    </td>
+                    <td className="text-center whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                        {item.presentDays || 0}
+                      </span>
+                    </td>
+                    <td className="text-center whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                        {item.halfDayWorking || 0}
+                      </span>
+                    </td>
+                    <td className="text-center whitespace-nowrap">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${item.isSpecialMay2026 ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-purple-50 text-purple-700 border-purple-100'}`}>
                         {getWeekOffDaysForDisplay(item)}
                       </span>
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs">
-                      <div className="font-medium text-blue-600">₹{(item.salaryPerMonth || 0).toLocaleString()}</div>
+                    <td className="text-center whitespace-nowrap">
+                      <div className="font-semibold text-slate-700">₹{(item.salaryPerMonth || 0).toLocaleString()}</div>
                       {item.currentSalary && item.currentSalary !== item.salaryPerMonth && (
-                        <div className="text-[9px] text-gray-500 line-through">₹{item.currentSalary.toLocaleString()}</div>
+                        <div className="text-[9px] text-gray-400 line-through">₹{item.currentSalary.toLocaleString()}</div>
                       )}
                       {item.historicalEffectiveFrom && item.historicalEffectiveFrom !== item.joinDate && (
-                        <div className="text-[8px] text-blue-600">w.e.f {new Date(item.historicalEffectiveFrom).toLocaleDateString()}</div>
+                        <div className="text-[8px] text-blue-600 font-medium">w.e.f {new Date(item.historicalEffectiveFrom).toLocaleDateString()}</div>
                       )}
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs">
+                    <td className="text-center whitespace-nowrap">
                       {item.finalOTAmount > 0 ? (
-                        <span className="font-semibold text-green-600">₹{item.finalOTAmount.toFixed(0)}</span>
+                        <span className="font-bold text-green-600">₹{item.finalOTAmount.toFixed(0)}</span>
                       ) : (
                         <span className="text-gray-400">-</span>
                       )}
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs">
-                      <span className="font-semibold text-blue-700">₹{calculateSalary(item).toLocaleString()}</span>
+                    <td className="text-center whitespace-nowrap">
+                      <span className="font-bold text-blue-700">₹{calculateSalary(item).toLocaleString()}</span>
                     </td>
-                    <td className="px-2 py-1.5 text-center text-xs">
-                      <span className="font-bold text-green-700">₹{(item.finalPay || item.calculatedSalary || 0).toLocaleString()}</span>
+                    <td className="text-center whitespace-nowrap">
+                      <span className="font-extrabold text-green-700">₹{(item.finalPay || item.calculatedSalary || 0).toLocaleString()}</span>
                     </td>
-                    <td className="px-2 py-1.5 text-center" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex justify-center gap-1">
-                        <button onClick={(e) => { e.stopPropagation(); handleView(item); }} className="p-1 text-blue-600 rounded hover:bg-blue-50" title="View">
+                    <td className="text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex justify-end gap-1.5">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleView(item); }}
+                          className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-lg transition-all shadow-sm"
+                          title="View Details"
+                        >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); handleEdit(item); }} className="p-1 text-blue-700 rounded hover:bg-blue-50" title="Edit">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleEdit(item); }}
+                          className="p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-100 rounded-lg transition-all shadow-sm"
+                          title="Edit Adjustment"
+                        >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); downloadInvoice(item); }} disabled={!isPayslipDownloadAllowed(item.month || selectedMonth)} className={`p-1 rounded ${isPayslipDownloadAllowed(item.month || selectedMonth) ? 'text-purple-600 hover:bg-purple-50' : 'text-gray-400 cursor-not-allowed'}`} title="Download">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); downloadInvoice(item); }}
+                          disabled={!isPayslipDownloadAllowed(item.month || selectedMonth)}
+                          className={`p-1.5 border rounded-lg transition-all shadow-sm ${
+                            isPayslipDownloadAllowed(item.month || selectedMonth)
+                              ? 'text-purple-600 bg-purple-50 hover:bg-purple-100 border-purple-100'
+                              : 'text-gray-300 bg-gray-50 border-gray-100 cursor-not-allowed'
+                          }`}
+                          title="Download Payslip"
+                        >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
@@ -4333,144 +4611,263 @@ const PayRoll = () => {
             </table>
           </div>
 
+          {/* Pagination */}
           {filteredRecords.length > 0 && (
-            <div className="flex flex-col items-center justify-between gap-2 px-3 py-2 border-t sm:flex-row">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200/50 bg-gray-50/30">
               <div className="flex items-center gap-2">
-                <label className="text-xs text-gray-700">Show:</label>
-                <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-1 text-xs border rounded">
+                <span className="text-xs text-gray-500 font-medium">Show</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={handleItemsPerPageChange}
+                  className="p-1 text-xs border border-gray-300 rounded bg-white text-gray-700 focus:outline-none"
+                >
                   <option value={5}>5</option>
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                 </select>
+                <span className="text-xs text-gray-500 font-medium">records per page</span>
               </div>
               <div className="flex items-center gap-1">
-                <button onClick={handlePrevious} disabled={currentPage === 1} className={`px-3 py-0.5 text-xs border rounded ${currentPage === 1 ? 'text-gray-500 bg-gray-100' : 'text-blue-600 bg-white hover:bg-blue-50'}`}>Prev</button>
+                <button
+                  onClick={handlePrevious}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-55 transition disabled:opacity-50"
+                >
+                  Prev
+                </button>
                 {getPageNumbers().map((page, idx) => (
-                  <button key={idx} onClick={() => typeof page === 'number' && handlePageClick(page)} disabled={page === "..."} className={`px-3 py-0.5 text-xs border rounded ${page === "..." ? 'text-gray-500 bg-white' : currentPage === page ? 'text-white bg-blue-600' : 'text-blue-600 bg-white hover:bg-blue-50'}`}>{page}</button>
+                  <button
+                    key={idx}
+                    onClick={() => typeof page === 'number' && handlePageClick(page)}
+                    disabled={page === "..."}
+                    className={`px-3 py-1.5 text-xs font-semibold border rounded-lg transition ${
+                      page === "..."
+                        ? "text-gray-400 bg-white border-transparent cursor-default"
+                        : currentPage === page
+                        ? "text-white bg-blue-600 border-blue-600"
+                        : "text-gray-700 bg-white border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    {page}
+                  </button>
                 ))}
-                <button onClick={handleNext} disabled={currentPage === totalPages} className={`px-3 py-0.5 text-xs border rounded ${currentPage === totalPages ? 'text-gray-500 bg-gray-100' : 'text-blue-600 bg-white hover:bg-blue-50'}`}>Next</button>
+                <button
+                  onClick={handleNext}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-55 transition disabled:opacity-50"
+                >
+                  Next
+                </button>
               </div>
             </div>
           )}
         </div>
-      </div>
+      </main>
 
+      {/* View Modal */}
       {showViewModal && selectedEmployee && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
-            <div className="sticky top-0 z-10 flex items-center justify-between mb-4 bg-white">
-              <h2 className="text-xl font-bold text-gray-700">Employee Details</h2>
-              <button onClick={() => setShowViewModal(false)} className="text-gray-500 hover:text-gray-700"><FaTimes size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto border border-gray-100">
+            <div className="sticky top-0 z-10 flex items-center justify-between mb-4 bg-white pb-3 border-b border-gray-100">
+              <h2 className="text-lg font-bold text-gray-800">Employee Payroll Details</h2>
+              <button onClick={() => setShowViewModal(false)} className="text-gray-400 hover:text-gray-600 transition">
+                <FaTimes size={18} />
+              </button>
             </div>
-            <div className="flex items-start space-x-4">
-              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full shrink-0"><span className="text-lg font-semibold text-blue-800">{selectedEmployee.name?.charAt(0) || 'E'}</span></div>
-              <div className="flex flex-col flex-1 space-y-1">
-                <h3 className="text-lg font-semibold text-gray-700">{selectedEmployee.name}</h3>
-                <div className="grid grid-cols-2 text-sm text-gray-500 gap-x-6 gap-y-1">
-                  <p><span className="font-medium text-gray-700">ID:</span> {selectedEmployee.employeeId}</p>
-                  <p><span className="font-medium text-gray-700">Role:</span> {selectedEmployee.designation || selectedEmployee.role || 'N/A'}</p>
-                  <p><span className="font-medium text-gray-700">Department:</span> {selectedEmployee.department || 'N/A'}</p>
-                  <p><span className="font-medium text-gray-700">Month:</span> {selectedEmployee.month || selectedMonth} ({selectedEmployee.monthDays || monthDays} days)</p>
+            
+            <div className="flex items-center space-x-4 mb-6 bg-slate-50 p-4 rounded-xl">
+              <div className="flex items-center justify-center w-12 h-12 bg-blue-600 text-white text-lg font-bold rounded-full shadow-md shrink-0">
+                {selectedEmployee.name?.charAt(0) || 'E'}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-gray-800">{selectedEmployee.name}</h3>
+                <div className="grid grid-cols-2 text-xs text-gray-500 gap-x-4 mt-0.5">
+                  <p><span className="font-semibold text-gray-700">ID:</span> {selectedEmployee.employeeId}</p>
+                  <p><span className="font-semibold text-gray-700">Role:</span> {selectedEmployee.designation || selectedEmployee.role || 'N/A'}</p>
+                  <p><span className="font-semibold text-gray-700">Department:</span> {selectedEmployee.department || 'N/A'}</p>
+                  <p><span className="font-semibold text-gray-700">Month:</span> {selectedEmployee.month || selectedMonth}</p>
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-1 mt-4 mb-4 text-sm sm:grid-cols-2 gap-x-10 gap-y-2">
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Present Days</span><span className="font-semibold text-blue-700">{selectedEmployee.presentDays || 0}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Working Days</span><span className="font-semibold text-blue-600">{selectedEmployee.totalWorkingDays || 0}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Half Days</span><span className="font-semibold text-yellow-600">{selectedEmployee.halfDayWorking || 0}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">WeekOff Days</span><span className="font-semibold text-purple-600">{getWeekOffDaysForDisplay(selectedEmployee)}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Month Days</span><span className="font-semibold text-gray-700">{selectedEmployee.monthDays || monthDays}</span></div>
-              <div className="flex justify-between pb-1 border-b">
-                <span className="text-gray-500">Monthly Salary</span>
+
+            <div className="grid grid-cols-1 text-xs sm:grid-cols-2 gap-x-8 gap-y-2 mb-6">
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Present Days</span><span className="font-bold text-emerald-700">{selectedEmployee.presentDays || 0}</span></div>
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Working Days</span><span className="font-bold text-blue-700">{selectedEmployee.totalWorkingDays || 0}</span></div>
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Half Days</span><span className="font-bold text-amber-700">{selectedEmployee.halfDayWorking || 0}</span></div>
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">WeekOff Days</span><span className="font-bold text-purple-700">{getWeekOffDaysForDisplay(selectedEmployee)}</span></div>
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Month Days</span><span className="font-bold text-slate-700">{selectedEmployee.monthDays || monthDays}</span></div>
+              <div className="flex justify-between py-1.5 border-b border-gray-100">
+                <span className="text-gray-500 font-medium">Monthly Salary</span>
                 <div className="text-right">
-                  <span className="font-semibold text-blue-600">₹{selectedEmployee.salaryPerMonth || 0}</span>
+                  <span className="font-bold text-slate-800">₹{selectedEmployee.salaryPerMonth || 0}</span>
                   {selectedEmployee.currentSalary && selectedEmployee.currentSalary !== selectedEmployee.salaryPerMonth && (
-                    <div className="text-[9px] text-gray-500 line-through">₹{selectedEmployee.currentSalary.toLocaleString()}</div>
+                    <div className="text-[9px] text-gray-400 line-through">₹{selectedEmployee.currentSalary.toLocaleString()}</div>
                   )}
                 </div>
               </div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Daily Rate</span><span className="font-semibold text-gray-700">₹{calculateDailyRate(selectedEmployee)}/day</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">OT Amount</span><span className="font-semibold text-green-600">₹{(selectedEmployee.finalOTAmount || 0).toFixed(0)}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Calculated Salary</span><span className="font-semibold text-blue-700">₹{Math.round(selectedEmployee.calculatedSalary || 0)}</span></div>
-              <div className="flex justify-between pb-1 border-b"><span className="text-gray-500">Final Pay</span><span className="font-semibold text-green-700">₹{Math.round(selectedEmployee.finalPay || selectedEmployee.calculatedSalary || 0)}</span></div>
-              <div className="flex flex-col pb-2 border-b sm:col-span-2">
-                <div className="flex justify-between mb-2"><span className="font-medium text-gray-500">Approved Leaves</span><span className="font-semibold text-red-600">{getLeaveTypes(selectedEmployee) || "0"}</span></div>
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">Daily Rate</span><span className="font-bold text-slate-700">₹{calculateDailyRate(selectedEmployee)}/day</span></div>
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium">OT Amount</span><span className="font-bold text-emerald-600">₹{(selectedEmployee.finalOTAmount || 0).toFixed(0)}</span></div>
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-500 font-medium text-blue-600">Calculated Base Salary</span><span className="font-bold text-blue-600">₹{Math.round(selectedEmployee.calculatedSalary || 0)}</span></div>
+              <div className="flex justify-between py-1.5 border-b border-gray-100"><span className="text-gray-700 font-bold">Final Pay</span><span className="font-bold text-emerald-700">₹{Math.round(selectedEmployee.finalPay || selectedEmployee.calculatedSalary || 0)}</span></div>
+              
+              <div className="flex flex-col py-1.5 border-b border-gray-100 sm:col-span-2">
+                <div className="flex justify-between"><span className="text-gray-500 font-medium">Approved Leaves</span><span className="font-bold text-rose-600">{getLeaveTypes(selectedEmployee) || "0"}</span></div>
               </div>
             </div>
-            <div className="flex justify-end space-x-3">
-              <button onClick={() => downloadInvoice(selectedEmployee)} disabled={!isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth)} className={`px-6 py-2 rounded-lg transition duration-200 ${isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth) ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>Download Payslip</button>
-              <button onClick={() => setShowViewModal(false)} className="px-6 py-2 text-white transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-700">Close</button>
+
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+              <button
+                onClick={() => downloadInvoice(selectedEmployee)}
+                disabled={!isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth)}
+                className={`px-4 py-2 text-xs font-semibold rounded-lg transition duration-200 ${
+                  isPayslipDownloadAllowed(selectedEmployee.month || selectedMonth)
+                    ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-md shadow-purple-200'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                Download Payslip
+              </button>
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="px-4 py-2 text-xs font-semibold text-white bg-slate-700 rounded-lg hover:bg-slate-800 transition"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Edit Modal */}
       {showEditModal && selectedEmployee && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-4 w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-3"><h2 className="text-lg font-bold">Edit Salary - {selectedEmployee.name}</h2><button onClick={() => setShowEditModal(false)} className="text-gray-500"><FaTimes /></button></div>
-            <form onSubmit={handleEditSubmit} className="space-y-3">
-              <div><label className="block text-xs">Present Days</label><input type="number" name="presentDays" value={editFormData.presentDays || 0} onChange={handleInputChange} className="w-full p-2 text-sm border rounded" /></div>
-              <div><label className="block text-xs">Working Days</label><input type="number" name="workingDays" value={editFormData.workingDays || 0} onChange={handleInputChange} className="w-full p-2 text-sm border rounded" /></div>
-              <div><label className="block text-xs">Half Days</label><input type="number" name="halfDayWorking" value={editFormData.halfDayWorking || 0} onChange={handleInputChange} className="w-full p-2 text-sm border rounded" /></div>
-              <div><label className="block text-xs">Bonus (₹)</label><input type="number" name="bonus" value={extraWorkData.bonus || 0} onChange={handleExtraWorkChange} className="w-full p-2 text-sm border rounded" /></div>
-              <div><label className="block text-xs">Deductions (₹)</label><input type="number" name="deductions" value={extraWorkData.deductions || 0} onChange={handleExtraWorkChange} className="w-full p-2 text-sm border rounded" /></div>
-              <div><label className="block text-xs">Reason</label><input type="text" name="reason" value={extraWorkData.reason || ""} onChange={handleExtraWorkChange} className="w-full p-2 text-sm border rounded" /></div>
-              <div className="flex gap-2 pt-2"><button type="button" onClick={handleReset} className="px-3 py-1 text-sm text-white bg-yellow-500 rounded hover:bg-yellow-600">Reset</button><button type="button" onClick={() => setShowEditModal(false)} className="px-3 py-1 text-sm bg-gray-300 rounded hover:bg-gray-400">Cancel</button><button type="submit" className="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700">Save</button></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto border border-gray-100">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-100">
+              <h2 className="text-base font-bold text-gray-800">Edit Salary - {selectedEmployee.name}</h2>
+              <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-600 transition">
+                <FaTimes size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Present Days</label>
+                  <input type="number" name="presentDays" value={editFormData.presentDays || 0} onChange={handleInputChange} className="w-full p-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Working Days</label>
+                  <input type="number" name="workingDays" value={editFormData.workingDays || 0} onChange={handleInputChange} className="w-full p-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Half Days</label>
+                  <input type="number" name="halfDayWorking" value={editFormData.halfDayWorking || 0} onChange={handleInputChange} className="w-full p-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Bonus (₹)</label>
+                  <input type="number" name="bonus" value={extraWorkData.bonus || 0} onChange={handleExtraWorkChange} className="w-full p-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Deductions (₹)</label>
+                <input type="number" name="deductions" value={extraWorkData.deductions || 0} onChange={handleExtraWorkChange} className="w-full p-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Adjustment Reason</label>
+                <input type="text" name="reason" value={extraWorkData.reason || ""} onChange={handleExtraWorkChange} placeholder="e.g. Performance bonus or Loss of Pay" className="w-full p-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold" />
+              </div>
+              
+              <div className="flex gap-2 pt-4 border-t border-gray-100 justify-end">
+                <button type="button" onClick={handleReset} className="px-3 py-1.5 text-xs font-semibold text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition shadow-sm">
+                  Reset System
+                </button>
+                <button type="button" onClick={() => setShowEditModal(false)} className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-200">
+                  Save Changes
+                </button>
+              </div>
             </form>
           </div>
         </div>
       )}
 
+      {/* Template Modal */}
       {showTemplateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md p-4 bg-white rounded-lg">
-            <div className="flex items-center justify-between mb-3"><h2 className="text-lg font-bold">Edit Template</h2><button onClick={() => setShowTemplateModal(false)}><FaTimes /></button></div>
-            <div className="space-y-3">
-              <div><label className="block text-xs">Company Name</label><input type="text" value={templateConfig.companyName} onChange={(e) => setTemplateConfig({...templateConfig, companyName: e.target.value})} className="w-full p-2 text-sm border rounded" /></div>
-              <div><label className="block text-xs">Address</label><textarea rows="2" value={templateConfig.address} onChange={(e) => setTemplateConfig({...templateConfig, address: e.target.value})} className="w-full p-2 text-sm border rounded"></textarea></div>
-              <div><label className="block text-xs">Logo</label><input type="file" accept="image/*" onChange={handleLogoChange} className="w-full text-sm" /></div>
-              <div className="flex gap-2"><button onClick={() => setShowTemplateModal(false)} className="px-3 py-1 text-sm bg-gray-300 rounded hover:bg-gray-400">Cancel</button><button onClick={handleTemplateSave} className="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700">Save</button></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="w-full max-w-md p-6 bg-white rounded-xl shadow-2xl border border-gray-100">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-100">
+              <h2 className="text-base font-bold text-gray-800">Edit Payslip Template</h2>
+              <button onClick={() => setShowTemplateModal(false)} className="text-gray-400 hover:text-gray-600 transition">
+                <FaTimes size={18} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Company Name</label>
+                <input type="text" value={templateConfig.companyName} onChange={(e) => setTemplateConfig({...templateConfig, companyName: e.target.value})} className="w-full p-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Company Address</label>
+                <textarea rows="3" value={templateConfig.address} onChange={(e) => setTemplateConfig({...templateConfig, address: e.target.value})} className="w-full p-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold"></textarea>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Company Logo</label>
+                <input type="file" accept="image/*" onChange={handleLogoChange} className="w-full text-xs text-slate-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+              </div>
+              <div className="flex gap-2 pt-4 border-t border-gray-100 justify-end">
+                <button onClick={() => setShowTemplateModal(false)} className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+                  Cancel
+                </button>
+                <button onClick={handleTemplateSave} className="px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-200">
+                  Save Template
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
       
+      {/* OT Selection Modal */}
       {showOTModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-4 w-full max-w-lg max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-bold">Select Employees for OT Payment</h2>
-              <button onClick={() => setShowOTModal(false)}><FaTimes /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg max-h-[80vh] flex flex-col border border-gray-100">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-100">
+              <h2 className="text-base font-bold text-gray-800">Select Employees for OT Payment</h2>
+              <button onClick={() => setShowOTModal(false)} className="text-gray-400 hover:text-gray-600 transition">
+                <FaTimes size={18} />
+              </button>
             </div>
-            <div className="flex-1 pr-2 overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gradient-to-r from-green-500 to-blue-600">
+            <div className="flex-1 pr-1 overflow-y-auto custom-scrollbar">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-slate-50 text-gray-600 font-bold uppercase text-[9px] tracking-wider sticky top-0 z-10">
                   <tr>
-                    <th className="p-2 text-left text-white">Select</th>
-                    <th className="p-2 text-left text-white">Employee ID</th>
-                    <th className="p-2 text-left text-white">Name</th>
-                    <th className="p-2 text-right text-white">OT Hours</th>
+                    <th className="p-3">Select</th>
+                    <th className="p-3">ID</th>
+                    <th className="p-3">Employee Name</th>
+                    <th className="p-3 text-right">OT Hours</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-100">
                   {records.length === 0 ? (
-                    <tr><td colSpan="4" className="p-4 text-center text-gray-500">No employees found. </td></tr>
+                    <tr><td colSpan="4" className="p-4 text-center text-gray-400 font-semibold">No employees found.</td></tr>
                   ) : (
                     records.map(r => (
-                      <tr key={r.employeeId} className="border-b">
-                        <td className="p-2">
+                      <tr key={r.employeeId} className="hover:bg-slate-50/50">
+                        <td className="p-3">
                           <input 
                             type="checkbox" 
                             checked={selectedOTEmployees.has(r.employeeId)}
                             onChange={() => handleOTEmployeeSelection(r.employeeId)}
-                            className="w-4 h-4 text-blue-600 rounded"
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                           />
                         </td>
-                        <td className="p-2">{r.employeeId}</td>
-                        <td className="p-2 font-medium">{r.name}</td>
-                        <td className="p-2 font-semibold text-right text-blue-600">
+                        <td className="p-3 text-gray-500 font-semibold">{r.employeeId}</td>
+                        <td className="p-3 font-semibold text-slate-800">{r.name}</td>
+                        <td className="p-3 font-bold text-right text-blue-600">
                           {r.overTimeHoursFormatted || formatDecimalHours(r.overTimeHours)}
                         </td>
                       </tr>
@@ -4479,8 +4876,8 @@ const PayRoll = () => {
                 </tbody>
               </table>
             </div>
-            <div className="flex justify-end mt-4">
-              <button onClick={() => setShowOTModal(false)} className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">Done</button>
+            <div className="flex justify-end pt-4 border-t border-gray-100 mt-4">
+              <button onClick={() => setShowOTModal(false)} className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-200">Done</button>
             </div>
           </div>
         </div>
