@@ -2042,7 +2042,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
   const [currentPage, setCurrentPage] = useState("Dashboard");
   const [activeItem, setActiveItem] = useState("/employeedashboard");
   
-  // View state
   const [isAdminView, setIsAdminView] = useState(() => {
     const saved = localStorage.getItem("isAdminView");
     return saved === "true";
@@ -2118,7 +2117,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     return pathMap[path] || "Dashboard";
   };
 
-  // Desktop Hover Expand/Collapse
   const handleMouseEnterSidebar = () => {
     if (!isMobile && setIsCollapsed && isCollapsed) {
       setIsCollapsed(false);
@@ -2191,7 +2189,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     }
   };
 
-  // Toggle view
   const toggleView = useCallback((e) => {
     if (e) {
       e.stopPropagation();
@@ -2328,11 +2325,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     return permissions.includes(permission);
   };
 
-  // ─── Employee Menu - Tasks (TH029 wali ID send karo) ───
   const buildEmployeeMenu = () => {
-    const employeeId = localStorage.getItem("employeeId") || ''; // TH029
-    
-    // ─── Sirf employeeId (TH029) pass karo localhost:3001 ───
+    const employeeId = localStorage.getItem("employeeId") || '';
     const tasksUrl = `https://taskmanagement.iryax.com?employeeId=${employeeId}`;
     
     const menu = [
@@ -2358,7 +2352,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         path: "/emp-issues",
         badge: "NEW"
       },
-      // ─── Tasks - localhost:3001 with employeeId (TH029) ───
       { 
         icon: <i className="ri-task-fill"></i>, 
         name: "Tasks", 
@@ -2371,11 +2364,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     return menu;
   };
 
-  // ─── Admin Menu - Tasks (TH029 wali ID send karo) ───
   const buildAdminMenu = () => {
-    const employeeId = localStorage.getItem("employeeId") || ''; // TH029
-    
-    // ─── Sirf employeeId (TH029) pass karo localhost:3001 ───
+    const employeeId = localStorage.getItem("employeeId") || '';
     const tasksUrl = `https://taskmanagement.iryax.com?employeeId=${employeeId}`;
     
     const menu = [];
@@ -2592,13 +2582,29 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                       )}
                     </div>
 
+                    {/* ─── CHEVRON DOWN ICON - BLUE COLOR ─── */}
                     {!isCollapsed && (
-                      <FaChevronDown
-                        onClick={(e) => toggleDropdown(e, item.name)}
-                        className={`emp-sidebar__chevron ${
-                          openDropdown === item.name ? "emp-sidebar__chevron--open" : ""
-                        }`}
-                      />
+                      <div className="flex items-center gap-1">
+                        {isDropdownActive(item.dropdown) && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
+                        )}
+                        <FaChevronDown
+                          onClick={(e) => toggleDropdown(e, item.name)}
+                          className={`text-[10px] transition-transform duration-300 p-0 rounded cursor-pointer ${
+                            isDropdownActive(item.dropdown)
+                              ? "text-blue-500"
+                              : openDropdown === item.name
+                                ? "text-blue-500"
+                                : "text-blue-400"
+                          } ${openDropdown === item.name ? "rotate-180" : ""}`}
+                          style={{
+                            width: '16px',
+                            height: '16px',
+                            minWidth: '16px',
+                            minHeight: '16px'
+                          }}
+                        />
+                      </div>
                     )}
                   </div>
 

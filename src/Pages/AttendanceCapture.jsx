@@ -2739,6 +2739,1462 @@
 // }
 
 
+// import axios from "axios";
+// import { useEffect, useRef, useState } from "react";
+// import { useLocation, useNavigate } from "react-router-dom";
+// import { API_BASE_URL } from "../config";
+// import {
+//   FaStar,
+//   FaCalendarAlt,
+//   FaClock,
+//   FaQuoteLeft,
+//   FaQuoteRight,
+//   FaRocket,
+//   FaTimes,
+//   FaVolumeUp,
+//   FaUserFriends,
+//   FaMapMarkerAlt,
+//   FaCheckCircle,
+//   FaUserCheck,
+//   FaBuilding,
+//   FaWifi,
+//   FaArrowRight,
+//   FaArrowLeft,
+//   FaSpinner,
+//   FaHome,
+//   FaBriefcase,
+//   FaUsers,
+//   FaSmile
+// } from "react-icons/fa";
+// import { MdCelebration, MdLocationOn, MdWork, MdOutlineAttachMoney } from "react-icons/md";
+// import { BsStars, BsCalendarCheck, BsClockHistory, BsPersonBadge } from "react-icons/bs";
+
+// // FIX: Ensure BASE_URL ends without trailing slash and remove any duplicate 'api'
+// const BASE_URL = API_BASE_URL.endsWith("/") ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+// const cleanBaseUrl = BASE_URL.replace(/\/api\/?$/, "");
+
+// const ONSITE_RADIUS_M = 50;
+
+// // List of departments that should ONLY have onsite option
+// const ONSITE_ONLY_DEPARTMENTS = ["Laboratory Medicine", "Medical", "Nursing"];
+
+// // Haversine formula
+// function haversineDistance(lat1, lon1, lat2, lon2) {
+//   const R = 6371000;
+//   const toRad = (deg) => (deg * Math.PI) / 180;
+//   const dLat = toRad(lat2 - lat1);
+//   const dLon = toRad(lon2 - lon1);
+//   const a =
+//     Math.sin(dLat / 2) ** 2 +
+//     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+//   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+//   return Math.round(R * c);
+// }
+
+// // Motivational thoughts collection with categories
+// const MOTIVATIONAL_THOUGHTS = [
+//   { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", emoji: "💪", category: "success" },
+//   { text: "The only way to do great work is to love what you do.", emoji: "❤️", category: "passion" },
+//   { text: "Believe you can and you're halfway there.", emoji: "🌟", category: "belief" },
+//   { text: "It does not matter how slowly you go as long as you do not stop.", emoji: "🚀", category: "persistence" },
+//   { text: "The future belongs to those who believe in the beauty of their dreams.", emoji: "✨", category: "dreams" },
+//   { text: "You are never too old to set another goal or to dream a new dream.", emoji: "🌈", category: "goals" },
+//   { text: "The secret of getting ahead is getting started.", emoji: "🏃‍♂️", category: "action" },
+//   { text: "Your attitude, not your aptitude, will determine your altitude.", emoji: "📈", category: "attitude" },
+//   { text: "The only impossible journey is the one you never begin.", emoji: "🌄", category: "courage" },
+//   { text: "Dream big and dare to fail.", emoji: "🎯", category: "ambition" },
+//   { text: "Success is not the key to happiness. Happiness is the key to success.", emoji: "😊", category: "happiness" },
+//   { text: "The best time to plant a tree was 20 years ago. The second best time is now.", emoji: "🌳", category: "timing" },
+//   { text: "You miss 100% of the shots you don't take.", emoji: "🏀", category: "opportunity" },
+//   { text: "The only limit to our realization of tomorrow is our doubts of today.", emoji: "🔥", category: "belief" },
+//   { text: "Great things never come from comfort zones.", emoji: "🌊", category: "growth" },
+//   { text: "The difference between ordinary and extraordinary is that little extra.", emoji: "⭐", category: "excellence" },
+//   { text: "Success usually comes to those who are too busy to be looking for it.", emoji: "🎯", category: "focus" },
+//   { text: "Don't watch the clock; do what it does. Keep going.", emoji: "⏰", category: "persistence" },
+//   { text: "The only person you are destined to become is the person you decide to be.", emoji: "🌟", category: "identity" },
+//   { text: "What you get by achieving your goals is not as important as what you become.", emoji: "🌱", category: "growth" },
+//   { text: "The journey of a thousand miles begins with a single step.", emoji: "👣", category: "beginning" },
+//   { text: "Believe in yourself and all that you are. Know that there is something inside you that is greater than any obstacle.", emoji: "💫", category: "belief" },
+//   { text: "Your limitation—it's only your imagination.", emoji: "🧠", category: "imagination" },
+//   { text: "Push yourself, because no one else is going to do it for you.", emoji: "💪", category: "motivation" },
+// ];
+
+// // Greetings based on time of day
+// const getGreeting = (name) => {
+//   const hour = new Date().getHours();
+//   let greeting = "";
+//   let emoji = "";
+
+//   if (hour >= 5 && hour < 12) {
+//     greeting = "Good Morning";
+//     emoji = "🌅";
+//   } else if (hour >= 12 && hour < 17) {
+//     greeting = "Good Afternoon";
+//     emoji = "☀️";
+//   } else if (hour >= 17 && hour < 21) {
+//     greeting = "Good Evening";
+//     emoji = "🌆";
+//   } else {
+//     greeting = "Good Night";
+//     emoji = "🌙";
+//   }
+
+//   return { greeting, emoji, name };
+// };
+
+// // Get Indian date format
+// const getIndianDate = () => {
+//   const now = new Date();
+//   const options = {
+//     weekday: "long",
+//     year: "numeric",
+//     month: "long",
+//     day: "numeric",
+//     timeZone: "Asia/Kolkata",
+//   };
+//   return now.toLocaleDateString("en-IN", options);
+// };
+
+// // Get Indian time
+// const getIndianTime = () => {
+//   const now = new Date();
+//   return now.toLocaleTimeString("en-IN", {
+//     hour: "2-digit",
+//     minute: "2-digit",
+//     hour12: true,
+//     timeZone: "Asia/Kolkata",
+//   });
+// };
+
+// // Get day details
+// const getDayDetails = () => {
+//   const now = new Date();
+//   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+//   const day = days[now.getDay()];
+//   return { day };
+// };
+
+// // Get random motivational thought
+// const getRandomThought = () => {
+//   return MOTIVATIONAL_THOUGHTS[Math.floor(Math.random() * MOTIVATIONAL_THOUGHTS.length)];
+// };
+
+// // Sound function - Welcome
+// const playWelcomeSound = () => {
+//   try {
+//     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+//     const notes = [523.25, 587.33, 659.25, 783.99];
+//     notes.forEach((freq, index) => {
+//       setTimeout(() => {
+//         const oscillator = audioContext.createOscillator();
+//         const gainNode = audioContext.createGain();
+//         oscillator.connect(gainNode);
+//         gainNode.connect(audioContext.destination);
+//         oscillator.frequency.value = freq;
+//         oscillator.type = "sine";
+//         gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+//         gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.25);
+//         oscillator.start(audioContext.currentTime);
+//         oscillator.stop(audioContext.currentTime + 0.25);
+//       }, index * 150);
+//     });
+//   } catch (e) {
+//     console.log("Audio not supported");
+//   }
+// };
+
+// // Success sound
+// const playSuccessSound = () => {
+//   try {
+//     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+//     const notes = [523.25, 659.25, 783.99, 1046.5];
+//     notes.forEach((freq, index) => {
+//       setTimeout(() => {
+//         const oscillator = audioContext.createOscillator();
+//         const gainNode = audioContext.createGain();
+//         oscillator.connect(gainNode);
+//         gainNode.connect(audioContext.destination);
+//         oscillator.frequency.value = freq;
+//         oscillator.type = "sine";
+//         gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+//         gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+//         oscillator.start(audioContext.currentTime);
+//         oscillator.stop(audioContext.currentTime + 0.3);
+//       }, index * 120);
+//     });
+//   } catch (e) {
+//     console.log("Audio not supported");
+//   }
+// };
+
+// // Female voice welcome message - SHORT VERSION
+// const speakWelcomeMessage = (name, greeting) => {
+//   try {
+//     if (!("speechSynthesis" in window)) return;
+
+//     window.speechSynthesis.cancel();
+
+//     const { day } = getDayDetails();
+
+//     const message = `Hello ${name}! ${greeting}! Today is ${day}. Welcome to your dashboard. Have a great day!`;
+
+//     const utterance = new SpeechSynthesisUtterance(message);
+//     const voices = window.speechSynthesis.getVoices();
+
+//     let femaleVoice = voices.find(
+//       (voice) =>
+//         voice.name.toLowerCase().includes("female") ||
+//         voice.name.toLowerCase().includes("woman") ||
+//         voice.name.toLowerCase().includes("zira") ||
+//         voice.name.toLowerCase().includes("samantha") ||
+//         voice.name.toLowerCase().includes("victoria")
+//     );
+
+//     if (!femaleVoice) {
+//       femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
+//     }
+
+//     if (!femaleVoice) {
+//       femaleVoice = voices.find((voice) => voice.lang.includes("en"));
+//     }
+
+//     if (femaleVoice) {
+//       utterance.voice = femaleVoice;
+//     }
+
+//     utterance.lang = "en-IN";
+//     utterance.pitch = 1.2;
+//     utterance.rate = 0.9;
+//     utterance.volume = 1;
+
+//     window.speechSynthesis.speak(utterance);
+//     return true;
+//   } catch (error) {
+//     return false;
+//   }
+// };
+
+// // Female voice for Check-in success - SHORT
+// const speakCheckInSuccess = (name) => {
+//   try {
+//     if (!("speechSynthesis" in window)) return;
+
+//     window.speechSynthesis.cancel();
+
+//     const message = `Congratulations ${name}! You have successfully checked in. Have a great day!`;
+
+//     const utterance = new SpeechSynthesisUtterance(message);
+//     const voices = window.speechSynthesis.getVoices();
+
+//     let femaleVoice = voices.find(
+//       (voice) =>
+//         voice.name.toLowerCase().includes("female") ||
+//         voice.name.toLowerCase().includes("zira") ||
+//         voice.name.toLowerCase().includes("samantha")
+//     );
+
+//     if (!femaleVoice) {
+//       femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
+//     }
+
+//     if (!femaleVoice) {
+//       femaleVoice = voices.find((voice) => voice.lang.includes("en"));
+//     }
+
+//     if (femaleVoice) {
+//       utterance.voice = femaleVoice;
+//     }
+
+//     utterance.lang = "en-IN";
+//     utterance.pitch = 1.2;
+//     utterance.rate = 0.9;
+//     utterance.volume = 1;
+
+//     window.speechSynthesis.speak(utterance);
+//   } catch (error) {}
+// };
+
+// // Female voice for Check-out success - SHORT
+// const speakCheckOutSuccess = (name) => {
+//   try {
+//     if (!("speechSynthesis" in window)) return;
+
+//     window.speechSynthesis.cancel();
+
+//     const message = `Goodbye ${name}! You have successfully checked out. See you tomorrow!`;
+
+//     const utterance = new SpeechSynthesisUtterance(message);
+//     const voices = window.speechSynthesis.getVoices();
+
+//     let femaleVoice = voices.find(
+//       (voice) =>
+//         voice.name.toLowerCase().includes("female") ||
+//         voice.name.toLowerCase().includes("zira") ||
+//         voice.name.toLowerCase().includes("samantha")
+//     );
+
+//     if (!femaleVoice) {
+//       femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
+//     }
+
+//     if (!femaleVoice) {
+//       femaleVoice = voices.find((voice) => voice.lang.includes("en"));
+//     }
+
+//     if (femaleVoice) {
+//       utterance.voice = femaleVoice;
+//     }
+
+//     utterance.lang = "en-IN";
+//     utterance.pitch = 1.2;
+//     utterance.rate = 0.9;
+//     utterance.volume = 1;
+
+//     window.speechSynthesis.speak(utterance);
+//   } catch (error) {}
+// };
+
+// export default function AttendanceCapture() {
+//   const navigate = useNavigate();
+//   const routerLocation = useLocation();
+
+//   const swipeAreaRef = useRef(null);
+//   const [swipeProgress, setSwipeProgress] = useState(0);
+//   const [isSwiping, setIsSwiping] = useState(false);
+
+//   const [employeeId, setEmployeeId] = useState(null);
+//   const [employeeEmail, setEmployeeEmail] = useState(null);
+//   const [employeeName, setEmployeeName] = useState(null);
+//   const [employeeDepartment, setEmployeeDepartment] = useState(null);
+//   const [assignedLocation, setAssignedLocation] = useState(null);
+//   const [position, setPosition] = useState(null);
+//   const [distance, setDistance] = useState(null);
+//   const [checkedIn, setCheckedIn] = useState(false);
+//   const [submitting, setSubmitting] = useState(false);
+//   const [reason, setReason] = useState("");
+//   const [error, setError] = useState("");
+//   const [loadingLocation, setLoadingLocation] = useState(true);
+//   const [allLocations, setAllLocations] = useState([]);
+//   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+//   const [searchQuery, setSearchQuery] = useState("");
+//   const [isSpeaking, setIsSpeaking] = useState(false);
+
+//   // Success Popup states
+//   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+//   const [successMessage, setSuccessMessage] = useState("");
+//   const [successEmoji, setSuccessEmoji] = useState("");
+//   const [successType, setSuccessType] = useState("");
+//   const [isPopupClosing, setIsPopupClosing] = useState(false);
+
+//   // Welcome Popup states
+//   const [showWelcomePopup, setShowWelcomePopup] = useState(true);
+//   const [greetingMessage, setGreetingMessage] = useState("");
+//   const [greetingEmoji, setGreetingEmoji] = useState("");
+//   const [motivationalThought, setMotivationalThought] = useState(null);
+//   const [particles, setParticles] = useState([]);
+
+//   // Current time state
+//   const [currentTime, setCurrentTime] = useState("");
+//   const [currentDate, setCurrentDate] = useState("");
+
+//   // ─── Dismiss Welcome Popup ───
+//   const dismissWelcomePopup = () => {
+//     setShowWelcomePopup(false);
+//     if (window.speechSynthesis) {
+//       window.speechSynthesis.cancel();
+//     }
+//   };
+
+//   // ─── Dismiss Success Popup ───
+//   const dismissSuccessPopup = () => {
+//     if (isPopupClosing) return;
+//     setIsPopupClosing(true);
+//     setShowSuccessPopup(false);
+//     setTimeout(() => {
+//       window.location.reload();
+//     }, 300);
+//   };
+
+//   // Get employee data
+//   useEffect(() => {
+//     const stateId = routerLocation.state?.employeeId;
+//     const stateEmail = routerLocation.state?.email;
+//     const stateName = routerLocation.state?.employeeName;
+//     const stateDepartment = routerLocation.state?.department;
+
+//     if (stateId && stateEmail) {
+//       setEmployeeId(stateId);
+//       setEmployeeEmail(stateEmail);
+//       if (stateName) setEmployeeName(stateName);
+//       if (stateDepartment) setEmployeeDepartment(stateDepartment);
+//       localStorage.setItem(
+//         "employeeData",
+//         JSON.stringify({
+//           employeeId: stateId,
+//           email: stateEmail,
+//           employeeName: stateName,
+//           department: stateDepartment,
+//         })
+//       );
+//     } else {
+//       const stored = localStorage.getItem("employeeData");
+//       if (stored) {
+//         const data = JSON.parse(stored);
+//         setEmployeeId(data.employeeId);
+//         setEmployeeEmail(data.email);
+//         setEmployeeName(data.employeeName);
+//         setEmployeeDepartment(data.department);
+//       } else {
+//         navigate("/");
+//       }
+//     }
+//   }, [routerLocation.state, navigate]);
+
+//   // Initialize welcome popup
+//   useEffect(() => {
+//     if (employeeName) {
+//       const { greeting, emoji } = getGreeting(employeeName);
+//       setGreetingMessage(greeting);
+//       setGreetingEmoji(emoji);
+//       const thought = getRandomThought();
+//       setMotivationalThought(thought);
+
+//       setTimeout(() => {
+//         playWelcomeSound();
+//       }, 300);
+
+//       setTimeout(() => {
+//         speakWelcomeMessage(employeeName, greeting);
+//         setIsSpeaking(true);
+//       }, 1000);
+
+//       generateParticles();
+//     }
+//   }, [employeeName]);
+
+//   // Generate floating particles
+//   const generateParticles = () => {
+//     const colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD", "#FF9FF3", "#54A0FF"];
+//     const newParticles = [];
+//     for (let i = 0; i < 20; i++) {
+//       newParticles.push({
+//         id: i,
+//         x: Math.random() * 100,
+//         y: Math.random() * 100,
+//         size: Math.random() * 6 + 3,
+//         color: colors[Math.floor(Math.random() * colors.length)],
+//         duration: Math.random() * 3 + 2,
+//         delay: Math.random() * 2,
+//       });
+//     }
+//     setParticles(newParticles);
+//   };
+
+//   // Fetch Assigned Location
+//   useEffect(() => {
+//     const fetchAssignedLocation = async () => {
+//       if (!employeeId) return;
+//       setLoadingLocation(true);
+//       setError("");
+
+//       try {
+//         const url = `${cleanBaseUrl}/api/employees/mylocation/${employeeId}`;
+//         const res = await axios.get(url);
+
+//         if (res.data) {
+//           let locationData = null;
+//           let employeeData = null;
+
+//           if (res.data.success && res.data.data) {
+//             locationData = res.data.data.location || res.data.data;
+//             employeeData = res.data.data.employee;
+//           } else if (res.data.location) {
+//             locationData = res.data.location;
+//             employeeData = res.data.employee;
+//           } else if (res.data.data) {
+//             locationData = res.data.data;
+//           } else if (res.data.latitude || res.data.coordinates) {
+//             locationData = res.data;
+//           }
+
+//           if (locationData) {
+//             setAssignedLocation(locationData);
+//             if (employeeData) {
+//               if (employeeData.name) setEmployeeName(employeeData.name);
+//               if (employeeData.department) setEmployeeDepartment(employeeData.department);
+//             }
+//           } else {
+//             setError("No assigned location found for this employee.");
+//           }
+//         }
+//       } catch (err) {
+//         console.error("Error fetching location:", err);
+//         setError("Failed to fetch location");
+//       } finally {
+//         setLoadingLocation(false);
+//       }
+//     };
+//     if (employeeId) fetchAssignedLocation();
+//   }, [employeeId]);
+
+//   // Fetch All Locations
+//   useEffect(() => {
+//     const fetchAllLocations = async () => {
+//       try {
+//         const url = `${cleanBaseUrl}/api/location/alllocation`;
+//         const res = await axios.get(url);
+//         if (res.data.locations) setAllLocations(res.data.locations);
+//         else if (res.data.data) setAllLocations(res.data.data);
+//         else if (Array.isArray(res.data)) setAllLocations(res.data);
+//       } catch (err) {
+//         console.error("Error fetching locations:", err);
+//       }
+//     };
+//     fetchAllLocations();
+//   }, []);
+
+//   const handleSelectLocation = (loc) => {
+//     setAssignedLocation(loc);
+//     setIsLocationModalOpen(false);
+//     setPosition(null);
+//     setDistance(null);
+//     alert(`Switched to location: ${loc.name}`);
+//   };
+
+//   const filteredLocations = allLocations.filter(
+//     (loc) =>
+//       loc.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//       loc.fullAddress?.toLowerCase().includes(searchQuery.toLowerCase())
+//   );
+
+//   // Fetch today's attendance
+//   useEffect(() => {
+//     const fetchTodayAttendance = async () => {
+//       if (!employeeId) return;
+//       try {
+//         const url = `${cleanBaseUrl}/api/attendance/myattendance/${employeeId}`;
+//         const res = await axios.get(url);
+
+//         if (res.data.employeeName) {
+//           setEmployeeName(res.data.employeeName);
+//         }
+
+//         const records = res.data.records || [];
+
+//         const today = new Date();
+//         today.setHours(0, 0, 0, 0);
+
+//         const todayRecord = records.find((rec) => {
+//           const checkInTime = new Date(rec.checkInTime);
+//           return checkInTime >= today && (rec.status === "checked-in" || rec.status === "on-break");
+//         });
+
+//         if (todayRecord) {
+//           setCheckedIn(true);
+//         } else {
+//           setCheckedIn(false);
+//         }
+//       } catch (err) {
+//         console.error("Error fetching attendance:", err);
+//       }
+//     };
+//     if (employeeId) fetchTodayAttendance();
+//   }, [employeeId]);
+
+//   // Update current time and date
+//   useEffect(() => {
+//     const updateDateTime = () => {
+//       const now = new Date();
+//       setCurrentTime(now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+//       setCurrentDate(
+//         now.toLocaleDateString("en-US", {
+//           weekday: "short",
+//           month: "short",
+//           day: "numeric",
+//           year: "numeric",
+//         })
+//       );
+//     };
+//     updateDateTime();
+//     const interval = setInterval(updateDateTime, 60000);
+//     return () => clearInterval(interval);
+//   }, []);
+
+//   // Get current live location
+//   const fetchLocation = () => {
+//     if (!navigator.geolocation) {
+//       return alert("Geolocation is not supported by your browser.");
+//     }
+//     setPosition(null);
+//     navigator.geolocation.getCurrentPosition(
+//       (pos) => {
+//         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+//         setPosition(coords);
+//         if (assignedLocation) {
+//           const dist = haversineDistance(
+//             coords.lat,
+//             coords.lng,
+//             assignedLocation.latitude,
+//             assignedLocation.longitude
+//           );
+//           setDistance(dist);
+//         }
+//       },
+//       (err) => alert("Error getting location: " + err.message),
+//       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+//     );
+//   };
+
+//   // Handle Check-In
+//   const handleCheckIn = async () => {
+//     if (!position) return alert("Please capture your current location first.");
+//     if (!employeeId || !employeeEmail) return alert("Employee data missing.");
+
+//     const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
+
+//     if (isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M) {
+//       return alert(`You are outside the office range (${distance}m). Must be within ${ONSITE_RADIUS_M}m.`);
+//     }
+//     if (!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && !reason.trim()) {
+//       return alert("You are outside the office range. Please select a reason.");
+//     }
+
+//     setSubmitting(true);
+//     try {
+//       await axios.post(`${cleanBaseUrl}/api/attendance/checkin`, {
+//         employeeId,
+//         employeeEmail,
+//         latitude: position.lat,
+//         longitude: position.lng,
+//         reason: isOnsiteOnlyDepartment ? "Onsite" : reason || "Onsite",
+//       });
+
+//       setSuccessType("checkin");
+//       setSuccessMessage(`Congratulations ${employeeName}!`);
+//       setSuccessEmoji("🎉");
+//       setShowSuccessPopup(true);
+//       setIsPopupClosing(false);
+
+//       playSuccessSound();
+//       setTimeout(() => {
+//         speakCheckInSuccess(employeeName);
+//       }, 500);
+//     } catch (err) {
+//       alert(err.response?.data?.message || "Check-in failed.");
+//     } finally {
+//       setSubmitting(false);
+//     }
+//   };
+
+//   // Handle Check-Out
+//   const handleCheckOut = async () => {
+//     if (!employeeId) return alert("Employee data missing.");
+
+//     let lat = null;
+//     let lng = null;
+
+//     if (position) {
+//       lat = position.lat;
+//       lng = position.lng;
+//     } else {
+//       const gotLocation = await new Promise((resolve) => {
+//         if (!navigator.geolocation) {
+//           resolve(false);
+//           return;
+//         }
+//         navigator.geolocation.getCurrentPosition(
+//           (pos) => {
+//             lat = pos.coords.latitude;
+//             lng = pos.coords.longitude;
+//             resolve(true);
+//           },
+//           () => resolve(false),
+//           { enableHighAccuracy: true, timeout: 5000 }
+//         );
+//       });
+
+//       if (!gotLocation) {
+//         const proceed = window.confirm("Location not available. Check out anyway?");
+//         if (!proceed) return;
+//       }
+//     }
+
+//     if (!window.confirm("Are you sure you want to check out?")) return;
+
+//     setSubmitting(true);
+//     try {
+//       const payload = { employeeId };
+//       if (lat && lng) {
+//         payload.latitude = lat;
+//         payload.longitude = lng;
+//       }
+
+//       await axios.post(`${cleanBaseUrl}/api/attendance/checkout`, payload);
+
+//       setSuccessType("checkout");
+//       setSuccessMessage(`Goodbye ${employeeName}!`);
+//       setSuccessEmoji("👋");
+//       setShowSuccessPopup(true);
+//       setIsPopupClosing(false);
+
+//       playSuccessSound();
+//       setTimeout(() => {
+//         speakCheckOutSuccess(employeeName);
+//       }, 500);
+//     } catch (err) {
+//       console.error("Check-out error:", err);
+//       alert(err.response?.data?.message || "Check-out failed.");
+//     } finally {
+//       setSubmitting(false);
+//     }
+//   };
+
+//   // Handle close success popup
+//   const handleCloseSuccessPopup = () => {
+//     dismissSuccessPopup();
+//   };
+
+//   // Manual swipe handler
+//   const handleManualSwipe = () => {
+//     if (submitting) {
+//       alert("Please wait, previous action is processing...");
+//       return;
+//     }
+
+//     if (!checkedIn && !position) {
+//       alert("Please capture your location first.");
+//       return;
+//     }
+
+//     setIsSwiping(true);
+//     let progress = 0;
+//     const interval = setInterval(() => {
+//       progress += 0.1;
+//       setSwipeProgress(progress);
+//       if (progress >= 1) {
+//         clearInterval(interval);
+//         setTimeout(() => {
+//           if (!checkedIn) {
+//             handleCheckIn();
+//           } else {
+//             handleCheckOut();
+//           }
+//           setIsSwiping(false);
+//           setSwipeProgress(0);
+//         }, 300);
+//       }
+//     }, 30);
+//   };
+
+//   // Swipe event handlers
+//   useEffect(() => {
+//     const swipeArea = swipeAreaRef.current;
+//     if (!swipeArea) return;
+
+//     let startX = 0;
+//     let isDragging = false;
+//     const minSwipeDistance = 100;
+
+//     const onStart = (clientX) => {
+//       if (submitting) return;
+//       if (!checkedIn && !position) return;
+//       startX = clientX;
+//       isDragging = true;
+//       setIsSwiping(true);
+//     };
+
+//     const onMove = (clientX) => {
+//       if (!isDragging) return;
+//       const diff = clientX - startX;
+//       if (!checkedIn && diff > 0) {
+//         setSwipeProgress(Math.min(diff / minSwipeDistance, 1));
+//       } else if (checkedIn && diff < 0) {
+//         setSwipeProgress(Math.min(Math.abs(diff) / minSwipeDistance, 1));
+//       }
+//     };
+
+//     const onEnd = (clientX) => {
+//       if (!isDragging) return;
+//       isDragging = false;
+//       const diff = clientX - startX;
+//       if (!checkedIn && diff >= minSwipeDistance) {
+//         handleCheckIn();
+//       } else if (checkedIn && diff <= -minSwipeDistance) {
+//         handleCheckOut();
+//       }
+//       setTimeout(() => {
+//         setSwipeProgress(0);
+//         setIsSwiping(false);
+//       }, 300);
+//     };
+
+//     const handleMouseDown = (e) => onStart(e.clientX);
+//     const handleMouseMove = (e) => onMove(e.clientX);
+//     const handleMouseUp = (e) => onEnd(e.clientX);
+//     const handleTouchStart = (e) => onStart(e.touches[0].clientX);
+//     const handleTouchMove = (e) => onMove(e.touches[0].clientX);
+//     const handleTouchEnd = (e) => onEnd(e.changedTouches[0]?.clientX || 0);
+
+//     swipeArea.addEventListener("mousedown", handleMouseDown);
+//     document.addEventListener("mousemove", handleMouseMove);
+//     document.addEventListener("mouseup", handleMouseUp);
+//     swipeArea.addEventListener("touchstart", handleTouchStart);
+//     document.addEventListener("touchmove", handleTouchMove);
+//     document.addEventListener("touchend", handleTouchEnd);
+
+//     return () => {
+//       swipeArea.removeEventListener("mousedown", handleMouseDown);
+//       document.removeEventListener("mousemove", handleMouseMove);
+//       document.removeEventListener("mouseup", handleMouseUp);
+//       swipeArea.removeEventListener("touchstart", handleTouchStart);
+//       document.removeEventListener("touchmove", handleTouchMove);
+//       document.removeEventListener("touchend", handleTouchEnd);
+//     };
+//   }, [checkedIn, submitting, position, employeeId, assignedLocation]);
+
+//   const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
+
+//   // Replay voice
+//   const replayVoice = () => {
+//     if (employeeName) {
+//       const { greeting } = getGreeting(employeeName);
+//       speakWelcomeMessage(employeeName, greeting);
+//       setIsSpeaking(true);
+//     }
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 p-4">
+//       <div className="max-w-md mx-auto">
+//         {/* ─── SUCCESS POPUP WITH CLICK ANYWHERE TO CLOSE ─── */}
+//         {showSuccessPopup && (
+//           <div 
+//             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in"
+//             onClick={dismissSuccessPopup}
+//           >
+//             <div 
+//               className="relative bg-gradient-to-br from-white via-green-50/95 to-emerald-50/95 rounded-3xl shadow-2xl max-w-sm w-full p-6 transform animate-scale-up border border-green-200/50"
+//               onClick={(e) => e.stopPropagation()}
+//             >
+//               {/* Close X Button */}
+//               <button
+//                 onClick={dismissSuccessPopup}
+//                 className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-gray-200 transition-all duration-200 hover:rotate-90 group"
+//                 title="Close"
+//               >
+//                 <FaTimes className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
+//               </button>
+
+//               <div className="relative text-center">
+//                 {/* ─── Emoji with "click me" ─── */}
+//                 <div className="flex justify-center mb-3">
+//                   <div className="relative">
+//                     <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full blur-xl opacity-30 animate-pulse"></div>
+//                     <div 
+//                       onClick={dismissSuccessPopup}
+//                       className="relative w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/30 cursor-pointer hover:scale-110 transition-all duration-300 group"
+//                       title="Click to dismiss"
+//                     >
+//                       <div className="flex flex-col items-center justify-center">
+//                         <span className="text-2xl">{successEmoji}</span>
+//                         <span className="text-[6px] sm:text-[8px] text-white/90 font-medium mt-0.5 group-hover:scale-110 transition-transform">
+//                           click me
+//                         </span>
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </div>
+
+//                 <h2 className="text-xl font-bold text-gray-900">{successMessage}</h2>
+
+//                 <p className="text-sm text-gray-600 mt-1">
+//                   {successType === "checkin" ? (
+//                     <>
+//                       You have successfully <span className="text-green-600 font-semibold">checked in</span>
+//                     </>
+//                   ) : (
+//                     <>
+//                       You have successfully <span className="text-orange-600 font-semibold">checked out</span>
+//                     </>
+//                   )}
+//                 </p>
+
+//                 <p className="text-xs text-gray-500 mt-2">
+//                   {successType === "checkin" ? "Have a great day! 💪" : "Thank you for your hard work! 🌟"}
+//                 </p>
+
+//                 {/* Voice Indicator */}
+//                 <div className="flex items-center justify-center gap-1.5 mt-3">
+//                   <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />
+//                   <span className="text-[8px] text-purple-500 font-medium animate-pulse">🔊 Female voice speaking...</span>
+//                 </div>
+
+//                 <button
+//                   onClick={dismissSuccessPopup}
+//                   disabled={isPopupClosing}
+//                   className="mt-3 w-full py-2 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+//                 >
+//                   {isPopupClosing ? "Closing..." : "OK 👍"}
+//                 </button>
+
+//                 <p className="text-[6px] text-gray-400 mt-1.5">
+//                   Click anywhere outside or click "click me" to dismiss
+//                 </p>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+
+//         {/* ─── WELCOME POPUP WITH CLICK ANYWHERE TO CLOSE ─── */}
+//         {showWelcomePopup && employeeName && motivationalThought && (
+//           <div 
+//             className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
+//             onClick={dismissWelcomePopup}
+//           >
+//             {/* Floating Particles */}
+//             <div className="absolute inset-0 overflow-hidden pointer-events-none">
+//               {particles.map((particle) => (
+//                 <div
+//                   key={particle.id}
+//                   className="absolute rounded-full animate-float"
+//                   style={{
+//                     left: `${particle.x}%`,
+//                     top: `${particle.y}%`,
+//                     width: `${particle.size}px`,
+//                     height: `${particle.size}px`,
+//                     backgroundColor: particle.color,
+//                     opacity: 0.5,
+//                     animationDuration: `${particle.duration}s`,
+//                     animationDelay: `${particle.delay}s`,
+//                   }}
+//                 />
+//               ))}
+//             </div>
+
+//             <div 
+//               className="relative bg-gradient-to-br from-white via-indigo-50/95 to-purple-50/95 rounded-3xl shadow-2xl max-w-sm w-full p-5 transform animate-scale-up border border-white/30"
+//               onClick={(e) => e.stopPropagation()}
+//             >
+//               {/* Close X Button */}
+//               <button
+//                 onClick={dismissWelcomePopup}
+//                 className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full bg-white/80 hover:bg-red-50 hover:text-red-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:rotate-90"
+//                 aria-label="Close"
+//               >
+//                 <FaTimes className="text-gray-600 hover:text-red-500 transition-colors text-sm" />
+//               </button>
+
+//               {/* Voice Indicator */}
+//               {isSpeaking && (
+//                 <div className="absolute top-2 right-12 flex items-center gap-1">
+//                   <div className="flex items-center gap-0.5">
+//                     <div className="w-1 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: "0s" }}></div>
+//                     <div className="w-1 h-3 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: "0.2s" }}></div>
+//                     <div className="w-1 h-4 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: "0.4s" }}></div>
+//                     <div className="w-1 h-3 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: "0.6s" }}></div>
+//                     <div className="w-1 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: "0.8s" }}></div>
+//                   </div>
+//                   <span className="text-[10px] font-medium text-purple-600">🔊</span>
+//                 </div>
+//               )}
+
+//               <div className="relative">
+//                 {/* ─── Emoji with "click me" ─── */}
+//                 <div className="flex justify-center mb-3">
+//                   <div className="relative">
+//                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl blur-lg opacity-30 animate-pulse"></div>
+//                     <div 
+//                       onClick={dismissWelcomePopup}
+//                       className="relative w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex flex-col items-center justify-center shadow-lg shadow-indigo-500/30 cursor-pointer hover:scale-110 transition-all duration-300 group"
+//                       title="Click to dismiss"
+//                     >
+//                       <span className="text-2xl animate-bounce" style={{ animationDuration: "2s" }}>
+//                         {greetingEmoji || "🌟"}
+//                       </span>
+//                       <span className="text-[5px] text-white/90 font-medium mt-0.5 group-hover:scale-110 transition-transform">
+//                         click me
+//                       </span>
+//                     </div>
+//                   </div>
+//                 </div>
+
+//                 {/* Greeting */}
+//                 <h2 className="text-xl font-bold text-center text-gray-900">
+//                   {greetingMessage}, {employeeName}! 👋
+//                 </h2>
+
+//                 {/* Date */}
+//                 <div className="mt-2 text-center">
+//                   <p className="text-xs text-indigo-600 font-medium flex items-center justify-center gap-1">
+//                     <FaCalendarAlt className="text-indigo-500 text-xs" />
+//                     {getIndianDate()}
+//                   </p>
+//                 </div>
+
+//                 {/* Motivational Thought */}
+//                 <div className="mt-2 p-2.5 bg-gradient-to-r from-indigo-50/80 to-purple-50/80 rounded-xl border border-indigo-100/50">
+//                   <div className="flex items-start gap-1.5">
+//                     <FaQuoteLeft className="text-indigo-400 text-xs mt-0.5 flex-shrink-0" />
+//                     <p className="text-xs text-gray-700 text-center leading-relaxed">
+//                       {motivationalThought.emoji} {motivationalThought.text}
+//                     </p>
+//                     <FaQuoteRight className="text-indigo-400 text-xs mt-0.5 flex-shrink-0" />
+//                   </div>
+//                 </div>
+
+//                 {/* Replay Voice Button */}
+//                 <button
+//                   onClick={replayVoice}
+//                   className="mt-2 w-full py-1.5 rounded-xl text-xs font-medium bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-500/25 transition-all duration-200 flex items-center justify-center gap-2"
+//                 >
+//                   <FaVolumeUp className="text-white text-xs" />
+//                   <span>🔊 Listen Again</span>
+//                 </button>
+
+//                 {/* Get Started Button */}
+//                 <button
+//                   onClick={dismissWelcomePopup}
+//                   className="mt-2 w-full relative group py-2 rounded-xl text-sm font-bold text-white overflow-hidden transition-all duration-300 transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-indigo-500/30"
+//                 >
+//                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 group-hover:from-indigo-600 group-hover:via-purple-600 group-hover:to-pink-600 transition-all duration-300"></div>
+//                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-all duration-700"></div>
+//                   <span className="relative flex items-center justify-center gap-2 text-sm">
+//                     <FaRocket className="text-white group-hover:animate-bounce" />
+//                     Let's Get Started
+//                   </span>
+//                 </button>
+
+//                 <p className="text-[6px] text-gray-400 mt-2 text-center">
+//                   Click anywhere outside or click "click me" to dismiss
+//                 </p>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+
+//         {/* Header with Time */}
+//         <div className="text-center mb-6">
+//           <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md border border-white/50">
+//             <div className="flex items-center gap-1.5">
+//               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+//               <span className="text-xs font-medium text-gray-600">Live</span>
+//             </div>
+//             <div className="w-px h-5 bg-gray-300"></div>
+//             <span className="text-xs font-medium text-gray-700">{currentDate}</span>
+//             <div className="w-px h-5 bg-gray-300"></div>
+//             <span className="text-sm font-bold text-indigo-600">{currentTime}</span>
+//           </div>
+//         </div>
+
+//         {/* Employee Info Card */}
+//         <div className="relative overflow-hidden bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-5 mb-4">
+//           <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+//           <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-400/10 to-cyan-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+
+//           <div className="relative flex items-center gap-4">
+//             <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+//               <span className="text-2xl font-bold text-white">
+//                 {employeeName ? employeeName.charAt(0).toUpperCase() : "U"}
+//               </span>
+//             </div>
+//             <div className="flex-1 min-w-0">
+//               <h2 className="text-lg font-bold text-gray-900 truncate">{employeeName || "Employee"}</h2>
+//               <p className="text-sm text-indigo-600 font-medium flex items-center gap-1.5">
+//                 <FaUsers className="text-indigo-500 text-xs" />
+//                 {employeeDepartment || "Department"}
+//               </p>
+//               <div className="flex items-center gap-2 mt-0.5">
+//                 <span className="text-xs text-gray-500 flex items-center gap-1">
+//                   <BsPersonBadge className="text-gray-400" />
+//                   ID: {employeeId || "N/A"}
+//                 </span>
+//                 <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+//                 <span className="text-xs text-gray-500 truncate flex items-center gap-1">
+//                   <span className="text-gray-400">✉️</span>
+//                   {employeeEmail || "email"}
+//                 </span>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Location Card */}
+//         <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-4 mb-4">
+//           <div className="flex justify-between items-center mb-3">
+//             <div className="flex items-center gap-2">
+//               <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center">
+//                 <FaMapMarkerAlt className="w-4 h-4 text-indigo-600" />
+//               </div>
+//               <h3 className="text-sm font-semibold text-gray-900">Location</h3>
+//             </div>
+//             <button
+//               onClick={() => setIsLocationModalOpen(true)}
+//               className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100"
+//             >
+//               Change Location
+//             </button>
+//           </div>
+
+//           {loadingLocation ? (
+//             <div className="animate-pulse space-y-2">
+//               <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+//               <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+//             </div>
+//           ) : assignedLocation ? (
+//             <div>
+//               <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-indigo-50/80 to-purple-50/80 rounded-xl border border-indigo-100/50">
+//                 <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+//                   <FaBuilding className="w-4 h-4 text-indigo-600" />
+//                 </div>
+//                 <div className="min-w-0 flex-1">
+//                   <h4 className="text-sm font-medium text-gray-900 truncate">
+//                     {assignedLocation.name || "Unnamed Location"}
+//                   </h4>
+//                   <p className="text-xs text-gray-500">Radius: {ONSITE_RADIUS_M}m</p>
+//                 </div>
+//                 {position && (
+//                   <div
+//                     className={`px-3 py-1.5 rounded-full text-xs font-bold ${
+//                       distance <= ONSITE_RADIUS_M
+//                         ? "bg-green-100 text-green-700"
+//                         : "bg-red-100 text-red-700"
+//                     }`}
+//                   >
+//                     {distance}m
+//                   </div>
+//                 )}
+//               </div>
+
+//               {position && distance != null && !checkedIn && (
+//                 <div className="mt-3 p-3 bg-gray-50/80 rounded-xl">
+//                   <div className="flex justify-between items-center mb-1.5">
+//                     <span className="text-xs text-gray-600 flex items-center gap-1">
+//                       <FaWifi className="text-gray-400" />
+//                       Distance from office
+//                     </span>
+//                     <span
+//                       className={`text-sm font-bold ${
+//                         distance <= ONSITE_RADIUS_M ? "text-green-600" : "text-red-600"
+//                       }`}
+//                     >
+//                       {distance}m
+//                     </span>
+//                   </div>
+//                   <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+//                     <div
+//                       className={`h-full transition-all duration-500 ${
+//                         distance <= ONSITE_RADIUS_M
+//                           ? "bg-gradient-to-r from-green-400 to-green-500"
+//                           : "bg-gradient-to-r from-red-400 to-red-500"
+//                       }`}
+//                       style={{ width: `${Math.min((distance / ONSITE_RADIUS_M) * 100, 100)}%` }}
+//                     ></div>
+//                   </div>
+//                   {distance > ONSITE_RADIUS_M && !isOnsiteOnlyDepartment && (
+//                     <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+//                       <span>⚠️</span> Outside office radius - Reason required
+//                     </p>
+//                   )}
+//                 </div>
+//               )}
+
+//               <button
+//                 onClick={fetchLocation}
+//                 className="w-full mt-3 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg shadow-indigo-500/25 transition-all duration-200 flex items-center justify-center gap-2"
+//               >
+//                 <FaMapMarkerAlt className="w-4 h-4" />
+//                 <span>{!position ? "Get Location" : "Update Location"}</span>
+//               </button>
+//             </div>
+//           ) : (
+//             <div className="text-center py-4">
+//               <p className="text-sm text-gray-500">No location assigned. Contact admin.</p>
+//             </div>
+//           )}
+//         </div>
+
+//         {/* Reason Selection */}
+//         {!checkedIn && !isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && (
+//           <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-4 mb-4">
+//             <div className="flex items-center gap-2 mb-2">
+//               <div className="w-7 h-7 bg-yellow-100 rounded-lg flex items-center justify-center">
+//                 <span className="text-sm">⚠️</span>
+//               </div>
+//               <span className="text-sm font-medium text-gray-900">Reason Required</span>
+//               <span className="ml-auto text-xs text-red-500 font-medium">Outside: {distance}m</span>
+//             </div>
+//             <select
+//               value={reason}
+//               onChange={(e) => setReason(e.target.value)}
+//               className="w-full p-2.5 text-sm border border-gray-200 rounded-xl bg-white/50 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+//             >
+//               <option value="">-- Select Reason --</option>
+//               <option value="Field Work">📋 Field Work</option>
+//               <option value="Work From Home">🏠 Work From Home</option>
+//               <option value="Client Meeting">🤝 Client Meeting</option>
+//               <option value="Other">📝 Other</option>
+//             </select>
+//           </div>
+//         )}
+
+//         {/* Onsite-only department warning */}
+//         {!checkedIn && isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && (
+//           <div className="bg-red-50/80 backdrop-blur-sm rounded-3xl shadow-xl border border-red-200/50 p-4 mb-4">
+//             <div className="flex items-start gap-3">
+//               <div className="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+//                 <span className="text-lg">🚫</span>
+//               </div>
+//               <div>
+//                 <p className="text-sm font-semibold text-red-800">
+//                   {employeeDepartment} department must be within {ONSITE_RADIUS_M}m
+//                 </p>
+//                 <p className="text-xs text-red-600 mt-0.5">Current distance: {distance}m</p>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+
+//         {/* Attendance Swipe Card */}
+//         <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-5">
+//           <div className="flex items-center justify-between mb-4">
+//             <div>
+//               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+//                 <BsCalendarCheck className="text-indigo-500" />
+//                 Today's Attendance
+//               </h3>
+//               <p className="text-xs text-gray-500">
+//                 {!checkedIn ? "Ready to check in" : "Checked in - swipe to check out"}
+//               </p>
+//             </div>
+//             <div
+//               className={`px-3 py-1.5 rounded-xl text-xs font-bold ${
+//                 !checkedIn ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"
+//               }`}
+//             >
+//               {!checkedIn ? "Not Checked In" : "Checked In ✅"}
+//             </div>
+//           </div>
+
+//           <div className="text-center mb-3">
+//             <p className="text-sm text-gray-600 font-medium flex items-center justify-center gap-2">
+//               {!checkedIn ? (
+//                 <>
+//                   <FaArrowRight className="text-indigo-500 text-xs" />
+//                   Swipe right to check in
+//                 </>
+//               ) : (
+//                 <>
+//                   <FaArrowLeft className="text-red-500 text-xs" />
+//                   Swipe left to check out
+//                 </>
+//               )}
+//             </p>
+//           </div>
+
+//           <div className="mb-3">
+//             <div
+//               ref={swipeAreaRef}
+//               className={`relative overflow-hidden rounded-xl ${
+//                 submitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+//               }`}
+//               onClick={handleManualSwipe}
+//             >
+//               {!checkedIn ? (
+//                 <div className="relative bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-14">
+//                   <div
+//                     className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"
+//                     style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.2s ease-out" }}
+//                   ></div>
+//                   <div className="absolute inset-0 flex items-center justify-between px-4">
+//                     <div className="flex items-center gap-2 text-white">
+//                       <FaCheckCircle className="w-5 h-5" />
+//                       <span className="text-sm font-bold">CHECK IN</span>
+//                     </div>
+//                     <div className="flex items-center gap-1 text-white/90">
+//                       <span className="text-xs">Swipe →</span>
+//                       <FaArrowRight className="w-5 h-5" />
+//                     </div>
+//                   </div>
+//                 </div>
+//               ) : (
+//                 <div className="relative bg-gradient-to-r from-red-500 to-orange-500 h-14">
+//                   <div
+//                     className="absolute right-0 top-0 bottom-0 bg-gradient-to-r from-red-400 to-orange-400"
+//                     style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.2s ease-out" }}
+//                   ></div>
+//                   <div className="absolute inset-0 flex items-center justify-between px-4">
+//                     <div className="flex items-center gap-1 text-white/90">
+//                       <FaArrowLeft className="w-5 h-5" />
+//                       <span className="text-xs">Swipe</span>
+//                     </div>
+//                     <div className="flex items-center gap-2 text-white">
+//                       <span className="text-sm font-bold">CHECK OUT</span>
+//                       <FaTimes className="w-5 h-5" />
+//                     </div>
+//                   </div>
+//                 </div>
+//               )}
+//             </div>
+//             <p className="text-center text-xs text-gray-500 mt-2">
+//               {!checkedIn ? "📍 Need location to check in" : "👆 Swipe or tap to check out"}
+//             </p>
+//           </div>
+
+//           {submitting && (
+//             <div className="text-center py-2">
+//               <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-xl">
+//                 <FaSpinner className="w-4 h-4 text-indigo-600 animate-spin" />
+//                 <span className="text-sm text-indigo-600 font-medium">Processing...</span>
+//               </div>
+//             </div>
+//           )}
+//         </div>
+
+//         {/* Footer */}
+//         <div className="text-center mt-4">
+//           <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
+//             <span>📍</span>
+//             Location required for check-in
+//             <span className="w-1 h-1 rounded-full bg-gray-300 mx-1"></span>
+//             {isOnsiteOnlyDepartment
+//               ? `${employeeDepartment} department: Within ${ONSITE_RADIUS_M}m required`
+//               : "Outside radius requires reason"}
+//           </p>
+//         </div>
+//       </div>
+
+//       {/* Location Selection Modal */}
+//       {isLocationModalOpen && (
+//         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+//           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col animate-scale-in">
+//             <div className="p-4 border-b flex justify-between items-center">
+//               <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+//                 <FaBuilding className="text-indigo-500" />
+//                 Select Location
+//               </h3>
+//               <button
+//                 onClick={() => setIsLocationModalOpen(false)}
+//                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
+//               >
+//                 ✕
+//               </button>
+//             </div>
+//             <div className="p-4 flex-1 overflow-hidden">
+//               <div className="relative mb-3">
+//                 <svg
+//                   className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+//                   fill="none"
+//                   stroke="currentColor"
+//                   viewBox="0 0 24 24"
+//                 >
+//                   <path
+//                     strokeLinecap="round"
+//                     strokeLinejoin="round"
+//                     strokeWidth="2"
+//                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+//                   ></path>
+//                 </svg>
+//                 <input
+//                   type="text"
+//                   placeholder="Search location..."
+//                   className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+//                   value={searchQuery}
+//                   onChange={(e) => setSearchQuery(e.target.value)}
+//                   autoFocus
+//                 />
+//               </div>
+//               <div className="overflow-y-auto max-h-[50vh] space-y-2">
+//                 {filteredLocations.length > 0 ? (
+//                   filteredLocations.map((loc) => (
+//                     <div
+//                       key={loc._id}
+//                       onClick={() => handleSelectLocation(loc)}
+//                       className="p-3 border border-gray-100 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/50 cursor-pointer transition-all"
+//                     >
+//                       <h4 className="font-medium text-gray-900">{loc.name}</h4>
+//                       <p className="text-xs text-gray-500 mt-0.5">{loc.fullAddress || "No address"}</p>
+//                     </div>
+//                   ))
+//                 ) : (
+//                   <div className="text-center py-8 text-gray-500">
+//                     <p className="text-sm">No locations found</p>
+//                   </div>
+//                 )}
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* CSS for animations */}
+//       <style jsx>{`
+//         @keyframes fade-in {
+//           from {
+//             opacity: 0;
+//           }
+//           to {
+//             opacity: 1;
+//           }
+//         }
+//         @keyframes scale-up {
+//           from {
+//             opacity: 0;
+//             transform: scale(0.9) translateY(15px);
+//           }
+//           to {
+//             opacity: 1;
+//             transform: scale(1) translateY(0);
+//           }
+//         }
+//         @keyframes float {
+//           0%,
+//           100% {
+//             transform: translateY(0px) rotate(0deg);
+//           }
+//           50% {
+//             transform: translateY(-15px) rotate(180deg);
+//           }
+//         }
+//         .animate-fade-in {
+//           animation: fade-in 0.3s ease-out;
+//         }
+//         .animate-scale-up {
+//           animation: scale-up 0.35s ease-out;
+//         }
+//         .animate-scale-in {
+//           animation: scale-up 0.25s ease-out;
+//         }
+//         .animate-float {
+//           animation: float infinite ease-in-out;
+//         }
+//         .animate-bounce {
+//           animation: bounce 2s infinite;
+//         }
+//         @keyframes bounce {
+//           0%,
+//           100% {
+//             transform: scale(1);
+//           }
+//           50% {
+//             transform: scale(1.1);
+//           }
+//         }
+//         @keyframes pulse {
+//           0%,
+//           100% {
+//             opacity: 1;
+//           }
+//           50% {
+//             opacity: 0.5;
+//           }
+//         }
+//       `}</style>
+//     </div>
+//   );
+// }
+
+
+
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -2764,125 +4220,95 @@ import {
   FaHome,
   FaBriefcase,
   FaUsers,
+  FaSmile
 } from "react-icons/fa";
 import { MdCelebration, MdLocationOn, MdWork, MdOutlineAttachMoney } from "react-icons/md";
 import { BsStars, BsCalendarCheck, BsClockHistory, BsPersonBadge } from "react-icons/bs";
 
-// FIX: Ensure BASE_URL ends without trailing slash and remove any duplicate 'api'
 const BASE_URL = API_BASE_URL.endsWith("/") ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
 const cleanBaseUrl = BASE_URL.replace(/\/api\/?$/, "");
 
 const ONSITE_RADIUS_M = 50;
-
-// List of departments that should ONLY have onsite option
 const ONSITE_ONLY_DEPARTMENTS = ["Laboratory Medicine", "Medical", "Nursing"];
 
-// Haversine formula
 function haversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371000;
   const toRad = (deg) => (deg * Math.PI) / 180;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return Math.round(R * c);
 }
 
-// Motivational thoughts collection with categories
 const MOTIVATIONAL_THOUGHTS = [
-  { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", emoji: "💪", category: "success" },
-  { text: "The only way to do great work is to love what you do.", emoji: "❤️", category: "passion" },
-  { text: "Believe you can and you're halfway there.", emoji: "🌟", category: "belief" },
-  { text: "It does not matter how slowly you go as long as you do not stop.", emoji: "🚀", category: "persistence" },
-  { text: "The future belongs to those who believe in the beauty of their dreams.", emoji: "✨", category: "dreams" },
-  { text: "You are never too old to set another goal or to dream a new dream.", emoji: "🌈", category: "goals" },
-  { text: "The secret of getting ahead is getting started.", emoji: "🏃‍♂️", category: "action" },
-  { text: "Your attitude, not your aptitude, will determine your altitude.", emoji: "📈", category: "attitude" },
-  { text: "The only impossible journey is the one you never begin.", emoji: "🌄", category: "courage" },
-  { text: "Dream big and dare to fail.", emoji: "🎯", category: "ambition" },
-  { text: "Success is not the key to happiness. Happiness is the key to success.", emoji: "😊", category: "happiness" },
-  { text: "The best time to plant a tree was 20 years ago. The second best time is now.", emoji: "🌳", category: "timing" },
-  { text: "You miss 100% of the shots you don't take.", emoji: "🏀", category: "opportunity" },
-  { text: "The only limit to our realization of tomorrow is our doubts of today.", emoji: "🔥", category: "belief" },
-  { text: "Great things never come from comfort zones.", emoji: "🌊", category: "growth" },
-  { text: "The difference between ordinary and extraordinary is that little extra.", emoji: "⭐", category: "excellence" },
-  { text: "Success usually comes to those who are too busy to be looking for it.", emoji: "🎯", category: "focus" },
-  { text: "Don't watch the clock; do what it does. Keep going.", emoji: "⏰", category: "persistence" },
-  { text: "The only person you are destined to become is the person you decide to be.", emoji: "🌟", category: "identity" },
-  { text: "What you get by achieving your goals is not as important as what you become.", emoji: "🌱", category: "growth" },
-  { text: "The journey of a thousand miles begins with a single step.", emoji: "👣", category: "beginning" },
-  { text: "Believe in yourself and all that you are. Know that there is something inside you that is greater than any obstacle.", emoji: "💫", category: "belief" },
-  { text: "Your limitation—it's only your imagination.", emoji: "🧠", category: "imagination" },
-  { text: "Push yourself, because no one else is going to do it for you.", emoji: "💪", category: "motivation" },
+  { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", emoji: "💪" },
+  { text: "The only way to do great work is to love what you do.", emoji: "❤️" },
+  { text: "Believe you can and you're halfway there.", emoji: "🌟" },
+  { text: "It does not matter how slowly you go as long as you do not stop.", emoji: "🚀" },
+  { text: "The future belongs to those who believe in the beauty of their dreams.", emoji: "✨" },
+  { text: "You are never too old to set another goal or to dream a new dream.", emoji: "🌈" },
+  { text: "The secret of getting ahead is getting started.", emoji: "🏃‍♂️" },
+  { text: "Your attitude, not your aptitude, will determine your altitude.", emoji: "📈" },
+  { text: "The only impossible journey is the one you never begin.", emoji: "🌄" },
+  { text: "Dream big and dare to fail.", emoji: "🎯" },
+  { text: "Success is not the key to happiness. Happiness is the key to success.", emoji: "😊" },
+  { text: "The best time to plant a tree was 20 years ago. The second best time is now.", emoji: "🌳" },
+  { text: "You miss 100% of the shots you don't take.", emoji: "🏀" },
+  { text: "The only limit to our realization of tomorrow is our doubts of today.", emoji: "🔥" },
+  { text: "Great things never come from comfort zones.", emoji: "🌊" },
+  { text: "The difference between ordinary and extraordinary is that little extra.", emoji: "⭐" },
+  { text: "Success usually comes to those who are too busy to be looking for it.", emoji: "🎯" },
+  { text: "Don't watch the clock; do what it does. Keep going.", emoji: "⏰" },
+  { text: "The only person you are destined to become is the person you decide to be.", emoji: "🌟" },
+  { text: "What you get by achieving your goals is not as important as what you become.", emoji: "🌱" },
+  { text: "The journey of a thousand miles begins with a single step.", emoji: "👣" },
+  { text: "Believe in yourself and all that you are.", emoji: "💫" },
+  { text: "Your limitation—it's only your imagination.", emoji: "🧠" },
+  { text: "Push yourself, because no one else is going to do it for you.", emoji: "💪" },
 ];
 
-// Greetings based on time of day with fun emojis
 const getGreeting = (name) => {
   const hour = new Date().getHours();
-  let greeting = "";
-  let emoji = "";
-
-  if (hour >= 5 && hour < 12) {
-    greeting = "Good Morning";
-    emoji = "🌅";
-  } else if (hour >= 12 && hour < 17) {
-    greeting = "Good Afternoon";
-    emoji = "☀️";
-  } else if (hour >= 17 && hour < 21) {
-    greeting = "Good Evening";
-    emoji = "🌆";
-  } else {
-    greeting = "Good Night";
-    emoji = "🌙";
-  }
-
+  let greeting = "", emoji = "";
+  if (hour >= 5 && hour < 12) { greeting = "Good Morning"; emoji = "🌅"; }
+  else if (hour >= 12 && hour < 17) { greeting = "Good Afternoon"; emoji = "☀️"; }
+  else if (hour >= 17 && hour < 21) { greeting = "Good Evening"; emoji = "🌆"; }
+  else { greeting = "Good Night"; emoji = "🌙"; }
   return { greeting, emoji, name };
 };
 
-// Get Indian date format with day
 const getIndianDate = () => {
   const now = new Date();
-  const options = {
+  return now.toLocaleDateString("en-IN", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
     timeZone: "Asia/Kolkata",
-  };
-  return now.toLocaleDateString("en-IN", options);
+  });
 };
 
-// Get Indian time with seconds
 const getIndianTime = () => {
   const now = new Date();
   return now.toLocaleTimeString("en-IN", {
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
     hour12: true,
     timeZone: "Asia/Kolkata",
   });
 };
 
-// Get current day and date details
 const getDayDetails = () => {
   const now = new Date();
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const day = days[now.getDay()];
-  const date = now.getDate();
-  const month = now.toLocaleString("en-US", { month: "long" });
-  const year = now.getFullYear();
-  return { day, date, month, year };
+  return { day: days[now.getDay()] };
 };
 
-// Get random motivational thought
 const getRandomThought = () => {
   return MOTIVATIONAL_THOUGHTS[Math.floor(Math.random() * MOTIVATIONAL_THOUGHTS.length)];
 };
 
-// Sound function - Welcome
 const playWelcomeSound = () => {
   try {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -2901,12 +4327,9 @@ const playWelcomeSound = () => {
         oscillator.stop(audioContext.currentTime + 0.25);
       }, index * 150);
     });
-  } catch (e) {
-    console.log("Audio not supported");
-  }
+  } catch (e) {}
 };
 
-// Success sound for Check-in/Check-out
 const playSuccessSound = () => {
   try {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -2925,161 +4348,98 @@ const playSuccessSound = () => {
         oscillator.stop(audioContext.currentTime + 0.3);
       }, index * 120);
     });
-  } catch (e) {
-    console.log("Audio not supported");
-  }
+  } catch (e) {}
 };
 
-// Female voice welcome message
+// ─── SHORT VOICE MESSAGES ───
 const speakWelcomeMessage = (name, greeting) => {
   try {
-    if (!("speechSynthesis" in window)) {
-      console.log("Speech synthesis not supported");
-      return;
-    }
-
+    if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
-
-    const { day, date, month, year } = getDayDetails();
-    const currentTime = getIndianTime();
-
-    const message = `Hello ${name}! ${greeting}! Today is ${day}, ${date} ${month} ${year}. The current time is ${currentTime} IST. Welcome to your attendance dashboard. Have a wonderful and productive day ahead. Stay motivated and keep shining!`;
-
+    const { day } = getDayDetails();
+    const message = `Hello ${name}! ${greeting}! Today is ${day}. Welcome to your dashboard. Have a great day!`;
     const utterance = new SpeechSynthesisUtterance(message);
     const voices = window.speechSynthesis.getVoices();
-
-    let femaleVoice = voices.find(
-      (voice) =>
-        voice.name.toLowerCase().includes("female") ||
-        voice.name.toLowerCase().includes("woman") ||
-        voice.name.toLowerCase().includes("girl") ||
-        voice.name.toLowerCase().includes("zira") ||
-        voice.name.toLowerCase().includes("samantha") ||
-        voice.name.toLowerCase().includes("victoria") ||
-        voice.name.toLowerCase().includes("google uk english female")
+    let femaleVoice = voices.find(v => 
+      v.name.toLowerCase().includes("female") || 
+      v.name.toLowerCase().includes("zira") || 
+      v.name.toLowerCase().includes("samantha") ||
+      v.name.toLowerCase().includes("victoria")
     );
-
-    if (!femaleVoice) {
-      femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
-    }
-
-    if (!femaleVoice) {
-      femaleVoice = voices.find((voice) => voice.lang.includes("en"));
-    }
-
-    if (femaleVoice) {
-      utterance.voice = femaleVoice;
-    }
-
+    if (!femaleVoice) femaleVoice = voices.find(v => v.lang.includes("en-IN"));
+    if (!femaleVoice) femaleVoice = voices.find(v => v.lang.includes("en"));
+    if (femaleVoice) utterance.voice = femaleVoice;
     utterance.lang = "en-IN";
     utterance.pitch = 1.2;
     utterance.rate = 0.9;
     utterance.volume = 1;
-
     window.speechSynthesis.speak(utterance);
-
     return true;
-  } catch (error) {
-    console.log("Speech synthesis error:", error);
-    return false;
-  }
+  } catch (error) { return false; }
 };
 
-// Female voice for Check-in success
 const speakCheckInSuccess = (name) => {
   try {
     if (!("speechSynthesis" in window)) return;
-
     window.speechSynthesis.cancel();
-
-    const currentTime = getIndianTime();
-    const message = `Congratulations ${name}! You have successfully checked in at ${currentTime} IST. Have a great day at work!`;
-
+    const message = `Congratulations ${name}! You have successfully checked in. Have a great day!`;
     const utterance = new SpeechSynthesisUtterance(message);
     const voices = window.speechSynthesis.getVoices();
-
-    let femaleVoice = voices.find(
-      (voice) =>
-        voice.name.toLowerCase().includes("female") ||
-        voice.name.toLowerCase().includes("woman") ||
-        voice.name.toLowerCase().includes("girl") ||
-        voice.name.toLowerCase().includes("zira") ||
-        voice.name.toLowerCase().includes("samantha")
+    let femaleVoice = voices.find(v => 
+      v.name.toLowerCase().includes("female") || 
+      v.name.toLowerCase().includes("zira") || 
+      v.name.toLowerCase().includes("samantha")
     );
-
-    if (!femaleVoice) {
-      femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
-    }
-
-    if (!femaleVoice) {
-      femaleVoice = voices.find((voice) => voice.lang.includes("en"));
-    }
-
-    if (femaleVoice) {
-      utterance.voice = femaleVoice;
-    }
-
+    if (!femaleVoice) femaleVoice = voices.find(v => v.lang.includes("en-IN"));
+    if (!femaleVoice) femaleVoice = voices.find(v => v.lang.includes("en"));
+    if (femaleVoice) utterance.voice = femaleVoice;
     utterance.lang = "en-IN";
     utterance.pitch = 1.2;
     utterance.rate = 0.9;
     utterance.volume = 1;
-
     window.speechSynthesis.speak(utterance);
-  } catch (error) {
-    console.log("Speech error:", error);
-  }
+  } catch (error) {}
 };
 
-// Female voice for Check-out success
 const speakCheckOutSuccess = (name) => {
   try {
     if (!("speechSynthesis" in window)) return;
-
     window.speechSynthesis.cancel();
-
-    const currentTime = getIndianTime();
-    const message = `Goodbye ${name}! You have successfully checked out at ${currentTime} IST. Thank you for your hard work today. See you tomorrow!`;
-
+    const message = `Goodbye ${name}! You have successfully checked out. See you tomorrow!`;
     const utterance = new SpeechSynthesisUtterance(message);
     const voices = window.speechSynthesis.getVoices();
-
-    let femaleVoice = voices.find(
-      (voice) =>
-        voice.name.toLowerCase().includes("female") ||
-        voice.name.toLowerCase().includes("woman") ||
-        voice.name.toLowerCase().includes("girl") ||
-        voice.name.toLowerCase().includes("zira") ||
-        voice.name.toLowerCase().includes("samantha")
+    let femaleVoice = voices.find(v => 
+      v.name.toLowerCase().includes("female") || 
+      v.name.toLowerCase().includes("zira") || 
+      v.name.toLowerCase().includes("samantha")
     );
-
-    if (!femaleVoice) {
-      femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
-    }
-
-    if (!femaleVoice) {
-      femaleVoice = voices.find((voice) => voice.lang.includes("en"));
-    }
-
-    if (femaleVoice) {
-      utterance.voice = femaleVoice;
-    }
-
+    if (!femaleVoice) femaleVoice = voices.find(v => v.lang.includes("en-IN"));
+    if (!femaleVoice) femaleVoice = voices.find(v => v.lang.includes("en"));
+    if (femaleVoice) utterance.voice = femaleVoice;
     utterance.lang = "en-IN";
     utterance.pitch = 1.2;
     utterance.rate = 0.9;
     utterance.volume = 1;
-
     window.speechSynthesis.speak(utterance);
-  } catch (error) {
-    console.log("Speech error:", error);
-  }
+  } catch (error) {}
+};
+
+// ─── DISMISS FUNCTIONS ───
+const dismissWelcomePopup = (setShowWelcomePopup) => {
+  setShowWelcomePopup(false);
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+};
+
+const dismissSuccessPopup = (setShowSuccessPopup, setIsPopupClosing) => {
+  setIsPopupClosing(true);
+  setShowSuccessPopup(false);
+  setTimeout(() => window.location.reload(), 300);
 };
 
 export default function AttendanceCapture() {
   const navigate = useNavigate();
   const routerLocation = useLocation();
 
-  // Swipe related refs and state
   const swipeAreaRef = useRef(null);
   const [swipeProgress, setSwipeProgress] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
@@ -3101,27 +4461,22 @@ export default function AttendanceCapture() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  // Success Popup states
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [successEmoji, setSuccessEmoji] = useState("");
-  const [successType, setSuccessType] = useState(""); // "checkin" or "checkout"
+  const [successType, setSuccessType] = useState("");
   const [isPopupClosing, setIsPopupClosing] = useState(false);
 
-  // Welcome Popup states
   const [showWelcomePopup, setShowWelcomePopup] = useState(true);
   const [greetingMessage, setGreetingMessage] = useState("");
   const [greetingEmoji, setGreetingEmoji] = useState("");
   const [currentIndianDate, setCurrentIndianDate] = useState("");
-  const [currentIndianTime, setCurrentIndianTime] = useState("");
   const [motivationalThought, setMotivationalThought] = useState(null);
   const [particles, setParticles] = useState([]);
 
-  // Current time state
   const [currentTime, setCurrentTime] = useState("");
   const [currentDate, setCurrentDate] = useState("");
 
-  // Get employeeId & email from navigation state or localStorage
   useEffect(() => {
     const stateId = routerLocation.state?.employeeId;
     const stateEmail = routerLocation.state?.email;
@@ -3133,15 +4488,12 @@ export default function AttendanceCapture() {
       setEmployeeEmail(stateEmail);
       if (stateName) setEmployeeName(stateName);
       if (stateDepartment) setEmployeeDepartment(stateDepartment);
-      localStorage.setItem(
-        "employeeData",
-        JSON.stringify({
-          employeeId: stateId,
-          email: stateEmail,
-          employeeName: stateName,
-          department: stateDepartment,
-        })
-      );
+      localStorage.setItem("employeeData", JSON.stringify({
+        employeeId: stateId,
+        email: stateEmail,
+        employeeName: stateName,
+        department: stateDepartment,
+      }));
     } else {
       const stored = localStorage.getItem("employeeData");
       if (stored) {
@@ -3156,21 +4508,16 @@ export default function AttendanceCapture() {
     }
   }, [routerLocation.state, navigate]);
 
-  // Initialize welcome popup data when employee name is available
   useEffect(() => {
     if (employeeName) {
       const { greeting, emoji } = getGreeting(employeeName);
       setGreetingMessage(greeting);
       setGreetingEmoji(emoji);
       setCurrentIndianDate(getIndianDate());
-      setCurrentIndianTime(getIndianTime());
       const thought = getRandomThought();
       setMotivationalThought(thought);
 
-      setTimeout(() => {
-        playWelcomeSound();
-      }, 300);
-
+      setTimeout(() => playWelcomeSound(), 300);
       setTimeout(() => {
         speakWelcomeMessage(employeeName, greeting);
         setIsSpeaking(true);
@@ -3180,7 +4527,6 @@ export default function AttendanceCapture() {
     }
   }, [employeeName]);
 
-  // Generate floating particles
   const generateParticles = () => {
     const colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD", "#FF9FF3", "#54A0FF"];
     const newParticles = [];
@@ -3198,21 +4544,16 @@ export default function AttendanceCapture() {
     setParticles(newParticles);
   };
 
-  // Fetch Employee's Assigned Location
   useEffect(() => {
     const fetchAssignedLocation = async () => {
       if (!employeeId) return;
       setLoadingLocation(true);
       setError("");
-
       try {
         const url = `${cleanBaseUrl}/api/employees/mylocation/${employeeId}`;
         const res = await axios.get(url);
-
         if (res.data) {
-          let locationData = null;
-          let employeeData = null;
-
+          let locationData = null, employeeData = null;
           if (res.data.success && res.data.data) {
             locationData = res.data.data.location || res.data.data;
             employeeData = res.data.data.employee;
@@ -3224,7 +4565,6 @@ export default function AttendanceCapture() {
           } else if (res.data.latitude || res.data.coordinates) {
             locationData = res.data;
           }
-
           if (locationData) {
             setAssignedLocation(locationData);
             if (employeeData) {
@@ -3245,7 +4585,6 @@ export default function AttendanceCapture() {
     if (employeeId) fetchAssignedLocation();
   }, [employeeId]);
 
-  // Fetch All Locations
   useEffect(() => {
     const fetchAllLocations = async () => {
       try {
@@ -3275,33 +4614,22 @@ export default function AttendanceCapture() {
       loc.fullAddress?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Fetch today's attendance
   useEffect(() => {
     const fetchTodayAttendance = async () => {
       if (!employeeId) return;
       try {
         const url = `${cleanBaseUrl}/api/attendance/myattendance/${employeeId}`;
         const res = await axios.get(url);
-
-        if (res.data.employeeName) {
-          setEmployeeName(res.data.employeeName);
-        }
-
+        if (res.data.employeeName) setEmployeeName(res.data.employeeName);
         const records = res.data.records || [];
-
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-
         const todayRecord = records.find((rec) => {
           const checkInTime = new Date(rec.checkInTime);
           return checkInTime >= today && (rec.status === "checked-in" || rec.status === "on-break");
         });
-
-        if (todayRecord) {
-          setCheckedIn(true);
-        } else {
-          setCheckedIn(false);
-        }
+        if (todayRecord) setCheckedIn(true);
+        else setCheckedIn(false);
       } catch (err) {
         console.error("Error fetching attendance:", err);
       }
@@ -3309,7 +4637,6 @@ export default function AttendanceCapture() {
     if (employeeId) fetchTodayAttendance();
   }, [employeeId]);
 
-  // Update current time and date
   useEffect(() => {
     const updateDateTime = () => {
       const now = new Date();
@@ -3322,14 +4649,12 @@ export default function AttendanceCapture() {
           year: "numeric",
         })
       );
-      setCurrentIndianTime(getIndianTime());
     };
     updateDateTime();
     const interval = setInterval(updateDateTime, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  // Get current live location
   const fetchLocation = () => {
     if (!navigator.geolocation) {
       return alert("Geolocation is not supported by your browser.");
@@ -3354,7 +4679,6 @@ export default function AttendanceCapture() {
     );
   };
 
-  // Handle Check-In
   const handleCheckIn = async () => {
     if (!position) return alert("Please capture your current location first.");
     if (!employeeId || !employeeEmail) return alert("Employee data missing.");
@@ -3378,18 +4702,14 @@ export default function AttendanceCapture() {
         reason: isOnsiteOnlyDepartment ? "Onsite" : reason || "Onsite",
       });
 
-      // Show success popup - remove alert
       setSuccessType("checkin");
       setSuccessMessage(`Congratulations ${employeeName}!`);
       setSuccessEmoji("🎉");
       setShowSuccessPopup(true);
       setIsPopupClosing(false);
 
-      // Play success sound and speak
       playSuccessSound();
-      setTimeout(() => {
-        speakCheckInSuccess(employeeName);
-      }, 500);
+      setTimeout(() => speakCheckInSuccess(employeeName), 500);
     } catch (err) {
       alert(err.response?.data?.message || "Check-in failed.");
     } finally {
@@ -3397,33 +4717,22 @@ export default function AttendanceCapture() {
     }
   };
 
-  // Handle Check-Out
   const handleCheckOut = async () => {
     if (!employeeId) return alert("Employee data missing.");
 
-    let lat = null;
-    let lng = null;
-
+    let lat = null, lng = null;
     if (position) {
       lat = position.lat;
       lng = position.lng;
     } else {
       const gotLocation = await new Promise((resolve) => {
-        if (!navigator.geolocation) {
-          resolve(false);
-          return;
-        }
+        if (!navigator.geolocation) { resolve(false); return; }
         navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            lat = pos.coords.latitude;
-            lng = pos.coords.longitude;
-            resolve(true);
-          },
+          (pos) => { lat = pos.coords.latitude; lng = pos.coords.longitude; resolve(true); },
           () => resolve(false),
           { enableHighAccuracy: true, timeout: 5000 }
         );
       });
-
       if (!gotLocation) {
         const proceed = window.confirm("Location not available. Check out anyway?");
         if (!proceed) return;
@@ -3435,25 +4744,17 @@ export default function AttendanceCapture() {
     setSubmitting(true);
     try {
       const payload = { employeeId };
-      if (lat && lng) {
-        payload.latitude = lat;
-        payload.longitude = lng;
-      }
-
+      if (lat && lng) { payload.latitude = lat; payload.longitude = lng; }
       await axios.post(`${cleanBaseUrl}/api/attendance/checkout`, payload);
 
-      // Show success popup - remove alert
       setSuccessType("checkout");
       setSuccessMessage(`Goodbye ${employeeName}!`);
       setSuccessEmoji("👋");
       setShowSuccessPopup(true);
       setIsPopupClosing(false);
 
-      // Play success sound and speak
       playSuccessSound();
-      setTimeout(() => {
-        speakCheckOutSuccess(employeeName);
-      }, 500);
+      setTimeout(() => speakCheckOutSuccess(employeeName), 500);
     } catch (err) {
       console.error("Check-out error:", err);
       alert(err.response?.data?.message || "Check-out failed.");
@@ -3462,29 +4763,28 @@ export default function AttendanceCapture() {
     }
   };
 
-  // Handle close success popup
-  const handleCloseSuccessPopup = () => {
+  // ─── Dismiss Functions ───
+  const handleDismissWelcome = () => {
+    setShowWelcomePopup(false);
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+  };
+
+  const handleDismissSuccess = () => {
     if (isPopupClosing) return;
     setIsPopupClosing(true);
     setShowSuccessPopup(false);
-    // Reload after popup closes
-    setTimeout(() => {
-      window.location.reload();
-    }, 300);
+    setTimeout(() => window.location.reload(), 300);
   };
 
-  // Manual swipe handler
   const handleManualSwipe = () => {
     if (submitting) {
       alert("Please wait, previous action is processing...");
       return;
     }
-
     if (!checkedIn && !position) {
       alert("Please capture your location first.");
       return;
     }
-
     setIsSwiping(true);
     let progress = 0;
     const interval = setInterval(() => {
@@ -3493,11 +4793,8 @@ export default function AttendanceCapture() {
       if (progress >= 1) {
         clearInterval(interval);
         setTimeout(() => {
-          if (!checkedIn) {
-            handleCheckIn();
-          } else {
-            handleCheckOut();
-          }
+          if (!checkedIn) handleCheckIn();
+          else handleCheckOut();
           setIsSwiping(false);
           setSwipeProgress(0);
         }, 300);
@@ -3505,13 +4802,11 @@ export default function AttendanceCapture() {
     }, 30);
   };
 
-  // Swipe event handlers
   useEffect(() => {
     const swipeArea = swipeAreaRef.current;
     if (!swipeArea) return;
 
-    let startX = 0;
-    let isDragging = false;
+    let startX = 0, isDragging = false;
     const minSwipeDistance = 100;
 
     const onStart = (clientX) => {
@@ -3536,15 +4831,9 @@ export default function AttendanceCapture() {
       if (!isDragging) return;
       isDragging = false;
       const diff = clientX - startX;
-      if (!checkedIn && diff >= minSwipeDistance) {
-        handleCheckIn();
-      } else if (checkedIn && diff <= -minSwipeDistance) {
-        handleCheckOut();
-      }
-      setTimeout(() => {
-        setSwipeProgress(0);
-        setIsSwiping(false);
-      }, 300);
+      if (!checkedIn && diff >= minSwipeDistance) handleCheckIn();
+      else if (checkedIn && diff <= -minSwipeDistance) handleCheckOut();
+      setTimeout(() => { setSwipeProgress(0); setIsSwiping(false); }, 300);
     };
 
     const handleMouseDown = (e) => onStart(e.clientX);
@@ -3569,11 +4858,10 @@ export default function AttendanceCapture() {
       document.removeEventListener("touchmove", handleTouchMove);
       document.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [checkedIn, submitting, position, employeeId, assignedLocation]);
+  }, [checkedIn, submitting, position]);
 
   const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
 
-  // Function to replay voice
   const replayVoice = () => {
     if (employeeName) {
       const { greeting } = getGreeting(employeeName);
@@ -3583,77 +4871,86 @@ export default function AttendanceCapture() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 p-4">
-      <div className="max-w-md mx-auto">
-        {/* Success Popup - Stays until user clicks OK */}
-        {showSuccessPopup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
-            <div className="relative bg-gradient-to-br from-white via-green-50/95 to-emerald-50/95 rounded-3xl shadow-2xl max-w-sm w-full p-6 transform animate-scale-up border border-green-200/50">
-              {/* Decorative elements */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-cyan-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/80 to-purple-50/60 p-4 relative overflow-hidden">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-20 -left-20 w-72 h-72 bg-gradient-to-br from-indigo-300/25 to-blue-400/20 rounded-full blur-3xl animate-orb-float" style={{ animationDuration: '8s' }}></div>
+        <div className="absolute top-1/3 -right-16 w-64 h-64 bg-gradient-to-br from-purple-300/20 to-pink-300/15 rounded-full blur-3xl animate-orb-float" style={{ animationDuration: '10s', animationDelay: '2s' }}></div>
+        <div className="absolute -bottom-16 left-1/4 w-56 h-56 bg-gradient-to-br from-cyan-300/20 to-emerald-300/15 rounded-full blur-3xl animate-orb-float" style={{ animationDuration: '12s', animationDelay: '4s' }}></div>
+      </div>
 
-              {/* Voice Indicator - Shows while speaking */}
-              <div className="absolute top-3 right-3 flex items-center gap-1">
-                <div className="flex items-center gap-0.5">
-                  <div className="w-1 h-2 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0s" }}></div>
-                  <div className="w-1 h-3 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.2s" }}></div>
-                  <div className="w-1 h-4 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.4s" }}></div>
-                  <div className="w-1 h-3 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.6s" }}></div>
-                  <div className="w-1 h-2 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.8s" }}></div>
-                </div>
-                <span className="text-[10px] font-medium text-green-600">🔊</span>
-              </div>
+      <div className="max-w-md mx-auto relative z-10">
+        {/* ─── SUCCESS POPUP WITH CLICK ANYWHERE ─── */}
+        {showSuccessPopup && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in"
+            onClick={handleDismissSuccess}
+          >
+            <div 
+              className="relative bg-gradient-to-br from-white via-green-50/95 to-emerald-50/95 rounded-3xl shadow-2xl max-w-sm w-full p-6 transform animate-scale-up border border-green-200/50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close X Button */}
+              <button
+                onClick={handleDismissSuccess}
+                className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-gray-200 transition-all duration-200 hover:rotate-90 group"
+              >
+                <FaTimes className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
+              </button>
 
               <div className="relative text-center">
-                {/* Success Icon */}
+                {/* ─── Emoji with "click me" ─── */}
                 <div className="flex justify-center mb-3">
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full blur-xl opacity-30 animate-pulse"></div>
-                    <div className="relative w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/30">
-                      <span className="text-4xl animate-bounce">{successEmoji}</span>
+                    <div 
+                      onClick={handleDismissSuccess}
+                      className="relative w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex flex-col items-center justify-center shadow-lg shadow-green-500/30 cursor-pointer hover:scale-110 transition-all duration-300 group"
+                    >
+                      <span className="text-2xl">{successEmoji}</span>
+                      <span className="text-[6px] sm:text-[8px] text-white/90 font-medium group-hover:scale-110 transition-transform">
+                        click me
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Success Message */}
                 <h2 className="text-xl font-bold text-gray-900">{successMessage}</h2>
-
                 <p className="text-sm text-gray-600 mt-1">
                   {successType === "checkin" ? (
-                    <>
-                      You have successfully <span className="text-green-600 font-semibold">checked in</span> at{" "}
-                      {getIndianTime()} IST
-                    </>
+                    <>You have successfully <span className="text-green-600 font-semibold">checked in</span></>
                   ) : (
-                    <>
-                      You have successfully <span className="text-orange-600 font-semibold">checked out</span> at{" "}
-                      {getIndianTime()} IST
-                    </>
+                    <>You have successfully <span className="text-orange-600 font-semibold">checked out</span></>
                   )}
                 </p>
-
                 <p className="text-xs text-gray-500 mt-2">
-                  {successType === "checkin" ? "Have a great day at work! 💪" : "Thank you for your hard work today! 🌟"}
+                  {successType === "checkin" ? "Have a great day! 💪" : "Thank you for your hard work! 🌟"}
                 </p>
 
-                {/* OK Button - Only way to close */}
+                <div className="flex items-center justify-center gap-1.5 mt-3">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />
+                  <span className="text-[8px] text-purple-500 font-medium animate-pulse">🔊 Female voice speaking...</span>
+                </div>
+
                 <button
-                  onClick={handleCloseSuccessPopup}
+                  onClick={handleDismissSuccess}
                   disabled={isPopupClosing}
-                  className="mt-4 w-full py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-3 w-full py-2 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-95"
                 >
                   {isPopupClosing ? "Closing..." : "OK 👍"}
                 </button>
+
+                <p className="text-[6px] text-gray-400 mt-1.5">Click anywhere outside or click "click me" to dismiss</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Small Welcome Popup */}
+        {/* ─── WELCOME POPUP WITH CLICK ANYWHERE ─── */}
         {showWelcomePopup && employeeName && motivationalThought && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-            {/* Floating Particles */}
+          <div 
+            className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
+            onClick={handleDismissWelcome}
+          >
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               {particles.map((particle) => (
                 <div
@@ -3673,22 +4970,18 @@ export default function AttendanceCapture() {
               ))}
             </div>
 
-            <div className="relative bg-gradient-to-br from-white via-indigo-50/95 to-purple-50/95 rounded-3xl shadow-2xl max-w-sm w-full p-5 transform animate-scale-up border border-white/30">
-              {/* Close Button (X) */}
+            <div 
+              className="relative bg-gradient-to-br from-white via-indigo-50/95 to-purple-50/95 rounded-3xl shadow-2xl max-w-sm w-full p-5 transform animate-scale-up border border-white/30"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close X Button */}
               <button
-                onClick={() => {
-                  setShowWelcomePopup(false);
-                  if (window.speechSynthesis) {
-                    window.speechSynthesis.cancel();
-                  }
-                }}
+                onClick={handleDismissWelcome}
                 className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full bg-white/80 hover:bg-red-50 hover:text-red-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:rotate-90"
-                aria-label="Close"
               >
                 <FaTimes className="text-gray-600 hover:text-red-500 transition-colors text-sm" />
               </button>
 
-              {/* Voice Indicator */}
               {isSpeaking && (
                 <div className="absolute top-2 right-12 flex items-center gap-1">
                   <div className="flex items-center gap-0.5">
@@ -3703,36 +4996,33 @@ export default function AttendanceCapture() {
               )}
 
               <div className="relative">
-                {/* Small Icon */}
+                {/* ─── Emoji with "click me" ─── */}
                 <div className="flex justify-center mb-3">
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl blur-lg opacity-30 animate-pulse"></div>
-                    <div className="relative w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                      <span className="text-3xl animate-bounce" style={{ animationDuration: "2s" }}>
-                        {greetingEmoji || "🌟"}
+                    <div 
+                      onClick={handleDismissWelcome}
+                      className="relative w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex flex-col items-center justify-center shadow-lg shadow-indigo-500/30 cursor-pointer hover:scale-110 transition-all duration-300 group"
+                    >
+                      <span className="text-2xl animate-bounce" style={{ animationDuration: "2s" }}>{greetingEmoji || "🌟"}</span>
+                      <span className="text-[5px] text-white/90 font-medium group-hover:scale-110 transition-transform">
+                        click me
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Greeting */}
                 <h2 className="text-xl font-bold text-center text-gray-900">
                   {greetingMessage}, {employeeName}! 👋
                 </h2>
 
-                {/* Date and Time */}
-                <div className="mt-2 text-center space-y-0.5">
+                <div className="mt-2 text-center">
                   <p className="text-xs text-indigo-600 font-medium flex items-center justify-center gap-1">
                     <FaCalendarAlt className="text-indigo-500 text-xs" />
                     {currentIndianDate}
                   </p>
-                  <p className="text-xs text-purple-600 font-medium flex items-center justify-center gap-1">
-                    <FaClock className="text-purple-500 text-xs" />
-                    {currentIndianTime} IST
-                  </p>
                 </div>
 
-                {/* Motivational Thought - Smaller */}
                 <div className="mt-2 p-2.5 bg-gradient-to-r from-indigo-50/80 to-purple-50/80 rounded-xl border border-indigo-100/50">
                   <div className="flex items-start gap-1.5">
                     <FaQuoteLeft className="text-indigo-400 text-xs mt-0.5 flex-shrink-0" />
@@ -3743,7 +5033,6 @@ export default function AttendanceCapture() {
                   </div>
                 </div>
 
-                {/* Replay Voice Button */}
                 <button
                   onClick={replayVoice}
                   className="mt-2 w-full py-1.5 rounded-xl text-xs font-medium bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-500/25 transition-all duration-200 flex items-center justify-center gap-2"
@@ -3752,14 +5041,8 @@ export default function AttendanceCapture() {
                   <span>🔊 Listen Again</span>
                 </button>
 
-                {/* Get Started Button */}
                 <button
-                  onClick={() => {
-                    setShowWelcomePopup(false);
-                    if (window.speechSynthesis) {
-                      window.speechSynthesis.cancel();
-                    }
-                  }}
+                  onClick={handleDismissWelcome}
                   className="mt-2 w-full relative group py-2 rounded-xl text-sm font-bold text-white overflow-hidden transition-all duration-300 transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-indigo-500/30"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 group-hover:from-indigo-600 group-hover:via-purple-600 group-hover:to-pink-600 transition-all duration-300"></div>
@@ -3769,6 +5052,8 @@ export default function AttendanceCapture() {
                     Let's Get Started
                   </span>
                 </button>
+
+                <p className="text-[6px] text-gray-400 mt-2 text-center">Click anywhere outside or click "click me" to dismiss</p>
               </div>
             </div>
           </div>
@@ -3776,43 +5061,51 @@ export default function AttendanceCapture() {
 
         {/* Header with Time */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md border border-white/50">
+          <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg shadow-indigo-500/8 border border-white/70 hover:shadow-xl transition-all duration-300">
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-              <span className="text-xs font-medium text-gray-600">Live</span>
+              <div className="relative">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <div className="absolute inset-0 w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-75"></div>
+              </div>
+              <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider">Live</span>
             </div>
-            <div className="w-px h-5 bg-gray-300"></div>
-            <span className="text-xs font-medium text-gray-700">{currentDate}</span>
-            <div className="w-px h-5 bg-gray-300"></div>
-            <span className="text-sm font-bold text-indigo-600">{currentTime}</span>
+            <div className="w-px h-5 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
+            <span className="text-xs font-semibold text-gray-600">{currentDate}</span>
+            <div className="w-px h-5 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
+            <span className="text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{currentTime}</span>
           </div>
         </div>
 
         {/* Employee Info Card */}
-        <div className="relative overflow-hidden bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-5 mb-4">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-400/10 to-cyan-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+        <div className="relative overflow-hidden bg-white/85 backdrop-blur-2xl rounded-3xl shadow-xl shadow-indigo-500/5 border border-white/60 p-5 mb-4 group hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-indigo-400/15 to-purple-400/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:from-indigo-400/25 group-hover:to-purple-400/25 transition-all duration-700"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-400/10 to-cyan-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
 
           <div className="relative flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
-              <span className="text-2xl font-bold text-white">
-                {employeeName ? employeeName.charAt(0).toUpperCase() : "U"}
-              </span>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl blur-md opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
+              <div className="relative w-16 h-16 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-2 ring-white/50">
+                <span className="text-2xl font-bold text-white drop-shadow-sm">
+                  {employeeName ? employeeName.charAt(0).toUpperCase() : "U"}
+                </span>
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white shadow-sm">
+                <div className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-50"></div>
+              </div>
             </div>
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-bold text-gray-900 truncate">{employeeName || "Employee"}</h2>
-              <p className="text-sm text-indigo-600 font-medium flex items-center gap-1.5">
+              <p className="text-sm font-semibold flex items-center gap-1.5">
                 <FaUsers className="text-indigo-500 text-xs" />
-                {employeeDepartment || "Department"}
+                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{employeeDepartment || "Department"}</span>
               </p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-xs text-gray-500 flex items-center gap-1">
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[10px] text-gray-500 flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded-full">
                   <BsPersonBadge className="text-gray-400" />
-                  ID: {employeeId || "N/A"}
+                  {employeeId || "N/A"}
                 </span>
-                <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                <span className="text-xs text-gray-500 truncate flex items-center gap-1">
-                  <span className="text-gray-400">✉️</span>
+                <span className="text-[10px] text-gray-500 truncate flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded-full">
+                  <span className="text-gray-400 text-[8px]">✉️</span>
                   {employeeEmail || "email"}
                 </span>
               </div>
@@ -3821,19 +5114,22 @@ export default function AttendanceCapture() {
         </div>
 
         {/* Location Card */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-4 mb-4">
+        <div className="bg-white/85 backdrop-blur-2xl rounded-3xl shadow-xl shadow-indigo-500/5 border border-white/60 p-4 mb-4 hover:shadow-2xl hover:shadow-indigo-500/8 transition-all duration-500">
           <div className="flex justify-between items-center mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center shadow-sm">
                 <FaMapMarkerAlt className="w-4 h-4 text-indigo-600" />
               </div>
-              <h3 className="text-sm font-semibold text-gray-900">Location</h3>
+              <div>
+                <h3 className="text-sm font-bold text-gray-900">Location</h3>
+                <p className="text-[10px] text-gray-400 font-medium">Office geofence tracking</p>
+              </div>
             </div>
             <button
               onClick={() => setIsLocationModalOpen(true)}
-              className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100"
+              className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition-all bg-indigo-50 px-3 py-1.5 rounded-xl hover:bg-indigo-100 border border-indigo-100 shadow-sm uppercase tracking-wider"
             >
-              Change Location
+              Change
             </button>
           </div>
 
@@ -3855,13 +5151,7 @@ export default function AttendanceCapture() {
                   <p className="text-xs text-gray-500">Radius: {ONSITE_RADIUS_M}m</p>
                 </div>
                 {position && (
-                  <div
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold ${
-                      distance <= ONSITE_RADIUS_M
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
+                  <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${distance <= ONSITE_RADIUS_M ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                     {distance}m
                   </div>
                 )}
@@ -3874,21 +5164,13 @@ export default function AttendanceCapture() {
                       <FaWifi className="text-gray-400" />
                       Distance from office
                     </span>
-                    <span
-                      className={`text-sm font-bold ${
-                        distance <= ONSITE_RADIUS_M ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
+                    <span className={`text-sm font-bold ${distance <= ONSITE_RADIUS_M ? "text-green-600" : "text-red-600"}`}>
                       {distance}m
                     </span>
                   </div>
                   <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
-                      className={`h-full transition-all duration-500 ${
-                        distance <= ONSITE_RADIUS_M
-                          ? "bg-gradient-to-r from-green-400 to-green-500"
-                          : "bg-gradient-to-r from-red-400 to-red-500"
-                      }`}
+                      className={`h-full transition-all duration-500 ${distance <= ONSITE_RADIUS_M ? "bg-gradient-to-r from-green-400 to-green-500" : "bg-gradient-to-r from-red-400 to-red-500"}`}
                       style={{ width: `${Math.min((distance / ONSITE_RADIUS_M) * 100, 100)}%` }}
                     ></div>
                   </div>
@@ -3957,38 +5239,36 @@ export default function AttendanceCapture() {
         )}
 
         {/* Attendance Swipe Card */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-5">
+        <div className="bg-white/85 backdrop-blur-2xl rounded-3xl shadow-xl shadow-indigo-500/5 border border-white/60 p-5 hover:shadow-2xl hover:shadow-indigo-500/8 transition-all duration-500">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
-                <BsCalendarCheck className="text-indigo-500" />
+              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <div className="w-7 h-7 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center">
+                  <BsCalendarCheck className="text-indigo-600 text-xs" />
+                </div>
                 Today's Attendance
               </h3>
-              <p className="text-xs text-gray-500">
-                {!checkedIn ? "Ready to check in" : "Checked in - swipe to check out"}
+              <p className="text-[10px] text-gray-400 font-medium mt-0.5 ml-9">
+                {!checkedIn ? "Ready to mark attendance" : "Currently on duty"}
               </p>
             </div>
-            <div
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold ${
-                !checkedIn ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"
-              }`}
-            >
-              {!checkedIn ? "Not Checked In" : "Checked In ✅"}
+            <div className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider border shadow-sm ${!checkedIn ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
+              {!checkedIn ? "Pending" : "Active ✅"}
             </div>
           </div>
 
           <div className="text-center mb-3">
-            <p className="text-sm text-gray-600 font-medium flex items-center justify-center gap-2">
+            <p className="text-xs text-gray-500 font-medium flex items-center justify-center gap-2">
               {!checkedIn ? (
-                <>
-                  <FaArrowRight className="text-indigo-500 text-xs" />
-                  Swipe right to check in
-                </>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 rounded-full text-indigo-600">
+                  <FaArrowRight className="text-[9px] animate-bounce-x" />
+                  <span className="text-[10px] font-semibold">Swipe right to check in</span>
+                </span>
               ) : (
-                <>
-                  <FaArrowLeft className="text-red-500 text-xs" />
-                  Swipe left to check out
-                </>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 rounded-full text-red-600">
+                  <FaArrowLeft className="text-[9px] animate-bounce-x-reverse" />
+                  <span className="text-[10px] font-semibold">Swipe left to check out</span>
+                </span>
               )}
             </p>
           </div>
@@ -3996,72 +5276,91 @@ export default function AttendanceCapture() {
           <div className="mb-3">
             <div
               ref={swipeAreaRef}
-              className={`relative overflow-hidden rounded-xl ${
-                submitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-              }`}
+              className={`relative overflow-hidden rounded-2xl ${submitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
               onClick={handleManualSwipe}
             >
               {!checkedIn ? (
-                <div className="relative bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-14">
+                <div className="relative h-16 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-lg shadow-indigo-500/30">
                   <div
-                    className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"
-                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.2s ease-out" }}
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 opacity-60"
+                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.3s ease-out" }}
                   ></div>
-                  <div className="absolute inset-0 flex items-center justify-between px-4">
-                    <div className="flex items-center gap-2 text-white">
-                      <FaCheckCircle className="w-5 h-5" />
-                      <span className="text-sm font-bold">CHECK IN</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent animate-shimmer"></div>
+                  <div className="absolute inset-0 flex items-center justify-between px-5">
+                    <div className="flex items-center gap-2.5 text-white">
+                      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-inner">
+                        <FaCheckCircle className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-extrabold tracking-wide">CHECK IN</span>
+                        <p className="text-[9px] text-white/70 font-medium">Mark your attendance</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 text-white/90">
-                      <span className="text-xs">Swipe →</span>
-                      <FaArrowRight className="w-5 h-5" />
+                    <div className="flex items-center gap-1.5 text-white/80">
+                      <span className="text-[10px] font-semibold">Swipe</span>
+                      <div className="flex gap-0.5 animate-bounce-x">
+                        <FaArrowRight className="w-3 h-3 opacity-40" />
+                        <FaArrowRight className="w-3 h-3 opacity-70" />
+                        <FaArrowRight className="w-3 h-3" />
+                      </div>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="relative bg-gradient-to-r from-red-500 to-orange-500 h-14">
+                <div className="relative h-16 bg-gradient-to-r from-red-500 via-rose-500 to-orange-500 shadow-lg shadow-red-500/30">
                   <div
-                    className="absolute right-0 top-0 bottom-0 bg-gradient-to-r from-red-400 to-orange-400"
-                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.2s ease-out" }}
+                    className="absolute inset-y-0 right-0 bg-gradient-to-r from-red-400 to-orange-400 opacity-60"
+                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.3s ease-out" }}
                   ></div>
-                  <div className="absolute inset-0 flex items-center justify-between px-4">
-                    <div className="flex items-center gap-1 text-white/90">
-                      <FaArrowLeft className="w-5 h-5" />
-                      <span className="text-xs">Swipe</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
+                  <div className="absolute inset-0 flex items-center justify-between px-5">
+                    <div className="flex items-center gap-1.5 text-white/80">
+                      <div className="flex gap-0.5 animate-bounce-x-reverse">
+                        <FaArrowLeft className="w-3 h-3" />
+                        <FaArrowLeft className="w-3 h-3 opacity-70" />
+                        <FaArrowLeft className="w-3 h-3 opacity-40" />
+                      </div>
+                      <span className="text-[10px] font-semibold">Swipe</span>
                     </div>
-                    <div className="flex items-center gap-2 text-white">
-                      <span className="text-sm font-bold">CHECK OUT</span>
-                      <FaTimes className="w-5 h-5" />
+                    <div className="flex items-center gap-2.5 text-white">
+                      <div>
+                        <span className="text-sm font-extrabold tracking-wide">CHECK OUT</span>
+                        <p className="text-[9px] text-white/70 font-medium text-right">End your shift</p>
+                      </div>
+                      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-inner">
+                        <FaTimes className="w-5 h-5 text-white" />
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
             </div>
-            <p className="text-center text-xs text-gray-500 mt-2">
-              {!checkedIn ? "📍 Need location to check in" : "👆 Swipe or tap to check out"}
+            <p className="text-center text-[10px] text-gray-400 mt-2 font-medium">
+              {!checkedIn ? "📍 Capture your location first, then swipe to check in" : "👆 Tap or swipe the bar to check out"}
             </p>
           </div>
 
           {submitting && (
-            <div className="text-center py-2">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-xl">
+            <div className="text-center py-3">
+              <div className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 shadow-sm">
                 <FaSpinner className="w-4 h-4 text-indigo-600 animate-spin" />
-                <span className="text-sm text-indigo-600 font-medium">Processing...</span>
+                <span className="text-sm text-indigo-700 font-semibold">Processing...</span>
               </div>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-4">
-          <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
-            <span>📍</span>
-            Location required for check-in
-            <span className="w-1 h-1 rounded-full bg-gray-300 mx-1"></span>
-            {isOnsiteOnlyDepartment
-              ? `${employeeDepartment} department: Within ${ONSITE_RADIUS_M}m required`
-              : "Outside radius requires reason"}
-          </p>
+        <div className="text-center mt-5 space-y-2">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/50 shadow-sm">
+            <span className="text-[10px]">📍</span>
+            <p className="text-[10px] text-gray-500 font-medium">
+              {isOnsiteOnlyDepartment
+                ? `${employeeDepartment}: Must be within ${ONSITE_RADIUS_M}m of office`
+                : "Location required • Outside radius needs reason"}
+            </p>
+          </div>
+          <p className="text-[9px] text-gray-300 font-medium">Powered by Timely Health HRMS</p>
         </div>
       </div>
 
@@ -4083,18 +5382,8 @@ export default function AttendanceCapture() {
             </div>
             <div className="p-4 flex-1 overflow-hidden">
               <div className="relative mb-3">
-                <svg
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  ></path>
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
                 <input
                   type="text"
@@ -4128,68 +5417,50 @@ export default function AttendanceCapture() {
         </div>
       )}
 
-      {/* CSS for animations */}
       <style jsx>{`
         @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
         @keyframes scale-up {
-          from {
-            opacity: 0;
-            transform: scale(0.9) translateY(15px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
+          from { opacity: 0; transform: scale(0.9) translateY(15px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
         }
         @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-15px) rotate(180deg);
-          }
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-15px) rotate(180deg); }
         }
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out;
+        @keyframes orb-float {
+          0%, 100% { transform: translateY(0px) translateX(0px) scale(1); }
+          25% { transform: translateY(-20px) translateX(10px) scale(1.05); }
+          50% { transform: translateY(-10px) translateX(-15px) scale(0.95); }
+          75% { transform: translateY(-25px) translateX(5px) scale(1.02); }
         }
-        .animate-scale-up {
-          animation: scale-up 0.35s ease-out;
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
         }
-        .animate-scale-in {
-          animation: scale-up 0.25s ease-out;
+        @keyframes bounce-x {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(4px); }
         }
-        .animate-float {
-          animation: float infinite ease-in-out;
-        }
-        .animate-bounce {
-          animation: bounce 2s infinite;
+        @keyframes bounce-x-reverse {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(-4px); }
         }
         @keyframes bounce {
-          0%,
-          100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.1);
-          }
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
         }
-        @keyframes pulse {
-          0%,
-          100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.5;
-          }
-        }
+        .animate-fade-in { animation: fade-in 0.3s ease-out; }
+        .animate-scale-up { animation: scale-up 0.35s ease-out; }
+        .animate-scale-in { animation: scale-up 0.25s ease-out; }
+        .animate-float { animation: float infinite ease-in-out; }
+        .animate-orb-float { animation: orb-float infinite ease-in-out; }
+        .animate-shimmer { animation: shimmer 2.5s infinite ease-in-out; }
+        .animate-bounce-x { animation: bounce-x 1.5s infinite ease-in-out; }
+        .animate-bounce-x-reverse { animation: bounce-x-reverse 1.5s infinite ease-in-out; }
+        .animate-bounce { animation: bounce 2s infinite; }
       `}</style>
     </div>
   );

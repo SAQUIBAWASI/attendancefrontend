@@ -3688,8 +3688,7 @@ const TodayAttendance = () => {
                         ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed"
                         : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
                     }`}
-                  >
-                    Next
+                  >Next
                   </button>
                 </div>
               </div>
