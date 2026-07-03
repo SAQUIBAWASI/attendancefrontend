@@ -212,6 +212,11 @@ import IssueManagement from "./Pages/IssueManagement.js";
 import AdminIssueManagement from "./Pages/AdminIssueManagement.js";
 import ClaimedOTManagement from "./Pages/ClaimedOTManagement.js";
 import AdminCompOffRequests from "./Pages/AdminCompOffRequests.js";
+import QRScanner from "./Pages/QRScanner.js";
+import AttendanceByID from "./Pages/AttendanceByID.js";
+import GeminiChat from "./Pages/GeminiChat.js"
+import CompanyIPManagement from "./Pages/CompanyIPManagement.js";
+import MyProducts from "./Pages/MyProducts.js";
 // import ClaimedOTManagement from "./Pages/ClaimedOTManagement.js";
 // import IssueManagement from "./Pages/IssueManagement.js";
 // import AdminIssueManagement from "./Pages/AdminIssueManagement.js";
@@ -233,6 +238,8 @@ function App() {
       <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route path="/admin-login" element={<Login />} />
       <Route path="/employee-login" element={<Login />} />
+      <Route path="/attendance-by-id" element={<AttendanceByID />} />
+      <Route path="/chat" element={<GeminiChat />} />
       <Route path="/candidate-login" element={<CandidateLogin />} />
       <Route path="/candidate-register" element={<CandidateRegister />} />
       <Route path="/employeedashboard" element={<EmployeeLayout><EmployeeDashboard /></EmployeeLayout>} />
@@ -312,6 +319,7 @@ function App() {
       <Route path="/emp-all-expensives-management" element={<EmployeeLayout><AllExpensives /></EmployeeLayout>} />
       <Route path="/my-medical-certificate" element={<EmployeeLayout><MyMedicalCertificate /></EmployeeLayout>} />
       <Route path="/emp-events" element={<EmployeeLayout><Events /></EmployeeLayout>} />
+
 
       <Route path="/emp-claimed-ot-management" element={<EmployeeLayout><ClaimedOTManagement /></EmployeeLayout>} />
       <Route path="/emp-issues" element={<EmployeeLayout><IssueManagement /></EmployeeLayout>} />
@@ -482,6 +490,9 @@ function App() {
               <Route path="/comp-off-requests" element={<AdminCompOffRequests />} />
               <Route path="/ot-claims" element={<ClaimedOTManagement />} />
               <Route path="/employeesissues" element={<AdminIssueManagement />} />
+              <Route path="/qrcode" element={<QRScanner />} />
+              <Route path="/company-ip" element={<CompanyIPManagement />} />
+              <Route path="/my-products" element={<MyProducts />} />
 
            
            

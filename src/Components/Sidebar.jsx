@@ -1732,7 +1732,10 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/regularization": "Regularization",
       "/comp-off-requests": "Comp Off Requests",
       "/ot-claims": "OverTime",
-      "/admin-issue-management": "Issue Management"
+      "/admin-issue-management": "Issue Management",
+      "/qrcode": "QR Scanner",
+      "/company-ip": "Company IP",
+      "/my-products": "My Products"
     };
     return pathMap[path] || "Dashboard";
   };
@@ -1901,6 +1904,21 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       path: "/shift",
     },
     {
+      icon: <i className="ri-qr-code-fill"></i>,
+      name: "QR Scanner",
+      path: "/qrcode",
+    },
+    {
+      icon: <i className="ri-wifi-fill"></i>,
+      name: "Company IP",
+      path: "/company-ip",
+    },
+    {
+      icon: <i className="ri-store-3-fill"></i>,
+      name: "My Products",
+      path: "/my-products",
+    },
+    {
       icon: <i className="ri-logout-box-r-line"></i>,
       name: "Logout",
       action: handleLogout,
@@ -1993,7 +2011,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         </div>
 
         {/* Menu - Scrollable */}
-        <nav 
+        <nav
           className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto no-scrollbar"
           style={{
             overflowY: 'auto',
@@ -2008,13 +2026,12 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
               {item.dropdown ? (
                 <>
                   <div
-                    className={`group flex items-center justify-between px-2.5 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${
-                      isDropdownActive(item.dropdown)
-                        ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
-                        : openDropdown === item.name
-                          ? "bg-[#1E3A8A]"
-                          : "hover:bg-blue-50"
-                    }`}
+                    className={`group flex items-center justify-between px-2.5 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${isDropdownActive(item.dropdown)
+                      ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
+                      : openDropdown === item.name
+                        ? "bg-[#1E3A8A]"
+                        : "hover:bg-blue-50"
+                      }`}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (item.dropdown && item.dropdown.length > 0) {
@@ -2029,19 +2046,17 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      <span className={`text-base transition-colors duration-200 ${
-                        isDropdownActive(item.dropdown)
+                      <span className={`text-base transition-colors duration-200 ${isDropdownActive(item.dropdown)
+                        ? "text-white"
+                        : openDropdown === item.name
                           ? "text-white"
-                          : openDropdown === item.name
-                            ? "text-white"
-                            : "text-gray-600 group-hover:text-[#175cd3]"
-                      }`}>
+                          : "text-gray-600 group-hover:text-[#175cd3]"
+                        }`}>
                         {item.icon}
                       </span>
                       {!isCollapsed && (
-                        <span className={`text-[13px] font-medium leading-none ${
-                          isDropdownActive(item.dropdown) ? "text-white" : "text-[#101828]"
-                        }`}>
+                        <span className={`text-[13px] font-medium leading-none ${isDropdownActive(item.dropdown) ? "text-white" : "text-[#101828]"
+                          }`}>
                           {item.name}
                         </span>
                       )}
@@ -2054,13 +2069,12 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                         )}
                         <FaChevronDown
                           onClick={(e) => toggleDropdown(e, item.name)}
-                          className={`text-[10px] transition-transform duration-300 p-0 rounded cursor-pointer ${
-                            isDropdownActive(item.dropdown)
+                          className={`text-[10px] transition-transform duration-300 p-0 rounded cursor-pointer ${isDropdownActive(item.dropdown)
+                            ? "text-white"
+                            : openDropdown === item.name
                               ? "text-white"
-                              : openDropdown === item.name
-                                ? "text-white"
-                                : "text-gray-400"
-                          } ${openDropdown === item.name ? "rotate-180" : ""}`}
+                              : "text-gray-400"
+                            } ${openDropdown === item.name ? "rotate-180" : ""}`}
                           style={{
                             width: '16px',
                             height: '16px',
@@ -2080,11 +2094,10 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                           <Link
                             to={sub.path}
                             onClick={() => handleDropdownItemClick(sub.path)}
-                            className={`block py-1 text-[12px] transition-colors no-underline ${
-                              isActive(sub.path)
-                                ? "text-[#175cd3] font-semibold"
-                                : "text-gray-600 hover:text-[#175cd3]"
-                            }`}
+                            className={`block py-1 text-[12px] transition-colors no-underline ${isActive(sub.path)
+                              ? "text-[#175cd3] font-semibold"
+                              : "text-gray-600 hover:text-[#175cd3]"
+                              }`}
                             style={{ textDecoration: 'none' }}
                           >
                             <div className="flex items-center gap-2">
@@ -2104,24 +2117,21 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
               ) : (
                 <div
                   onClick={() => handleItemClick(item.path, item.action)}
-                  className={`group flex items-center gap-2 px-2.5 py-1.5 rounded-md cursor-pointer transition-all duration-200 relative ${
-                    isActive(item.path)
-                      ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
-                      : "hover:bg-blue-50"
-                  }`}
+                  className={`group flex items-center gap-2 px-2.5 py-1.5 rounded-md cursor-pointer transition-all duration-200 relative ${isActive(item.path)
+                    ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
+                    : "hover:bg-blue-50"
+                    }`}
                 >
-                  <span className={`text-base transition-colors duration-200 ${
-                    isActive(item.path)
-                      ? "text-white"
-                      : "text-gray-600 group-hover:text-[#175cd3]"
-                  }`}>
+                  <span className={`text-base transition-colors duration-200 ${isActive(item.path)
+                    ? "text-white"
+                    : "text-gray-600 group-hover:text-[#175cd3]"
+                    }`}>
                     {item.icon}
                   </span>
                   {!isCollapsed && (
                     <div className="flex items-center flex-1 min-w-0 gap-1.5">
-                      <span className={`text-[13px] font-medium leading-none truncate ${
-                        isActive(item.path) ? "text-white" : "text-[#101828]"
-                      }`}>
+                      <span className={`text-[13px] font-medium leading-none truncate ${isActive(item.path) ? "text-white" : "text-[#101828]"
+                        }`}>
                         {item.name}
                       </span>
                       {/* Badge with Blink Effect */}
