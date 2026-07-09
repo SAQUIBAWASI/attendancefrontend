@@ -2931,8 +2931,9 @@
 
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
-import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag } from "react-icons/fa";
-import { FiCoffee, FiUsers, FiMapPin, FiUserCheck, FiHome, FiCalendar, FiTrash2, FiRefreshCw, FiFilter } from "react-icons/fi";
+import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag, FaMapMarkerAlt } from "react-icons/fa";
+import { FiCoffee, FiUsers, FiMapPin, FiUserCheck, FiHome, FiCalendar, FiTrash2, FiRefreshCw, FiFilter, FiExternalLink } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
 import "./EmployeeDashboard.css";
@@ -2954,6 +2955,8 @@ const calculateTotalBreakMinutes = (breaks) => {
 };
 
 const TodayAttendance = () => {
+  const navigate = useNavigate(); // ✅ For navigation
+  
   const [todayRecords, setTodayRecords] = useState([]);
   const [filteredRecords, setFilteredRecords] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -3126,6 +3129,11 @@ const TodayAttendance = () => {
     setSelectedMonth("");
   };
 
+  // ─── Navigate to Employee Locations Page ───
+  const goToEmployeeLocations = () => {
+    navigate('/employee-locations');
+  };
+
   const indexOfLastRow = pagination.currentPage * pagination.limit;
   const indexOfFirstRow = indexOfLastRow - pagination.limit;
   const currentRows = filteredRecords.slice(indexOfFirstRow, indexOfLastRow);
@@ -3232,6 +3240,29 @@ const TodayAttendance = () => {
           </div>
         </div>
 
+        {/* ─── Action Buttons Row ─── */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div className="flex items-center gap-2">
+            {/* ✅ Employee Location Button */}
+            <button
+              onClick={goToEmployeeLocations}
+              className="px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+            >
+              <FaMapMarkerAlt className="text-sm" />
+              Check Employee Location
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fetchAttendanceData}
+              className="px-3 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm flex items-center gap-2"
+            >
+              <FiRefreshCw className={loading ? 'animate-spin' : ''} />
+              Refresh
+            </button>
+          </div>
+        </div>
+
         {/* Top KPI Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
           <div className="emp-dash__stat">
@@ -3286,15 +3317,9 @@ const TodayAttendance = () => {
               <h3 className="emp-dash__card-title flex items-center gap-2">
                 <FiFilter className="text-blue-600" /> Filters &amp; Actions
               </h3>
-              {/* <p className="emp-dash__card-desc">Filter records by name, department, date range, or month</p> */}
             </div>
             <div className="flex gap-2 flex-wrap w-full sm:w-auto justify-start sm:justify-end">
-              <button
-                onClick={fetchAttendanceData}
-                className="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all flex items-center gap-1.5 shadow-md"
-              >
-                <FiRefreshCw /> Refresh
-              </button>
+              {/* Already have refresh button above */}
             </div>
           </div>
           

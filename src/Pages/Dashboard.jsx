@@ -977,10 +977,9 @@
 
 // export default AttendanceDashboard;
 
-
 import axios from 'axios';
 import { useEffect, useState } from "react";
-import { FiCalendar, FiClock, FiTrendingUp, FiUserCheck, FiUserX, FiUsers, FiX } from "react-icons/fi";
+import { FiCalendar, FiClock, FiTrendingUp, FiUserCheck, FiUserX, FiUsers, FiX, FiMapPin } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { isEmployeeHidden } from "../utils/employeeStatus";
 import "./Dashboard.css";
@@ -1002,6 +1001,7 @@ import {
 const API_BASE_URL = "https://api.timelyhealth.in/api";
 
 const AttendanceDashboard = () => {
+  // ─── ALL HOOKS AT TOP LEVEL ───
   const [attendanceData, setAttendanceData] = useState(null);
   const [allAttendance, setAllAttendance] = useState([]);
   const [leavesData, setLeavesData] = useState([]);
@@ -1020,6 +1020,13 @@ const AttendanceDashboard = () => {
   const [anniversariesToday, setAnniversariesToday] = useState([]);
   const [leavesToday, setLeavesToday] = useState([]);
   const [celebModal, setCelebModal] = useState({ show: false, type: '' });
+  
+  // ─── Employee Location Stats ───
+  const [locationStats, setLocationStats] = useState({
+    total: 0,
+    withAddress: 0,
+    withoutAddress: 0
+  });
 
   const reactNavigate = useNavigate();
 
@@ -1032,6 +1039,7 @@ const AttendanceDashboard = () => {
         "/late-today": "/emp-late-today",
         "/attedancesummary": "/emp-attendance-summary",
         "/leavelist": "/emp-leaves",
+        "/employee-locations": "/emp-employee-locations",
       };
       if (typeof path === "string" && routeMap[path]) {
         reactNavigate(routeMap[path]);
@@ -1039,6 +1047,27 @@ const AttendanceDashboard = () => {
       }
     }
     reactNavigate(path);
+  };
+
+  // ─── Navigate to Employee Locations ───
+  const goToEmployeeLocations = () => {
+    navigate("/employee-locations");
+  };
+
+  // ─── Fetch Location Stats ───
+  const fetchLocationStats = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/employees/employee-locations`);
+      if (response.data.success) {
+        setLocationStats({
+          total: response.data.stats?.total || 0,
+          withAddress: response.data.stats?.withAddress || 0,
+          withoutAddress: response.data.stats?.withoutAddress || 0
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch location stats:', err);
+    }
   };
 
   const fetchData = async () => {
@@ -1076,23 +1105,26 @@ const AttendanceDashboard = () => {
       const leavesResult = leavesRes.data;
       setLeavesData(Array.isArray(leavesResult) ? leavesResult : leavesResult.records || leavesResult.leaves || []);
 
-      // 7. Fetch Today's Birthdays (company-wide)
+      // 7. Fetch Today's Birthdays
       try {
         const bdayRes = await axios.get(`${API_BASE_URL}/employees/birthdays-today`);
         setBirthdaysToday(bdayRes.data.data || []);
       } catch (e) { console.warn("Birthdays fetch failed", e); }
 
-      // 8. Fetch Today's Work Anniversaries (company-wide)
+      // 8. Fetch Today's Work Anniversaries
       try {
         const annivRes = await axios.get(`${API_BASE_URL}/employees/anniversaries-today`);
         setAnniversariesToday(annivRes.data.data || []);
       } catch (e) { console.warn("Anniversaries fetch failed", e); }
 
-      // 9. Fetch Employees on Leave Today (company-wide)
+      // 9. Fetch Employees on Leave Today
       try {
         const leaveRes = await axios.get(`${API_BASE_URL}/leaves/on-leave-today`);
         setLeavesToday(leaveRes.data.data || []);
       } catch (e) { console.warn("Leaves today fetch failed", e); }
+
+      // ─── Fetch Location Stats ───
+      await fetchLocationStats();
 
       setLoading(false);
     } catch (err) {
@@ -1102,18 +1134,18 @@ const AttendanceDashboard = () => {
     }
   };
 
+  // ─── useEffect Hooks at Top Level ───
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Get Employee Name by ID
+  // ─── Rest of the functions ───
   const getEmployeeName = (id) => {
     if (!id) return "Unknown";
     const emp = employees.find(e => e.employeeId === id || e._id === id);
     return emp ? emp.name : id;
   };
 
-  // Get Employee Shift Time from Master Shifts
   const getEmployeeShift = (employeeId) => {
     const shiftAssignment = shiftsData.find(s =>
       s.employeeAssignment?.employeeId === employeeId ||
@@ -1155,7 +1187,6 @@ const AttendanceDashboard = () => {
     return getDefaultShiftTime(shiftType);
   };
 
-  // Default shift timings if no master shift found
   const getDefaultShiftTime = (shiftType) => {
     const shiftTimes = {
       "A": { start: "10:00", end: "19:00", grace: 5, isBrakeShift: false },
@@ -1173,17 +1204,15 @@ const AttendanceDashboard = () => {
     return shiftTimes[shiftType] || { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
   };
 
-  // Filter Inactive Employees
   const activeEmployees = employees.filter(emp => !isEmployeeHidden(emp));
 
-  // Process Attendance Data with Color Coding
   const getAttendanceColor = (count, max) => {
     const percentage = (count / max) * 100;
-    if (percentage >= 90) return '#10b981'; // Emerald 500
-    if (percentage >= 75) return '#84cc16'; // Lime 500
-    if (percentage >= 50) return '#EF4444'; // Amber 500
-    if (percentage >= 25) return '#DC2626'; // Orange 500
-    return '#ef4444'; // Red 500
+    if (percentage >= 90) return '#10b981';
+    if (percentage >= 75) return '#84cc16';
+    if (percentage >= 50) return '#EF4444';
+    if (percentage >= 25) return '#DC2626';
+    return '#ef4444';
   };
 
   const processAttendanceData = () => {
@@ -1229,9 +1258,7 @@ const AttendanceDashboard = () => {
     }));
   };
 
-  // Process Late Analysis Data (Pie Chart)
   const processLateAnalysisData = () => {
-    // 1. Date View: Late Minutes
     if (lateDate) {
       const lateMap = {};
       allAttendance.forEach(record => {
@@ -1263,7 +1290,6 @@ const AttendanceDashboard = () => {
       return Object.values(lateMap).sort((a, b) => b.value - a.value);
     }
 
-    // 2. Month View: Late Days
     const [year, month] = lateMonth.split('-').map(Number);
     const lateCounts = {};
 
@@ -1282,7 +1308,6 @@ const AttendanceDashboard = () => {
       const [hours, minutes] = shift.start.split(':').map(Number);
       const shiftStartTime = new Date(checkInDateTime);
       shiftStartTime.setHours(hours, minutes, 0, 0);
-      // Fix: Ensure we compare with the correct date's shift time
       shiftStartTime.setFullYear(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate());
 
       const graceTime = new Date(shiftStartTime);
@@ -1301,93 +1326,38 @@ const AttendanceDashboard = () => {
   };
 
   const COLORS = [
-    '#DC2626',  // Rose 600
-    '#EF4444',  // Rose 600
-    '#E11D48',  // Rose 600
-    // '#F43F5E', // Rose 500
-    // '#FB7185', // Rose 400
-
-    '#D97706', // Amber 600
-    '#F59E0B', // Amber 500
-    '#FBBF24', // Amber 400
-
-    '#0891B2', // Cyan 600
-    '#06B6D4', // Cyan 500
-    '#22D3EE', // Cyan 400
-
-    '#4F46E5', // Indigo 600
-    '#6366F1', // Indigo 500
-    '#818CF8', // Indigo 400
-
-    '#059669',// Emerald 600
-    '#10B981', // Emerald 500
-    '#34D399' // Emerald 400
+    '#DC2626', '#EF4444', '#E11D48', '#D97706', '#F59E0B',
+    '#FBBF24', '#0891B2', '#06B6D4', '#22D3EE', '#4F46E5',
+    '#6366F1', '#818CF8', '#059669', '#10B981', '#34D399'
   ];
 
-  // Get Color based on late minutes
   const getLateMinutesColor = (minutes) => {
-
-    // 🟢 0–5
-    if (minutes <= 5) return '#34D399';   // Emerald 400
-
-    // 🟢 6–10
-    if (minutes <= 10) return '#10B981';  // Emerald 500
-
-    // 🟢 11–20
-    if (minutes <= 20) return '#059669';  // Emerald 600
-
-    // 🔵 21–30
-    if (minutes <= 30) return '#6366F1';  // Indigo 500
-
-    // 🔷 31–40
-    if (minutes <= 40) return '#06B6D4';  // Cyan 500
-
-    // 🟡 41–50
-    if (minutes <= 50) return '#FBBF24';  // Amber 400
-
-    // 🟠 51–60
-    if (minutes <= 60) return '#F59E0B';  // Amber 500
-
-    // 🔴 60+ (Critical)
-    return '#EF4444'; // Rose 600
+    if (minutes <= 5) return '#34D399';
+    if (minutes <= 10) return '#10B981';
+    if (minutes <= 20) return '#059669';
+    if (minutes <= 30) return '#6366F1';
+    if (minutes <= 40) return '#06B6D4';
+    if (minutes <= 50) return '#FBBF24';
+    if (minutes <= 60) return '#F59E0B';
+    return '#EF4444';
   };
 
-  // Get Color based on days absent
   const getAbsentColor = (daysSince) => {
-
-    // 🟢 0–1 Day
-    if (daysSince <= 1) return '#34D399';   // Emerald 400
-
-    // 🟢 2–3 Days
-    if (daysSince <= 3) return '#10B981';   // Emerald 500
-
-    // 🟢 4–5 Days
-    if (daysSince <= 5) return '#059669';   // Emerald 600
-
-    // 🔵 6–7 Days
-    if (daysSince <= 7) return '#6366F1';   // Indigo 500
-
-    // 🔷 8–10 Days
-    if (daysSince <= 10) return '#06B6D4';  // Cyan 500
-
-    // 🟡 11–14 Days
-    if (daysSince <= 14) return '#FBBF24';  // Amber 400
-
-    // 🟠 15–21 Days
-    if (daysSince <= 21) return '#F59E0B';  // Amber 500
-
-    // 🔴 21+ Days (Critical)
-    return '#EF4444'; // Rose 600
+    if (daysSince <= 1) return '#34D399';
+    if (daysSince <= 3) return '#10B981';
+    if (daysSince <= 5) return '#059669';
+    if (daysSince <= 7) return '#6366F1';
+    if (daysSince <= 10) return '#06B6D4';
+    if (daysSince <= 14) return '#FBBF24';
+    if (daysSince <= 21) return '#F59E0B';
+    return '#EF4444';
   };
 
-  // Process Absent Analysis Data (Bar Chart)
   const processAbsentAnalysisData = () => {
-    // Ensure employees are loaded
     if (!employees.length) return [];
 
     const activeEmps = employees.filter(emp => !isEmployeeHidden(emp));
 
-    // 1. Date View: Days Since Last Attendance
     if (absentDate) {
       const selectedDate = new Date(absentDate);
       const selectedDateStr = absentDate;
@@ -1437,7 +1407,6 @@ const AttendanceDashboard = () => {
       return absentData.sort((a, b) => b.value - a.value).slice(0, 10);
     }
 
-    // 2. Month View: Total Absent Days
     const [year, month] = absentMonth.split('-').map(Number);
     const absentCounts = {};
     const totalDaysInMonth = new Date(year, month, 0).getDate();
@@ -1446,7 +1415,6 @@ const AttendanceDashboard = () => {
     const isCurrentMonth = now.getFullYear() === year && now.getMonth() + 1 === month;
     const daysToCount = isCurrentMonth ? now.getDate() : totalDaysInMonth;
 
-    // Initialize counts for all active employees
     activeEmps.forEach(emp => {
       absentCounts[emp.employeeId] = {
         name: `${emp.name} (${emp.employeeId})`,
@@ -1454,7 +1422,6 @@ const AttendanceDashboard = () => {
       };
     });
 
-    // Count present days
     allAttendance.forEach(record => {
       if (!record.checkInTime) return;
       const recordDate = new Date(record.checkInTime);
@@ -1468,7 +1435,6 @@ const AttendanceDashboard = () => {
       }
     });
 
-    // Calculate absent
     const results = Object.values(absentCounts).map(emp => {
       const absentDays = Math.max(0, daysToCount - emp.present);
       return {
@@ -1482,7 +1448,6 @@ const AttendanceDashboard = () => {
     return results;
   };
 
-  // Process Top Late Comers (for the new bar chart)
   const processTopLateComersData = () => {
     const [year, month] = topLateMonth ? topLateMonth.split('-').map(Number) : [null, null];
     const lateCounts = {};
@@ -1522,7 +1487,6 @@ const AttendanceDashboard = () => {
       .slice(0, 10); 
   };
 
-  // Calculate Present Count for Today
   const calculatePresentCount = (dateStr) => {
     if (!Array.isArray(allAttendance)) return 0;
     const present = allAttendance.filter(record => {
@@ -1535,19 +1499,16 @@ const AttendanceDashboard = () => {
     return uniqueIds.size;
   };
 
-  // Calculate Absent Count for Today
   const calculateAbsentCount = (dateStr) => {
     const activeEmps = employees.filter(emp => !isEmployeeHidden(emp));
     const presentCount = calculatePresentCount(dateStr);
     return Math.max(0, activeEmps.length - presentCount);
   };
 
-  // Calculate Late Count for Today
   const calculateLateCount = (dateStr) => {
     if (!Array.isArray(allAttendance)) return 0;
     let count = 0;
 
-    // We iterate through all attendance records to find lates for the given date
     allAttendance.forEach(record => {
       if (!record.checkInTime) return;
       if (!record.checkInTime.startsWith(dateStr)) return;
@@ -1561,7 +1522,6 @@ const AttendanceDashboard = () => {
       const checkInDateTime = new Date(record.checkInTime);
       const [hours, minutes] = shift.start.split(':').map(Number);
 
-      // Construct shift start time for the *attendance record's date*
       const shiftStartTime = new Date(checkInDateTime);
       shiftStartTime.setHours(hours, minutes, 0, 0);
 
@@ -1575,6 +1535,7 @@ const AttendanceDashboard = () => {
     return count;
   };
 
+  // ─── EARLY RETURNS ───
   if (loading) {
     return (
       <div className="admin-dash">
@@ -1608,7 +1569,6 @@ const AttendanceDashboard = () => {
   const absentToday = calculateAbsentCount(new Date().toISOString().split('T')[0]);
   const lateToday = calculateLateCount(new Date().toISOString().split('T')[0]);
 
-  // Custom tooltip formatter for attendance chart
   const AttendanceTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -1622,21 +1582,6 @@ const AttendanceDashboard = () => {
     return null;
   };
 
-  // Custom tooltip formatter for leaves chart
-  const LeavesTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="admin-dash__tooltip">
-          <p className="admin-dash__tooltip-title">{data.name} ({data.id})</p>
-          <p className="admin-dash__tooltip-value">Leaves: {data.count} days</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Custom tooltip formatter for late chart
   const LateTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -1652,7 +1597,6 @@ const AttendanceDashboard = () => {
     return null;
   };
 
-  // Custom tooltip formatter for absent chart
   const AbsentTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -1666,19 +1610,6 @@ const AttendanceDashboard = () => {
       );
     }
     return null;
-  };
-
-  const RADIAN = Math.PI / 180;
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={10}>
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
   };
 
   return (
@@ -1707,7 +1638,7 @@ const AttendanceDashboard = () => {
           </div>
         </div>
 
-        {/* 1. Top Summary Stats - Updated Cards */}
+        {/* 1. Top Summary Stats - 6 Cards */}
         <div className="admin-dash__stats">
           <div className="admin-dash__stat" onClick={() => navigate("/employeelist")}>
             <div className="admin-dash__stat-top">
@@ -1719,6 +1650,7 @@ const AttendanceDashboard = () => {
             <div className="admin-dash__stat-value">{totals.employees || 0}</div>
             <div className="admin-dash__stat-meta">active employees</div>
           </div>
+          
           <div className="admin-dash__stat" onClick={() => navigate("/today-attendance")}>
             <div className="admin-dash__stat-top">
               <span className="admin-dash__stat-label">Present Today</span>
@@ -1729,6 +1661,7 @@ const AttendanceDashboard = () => {
             <div className="admin-dash__stat-value">{presentToday || 0}</div>
             <div className="admin-dash__stat-meta">employees present</div>
           </div>
+          
           <div className="admin-dash__stat" onClick={() => navigate("/absent-today")}>
             <div className="admin-dash__stat-top">
               <span className="admin-dash__stat-label">Absent Today</span>
@@ -1739,6 +1672,7 @@ const AttendanceDashboard = () => {
             <div className="admin-dash__stat-value">{absentToday || 0}</div>
             <div className="admin-dash__stat-meta">employees absent</div>
           </div>
+          
           <div className="admin-dash__stat" onClick={() => navigate("/late-today")}>
             <div className="admin-dash__stat-top">
               <span className="admin-dash__stat-label">Late Arrival</span>
@@ -1749,6 +1683,7 @@ const AttendanceDashboard = () => {
             <div className="admin-dash__stat-value">{lateToday || 0}</div>
             <div className="admin-dash__stat-meta">late arrivals</div>
           </div>
+          
           <div className="admin-dash__stat" onClick={() => navigate("/attedancesummary")}>
             <div className="admin-dash__stat-top">
               <span className="admin-dash__stat-label">Attendance Rate</span>
@@ -1758,6 +1693,20 @@ const AttendanceDashboard = () => {
             </div>
             <div className="admin-dash__stat-value">{totals.attendanceRate || 0}%</div>
             <div className="admin-dash__stat-meta">overall rate</div>
+          </div>
+
+          {/* ✅ Employee Locations Card - withAddress count */}
+          <div className="admin-dash__stat" onClick={goToEmployeeLocations} style={{ cursor: 'pointer' }}>
+            <div className="admin-dash__stat-top">
+              <span className="admin-dash__stat-label">📍 Employee Locations</span>
+              <div className="admin-dash__stat-icon" style={{ background: '#dbeafe', color: '#2563eb' }}>
+                <FiMapPin />
+              </div>
+            </div>
+            <div className="admin-dash__stat-value">{locationStats.withAddress || 0}</div>
+            <div className="admin-dash__stat-meta">
+              {locationStats.withoutAddress > 0 ? `${locationStats.withoutAddress} without address` : 'all have addresses'}
+            </div>
           </div>
         </div>
 
@@ -2030,5 +1979,3 @@ const AttendanceDashboard = () => {
 };
 
 export default AttendanceDashboard;
-
-
