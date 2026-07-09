@@ -217,6 +217,7 @@ import AttendanceByID from "./Pages/AttendanceByID.js";
 import GeminiChat from "./Pages/GeminiChat.js"
 import CompanyIPManagement from "./Pages/CompanyIPManagement.js";
 import MyProducts from "./Pages/MyProducts.js";
+import EmployeeLocations from "./Pages/EmployeeLocations.js";
 // import ClaimedOTManagement from "./Pages/ClaimedOTManagement.js";
 // import IssueManagement from "./Pages/IssueManagement.js";
 // import AdminIssueManagement from "./Pages/AdminIssueManagement.js";
@@ -493,6 +494,7 @@ function App() {
               <Route path="/qrcode" element={<QRScanner />} />
               <Route path="/company-ip" element={<CompanyIPManagement />} />
               <Route path="/my-products" element={<MyProducts />} />
+              <Route path="/employee-locations" element={<EmployeeLocations />} />
 
            
            

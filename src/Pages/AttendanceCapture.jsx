@@ -4364,7 +4364,9 @@ const speakWelcomeMessage = (name, greeting) => {
       v.name.toLowerCase().includes("female") || 
       v.name.toLowerCase().includes("zira") || 
       v.name.toLowerCase().includes("samantha") ||
-      v.name.toLowerCase().includes("victoria")
+      v.name.toLowerCase().includes("victoria") ||
+      v.name.toLowerCase().includes("google uk english female") ||
+      v.name.toLowerCase().includes("microsoft zira")
     );
     if (!femaleVoice) femaleVoice = voices.find(v => v.lang.includes("en-IN"));
     if (!femaleVoice) femaleVoice = voices.find(v => v.lang.includes("en"));
@@ -4388,7 +4390,8 @@ const speakCheckInSuccess = (name) => {
     let femaleVoice = voices.find(v => 
       v.name.toLowerCase().includes("female") || 
       v.name.toLowerCase().includes("zira") || 
-      v.name.toLowerCase().includes("samantha")
+      v.name.toLowerCase().includes("samantha") ||
+      v.name.toLowerCase().includes("victoria")
     );
     if (!femaleVoice) femaleVoice = voices.find(v => v.lang.includes("en-IN"));
     if (!femaleVoice) femaleVoice = voices.find(v => v.lang.includes("en"));
@@ -4411,7 +4414,8 @@ const speakCheckOutSuccess = (name) => {
     let femaleVoice = voices.find(v => 
       v.name.toLowerCase().includes("female") || 
       v.name.toLowerCase().includes("zira") || 
-      v.name.toLowerCase().includes("samantha")
+      v.name.toLowerCase().includes("samantha") ||
+      v.name.toLowerCase().includes("victoria")
     );
     if (!femaleVoice) femaleVoice = voices.find(v => v.lang.includes("en-IN"));
     if (!femaleVoice) femaleVoice = voices.find(v => v.lang.includes("en"));
@@ -4467,7 +4471,10 @@ export default function AttendanceCapture() {
   const [successType, setSuccessType] = useState("");
   const [isPopupClosing, setIsPopupClosing] = useState(false);
 
-  const [showWelcomePopup, setShowWelcomePopup] = useState(true);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(() => {
+    const alreadyShown = sessionStorage.getItem("welcomePopupShown");
+    return alreadyShown !== "true";
+  });
   const [greetingMessage, setGreetingMessage] = useState("");
   const [greetingEmoji, setGreetingEmoji] = useState("");
   const [currentIndianDate, setCurrentIndianDate] = useState("");
@@ -4476,6 +4483,15 @@ export default function AttendanceCapture() {
 
   const [currentTime, setCurrentTime] = useState("");
   const [currentDate, setCurrentDate] = useState("");
+
+  useEffect(() => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices();
+      };
+    }
+  }, []);
 
   useEffect(() => {
     const stateId = routerLocation.state?.employeeId;
@@ -4509,7 +4525,7 @@ export default function AttendanceCapture() {
   }, [routerLocation.state, navigate]);
 
   useEffect(() => {
-    if (employeeName) {
+    if (employeeName && showWelcomePopup) {
       const { greeting, emoji } = getGreeting(employeeName);
       setGreetingMessage(greeting);
       setGreetingEmoji(emoji);
@@ -4524,6 +4540,8 @@ export default function AttendanceCapture() {
       }, 1000);
 
       generateParticles();
+
+      sessionStorage.setItem("welcomePopupShown", "true");
     }
   }, [employeeName]);
 
@@ -4710,6 +4728,7 @@ export default function AttendanceCapture() {
 
       playSuccessSound();
       setTimeout(() => speakCheckInSuccess(employeeName), 500);
+
     } catch (err) {
       alert(err.response?.data?.message || "Check-in failed.");
     } finally {
@@ -4755,6 +4774,7 @@ export default function AttendanceCapture() {
 
       playSuccessSound();
       setTimeout(() => speakCheckOutSuccess(employeeName), 500);
+
     } catch (err) {
       console.error("Check-out error:", err);
       alert(err.response?.data?.message || "Check-out failed.");
@@ -4763,7 +4783,6 @@ export default function AttendanceCapture() {
     }
   };
 
-  // ─── Dismiss Functions ───
   const handleDismissWelcome = () => {
     setShowWelcomePopup(false);
     if (window.speechSynthesis) window.speechSynthesis.cancel();
@@ -4879,7 +4898,7 @@ export default function AttendanceCapture() {
       </div>
 
       <div className="max-w-md mx-auto relative z-10">
-        {/* ─── SUCCESS POPUP WITH CLICK ANYWHERE ─── */}
+        {/* ─── SUCCESS POPUP ─── */}
         {showSuccessPopup && (
           <div 
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in"
@@ -4887,9 +4906,8 @@ export default function AttendanceCapture() {
           >
             <div 
               className="relative bg-gradient-to-br from-white via-green-50/95 to-emerald-50/95 rounded-3xl shadow-2xl max-w-sm w-full p-6 transform animate-scale-up border border-green-200/50"
-              onClick={(e) => e.stopPropagation()}
+              onClick={handleDismissSuccess}
             >
-              {/* Close X Button */}
               <button
                 onClick={handleDismissSuccess}
                 className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-gray-200 transition-all duration-200 hover:rotate-90 group"
@@ -4898,13 +4916,12 @@ export default function AttendanceCapture() {
               </button>
 
               <div className="relative text-center">
-                {/* ─── Emoji with "click me" ─── */}
                 <div className="flex justify-center mb-3">
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full blur-xl opacity-30 animate-pulse"></div>
                     <div 
-                      onClick={handleDismissSuccess}
                       className="relative w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex flex-col items-center justify-center shadow-lg shadow-green-500/30 cursor-pointer hover:scale-110 transition-all duration-300 group"
+                      onClick={handleDismissSuccess}
                     >
                       <span className="text-2xl">{successEmoji}</span>
                       <span className="text-[6px] sm:text-[8px] text-white/90 font-medium group-hover:scale-110 transition-transform">
@@ -4915,18 +4932,18 @@ export default function AttendanceCapture() {
                 </div>
 
                 <h2 className="text-xl font-bold text-gray-900">{successMessage}</h2>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-gray-600 mt-1" onClick={handleDismissSuccess}>
                   {successType === "checkin" ? (
                     <>You have successfully <span className="text-green-600 font-semibold">checked in</span></>
                   ) : (
                     <>You have successfully <span className="text-orange-600 font-semibold">checked out</span></>
                   )}
                 </p>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 mt-2" onClick={handleDismissSuccess}>
                   {successType === "checkin" ? "Have a great day! 💪" : "Thank you for your hard work! 🌟"}
                 </p>
 
-                <div className="flex items-center justify-center gap-1.5 mt-3">
+                <div className="flex items-center justify-center gap-1.5 mt-3" onClick={handleDismissSuccess}>
                   <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />
                   <span className="text-[8px] text-purple-500 font-medium animate-pulse">🔊 Female voice speaking...</span>
                 </div>
@@ -4939,13 +4956,13 @@ export default function AttendanceCapture() {
                   {isPopupClosing ? "Closing..." : "OK 👍"}
                 </button>
 
-                <p className="text-[6px] text-gray-400 mt-1.5">Click anywhere outside or click "click me" to dismiss</p>
+                <p className="text-[6px] text-gray-400 mt-1.5" onClick={handleDismissSuccess}>Click anywhere to dismiss</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* ─── WELCOME POPUP WITH CLICK ANYWHERE ─── */}
+        {/* ─── WELCOME POPUP ─── */}
         {showWelcomePopup && employeeName && motivationalThought && (
           <div 
             className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
@@ -4972,9 +4989,8 @@ export default function AttendanceCapture() {
 
             <div 
               className="relative bg-gradient-to-br from-white via-indigo-50/95 to-purple-50/95 rounded-3xl shadow-2xl max-w-sm w-full p-5 transform animate-scale-up border border-white/30"
-              onClick={(e) => e.stopPropagation()}
+              onClick={handleDismissWelcome}
             >
-              {/* Close X Button */}
               <button
                 onClick={handleDismissWelcome}
                 className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full bg-white/80 hover:bg-red-50 hover:text-red-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:rotate-90"
@@ -4983,7 +4999,7 @@ export default function AttendanceCapture() {
               </button>
 
               {isSpeaking && (
-                <div className="absolute top-2 right-12 flex items-center gap-1">
+                <div className="absolute top-2 right-12 flex items-center gap-1" onClick={handleDismissWelcome}>
                   <div className="flex items-center gap-0.5">
                     <div className="w-1 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: "0s" }}></div>
                     <div className="w-1 h-3 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: "0.2s" }}></div>
@@ -4996,13 +5012,12 @@ export default function AttendanceCapture() {
               )}
 
               <div className="relative">
-                {/* ─── Emoji with "click me" ─── */}
                 <div className="flex justify-center mb-3">
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl blur-lg opacity-30 animate-pulse"></div>
                     <div 
-                      onClick={handleDismissWelcome}
                       className="relative w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex flex-col items-center justify-center shadow-lg shadow-indigo-500/30 cursor-pointer hover:scale-110 transition-all duration-300 group"
+                      onClick={handleDismissWelcome}
                     >
                       <span className="text-2xl animate-bounce" style={{ animationDuration: "2s" }}>{greetingEmoji || "🌟"}</span>
                       <span className="text-[5px] text-white/90 font-medium group-hover:scale-110 transition-transform">
@@ -5012,18 +5027,18 @@ export default function AttendanceCapture() {
                   </div>
                 </div>
 
-                <h2 className="text-xl font-bold text-center text-gray-900">
+                <h2 className="text-xl font-bold text-center text-gray-900" onClick={handleDismissWelcome}>
                   {greetingMessage}, {employeeName}! 👋
                 </h2>
 
-                <div className="mt-2 text-center">
+                <div className="mt-2 text-center" onClick={handleDismissWelcome}>
                   <p className="text-xs text-indigo-600 font-medium flex items-center justify-center gap-1">
                     <FaCalendarAlt className="text-indigo-500 text-xs" />
                     {currentIndianDate}
                   </p>
                 </div>
 
-                <div className="mt-2 p-2.5 bg-gradient-to-r from-indigo-50/80 to-purple-50/80 rounded-xl border border-indigo-100/50">
+                <div className="mt-2 p-2.5 bg-gradient-to-r from-indigo-50/80 to-purple-50/80 rounded-xl border border-indigo-100/50" onClick={handleDismissWelcome}>
                   <div className="flex items-start gap-1.5">
                     <FaQuoteLeft className="text-indigo-400 text-xs mt-0.5 flex-shrink-0" />
                     <p className="text-xs text-gray-700 text-center leading-relaxed">
@@ -5034,7 +5049,7 @@ export default function AttendanceCapture() {
                 </div>
 
                 <button
-                  onClick={replayVoice}
+                  onClick={(e) => { e.stopPropagation(); replayVoice(); }}
                   className="mt-2 w-full py-1.5 rounded-xl text-xs font-medium bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-500/25 transition-all duration-200 flex items-center justify-center gap-2"
                 >
                   <FaVolumeUp className="text-white text-xs" />
@@ -5053,7 +5068,7 @@ export default function AttendanceCapture() {
                   </span>
                 </button>
 
-                <p className="text-[6px] text-gray-400 mt-2 text-center">Click anywhere outside or click "click me" to dismiss</p>
+                <p className="text-[6px] text-gray-400 mt-2 text-center" onClick={handleDismissWelcome}>Click anywhere to dismiss</p>
               </div>
             </div>
           </div>
@@ -5238,7 +5253,7 @@ export default function AttendanceCapture() {
           </div>
         )}
 
-        {/* Attendance Swipe Card */}
+        {/* ⭐ FIX: Attendance Swipe Card - Fixed alignment */}
         <div className="bg-white/85 backdrop-blur-2xl rounded-3xl shadow-xl shadow-indigo-500/5 border border-white/60 p-5 hover:shadow-2xl hover:shadow-indigo-500/8 transition-all duration-500">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -5286,22 +5301,23 @@ export default function AttendanceCapture() {
                     style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.3s ease-out" }}
                   ></div>
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent animate-shimmer"></div>
-                  <div className="absolute inset-0 flex items-center justify-between px-5">
-                    <div className="flex items-center gap-2.5 text-white">
-                      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-inner">
-                        <FaCheckCircle className="w-5 h-5 text-white" />
+                  {/* ⭐ FIX: Better alignment for check-in */}
+                  <div className="absolute inset-0 flex items-center justify-between px-4 sm:px-5">
+                    <div className="flex items-center gap-2 text-white">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-inner flex-shrink-0">
+                        <FaCheckCircle className="w-4 h-4 sm:w-5 h-5 text-white" />
                       </div>
-                      <div>
-                        <span className="text-sm font-extrabold tracking-wide">CHECK IN</span>
-                        <p className="text-[9px] text-white/70 font-medium">Mark your attendance</p>
+                      <div className="flex flex-col leading-tight">
+                        <span className="text-xs sm:text-sm font-extrabold tracking-wide leading-none">CHECK IN</span>
+                        <span className="text-[6px] sm:text-[8px] text-white/70 font-medium leading-none mt-0.5">Mark your attendance</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-white/80">
-                      <span className="text-[10px] font-semibold">Swipe</span>
+                    <div className="flex items-center gap-1 text-white/80 flex-shrink-0">
+                      <span className="text-[8px] sm:text-[10px] font-semibold hidden xs:inline">Swipe</span>
                       <div className="flex gap-0.5 animate-bounce-x">
-                        <FaArrowRight className="w-3 h-3 opacity-40" />
-                        <FaArrowRight className="w-3 h-3 opacity-70" />
-                        <FaArrowRight className="w-3 h-3" />
+                        <FaArrowRight className="w-2.5 h-2.5 sm:w-3 h-3 opacity-40" />
+                        <FaArrowRight className="w-2.5 h-2.5 sm:w-3 h-3 opacity-70" />
+                        <FaArrowRight className="w-2.5 h-2.5 sm:w-3 h-3" />
                       </div>
                     </div>
                   </div>
@@ -5313,22 +5329,23 @@ export default function AttendanceCapture() {
                     style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.3s ease-out" }}
                   ></div>
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
-                  <div className="absolute inset-0 flex items-center justify-between px-5">
-                    <div className="flex items-center gap-1.5 text-white/80">
+                  {/* ⭐ FIX: Better alignment for check-out */}
+                  <div className="absolute inset-0 flex items-center justify-between px-4 sm:px-5">
+                    <div className="flex items-center gap-1 text-white/80 flex-shrink-0">
                       <div className="flex gap-0.5 animate-bounce-x-reverse">
-                        <FaArrowLeft className="w-3 h-3" />
-                        <FaArrowLeft className="w-3 h-3 opacity-70" />
-                        <FaArrowLeft className="w-3 h-3 opacity-40" />
+                        <FaArrowLeft className="w-2.5 h-2.5 sm:w-3 h-3" />
+                        <FaArrowLeft className="w-2.5 h-2.5 sm:w-3 h-3 opacity-70" />
+                        <FaArrowLeft className="w-2.5 h-2.5 sm:w-3 h-3 opacity-40" />
                       </div>
-                      <span className="text-[10px] font-semibold">Swipe</span>
+                      <span className="text-[8px] sm:text-[10px] font-semibold hidden xs:inline">Swipe</span>
                     </div>
-                    <div className="flex items-center gap-2.5 text-white">
-                      <div>
-                        <span className="text-sm font-extrabold tracking-wide">CHECK OUT</span>
-                        <p className="text-[9px] text-white/70 font-medium text-right">End your shift</p>
+                    <div className="flex items-center gap-2 text-white">
+                      <div className="flex flex-col leading-tight text-right">
+                        <span className="text-xs sm:text-sm font-extrabold tracking-wide leading-none">CHECK OUT</span>
+                        <span className="text-[6px] sm:text-[8px] text-white/70 font-medium leading-none mt-0.5">End your shift</span>
                       </div>
-                      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-inner">
-                        <FaTimes className="w-5 h-5 text-white" />
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-inner flex-shrink-0">
+                        <FaTimes className="w-4 h-4 sm:w-5 h-5 text-white" />
                       </div>
                     </div>
                   </div>

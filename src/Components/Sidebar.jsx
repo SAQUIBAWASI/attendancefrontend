@@ -1712,6 +1712,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/editemployee": "Edit Employee",
       "/departmentdashboard": "Departments",
       "/roledashboard": "Roles",
+      "/employee-locations": "Employee Locations",
       "/addlocation": "Add Location",
       "/empmanagement": "Employee Management",
       "/permissions": "Permissions",
@@ -1897,6 +1898,11 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       icon: <i className="ri-map-pin-2-fill"></i>,
       name: "Locations",
       path: "/locationlist",
+    },
+    {
+      icon: <i className="ri-map-pin-user-fill"></i>,
+      name: "Employee Location",
+      path: "/employee-locations",
     },
     {
       icon: <i className="ri-time-fill"></i>,
