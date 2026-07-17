@@ -1,4 +1,3 @@
-
 // import axios from "axios";
 // import { useEffect, useState } from "react";
 // import { FaChevronDown } from "react-icons/fa";
@@ -1789,7 +1788,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
   const getCredentials = () => {
     const userRole = localStorage.getItem('userRole');
     let email = '', password = '';
-    
+
     if (userRole === 'admin') {
       email = localStorage.getItem('adminEmail') || '';
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -1803,14 +1802,14 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       email = clientData.email || localStorage.getItem('clientEmail') || '';
       password = clientData.password || localStorage.getItem('clientPassword') || '';
     }
-    
+
     return { email, password, userRole };
   };
 
   // ─── Function to handle external link with auto-login ───
   const handleExternalLink = () => {
     const { email, password, userRole } = getCredentials();
-    
+
     if (!email || !password) {
       alert('Please login first to access Hire.');
       return;
@@ -1824,7 +1823,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
     params.append('role', userRole || 'employee');
     params.append('clientLogin', 'true');
     params.append('skipOtp', 'true');
-    
+
     const finalUrl = `${url}?${params.toString()}`;
     console.log('🔗 Opening Hire:', finalUrl);
     window.open(finalUrl, '_blank');
@@ -1931,19 +1930,19 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       name: "Medical Certificates",
       path: "/all-medical-certificates",
     },
-    {
-      icon: <i className="ri-briefcase-fill"></i>,
-      name: "Recruitment",
-      dropdown: [
-        { name: "Dashboard", path: "/recruitment-dashboard" },
-        { name: "Job Posts", path: "/jobpost" },
-        { name: "Job Applicants", path: "/job-applicants" },
-        { name: "Score Board", path: "/score" },
-        { name: "Assessments", path: "/assessment-manager" },
-        { name: "Documents", path: "/personaldocuments" },
-        { name: "Employee Journey", path: "/employee-journey" },
-      ],
-    },
+    // {
+    //   icon: <i className="ri-briefcase-fill"></i>,
+    //   name: "Recruitment",
+    //   dropdown: [
+    //     { name: "Dashboard", path: "/recruitment-dashboard" },
+    //     { name: "Job Posts", path: "/jobpost" },
+    //     { name: "Job Applicants", path: "/job-applicants" },
+    //     { name: "Score Board", path: "/score" },
+    //     { name: "Assessments", path: "/assessment-manager" },
+    //     { name: "Documents", path: "/personaldocuments" },
+    //     { name: "Employee Journey", path: "/employee-journey" },
+    //   ],
+    // },
     {
       icon: <i className="ri-map-pin-2-fill"></i>,
       name: "Locations",
@@ -2009,7 +2008,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
     } else if (item.path) {
       navigate(item.path);
     }
-    
+
     setOpenDropdown(null);
 
     if (isMobile) {
@@ -2276,7 +2275,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                     } else {
                       handleItemClick(item.path, item.action);
                     }
-                    
+
                     setOpenDropdown(null);
                     if (isMobile) {
                       setIsCollapsed(true);
@@ -2369,5 +2368,6 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
     </>
   );
 };
+
 
 export default Sidebar;

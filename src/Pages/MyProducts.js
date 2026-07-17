@@ -28,7 +28,7 @@ const MyProducts = () => {
   const getCredentials = () => {
     const userRole = localStorage.getItem('userRole');
     let email = '', password = '';
-    
+
     if (userRole === 'admin') {
       email = localStorage.getItem('adminEmail') || '';
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -42,7 +42,7 @@ const MyProducts = () => {
       email = clientData.email || localStorage.getItem('clientEmail') || '';
       password = clientData.password || localStorage.getItem('clientPassword') || '';
     }
-    
+
     console.log('🔑 Credentials:', { email, password, userRole });
     return { email, password, userRole };
   };
@@ -132,51 +132,51 @@ const MyProducts = () => {
     console.log('🚀 Launching product:', product.name);
     console.log('🔗 Product link:', product.link);
     console.log('🔐 Requires auth:', product.requiresAuth);
-    
+
     // ⭐ If already launched, just open
     if (product.isLaunched) {
       window.open(product.link, '_blank');
       return;
     }
-    
+
     // ⭐ If product doesn't require auth, just open
     if (!product.requiresAuth) {
       window.open(product.link, '_blank');
       return;
     }
-    
+
     // ⭐ For products that require auth - get credentials
     const { email, password, userRole } = getCredentials();
-    
+
     if (!email || !password) {
       alert(`Please login first to access ${product.name}.`);
       return;
     }
 
     setIsLoading(true);
-    
+
     const baseUrl = product.link;
     const params = new URLSearchParams();
     params.append('email', email);
     params.append('password', password);
     params.append('autoLogin', 'true');
     params.append('role', userRole || 'employee');
-    
+
     // ⭐ Special handling for Recruitment (Client Login)
     if (product.loginPage === 'client') {
       params.append('clientLogin', 'true');
       params.append('skipOtp', 'true');
     }
-    
+
     // ⭐ Final URL - baseUrl already has /login
     const finalUrl = `${baseUrl}?${params.toString()}`;
-    
+
     console.log('🔗 Final URL:', finalUrl);
     console.log('📧 Email:', email);
     console.log('🔐 Password:', password);
-    
+
     const newWindow = window.open(finalUrl, '_blank');
-    
+
     if (newWindow) {
       setIsLoading(false);
     } else {
@@ -213,16 +213,16 @@ const MyProducts = () => {
 
   return (
     <div className="emp-dash">
-      <main className="p-4 sm:p-6 lg:p-8">
+      <main className="p-2 sm:p-4 lg:p-6">
         {/* Dashboard Header */}
         <div className="emp-dash__header">
           <div>
             <h1 className="emp-dash__greeting">
               My <span>Products</span>
             </h1>
-            <p className="emp-dash__subtitle">
+            {/* <p className="emp-dash__subtitle">
               Manage and monitor all your products in one place.
-            </p>
+            </p> */}
           </div>
           <div className="emp-dash__date-pill bg-white/70 backdrop-blur-lg border border-white/50 shadow-lg">
             <FiCalendar className="text-blue-500" />
@@ -369,5 +369,7 @@ const MyProducts = () => {
     </div>
   );
 };
+
+
 
 export default MyProducts;

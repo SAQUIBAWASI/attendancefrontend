@@ -28,11 +28,11 @@ export default function EmployeeLocations() {
   const [stats, setStats] = useState({ total: 0, withAddress: 0, withoutAddress: 0 });
   const [saveStatus, setSaveStatus] = useState('');
   const [addressPopup, setAddressPopup] = useState({ show: false, address: '', label: '' });
-  
+
   // ─── Simple Filters ───
   const [filterDate, setFilterDate] = useState('');
   const [filterEmployee, setFilterEmployee] = useState('');
-  
+
   const saveStatusTimeoutRef = React.useRef(null);
 
   const showSaveStatus = (msg) => {
@@ -45,11 +45,11 @@ export default function EmployeeLocations() {
     try {
       setLoading(true);
       setError('');
-      
+
       const response = await axios.get(`${API_BASE_URL}/api/employees/employee-locations`);
-      
+
       console.log('📍 Employee locations response:', response.data);
-      
+
       if (response.data.success) {
         setEmployees(response.data.employees || []);
         setFilteredEmployees(response.data.employees || []);
@@ -102,7 +102,7 @@ export default function EmployeeLocations() {
         const loginDate = emp.lastLoginLocation?.timestamp ? new Date(emp.lastLoginLocation.timestamp) : null;
         const checkinDate = emp.lastCheckInLocation?.timestamp ? new Date(emp.lastCheckInLocation.timestamp) : null;
         const checkoutDate = emp.lastCheckOutLocation?.timestamp ? new Date(emp.lastCheckOutLocation.timestamp) : null;
-        
+
         return (loginDate && loginDate >= selectedDate && loginDate < nextDay) ||
                (checkinDate && checkinDate >= selectedDate && checkinDate < nextDay) ||
                (checkoutDate && checkoutDate >= selectedDate && checkoutDate < nextDay);
@@ -190,7 +190,7 @@ export default function EmployeeLocations() {
     const now = new Date();
     const past = new Date(dateString);
     const diff = Math.floor((now - past) / 1000);
-    
+
     if (diff < 60) return 'Just now';
     if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
@@ -204,7 +204,7 @@ export default function EmployeeLocations() {
                      employee.lastCheckInLocation?.timestamp || 
                      employee.lastLoginLocation?.timestamp;
       const isRecent = latest && (new Date() - new Date(latest)) < 600000;
-      
+
       if (isRecent) {
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -333,9 +333,9 @@ export default function EmployeeLocations() {
             <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
               Employee <span className="text-blue-600">Locations</span>
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
+            {/* <p className="mt-1 text-sm text-gray-600">
               Track real-time location of all employees
-            </p>
+            </p> */}
           </div>
           <div className="flex gap-2">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
@@ -561,13 +561,13 @@ export default function EmployeeLocations() {
                     const loginAddress = employee.lastLoginLocation?.address;
                     const checkinAddress = employee.lastCheckInLocation?.address;
                     const checkoutAddress = employee.lastCheckOutLocation?.address;
-                    
+
                     const isHighlighted = filterDate ? (
                       (loginTime && new Date(loginTime).toDateString() === new Date(filterDate).toDateString()) ||
                       (checkinTime && new Date(checkinTime).toDateString() === new Date(filterDate).toDateString()) ||
                       (checkoutTime && new Date(checkoutTime).toDateString() === new Date(filterDate).toDateString())
                     ) : false;
-                    
+
                     return (
                       <tr key={employee._id || index} className={`hover:bg-gray-50 transition-all ${isHighlighted ? 'bg-blue-50/50' : ''}`}>
                         <td className="px-3 py-3 text-gray-500 font-medium">{index + 1}</td>
@@ -590,7 +590,7 @@ export default function EmployeeLocations() {
                           <div className="text-sm text-gray-700">{employee.department || 'N/A'}</div>
                           <div className="text-xs text-gray-400">{employee.role || 'N/A'}</div>
                         </td>
-                        
+
                         {/* ─── LOGIN ─── */}
                         <td className="px-3 py-3">
                           {loginTime ? (
@@ -623,7 +623,7 @@ export default function EmployeeLocations() {
                             <span className="text-gray-400 text-xs">Never</span>
                           )}
                         </td>
-                        
+
                         {/* ─── CHECK-IN ─── */}
                         <td className="px-3 py-3">
                           {checkinTime ? (
@@ -656,7 +656,7 @@ export default function EmployeeLocations() {
                             <span className="text-gray-400 text-xs">Never</span>
                           )}
                         </td>
-                        
+
                         {/* ─── CHECK-OUT ─── */}
                         <td className="px-3 py-3">
                           {checkoutTime ? (
@@ -689,7 +689,7 @@ export default function EmployeeLocations() {
                             <span className="text-gray-400 text-xs">Never</span>
                           )}
                         </td>
-                        
+
                         <td className="px-3 py-3">{getStatusBadge(employee)}</td>
                         <td className="px-3 py-3 text-center">
                           <div className="flex flex-col items-center justify-center gap-1">
@@ -699,7 +699,7 @@ export default function EmployeeLocations() {
                             >
                               <FaEye className="text-xs" /> View
                             </button>
-                            
+
                             {employee.latitude && employee.longitude && (
                               <button
                                 onClick={() => redirectToLocation(employee.latitude, employee.longitude, employee.name)}
