@@ -326,14 +326,14 @@ const EmployeeResignation = () => {
   return (
     <div className="emp-dash">
 
-      <main className="p-4 sm:p-6 lg:p-8">
+      <main className="p-2 sm:p-4 lg:p-6">
         {/* Dashboard Header */}
         <div className="emp-dash__header">
-          <div>
-            <h1 className="emp-dash__greeting">
+          <div className="flex items-center gap-3 flex-wrap">
+  <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
               Employee <span>Resignations</span>
             </h1>
-            <p className="emp-dash__subtitle">
+           <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
               Monitor and manage employee resignation requests and approvals.
             </p>
           </div>

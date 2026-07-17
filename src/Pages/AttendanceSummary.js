@@ -7,8 +7,13 @@
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 import { useEffect, useRef, useState } from "react";
-import { FaBuilding, FaUserTag, FaTimes, FaCalendarAlt, FaSearch } from "react-icons/fa";
-import { FiFilter, FiMapPin, FiUserCheck, FiUsers, FiCoffee, FiTrendingUp } from "react-icons/fi";
+import { FaBuilding, FaUserTag, FaTimes, FaCalendarAlt, FaSearch, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FiFilter, FiMapPin, FiUserCheck, FiUsers, FiCoffee, FiTrendingUp, 
+  FiDownload, 
+  FiTrash2, 
+  FiPlus,
+  FiChevronUp as FiChevronUpIcon,
+  FiChevronDown as FiChevronDownIcon } from "react-icons/fi";
 import * as XLSX from "xlsx";
 import { API_BASE_URL } from "../config";
 import "../index.css";
@@ -27,6 +32,7 @@ export default function AttendanceSummary() {
   const [filterDesignation, setFilterDesignation] = useState("");
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   
   const [uniqueDepartments, setUniqueDepartments] = useState([]);
   const [uniqueDesignations, setUniqueDesignations] = useState([]);
@@ -423,6 +429,19 @@ export default function AttendanceSummary() {
   const getEmployeeDesignation = (employeeId) => {
     const employee = employees.find(emp => emp.employeeId === employeeId);
     return employee?.role || employee?.designation || '-';
+  };
+
+  // Helper function to get all dates of a month
+  const getAllDatesOfMonth = (month) => {
+    if (!month) return [];
+    const [year, m] = month.split("-");
+    const start = new Date(year, m - 1, 1);
+    const end = new Date(year, m, 0);
+    const dates = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      dates.push(new Date(d));
+    }
+    return dates;
   };
 
   const downloadSingleEmployeeExcel = async (employeeId) => {
@@ -948,92 +967,238 @@ export default function AttendanceSummary() {
     }
   };
 
-  const handleBulkSaveAttendance = async () => {
+  // FIXED: handleBulkAction - collects records, updates state, waits, then saves
+  const handleBulkAction = async (actionType, inputId, defaultHours) => {
     try {
-      const editedKeys = Object.keys(editedRows);
-      if (editedKeys.length === 0) {
-        showSaveStatus("No changes to save.", "error");
+      const val = parseFloat(document.getElementById(inputId)?.value) || defaultHours;
+      
+      let count = 0;
+      const newEdited = { ...editedRows };
+      const recordsToUpdate = [];
+      
+      const monthDates = getAllDatesOfMonth(selectedMonth);
+      
+      monthDates.forEach(date => {
+        const dateKey = date.toLocaleDateString('en-CA');
+        const rec = employeeDetails.find(r => 
+          r.checkInTime && 
+          new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey
+        );
+        
+        if (!rec) return;
+        
+        const originalHours = rec.totalHours || rec.hours || 0;
+        let shouldUpdate = false;
+        let updateData = {};
+        
+        switch(actionType) {
+          case 'halfDay':
+            if (calculateDayType(selectedEmployee, originalHours) === "half") {
+              shouldUpdate = true;
+              updateData = { hours: val };
+            }
+            break;
+          case 'fullLeave':
+            if (calculateDayType(selectedEmployee, originalHours) === "full_leave") {
+              shouldUpdate = true;
+              updateData = { hours: val };
+            }
+            break;
+          case 'singlePunch':
+            if (rec.checkInTime && !rec.checkOutTime) {
+              shouldUpdate = true;
+              updateData = { 
+                hours: val, 
+                checkOutTime: "23:59" 
+              };
+            }
+            break;
+        }
+        
+        if (shouldUpdate) {
+          const updatedEntry = {
+            ...newEdited[dateKey],
+            ...updateData,
+            edited: true,
+            timestamp: Date.now()
+          };
+          newEdited[dateKey] = updatedEntry;
+          count++;
+          recordsToUpdate.push({
+            dateKey,
+            rec,
+            updateData: updatedEntry
+          });
+        }
+      });
+      
+      if (count === 0) {
+        showSaveStatus(`❌ No matching records found to update.`, "error");
         return;
       }
+      
+      // Update state
+      setEditedRows(newEdited);
+      showSaveStatus(`✅ Found ${count} records! Saving...`);
+      
+      // CRITICAL: Wait for state to update
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Call bulk save with pre-collected records
+      await handleBulkSaveAttendanceWithRecords(recordsToUpdate);
+      
+    } catch (error) {
+      console.error("Bulk action error:", error);
+      showSaveStatus("🚨 Error in bulk action: " + error.message, "error");
+    }
+  };
+
+  // NEW: Bulk save with pre-collected records - NO STATE READ
+  const handleBulkSaveAttendanceWithRecords = async (recordsToUpdate) => {
+    try {
+      if (recordsToUpdate.length === 0) {
+        showSaveStatus("No records to update.", "error");
+        return;
+      }
+      
       setLoading(true);
       let successCount = 0;
-      const keysToSave = editedKeys.filter(dateKey => editedRows[dateKey] && editedRows[dateKey].edited);
-      if (keysToSave.length === 0) {
-        setLoading(false);
+      const errors = [];
+      
+      // Process each record
+      for (const item of recordsToUpdate) {
+        const { dateKey, rec, updateData } = item;
+        
+        // Use the data from updateData directly (no state read)
+        const currentReason = updateData.reason !== undefined ? updateData.reason : (rec?.reason || "");
+        const currentComment = updateData.comment !== undefined ? updateData.comment : (rec?.comment || "");
+        const currentHours = updateData.hours !== undefined ? updateData.hours : (rec ? (rec.totalHours || rec.hours) : 0);
+        
+        const formatTimeForInput = (isoString) => {
+          if (!isoString) return "";
+          const d = new Date(isoString);
+          const h = String(d.getHours()).padStart(2, '0');
+          const m = String(d.getMinutes()).padStart(2, '0');
+          return `${h}:${m}`;
+        };
+        
+        const baseCheckIn = rec?.checkInTime ? formatTimeForInput(rec.checkInTime) : "";
+        const baseCheckOut = rec?.checkOutTime ? formatTimeForInput(rec.checkOutTime) : "";
+        const currentCheckIn = updateData.checkInTime !== undefined ? updateData.checkInTime : baseCheckIn;
+        const currentCheckOut = updateData.checkOutTime !== undefined ? updateData.checkOutTime : baseCheckOut;
+        
+        const combineDateTime = (timeStr) => {
+          if (!timeStr) return null;
+          return `${dateKey}T${timeStr}:00`;
+        };
+        
+        const finalCheckIn = updateData.checkInTime !== undefined ? combineDateTime(updateData.checkInTime) : 
+                            (rec?.checkInTime ? rec.checkInTime : undefined);
+        const finalCheckOut = updateData.checkOutTime !== undefined ? combineDateTime(updateData.checkOutTime) : 
+                             (rec?.checkOutTime ? rec.checkOutTime : undefined);
+        
+        if (!finalCheckIn && !rec) {
+          errors.push(`No check-in time for ${dateKey}`);
+          continue;
+        }
+        
+        const payload = {
+          attendanceId: rec?._id,
+          employeeId: selectedEmployee,
+          date: dateKey,
+          hours: currentHours,
+          region: null,
+          comment: currentComment || "Admin Bulk Update",
+          reason: currentReason || "Onsite",
+          checkInTime: finalCheckIn,
+          checkOutTime: finalCheckOut
+        };
+        
+        try {
+          const res = await fetch(`${BASE_URL}/attendancesummary/update`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const result = await res.json();
+          if (result.success) {
+            successCount++;
+            // Clear the edited flag
+            setEditedRows(prev => {
+              const newRows = { ...prev };
+              if (newRows[dateKey]) {
+                newRows[dateKey].edited = false;
+              }
+              return newRows;
+            });
+          } else {
+            errors.push(`Failed to update ${dateKey}: ${result.message || "Unknown error"}`);
+          }
+        } catch (err) {
+          console.error(`Failed to update ${dateKey}:`, err);
+          errors.push(`Network error for ${dateKey}`);
+        }
+      }
+      
+      if (successCount > 0) {
+        showSaveStatus(`✅ ${successCount}/${recordsToUpdate.length} records updated successfully!${errors.length > 0 ? ` (${errors.length} failed)` : ''}`);
+        
+        // Refresh data
+        if (selectedEmployee) {
+          await handleViewDetails(selectedEmployee);
+        }
+        await calculateSummaryFromBackend();
+        await fetchAllData();
+      } else {
+        showSaveStatus(`❌ No records were updated successfully. ${errors.length > 0 ? errors.join('. ') : ''}`, "error");
+      }
+      
+    } catch (error) {
+      console.error("Bulk save error:", error);
+      showSaveStatus("🚨 Error saving bulk records: " + error.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Kept for backward compatibility
+  const handleBulkSaveAttendance = async () => {
+    try {
+      const currentEditedRows = { ...editedRows };
+      const editedKeys = Object.keys(currentEditedRows).filter(key => 
+        currentEditedRows[key] && currentEditedRows[key].edited
+      );
+      
+      if (editedKeys.length === 0) {
         showSaveStatus("No records to update in bulk.", "error");
         return;
       }
-      for (const dateKey of keysToSave) {
-        const edited = editedRows[dateKey];
-        if (edited) {
-          const rec = employeeDetails.find(r =>
-            r.checkInTime &&
-            new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey
-          );
-          const currentReason = edited.reason !== undefined ? edited.reason : (rec?.reason || "");
-          const currentComment = edited.comment !== undefined ? edited.comment : (rec?.comment || "");
-          const currentHours = edited.hours !== undefined ? edited.hours : (rec ? (rec.totalHours || rec.hours) : 0);
-          const formatTimeForInput = (isoString) => {
-            if (!isoString) return "";
-            const d = new Date(isoString);
-            const h = String(d.getHours()).padStart(2, '0');
-            const m = String(d.getMinutes()).padStart(2, '0');
-            return `${h}:${m}`;
-          };
-          const baseCheckIn = rec?.checkInTime ? formatTimeForInput(rec.checkInTime) : "";
-          const baseCheckOut = rec?.checkOutTime ? formatTimeForInput(rec.checkOutTime) : "";
-          const currentCheckIn = edited.checkInTime !== undefined ? edited.checkInTime : baseCheckIn;
-          const currentCheckOut = edited.checkOutTime !== undefined ? edited.checkOutTime : baseCheckOut;
-          const combineDateTime = (timeStr) => {
-            if (!timeStr) return null;
-            return `${dateKey}T${timeStr}:00`;
-          };
-          const finalCheckIn = edited.checkInTime !== undefined ? combineDateTime(edited.checkInTime) : undefined;
-          const finalCheckOut = edited.checkOutTime !== undefined ? combineDateTime(edited.checkOutTime) : undefined;
-          const checkInToSend = finalCheckIn !== undefined ? finalCheckIn : (!rec ? combineDateTime(currentCheckIn) : undefined);
-          const checkOutToSend = finalCheckOut !== undefined ? finalCheckOut : (!rec ? combineDateTime(currentCheckOut) : undefined);
-          if (!checkInToSend && !rec) continue;
-          const payload = {
-            attendanceId: rec?._id,
-            employeeId: selectedEmployee,
-            date: dateKey,
-            hours: currentHours,
-            region: null,
-            comment: currentComment || "Admin Bulk Update",
-            reason: currentReason || "Onsite",
-            checkInTime: checkInToSend,
-            checkOutTime: checkOutToSend
-          };
-          try {
-            const res = await fetch(`${BASE_URL}/attendancesummary/update`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            });
-            const result = await res.json();
-            if (result.success) {
-               successCount++;
-            }
-          } catch (err) {
-            console.error(`Failed to update ${dateKey}:`, err);
-          }
+      
+      const recordsToUpdate = [];
+      for (const dateKey of editedKeys) {
+        const rec = employeeDetails.find(r =>
+          r.checkInTime &&
+          new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey
+        );
+        if (rec) {
+          recordsToUpdate.push({
+            dateKey,
+            rec,
+            updateData: currentEditedRows[dateKey]
+          });
         }
       }
-      if (successCount > 0) {
-        showSaveStatus(`✅ ${successCount} records updated successfully!`);
-      } else {
-        showSaveStatus(`❌ No records were updated successfully.`, "error");
+      
+      if (recordsToUpdate.length === 0) {
+        showSaveStatus("No valid records to update.", "error");
+        return;
       }
-      if (selectedEmployee) {
-        await handleViewDetails(selectedEmployee);
-      }
-      await calculateSummaryFromBackend();
-      fetchAllData();
+      
+      await handleBulkSaveAttendanceWithRecords(recordsToUpdate);
+      
     } catch (error) {
-      console.error(error);
-      showSaveStatus("🚨 Error saving bulk records", "error");
-    } finally {
-      setLoading(false);
+      console.error("Bulk save error:", error);
+      showSaveStatus("🚨 Error saving bulk records: " + error.message, "error");
     }
   };
 
@@ -1085,20 +1250,24 @@ export default function AttendanceSummary() {
     try {
       setSelectedEmployee(employeeId);
       setEditedRows({});
+      
       const params = new URLSearchParams({
         employeeId,
         ...(fromDate && toDate && { fromDate, toDate }),
         ...(selectedMonth && { month: selectedMonth })
       });
+      
       const response = await fetch(`${BASE_URL}/attendancesummary/employee-details?${params}`);
       const result = await response.json();
+      
       if (result.success) {
         const sortedDetails = result.details.sort((a, b) =>
           new Date(a.checkInTime) - new Date(b.checkInTime)
         );
         setEmployeeDetails(sortedDetails);
+        
         const initialEditedRows = {};
-        sortedDetails.forEach((detail, index) => {
+        sortedDetails.forEach((detail) => {
           const dateKey = new Date(detail.checkInTime).toLocaleDateString('en-CA');
           if (detail.comment || detail.reason) {
             initialEditedRows[dateKey] = {
@@ -1361,7 +1530,7 @@ export default function AttendanceSummary() {
 
   return (
     <div className="emp-dash">
-      <main className="p-4 sm:p-6 lg:p-8">
+      <main className="p-2 sm:p-4 lg:p-6">
         {saveStatus && (
           <div className={`fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${
             saveStatus.includes("✅") || saveStatus.includes("successfully")
@@ -1375,13 +1544,13 @@ export default function AttendanceSummary() {
 
         {/* Header */}
         <div className="emp-dash__header">
-          <div>
-            <h1 className="emp-dash__greeting">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Attendance <span>Summary</span>
             </h1>
-            <p className="emp-dash__subtitle">
+            {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
               Monthly summary of work hours, overtime, and presence metrics per employee.
-            </p>
+            </p> */}
           </div>
           <div className="emp-dash__date-pill">
             <FaCalendarAlt />
@@ -1389,276 +1558,482 @@ export default function AttendanceSummary() {
           </div>
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats Grid - Mobile Responsive */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Total Employees</span>
+              <span className="emp-dash__stat-label text-[10px] sm:text-xs">Total Employees</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                <FiUsers />
+                <FiUsers className="text-sm sm:text-base" />
               </div>
             </div>
-            <div className="emp-dash__stat-value">{filteredSummary.length}</div>
-            <div className="emp-dash__stat-meta">active in view</div>
+            <div className="emp-dash__stat-value text-lg sm:text-xl lg:text-2xl">{filteredSummary.length}</div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">active in view</div>
           </div>
 
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Avg Work Days</span>
+              <span className="emp-dash__stat-label text-[10px] sm:text-xs">Avg Work Days</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
-                <FiTrendingUp />
+                <FiTrendingUp className="text-sm sm:text-base" />
               </div>
             </div>
-            <div className="emp-dash__stat-value">{averageWorkingDays}</div>
-            <div className="emp-dash__stat-meta">days per employee</div>
+            <div className="emp-dash__stat-value text-lg sm:text-xl lg:text-2xl">{averageWorkingDays}</div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">days per employee</div>
           </div>
 
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Total Onsite</span>
+              <span className="emp-dash__stat-label text-[10px] sm:text-xs">Total Onsite</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                <FiMapPin />
+                <FiMapPin className="text-sm sm:text-base" />
               </div>
             </div>
-            <div className="emp-dash__stat-value">{totalOnsiteDays}</div>
-            <div className="emp-dash__stat-meta">office check-ins</div>
+            <div className="emp-dash__stat-value text-lg sm:text-xl lg:text-2xl">{totalOnsiteDays}</div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">office check-ins</div>
           </div>
 
           <div className="emp-dash__stat">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Total Late Days</span>
+              <span className="emp-dash__stat-label text-[10px] sm:text-xs">Total Late Days</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
-                <FiUserCheck />
+                <FiUserCheck className="text-sm sm:text-base" />
               </div>
             </div>
-            <div className="emp-dash__stat-value text-amber-600">{totalLateDays}</div>
-            <div className="emp-dash__stat-meta">grace exceeded</div>
+            <div className="emp-dash__stat-value text-lg sm:text-xl lg:text-2xl text-amber-600">{totalLateDays}</div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">grace exceeded</div>
           </div>
 
-          <div className="emp-dash__stat">
+          <div className="emp-dash__stat col-span-2 lg:col-span-1">
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Total Overtime</span>
+              <span className="emp-dash__stat-label text-[10px] sm:text-xs">Total Overtime</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
-                <FiCoffee />
+                <FiCoffee className="text-sm sm:text-base" />
               </div>
             </div>
-            <div className="emp-dash__stat-value text-indigo-600 text-base sm:text-lg md:text-xl font-bold truncate">
+            <div className="emp-dash__stat-value text-lg sm:text-xl lg:text-2xl text-indigo-600 font-bold truncate">
               {formatDecimalHours(totalOvertime)}
             </div>
-            <div className="emp-dash__stat-meta">accumulated</div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">accumulated</div>
           </div>
         </div>
 
-        {/* Filters Card */}
+        {/* Filters Card - Mobile Toggle */}
         <div className="emp-dash__card mb-6">
-          <div className="emp-dash__card-header flex-col sm:flex-row gap-3">
-            <div>
-              <h3 className="emp-dash__card-title flex items-center gap-2">
-                <FiFilter className="text-blue-600" /> Filters &amp; Actions
-              </h3>
-              <p className="emp-dash__card-desc">Search and filter employee summary by department, designation and date range.</p>
-            </div>
-          </div>
-
-          <div className="emp-dash__card-body bg-gray-50/50">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
-              {/* ID/Name Search */}
-              <div className="flex flex-col gap-1.5 lg:col-span-2">
-                <label className="text-xs font-medium text-gray-600">Search Employee</label>
-                <div className="relative">
+          {/* Desktop View */}
+          <div className="hidden sm:block">
+            <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200">
+              {/* Left - Filters */}
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                {/* Search */}
+                <div className="relative min-w-[140px] flex-1 max-w-[200px]">
                   <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
                   <input
                     type="text"
                     placeholder="Search ID or Name..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                   />
                 </div>
-              </div>
 
-              {/* Department Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={departmentFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Department</label>
-                <button
-                  onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDepartment
-                      ? "border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10"
-                      : "border-gray-300 text-gray-700 hover:bg-slate-50"
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaBuilding className="text-gray-400" />
-                    {filterDepartment || "All Departments"}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-
-                {showDepartmentFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div
-                      onClick={() => {
-                        setFilterDepartment("");
-                        setShowDepartmentFilter(false);
+                {/* Department */}
+                <div className="relative" ref={departmentFilterRef}>
+                  <button
+                    onClick={() => {
+                      setShowDepartmentFilter(!showDepartmentFilter);
+                      setShowDesignationFilter(false);
+                    }}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                      filterDepartment
+                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <FaBuilding className="text-gray-400 text-[10px]" />
+                    <span className="truncate max-w-[100px]">{filterDepartment || "Departments"}</span>
+                    <span className="text-gray-400 text-[10px]">▾</span>
+                  </button>
+                  {showDepartmentFilter && (
+                    <div 
+                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
+                      style={{
+                        zIndex: 99999,
+                        top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                        left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
                       }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
                     >
-                      All Departments
-                    </div>
-                    {uniqueDepartments.map((dept) => (
                       <div
-                        key={dept}
                         onClick={() => {
-                          setFilterDepartment(dept);
+                          setFilterDepartment("");
                           setShowDepartmentFilter(false);
                         }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
-                          filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                        }`}
+                        className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
                       >
-                        {dept}
+                        All Departments
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Designation Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={designationFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Designation</label>
-                <button
-                  onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDesignation
-                      ? "border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10"
-                      : "border-gray-300 text-gray-700 hover:bg-slate-50"
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaUserTag className="text-gray-400" />
-                    {filterDesignation || "All Designations"}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-
-                {showDesignationFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div
-                      onClick={() => {
-                        setFilterDesignation("");
-                        setShowDesignationFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Designations
+                      {uniqueDepartments.map((dept) => (
+                        <div
+                          key={dept}
+                          onClick={() => {
+                            setFilterDepartment(dept);
+                            setShowDepartmentFilter(false);
+                          }}
+                          className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                            filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                          }`}
+                        >
+                          {dept}
+                        </div>
+                      ))}
                     </div>
-                    {uniqueDesignations.map((des) => (
-                      <div
-                        key={des}
-                        onClick={() => {
-                          setFilterDesignation(des);
-                          setShowDesignationFilter(false);
-                        }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
-                          filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                        }`}
-                      >
-                        {des}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Date From */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">From Date</label>
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
-
-              {/* Date To */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">To Date</label>
-                <input
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200/50">
-              <div className="flex items-center gap-3">
-                <div className="text-xs text-gray-500 font-medium">
-                  Showing <strong>{filteredSummary.length}</strong> of <strong>{employeeSummary.length}</strong> employees
+                  )}
                 </div>
 
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-gray-500 font-medium">Month:</span>
+                {/* Designation */}
+                <div className="relative" ref={designationFilterRef}>
+                  <button
+                    onClick={() => {
+                      setShowDesignationFilter(!showDesignationFilter);
+                      setShowDepartmentFilter(false);
+                    }}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                      filterDesignation
+                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <FaUserTag className="text-gray-400 text-[10px]" />
+                    <span className="truncate max-w-[100px]">{filterDesignation || "Designations"}</span>
+                    <span className="text-gray-400 text-[10px]">▾</span>
+                  </button>
+                  {showDesignationFilter && (
+                    <div 
+                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
+                      style={{
+                        zIndex: 99999,
+                        top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                        left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
+                      }}
+                    >
+                      <div
+                        onClick={() => {
+                          setFilterDesignation("");
+                          setShowDesignationFilter(false);
+                        }}
+                        className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                      >
+                        All Designations
+                      </div>
+                      {uniqueDesignations.map((des) => (
+                        <div
+                          key={des}
+                          onClick={() => {
+                            setFilterDesignation(des);
+                            setShowDesignationFilter(false);
+                          }}
+                          className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                            filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                          }`}
+                        >
+                          {des}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Date From - Compact */}
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                    placeholder="From"
+                    className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+
+                {/* Date To - Compact */}
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                    placeholder="To"
+                    className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+
+                {/* Month Picker - Compact */}
+                <div className="relative">
                   <input
                     type="month"
                     value={selectedMonth}
                     onChange={handleMonthChange}
                     onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold"
+                    className="w-[130px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
                   />
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              {/* Right - Action Buttons */}
+              <div className="flex items-center gap-1.5 flex-shrink-0">
                 <button
                   onClick={handleDateRangeFilter}
-                  className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all flex items-center gap-1.5 shadow-sm"
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
                 >
-                  <FaSearch className="text-xs" /> Apply Dates
+                  <FaSearch className="w-3 h-3" />
+                  Apply
                 </button>
 
                 <button
                   onClick={handleFixWrongData}
-                  className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all flex items-center gap-1.5 shadow-sm"
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm whitespace-nowrap"
                   title="Fix data corrections for the selected month"
                 >
-                  🔧 Fix Wrong Data
+                  🔧 Fix
                 </button>
 
                 {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
                   <button
                     onClick={clearFilters}
-                    className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-55 transition-all flex items-center gap-1.5 shadow-sm"
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
                   >
-                    Clear Filters
+                    <FiTrash2 className="w-3 h-3" />
+                    Clear
                   </button>
                 )}
 
                 <button
                   onClick={downloadCombinedExcel}
-                  className="px-4 py-2 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all flex items-center gap-1.5 shadow-md"
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-md whitespace-nowrap"
                 >
-                  Export Excel (ZIP)
+                  <FiDownload className="w-3 h-3" />
+                  Export
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Mobile View */}
+          <div className="sm:hidden">
+            {/* Mobile Header with Toggle */}
+            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+              >
+                <FiFilter className="text-blue-600 text-base" />
+                <span>Filters &amp; Actions</span>
+                {showMobileFilters ? (
+                  <FaChevronUp className="text-gray-400" />
+                ) : (
+                  <FaChevronDown className="text-gray-400" />
+                )}
+              </button>
+              <span className="text-xs text-gray-500">
+                <strong>{filteredSummary.length}</strong> employees
+              </span>
+            </div>
+
+            {/* Mobile Filters */}
+            {showMobileFilters && (
+              <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+                {/* Search */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
+                  <div className="relative">
+                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                    <input
+                      type="text"
+                      placeholder="Search ID or Name..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Department */}
+                <div className="relative" ref={departmentFilterRef}>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
+                  <button
+                    onClick={() => {
+                      setShowDepartmentFilter(!showDepartmentFilter);
+                      setShowDesignationFilter(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                      filterDepartment
+                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                        : "border-gray-300 text-gray-700"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <FaBuilding className="text-gray-400" />
+                      {filterDepartment || "All Departments"}
+                    </span>
+                    <span className="text-gray-400">▾</span>
+                  </button>
+                  {showDepartmentFilter && (
+                    <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      <div
+                        onClick={() => {
+                          setFilterDepartment("");
+                          setShowDepartmentFilter(false);
+                        }}
+                        className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                      >
+                        All Departments
+                      </div>
+                      {uniqueDepartments.map((dept) => (
+                        <div
+                          key={dept}
+                          onClick={() => {
+                            setFilterDepartment(dept);
+                            setShowDepartmentFilter(false);
+                          }}
+                          className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                            filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                          }`}
+                        >
+                          {dept}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Designation */}
+                <div className="relative" ref={designationFilterRef}>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
+                  <button
+                    onClick={() => {
+                      setShowDesignationFilter(!showDesignationFilter);
+                      setShowDepartmentFilter(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                      filterDesignation
+                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                        : "border-gray-300 text-gray-700"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <FaUserTag className="text-gray-400" />
+                      {filterDesignation || "All Designations"}
+                    </span>
+                    <span className="text-gray-400">▾</span>
+                  </button>
+                  {showDesignationFilter && (
+                    <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      <div
+                        onClick={() => {
+                          setFilterDesignation("");
+                          setShowDesignationFilter(false);
+                        }}
+                        className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                      >
+                        All Designations
+                      </div>
+                      {uniqueDesignations.map((des) => (
+                        <div
+                          key={des}
+                          onClick={() => {
+                            setFilterDesignation(des);
+                            setShowDesignationFilter(false);
+                          }}
+                          className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                            filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                          }`}
+                        >
+                          {des}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Date From & To */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
+                    <input
+                      type="date"
+                      value={fromDate}
+                      onChange={(e) => setFromDate(e.target.value)}
+                      onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
+                    <input
+                      type="date"
+                      value={toDate}
+                      onChange={(e) => setToDate(e.target.value)}
+                      onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Month Picker */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={handleMonthChange}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+                  />
+                </div>
+
+                {/* Mobile Action Buttons */}
+                <div className="pt-3 border-t border-gray-200 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={handleDateRangeFilter}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                    >
+                      <FaSearch className="w-4 h-4" />
+                      Apply
+                    </button>
+                    <button
+                      onClick={handleFixWrongData}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm"
+                    >
+                      🔧 Fix
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={downloadCombinedExcel}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+                    >
+                      <FiDownload className="w-4 h-4" />
+                      Export
+                    </button>
+                    {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
+                      <button
+                        onClick={clearFilters}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Table Card */}
         <div className="emp-dash__card">
-          <div className="emp-dash__card-header">
-            <div>
-              <h3 className="emp-dash__card-title">Employee Summaries</h3>
-              <p className="emp-dash__card-desc">Work hours aggregate, overtime, and check-in summary metrics.</p>
-            </div>
-          </div>
-
           {employeeSummary.length === 0 ? (
             <div className="emp-dash__card-body py-12 text-center text-gray-500">
               <div className="mb-3 text-4xl text-gray-300">📭</div>
@@ -1673,17 +2048,17 @@ export default function AttendanceSummary() {
                     <tr>
                       <th>Employee ID</th>
                       <th>Name</th>
-                      <th style={{ textAlign: "center" }}>Department</th>
-                      <th style={{ textAlign: "center" }}>Designation</th>
+                      <th style={{ textAlign: "center" }} className="hidden sm:table-cell">Department</th>
+                      <th style={{ textAlign: "center" }} className="hidden md:table-cell">Designation</th>
                       <th style={{ textAlign: "center" }}>Month</th>
                       <th style={{ textAlign: "center" }}>Present</th>
                       <th style={{ textAlign: "center" }}>Late</th>
-                      <th style={{ textAlign: "center" }}>Onsite</th>
-                      <th style={{ textAlign: "center" }}>Remote</th>
-                      <th style={{ textAlign: "center" }}>Half Day</th>
-                      <th style={{ textAlign: "center" }}>Full Day</th>
-                      <th style={{ textAlign: "center" }}>Over Time</th>
-                      <th style={{ textAlign: "center" }}>Working Days</th>
+                      <th style={{ textAlign: "center" }} className="hidden sm:table-cell">Onsite</th>
+                      <th style={{ textAlign: "center" }} className="hidden sm:table-cell">Remote</th>
+                      <th style={{ textAlign: "center" }} className="hidden lg:table-cell">Half Day</th>
+                      <th style={{ textAlign: "center" }} className="hidden lg:table-cell">Full Day</th>
+                      <th style={{ textAlign: "center" }}>OT</th>
+                      <th style={{ textAlign: "center" }}>Work Days</th>
                       <th style={{ textAlign: "right" }}>Download</th>
                     </tr>
                   </thead>
@@ -1715,10 +2090,10 @@ export default function AttendanceSummary() {
                               </span>
                             </div>
                           </td>
-                          <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">
+                          <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap hidden sm:table-cell">
                             {department}
                           </td>
-                          <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">
+                          <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap hidden md:table-cell">
                             {designation}
                           </td>
                           <td className="text-center text-slate-600 text-[11px] font-bold whitespace-nowrap">
@@ -1734,22 +2109,22 @@ export default function AttendanceSummary() {
                               {lateDays}
                             </span>
                           </td>
-                          <td className="text-center whitespace-nowrap">
+                          <td className="text-center whitespace-nowrap hidden sm:table-cell">
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
                               {onsiteDays}
                             </span>
                           </td>
-                          <td className="text-center whitespace-nowrap">
+                          <td className="text-center whitespace-nowrap hidden sm:table-cell">
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-100">
                               {calculateEmployeeRemoteDays(emp.employeeId)}
                             </span>
                           </td>
-                          <td className="text-center whitespace-nowrap">
+                          <td className="text-center whitespace-nowrap hidden lg:table-cell">
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-50 text-yellow-700 border border-yellow-100">
                               {emp.halfDayWorking ?? 0}
                             </span>
                           </td>
-                          <td className="text-center whitespace-nowrap">
+                          <td className="text-center whitespace-nowrap hidden lg:table-cell">
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-100">
                               {emp.fullDayNotWorking ?? 0}
                             </span>
@@ -1853,20 +2228,7 @@ export default function AttendanceSummary() {
 
       {/* Details Modal */}
       {selectedEmployee && (() => {
-        const activeMonth = selectedMonth;
-        const getAllDatesOfMonth = (month) => {
-          if (!month) return [];
-          const [year, m] = month.split("-");
-          const start = new Date(year, m - 1, 1);
-          const end = new Date(year, m, 0);
-          const dates = [];
-          for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-            dates.push(new Date(d));
-          }
-          return dates;
-        };
-
-        const monthDates = getAllDatesOfMonth(activeMonth);
+        const monthDates = getAllDatesOfMonth(selectedMonth);
         const empDetailsRecord = employees.find(e => e.employeeId === selectedEmployee);
         const empName = empDetailsRecord?.name || selectedEmployee;
 
@@ -1885,7 +2247,7 @@ export default function AttendanceSummary() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  {/* Half Days Bulk Apply */}
+                  {/* Half Days - Full Day Button */}
                   <div className="flex items-center px-2.5 py-1 space-x-1.5 bg-slate-50 border border-slate-200 rounded-full text-[11px] font-semibold text-slate-700">
                     <span>Half Days ({
                       monthDates.filter(date => {
@@ -1904,40 +2266,16 @@ export default function AttendanceSummary() {
                     />
                     <span className="text-gray-400">Hrs</span>
                     <button
-                      onClick={() => {
-                        const val = parseFloat(document.getElementById('bulkHalfDayHours').value) || 9;
-                        const newEdited = { ...editedRows };
-                        let count = 0;
-                        monthDates.forEach(date => {
-                           const dateKey = date.toLocaleDateString('en-CA');
-                           const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
-                           const originalHours = rec ? (rec.totalHours || rec.hours) : 0;
-                           if (rec && calculateDayType(selectedEmployee, originalHours) === "half") {
-                              newEdited[dateKey] = {
-                                ...newEdited[dateKey],
-                                hours: val,
-                                edited: true,
-                                timestamp: Date.now()
-                              };
-                              count++;
-                           }
-                        });
-                        setEditedRows(newEdited);
-                        if (count > 0) {
-                          showSaveStatus(`✅ Applied ${val} hrs to ${count} Half Days! Click 'Save Bulk Edits' to confirm.`);
-                        } else {
-                          showSaveStatus(`❌ No Half Days found to update.`, "error");
-                        }
-                      }}
+                      onClick={() => handleBulkAction('halfDay', 'bulkHalfDayHours', 9)}
                       className="px-2 py-0.5 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition"
                     >
-                      Apply
+                      Full Day
                     </button>
                   </div>
 
-                  {/* Full Day Leaves Bulk Apply */}
+                  {/* Full Leaves - Double Punch Button */}
                   <div className="flex items-center px-2.5 py-1 space-x-1.5 bg-slate-50 border border-slate-200 rounded-full text-[11px] font-semibold text-slate-700">
-                    <span>Full Leaves ({
+                    <span>Single Punch ({
                       monthDates.filter(date => {
                         const dateKey = date.toLocaleDateString('en-CA');
                         const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
@@ -1954,47 +2292,37 @@ export default function AttendanceSummary() {
                     />
                     <span className="text-gray-400">Hrs</span>
                     <button
-                      onClick={() => {
-                        const val = parseFloat(document.getElementById('bulkFullLeaveHours').value) || 9;
-                        const newEdited = { ...editedRows };
-                        let count = 0;
-                        monthDates.forEach(date => {
-                           const dateKey = date.toLocaleDateString('en-CA');
-                           const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
-                           const originalHours = rec ? (rec.totalHours || rec.hours) : 0;
-                           if (rec && calculateDayType(selectedEmployee, originalHours) === "full_leave") {
-                              newEdited[dateKey] = {
-                                ...newEdited[dateKey],
-                                hours: val,
-                                edited: true,
-                                timestamp: Date.now()
-                              };
-                              count++;
-                           }
-                        });
-                        setEditedRows(newEdited);
-                        if (count > 0) {
-                          showSaveStatus(`✅ Applied ${val} hrs to ${count} Full Day Leaves! Click 'Save Bulk Edits' to confirm.`);
-                        } else {
-                          showSaveStatus(`❌ No Full Day Leaves found to update.`, "error");
-                        }
-                      }}
+                      onClick={() => handleBulkAction('fullLeave', 'bulkFullLeaveHours', 9)}
                       className="px-2 py-0.5 text-[10px] font-bold text-white bg-purple-600 hover:bg-purple-700 rounded transition"
                     >
-                      Apply
+                      Double Punch
                     </button>
                   </div>
 
-                  {/* Bulk Save Edits */}
-                  {`${(() => {
-                    const editedCount = Object.keys(editedRows).filter(key => editedRows[key].edited).length;
-                    if (editedCount > 0) {
-                      return (
-                        "<button onClick={handleBulkSaveAttendance} className='px-3 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm transition'>Save Bulk Edits (" + editedCount + ")</button>"
-                      );
-                    }
-                    return '';
-                  })()}`}
+                  {/* Single Punch - New Button */}
+                  {/* <div className="flex items-center px-2.5 py-1 space-x-1.5 bg-slate-50 border border-slate-200 rounded-full text-[11px] font-semibold text-slate-700">
+                    <span>Single Punch ({
+                      monthDates.filter(date => {
+                        const dateKey = date.toLocaleDateString('en-CA');
+                        const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
+                        return rec && rec.checkInTime && !rec.checkOutTime;
+                      }).length
+                    }) ➔</span>
+                    <input 
+                      type="number" 
+                      id="bulkSinglePunchHours"
+                      defaultValue="9" 
+                      className="w-12 px-1 py-0.5 text-gray-900 bg-white border border-gray-300 rounded text-center font-bold focus:outline-none"
+                      step="0.25"
+                    />
+                    <span className="text-gray-400">Hrs</span>
+                    <button
+                      onClick={() => handleBulkAction('singlePunch', 'bulkSinglePunchHours', 9)}
+                      className="px-2 py-0.5 text-[10px] font-bold text-white bg-orange-600 hover:bg-orange-700 rounded transition"
+                    >
+                      Single Punch
+                    </button>
+                  </div> */}
 
                   {/* Close Button */}
                   <button

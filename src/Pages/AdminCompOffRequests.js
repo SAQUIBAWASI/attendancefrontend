@@ -689,8 +689,14 @@
 
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { FaCheck, FaTimes, FaEye, FaSearch, FaExchangeAlt } from "react-icons/fa";
-import { FiFileText, FiClock, FiCheckCircle, FiXCircle, FiList } from "react-icons/fi";
+import { 
+  FaCheck, FaTimes, FaEye, FaSearch, FaExchangeAlt, 
+  FaChevronDown, FaChevronUp, FaTrash 
+} from "react-icons/fa";
+import { 
+  FiFileText, FiClock, FiCheckCircle, FiXCircle, 
+  FiList, FiFilter, FiTrash2, FiDownload 
+} from "react-icons/fi";
 import { API_BASE_URL } from "../config";
 
 const AdminCompOffRequests = () => {
@@ -699,6 +705,7 @@ const AdminCompOffRequests = () => {
   const [error, setError] = useState("");
   const [counts, setCounts] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -785,6 +792,29 @@ const AdminCompOffRequests = () => {
     setStatusFilter("");
     setMonthFilter("");
     setCurrentPage(1);
+    if (window.innerWidth < 640) {
+      setShowMobileFilters(false);
+    }
+  };
+
+  // Handle card click to filter
+  const handleCardClick = (filterType) => {
+    if (filterType === 'total') {
+      setStatusFilter('');
+      setCurrentPage(1);
+    } else if (filterType === 'pending') {
+      setStatusFilter('pending');
+      setCurrentPage(1);
+    } else if (filterType === 'approved') {
+      setStatusFilter('approved');
+      setCurrentPage(1);
+    } else if (filterType === 'rejected') {
+      setStatusFilter('rejected');
+      setCurrentPage(1);
+    }
+    if (window.innerWidth < 640) {
+      setShowMobileFilters(false);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -932,19 +962,27 @@ const AdminCompOffRequests = () => {
   }
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8 bg-gray-50">
+    <div className="min-h-screen p-2 sm:p-4 lg:p-6 bg-gray-50">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <FaExchangeAlt className="text-purple-600" />
-          Comp-off Requests
-        </h1>
-        <p className="text-sm text-gray-500">Manage all comp-off requests from employees</p>
-      </div>
+     <div className="flex items-center gap-3 flex-wrap">
+  <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
+    <FaExchangeAlt className="text-purple-600" />
+    Comp-off Requests
+  </h1>
+  {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
+    Manage all comp-off requests from employees
+  </p> */}
+</div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-4">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all">
+      {/* Stats Cards - 2 columns on mobile, 4 on desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {/* Total Card */}
+        <div 
+          className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] ${
+            statusFilter === '' ? 'ring-2 ring-purple-500 shadow-lg' : 'border-gray-200'
+          }`}
+          onClick={() => handleCardClick('total')}
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total</span>
             <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-50">
@@ -952,10 +990,16 @@ const AdminCompOffRequests = () => {
             </div>
           </div>
           <div className="text-2xl font-bold text-gray-800">{counts.total || 0}</div>
-          <div className="text-xs text-gray-400">all requests</div>
+          <div className="text-xs text-gray-400">tap to view all</div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all">
+        {/* Pending Card */}
+        <div 
+          className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] ${
+            statusFilter === 'pending' ? 'ring-2 ring-yellow-500 shadow-lg' : 'border-gray-200'
+          }`}
+          onClick={() => handleCardClick('pending')}
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Pending</span>
             <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-yellow-50">
@@ -963,10 +1007,16 @@ const AdminCompOffRequests = () => {
             </div>
           </div>
           <div className="text-2xl font-bold text-gray-800">{counts.pending || 0}</div>
-          <div className="text-xs text-gray-400">awaiting approval</div>
+          <div className="text-xs text-gray-400">tap to view pending</div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all">
+        {/* Approved Card */}
+        <div 
+          className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] ${
+            statusFilter === 'approved' ? 'ring-2 ring-green-500 shadow-lg' : 'border-gray-200'
+          }`}
+          onClick={() => handleCardClick('approved')}
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Approved</span>
             <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-green-50">
@@ -974,10 +1024,16 @@ const AdminCompOffRequests = () => {
             </div>
           </div>
           <div className="text-2xl font-bold text-gray-800">{counts.approved || 0}</div>
-          <div className="text-xs text-gray-400">approved requests</div>
+          <div className="text-xs text-gray-400">tap to view approved</div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all">
+        {/* Rejected Card */}
+        <div 
+          className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] ${
+            statusFilter === 'rejected' ? 'ring-2 ring-red-500 shadow-lg' : 'border-gray-200'
+          }`}
+          onClick={() => handleCardClick('rejected')}
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Rejected</span>
             <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50">
@@ -985,97 +1041,157 @@ const AdminCompOffRequests = () => {
             </div>
           </div>
           <div className="text-2xl font-bold text-gray-800">{counts.rejected || 0}</div>
-          <div className="text-xs text-gray-400">rejected requests</div>
+          <div className="text-xs text-gray-400">tap to view rejected</div>
         </div>
       </div>
 
-      {/* Filters Card */}
+      {/* Active Filter Indicator */}
+      {statusFilter && (
+        <div className="mb-4 flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+          <span className="font-semibold text-blue-700">🔍 Showing:</span>
+          <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+            statusFilter === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+            statusFilter === 'approved' ? 'bg-green-100 text-green-700' :
+            'bg-red-100 text-red-700'
+          }`}>
+            {statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+          </span>
+          <button 
+            onClick={() => handleCardClick('total')}
+            className="ml-auto text-blue-600 hover:text-blue-800 font-semibold text-xs"
+          >
+            Show All ✕
+          </button>
+        </div>
+      )}
+
+      {/* Filters Card - Mobile Toggle */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <FiList className="text-purple-600 text-sm" />
-            <span className="text-sm font-semibold text-gray-700">Filters</span>
-          </div>
-          {(searchTerm || statusFilter || monthFilter) && (
-            <button
-              onClick={clearFilters}
-              className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all flex items-center gap-1.5"
-            >
-              ✕ Clear
-            </button>
-          )}
-        </div>
-        
-        <div className="p-4 bg-gray-50/50">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
-            {/* Search */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-600">Search</label>
-              <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-                <input
-                  type="text"
-                  placeholder="Employee name, ID, or reason..."
-                  value={searchTerm}
-                  onChange={handleSearch}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white"
-                />
-              </div>
-            </div>
+  {/* Mobile Filter Toggle Button */}
+  <div className="sm:hidden flex items-center justify-between p-3 border-b border-gray-100">
+    <button
+      onClick={() => setShowMobileFilters(!showMobileFilters)}
+      className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+    >
+      <FiFilter className="text-purple-600" />
+      Filters
+      {showMobileFilters ? <FaChevronUp className="ml-1" /> : <FaChevronDown className="ml-1" />}
+    </button>
+    <span className="text-xs text-gray-400">
+      {requests.length} requests
+    </span>
+  </div>
 
-            {/* Status Filter */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-600">Status</label>
-              <select
-                value={statusFilter}
-                onChange={handleStatusChange}
-                className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white"
-              >
-                <option value="">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-
-            {/* Month Filter */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-600">Month</label>
-              <input
-                type="month"
-                value={monthFilter}
-                onChange={handleMonthChange}
-                className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white"
-              />
-            </div>
-
-            {/* Filter Actions */}
-            <div className="flex flex-col gap-1.5 justify-end">
-              <div className="text-xs text-gray-500 pt-1">
-                Showing <strong className="text-gray-700">{requests.length}</strong> of <strong className="text-gray-700">{pagination.total || 0}</strong> records
-              </div>
-            </div>
-          </div>
+  {/* Filter Content - Toggle on Mobile */}
+  <div className={`p-4 bg-gray-50/50 ${showMobileFilters ? 'block' : 'hidden sm:block'}`}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+      {/* Search */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-medium text-gray-600">Search Employee</label>
+        <div className="relative">
+          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+          <input
+            type="text"
+            placeholder="Employee name, ID, or reason..."
+            value={searchTerm}
+            onChange={handleSearch}
+            className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white"
+          />
         </div>
       </div>
+
+      {/* Status Filter */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-medium text-gray-600">Status</label>
+        <select
+          value={statusFilter}
+          onChange={handleStatusChange}
+          className="w-full h-9 px-3 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white"
+        >
+          <option value="">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+
+      {/* Month Filter */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-medium text-gray-600">Month</label>
+        <input
+          type="month"
+          value={monthFilter}
+          onChange={handleMonthChange}
+          className="w-full h-9 px-3 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white"
+        />
+      </div>
+
+      {/* Filter Actions */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-medium text-gray-600">&nbsp;</label>
+        <div className="flex gap-2">
+          <button
+            onClick={clearFilters}
+            className="flex-1 px-3 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-1.5 shadow-sm"
+          >
+            <FiTrash2 className="w-3.5 h-3.5" /> Clear Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {/* Filter Info */}
+    <div className="flex flex-wrap justify-between items-center mt-4 pt-3 border-t border-gray-200/50 gap-2">
+      <div className="text-xs text-gray-500 font-medium">
+        Showing <strong>{requests.length}</strong> of <strong>{pagination.total || 0}</strong> requests
+      </div>
+      <div className="flex gap-2 flex-wrap">
+        {/* Active Filters Badges */}
+        {(searchTerm || statusFilter || monthFilter) && (
+          <>
+            {searchTerm && (
+              <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[9px] font-semibold border border-gray-200">
+                "{searchTerm}"
+              </span>
+            )}
+            {statusFilter && (
+              <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
+                statusFilter === 'pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                statusFilter === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
+                'bg-red-50 text-red-700 border-red-200'
+              }`}>
+                {statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+              </span>
+            )}
+            {monthFilter && (
+              <span className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[9px] font-semibold border border-purple-200">
+                {new Date(monthFilter + '-01').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+              </span>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-100">
+        {/* <div className="px-4 py-3 border-b border-gray-100">
           <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
             <FiList className="text-purple-600" /> Comp-off Requests
           </h3>
-        </div>
+        </div> */}
 
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Employee</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Leave Details</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Extra Day</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">Leave Details</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell">Extra Day</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Requested On</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider hidden lg:table-cell">Requested On</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -1090,7 +1206,7 @@ const AdminCompOffRequests = () => {
                     </td>
                     
                     {/* Leave Details */}
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3 text-center hidden sm:table-cell">
                       <span className="px-2 py-0.5 text-xs font-medium capitalize bg-blue-100 text-blue-700 rounded-full">
                         {request.leaveDetails?.leaveType || "N/A"}
                       </span>
@@ -1104,7 +1220,7 @@ const AdminCompOffRequests = () => {
                     </td>
                     
                     {/* Extra Day Details */}
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3 text-center hidden md:table-cell">
                       <div className="text-sm font-medium text-gray-800">
                         {request.extraDayDetails?.day || formatDate(request.extraDayDate)}
                       </div>
@@ -1116,7 +1232,7 @@ const AdminCompOffRequests = () => {
                     
                     {/* Status */}
                     <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(request.status)}`}>
+                      <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(request.status)}`}>
                         <span className={`w-1.5 h-1.5 mr-1.5 rounded-full ${
                           request.status === "approved" ? 'bg-green-500' : 
                           request.status === "rejected" ? 'bg-red-500' : 'bg-yellow-500'
@@ -1126,7 +1242,7 @@ const AdminCompOffRequests = () => {
                     </td>
                     
                     {/* Requested On */}
-                    <td className="px-4 py-3 text-center text-xs text-gray-500">
+                    <td className="px-4 py-3 text-center text-xs text-gray-500 hidden lg:table-cell">
                       {request.createdAt ? formatDateTime(request.createdAt) : "N/A"}
                     </td>
                     
@@ -1176,7 +1292,7 @@ const AdminCompOffRequests = () => {
         {/* Pagination */}
         {pagination.totalPages > 1 && (
           <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 sm:flex-row">
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
               <span>Show:</span>
               <select
                 value={itemsPerPage}
@@ -1191,7 +1307,7 @@ const AdminCompOffRequests = () => {
                 <option value={20}>20</option>
                 <option value={50}>50</option>
               </select>
-              <span>
+              <span className="text-xs sm:text-sm">
                 {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, pagination.total)} of {pagination.total}
               </span>
             </div>
@@ -1199,19 +1315,19 @@ const AdminCompOffRequests = () => {
               <button
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                className={`px-2.5 py-1 text-sm font-medium rounded-lg transition-colors ${
                   currentPage === 1 
                     ? "text-gray-400 bg-gray-100 cursor-not-allowed" 
                     : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                Previous
+                Prev
               </button>
               {getPageNumbers().map((page, idx) => (
                 <button
                   key={idx}
                   onClick={() => typeof page === "number" && setCurrentPage(page)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  className={`px-2.5 py-1 text-sm font-medium rounded-lg transition-colors min-w-[28px] ${
                     page === "..." 
                       ? "text-gray-400 cursor-default" 
                       : currentPage === page 
@@ -1225,7 +1341,7 @@ const AdminCompOffRequests = () => {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
                 disabled={currentPage === pagination.totalPages}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                className={`px-2.5 py-1 text-sm font-medium rounded-lg transition-colors ${
                   currentPage === pagination.totalPages 
                     ? "text-gray-400 bg-gray-100 cursor-not-allowed" 
                     : "text-gray-600 hover:bg-gray-100"

@@ -996,7 +996,16 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
-  YAxis
+  YAxis,
+  Area,
+  AreaChart,
+  ComposedChart,
+  Line,
+  RadialBar,
+  RadialBarChart,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis
 } from 'recharts';
 
 const API_BASE_URL = "https://api.timelyhealth.in/api";
@@ -1046,49 +1055,40 @@ const AttendanceDashboard = () => {
       setLoading(true);
       setError(null);
 
-      // 1. Fetch Employees
       const empRes = await axios.get(`${API_BASE_URL}/employees/get-employees`);
       setEmployees(empRes.data || []);
 
-      // 2. Fetch Master Shifts
       const shiftsRes = await axios.get(`${API_BASE_URL}/shifts/master`);
       if (shiftsRes.data.success) {
         setMasterShifts(shiftsRes.data.data || []);
       }
 
-      // 3. Fetch Employee Shift Assignments
       const assignmentsRes = await axios.get(`${API_BASE_URL}/shifts/assignments`);
       if (assignmentsRes.data.success) {
         setShiftsData(assignmentsRes.data.data || []);
       }
 
-      // 4. Fetch Summary Stats
       const summaryRes = await axios.get(`${API_BASE_URL}/attendance/summary`);
       setAttendanceData(summaryRes.data);
 
-      // 5. Fetch All Attendance for Chart
       const allAttRes = await axios.get(`${API_BASE_URL}/attendance/allattendance`);
       const allAttData = allAttRes.data;
       setAllAttendance(Array.isArray(allAttData) ? allAttData : allAttData.records || allAttData.allAttendance || []);
 
-      // 6. Fetch Approved Leaves
       const leavesRes = await axios.get(`${API_BASE_URL}/leaves/leaves?status=approved`);
       const leavesResult = leavesRes.data;
       setLeavesData(Array.isArray(leavesResult) ? leavesResult : leavesResult.records || leavesResult.leaves || []);
 
-      // 7. Fetch Today's Birthdays (company-wide)
       try {
         const bdayRes = await axios.get(`${API_BASE_URL}/employees/birthdays-today`);
         setBirthdaysToday(bdayRes.data.data || []);
       } catch (e) { console.warn("Birthdays fetch failed", e); }
 
-      // 8. Fetch Today's Work Anniversaries (company-wide)
       try {
         const annivRes = await axios.get(`${API_BASE_URL}/employees/anniversaries-today`);
         setAnniversariesToday(annivRes.data.data || []);
       } catch (e) { console.warn("Anniversaries fetch failed", e); }
 
-      // 9. Fetch Employees on Leave Today (company-wide)
       try {
         const leaveRes = await axios.get(`${API_BASE_URL}/leaves/on-leave-today`);
         setLeavesToday(leaveRes.data.data || []);
@@ -1106,14 +1106,12 @@ const AttendanceDashboard = () => {
     fetchData();
   }, []);
 
-  // Get Employee Name by ID
   const getEmployeeName = (id) => {
     if (!id) return "Unknown";
     const emp = employees.find(e => e.employeeId === id || e._id === id);
     return emp ? emp.name : id;
   };
 
-  // Get Employee Shift Time from Master Shifts
   const getEmployeeShift = (employeeId) => {
     const shiftAssignment = shiftsData.find(s =>
       s.employeeAssignment?.employeeId === employeeId ||
@@ -1155,7 +1153,6 @@ const AttendanceDashboard = () => {
     return getDefaultShiftTime(shiftType);
   };
 
-  // Default shift timings if no master shift found
   const getDefaultShiftTime = (shiftType) => {
     const shiftTimes = {
       "A": { start: "10:00", end: "19:00", grace: 5, isBrakeShift: false },
@@ -1173,19 +1170,18 @@ const AttendanceDashboard = () => {
     return shiftTimes[shiftType] || { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
   };
 
-  // Filter Inactive Employees
   const activeEmployees = employees.filter(emp => !isEmployeeHidden(emp));
 
-  // Process Attendance Data with Color Coding
   const getAttendanceColor = (count, max) => {
     const percentage = (count / max) * 100;
-    if (percentage >= 90) return '#10b981'; // Emerald 500
-    if (percentage >= 75) return '#84cc16'; // Lime 500
-    if (percentage >= 50) return '#EF4444'; // Amber 500
-    if (percentage >= 25) return '#DC2626'; // Orange 500
-    return '#ef4444'; // Red 500
+    if (percentage >= 90) return '#10b981';
+    if (percentage >= 75) return '#84cc16';
+    if (percentage >= 50) return '#EF4444';
+    if (percentage >= 25) return '#DC2626';
+    return '#ef4444';
   };
 
+  // Process data for Cosmos Graph (Radial Bar Chart)
   const processAttendanceData = () => {
     if (!Array.isArray(allAttendance)) return [];
 
@@ -1202,7 +1198,6 @@ const AttendanceDashboard = () => {
       const id = (typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId);
       if (!id) return;
 
-      const name = getEmployeeName(id);
       const isPresent = record.status === "present" || record.status === "checked-in" || record.checkInTime;
       if (isPresent) {
         counts[id] = (counts[id] || 0) + 1;
@@ -1216,22 +1211,18 @@ const AttendanceDashboard = () => {
         count
       }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
+      .slice(0, 8);
 
     const maxCount = Math.max(...result.map(item => item.count), 1);
 
-    return result.map(item => ({
-      id: item.id,
-      name: item.name,
-      displayId: item.id,
-      count: item.count,
-      color: getAttendanceColor(item.count, maxCount)
+    return result.map((item, index) => ({
+      ...item,
+      fill: ['#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe', '#f59e0b', '#fbbf24', '#fcd34d'][index % 8],
+      color: ['#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe', '#f59e0b', '#fbbf24', '#fcd34d'][index % 8]
     }));
   };
 
-  // Process Late Analysis Data (Pie Chart)
   const processLateAnalysisData = () => {
-    // 1. Date View: Late Minutes
     if (lateDate) {
       const lateMap = {};
       allAttendance.forEach(record => {
@@ -1256,14 +1247,13 @@ const AttendanceDashboard = () => {
           const diffMs = checkInDateTime - graceTime;
           const lateMinutes = Math.floor(diffMs / (1000 * 60));
           const name = getEmployeeName(id);
-          const label = `${name} (${id})`;
+          const label = `${name}`;
           lateMap[label] = { name: label, value: lateMinutes, type: 'minutes' };
         }
       });
       return Object.values(lateMap).sort((a, b) => b.value - a.value);
     }
 
-    // 2. Month View: Late Days
     const [year, month] = lateMonth.split('-').map(Number);
     const lateCounts = {};
 
@@ -1282,7 +1272,6 @@ const AttendanceDashboard = () => {
       const [hours, minutes] = shift.start.split(':').map(Number);
       const shiftStartTime = new Date(checkInDateTime);
       shiftStartTime.setHours(hours, minutes, 0, 0);
-      // Fix: Ensure we compare with the correct date's shift time
       shiftStartTime.setFullYear(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate());
 
       const graceTime = new Date(shiftStartTime);
@@ -1290,8 +1279,7 @@ const AttendanceDashboard = () => {
 
       if (checkInDateTime > graceTime) {
         const name = getEmployeeName(id);
-        const label = `${name} (${id})`;
-        lateCounts[label] = (lateCounts[label] || 0) + 1;
+        lateCounts[name] = (lateCounts[name] || 0) + 1;
       }
     });
 
@@ -1301,93 +1289,38 @@ const AttendanceDashboard = () => {
   };
 
   const COLORS = [
-    '#DC2626',  // Rose 600
-    '#EF4444',  // Rose 600
-    '#E11D48',  // Rose 600
-    // '#F43F5E', // Rose 500
-    // '#FB7185', // Rose 400
-
-    '#D97706', // Amber 600
-    '#F59E0B', // Amber 500
-    '#FBBF24', // Amber 400
-
-    '#0891B2', // Cyan 600
-    '#06B6D4', // Cyan 500
-    '#22D3EE', // Cyan 400
-
-    '#4F46E5', // Indigo 600
-    '#6366F1', // Indigo 500
-    '#818CF8', // Indigo 400
-
-    '#059669',// Emerald 600
-    '#10B981', // Emerald 500
-    '#34D399' // Emerald 400
+    '#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe',
+    '#f59e0b', '#fbbf24', '#fcd34d', '#fde68a', '#fef3c7',
+    '#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#d1fae5'
   ];
 
-  // Get Color based on late minutes
   const getLateMinutesColor = (minutes) => {
-
-    // 🟢 0–5
-    if (minutes <= 5) return '#34D399';   // Emerald 400
-
-    // 🟢 6–10
-    if (minutes <= 10) return '#10B981';  // Emerald 500
-
-    // 🟢 11–20
-    if (minutes <= 20) return '#059669';  // Emerald 600
-
-    // 🔵 21–30
-    if (minutes <= 30) return '#6366F1';  // Indigo 500
-
-    // 🔷 31–40
-    if (minutes <= 40) return '#06B6D4';  // Cyan 500
-
-    // 🟡 41–50
-    if (minutes <= 50) return '#FBBF24';  // Amber 400
-
-    // 🟠 51–60
-    if (minutes <= 60) return '#F59E0B';  // Amber 500
-
-    // 🔴 60+ (Critical)
-    return '#EF4444'; // Rose 600
+    if (minutes <= 5) return '#34D399';
+    if (minutes <= 10) return '#10B981';
+    if (minutes <= 20) return '#059669';
+    if (minutes <= 30) return '#6366F1';
+    if (minutes <= 40) return '#06B6D4';
+    if (minutes <= 50) return '#FBBF24';
+    if (minutes <= 60) return '#F59E0B';
+    return '#EF4444';
   };
 
-  // Get Color based on days absent
   const getAbsentColor = (daysSince) => {
-
-    // 🟢 0–1 Day
-    if (daysSince <= 1) return '#34D399';   // Emerald 400
-
-    // 🟢 2–3 Days
-    if (daysSince <= 3) return '#10B981';   // Emerald 500
-
-    // 🟢 4–5 Days
-    if (daysSince <= 5) return '#059669';   // Emerald 600
-
-    // 🔵 6–7 Days
-    if (daysSince <= 7) return '#6366F1';   // Indigo 500
-
-    // 🔷 8–10 Days
-    if (daysSince <= 10) return '#06B6D4';  // Cyan 500
-
-    // 🟡 11–14 Days
-    if (daysSince <= 14) return '#FBBF24';  // Amber 400
-
-    // 🟠 15–21 Days
-    if (daysSince <= 21) return '#F59E0B';  // Amber 500
-
-    // 🔴 21+ Days (Critical)
-    return '#EF4444'; // Rose 600
+    if (daysSince <= 1) return '#34D399';
+    if (daysSince <= 3) return '#10B981';
+    if (daysSince <= 5) return '#059669';
+    if (daysSince <= 7) return '#6366F1';
+    if (daysSince <= 10) return '#06B6D4';
+    if (daysSince <= 14) return '#FBBF24';
+    if (daysSince <= 21) return '#F59E0B';
+    return '#EF4444';
   };
 
-  // Process Absent Analysis Data (Bar Chart)
   const processAbsentAnalysisData = () => {
-    // Ensure employees are loaded
     if (!employees.length) return [];
 
     const activeEmps = employees.filter(emp => !isEmployeeHidden(emp));
 
-    // 1. Date View: Days Since Last Attendance
     if (absentDate) {
       const selectedDate = new Date(absentDate);
       const selectedDateStr = absentDate;
@@ -1427,7 +1360,7 @@ const AttendanceDashboard = () => {
           }
 
           absentData.push({
-            name: `${emp.name} (${emp.employeeId})`,
+            name: `${emp.name}`,
             value: Math.max(0, daysSince),
             type: 'daysSince',
             color: getAbsentColor(daysSince)
@@ -1437,7 +1370,6 @@ const AttendanceDashboard = () => {
       return absentData.sort((a, b) => b.value - a.value).slice(0, 10);
     }
 
-    // 2. Month View: Total Absent Days
     const [year, month] = absentMonth.split('-').map(Number);
     const absentCounts = {};
     const totalDaysInMonth = new Date(year, month, 0).getDate();
@@ -1446,15 +1378,13 @@ const AttendanceDashboard = () => {
     const isCurrentMonth = now.getFullYear() === year && now.getMonth() + 1 === month;
     const daysToCount = isCurrentMonth ? now.getDate() : totalDaysInMonth;
 
-    // Initialize counts for all active employees
     activeEmps.forEach(emp => {
       absentCounts[emp.employeeId] = {
-        name: `${emp.name} (${emp.employeeId})`,
+        name: `${emp.name}`,
         present: 0
       };
     });
 
-    // Count present days
     allAttendance.forEach(record => {
       if (!record.checkInTime) return;
       const recordDate = new Date(record.checkInTime);
@@ -1468,7 +1398,6 @@ const AttendanceDashboard = () => {
       }
     });
 
-    // Calculate absent
     const results = Object.values(absentCounts).map(emp => {
       const absentDays = Math.max(0, daysToCount - emp.present);
       return {
@@ -1482,7 +1411,7 @@ const AttendanceDashboard = () => {
     return results;
   };
 
-  // Process Top Late Comers (for the new bar chart)
+  // Process data for Line Graph (Most Late Comings)
   const processTopLateComersData = () => {
     const [year, month] = topLateMonth ? topLateMonth.split('-').map(Number) : [null, null];
     const lateCounts = {};
@@ -1522,7 +1451,6 @@ const AttendanceDashboard = () => {
       .slice(0, 10); 
   };
 
-  // Calculate Present Count for Today
   const calculatePresentCount = (dateStr) => {
     if (!Array.isArray(allAttendance)) return 0;
     const present = allAttendance.filter(record => {
@@ -1535,19 +1463,16 @@ const AttendanceDashboard = () => {
     return uniqueIds.size;
   };
 
-  // Calculate Absent Count for Today
   const calculateAbsentCount = (dateStr) => {
     const activeEmps = employees.filter(emp => !isEmployeeHidden(emp));
     const presentCount = calculatePresentCount(dateStr);
     return Math.max(0, activeEmps.length - presentCount);
   };
 
-  // Calculate Late Count for Today
   const calculateLateCount = (dateStr) => {
     if (!Array.isArray(allAttendance)) return 0;
     let count = 0;
 
-    // We iterate through all attendance records to find lates for the given date
     allAttendance.forEach(record => {
       if (!record.checkInTime) return;
       if (!record.checkInTime.startsWith(dateStr)) return;
@@ -1561,7 +1486,6 @@ const AttendanceDashboard = () => {
       const checkInDateTime = new Date(record.checkInTime);
       const [hours, minutes] = shift.start.split(':').map(Number);
 
-      // Construct shift start time for the *attendance record's date*
       const shiftStartTime = new Date(checkInDateTime);
       shiftStartTime.setHours(hours, minutes, 0, 0);
 
@@ -1600,7 +1524,6 @@ const AttendanceDashboard = () => {
   const totals = attendanceData?.totals || {};
   const attendanceChartData = processAttendanceData();
   const lateComersData = processTopLateComersData();
-
   const lateChartData = processLateAnalysisData();
   const absentChartData = processAbsentAnalysisData();
 
@@ -1608,35 +1531,35 @@ const AttendanceDashboard = () => {
   const absentToday = calculateAbsentCount(new Date().toISOString().split('T')[0]);
   const lateToday = calculateLateCount(new Date().toISOString().split('T')[0]);
 
-  // Custom tooltip formatter for attendance chart
-  const AttendanceTooltip = ({ active, payload }) => {
+  // Tooltip for Cosmos Graph
+  const CosmosTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
         <div className="admin-dash__tooltip">
-          <p className="admin-dash__tooltip-title">{data.name} ({data.id})</p>
+          <p className="admin-dash__tooltip-title">{data.name}</p>
           <p className="admin-dash__tooltip-value">Attendance: {data.count} days</p>
+          <p className="admin-dash__tooltip-subtitle">ID: {data.id}</p>
         </div>
       );
     }
     return null;
   };
 
-  // Custom tooltip formatter for leaves chart
-  const LeavesTooltip = ({ active, payload }) => {
+  // Tooltip for Line Graph
+  const LineTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
         <div className="admin-dash__tooltip">
-          <p className="admin-dash__tooltip-title">{data.name} ({data.id})</p>
-          <p className="admin-dash__tooltip-value">Leaves: {data.count} days</p>
+          <p className="admin-dash__tooltip-title">{data.name}</p>
+          <p className="admin-dash__tooltip-value">Late Days: {data.count}</p>
         </div>
       );
     }
     return null;
   };
 
-  // Custom tooltip formatter for late chart
   const LateTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -1652,7 +1575,6 @@ const AttendanceDashboard = () => {
     return null;
   };
 
-  // Custom tooltip formatter for absent chart
   const AbsentTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -1668,31 +1590,18 @@ const AttendanceDashboard = () => {
     return null;
   };
 
-  const RADIAN = Math.PI / 180;
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={10}>
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
-
   return (
     <div className="admin-dash">
       <main>
         {/* Header */}
         <div className="admin-dash__header">
-          <div>
-            <h1 className="admin-dash__greeting">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="admin-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap leading-tight">
               Admin <span>Dashboard</span>
             </h1>
-            <p className="admin-dash__subtitle">
+            {/* <p className="admin-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
               Track attendance, leaves, and team performance in one place.
-            </p>
+            </p> */}
           </div>
           <div className="admin-dash__date-pill">
             <FiCalendar />
@@ -1707,7 +1616,7 @@ const AttendanceDashboard = () => {
           </div>
         </div>
 
-        {/* 1. Top Summary Stats - Updated Cards */}
+        {/* Stats Cards */}
         <div className="admin-dash__stats">
           <div className="admin-dash__stat" onClick={() => navigate("/employeelist")}>
             <div className="admin-dash__stat-top">
@@ -1761,13 +1670,14 @@ const AttendanceDashboard = () => {
           </div>
         </div>
 
-        {/* 2. Historical Performance */}
+        {/* Charts Grid */}
         <div className="admin-dash__charts-grid">
-          {/* Attendance Performance */}
+          {/* Attendance Performance - Cosmos Graph (Radial Bar Chart) */}
           <div className="admin-dash__card admin-dash__chart-wrap">
             <div className="admin-dash__card-header">
               <div>
-                <h3 className="admin-dash__card-title">Top Attendance Performance</h3>
+                <h3 className="admin-dash__card-title">🌌 Attendance Performance</h3>
+                <p className="admin-dash__card-desc">Top performers this month</p>
               </div>
               <div className="flex items-center gap-2">
                 <input
@@ -1782,30 +1692,57 @@ const AttendanceDashboard = () => {
             <div className="admin-dash__card-body flex-1">
               {attendanceChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={attendanceChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis
-                      dataKey="id"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#64748b', fontSize: 11 }}
-                      angle={-25}
-                      textAnchor="end"
-                      interval={0}
-                      height={60}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#64748b', fontSize: 11 }}
-                    />
-                    <Tooltip content={<AttendanceTooltip />} cursor={{ fill: '#f8fafc' }} />
-                    <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={20}>
+                  <RadialBarChart 
+                    cx="50%" 
+                    cy="50%" 
+                    innerRadius="20%" 
+                    outerRadius="90%" 
+                    data={attendanceChartData} 
+                    startAngle={180} 
+                    endAngle={-180}
+                  >
+                    <defs>
                       {attendanceChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <linearGradient key={`grad-${index}`} id={`grad-${index}`} x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor={entry.color} stopOpacity={0.9}/>
+                          <stop offset="100%" stopColor={entry.color} stopOpacity={0.3}/>
+                        </linearGradient>
                       ))}
-                    </Bar>
-                  </BarChart>
+                    </defs>
+                    <PolarAngleAxis 
+                      type="number" 
+                      domain={[0, Math.max(...attendanceChartData.map(d => d.count))]} 
+                      angleAxisId={0} 
+                      tick={false} 
+                    />
+                    <RadialBar
+                      minAngle={15}
+                      background
+                      clockWise
+                      dataKey="count"
+                      cornerRadius={30}
+                      barSize={30}
+                    >
+                      {attendanceChartData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={`url(#grad-${index})`}
+                          stroke={entry.color}
+                          strokeWidth={2}
+                        />
+                      ))}
+                    </RadialBar>
+                    <Tooltip content={<CosmosTooltip />} />
+                    <Legend
+                      iconSize={10}
+                      width={120}
+                      height={140}
+                      layout="vertical"
+                      verticalAlign="middle"
+                      align="right"
+                      wrapperStyle={{ fontSize: '10px' }}
+                    />
+                  </RadialBarChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="admin-dash__empty-chart">No attendance data available</div>
@@ -1813,11 +1750,12 @@ const AttendanceDashboard = () => {
             </div>
           </div>
 
-          {/* Most Late Comings */}
+          {/* Most Late Comings - Line Graph */}
           <div className="admin-dash__card admin-dash__chart-wrap">
             <div className="admin-dash__card-header">
               <div>
-                <h3 className="admin-dash__card-title">Most Late Comings</h3>
+                <h3 className="admin-dash__card-title">📈 Most Late Comings</h3>
+                <p className="admin-dash__card-desc">Employees with highest late arrivals</p>
               </div>
               <div className="flex items-center gap-2">
                 <input
@@ -1830,7 +1768,7 @@ const AttendanceDashboard = () => {
                   onClick={() => navigate("/late-today")}
                   className="admin-dash__card-link hidden sm:block"
                 >
-                  View All Lates →
+                  View All →
                 </button>
               </div>
             </div>
@@ -1838,42 +1776,86 @@ const AttendanceDashboard = () => {
             <div className="admin-dash__card-body flex-1">
               {lateComersData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
+                  <ComposedChart
                     data={lateComersData}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    margin={{ top: 20, right: 20, left: 0, bottom: 10 }}
                   >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="#f1f5f9"
-                      vertical={false}
-                    />
-
+                    <defs>
+                      <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#6366f1" stopOpacity={0.8}/>
+                        <stop offset="50%" stopColor="#8b5cf6" stopOpacity={0.8}/>
+                        <stop offset="100%" stopColor="#a78bfa" stopOpacity={0.8}/>
+                      </linearGradient>
+                      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#6366f1" stopOpacity={0.3}/>
+                        <stop offset="100%" stopColor="#6366f1" stopOpacity={0.02}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                     <XAxis
                       dataKey="id"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 11 }}
+                      tick={{ fill: "#64748b", fontSize: 10 }}
                       angle={-25}
                       textAnchor="end"
                       interval={0}
-                      height={60}
+                      height={55}
                     />
-
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 11 }}
+                      tick={{ fill: "#64748b", fontSize: 10 }}
                       allowDecimals={false}
                     />
-
-                    <Tooltip content={<AttendanceTooltip />} cursor={{ fill: '#f8fafc' }} />
-
-                    <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={20}>
-                      {lateComersData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={index >= 3 ? "#F59E0B" : "#EF4444"} />
-                      ))}
-                    </Bar>
-                  </BarChart>
+                    <Tooltip content={<LineTooltip />} cursor={{ fill: '#f8fafc', opacity: 0.6 }} />
+                    
+                    {/* Area under the line */}
+                    <Area
+                      type="monotone"
+                      dataKey="count"
+                      stroke="none"
+                      fill="url(#areaGrad)"
+                      animationDuration={1500}
+                      animationEasing="ease-out"
+                    />
+                    
+                    {/* Main Line */}
+                    <Line
+                      type="monotone"
+                      dataKey="count"
+                      stroke="url(#lineGrad)"
+                      strokeWidth={3}
+                      dot={{ 
+                        fill: '#6366f1', 
+                        r: 6, 
+                        stroke: 'white', 
+                        strokeWidth: 2,
+                        style: { transition: 'all 0.3s ease' }
+                      }}
+                      activeDot={{ r: 8, fill: '#8b5cf6' }}
+                      animationDuration={1500}
+                      animationEasing="ease-out"
+                    />
+                    
+                    {/* Reference Line (Average) */}
+                    <Line
+                      type="monotone"
+                      dataKey="count"
+                      stroke="#f59e0b"
+                      strokeWidth={1.5}
+                      strokeDasharray="5 5"
+                      dot={false}
+                      activeDot={false}
+                      label={{
+                        value: 'Avg',
+                        position: 'right',
+                        fill: '#f59e0b',
+                        fontSize: 10,
+                        fontWeight: 600
+                      }}
+                    />
+                  </ComposedChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="admin-dash__empty-chart">
@@ -1884,13 +1866,13 @@ const AttendanceDashboard = () => {
           </div>
         </div>
 
-        {/* 3. Late & Absent Analysis */}
+        {/* Late & Absent Analysis - Pie Charts */}
         <div className="admin-dash__charts-grid">
-          {/* Late Analysis (Pie Chart) */}
+          {/* Late Analysis - Pie Chart */}
           <div className="admin-dash__card admin-dash__chart-wrap admin-dash__chart-wrap--tall">
             <div className="admin-dash__card-header">
               <div>
-                <h3 className="admin-dash__card-title">Late Analysis</h3>
+                <h3 className="admin-dash__card-title">🎯 Late Analysis</h3>
                 <p className="admin-dash__card-desc">
                   {lateDate ? `Late Minutes on ${lateDate}` : `Late Days in ${lateMonth}`}
                 </p>
@@ -1924,17 +1906,42 @@ const AttendanceDashboard = () => {
               {lateChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
+                    <defs>
+                      {COLORS.map((color, index) => (
+                        <linearGradient key={`late-pie-${index}`} id={`late-pie-${index}`} x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor={color} stopOpacity={0.9}/>
+                          <stop offset="100%" stopColor={color} stopOpacity={0.4}/>
+                        </linearGradient>
+                      ))}
+                    </defs>
                     <Pie
                       data={lateChartData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={2}
+                      innerRadius={50}
+                      outerRadius={90}
+                      paddingAngle={3}
                       dataKey="value"
+                      animationDuration={1500}
+                      animationEasing="ease-out"
+                      labelLine={{
+                        stroke: '#94a3b8',
+                        strokeWidth: 1
+                      }}
+                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                      labelStyle={{
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        fill: '#1e293b'
+                      }}
                     >
                       {lateChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={`url(#late-pie-${index % COLORS.length})`}
+                          stroke="white"
+                          strokeWidth={2}
+                        />
                       ))}
                     </Pie>
                     <Tooltip content={<LateTooltip />} />
@@ -1943,6 +1950,8 @@ const AttendanceDashboard = () => {
                       align="right"
                       verticalAlign="middle"
                       wrapperStyle={{ fontSize: '10px', maxWidth: '40%' }}
+                      iconType="circle"
+                      iconSize={8}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -1955,11 +1964,11 @@ const AttendanceDashboard = () => {
             </div>
           </div>
 
-          {/* Absent Analysis (Pie Chart) */}
+          {/* Absent Analysis - Pie Chart */}
           <div className="admin-dash__card admin-dash__chart-wrap admin-dash__chart-wrap--tall">
             <div className="admin-dash__card-header">
               <div>
-                <h3 className="admin-dash__card-title">Absent Analysis</h3>
+                <h3 className="admin-dash__card-title">📅 Absent Analysis</h3>
                 <p className="admin-dash__card-desc">
                   {absentDate ? `Days Since Last Attendance (as of ${absentDate})` : `Total Absent Days in ${absentMonth}`}
                 </p>
@@ -1993,17 +2002,42 @@ const AttendanceDashboard = () => {
               {absentChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
+                    <defs>
+                      {COLORS.map((color, index) => (
+                        <linearGradient key={`absent-pie-${index}`} id={`absent-pie-${index}`} x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor={color} stopOpacity={0.9}/>
+                          <stop offset="100%" stopColor={color} stopOpacity={0.4}/>
+                        </linearGradient>
+                      ))}
+                    </defs>
                     <Pie
                       data={absentChartData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={2}
+                      innerRadius={50}
+                      outerRadius={90}
+                      paddingAngle={3}
                       dataKey="value"
+                      animationDuration={1500}
+                      animationEasing="ease-out"
+                      labelLine={{
+                        stroke: '#94a3b8',
+                        strokeWidth: 1
+                      }}
+                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                      labelStyle={{
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        fill: '#1e293b'
+                      }}
                     >
                       {absentChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={`url(#absent-pie-${index % COLORS.length})`}
+                          stroke="white"
+                          strokeWidth={2}
+                        />
                       ))}
                     </Pie>
                     <Tooltip content={<AbsentTooltip />} />
@@ -2012,6 +2046,8 @@ const AttendanceDashboard = () => {
                       align="right"
                       verticalAlign="middle"
                       wrapperStyle={{ fontSize: '10px', maxWidth: '40%' }}
+                      iconType="circle"
+                      iconSize={8}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -2030,5 +2066,3 @@ const AttendanceDashboard = () => {
 };
 
 export default AttendanceDashboard;
-
-

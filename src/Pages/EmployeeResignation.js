@@ -3,53 +3,32 @@ import axios from "axios";
 import { jsPDF } from "jspdf";
 import { API_BASE_URL } from "../config";
 import {
-  FaUserTie, FaCalendarAlt, FaStar, FaEye, FaDownload,
-  FaCheckCircle, FaTimesCircle, FaTasks, FaSearch,
-  FaFilePdf, FaFileAlt, FaSignOutAlt, FaChevronRight,
-  FaArrowLeft, FaFilter, FaSync, FaEnvelope, FaBriefcase, FaUserCircle,
-  FaTimes, FaUserGraduate, FaPhone, FaBuilding, FaMoneyBillWave,
-  FaCalendarCheck, FaMapMarkerAlt
+  FaUserTie, FaCalendarAlt, FaEye, FaDownload,
+  FaCheckCircle, FaTimesCircle, FaSearch,
+  FaFileAlt, FaFilter, FaSync, FaBriefcase,
+  FaTimes, FaList, FaChevronDown, FaChevronUp,
+  FaSortAmountDown, FaSortAmountUp, FaClock,
+  FaExclamationTriangle, FaInfoCircle
 } from "react-icons/fa";
-
-
-
-const Info = ({ label, value }) => (
-  <div className="flex justify-between">
-    <span className="text-gray-500">{label}</span>
-    <span className="font-medium text-gray-700 text-right">
-      {value || "N/A"}
-    </span>
-  </div>
-);
-
-const ScoreMini = ({ label, score }) => (
-  <div>
-    <p className="text-xs text-gray-500">{label}</p>
-    <p className={`text-sm font-semibold ${score >= 80
-      ? "text-blue-700"
-      : score >= 50
-        ? "text-yellow-600"
-        : "text-red-600"
-      }`}>
-      {score || 0}
-    </p>
-  </div>
-);
 
 const EmployeeResignation = () => {
   const [resignations, setResignations] = useState([]);
+  const [filteredResignations, setFilteredResignations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
-  const [roleSearchQuery, setRoleSearchQuery] = useState("");
-  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
-  const roleDropdownRef = useRef(null);
-  const [roles, setRoles] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
   const [selectedResignation, setSelectedResignation] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
-  const [filterStatus, setFilterStatus] = useState("All");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  const roleDropdownRef = useRef(null);
+  const [roles, setRoles] = useState([]);
+  const [roleSearchQuery, setRoleSearchQuery] = useState("");
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
   useEffect(() => {
     fetchResignations();
@@ -68,7 +47,6 @@ const EmployeeResignation = () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/jobs/all`);
       if (res.data.success) {
-        // Extract unique roles from jobs
         const jobData = res.data.data || res.data.jobPosts || [];
         const roleNames = Array.from(new Set(jobData.map(job => job.role))).filter(Boolean);
         const uniqueRoles = roleNames.map((name, index) => ({ _id: index, name }));
@@ -86,6 +64,7 @@ const EmployeeResignation = () => {
       const allApps = res.data.applications || [];
       const resignedApps = allApps.filter(app => app.status === "Resigned");
       setResignations(resignedApps);
+      setFilteredResignations(resignedApps);
     } catch (err) {
       console.error("Fetch resignations error:", err);
     } finally {
@@ -143,383 +122,648 @@ const EmployeeResignation = () => {
     doc.save(`Resignation_${app.firstName}_${app.lastName}.pdf`);
   };
 
-  const formatDocumentUrl = (filePath) => {
-    if (!filePath) return "";
-    const relativePath = filePath.includes("uploads")
-      ? "uploads/" + filePath.split(/uploads[\\/]/).pop().replace(/\\/g, "/")
-      : filePath.replace(/\\/g, "/");
-    return `${API_BASE_URL.replace("/api", "")}/${relativePath}`;
-  };
+  const applyFiltersAndSort = () => {
+    let result = [...resignations];
 
-  const filteredData = resignations.filter(app => {
-    const query = searchQuery.toLowerCase();
-    const matchesSearch =
-      `${app.firstName} ${app.lastName}`.toLowerCase().includes(query) ||
-      (app.jobId?.role || "").toLowerCase().includes(query) ||
-      (app.mobile || "").toLowerCase().includes(query) ||
-      (app.email || "").toLowerCase().includes(query);
-
-    const matchesRole = roleFilter ? (app.jobId?.role === roleFilter) : true;
-
-    let matchesDate = true;
-    if (dateFilter) {
-      const appDate = new Date(app.resignationSentAt).toISOString().split('T')[0];
-      matchesDate = appDate === dateFilter;
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(app =>
+        `${app.firstName} ${app.lastName}`.toLowerCase().includes(query) ||
+        (app.jobId?.role || "").toLowerCase().includes(query) ||
+        (app.mobile || "").toLowerCase().includes(query) ||
+        (app.email || "").toLowerCase().includes(query)
+      );
     }
 
-    const matchesStatus = filterStatus === "All" || (app.resignationStatus || "Pending") === filterStatus;
+    if (roleFilter) {
+      result = result.filter(app => app.jobId?.role === roleFilter);
+    }
 
-    return matchesSearch && matchesRole && matchesDate && matchesStatus;
-  });
+    if (dateFilter) {
+      result = result.filter(app => {
+        const appDate = new Date(app.resignationSentAt).toISOString().split('T')[0];
+        return appDate === dateFilter;
+      });
+    }
+
+    if (statusFilter !== "All") {
+      result = result.filter(app => (app.resignationStatus || "Pending") === statusFilter);
+    }
+
+    result.sort((a, b) => {
+      let aVal = a[sortConfig.key] || a.resignationSentAt;
+      let bVal = b[sortConfig.key] || b.resignationSentAt;
+
+      if (sortConfig.key === 'createdAt' || sortConfig.key === 'resignationSentAt') {
+        aVal = new Date(aVal || a.resignationSentAt).getTime();
+        bVal = new Date(bVal || b.resignationSentAt).getTime();
+      } else if (typeof aVal === 'string') {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
+      }
+
+      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    setFilteredResignations(result);
+  };
+
+  useEffect(() => {
+    applyFiltersAndSort();
+  }, [resignations, searchQuery, roleFilter, dateFilter, statusFilter, sortConfig]);
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setRoleFilter("");
+    setDateFilter("");
+    setStatusFilter("All");
+    setSortConfig({ key: 'createdAt', direction: 'desc' });
+    setShowMobileFilters(false);
+  };
+
+  const handleSort = (key) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return <FaSortAmountDown className="text-gray-400 opacity-50 text-xs" />;
+    return sortConfig.direction === 'asc' ? 
+      <FaSortAmountUp className="text-blue-600 text-xs" /> : 
+      <FaSortAmountDown className="text-blue-600 text-xs" />;
+  };
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (searchQuery) count++;
+    if (roleFilter) count++;
+    if (dateFilter) count++;
+    if (statusFilter !== "All") count++;
+    return count;
+  };
+
+  const getStatusBadge = (status) => {
+    const statusMap = {
+      'Approved': { color: 'bg-green-100 text-green-700 border-green-200' },
+      'Rejected': { color: 'bg-red-100 text-red-700 border-red-200' },
+      'Pending': { color: 'bg-yellow-100 text-yellow-700 border-yellow-200' }
+    };
+    const info = statusMap[status] || statusMap['Pending'];
+    return (
+      <span className={`px-2.5 py-1 text-[10px] font-semibold rounded-full border ${info.color}`}>
+        {status || 'Pending'}
+      </span>
+    );
+  };
+
+  // Stats
+  const stats = {
+    total: resignations.length,
+    pending: resignations.filter(r => (r.resignationStatus || "Pending") === "Pending").length,
+    approved: resignations.filter(r => r.resignationStatus === "Approved").length,
+    rejected: resignations.filter(r => r.resignationStatus === "Rejected").length
+  };
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredResignations.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredResignations.length / itemsPerPage);
+
+  const handlePageClick = (page) => setCurrentPage(page);
+  const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
+  const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
+  
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+        pageNumbers.push(i);
+      } else if (i === currentPage - 2 || i === currentPage + 2) {
+        pageNumbers.push("...");
+      }
+    }
+    return pageNumbers;
+  };
 
   return (
-    <div className="w-full h-full">
-      {/* Header Section */}
-      <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-center xl:justify-between">
-        <div></div>
-
-        <div className="flex flex-wrap items-center justify-start xl:justify-end gap-3 w-full xl:w-auto">
-          {/* Status Filter Tabs */}
-          <div className="flex p-1 bg-gray-100 rounded-lg mr-2">
-            {["All", "Pending", "Approved", "Rejected"].map((status) => (
-              <button
-                key={status}
-                onClick={() => setFilterStatus(status)}
-                className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${filterStatus === status
-                  ? "bg-white text-red-600 shadow-sm"
-                  : "text-gray-500 hover:text-gray-500"
-                  }`}
-              >
-                {status}
-              </button>
-            ))}
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8 bg-gray-50">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <FaList className="text-blue-600" />
+            Resignation Requests
+          </h1>
+          <p className="text-sm text-gray-500">Review and manage employee resignation applications</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2 bg-white border border-gray-200 rounded-lg flex items-center gap-2">
+            <span className="text-xs font-medium text-gray-500">Total:</span>
+            <span className="text-sm font-bold text-blue-600">{filteredResignations.length}</span>
           </div>
-
-          {/* Date Filter */}
-          <div className="relative w-full sm:w-auto">
-            <input
-              type="date"
-              className="w-full appearance-none bg-white py-2 px-4 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm sm:w-40"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-            />
-            {dateFilter && (
-              <div
-                className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer text-gray-500 hover:text-red-500 transition-colors"
-                onClick={() => setDateFilter("")}
-                title="Clear date filter"
-              >
-                <FaTimes className="text-[12px]" />
-              </div>
-            )}
-          </div>
-
-          {/* Searchable Role Filter */}
-          <div className="relative w-full sm:w-56" ref={roleDropdownRef}>
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500 z-10">
-              <FaBriefcase className="text-sm" />
-            </div>
-            <div
-              className="w-full bg-white py-2 pl-10 pr-10 text-sm text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold transition-all hover:bg-white cursor-pointer shadow-sm relative overflow-hidden text-ellipsis whitespace-nowrap"
-              onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-            >
-              {roleFilter || "Select Role"}
-            </div>
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 z-10">
-              {roleFilter ? (
-                <FaTimes
-                  className="text-[12px] text-gray-500 hover:text-red-500 cursor-pointer transition-colors"
-                  onClick={(e) => { e.stopPropagation(); setRoleFilter(""); }}
-                  title="Clear role filter"
-                />
-              ) : (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 pointer-events-none"><path d="m6 9 6 6 6-6" /></svg>
-              )}
-            </div>
-
-            {isRoleDropdownOpen && (
-              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="p-2 border-b border-gray-200 bg-white">
-                  <div className="relative">
-                    <FaUserTie className="absolute left-2.5 top-2.5 text-gray-500 text-xs" />
-                    <input
-                      type="text"
-                      className="w-full py-1.5 pl-8 pr-4 text-xs bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Search roles..."
-                      value={roleSearchQuery}
-                      onChange={(e) => setRoleSearchQuery(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      autoFocus
-                    />
-                  </div>
-                </div>
-                <div className="max-h-60 overflow-y-auto py-1">
-                  <div
-                    className={`px-4 py-2 text-xs font-bold cursor-pointer hover:bg-indigo-50 transition-colors ${!roleFilter ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-500'}`}
-                    onClick={() => { setRoleFilter(""); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
-                  >
-                    All Roles
-                  </div>
-                  {roles
-                    .filter(r => r.name.toLowerCase().includes(roleSearchQuery.toLowerCase()))
-                    .map((r) => (
-                      <div
-                        key={r._id}
-                        className={`px-4 py-2 text-xs font-bold cursor-pointer hover:bg-indigo-50 transition-colors ${roleFilter === r.name ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-500'}`}
-                        onClick={() => { setRoleFilter(r.name); setIsRoleDropdownOpen(false); setRoleSearchQuery(""); }}
-                      >
-                        {r.name}
-                      </div>
-                    ))
-                  }
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Search Bar */}
-          <div className="relative w-full sm:w-auto sm:min-w-[250px] md:min-w-[300px]">
-            <input
-              type="text"
-              className="w-full py-2 pl-10 pr-10 text-sm text-gray-700 placeholder-gray-400 transition-all border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-              placeholder="Search employee, email, role..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
-              <FaSearch className="text-sm" />
-            </div>
-            {searchQuery && (
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <FaTimes
-                  className="text-[12px] text-gray-500 hover:text-red-500 cursor-pointer transition-colors"
-                  onClick={() => setSearchQuery("")}
-                  title="Clear search"
-                />
-              </div>
-            )}
-          </div>
-
           <button
             onClick={() => fetchResignations()}
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-colors shadow-sm"
+            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
             title="Refresh"
           >
-            <FaSync className={`text-xs ${loading ? 'animate-spin' : ''}`} />
+            <FaSync className={`text-sm ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
-        {loading ? (
-          <div className="p-8 text-center text-gray-500">Loading Resignations...</div>
-        ) : filteredData.length > 0 ? (
-          <table className="min-w-full">
-            <thead className="text-left text-sm text-gray-900 bg-gradient-to-r from-purple-500 to-blue-600">
-              <tr>
-                <th className="py-3 px-4 text-center">Employee Name</th>
-                <th className="py-3 px-4 text-center">Designation</th>
-                <th className="py-3 px-4 text-center">Contact</th>
-                <th className="py-3 px-4 text-center">Filing Date</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.map((app) => (
-                <tr key={app._id} className="border-b hover:bg-white transition-colors">
-                  <td className="p-4 text-sm font-medium text-center">
-                    <div className="font-bold text-gray-700">{app.firstName} {app.lastName}</div>
-                    {/* <div className="text-[10px] text-gray-500">{app.email}</div> */}
-                  </td>
-                  <td className="p-4 text-sm font-medium text-center">
-                    <span className="inline-block px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full">
-                      {app.jobId?.role || "N/A"}
-                    </span>
-                  </td>
-                  <td className="p-4 text-sm font-medium text-center text-gray-500">
-                    {app.mobile}
-                  </td>
-                  <td className="p-4 text-sm font-medium text-center">
-                    <div className="inline-flex items-center gap-2 px-2 py-1 bg-gray-100 rounded text-[10px] font-bold text-gray-500">
-                      <FaCalendarAlt className="text-[8px]" />
-                      {app.resignationSentAt ? new Date(app.resignationSentAt).toLocaleDateString() : "—"}
-                    </div>
-                  </td>
-                  <td className="p-4 text-sm font-medium text-center">
-                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${app.resignationStatus === 'Approved' ? 'bg-blue-100 text-green-700' :
-                      app.resignationStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
-                        'bg-yellow-100 text-yellow-700'
-                      }`}>
-                      {(app.resignationStatus || "Pending").toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="p-4 text-sm font-medium text-center">
-                    <div className="flex justify-center gap-3">
-                      <button
-                        onClick={() => { setSelectedResignation(app); setIsModalOpen(true); }}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
-                        title="View Details"
-                      >
-                        <FaEye size={16} className="group-hover:scale-110 transition-transform" />
-                      </button>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Total</span>
+            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+              <FaList className="text-sm" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+          <div className="mt-1 text-xs text-gray-500">all resignations</div>
+        </div>
 
-                      {(app.resignationStatus || "Pending") === "Pending" && (
-                        <>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleStatusUpdate(app._id, "Approved"); }}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
-                            title="Accept Resignation"
-                          >
-                            <FaCheckCircle size={16} className="group-hover:scale-110 transition-transform" />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleStatusUpdate(app._id, "Rejected"); }}
-                            className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors group"
-                            title="Reject Resignation"
-                          >
-                            <FaTimesCircle size={16} className="group-hover:scale-110 transition-transform" />
-                          </button>
-                        </>
-                      )}
+        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Pending</span>
+            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-yellow-50 text-yellow-600">
+              <FaClock className="text-sm" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-gray-900">{stats.pending}</div>
+          <div className="mt-1 text-xs text-gray-500">awaiting review</div>
+        </div>
 
-                      <button
-                        onClick={(e) => { e.stopPropagation(); downloadResignationPDF(app); }}
-                        className="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors group"
-                        title="Download PDF"
-                      >
-                        <FaDownload size={14} className="group-hover:scale-110 transition-transform" />
-                      </button>
+        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Approved</span>
+            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-green-50 text-green-600">
+              <FaCheckCircle className="text-sm" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-gray-900">{stats.approved}</div>
+          <div className="mt-1 text-xs text-gray-500">approved</div>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Rejected</span>
+            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600">
+              <FaTimesCircle className="text-sm" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-gray-900">{stats.rejected}</div>
+          <div className="mt-1 text-xs text-gray-500">rejected</div>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative w-full mb-3">
+        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+          placeholder="Search by employee name, role, email, or mobile..."
+        />
+      </div>
+
+      {/* Filter Toggle Button */}
+      <div className="flex items-center gap-2 mb-4">
+        <button
+          onClick={() => setShowMobileFilters(!showMobileFilters)}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-2"
+        >
+          <FaFilter size={14} />
+          Filters
+          {getActiveFilterCount() > 0 && (
+            <span className="w-5 h-5 bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              {getActiveFilterCount()}
+            </span>
+          )}
+        </button>
+        {getActiveFilterCount() > 0 && (
+          <button
+            onClick={clearFilters}
+            className="px-3 py-2 text-sm font-medium text-red-600 hover:text-red-800 transition-all flex items-center gap-1"
+          >
+            <FaTimesCircle size={14} /> Clear
+          </button>
+        )}
+      </div>
+
+      {/* Filter Bar - Toggle */}
+      {showMobileFilters && (
+        <div className="mb-6 p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              >
+                <option value="All">All</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+
+            <div className="relative" ref={roleDropdownRef}>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Role</label>
+              <div className="relative">
+                <div
+                  className="w-full bg-white h-9 px-3 pr-10 text-sm text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer flex items-center justify-between"
+                  onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+                >
+                  <span>{roleFilter || "Select Role"}</span>
+                  <FaChevronDown size={12} className="text-gray-400" />
+                </div>
+                {roleFilter && (
+                  <button
+                    onClick={() => setRoleFilter("")}
+                    className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+                  >
+                    <FaTimes size={12} />
+                  </button>
+                )}
+                {isRoleDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                    <div
+                      className={`px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 transition-colors ${!roleFilter ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-700'}`}
+                      onClick={() => { setRoleFilter(""); setIsRoleDropdownOpen(false); }}
+                    >
+                      All Roles
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    {roles
+                      .filter(r => r.name.toLowerCase().includes(roleSearchQuery.toLowerCase()))
+                      .map((r) => (
+                        <div
+                          key={r._id}
+                          className={`px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 transition-colors ${roleFilter === r.name ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-700'}`}
+                          onClick={() => { setRoleFilter(r.name); setIsRoleDropdownOpen(false); }}
+                        >
+                          {r.name}
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-end">
+              <button
+                onClick={clearFilters}
+                className="w-full h-9 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all"
+              >
+                Reset Filters
+              </button>
+            </div>
+          </div>
+
+          {getActiveFilterCount() > 0 && (
+            <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap gap-2">
+              {statusFilter !== "All" && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                  Status: {statusFilter}
+                  <button onClick={() => setStatusFilter("All")} className="hover:text-blue-900">
+                    <FaTimes size={10} />
+                  </button>
+                </span>
+              )}
+              {roleFilter && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                  Role: {roleFilter}
+                  <button onClick={() => setRoleFilter("")} className="hover:text-purple-900">
+                    <FaTimes size={10} />
+                  </button>
+                </span>
+              )}
+              {dateFilter && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                  Date: {new Date(dateFilter).toLocaleDateString()}
+                  <button onClick={() => setDateFilter("")} className="hover:text-green-900">
+                    <FaTimes size={10} />
+                  </button>
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TABLE - FORCE SHOW ON MOBILE WITH INLINE STYLE */}
+      <div style={{ display: 'block' }}>
+        {filteredResignations.length === 0 && !loading ? (
+          <div className="text-center py-12 bg-white rounded-2xl border border-gray-200 shadow-sm">
+            <FaExclamationTriangle className="mx-auto text-4xl text-gray-300 mb-4" />
+            <p className="text-sm text-gray-500">
+              {resignations.length === 0 ? 'No resignations found.' : 'No resignations match your filters.'}
+            </p>
+            {resignations.length > 0 && (
+              <button
+                onClick={clearFilters}
+                className="mt-4 px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
         ) : (
-          <div className="p-12 text-center text-gray-500">
-            <FaFileAlt className="mx-auto mb-4 text-gray-700" size={48} />
-            <p className="font-medium">No resignations found</p>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <FaList className="text-blue-600" /> Resignation Requests
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-[700px] w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-blue-600 transition-colors whitespace-nowrap" onClick={() => handleSort('firstName')}>
+                      <div className="flex items-center gap-1.5">Employee {getSortIcon('firstName')}</div>
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-blue-600 transition-colors whitespace-nowrap" onClick={() => handleSort('jobId.role')}>
+                      <div className="flex items-center justify-center gap-1.5">Role {getSortIcon('jobId.role')}</div>
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-blue-600 transition-colors whitespace-nowrap" onClick={() => handleSort('resignationSentAt')}>
+                      <div className="flex items-center justify-center gap-1.5">Date {getSortIcon('resignationSentAt')}</div>
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-blue-600 transition-colors whitespace-nowrap" onClick={() => handleSort('resignationStatus')}>
+                      <div className="flex items-center justify-center gap-1.5">Status {getSortIcon('resignationStatus')}</div>
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {currentItems.map((app) => (
+                    <tr key={app._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-gray-800 text-sm">{app.firstName} {app.lastName}</div>
+                        <div className="text-xs text-gray-500">{app.mobile}</div>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="px-2.5 py-1 text-[10px] font-medium bg-blue-50 text-blue-700 rounded-full border border-blue-100 whitespace-nowrap">
+                          {app.jobId?.role || "N/A"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center text-sm text-gray-500 whitespace-nowrap">
+                        {app.resignationSentAt ? new Date(app.resignationSentAt).toLocaleDateString() : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {getStatusBadge(app.resignationStatus || "Pending")}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => { setSelectedResignation(app); setIsModalOpen(true); }}
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="View Details"
+                          >
+                            <FaEye size={14} />
+                          </button>
+                          {(app.resignationStatus || "Pending") === "Pending" && (
+                            <>
+                              <button
+                                onClick={() => handleStatusUpdate(app._id, "Approved")}
+                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                title="Approve"
+                              >
+                                <FaCheckCircle size={14} />
+                              </button>
+                              <button
+                                onClick={() => handleStatusUpdate(app._id, "Rejected")}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Reject"
+                              >
+                                <FaTimesCircle size={14} />
+                              </button>
+                            </>
+                          )}
+                          <button
+                            onClick={() => downloadResignationPDF(app)}
+                            className="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Download PDF"
+                          >
+                            <FaDownload size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {loading && (
+                    <tr>
+                      <td colSpan="5" className="px-4 py-8 text-center">
+                        <div className="w-8 h-8 mx-auto border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {filteredResignations.length > 0 && !loading && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                  <span>Showing</span>
+                  <span className="font-semibold text-gray-900">
+                    {filteredResignations.length > 0 ? indexOfFirstItem + 1 : 0}
+                  </span>
+                  <span>to</span>
+                  <span className="font-semibold text-gray-900">
+                    {Math.min(indexOfLastItem, filteredResignations.length)}
+                  </span>
+                  <span>of</span>
+                  <span className="font-semibold text-gray-900">
+                    {filteredResignations.length}
+                  </span>
+                  <span>records</span>
+
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="px-2 py-1 text-xs border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {getPageNumbers().map((page, index) => (
+                      page === "..." ? (
+                        <span key={index} className="px-2 text-gray-400 text-xs">...</span>
+                      ) : (
+                        <button
+                          key={index}
+                          onClick={() => handlePageClick(page)}
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            currentPage === page
+                              ? "bg-blue-600 text-white"
+                              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* Detail Modal */}
       {isModalOpen && selectedResignation && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-100/40 backdrop-blur-[2px] animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl relative overflow-hidden animate-in slide-in-from-bottom-4 duration-300 border border-gray-200">
-            {/* Modal Header */}
-            <div className="px-8 pt-8 pb-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl text-gray-700">
-                  {selectedResignation.firstName} {selectedResignation.lastName}
-                </h2>
-                <p className="text-[10px] font-bold uppercase tracking-widest mt-1 text-blue-600">
-                  {selectedResignation.jobId?.role || "Position Not Specified"}
-                </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-auto bg-white rounded-2xl shadow-2xl">
+            <div className="sticky top-0 flex items-center justify-between p-4 bg-white border-b">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <FaInfoCircle className="text-blue-600" /> Resignation Details
+              </h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-2xl transition-colors">
+                ×
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Employee Name</label>
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-semibold">
+                    {selectedResignation.firstName} {selectedResignation.lastName}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Role</label>
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
+                    {selectedResignation.jobId?.role || "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Email</label>
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
+                    {selectedResignation.email || "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Mobile</label>
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
+                    {selectedResignation.mobile || "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Date Filed</label>
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
+                    {selectedResignation.resignationSentAt ? new Date(selectedResignation.resignationSentAt).toLocaleString() : "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Status</label>
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                    {getStatusBadge(selectedResignation.resignationStatus || "Pending")}
+                  </div>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Resignation Letter</label>
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 min-h-[80px] whitespace-pre-wrap">
+                    {selectedResignation.resignationLetter || "No letter provided"}
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className={`px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-widest ${selectedResignation.resignationStatus === 'Approved' ? 'bg-blue-100 text-green-700' :
-                  selectedResignation.resignationStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
-                    'bg-yellow-100 text-yellow-700'
-                  }`}>
-                  {selectedResignation.resignationStatus || 'Pending'}
-                </span>
+
+              <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-100">
+                {(selectedResignation.resignationStatus || "Pending") === "Pending" && (
+                  <>
+                    <button
+                      onClick={() => {
+                        handleStatusUpdate(selectedResignation._id, "Approved");
+                        setIsModalOpen(false);
+                      }}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 rounded-xl hover:bg-green-100 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <FaCheckCircle size={14} /> Approve
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleStatusUpdate(selectedResignation._id, "Rejected");
+                        setIsModalOpen(false);
+                      }}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 rounded-xl hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <FaTimesCircle size={14} /> Reject
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={() => downloadResignationPDF(selectedResignation)}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                >
+                  <FaDownload size={14} /> Download PDF
+                </button>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
+                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
                 >
-                  <FaTimesCircle size={18} />
+                  Close
                 </button>
               </div>
-            </div>
-
-            <div className="p-8 pt-4 max-h-[75vh] overflow-y-auto no-scrollbar space-y-8">
-              {/* Sleek Prominent Resignation Content */}
-              <div className="relative group">
-                <div className="absolute -top-4 -left-4 w-16 h-16 bg-red-50 rounded-full flex items-center justify-center -rotate-12 group-hover:rotate-0 transition-transform duration-500">
-                  <FaFileAlt className="text-red-500 text-xl" />
-                </div>
-
-                <div className="bg-gradient-to-br from-white to-slate-50 p-6 rounded-[2rem] border border-gray-200 shadow-sm relative overflow-hidden group-hover:shadow-md transition-shadow">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-
-                  <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
-                    Statement of Resignation
-                  </h3>
-
-                  <div className="text-base text-slate-700 font-medium leading-relaxed italic relative">
-                    <span className="text-3xl text-red-100 absolute -top-3 -left-3 select-none">"</span>
-                    <span className="relative z-10">{selectedResignation.resignationLetter || "No statement provided."}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Status & Timing Context Badge */}
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-2xl text-[10px] font-black text-slate-500 uppercase tracking-widest border border-gray-200/50">
-                  <FaCalendarAlt className="text-red-400" />
-                  Filed on {selectedResignation.resignationSentAt ? new Date(selectedResignation.resignationSentAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : "Unknown Date"}
-                </div>
-                {selectedResignation.resignationStatus !== 'Pending' && (
-                  <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${selectedResignation.resignationStatus === 'Approved' ? 'bg-green-50 text-blue-700 border-green-100' : 'bg-red-50 text-red-600 border-red-100'
-                    }`}>
-                    {selectedResignation.resignationStatus === 'Approved' ? <FaCheckCircle /> : <FaTimesCircle />}
-                    Decision: {selectedResignation.resignationStatus}
-                  </div>
-                )}
-              </div>
-
-              {(selectedResignation.resignationStatus || 'Pending') === 'Pending' && (
-                <div className="flex gap-4 pt-6">
-                  <button
-                    onClick={() => handleStatusUpdate(selectedResignation._id, "Approved")}
-                    disabled={!!updatingId}
-                    className="flex-1 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-gray-900 text-xs font-black uppercase tracking-[0.1em] rounded-2xl transition-all shadow-xl shadow-green-100 flex items-center justify-center gap-2 group transform hover:-translate-y-1"
-                  >
-                    <FaCheckCircle className="text-base group-hover:scale-110 transition-transform" />
-                    Approve Request
-                  </button>
-                  <button
-                    onClick={() => handleStatusUpdate(selectedResignation._id, "Rejected")}
-                    disabled={!!updatingId}
-                    className="flex-1 py-4 bg-white border border-gray-200 hover:bg-slate-900 hover:text-gray-900 hover:border-slate-900 text-slate-900 text-xs font-black uppercase tracking-[0.1em] rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 group transform hover:-translate-y-1"
-                  >
-                    <FaTimesCircle className="text-base group-hover:scale-110 transition-transform text-red-500" />
-                    Reject Request
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="px-8 py-6 border-t border-gray-50 flex justify-between items-center bg-white/50">
-              <button
-                onClick={() => downloadResignationPDF(selectedResignation)}
-                className="text-[10px] font-black text-gray-500 hover:text-red-500 transition-colors uppercase tracking-[0.2em] flex items-center gap-2 group"
-              >
-                <FaDownload className="text-xs group-hover:animate-bounce" /> Archive PDF
-              </button>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-8 py-3 bg-gray-100 text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-white transition-all shadow-lg shadow-gray-200"
-              >
-                Dismiss
-              </button>
             </div>
           </div>
         </div>
       )}
-
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
-        
-        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        .animate-in { animation: zoomIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-      `}} />
     </div>
   );
 };

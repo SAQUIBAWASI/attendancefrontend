@@ -2051,7 +2051,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasAnyAdminPermission, setHasAnyAdminPermission] = useState(false);
-  const [isManager, setIsManager] = useState(false);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -2260,8 +2259,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         const isManagerUser = checkManagerStatus(dataToUse);
         const isHRManagement = checkHRManagementStatus(dataToUse);
         
-        setIsManager(isManagerUser);
-        
         if (isHRManagement) {
           const allPerms = new Set([...fetchedPermissions, ...ADMIN_PERMISSIONS]);
           fetchedPermissions = Array.from(allPerms);
@@ -2291,8 +2288,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         const empLocal = JSON.parse(localStorage.getItem("employeeData") || "{}");
         const isManagerUser = checkManagerStatus(empLocal);
         const isHRManagement = checkHRManagementStatus(empLocal);
-
-        setIsManager(isManagerUser);
 
         if (isHRManagement) {
           const allPerms = new Set([...localPermissions, ...ADMIN_PERMISSIONS]);
@@ -2328,11 +2323,9 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     return permissions.includes(permission);
   };
 
-  // ─── Employee Menu - Tasks (TH029 wali ID send karo) ───
+  // ─── Employee Menu ───
   const buildEmployeeMenu = () => {
-    const employeeId = localStorage.getItem("employeeId") || ''; // TH029
-    
-    // ─── Sirf employeeId (TH029) pass karo localhost:3001 ───
+    const employeeId = localStorage.getItem("employeeId") || '';
     const tasksUrl = `https://taskmanagement.iryax.com?employeeId=${employeeId}`;
     
     const menu = [
@@ -2358,7 +2351,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         path: "/emp-issues",
         badge: "NEW"
       },
-      // ─── Tasks - localhost:3001 with employeeId (TH029) ───
       { 
         icon: <i className="ri-task-fill"></i>, 
         name: "Tasks", 
@@ -2371,11 +2363,9 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     return menu;
   };
 
-  // ─── Admin Menu - Tasks (TH029 wali ID send karo) ───
+  // ─── Admin Menu ───
   const buildAdminMenu = () => {
-    const employeeId = localStorage.getItem("employeeId") || ''; // TH029
-    
-    // ─── Sirf employeeId (TH029) pass karo localhost:3001 ───
+    const employeeId = localStorage.getItem("employeeId") || '';
     const tasksUrl = `https://taskmanagement.iryax.com?employeeId=${employeeId}`;
     
     const menu = [];
@@ -2392,23 +2382,23 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       menu.push({ icon: <i className="ri-user-add-fill"></i>, name: "Add Employee", path: "/emp-add-employee" });
     }
 
-    const attendanceDropdown = [
-      { name: "Attendance Capture", path: "/attendance-capture" },
-      { name: "My Attendance", path: "/myattendance" },
-      { name: "My Shift", path: "/my-shift" },
-      { name: "My Location", path: "/mylocation" },
-    ];
+    // Admin Attendance - Sirf admin-specific items
+    const attendanceDropdown = [];
+    
     if (hasPermission("attendance_view_all")) {
       attendanceDropdown.push({ name: "Attendance Summary", path: "/emp-attendance-summary" });
       attendanceDropdown.push({ name: "Attendance Records", path: "/emp-attendance-records" });
       attendanceDropdown.push({ name: "Today Attendance", path: "/emp-today-attendance" });
       attendanceDropdown.push({ name: "Absent Today", path: "/emp-absent-today" });
     }
-    menu.push({
-      icon: <i className="ri-calendar-check-fill"></i>,
-      name: "Attendance",
-      dropdown: attendanceDropdown
-    });
+    
+    if (attendanceDropdown.length > 0) {
+      menu.push({
+        icon: <i className="ri-calendar-check-fill"></i>,
+        name: "Attendance",
+        dropdown: attendanceDropdown
+      });
+    }
 
     if (hasPermission("leave_approve")) {
       menu.push({ icon: <i className="ri-calendar-fill"></i>, name: "Leaves", path: "/emp-leaves" });

@@ -11841,7 +11841,9 @@ import {
   FaBuilding, FaCalendar, FaClock, FaEdit, FaEye, FaPlus,
   FaSave,
   FaSearch,
-  FaClock as FaShift, FaTimes, FaTrash, FaUsers, FaUserTag
+  FaClock as FaShift, FaTimes, FaTrash, FaUsers, FaUserTag,
+  FaChevronUp,
+  FaChevronDown
 } from 'react-icons/fa';
 import { FiActivity, FiAlertCircle, FiCheckCircle, FiClock as FiClockIcon, FiFilter, FiList, FiUsers } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11857,6 +11859,7 @@ const ShiftManagement = () => {
   const [allEmployees, setAllEmployees] = useState([]);
   const [employeeCounts, setEmployeeCounts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -12281,10 +12284,10 @@ const ShiftManagement = () => {
   };
 
   const getBrakeShiftTimeDisplay = (shift) => {
-    if (shift.isBrakeShift && shift.timeSlots.length > 1) {
+    if (shift?.isBrakeShift && shift?.timeSlots?.length > 1) {
       return `${shift.timeSlots[0].timeRange} - ${shift.timeSlots[1].timeRange}`;
     }
-    return shift.timeSlots?.[0]?.timeRange || "Not set";
+    return shift?.timeSlots?.[0]?.timeRange || "Not set";
   };
 
   const getEmployeesCount = (shiftType) => {
@@ -12662,16 +12665,16 @@ const ShiftManagement = () => {
 
   return (
     <div className="emp-dash">
-      <div className="p-4 sm:p-6 lg:p-8">
+      <div className="p-2 sm:p-4 lg:p-6">
         {/* Dashboard Header */}
         <div className="emp-dash__header">
-          <div>
-            <h1 className="emp-dash__greeting">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Shift <span>Management</span>
             </h1>
-            <p className="emp-dash__subtitle">
+            {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
               Create shifts and assign them to employees
-            </p>
+            </p> */}
           </div>
           <div className="emp-dash__date-pill">
             <FaCalendar />
@@ -12686,9 +12689,9 @@ const ShiftManagement = () => {
           </div>
         </div>
 
-        {/* Top KPI Stats Grid */}
+        {/* Top KPI Stats Grid - 2 per row on mobile, 3 per row on desktop */}
         {!loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-6">
             <div className="emp-dash__stat">
               <div className="emp-dash__stat-top">
                 <span className="emp-dash__stat-label">Total Shifts</span>
@@ -12711,7 +12714,7 @@ const ShiftManagement = () => {
               <div className="emp-dash__stat-meta">employee assignments</div>
             </div>
 
-            <div className="emp-dash__stat">
+            <div className="emp-dash__stat col-span-2 md:col-span-1">
               <div className="emp-dash__stat-top">
                 <span className="emp-dash__stat-label">Active Employees</span>
                 <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
@@ -12725,234 +12728,380 @@ const ShiftManagement = () => {
         )}
 
         {/* Filters Card */}
-        <div className="emp-dash__card mb-6">
-          <div className="emp-dash__card-header">
-            <div>
-              <h3 className="emp-dash__card-title flex items-center gap-2">
-                <FiFilter className="text-blue-600" /> Filter Shifts
-              </h3>
-              <p className="emp-dash__card-desc">Search by employee ID, name, department, or shift type</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {masterShifts.length === 0 && (
-                <button
-                  type="button"
-                  onClick={handleCreateDefaultShifts}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+    <div className="emp-dash__card mb-6">
+  {/* Desktop View */}
+  <div className="hidden sm:block">
+    <div className="flex items-center justify-between gap-4 p-4 bg-white rounded-xl border border-gray-200">
+      {/* Left - Filters */}
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        {/* Search */}
+        <div className="relative flex-1 min-w-[180px] max-w-[240px]">
+          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+          <input
+            type="text"
+            placeholder="Search by ID or Name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+          />
+        </div>
+
+        {/* Department */}
+        <div className="relative" ref={departmentFilterRef}>
+          <button
+            onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-all bg-white ${
+              filterDepartment 
+                ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10' 
+                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <FaBuilding className="text-gray-400 text-xs" />
+            <span className="whitespace-nowrap">{filterDepartment || 'All Departments'}</span>
+            <span className="text-gray-400 text-xs">▾</span>
+          </button>
+          {showDepartmentFilter && (
+            <div className="absolute left-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[200px] max-h-60 overflow-y-auto">
+              <div
+                onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); }}
+                className="px-3 py-2 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+              >
+                All Departments
+              </div>
+              {uniqueDepartments.map(dept => (
+                <div
+                  key={dept}
+                  onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }}
+                  className={`px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 ${
+                    filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                  }`}
                 >
-                  <FaPlus className="w-4 h-4" />
-                  Create Defaults
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setShowCustomCreateModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-              >
-                <FaPlus className="w-4 h-4" />
-                Regular Shift
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowBrakeShiftModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-lg hover:from-green-700 hover:to-pink-700 transition-all shadow-sm"
-              >
-                <FaPlus className="w-4 h-4" />
-                Brake Shift
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAssignModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-              >
-                <FaClock className="w-4 h-4" />
-                Assign
-              </button>
-            </div>
-          </div>
-          <div className="emp-dash__card-body bg-gray-50/50">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
-              {/* Search */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Search Employee</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <FaSearch className="text-xs" />
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Search by ID or Name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
+                  {dept}
                 </div>
-              </div>
-
-              {/* Department Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={departmentFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Department</label>
-                <button
-                  type="button"
-                  onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDepartment 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaBuilding className="text-gray-400" />
-                    {filterDepartment || 'All Departments'}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                
-                {showDepartmentFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div 
-                      onClick={() => {
-                        setFilterDepartment('');
-                        setShowDepartmentFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-55"
-                    >
-                      All Departments
-                    </div>
-                    {uniqueDepartments.map(dept => (
-                      <div 
-                        key={dept}
-                        onClick={() => {
-                          setFilterDepartment(dept);
-                          setShowDepartmentFilter(false);
-                        }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-55 cursor-pointer transition-all ${
-                          filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
-                      >
-                        {dept}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Designation Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={designationFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Designation</label>
-                <button
-                  type="button"
-                  onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDesignation 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaUserTag className="text-gray-400" />
-                    {filterDesignation || 'All Designations'}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                
-                {showDesignationFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div 
-                      onClick={() => {
-                        setFilterDesignation('');
-                        setShowDesignationFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-55"
-                    >
-                      All Designations
-                    </div>
-                    {uniqueDesignations.map(des => (
-                      <div 
-                        key={des}
-                        onClick={() => {
-                          setFilterDesignation(des);
-                          setShowDesignationFilter(false);
-                        }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-55 cursor-pointer transition-all ${
-                          filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
-                      >
-                        {des}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Shift Type Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={shiftTypeFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Shift Type</label>
-                <button
-                  type="button"
-                  onClick={() => setShowShiftTypeFilter(!showShiftTypeFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterShiftType 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaClock className="text-gray-400" />
-                    {filterShiftType ? `Shift ${filterShiftType}` : 'All Shifts'}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                
-                {showShiftTypeFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div 
-                      onClick={() => {
-                        setFilterShiftType('');
-                        setShowShiftTypeFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-55"
-                    >
-                      All Shifts
-                    </div>
-                    {masterShifts.map(shift => (
-                      <div 
-                        key={shift._id}
-                        onClick={() => {
-                          setFilterShiftType(shift.shiftType);
-                          setShowShiftTypeFilter(false);
-                        }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-55 cursor-pointer transition-all ${
-                          filterShiftType === shift.shiftType ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
-                      >
-                        {getShiftDisplayText(shift)}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              ))}
             </div>
+          )}
+        </div>
 
-            {/* Filter Actions */}
-            <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200/50">
-              <div className="text-xs text-gray-500 font-medium">
-                Showing <strong>{filteredAssignments.length}</strong> of <strong>{employeeAssignments.length}</strong> assignments
+        {/* Designation */}
+        <div className="relative" ref={designationFilterRef}>
+          <button
+            onClick={() => setShowDesignationFilter(!showDesignationFilter)}
+            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-all bg-white ${
+              filterDesignation 
+                ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10' 
+                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <FaUserTag className="text-gray-400 text-xs" />
+            <span className="whitespace-nowrap">{filterDesignation || 'All Designations'}</span>
+            <span className="text-gray-400 text-xs">▾</span>
+          </button>
+          {showDesignationFilter && (
+            <div className="absolute left-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[200px] max-h-60 overflow-y-auto">
+              <div
+                onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); }}
+                className="px-3 py-2 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+              >
+                All Designations
               </div>
-              <div className="flex gap-2">
-                {(filterDepartment || filterDesignation || filterShiftType || searchTerm) && (
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition-all flex items-center gap-1.5 shadow-sm"
-                  >
-                    Clear Filters
-                  </button>
-                )}
-              </div>
+              {uniqueDesignations.map(des => (
+                <div
+                  key={des}
+                  onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }}
+                  className={`px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 ${
+                    filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                  }`}
+                >
+                  {des}
+                </div>
+              ))}
             </div>
+          )}
+        </div>
+
+        {/* Shift Type */}
+        <div className="relative" ref={shiftTypeFilterRef}>
+          <button
+            onClick={() => setShowShiftTypeFilter(!showShiftTypeFilter)}
+            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-all bg-white ${
+              filterShiftType 
+                ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10' 
+                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <FaClock className="text-gray-400 text-xs" />
+            <span className="whitespace-nowrap">{filterShiftType ? `Shift ${filterShiftType}` : 'All Shifts'}</span>
+            <span className="text-gray-400 text-xs">▾</span>
+          </button>
+          {showShiftTypeFilter && (
+            <div className="absolute left-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[200px] max-h-60 overflow-y-auto">
+              <div
+                onClick={() => { setFilterShiftType(''); setShowShiftTypeFilter(false); }}
+                className="px-3 py-2 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+              >
+                All Shifts
+              </div>
+              {masterShifts.map(shift => (
+                <div
+                  key={shift._id}
+                  onClick={() => { setFilterShiftType(shift.shiftType); setShowShiftTypeFilter(false); }}
+                  className={`px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 ${
+                    filterShiftType === shift.shiftType ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                  }`}
+                >
+                  {getShiftDisplayText(shift)}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Right - Action Buttons */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {masterShifts.length === 0 && (
+          <button
+            onClick={handleCreateDefaultShifts}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+          >
+            <FaPlus className="w-3.5 h-3.5" />
+            Create Defaults
+          </button>
+        )}
+        <button
+          onClick={() => setShowCustomCreateModal(true)}
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+        >
+          <FaPlus className="w-3.5 h-3.5" />
+          Regular
+        </button>
+        <button
+          onClick={() => setShowBrakeShiftModal(true)}
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-lg hover:from-green-700 hover:to-pink-700 transition-all shadow-sm"
+        >
+          <FaPlus className="w-3.5 h-3.5" />
+          Break
+        </button>
+        <button
+          onClick={() => setShowAssignModal(true)}
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+        >
+          <FaClock className="w-3.5 h-3.5" />
+          Assign
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {/* Mobile View */}
+  <div className="sm:hidden">
+    {/* Mobile Header with Toggle */}
+    <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200">
+      <button
+        onClick={() => setShowMobileFilters(!showMobileFilters)}
+        className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+      >
+        <FiFilter className="text-blue-600 text-base" />
+        <span>Filters</span>
+        {showMobileFilters ? (
+          <FaChevronUp className="text-gray-400" />
+        ) : (
+          <FaChevronDown className="text-gray-400" />
+        )}
+      </button>
+      <span className="text-sm text-gray-500">
+        <strong>{filteredAssignments.length}</strong> assignments
+      </span>
+    </div>
+
+    {/* Mobile Filters */}
+    {showMobileFilters && (
+      <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-4">
+        {/* Search */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1.5">Search Employee</label>
+          <div className="relative">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+            <input
+              type="text"
+              placeholder="Search by ID or Name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+            />
           </div>
         </div>
+
+        {/* Department */}
+        <div className="relative" ref={departmentFilterRef}>
+          <label className="block text-xs font-medium text-gray-600 mb-1.5">Department</label>
+          <button
+            onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+            className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+              filterDepartment 
+                ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10' 
+                : 'border-gray-300 text-gray-700'
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <FaBuilding className="text-gray-400" />
+              {filterDepartment || 'All Departments'}
+            </span>
+            <span className="text-gray-400">▾</span>
+          </button>
+          {showDepartmentFilter && (
+            <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div
+                onClick={() => { setFilterDepartment(''); setShowDepartmentFilter(false); }}
+                className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+              >
+                All Departments
+              </div>
+              {uniqueDepartments.map(dept => (
+                <div
+                  key={dept}
+                  onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }}
+                  className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                    filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                  }`}
+                >
+                  {dept}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Designation */}
+        <div className="relative" ref={designationFilterRef}>
+          <label className="block text-xs font-medium text-gray-600 mb-1.5">Designation</label>
+          <button
+            onClick={() => setShowDesignationFilter(!showDesignationFilter)}
+            className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+              filterDesignation 
+                ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10' 
+                : 'border-gray-300 text-gray-700'
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <FaUserTag className="text-gray-400" />
+              {filterDesignation || 'All Designations'}
+            </span>
+            <span className="text-gray-400">▾</span>
+          </button>
+          {showDesignationFilter && (
+            <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div
+                onClick={() => { setFilterDesignation(''); setShowDesignationFilter(false); }}
+                className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+              >
+                All Designations
+              </div>
+              {uniqueDesignations.map(des => (
+                <div
+                  key={des}
+                  onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }}
+                  className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                    filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                  }`}
+                >
+                  {des}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Shift Type */}
+        <div className="relative" ref={shiftTypeFilterRef}>
+          <label className="block text-xs font-medium text-gray-600 mb-1.5">Shift Type</label>
+          <button
+            onClick={() => setShowShiftTypeFilter(!showShiftTypeFilter)}
+            className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+              filterShiftType 
+                ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10' 
+                : 'border-gray-300 text-gray-700'
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <FaClock className="text-gray-400" />
+              {filterShiftType ? `Shift ${filterShiftType}` : 'All Shifts'}
+            </span>
+            <span className="text-gray-400">▾</span>
+          </button>
+          {showShiftTypeFilter && (
+            <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div
+                onClick={() => { setFilterShiftType(''); setShowShiftTypeFilter(false); }}
+                className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+              >
+                All Shifts
+              </div>
+              {masterShifts.map(shift => (
+                <div
+                  key={shift._id}
+                  onClick={() => { setFilterShiftType(shift.shiftType); setShowShiftTypeFilter(false); }}
+                  className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                    filterShiftType === shift.shiftType ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                  }`}
+                >
+                  {getShiftDisplayText(shift)}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Action Buttons */}
+        <div className="pt-3 border-t border-gray-200 space-y-2">
+          {masterShifts.length === 0 && (
+            <button
+              onClick={handleCreateDefaultShifts}
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+            >
+              <FaPlus className="w-3.5 h-3.5" />
+              Create Defaults
+            </button>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setShowCustomCreateModal(true)}
+              className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+            >
+              <FaPlus className="w-3.5 h-3.5" />
+              Regular
+            </button>
+            <button
+              onClick={() => setShowBrakeShiftModal(true)}
+              className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-pink-600 rounded-lg hover:from-green-700 hover:to-pink-700 transition-all shadow-sm"
+            >
+              <FaPlus className="w-3.5 h-3.5" />
+              Break
+            </button>
+          </div>
+          <button
+            onClick={() => setShowAssignModal(true)}
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+          >
+            <FaClock className="w-3.5 h-3.5" />
+            Assign
+          </button>
+        </div>
+
+        {/* Clear Filters */}
+        {(filterDepartment || filterDesignation || filterShiftType || searchTerm) && (
+          <button
+            onClick={clearFilters}
+            className="w-full px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+          >
+            Clear All Filters
+          </button>
+        )}
+      </div>
+    )}
+  </div>
+</div>
 
         {/* Messages */}
         {error && (
@@ -13140,18 +13289,18 @@ const ShiftManagement = () => {
                 </div>
               ) : (
                 <>
-                  <div className="emp-dash__table-wrap">
-                    <table className="emp-dash__table">
+                  <div className="overflow-x-auto">
+                    <table className="emp-dash__table min-w-[900px]">
                       <thead>
                         <tr>
-                          <th>Emp ID</th>
-                          <th>Name</th>
-                          <th>Department</th>
-                          <th>Designation</th>
-                          <th style={{ textAlign: "center" }}>Shift</th>
-                          <th style={{ textAlign: "center" }}>Time</th>
-                          <th style={{ textAlign: "center" }}>Upcoming</th>
-                          <th style={{ textAlign: "right" }}>Actions</th>
+                          <th className="whitespace-nowrap">Emp ID</th>
+                          <th className="whitespace-nowrap">Name</th>
+                          <th className="whitespace-nowrap hidden sm:table-cell">Department</th>
+                          <th className="whitespace-nowrap hidden md:table-cell">Designation</th>
+                          <th className="whitespace-nowrap text-center">Shift</th>
+                          <th className="whitespace-nowrap text-center hidden lg:table-cell">Time</th>
+                          <th className="whitespace-nowrap text-center">Upcoming</th>
+                          <th className="whitespace-nowrap text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -13168,28 +13317,28 @@ const ShiftManagement = () => {
 
                             return (
                               <tr key={assignment._id} className="hover:bg-gray-50/60 transition-all">
-                                <td className="font-semibold text-gray-900 whitespace-nowrap">{employeeId}</td>
-                                <td className="font-semibold text-gray-900 whitespace-nowrap">{employeeName}</td>
-                                <td className="text-gray-600 truncate max-w-[120px]" title={department}>{department}</td>
-                                <td className="text-gray-600 truncate max-w-[120px]" title={designation}>{designation}</td>
-                                <td style={{ textAlign: "center" }}>
+                                <td className="font-semibold text-gray-900 whitespace-nowrap text-xs">{employeeId}</td>
+                                <td className="font-semibold text-gray-900 whitespace-nowrap text-xs">{employeeName}</td>
+                                <td className="text-gray-600 truncate max-w-[120px] hidden sm:table-cell text-xs" title={department}>{department}</td>
+                                <td className="text-gray-600 truncate max-w-[120px] hidden md:table-cell text-xs" title={designation}>{designation}</td>
+                                <td className="text-center">
                                   <span className={`px-2.5 py-1 text-[10px] font-semibold rounded-full ${getBadgeColor(assignment.shiftType)}`}>
                                     {assignment.shiftType}{isBrakeShift ? ' (B)' : ''}
                                   </span>
                                 </td>
-                                <td style={{ textAlign: "center" }} className="text-gray-600 font-medium whitespace-nowrap">
+                                <td className="text-center text-gray-600 font-medium whitespace-nowrap hidden lg:table-cell text-xs">
                                   {isBrakeShift ? getBrakeShiftTimeDisplay(shift) : getEmployeeTimeRange(assignment)}
                                 </td>
-                                <td style={{ textAlign: "center" }}>
+                                <td className="text-center">
                                   {scheduled?.shiftType ? (
-                                    <span className="px-2 py-1 text-[10px] font-medium text-purple-700 bg-purple-100 rounded-full">
+                                    <span className="px-2 py-1 text-[10px] font-medium text-purple-700 bg-purple-100 rounded-full whitespace-nowrap">
                                       Shift {scheduled.shiftType} from {formatScheduledDate(scheduled.effectiveFrom)}
                                     </span>
                                   ) : (
                                     <span className="text-gray-400">—</span>
                                   )}
                                 </td>
-                                <td style={{ textAlign: "right" }}>
+                                <td className="text-right">
                                   <div className="flex justify-end gap-1">
                                     <button
                                       onClick={() => openEditAssignment(assignment)}
@@ -13293,7 +13442,6 @@ const ShiftManagement = () => {
           </div>
         </div>
 
-        {/* ALL MODALS - Same as original, keeping them unchanged */}
         {/* REGULAR SHIFT CREATE MODAL */}
         {showCustomCreateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -13324,11 +13472,13 @@ const ShiftManagement = () => {
                         required
                       >
                         <option value="">Select Shift Letter</option>
-                        {shiftLetters.map(letter => (
-                          <option key={letter} value={letter}>
-                            Shift {letter}
-                          </option>
-                        ))}
+                        {shiftLetters
+                          .filter(letter => !masterShifts.some(shift => shift.shiftType === letter))
+                          .map(letter => (
+                            <option key={letter} value={letter}>
+                              Shift {letter}
+                            </option>
+                          ))}
                       </select>
                     </div>
 
@@ -13479,11 +13629,13 @@ const ShiftManagement = () => {
                         required
                       >
                         <option value="">Select Shift Letter</option>
-                        {shiftLetters.map(letter => (
-                          <option key={letter} value={letter}>
-                            Shift {letter}
-                          </option>
-                        ))}
+                        {shiftLetters
+                          .filter(letter => !masterShifts.some(shift => shift.shiftType === letter))
+                          .map(letter => (
+                            <option key={letter} value={letter}>
+                              Shift {letter}
+                            </option>
+                          ))}
                       </select>
                     </div>
 
@@ -13658,11 +13810,13 @@ const ShiftManagement = () => {
                         required
                       >
                         <option value="">Select Shift Letter</option>
-                        {shiftLetters.map(letter => (
-                          <option key={letter} value={letter}>
-                            Shift {letter}
-                          </option>
-                        ))}
+                        {shiftLetters
+                          .filter(letter => !masterShifts.some(shift => shift.shiftType === letter && shift._id !== editingShift?._id))
+                          .map(letter => (
+                            <option key={letter} value={letter}>
+                              Shift {letter}
+                            </option>
+                          ))}
                       </select>
                     </div>
 
@@ -13995,66 +14149,64 @@ const ShiftManagement = () => {
               </div>
 
               <div className="flex-1 overflow-y-auto">
-                <table className="w-full">
-                  <thead className="sticky top-0 bg-white border-b border-gray-200">
-                    <tr>
-                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase">Employee ID</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase">Employee Name</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase">Department</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase">Designation</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase">Time Slot</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase">Description</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {viewEmployees.map((emp) => {
-                      const rowColor = getShiftRowColor(emp.shiftType);
-                      const shift = masterShifts.find(s => s.shiftType === emp.shiftType);
-                      const isBrakeShift = shift?.isBrakeShift || false;
-                      const employeeId = emp.employeeAssignment?.employeeId || emp.employeeId;
-                      const department = getEmployeeDepartment(employeeId);
-                      const designation = getEmployeeDesignation(employeeId);
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[800px]">
+                    <thead className="sticky top-0 bg-white border-b border-gray-200">
+                      <tr>
+                        <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase whitespace-nowrap">Employee ID</th>
+                        <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase whitespace-nowrap">Employee Name</th>
+                        <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase hidden sm:table-cell">Department</th>
+                        <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase hidden md:table-cell">Designation</th>
+                        <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase hidden lg:table-cell">Time Slot</th>
+                        <th className="px-2 py-2 text-[10px] font-semibold tracking-wider text-left text-gray-500 uppercase">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {viewEmployees.map((emp) => {
+                        const rowColor = getShiftRowColor(emp.shiftType);
+                        const shift = masterShifts.find(s => s.shiftType === emp.shiftType);
+                        const isBrakeShift = shift?.isBrakeShift || false;
+                        const employeeId = emp.employeeAssignment?.employeeId || emp.employeeId;
+                        const department = getEmployeeDepartment(employeeId);
+                        const designation = getEmployeeDesignation(employeeId);
 
-                      return (
-                        <tr key={emp._id} className={`${rowColor} transition-colors`}>
-                          <td className="px-2 py-2 text-[10px] text-gray-900">{employeeId}</td>
-                          <td className="px-2 py-2 text-[10px] text-gray-900">{emp.employeeAssignment?.employeeName || emp.employeeName}</td>
-                          <td className="px-2 py-2 text-[10px] text-gray-900">{department}</td>
-                          <td className="px-2 py-2 text-[10px] text-gray-900">{designation}</td>
-                          <td className="px-2 py-2 text-[10px] text-gray-900">
-                            {isBrakeShift ? getBrakeShiftTimeDisplay(shift) : getEmployeeTimeRange(emp)}
-                          </td>
-                          <td className="px-2 py-2 text-[10px] text-gray-500">
-                            {isBrakeShift ? (shift.timeSlots?.[0]?.description ? `${shift.timeSlots[0].description} & ${shift.timeSlots[1]?.description || ''}` : "Brake shift") : (emp.employeeAssignment?.selectedDescription || "Legacy shift")}
-                          </td>
-                          <td className="px-2 py-2">
-                            <div className="flex gap-1">
-                              <button
-                                onClick={() => {
-                                  setShowViewModal(false);
-                                  openEditAssignment(emp);
-                                }}
-                                className="px-2 py-1 text-[8px] bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200"
-                              >
-                                <FaEdit className="text-[6px]" />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  handleDeleteAssignment(emp._id);
-                                  setShowViewModal(false);
-                                }}
-                                className="px-2 py-1 text-[8px] bg-red-50 text-red-700 rounded hover:bg-red-100 border border-red-200"
-                              >
-                                <FaTrash className="text-[6px]" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                        return (
+                          <tr key={emp._id} className={`${rowColor} transition-colors`}>
+                            <td className="px-2 py-2 text-[10px] text-gray-900 whitespace-nowrap">{employeeId}</td>
+                            <td className="px-2 py-2 text-[10px] text-gray-900 whitespace-nowrap">{emp.employeeAssignment?.employeeName || emp.employeeName}</td>
+                            <td className="px-2 py-2 text-[10px] text-gray-900 hidden sm:table-cell">{department}</td>
+                            <td className="px-2 py-2 text-[10px] text-gray-900 hidden md:table-cell">{designation}</td>
+                            <td className="px-2 py-2 text-[10px] text-gray-900 hidden lg:table-cell">
+                              {isBrakeShift ? getBrakeShiftTimeDisplay(shift) : getEmployeeTimeRange(emp)}
+                            </td>
+                            <td className="px-2 py-2">
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => {
+                                    setShowViewModal(false);
+                                    openEditAssignment(emp);
+                                  }}
+                                  className="px-2 py-1 text-[8px] bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200"
+                                >
+                                  <FaEdit className="text-[6px]" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleDeleteAssignment(emp._id);
+                                    setShowViewModal(false);
+                                  }}
+                                  className="px-2 py-1 text-[8px] bg-red-50 text-red-700 rounded hover:bg-red-100 border border-red-200"
+                                >
+                                  <FaTrash className="text-[6px]" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               <div className="p-3 bg-white border-t border-gray-200">

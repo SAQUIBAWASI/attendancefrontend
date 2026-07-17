@@ -2433,8 +2433,8 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import CountUp from "react-countup";
-import { FaBuilding, FaExchangeAlt, FaSearch, FaUserTag } from "react-icons/fa";
-import { FiCalendar, FiCheckCircle, FiClock, FiDownload, FiFilter, FiList, FiTrash2, FiXCircle } from "react-icons/fi";
+import { FaBuilding, FaExchangeAlt, FaSearch, FaUserTag, FaChevronUp, FaChevronDown } from "react-icons/fa";
+import { FiCalendar, FiCheckCircle, FiClock, FiDownload, FiFilter, FiList, FiTrash2, FiXCircle, FiChevronUp,FiChevronDown, } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
@@ -2443,16 +2443,17 @@ const LeavesList = () => {
   const [leaves, setLeaves] = useState([]);
   const [filteredLeaves, setFilteredLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Employees data for department/designation
   const [employees, setEmployees] = useState([]);
 
-  // ✅ Comp-off requests state
+  // Comp-off requests state
   const [compOffRequests, setCompOffRequests] = useState([]);
   const [showCompOffRequests, setShowCompOffRequests] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(false);
 
-  // ✅ Approved comp-offs state for editing
+  // Approved comp-offs state for editing
   const [approvedCompOffs, setApprovedCompOffs] = useState([]);
 
   // Pagination states
@@ -2473,11 +2474,11 @@ const LeavesList = () => {
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
   const [showDesignationFilter, setShowDesignationFilter] = useState(false);
 
-  // ✅ Comp-off states (for conversion)
+  // Comp-off states (for conversion)
   const [showCompOffPopup, setShowCompOffPopup] = useState(false);
   const [selectedCompOffRequest, setSelectedCompOffRequest] = useState(null);
 
-  // ✅ Edit Comp-off Popup
+  // Edit Comp-off Popup
   const [showEditCompOffPopup, setShowEditCompOffPopup] = useState(false);
   const [selectedCompOffForEdit, setSelectedCompOffForEdit] = useState(null);
   const [editCompOffData, setEditCompOffData] = useState({ count: 1, reason: "" });
@@ -2506,7 +2507,7 @@ const LeavesList = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ Fetch all leaves and employees
+  // Fetch all leaves and employees
   const fetchLeaves = async () => {
     try {
       setLoading(true);
@@ -2530,7 +2531,7 @@ const LeavesList = () => {
 
       const leavesData = leavesRes.data.records || leavesRes.data || [];
 
-      // ✅ Fetch comp-offs
+      // Fetch comp-offs
       let compOffMap = new Map();
       try {
         const compOffsRes = await axios.get(`${API_BASE_URL}/leaves/comp-offs`);
@@ -2586,8 +2587,6 @@ const LeavesList = () => {
         
         const isHRManagement = empRole.includes("hr") || empDept.includes("hr") || empRole.includes("management") || empDept.includes("management") || empDept.includes("human resources");
         
-        // HR/Management handles everything. Otherwise, the employee (who was granted leave_approve)
-        // should ONLY see their own department's leave requests!
         if (!isHRManagement) {
           filteredLeavesData = filteredLeavesData.filter(leave => {
             const leaveEmp = activeEmployees.find(e => e.employeeId === leave.employeeId || e._id === leave.employeeId);
@@ -2607,7 +2606,7 @@ const LeavesList = () => {
     }
   };
 
-  // ✅ Fetch comp-off requests
+  // Fetch comp-off requests
   const fetchCompOffRequests = async () => {
     setLoadingRequests(true);
     try {
@@ -2635,7 +2634,7 @@ const LeavesList = () => {
 
   const updateLeaveStatus = async (id, status) => {
     try {
-            const userRoleStr = localStorage.getItem("userRole");
+      const userRoleStr = localStorage.getItem("userRole");
       let approverName = "Admin";
       let approverRole = "Admin";
       let approverEmail = "";
@@ -2787,7 +2786,6 @@ const LeavesList = () => {
 
   const [showBalancePopup, setShowBalancePopup] = useState(false);
   const [selectedEmpBalance, setSelectedEmpBalance] = useState(null);
-  // const balancePopupRef = useRef(null);
 
   const viewEmployeeBalances = async (employeeId, employeeName) => {
     try {
@@ -2804,7 +2802,7 @@ const LeavesList = () => {
   // Filters
   useEffect(() => {
     let filtered = [...leaves];
-        const userRoleStr = localStorage.getItem("userRole");
+    const userRoleStr = localStorage.getItem("userRole");
     if (userRoleStr === "employee") {
       const empData = JSON.parse(localStorage.getItem("employeeData") || "{}");
       const empRole = (empData.role || empData.designation || "").toLowerCase();
@@ -2878,25 +2876,6 @@ const LeavesList = () => {
     return pageNumbers;
   };
 
-  // Calculate pagination
-  // const indexOfLastItem = currentPage * itemsPerPage;
-  // const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  // const currentItems = filteredLeaves.slice(indexOfFirstItem, indexOfLastItem);
-  // const totalPages = Math.ceil(filteredLeaves.length / itemsPerPage);
-
-  // ✅ Stat Box - Matching the Dashboard design
-  const StatCard = ({ icon: Icon, label, value, color, onClick }) => (
-    <div onClick={onClick} className={`bg-white rounded-lg p-3 shadow-sm border-t-4 ${color} cursor-pointer hover:shadow-md transition-all duration-300 flex items-center justify-between`}>
-      <div className="flex items-center gap-2">
-        <Icon className="text-gray-500 text-base flex-shrink-0" />
-        <div className="text-sm font-medium text-gray-700">{label}</div>
-      </div>
-      <div className="text-sm font-bold text-gray-700">
-        <CountUp end={value} duration={2} separator="," />
-      </div>
-    </div>
-  );
-
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="text-center">
@@ -2908,16 +2887,16 @@ const LeavesList = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="p-4 sm:p-6 lg:p-8">
+      <div className="p-2 sm:p-4 lg:p-6">
         {/* Dashboard Header */}
         <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
+           <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Leave <span className="text-blue-600">Requests</span>
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
+             {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
               Review and manage employee leave applications
-            </p>
+            </p> */}
           </div>
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
             <FiCalendar className="text-blue-600" />
@@ -2932,318 +2911,553 @@ const LeavesList = () => {
           </div>
         </div>
 
-        {/* Top KPI Stats Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-3 lg:grid-cols-5">
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={() => navigate("/leavelist")}>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Requests</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                <FiList className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">{leaves.length}</div>
-            <div className="mt-1 text-xs text-gray-500">all requests</div>
-          </div>
+       {/* Top KPI Stats Grid - 4 in a row like dashboard */}
+<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+  <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={() => navigate("/leavelist")}>
+    <div className="flex items-center justify-between mb-2">
+      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Requests</span>
+      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+        <FiList className="text-sm" />
+      </div>
+    </div>
+    <div className="text-2xl font-bold text-gray-900">{leaves.length}</div>
+    <div className="mt-1 text-xs text-gray-500">all requests</div>
+  </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={() => navigate(location.pathname.startsWith("/emp-") ? "/emp-pending-leaves" : "/pending-leaves")}>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Pending</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-                <FiClock className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">{leaves.filter((l) => l.status === "pending").length}</div>
-            <div className="mt-1 text-xs text-gray-500">awaiting approval</div>
-          </div>
+  <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={() => navigate(location.pathname.startsWith("/emp-") ? "/emp-pending-leaves" : "/pending-leaves")}>
+    <div className="flex items-center justify-between mb-2">
+      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Pending</span>
+      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+        <FiClock className="text-sm" />
+      </div>
+    </div>
+    <div className="text-2xl font-bold text-gray-900">{leaves.filter((l) => l.status === "pending").length}</div>
+    <div className="mt-1 text-xs text-gray-500">awaiting</div>
+  </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Manager Approved</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-                <FiCheckCircle className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">{leaves.filter((l) => l.status === "manager_approved").length}</div>
-            <div className="mt-1 text-xs text-gray-500">pending HR approval</div>
-          </div>
+  <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={() => navigate(location.pathname.startsWith("/emp-") ? "/emp-approved-leaves" : "/approved-leaves")}>
+    <div className="flex items-center justify-between mb-2">
+      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Approved</span>
+      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-green-50 text-green-600">
+        <FiCheckCircle className="text-sm" />
+      </div>
+    </div>
+    <div className="text-2xl font-bold text-gray-900">{leaves.filter((l) => l.status === "approved").length}</div>
+    <div className="mt-1 text-xs text-gray-500">approved</div>
+  </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={() => navigate(location.pathname.startsWith("/emp-") ? "/emp-approved-leaves" : "/approved-leaves")}>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Approved</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-green-50 text-green-600">
-                <FiCheckCircle className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">{leaves.filter((l) => l.status === "approved").length}</div>
-            <div className="mt-1 text-xs text-gray-500">approved leaves</div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={() => navigate(location.pathname.startsWith("/emp-") ? "/emp-rejected-leaves" : "/rejected-leaves")}>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Rejected</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-red-50 text-red-600">
-                <FiXCircle className="text-base" />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">{leaves.filter((l) => l.status === "rejected").length}</div>
-            <div className="mt-1 text-xs text-gray-500">rejected requests</div>
-          </div>
-        </div>
+  <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={() => navigate(location.pathname.startsWith("/emp-") ? "/emp-rejected-leaves" : "/rejected-leaves")}>
+    <div className="flex items-center justify-between mb-2">
+      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Rejected</span>
+      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600">
+        <FiXCircle className="text-sm" />
+      </div>
+    </div>
+    <div className="text-2xl font-bold text-gray-900">{leaves.filter((l) => l.status === "rejected").length}</div>
+    <div className="mt-1 text-xs text-gray-500">rejected</div>
+  </div>
+</div>
 
         {/* Filters Card */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-gray-100">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <FiFilter className="text-blue-600" /> Filters &amp; Actions
-              </h3>
-              {/* <p className="text-xs text-gray-500 mt-0.5">Filter leaves by employee, status, type, or date range</p> */}
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => setShowCompOffRequests(!showCompOffRequests)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 shadow-sm ${
-                  showCompOffRequests 
-                    ? 'bg-purple-600 text-white' 
-                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
+       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
+  {/* Desktop View */}
+  <div className="hidden sm:block">
+    <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200">
+      {/* Left - Filters */}
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        {/* Search */}
+        <div className="relative min-w-[120px] flex-1 max-w-[160px]">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Search ID or Name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+          />
+        </div>
+
+        {/* Status Filter - Compact */}
+        <div className="relative">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+          >
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="manager_approved">Manager Approved</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+
+        {/* Leave Type Filter - Compact */}
+        <div className="relative">
+          <select
+            value={leaveTypeFilter}
+            onChange={(e) => setLeaveTypeFilter(e.target.value)}
+            className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+          >
+            <option value="all">All Types</option>
+            <option value="sick">Sick</option>
+            <option value="casual">Casual</option>
+            <option value="earned">Earned</option>
+          </select>
+        </div>
+
+        {/* Department */}
+        <div className="relative" ref={departmentFilterRef}>
+          <button
+            onClick={() => {
+              setShowDepartmentFilter(!showDepartmentFilter);
+              setShowDesignationFilter(false);
+            }}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+              filterDepartment
+                ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                : "border-gray-300 text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            <FaBuilding className="text-gray-400 text-[10px]" />
+            <span className="truncate max-w-[80px]">{filterDepartment || "Dept"}</span>
+            <span className="text-gray-400 text-[10px]">▾</span>
+          </button>
+          {showDepartmentFilter && (
+            <div 
+              className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
+              style={{
+                zIndex: 99999,
+                top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
+              }}
+            >
+              <div
+                onClick={() => {
+                  setFilterDepartment("");
+                  setShowDepartmentFilter(false);
+                }}
+                className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
               >
-                <FaExchangeAlt /> {showCompOffRequests ? 'Hide' : `Comp-off (${compOffRequests.length})`}
-              </button>
-              <button
-                onClick={() => navigate("/leaves-report")}
-                className="px-3 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all flex items-center gap-1.5 shadow-sm"
-              >
-                <FiDownload /> Report
-              </button>
-            </div>
-          </div>
-          
-          <div className="p-4 bg-gray-50/50">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
-              {/* Search */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Search Employee</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Search ID or Name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
+                All Departments
+              </div>
+              {uniqueDepartments.map((dept) => (
+                <div
+                  key={dept}
+                  onClick={() => {
+                    setFilterDepartment(dept);
+                    setShowDepartmentFilter(false);
+                  }}
+                  className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                    filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                  }`}
+                >
+                  {dept}
                 </div>
-              </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-              {/* Status Filter */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Status</label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full h-9 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                >
-                  <option value="all">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="manager_approved">Manager Approved</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
+        {/* Designation */}
+        <div className="relative" ref={designationFilterRef}>
+          <button
+            onClick={() => {
+              setShowDesignationFilter(!showDesignationFilter);
+              setShowDepartmentFilter(false);
+            }}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+              filterDesignation
+                ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                : "border-gray-300 text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            <FaUserTag className="text-gray-400 text-[10px]" />
+            <span className="truncate max-w-[80px]">{filterDesignation || "Desig"}</span>
+            <span className="text-gray-400 text-[10px]">▾</span>
+          </button>
+          {showDesignationFilter && (
+            <div 
+              className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
+              style={{
+                zIndex: 99999,
+                top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
+              }}
+            >
+              <div
+                onClick={() => {
+                  setFilterDesignation("");
+                  setShowDesignationFilter(false);
+                }}
+                className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+              >
+                All Designations
               </div>
-
-              {/* Leave Type Filter */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Leave Type</label>
-                <select
-                  value={leaveTypeFilter}
-                  onChange={(e) => setLeaveTypeFilter(e.target.value)}
-                  className="w-full h-9 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                >
-                  <option value="all">All Types</option>
-                  <option value="sick">Sick Leave</option>
-                  <option value="casual">Casual Leave</option>
-                  <option value="earned">Earned Leave</option>
-                </select>
-              </div>
-
-              {/* Department Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={departmentFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Department</label>
-                <button
-                  onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDepartment 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              {uniqueDesignations.map((des) => (
+                <div
+                  key={des}
+                  onClick={() => {
+                    setFilterDesignation(des);
+                    setShowDesignationFilter(false);
+                  }}
+                  className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                    filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
                   }`}
                 >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaBuilding className="text-gray-400" />
-                    {filterDepartment || 'All Departments'}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                
-                {showDepartmentFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div 
-                      onClick={() => {
-                        setFilterDepartment('');
-                        setShowDepartmentFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Departments
-                    </div>
-                    {uniqueDepartments.map(dept => (
-                      <div 
-                        key={dept}
-                        onClick={() => {
-                          setFilterDepartment(dept);
-                          setShowDepartmentFilter(false);
-                        }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
-                          filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
-                      >
-                        {dept}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Designation Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={designationFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Designation</label>
-                <button
-                  onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDesignation 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaUserTag className="text-gray-400" />
-                    {filterDesignation || 'All Designations'}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                
-                {showDesignationFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div 
-                      onClick={() => {
-                        setFilterDesignation('');
-                        setShowDesignationFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Designations
-                    </div>
-                    {uniqueDesignations.map(des => (
-                      <div 
-                        key={des}
-                        onClick={() => {
-                          setFilterDesignation(des);
-                          setShowDesignationFilter(false);
-                        }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
-                          filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
-                      >
-                        {des}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Date From */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">From Date</label>
-                <input
-                  type="date"
-                  value={startDateFilter}
-                  onChange={(e) => { setStartDateFilter(e.target.value); setSelectedMonth(""); }}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
-
-              {/* Date To */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">To Date</label>
-                <input
-                  type="date"
-                  value={endDateFilter}
-                  onChange={(e) => { setEndDateFilter(e.target.value); setSelectedMonth(""); }}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
-
-              {/* Month Selector */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Month</label>
-                <input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={(e) => { setSelectedMonth(e.target.value); setStartDateFilter(""); setEndDateFilter(""); }}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
+                  {des}
+                </div>
+              ))}
             </div>
+          )}
+        </div>
 
-            {/* Filter Actions */}
-            <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200/50">
-              <div className="text-xs text-gray-500 font-medium">
-                Showing <strong>{filteredLeaves.length}</strong> of <strong>{leaves.length}</strong> requests
-              </div>
-              <div className="flex gap-2">
-                {(searchTerm || filterDepartment || filterDesignation || statusFilter !== "all" || leaveTypeFilter !== "all" || startDateFilter || endDateFilter || selectedMonth) && (
-                  <button
-                    onClick={clearFilters}
-                    className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 shadow-sm"
-                  >
-                    <FiTrash2 /> Clear Filters
-                  </button>
-                )}
-              </div>
-            </div>
+        {/* Date From - Compact */}
+        <div className="relative">
+          <input
+            type="date"
+            value={startDateFilter}
+            onChange={(e) => { setStartDateFilter(e.target.value); setSelectedMonth(""); }}
+            onClick={(e) => e.target.showPicker && e.target.showPicker()}
+            placeholder="From"
+            className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+          />
+        </div>
+
+        {/* Date To - Compact */}
+        <div className="relative">
+          <input
+            type="date"
+            value={endDateFilter}
+            onChange={(e) => { setEndDateFilter(e.target.value); setSelectedMonth(""); }}
+            onClick={(e) => e.target.showPicker && e.target.showPicker()}
+            placeholder="To"
+            className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+          />
+        </div>
+
+        {/* Month Picker - Compact */}
+        <div className="relative">
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => { setSelectedMonth(e.target.value); setStartDateFilter(""); setEndDateFilter(""); }}
+            onClick={(e) => e.target.showPicker && e.target.showPicker()}
+            className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+          />
+        </div>
+      </div>
+
+      {/* Right - Action Buttons */}
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <button
+          onClick={() => setShowCompOffRequests(!showCompOffRequests)}
+          className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap ${
+            showCompOffRequests 
+              ? 'bg-purple-600 text-white' 
+              : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+          }`}
+        >
+          <FaExchangeAlt className="w-3 h-3" />
+          <span>Comp-off</span>
+        </button>
+        
+        <button
+          onClick={() => navigate("/leaves-report")}
+          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap"
+        >
+          <FiDownload className="w-3 h-3" />
+          Report
+        </button>
+        
+        {(searchTerm || filterDepartment || filterDesignation || statusFilter !== "all" || leaveTypeFilter !== "all" || startDateFilter || endDateFilter || selectedMonth) && (
+          <button
+            onClick={clearFilters}
+            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+          >
+            <FiTrash2 className="w-3 h-3" />
+            Clear
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+
+  {/* Mobile View */}
+  <div className="sm:hidden">
+    {/* Mobile Header with Toggle */}
+    <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
+      <button
+        onClick={() => setShowMobileFilters(!showMobileFilters)}
+        className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+      >
+        <FiFilter className="text-blue-600 text-base" />
+        <span>Filters</span>
+        {showMobileFilters ? (
+          <FiChevronUp className="text-gray-400" />
+        ) : (
+          <FiChevronDown className="text-gray-400" />
+        )}
+      </button>
+      <span className="text-xs text-gray-500">
+        <strong>{filteredLeaves.length}</strong> requests
+      </span>
+    </div>
+
+    {/* Mobile Filters */}
+    {showMobileFilters && (
+      <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+        {/* Search */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+            <input
+              type="text"
+              placeholder="Search ID or Name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+            />
           </div>
         </div>
+
+        {/* Status */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+          >
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="manager_approved">Manager Approved</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+
+        {/* Leave Type */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Leave Type</label>
+          <select
+            value={leaveTypeFilter}
+            onChange={(e) => setLeaveTypeFilter(e.target.value)}
+            className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+          >
+            <option value="all">All Types</option>
+            <option value="sick">Sick Leave</option>
+            <option value="casual">Casual Leave</option>
+            <option value="earned">Earned Leave</option>
+          </select>
+        </div>
+
+        {/* Department */}
+        <div className="relative" ref={departmentFilterRef}>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
+          <button
+            onClick={() => {
+              setShowDepartmentFilter(!showDepartmentFilter);
+              setShowDesignationFilter(false);
+            }}
+            className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+              filterDepartment
+                ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                : "border-gray-300 text-gray-700"
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <FaBuilding className="text-gray-400" />
+              {filterDepartment || "All Departments"}
+            </span>
+            <span className="text-gray-400">▾</span>
+          </button>
+          {showDepartmentFilter && (
+            <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div
+                onClick={() => {
+                  setFilterDepartment("");
+                  setShowDepartmentFilter(false);
+                }}
+                className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+              >
+                All Departments
+              </div>
+              {uniqueDepartments.map((dept) => (
+                <div
+                  key={dept}
+                  onClick={() => {
+                    setFilterDepartment(dept);
+                    setShowDepartmentFilter(false);
+                  }}
+                  className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                    filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                  }`}
+                >
+                  {dept}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Designation */}
+        <div className="relative" ref={designationFilterRef}>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
+          <button
+            onClick={() => {
+              setShowDesignationFilter(!showDesignationFilter);
+              setShowDepartmentFilter(false);
+            }}
+            className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+              filterDesignation
+                ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                : "border-gray-300 text-gray-700"
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <FaUserTag className="text-gray-400" />
+              {filterDesignation || "All Designations"}
+            </span>
+            <span className="text-gray-400">▾</span>
+          </button>
+          {showDesignationFilter && (
+            <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div
+                onClick={() => {
+                  setFilterDesignation("");
+                  setShowDesignationFilter(false);
+                }}
+                className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+              >
+                All Designations
+              </div>
+              {uniqueDesignations.map((des) => (
+                <div
+                  key={des}
+                  onClick={() => {
+                    setFilterDesignation(des);
+                    setShowDesignationFilter(false);
+                  }}
+                  className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                    filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                  }`}
+                >
+                  {des}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Date From & To */}
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
+            <input
+              type="date"
+              value={startDateFilter}
+              onChange={(e) => { setStartDateFilter(e.target.value); setSelectedMonth(""); }}
+              onClick={(e) => e.target.showPicker && e.target.showPicker()}
+              className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
+            <input
+              type="date"
+              value={endDateFilter}
+              onChange={(e) => { setEndDateFilter(e.target.value); setSelectedMonth(""); }}
+              onClick={(e) => e.target.showPicker && e.target.showPicker()}
+              className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+            />
+          </div>
+        </div>
+
+        {/* Month */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => { setSelectedMonth(e.target.value); setStartDateFilter(""); setEndDateFilter(""); }}
+            onClick={(e) => e.target.showPicker && e.target.showPicker()}
+            className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+          />
+        </div>
+
+        {/* Mobile Action Buttons */}
+        <div className="pt-3 border-t border-gray-200 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setShowCompOffRequests(!showCompOffRequests)}
+              className={`flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+                showCompOffRequests 
+                  ? 'bg-purple-600 text-white' 
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <FaExchangeAlt className="w-4 h-4" />
+              <span>Comp-off</span>
+            </button>
+            <button
+              onClick={() => navigate("/leaves-report")}
+              className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+            >
+              <FiDownload className="w-4 h-4" />
+              Report
+            </button>
+          </div>
+          {(searchTerm || filterDepartment || filterDesignation || statusFilter !== "all" || leaveTypeFilter !== "all" || startDateFilter || endDateFilter || selectedMonth) && (
+            <button
+              onClick={clearFilters}
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+            >
+              <FiTrash2 className="w-4 h-4" />
+              Clear All Filters
+            </button>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+</div>
 
         {/* Comp-off Requests Section */}
         {showCompOffRequests && (
           <div className="mb-6 overflow-hidden bg-white border-2 border-purple-200 rounded-lg shadow-lg">
-            <div className="flex items-center justify-between px-4 py-2 text-gray-900 bg-gradient-to-r from-purple-500 to-purple-700"><h3 className="flex items-center gap-2 font-semibold"><FaExchangeAlt /> Comp-off Requests ({compOffRequests.length})</h3><button onClick={fetchCompOffRequests} className="px-2 py-1 text-xs text-purple-700 bg-white rounded hover:bg-purple-100">🔄 Refresh</button></div>
+            <div className="flex items-center justify-between px-4 py-2 text-white bg-gradient-to-r from-purple-500 to-purple-700">
+              <h3 className="flex items-center gap-2 font-semibold"><FaExchangeAlt /> Comp-off Requests ({compOffRequests.length})</h3>
+              <button onClick={fetchCompOffRequests} className="px-2 py-1 text-xs text-purple-700 bg-white rounded hover:bg-purple-100">🔄 Refresh</button>
+            </div>
             {loadingRequests ? (<div className="p-8 text-center"><div className="w-8 h-8 mx-auto border-b-2 border-purple-600 rounded-full animate-spin"></div><p className="mt-2 text-sm text-gray-500">Loading requests...</p></div>) : compOffRequests.length === 0 ? (<div className="p-8 text-center text-gray-500"><p>No pending comp-off requests</p></div>) : (
-              <div className="overflow-x-auto"><table className="min-w-full"><thead className="text-xs text-purple-800 bg-purple-100"><tr><th className="px-3 py-2 text-center">Employee</th><th className="px-3 py-2 text-center">Work Date</th><th className="px-3 py-2 text-center">Days</th><th className="px-3 py-2 text-center">Reason</th><th className="px-3 py-2 text-center">Actions</th></tr></thead><tbody>{compOffRequests.map(req => (<tr key={req._id} className="border-b hover:bg-purple-50"><td className="px-3 py-2 text-center"><div className="font-medium">{req.employeeName}</div><div className="text-xs text-gray-500">{req.employeeId}</div></td><td className="px-3 py-2 text-center">{formatDate(req.workDate)}</td><td className="px-3 py-2 text-center"><span className="px-2 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded-full">{req.count || 1} day(s)</span></td><td className="max-w-xs px-3 py-2 text-center"><span className="block text-xs text-gray-700 truncate">{req.reason || 'No reason provided'}</span></td><td className="px-3 py-2 text-center"><button onClick={() => { setSelectedCompOffRequest(req); setShowCompOffPopup(true); }} className="px-2 py-1 text-xs text-gray-900 bg-purple-500 rounded-md hover:bg-purple-600">Review</button></td></tr>))}</tbody></table></div>
+              <div className="overflow-x-auto"><table className="min-w-full"><thead className="text-xs text-purple-800 bg-purple-100"><tr><th className="px-3 py-2 text-center">Employee</th><th className="px-3 py-2 text-center">Work Date</th><th className="px-3 py-2 text-center">Days</th><th className="px-3 py-2 text-center">Reason</th><th className="px-3 py-2 text-center">Actions</th></tr></thead><tbody>{compOffRequests.map(req => (<tr key={req._id} className="border-b hover:bg-purple-50"><td className="px-3 py-2 text-center"><div className="font-medium">{req.employeeName}</div><div className="text-xs text-gray-500">{req.employeeId}</div></td><td className="px-3 py-2 text-center">{formatDate(req.workDate)}</td><td className="px-3 py-2 text-center"><span className="px-2 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded-full">{req.count || 1} day(s)</span></td><td className="max-w-xs px-3 py-2 text-center"><span className="block text-xs text-gray-700 truncate">{req.reason || 'No reason provided'}</span></td><td className="px-3 py-2 text-center"><button onClick={() => { setSelectedCompOffRequest(req); setShowCompOffPopup(true); }} className="px-3 py-1 text-xs text-white bg-purple-600 rounded-md hover:bg-purple-700">Review</button></td></tr>))}</tbody></table></div>
             )}
           </div>
         )}
 
         {/* Comp-off Review Popup */}
         {showCompOffPopup && selectedCompOffRequest && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white "><div ref={compOffPopupRef} className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl"><h2 className="mb-4 text-xl font-bold text-purple-800">Review Comp-off Request</h2><div className="space-y-4"><div className="p-3 rounded-lg bg-purple-50"><p className="text-sm text-gray-500">Employee</p><p className="font-medium">{selectedCompOffRequest.employeeName}</p><p className="text-xs text-gray-500">{selectedCompOffRequest.employeeId}</p></div><div><label className="block mb-1 text-sm font-medium text-gray-700">Work Date</label><div className="p-2 rounded-lg bg-white">{formatDate(selectedCompOffRequest.workDate)}</div></div><div><label className="block mb-1 text-sm font-medium text-gray-700">Days Requested</label><div className="p-2 rounded-lg bg-white">{selectedCompOffRequest.count || 1} day(s)</div></div><div><label className="block mb-1 text-sm font-medium text-gray-700">Reason</label><div className="p-2 rounded-lg bg-white">{selectedCompOffRequest.reason || 'No reason provided'}</div></div><div className="flex gap-2 pt-4"><button onClick={() => { setShowCompOffPopup(false); setSelectedCompOffRequest(null); }} className="flex-1 px-4 py-2 text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200">Cancel</button><button onClick={rejectCompOffRequest} className="flex-1 px-4 py-2 text-gray-900 bg-red-500 rounded-md hover:bg-red-600">Reject</button><button onClick={approveCompOffRequest} className="flex-1 px-4 py-2 text-gray-900 bg-blue-600 rounded-md hover:bg-blue-600">Approve</button></div></div></div></div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"><div ref={compOffPopupRef} className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl"><h2 className="mb-4 text-xl font-bold text-purple-800">Review Comp-off Request</h2><div className="space-y-4"><div className="p-3 rounded-lg bg-purple-50"><p className="text-sm text-gray-500">Employee</p><p className="font-medium">{selectedCompOffRequest.employeeName}</p><p className="text-xs text-gray-500">{selectedCompOffRequest.employeeId}</p></div><div><label className="block mb-1 text-sm font-medium text-gray-700">Work Date</label><div className="p-2 rounded-lg bg-white">{formatDate(selectedCompOffRequest.workDate)}</div></div><div><label className="block mb-1 text-sm font-medium text-gray-700">Days Requested</label><div className="p-2 rounded-lg bg-white">{selectedCompOffRequest.count || 1} day(s)</div></div><div><label className="block mb-1 text-sm font-medium text-gray-700">Reason</label><div className="p-2 rounded-lg bg-white">{selectedCompOffRequest.reason || 'No reason provided'}</div></div><div className="flex gap-2 pt-4"><button onClick={() => { setShowCompOffPopup(false); setSelectedCompOffRequest(null); }} className="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">Cancel</button><button onClick={rejectCompOffRequest} className="flex-1 px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600">Reject</button><button onClick={approveCompOffRequest} className="flex-1 px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700">Approve</button></div></div></div></div>
         )}
 
         {/* Edit Comp-off Popup */}
         {showEditCompOffPopup && selectedCompOffForEdit && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/40"><div ref={editCompOffPopupRef} className="w-full max-w-sm p-4 bg-white rounded-md shadow-lg"><h2 className="mb-3 text-lg font-semibold text-green-700">Edit Comp-off</h2><div className="space-y-3 text-sm"><div className="p-2 rounded bg-green-50"><p className="text-xs text-gray-500">Employee</p><p className="font-medium">{selectedCompOffForEdit.employeeName}</p><p className="text-[11px] text-gray-500">{selectedCompOffForEdit.employeeId}</p></div><div><label className="block mb-0.5 text-xs font-medium text-gray-500">Work Date</label><div className="p-1.5 rounded bg-white text-xs">{formatDate(selectedCompOffForEdit.workDate)}</div></div><div><label className="block mb-0.5 text-xs font-medium text-gray-500">Comp-off Days</label><input type="number" min="0.5" step="0.5" value={editCompOffData.count} onChange={(e) => setEditCompOffData({ ...editCompOffData, count: parseFloat(e.target.value) })} className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500" /></div><div><label className="block mb-0.5 text-xs font-medium text-gray-500">Reason</label><textarea rows="2" value={editCompOffData.reason} onChange={(e) => setEditCompOffData({ ...editCompOffData, reason: e.target.value })} className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500" /></div><div className="flex gap-2 pt-2"><button onClick={() => { setShowEditCompOffPopup(false); setSelectedCompOffForEdit(null); }} className="flex-1 px-2 py-1.5 text-xs text-gray-500 bg-gray-100 rounded hover:bg-gray-200">Cancel</button><button onClick={rejectApprovedCompOff} className="flex-1 px-2 py-1.5 text-xs text-gray-900 bg-red-500 rounded hover:bg-red-600">Reject</button><button onClick={saveEditedCompOff} className="flex-1 px-2 py-1.5 text-xs text-gray-900 bg-blue-600 rounded hover:bg-blue-600">Save</button></div></div></div></div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"><div ref={editCompOffPopupRef} className="w-full max-w-sm p-4 bg-white rounded-md shadow-lg"><h2 className="mb-3 text-lg font-semibold text-green-700">Edit Comp-off</h2><div className="space-y-3 text-sm"><div className="p-2 rounded bg-green-50"><p className="text-xs text-gray-500">Employee</p><p className="font-medium">{selectedCompOffForEdit.employeeName}</p><p className="text-[11px] text-gray-500">{selectedCompOffForEdit.employeeId}</p></div><div><label className="block mb-0.5 text-xs font-medium text-gray-500">Work Date</label><div className="p-1.5 rounded bg-white text-xs">{formatDate(selectedCompOffForEdit.workDate)}</div></div><div><label className="block mb-0.5 text-xs font-medium text-gray-500">Comp-off Days</label><input type="number" min="0.5" step="0.5" value={editCompOffData.count} onChange={(e) => setEditCompOffData({ ...editCompOffData, count: parseFloat(e.target.value) })} className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500" /></div><div><label className="block mb-0.5 text-xs font-medium text-gray-500">Reason</label><textarea rows="2" value={editCompOffData.reason} onChange={(e) => setEditCompOffData({ ...editCompOffData, reason: e.target.value })} className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500" /></div><div className="flex gap-2 pt-2"><button onClick={() => { setShowEditCompOffPopup(false); setSelectedCompOffForEdit(null); }} className="flex-1 px-2 py-1.5 text-xs text-gray-600 bg-gray-100 rounded hover:bg-gray-200">Cancel</button><button onClick={rejectApprovedCompOff} className="flex-1 px-2 py-1.5 text-xs text-white bg-red-500 rounded hover:bg-red-600">Reject</button><button onClick={saveEditedCompOff} className="flex-1 px-2 py-1.5 text-xs text-white bg-green-600 rounded hover:bg-green-700">Save</button></div></div></div></div>
         )}
 
         {/* View Balances Popup */}
         {showBalancePopup && selectedEmpBalance && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white ">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div ref={balancePopupRef} className="w-full max-w-sm p-6 bg-white rounded-lg shadow-xl">
               <h2 className="mb-4 text-xl font-bold text-blue-800">Leave Balances</h2>
               <div className="p-3 mb-4 rounded-lg bg-blue-50">
@@ -3265,7 +3479,7 @@ const LeavesList = () => {
                 </div>
               </div>
               <div className="mt-4 text-right">
-                <button onClick={() => setShowBalancePopup(false)} className="px-4 py-2 text-gray-900 bg-blue-600 rounded-md hover:bg-blue-700">Close</button>
+                <button onClick={() => setShowBalancePopup(false)} className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">Close</button>
               </div>
             </div>
           </div>
@@ -3273,14 +3487,14 @@ const LeavesList = () => {
 
         {/* Main Table */}
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          {/* <div className="flex items-center justify-between p-4 border-b border-gray-100">
             <div>
               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                 <FiList className="text-blue-600" /> Leave Requests
               </h3>
               <p className="text-xs text-gray-500 mt-0.5">Manage and approve employee leave applications</p>
             </div>
-          </div>
+          </div> */}
 
           {filteredLeaves.length === 0 ? (
             <div className="py-12 text-center text-gray-500">
@@ -3293,16 +3507,16 @@ const LeavesList = () => {
                 <table className="min-w-full divide-y divide-gray-200 bg-white">
                   <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     <tr>
-                      <th  style={{ color: 'black ' }} className="px-4 py-3 text-left">Employee ID</th>
-                      <th  style={{ color: 'black ' }} className="px-4 py-3 text-left">Name</th>
-                      <th  style={{ color: 'black ' }} className="px-4 py-3 text-left">Department</th>
-                      <th  style={{ color: 'black ' }} className="px-4 py-3 text-left">Designation</th>
-                      <th  style={{ color: 'black ' }} className="px-4 py-3 text-center">Dates</th>
-                      <th  style={{ color: 'black ' }} className="px-4 py-3 text-center">Days</th>
-                      <th  style={{ color: 'black ' }} className="px-4 py-3 text-left">Reason</th>
-                      <th  style={{ color: 'black ' }} className="px-4 py-3 text-center">Status</th>
-                      <th  style={{ color: 'black ' }} className="px-4 py-3 text-center">Approved By</th>
-                      <th  style={{ color: 'black ' }} className="px-4 py-3 text-center">Actions</th>
+                      <th style={{ color: 'black' }} className="px-4 py-3 text-left">Employee ID</th>
+                      <th style={{ color: 'black' }} className="px-4 py-3 text-left">Name</th>
+                      <th style={{ color: 'black' }} className="px-4 py-3 text-left">Department</th>
+                      <th style={{ color: 'black' }} className="px-4 py-3 text-left">Designation</th>
+                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Dates</th>
+                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Days</th>
+                      <th style={{ color: 'black' }} className="px-4 py-3 text-left">Reason</th>
+                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Status</th>
+                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Approved By</th>
+                      <th style={{ color: 'black' }} className="px-4 py-3 text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 text-xs">
@@ -3314,10 +3528,7 @@ const LeavesList = () => {
                       const canApprove = (userRole === "admin" && (l.status === "pending" || l.status === "manager_approved")) || (isManager && l.status === "pending");
                       
                       return (
-                        <tr 
-                          key={l._id} 
-                          className={`hover:bg-gray-50 transition-all ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-50' : ''}`}
-                        >
+                        <tr key={l._id} className={`hover:bg-gray-50 transition-all ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-50' : ''}`}>
                           <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">{l.employeeId || "N/A"}</td>
                           <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">{l.employeeName}</td>
                           <td className="px-4 py-3 text-gray-600 truncate max-w-[150px]" title={empDetails.department}>{empDetails.department}</td>
@@ -3328,12 +3539,8 @@ const LeavesList = () => {
                             <div className="text-gray-700 font-medium">{new Date(l.endDate).toLocaleDateString()}</div>
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                              compOffInfo?.exists && compOffInfo.status === "approved" 
-                                ? 'bg-purple-100 text-purple-700 border border-purple-200' 
-                                : 'bg-gray-100 text-gray-700 border border-gray-200'
-                            }`}>
-                              {l.days || 1} 
+                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${compOffInfo?.exists && compOffInfo.status === "approved" ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-gray-100 text-gray-700 border border-gray-200'}`}>
+                              {l.days || 1}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-gray-600 truncate max-w-[200px]" title={l.reason}>{l.reason || "No reason provided"}</td>
@@ -3482,7 +3689,27 @@ const LeavesList = () => {
 
         {/* Pagination */}
         {filteredLeaves.length > 0 && (
-          <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row"><div className="flex flex-wrap items-center gap-4"><div className="flex items-center gap-2"><label className="font-medium text-gray-700">Show:</label><select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-2 border rounded-lg"><option value={5}>5</option><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option></select><span className="text-sm text-gray-500">entries</span></div></div><div className="flex items-center gap-2"><button onClick={handlePrevPage} disabled={currentPage === 1} className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1 ? "text-gray-500 bg-gray-100 cursor-not-allowed" : "text-blue-600 bg-white hover:bg-blue-50"}`}>Previous</button>{getPageNumbers().map((page, index) => (<button key={index} onClick={() => typeof page === 'number' ? handlePageClick(page) : null} disabled={page === "..."} className={`px-4 py-1 text-sm border rounded-lg ${page === "..." ? "text-gray-500 bg-white cursor-default" : currentPage === page ? "text-gray-900 bg-blue-600" : "text-blue-600 bg-white hover:bg-blue-50"}`}>{page}</button>))}<button onClick={handleNextPage} disabled={currentPage === totalPages} className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages ? "text-gray-500 bg-gray-100 cursor-not-allowed" : "text-blue-600 bg-white hover:bg-blue-50"}`}>Next</button></div></div>
+          <div className="flex flex-col items-center justify-between gap-4 mt-6 sm:flex-row">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <label className="font-medium text-gray-700">Show:</label>
+                <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="p-2 border rounded-lg">
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <span className="text-sm text-gray-500">entries</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={handlePrevPage} disabled={currentPage === 1} className={`px-4 py-1 text-sm border rounded-lg ${currentPage === 1 ? "text-gray-500 bg-gray-100 cursor-not-allowed" : "text-blue-600 bg-white hover:bg-blue-50"}`}>Previous</button>
+              {getPageNumbers().map((page, index) => (
+                <button key={index} onClick={() => typeof page === 'number' ? handlePageClick(page) : null} disabled={page === "..."} className={`px-4 py-1 text-sm border rounded-lg ${page === "..." ? "text-gray-500 bg-white cursor-default" : currentPage === page ? "text-white bg-blue-600" : "text-blue-600 bg-white hover:bg-blue-50"}`}>{page}</button>
+              ))}
+              <button onClick={handleNextPage} disabled={currentPage === totalPages} className={`px-4 py-1 text-sm border rounded-lg ${currentPage === totalPages ? "text-gray-500 bg-gray-100 cursor-not-allowed" : "text-blue-600 bg-white hover:bg-blue-50"}`}>Next</button>
+            </div>
+          </div>
         )}
       </div>
     </div>

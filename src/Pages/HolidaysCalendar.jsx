@@ -1141,9 +1141,9 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
             <h1 className="emp-dash__greeting">
               Holiday <span>Calendar</span>
             </h1>
-            <p className="emp-dash__subtitle">
+            {/* <p className="emp-dash__subtitle">
               Company approved festivals, public holidays, and observances for employees.
-            </p>
+            </p> */}
           </div>
 
           <div className="emp-page__toolbar">

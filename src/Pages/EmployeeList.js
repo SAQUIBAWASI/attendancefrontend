@@ -3809,12 +3809,13 @@
 
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
-import { FaBuilding, FaUserTag } from "react-icons/fa";
+import { FaBuilding, FaUserTag, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { FiCalendar, FiUsers, FiUserCheck, FiUserMinus, FiBriefcase, FiMapPin, FiFilter, FiDownload, FiPlus, FiTrash2, FiEye, FiSearch, FiX, FiEdit } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import "./EmployeeList.css";
 import "./EmployeeDashboard.css";
+
 const EmployeeList = () => {
   const [employees, setEmployees] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -3825,6 +3826,10 @@ const EmployeeList = () => {
   const [selectedLocationId, setSelectedLocationId] = useState("");
   const [loading, setLoading] = useState(false);
   const [showInactiveOnly, setShowInactiveOnly] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  
+  // 🔥 NEW: Active filter type for card clicks
+  const [activeFilterType, setActiveFilterType] = useState('all'); // 'all', 'active', 'inactive', 'departments', 'locations'
   
   // Filter states
   const [filterDepartment, setFilterDepartment] = useState("");
@@ -3915,9 +3920,8 @@ const EmployeeList = () => {
     setUniqueDesignations(Array.from(designations).sort());
   };
 
-  // ✅ SIMPLE FIX: Check if employee is active based on isActive field or status
+  // Check if employee is active based on isActive field or status
   const isEmployeeHidden = (emp) => {
-    // Check multiple possible fields
     if (emp.isActive === false) return true;
     if (emp.status === 'inactive') return true;
     if (emp.status === false) return true;
@@ -3929,12 +3933,27 @@ const EmployeeList = () => {
 
   // Filter employees based on search and filters
   const filteredEmployees = employees.filter((emp) => {
+    // 🔥 Apply filter based on activeFilterType
+    if (activeFilterType === 'active' && isEmployeeHidden(emp)) return false;
+    if (activeFilterType === 'inactive' && !isEmployeeHidden(emp)) return false;
+    
+    // For departments filter - show employees from all departments
+    if (activeFilterType === 'departments') {
+      // No additional filtering, just show all active employees
+      if (isEmployeeHidden(emp)) return false;
+    }
+    
+    // For locations filter - show all active employees
+    if (activeFilterType === 'locations') {
+      if (isEmployeeHidden(emp)) return false;
+    }
+    
+    // Apply showInactiveOnly toggle (for backward compatibility)
     if (showInactiveOnly && !isEmployeeHidden(emp)) return false;
-    if (!showInactiveOnly && isEmployeeHidden(emp)) return false;
+    if (!showInactiveOnly && activeFilterType === 'all' && isEmployeeHidden(emp)) return false;
     
     const searchTermLower = searchTerm.toLowerCase().trim();
     
-    // Search by multiple fields
     const matchesSearch = searchTerm === "" || (
       emp.name?.toLowerCase().includes(searchTermLower) ||
       emp.email?.toLowerCase().includes(searchTermLower) ||
@@ -3944,10 +3963,7 @@ const EmployeeList = () => {
       emp.role?.toLowerCase().includes(searchTermLower)
     );
     
-    // Filter by Department
     const matchesDept = filterDepartment === "" || emp.department === filterDepartment;
-    
-    // Filter by Designation
     const matchesDesig = filterDesignation === "" || (emp.role || emp.designation) === filterDesignation;
     
     return matchesSearch && matchesDept && matchesDesig;
@@ -3968,17 +3984,29 @@ const EmployeeList = () => {
       totalPages: Math.ceil(filteredEmployees.length / prev.limit),
       currentPage: 1
     }));
-  }, [filteredEmployees.length, pagination.limit, showInactiveOnly, searchTerm, filterDepartment, filterDesignation]);
+  }, [filteredEmployees.length, pagination.limit, showInactiveOnly, searchTerm, filterDepartment, filterDesignation, activeFilterType]);
 
   const indexOfLast = pagination.currentPage * pagination.limit;
   const indexOfFirst = indexOfLast - pagination.limit;
   const currentEmployees = filteredEmployees.slice(indexOfFirst, indexOfLast);
 
+  // 🔥 Card click handlers
+  const handleCardClick = (type) => {
+    setActiveFilterType(type);
+    setShowInactiveOnly(false);
+    setFilterDepartment('');
+    setFilterDesignation('');
+    setSearchTerm('');
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+    
+    // Close mobile filters if open
+    if (showMobileFilters) setShowMobileFilters(false);
+  };
+
   const handleView = (employee) => setSelectedEmployee(employee);
   const handleCloseModal = () => setSelectedEmployee(null);
   const handleEdit = (employee) => navigate(`/addemployee`, { state: { employee } });
 
-  // ✅ FIXED: Status toggle with switch
   const handleToggleStatus = async (emp) => {
     const isCurrentlyHidden = isEmployeeHidden(emp);
     const newStatus = isCurrentlyHidden ? 'active' : 'inactive';
@@ -3989,11 +4017,7 @@ const EmployeeList = () => {
     setLoading(true);
     
     try {
-      // Try with status field
-      const updateData = {
-        status: newStatus
-      };
-
+      const updateData = { status: newStatus };
       console.log("Updating status for:", emp._id, "Data:", updateData);
 
       const response = await axios.put(
@@ -4002,7 +4026,6 @@ const EmployeeList = () => {
       );
 
       if (response.data.success) {
-        // Update local state
         setEmployees(employees.map(e => 
           e._id === emp._id 
             ? { ...e, status: newStatus } 
@@ -4015,12 +4038,8 @@ const EmployeeList = () => {
     } catch (error) {
       console.error("Error updating employee status:", error);
       
-      // If backend doesn't accept 'status' field, try 'isActive'
       try {
-        const updateData2 = {
-          isActive: !isCurrentlyHidden
-        };
-        
+        const updateData2 = { isActive: !isCurrentlyHidden };
         const retryResponse = await axios.put(
           `${API_BASE_URL}/employees/update/${emp._id}`,
           updateData2
@@ -4121,7 +4140,6 @@ const EmployeeList = () => {
     return pageNumbers;
   };
 
-  // ✅ FIXED: Assign location - Use correct endpoint
   const assignLocation = async () => {
     if (!selectedLocationId) {
       alert("Please select a location");
@@ -4132,14 +4150,12 @@ const EmployeeList = () => {
     try {
       console.log("Assigning location for employee:", selectedEmployeeForLocation.employeeId);
       
-      // Method 1: Use the dedicated assign-location endpoint
       const response = await axios.put(
         `${API_BASE_URL}/employees/assign-location/${selectedEmployeeForLocation.employeeId}`,
         { locationId: selectedLocationId }
       );
 
       if (response.data.success) {
-        // Update local state
         setEmployees(employees.map((emp) =>
           emp._id === selectedEmployeeForLocation._id
             ? { ...emp, location: selectedLocationId }
@@ -4152,7 +4168,6 @@ const EmployeeList = () => {
     } catch (error) {
       console.error("Error assigning location:", error);
       
-      // Method 2: Fallback to general update
       try {
         const fallbackResponse = await axios.put(
           `${API_BASE_URL}/employees/update/${selectedEmployeeForLocation._id}`,
@@ -4226,20 +4241,30 @@ const EmployeeList = () => {
     return location ? location.name : "Not assigned";
   };
 
+  // 🔥 Get display label for active filter
+  const getFilterLabel = () => {
+    switch(activeFilterType) {
+      case 'all': return 'All Employees';
+      case 'active': return 'Active Employees';
+      case 'inactive': return 'Inactive Employees';
+      case 'departments': return 'All Departments';
+      case 'locations': return 'All Locations';
+      default: return 'Employees';
+    }
+  };
+
   return (
     <div className="emp-dash">
-      <main className="p-4 sm:p-6 lg:p-8">
+      <main className="p-1 sm:p-2 lg:p-6">
 
         {/* Dashboard Header */}
         <div className="emp-dash__header">
-          <div>
-            <h1 className="emp-dash__greeting">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap leading-none">
               Employee <span>List</span>
             </h1>
-            <p className="emp-dash__subtitle">
-              Manage company employees, departments, designations, work shifts, locations and active status.
-            </p>
           </div>
+
           <div className="emp-dash__date-pill">
             <FiCalendar />
             <span>
@@ -4253,282 +4278,550 @@ const EmployeeList = () => {
           </div>
         </div>
 
-        {/* Top KPI Stats Grid */}
+        {/* 🔥 UPDATED: Top KPI Stats Grid with Clickable Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
-          <div className="emp-dash__stat">
+          {/* Total Employees Card */}
+          <div 
+            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${activeFilterType === 'all' ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
+            onClick={() => handleCardClick('all')}
+          >
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Total Employees</span>
+              <span className="emp-dash__stat-label text-[10px] sm:text-xs">Total Employees</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                <FiUsers />
+                <FiUsers className="text-sm sm:text-base" />
               </div>
             </div>
-            <div className="emp-dash__stat-value">{employees.length}</div>
-            <div className="emp-dash__stat-meta">all registered staff</div>
+            <div className="emp-dash__stat-value text-xl sm:text-2xl">{employees.length}</div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">all registered staff</div>
           </div>
           
-          <div className="emp-dash__stat">
+          {/* Active Employees Card */}
+          <div 
+            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${activeFilterType === 'active' ? 'ring-2 ring-green-500 ring-offset-2' : ''}`}
+            onClick={() => handleCardClick('active')}
+          >
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Active Employees</span>
+              <span className="emp-dash__stat-label text-[10px] sm:text-xs">Active Employees</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
-                <FiUserCheck />
+                <FiUserCheck className="text-sm sm:text-base" />
               </div>
             </div>
-            <div className="emp-dash__stat-value text-green-600">{activeEmployees.length}</div>
-            <div className="emp-dash__stat-meta">currently working</div>
+            <div className="emp-dash__stat-value text-xl sm:text-2xl text-green-600">{activeEmployees.length}</div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">currently working</div>
           </div>
 
-          <div className="emp-dash__stat">
+          {/* Inactive Employees Card */}
+          <div 
+            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${activeFilterType === 'inactive' ? 'ring-2 ring-red-500 ring-offset-2' : ''}`}
+            onClick={() => handleCardClick('inactive')}
+          >
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Inactive Employees</span>
+              <span className="emp-dash__stat-label text-[10px] sm:text-xs">Inactive Employees</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
-                <FiUserMinus />
+                <FiUserMinus className="text-sm sm:text-base" />
               </div>
             </div>
-            <div className="emp-dash__stat-value text-red-600">{inactiveEmployees.length}</div>
-            <div className="emp-dash__stat-meta">hidden from reports</div>
+            <div className="emp-dash__stat-value text-xl sm:text-2xl text-red-600">{inactiveEmployees.length}</div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">hidden from reports</div>
           </div>
 
-          <div className="emp-dash__stat">
+          {/* Departments Card */}
+          <div 
+            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${activeFilterType === 'departments' ? 'ring-2 ring-purple-500 ring-offset-2' : ''}`}
+            onClick={() => handleCardClick('departments')}
+          >
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Departments</span>
+              <span className="emp-dash__stat-label text-[10px] sm:text-xs">Departments</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                <FiBriefcase />
+                <FiBriefcase className="text-sm sm:text-base" />
               </div>
             </div>
-            <div className="emp-dash__stat-value">{uniqueDepartments.length}</div>
-            <div className="emp-dash__stat-meta">unique dept. units</div>
+            <div className="emp-dash__stat-value text-xl sm:text-2xl">{uniqueDepartments.length}</div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">unique dept. units</div>
           </div>
 
-          <div className="emp-dash__stat col-span-2 lg:col-span-1">
+          {/* Locations Card */}
+          <div 
+            className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md col-span-2 lg:col-span-1 ${activeFilterType === 'locations' ? 'ring-2 ring-indigo-500 ring-offset-2' : ''}`}
+            onClick={() => handleCardClick('locations')}
+          >
             <div className="emp-dash__stat-top">
-              <span className="emp-dash__stat-label">Work Locations</span>
+              <span className="emp-dash__stat-label text-[10px] sm:text-xs">Work Locations</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
-                <FiMapPin />
+                <FiMapPin className="text-sm sm:text-base" />
               </div>
             </div>
-            <div className="emp-dash__stat-value">{locations.length}</div>
-            <div className="emp-dash__stat-meta">assigned office sites</div>
+            <div className="emp-dash__stat-value text-xl sm:text-2xl">{locations.length}</div>
+            <div className="emp-dash__stat-meta text-[10px] sm:text-xs">assigned office sites</div>
           </div>
         </div>
 
-        {/* Filters Card */}
-        <div className="emp-dash__card mb-6">
-          <div className="emp-dash__card-header flex-col sm:flex-row gap-3">
-            <div>
-              <h3 className="emp-dash__card-title flex items-center gap-2">
-                <FiFilter className="text-blue-600" /> Filters &amp; Actions
-              </h3>
-              <p className="emp-dash__card-desc">Filter employees by ID/name, department, designation, or status</p>
-            </div>
-            <div className="flex gap-2 flex-wrap w-full sm:w-auto justify-start sm:justify-end">
-              <button
-                onClick={exportToExcel}
-                className="px-3 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all flex items-center gap-1.5 shadow-md"
-              >
-                <FiDownload /> Export Excel
-              </button>
-              <button
-                onClick={() => navigate("/addemployee")}
-                className="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all flex items-center gap-1.5 shadow-md"
-              >
-                <FiPlus /> Add Employee
-              </button>
-            </div>
+        {/* 🔥 Filter Info Badge - Shows what filter is active */}
+        {activeFilterType !== 'all' && (
+          <div className="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+            <span className="text-xs font-medium text-blue-700">
+              🔍 Showing: <strong>{getFilterLabel()}</strong> ({filteredEmployees.length} employees)
+            </span>
+            <button
+              onClick={() => {
+                setActiveFilterType('all');
+                setShowInactiveOnly(false);
+                setSearchTerm('');
+                setFilterDepartment('');
+                setFilterDesignation('');
+              }}
+              className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1"
+            >
+              <FiX className="w-3 h-3" /> Clear Filter
+            </button>
           </div>
-          
-          <div className="emp-dash__card-body bg-gray-50/50 p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
-              {/* ID/Name Search */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Search Employee</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <FiSearch className="w-4 h-4" />
-                  </span>
+        )}
+
+        {/* Filters Card */}
+        <div className="emp-dash__card mb-4">
+          {/* Desktop View */}
+          <div className="hidden sm:block">
+            <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200">
+              {/* Left - Filters */}
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                {/* Search */}
+                <div className="relative min-w-[140px] flex-1 max-w-[200px]">
+                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
                   <input
                     type="text"
-                    placeholder="Search ID, Name, Email, Phone..."
+                    placeholder="Search ID, Name, Email..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setPagination(prev => ({ ...prev, currentPage: 1 }));
+                    }}
+                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                   />
                 </div>
-              </div>
 
-              {/* Department Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={departmentFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Department</label>
-                <button
-                  onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDepartment 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaBuilding className="text-gray-400" />
-                    {filterDepartment || 'All Departments'}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                
-                {showDepartmentFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                {/* Department */}
+                <div className="relative" ref={departmentFilterRef}>
+                  <button
+                    onClick={() => {
+                      setShowDepartmentFilter(!showDepartmentFilter);
+                      setShowDesignationFilter(false);
+                    }}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                      filterDepartment 
+                        ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <FaBuilding className="text-gray-400 text-[10px]" />
+                    <span className="truncate max-w-[100px]">{filterDepartment || 'Departments'}</span>
+                    <span className="text-gray-400 text-[10px]">▾</span>
+                  </button>
+                  {showDepartmentFilter && (
                     <div 
-                      onClick={() => {
-                        setFilterDepartment('');
-                        setShowDepartmentFilter(false);
+                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
+                      style={{
+                        zIndex: 99999,
+                        top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                        left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
                       }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
                     >
-                      All Departments
-                    </div>
-                    {uniqueDepartments.map(dept => (
-                      <div 
-                        key={dept}
+                      <div
                         onClick={() => {
-                          setFilterDepartment(dept);
+                          setFilterDepartment('');
                           setShowDepartmentFilter(false);
+                          setPagination(prev => ({ ...prev, currentPage: 1 }));
                         }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
-                          filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
+                        className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
                       >
-                        {dept}
+                        All Departments
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Designation Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={designationFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Designation</label>
-                <button
-                  onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDesignation 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaUserTag className="text-gray-400" />
-                    {filterDesignation || 'All Designations'}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                
-                {showDesignationFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div 
-                      onClick={() => {
-                        setFilterDesignation('');
-                        setShowDesignationFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Designations
+                      {uniqueDepartments.map(dept => (
+                        <div
+                          key={dept}
+                          onClick={() => {
+                            setFilterDepartment(dept);
+                            setShowDepartmentFilter(false);
+                            setPagination(prev => ({ ...prev, currentPage: 1 }));
+                          }}
+                          className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                            filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                          }`}
+                        >
+                          {dept}
+                        </div>
+                      ))}
                     </div>
-                    {uniqueDesignations.map(des => (
-                      <div 
-                        key={des}
+                  )}
+                </div>
+
+                {/* Designation */}
+                <div className="relative" ref={designationFilterRef}>
+                  <button
+                    onClick={() => {
+                      setShowDesignationFilter(!showDesignationFilter);
+                      setShowDepartmentFilter(false);
+                    }}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                      filterDesignation 
+                        ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <FaUserTag className="text-gray-400 text-[10px]" />
+                    <span className="truncate max-w-[100px]">{filterDesignation || 'Designations'}</span>
+                    <span className="text-gray-400 text-[10px]">▾</span>
+                  </button>
+                  {showDesignationFilter && (
+                    <div 
+                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
+                      style={{
+                        zIndex: 99999,
+                        top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                        left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
+                      }}
+                    >
+                      <div
                         onClick={() => {
-                          setFilterDesignation(des);
+                          setFilterDesignation('');
                           setShowDesignationFilter(false);
+                          setPagination(prev => ({ ...prev, currentPage: 1 }));
                         }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
-                          filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
+                        className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
                       >
-                        {des}
+                        All Designations
                       </div>
-                    ))}
+                      {uniqueDesignations.map(des => (
+                        <div
+                          key={des}
+                          onClick={() => {
+                            setFilterDesignation(des);
+                            setShowDesignationFilter(false);
+                            setPagination(prev => ({ ...prev, currentPage: 1 }));
+                          }}
+                          className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                            filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                          }`}
+                        >
+                          {des}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Status Tabs - Only show when 'all' filter is active */}
+                {activeFilterType === 'all' && (
+                  <div className="flex items-center bg-gray-100 p-0.5 rounded-lg h-8">
+                    <button
+                      onClick={() => {
+                        setShowInactiveOnly(false);
+                        setPagination(prev => ({ ...prev, currentPage: 1 }));
+                      }}
+                      className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${
+                        !showInactiveOnly 
+                          ? 'bg-white text-blue-600 shadow-sm' 
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Active ({activeEmployees.length})
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowInactiveOnly(true);
+                        setPagination(prev => ({ ...prev, currentPage: 1 }));
+                      }}
+                      className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-all whitespace-nowrap ${
+                        showInactiveOnly 
+                          ? 'bg-white text-red-600 shadow-sm' 
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Inactive ({inactiveEmployees.length})
+                    </button>
                   </div>
                 )}
               </div>
 
-              {/* Status Filter Tabs */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Status</label>
-                <div className="flex items-center bg-gray-100 p-1 rounded-lg h-9 w-full">
-                  <button
-                    onClick={() => {
-                      setShowInactiveOnly(false);
-                      setPagination(prev => ({ ...prev, currentPage: 1 }));
-                    }}
-                    className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                      !showInactiveOnly 
-                        ? 'bg-white text-blue-600 shadow-sm' 
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    Active ({activeEmployees.length})
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowInactiveOnly(true);
-                      setPagination(prev => ({ ...prev, currentPage: 1 }));
-                    }}
-                    className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                      showInactiveOnly 
-                        ? 'bg-white text-red-650 shadow-sm' 
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    Inactive ({inactiveEmployees.length})
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Filter Actions */}
-            <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200/50">
-              <div className="text-xs text-gray-500 font-medium">
-                Showing <strong>{filteredEmployees.length}</strong> of <strong>{employees.length}</strong> employees
-              </div>
-              <div className="flex gap-2">
-                {(filterDepartment || filterDesignation || searchTerm) && (
+              {/* Right - Action Buttons */}
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <button
+                  onClick={exportToExcel}
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap"
+                >
+                  <FiDownload className="w-3 h-3" />
+                  Export
+                </button>
+                <button
+                  onClick={() => navigate("/addemployee")}
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+                >
+                  <FiPlus className="w-3 h-3" />
+                  Add
+                </button>
+                {(filterDepartment || filterDesignation || searchTerm || activeFilterType !== 'all') && (
                   <button
                     onClick={() => {
                       setFilterDepartment('');
                       setFilterDesignation('');
                       setSearchTerm('');
+                      setActiveFilterType('all');
+                      setShowInactiveOnly(false);
+                      setPagination(prev => ({ ...prev, currentPage: 1 }));
                     }}
-                    className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 shadow-sm"
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
                   >
-                    <FiTrash2 /> Clear Filters
+                    <FiTrash2 className="w-3 h-3" />
+                    Clear
                   </button>
                 )}
               </div>
             </div>
           </div>
+
+          {/* Mobile View */}
+          <div className="sm:hidden">
+            {/* Mobile Header with Toggle */}
+            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+              >
+                <FiFilter className="text-blue-600 text-base" />
+                <span>Filters</span>
+                {showMobileFilters ? (
+                  <FaChevronUp className="text-gray-400" />
+                ) : (
+                  <FaChevronDown className="text-gray-400" />
+                )}
+              </button>
+              <span className="text-xs text-gray-500">
+                <strong>{filteredEmployees.length}</strong> employees
+              </span>
+            </div>
+
+            {/* Mobile Filters */}
+            {showMobileFilters && (
+              <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+                {/* Search */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
+                  <div className="relative">
+                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                    <input
+                      type="text"
+                      placeholder="Search ID, Name, Email..."
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPagination(prev => ({ ...prev, currentPage: 1 }));
+                      }}
+                      className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Department */}
+                <div className="relative" ref={departmentFilterRef}>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
+                  <button
+                    onClick={() => {
+                      setShowDepartmentFilter(!showDepartmentFilter);
+                      setShowDesignationFilter(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                      filterDepartment 
+                        ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
+                        : 'border-gray-300 text-gray-700'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <FaBuilding className="text-gray-400" />
+                      {filterDepartment || 'All Departments'}
+                    </span>
+                    <span className="text-gray-400">▾</span>
+                  </button>
+                  {showDepartmentFilter && (
+                    <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      <div
+                        onClick={() => {
+                          setFilterDepartment('');
+                          setShowDepartmentFilter(false);
+                          setPagination(prev => ({ ...prev, currentPage: 1 }));
+                        }}
+                        className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                      >
+                        All Departments
+                      </div>
+                      {uniqueDepartments.map(dept => (
+                        <div
+                          key={dept}
+                          onClick={() => {
+                            setFilterDepartment(dept);
+                            setShowDepartmentFilter(false);
+                            setPagination(prev => ({ ...prev, currentPage: 1 }));
+                          }}
+                          className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                            filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                          }`}
+                        >
+                          {dept}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Designation */}
+                <div className="relative" ref={designationFilterRef}>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
+                  <button
+                    onClick={() => {
+                      setShowDesignationFilter(!showDesignationFilter);
+                      setShowDepartmentFilter(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                      filterDesignation 
+                        ? 'border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50' 
+                        : 'border-gray-300 text-gray-700'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <FaUserTag className="text-gray-400" />
+                      {filterDesignation || 'All Designations'}
+                    </span>
+                    <span className="text-gray-400">▾</span>
+                  </button>
+                  {showDesignationFilter && (
+                    <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      <div
+                        onClick={() => {
+                          setFilterDesignation('');
+                          setShowDesignationFilter(false);
+                          setPagination(prev => ({ ...prev, currentPage: 1 }));
+                        }}
+                        className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                      >
+                        All Designations
+                      </div>
+                      {uniqueDesignations.map(des => (
+                        <div
+                          key={des}
+                          onClick={() => {
+                            setFilterDesignation(des);
+                            setShowDesignationFilter(false);
+                            setPagination(prev => ({ ...prev, currentPage: 1 }));
+                          }}
+                          className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                            filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
+                          }`}
+                        >
+                          {des}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Status Tabs */}
+                {activeFilterType === 'all' && (
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                    <div className="flex bg-gray-100 p-1 rounded-lg">
+                      <button
+                        onClick={() => {
+                          setShowInactiveOnly(false);
+                          setPagination(prev => ({ ...prev, currentPage: 1 }));
+                        }}
+                        className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
+                          !showInactiveOnly 
+                            ? 'bg-white text-blue-600 shadow-sm' 
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        Active ({activeEmployees.length})
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowInactiveOnly(true);
+                          setPagination(prev => ({ ...prev, currentPage: 1 }));
+                        }}
+                        className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
+                          showInactiveOnly 
+                            ? 'bg-white text-red-600 shadow-sm' 
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        Inactive ({inactiveEmployees.length})
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Filter Info */}
+                {activeFilterType !== 'all' && (
+                  <div className="p-2 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-xs font-medium text-blue-700">
+                      Showing: <strong>{getFilterLabel()}</strong>
+                    </p>
+                  </div>
+                )}
+
+                {/* Mobile Action Buttons */}
+                <div className="pt-3 border-t border-gray-200 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={exportToExcel}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
+                    >
+                      <FiDownload className="w-4 h-4" />
+                      Export
+                    </button>
+                    <button
+                      onClick={() => navigate("/addemployee")}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                    >
+                      <FiPlus className="w-4 h-4" />
+                      Add
+                    </button>
+                  </div>
+                  {(filterDepartment || filterDesignation || searchTerm || activeFilterType !== 'all') && (
+                    <button
+                      onClick={() => {
+                        setFilterDepartment('');
+                        setFilterDesignation('');
+                        setSearchTerm('');
+                        setActiveFilterType('all');
+                        setShowInactiveOnly(false);
+                        setPagination(prev => ({ ...prev, currentPage: 1 }));
+                      }}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                    >
+                      <FiTrash2 className="w-4 h-4" />
+                      Clear All Filters
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Table Section */}
         <div className="emp-dash__card">
-          <div className="emp-dash__card-header">
-            <div>
-              <h3 className="emp-dash__card-title">Employee Directory</h3>
-              <p className="emp-dash__card-desc">Click details icon to view complete details, assign office sites or toggle status.</p>
-            </div>
-          </div>
-
           <div className="overflow-x-auto">
             <table className="emp-dash__table">
               <thead>
                 <tr>
                   <th>Employee ID</th>
                   <th>Name</th>
-                  <th>Phone</th>
-                  <th>Dept</th>
-                  <th>Desig</th>
-                  <th style={{ textAlign: "center" }}>Join Date</th>
-                  <th style={{ textAlign: "right" }}>Salary</th>
-                  <th style={{ textAlign: "center" }}>Shift</th>
-                  <th style={{ textAlign: "center" }}>Week Off</th>
-                  <th>Location</th>
+                  <th className="hidden sm:table-cell">Phone</th>
+                  <th className="hidden md:table-cell">Dept</th>
+                  <th className="hidden lg:table-cell">Desig</th>
+                  <th className="hidden sm:table-cell" style={{ textAlign: "center" }}>Join Date</th>
+                  <th className="hidden md:table-cell" style={{ textAlign: "right" }}>Salary</th>
+                  <th className="hidden lg:table-cell" style={{ textAlign: "center" }}>Shift</th>
+                  <th className="hidden lg:table-cell" style={{ textAlign: "center" }}>Week Off</th>
+                  <th className="hidden xl:table-cell">Location</th>
                   <th style={{ textAlign: "center" }}>Status</th>
                   <th style={{ textAlign: "center" }}>Actions</th>
                 </tr>
@@ -4543,24 +4836,24 @@ const EmployeeList = () => {
                         key={emp._id} 
                         className={`hover:bg-gray-50/60 transition-all ${isHidden ? 'bg-red-50/30' : ''}`}
                       >
-                        <td className="font-semibold text-gray-900 whitespace-nowrap">
+                        <td className="font-semibold text-gray-900 whitespace-nowrap text-[11px]">
                           {emp.employeeId}
                         </td>
-                        <td className="font-semibold text-gray-900 whitespace-nowrap">
+                        <td className="font-semibold text-gray-900 whitespace-nowrap text-xs">
                           {emp.name}
                         </td>
-                        <td className="text-gray-600 whitespace-nowrap">{emp.phone}</td>
-                        <td className="text-gray-600 truncate max-w-[120px]" title={emp.department}>{emp.department || "N/A"}</td>
-                        <td className="text-gray-600 truncate max-w-[120px]" title={emp.role || emp.designation}>{emp.role || emp.designation || "N/A"}</td>
-                        <td style={{ textAlign: "center" }} className="text-gray-500 font-medium whitespace-nowrap">
+                        <td className="text-gray-600 whitespace-nowrap hidden sm:table-cell text-[11px]">{emp.phone}</td>
+                        <td className="text-gray-600 truncate max-w-[120px] hidden md:table-cell text-[11px]" title={emp.department}>{emp.department || "N/A"}</td>
+                        <td className="text-gray-600 truncate max-w-[120px] hidden lg:table-cell text-[11px]" title={emp.role || emp.designation}>{emp.role || emp.designation || "N/A"}</td>
+                        <td style={{ textAlign: "center" }} className="text-gray-500 font-medium whitespace-nowrap hidden sm:table-cell text-[11px]">
                           {emp.joinDate ? new Date(emp.joinDate).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : "-"}
                         </td>
-                        <td style={{ textAlign: "right" }} className="font-semibold text-green-600 whitespace-nowrap">₹{emp.salaryPerMonth || 0}</td>
-                        <td style={{ textAlign: "center" }} className="font-medium text-purple-700">{emp.shiftHours || 8}h</td>
-                        <td style={{ textAlign: "center" }} className="font-medium text-gray-500">{emp.weekOffPerMonth || 0}</td>
-                        <td className="font-medium text-blue-600 whitespace-nowrap">{getLocationName(emp.location)}</td>
+                        <td style={{ textAlign: "right" }} className="font-semibold text-green-600 whitespace-nowrap hidden md:table-cell text-[11px]">₹{emp.salaryPerMonth || 0}</td>
+                        <td style={{ textAlign: "center" }} className="font-medium text-purple-700 hidden lg:table-cell text-[11px]">{emp.shiftHours || 8}h</td>
+                        <td style={{ textAlign: "center" }} className="font-medium text-gray-500 hidden lg:table-cell text-[11px]">{emp.weekOffPerMonth || 0}</td>
+                        <td className="font-medium text-blue-600 whitespace-nowrap hidden xl:table-cell text-[11px]">{getLocationName(emp.location)}</td>
                         <td style={{ textAlign: "center" }}>
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                          <span className={`px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold ${
                             isHidden 
                               ? 'bg-red-50 text-red-700 border border-red-200' 
                               : 'bg-green-50 text-green-700 border border-green-200'
@@ -4569,7 +4862,7 @@ const EmployeeList = () => {
                           </span>
                         </td>
                         <td style={{ textAlign: "center" }}>
-                          <div className="flex items-center justify-center gap-1.5">
+                          <div className="flex items-center justify-center gap-1">
                             <button 
                               className="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-all shadow-sm"
                               onClick={() => handleView(emp)} 
@@ -4578,7 +4871,7 @@ const EmployeeList = () => {
                               <FiEye className="w-3.5 h-3.5" />
                             </button>
                             <button 
-                              className="inline-flex items-center justify-center p-1.5 text-yellow-600 bg-yellow-50 hover:bg-yellow-100 rounded-md transition-all shadow-sm"
+                              className="inline-flex items-center justify-center p-1.5 text-yellow-600 bg-yellow-50 hover:bg-yellow-100 rounded-md transition-all shadow-sm hidden sm:inline-flex"
                               onClick={() => handleEdit(emp)} 
                               title="Edit Employee"
                             >
@@ -4587,7 +4880,7 @@ const EmployeeList = () => {
                             
                             {/* Location Button */}
                             <button 
-                              className="inline-flex items-center justify-center p-1.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-all shadow-sm"
+                              className="inline-flex items-center justify-center p-1.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-all shadow-sm hidden sm:inline-flex"
                               onClick={() => handleAssignLocation(emp)} 
                               title="Assign Location"
                             >
@@ -4595,11 +4888,11 @@ const EmployeeList = () => {
                             </button>
                             
                             {/* Status Toggle Switch */}
-                            <div className="flex items-center mx-1">
+                            <div className="flex items-center mx-0.5">
                               <button
                                 onClick={() => handleToggleStatus(emp)}
                                 disabled={loading}
-                                className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                                className={`relative inline-flex h-5 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                                   !isHidden ? 'bg-blue-600' : 'bg-gray-300'
                                 } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 title={isHidden ? "Make Active" : "Make Inactive"}
@@ -4627,7 +4920,9 @@ const EmployeeList = () => {
                 ) : (
                   <tr>
                     <td colSpan="12" className="py-12 text-center text-gray-500 font-medium">
-                      {showInactiveOnly ? 'No inactive employees found.' : 'No active employees found.'}
+                      {activeFilterType === 'all' && showInactiveOnly ? 'No inactive employees found.' : 
+                       activeFilterType === 'all' && !showInactiveOnly ? 'No active employees found.' :
+                       `No ${getFilterLabel().toLowerCase()} found.`}
                     </td>
                   </tr>
                 )}
@@ -4639,7 +4934,7 @@ const EmployeeList = () => {
           {filteredEmployees.length > 0 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200/50 bg-gray-50/30">
               {/* Left Side - Showing Info + Select */}
-              <div className="flex items-center gap-2 text-xs text-gray-500">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
                 <span>Show</span>
                 <select
                   value={pagination.limit}
@@ -4654,9 +4949,11 @@ const EmployeeList = () => {
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                 </select>
-                <span>entries per page</span>
-                <span className="mx-2 text-gray-300">|</span>
-                <span>Showing <strong>{indexOfFirst + 1}</strong> to <strong>{Math.min(indexOfLast, filteredEmployees.length)}</strong> of <strong>{filteredEmployees.length}</strong> results</span>
+                <span className="hidden sm:inline">entries per page</span>
+                <span className="hidden sm:inline text-gray-300">|</span>
+                <span className="text-[10px] sm:text-xs">
+                  Showing <strong>{indexOfFirst + 1}</strong> to <strong>{Math.min(indexOfLast, filteredEmployees.length)}</strong> of <strong>{filteredEmployees.length}</strong>
+                </span>
               </div>
 
               {/* Pagination buttons */}
@@ -4664,7 +4961,7 @@ const EmployeeList = () => {
                 <button
                   onClick={handlePrevPage}
                   disabled={pagination.currentPage === 1}
-                  className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
+                  className={`px-2 py-1 text-xs font-semibold border rounded-lg transition-all ${
                     pagination.currentPage === 1
                       ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
                       : "text-gray-700 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"
@@ -4678,7 +4975,7 @@ const EmployeeList = () => {
                     key={index}
                     onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                     disabled={page === "..."}
-                    className={`px-3 py-1 text-xs font-semibold border rounded-lg transition-all min-w-[32px] ${
+                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all min-w-[28px] sm:min-w-[32px] ${
                       page === "..."
                         ? "text-gray-400 bg-transparent border-transparent cursor-default"
                         : pagination.currentPage === page
@@ -4693,7 +4990,7 @@ const EmployeeList = () => {
                 <button
                   onClick={handleNextPage}
                   disabled={pagination.currentPage === pagination.totalPages}
-                  className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
+                  className={`px-2 py-1 text-xs font-semibold border rounded-lg transition-all ${
                     pagination.currentPage === pagination.totalPages
                       ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
                       : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300 shadow-sm"

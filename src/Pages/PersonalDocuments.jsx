@@ -992,6 +992,7 @@ import {
   FaEye, FaSave, FaSearch, FaSignOutAlt, FaSpinner, FaSync, FaTimes,
   FaUser, FaUserTie
 } from "react-icons/fa";
+import { FiFilter } from "react-icons/fi";
 import { toast } from "react-toastify";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
@@ -1384,308 +1385,329 @@ export default function PersonalDocuments() {
     const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
 
     return (
-      <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-0 md:p-2 lg:p-4 pb-20">
+      <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-6 lg:p-8">
         {/* Page Header Section */}
-        <div className="px-6 py-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
           <div>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
               Personal Documents
-              <span className="px-3 py-1 bg-blue-600 text-gray-900 text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-lg shadow-blue-200">
+              <span className="px-3 py-1 bg-blue-600 text-gray-900 text-[10px] font-bold uppercase tracking-[0.2em] rounded-full shadow-lg shadow-blue-200">
                 {filteredData.length} Records
               </span>
             </h1>
-            <p className="text-sm font-bold text-gray-500 mt-1 uppercase tracking-widest pl-1">Document Verification Manager</p>
+            <p className="text-sm text-gray-500 mt-1">Document Verification Manager</p>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={fetchData} className="h-11 px-5 text-xs font-black text-gray-500 bg-white border border-gray-200 shadow-sm rounded-xl hover:bg-white transition-all flex items-center gap-2 uppercase tracking-widest">
+            <button 
+              onClick={fetchData} 
+              className="h-10 px-4 text-xs font-bold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-2"
+            >
               <FaSync className={`text-blue-600 ${loading ? 'animate-spin' : ''}`} /> Refresh
             </button>
             <button
               onClick={() => window.location.assign('/employee-resignation')}
-              className="h-11 px-6 text-xs font-black text-gray-900 bg-red-600 shadow-lg shadow-red-100 rounded-xl hover:bg-red-700 transition-all flex items-center gap-2 uppercase tracking-widest"
+              className="h-10 px-4 text-xs font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all flex items-center gap-2"
             >
               <FaSignOutAlt /> Resignations
             </button>
           </div>
         </div>
 
-        {/* Unified Search & Filter Bar */}
-        <div className="mx-6 mb-6 p-4 bg-white/80 backdrop-blur-md rounded-2xl shadow-xl border border-white/50">
-          <div className="flex flex-wrap items-center gap-4">
-            {/* Professional Search Input */}
-            <div className="relative flex-1 min-w-[300px] group">
-              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 group-focus-within:text-blue-600 transition-colors" />
+        {/* Unified Search & Filter Bar - Like Assessment Manager */}
+        <div className="p-3 mb-3 bg-white rounded-lg shadow-md">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search Input */}
+            <div className="relative flex-1 min-w-[180px]">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
               <input
                 type="text"
                 placeholder="Search by candidate name or identifier..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-white border-transparent rounded-xl text-sm font-bold text-gray-700 placeholder:text-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none shadow-inner"
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-700 hover:text-gray-500 transition-colors bg-gray-100 p-1.5 rounded-lg"
-                >
-                  <FaTimes size={10} />
-                </button>
+            </div>
+
+            {/* Role Filter - Like Assessment Manager */}
+            <div className="relative" ref={roleDropdownRef}>
+              <button
+                onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+                className={`h-8 px-3 text-xs font-medium rounded-md transition flex items-center gap-1 ${
+                  roleFilter 
+                    ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                }`}
+              >
+                <FaBriefcase className="text-xs" /> Role {roleFilter && `: ${roleFilter}`}
+              </button>
+              
+              {/* Role Dropdown */}
+              {isRoleDropdownOpen && (
+                <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  <div className="p-2 border-b border-gray-200 bg-white">
+                    <div className="relative">
+                      <FaSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
+                      <input
+                        type="text"
+                        className="w-full py-1 pl-7 pr-2 text-xs bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="Search roles..."
+                        value={roleSearchQuery}
+                        onChange={(e) => setRoleSearchQuery(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  <div 
+                    onClick={() => {
+                      setRoleFilter('');
+                      setIsRoleDropdownOpen(false);
+                      setRoleSearchQuery('');
+                    }}
+                    className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-gray-200 font-medium ${
+                      !roleFilter ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                    }`}
+                  >
+                    All Roles
+                  </div>
+                  {roles
+                    .filter(r => r.name.toLowerCase().includes(roleSearchQuery.toLowerCase()))
+                    .map((r) => (
+                      <div 
+                        key={r._id}
+                        onClick={() => {
+                          setRoleFilter(r.name);
+                          setIsRoleDropdownOpen(false);
+                          setRoleSearchQuery('');
+                        }}
+                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
+                          roleFilter === r.name ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                        }`}
+                      >
+                        {r.name}
+                      </div>
+                    ))}
+                  {roles.filter(r => r.name.toLowerCase().includes(roleSearchQuery.toLowerCase())).length === 0 && (
+                    <div className="px-3 py-2 text-xs text-gray-500 text-center">
+                      No roles found
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Role Dropdown */}
-              <div className="relative" ref={roleDropdownRef}>
-                <button
-                  onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-                  className={`h-12 px-5 text-xs font-black rounded-xl transition-all flex items-center gap-2 border uppercase tracking-widest ${roleFilter
-                    ? 'bg-blue-600 text-gray-900 border-blue-600 shadow-lg shadow-blue-100'
-                    : 'bg-white text-gray-500 border-gray-200 hover:border-blue-200'
-                    }`}
-                >
-                  <FaBriefcase className={roleFilter ? 'text-gray-900' : 'text-blue-600'} />
-                  {roleFilter || 'All Departments'}
-                </button>
+            {/* Date Filter */}
+            <div className="relative w-[140px]">
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
 
-                {isRoleDropdownOpen && (
-                  <div className="absolute z-50 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden py-1 animate-in fade-in slide-in-from-top-2">
-                    <div className="p-3 border-b border-gray-50 bg-white/50">
-                      <div className="relative">
-                        <FaUserTie className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs" />
-                        <input
-                          type="text"
-                          className="w-full py-2 pl-9 pr-3 text-xs bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
-                          placeholder="Search roles..."
-                          value={roleSearchQuery}
-                          onChange={(e) => setRoleSearchQuery(e.target.value)}
-                          onClick={(e) => e.stopPropagation()}
-                          autoFocus
-                        />
-                      </div>
-                    </div>
-                    <div className="max-h-60 overflow-y-auto">
-                      <div
-                        onClick={() => { setRoleFilter(''); setIsRoleDropdownOpen(false); setRoleSearchQuery(''); }}
-                        className={`px-4 py-2.5 text-xs font-bold cursor-pointer hover:bg-blue-50 transition-colors ${!roleFilter ? 'text-blue-600 bg-blue-50/80' : 'text-gray-500'}`}
-                      >
-                        ALL DEPARTMENTS
-                      </div>
-                      {roles
-                        .filter(r => r.name.toLowerCase().includes(roleSearchQuery.toLowerCase()))
-                        .map((r) => (
-                          <div
-                            key={r._id}
-                            onClick={() => { setRoleFilter(r.name); setIsRoleDropdownOpen(false); setRoleSearchQuery(''); }}
-                            className={`px-4 py-2.5 text-xs font-bold cursor-pointer hover:bg-blue-50 transition-colors ${roleFilter === r.name ? 'text-blue-600 bg-blue-50/80' : 'text-gray-500'}`}
-                          >
-                            {r.name.toUpperCase()}
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Date Filter */}
-              <div className="relative group">
-                <FaCalendarAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-900 text-xs pointer-events-none group-focus-within:text-blue-600 transition-colors" />
-                <input
-                  type="date"
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
-                  className="h-12 pl-12 pr-4 bg-white border border-gray-200 rounded-xl text-xs font-black text-gray-500 uppercase tracking-widest focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none cursor-pointer hover:border-blue-200"
-                />
-              </div>
-
-              {/* Clear Action */}
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2 ml-auto">
+              {/* Reset Filters Button */}
               {(searchQuery || roleFilter || dateFilter) && (
                 <button
                   onClick={resetFilters}
-                  className="h-12 px-6 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] hover:bg-rose-100 transition-all active:scale-95 flex items-center gap-2"
+                  className="h-8 px-3 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition"
                 >
-                  <FaTimes /> Clear Filters
+                  Clear
                 </button>
               )}
             </div>
           </div>
         </div>
 
-        <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
-          <table className="min-w-full">
-            <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
-              <tr>
-                <th className="py-2 text-center">Candidate Details</th>
-                {["Aadhar", "PAN", "Pass", "10th", "12th", "Grad", "Exp", "Bank"].map((header) => (
-                  <th key={header} className="py-2 text-center">{header}</th>
-                ))}
-                <th className="py-2 text-center border-l border-white/20">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {currentItems.map((row) => {
-                const docs = row.documents || {};
-                const candidateObj = row.candidateId && typeof row.candidateId === 'object' ? row.candidateId : null;
-                const candName = candidateObj?.name || row.candidateName || row.name || 'Unknown';
-                const candEmail = candidateObj?.email || row.email || '';
-                const candId = candidateObj?._id || candidateObj?.id || row.candidateId || row._id || '-';
-
-                const renderDocMini = (docKey) => {
-                  const doc = docs[docKey] || {};
-                  const uploaded = !!doc.filePath;
-                  return (
-                    <td className="p-2 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        {uploaded ? (
-                          <>
-                            <button
-                              onClick={() => openFile(doc.filePath)}
-                              className="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-gray-900 transition-all"
-                              title="View"
-                            >
-                              <FaEye size={10} />
-                            </button>
-                            <button
-                              onClick={() => openFile(doc.filePath)}
-                              className="p-1 rounded bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-all"
-                              title="Download"
-                            >
-                              <FaDownload size={10} />
-                            </button>
-                          </>
-                        ) : (
-                          <FaTimes className="text-gray-900" size={10} />
-                        )}
-                      </div>
-                    </td>
-                  );
-                };
-
-                return (
-                  <tr key={candId} className="hover:bg-white transition-colors">
-                    <td className="p-2 text-center">
-                      <div className="flex items-center justify-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-gray-900 shadow-sm text-xs">
-                          {candName.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-gray-700">{candName}</div>
-                          <div className="text-[8px] text-gray-500 font-medium">{candEmail || candId.slice(-8)}</div>
-                        </div>
-                      </div>
-                    </td>
-                    {renderDocMini('aadharCard')}
-                    {renderDocMini('panCard')}
-                    {renderDocMini('passportPhoto')}
-                    {renderDocMini('tenthCertificate')}
-                    {renderDocMini('twelfthCertificate')}
-                    {renderDocMini('graduationCertificate')}
-                    {renderDocMini('experienceLetters')}
-                    <td className="p-2 text-center">
-                      <div className={`w-2 h-2 mx-auto rounded-full ${docs.bankDetails?.bankName ? 'bg-blue-600 shadow-sm' : 'bg-gray-100'}`}></div>
-                    </td>
-                    <td className="p-2 text-center border-l border-gray-50">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => window.location.assign(`/personaldocuments?userId=${candId}`)}
-                          className="p-1.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-gray-900 transition-all"
-                          title="Review"
-                        >
-                          <FaEye size={12} />
-                        </button>
-                        <button
-                          onClick={() => handleBulkDownload(row)}
-                          disabled={isDownloadingBulk}
-                          className="p-1.5 rounded bg-emerald-50 text-blue-700 hover:bg-blue-600 hover:text-gray-900 transition-all disabled:opacity-50"
-                          title="Bulk Download"
-                        >
-                          <FaDownload size={12} />
-                        </button>
-                      </div>
-                    </td>
+        {/* Table */}
+        <div className="p-0 mb-0 bg-white border shadow-lg rounded-2xl">
+          {filteredData.length > 0 ? (
+            <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+              <table className="min-w-full">
+                <thead className="text-sm text-left text-gray-900 bg-gradient-to-r from-green-500 to-blue-600">
+                  <tr>
+                    <th className="py-2 text-center">Candidate Details</th>
+                    {["Aadhar", "PAN", "Pass", "10th", "12th", "Grad", "Exp", "Bank"].map((header) => (
+                      <th key={header} className="py-2 text-center">{header}</th>
+                    ))}
+                    <th className="py-2 text-center border-l border-white/20">Actions</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {currentItems.map((row) => {
+                    const docs = row.documents || {};
+                    const candidateObj = row.candidateId && typeof row.candidateId === 'object' ? row.candidateId : null;
+                    const candName = candidateObj?.name || row.candidateName || row.name || 'Unknown';
+                    const candEmail = candidateObj?.email || row.email || '';
+                    const candId = candidateObj?._id || candidateObj?.id || row.candidateId || row._id || '-';
 
-          {/* Pagination */}
-          {filteredData.length > 0 && (
-            <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-white sm:flex-row">
-              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
-                <span>Showing</span>
-                <span className="font-medium">
-                  {indexOfFirstItem + 1}
-                </span>
-                <span>to</span>
-                <span className="font-medium">
-                  {Math.min(indexOfLastItem, filteredData.length)}
-                </span>
-                <span>of</span>
-                <span className="font-medium">
-                  {filteredData.length}
-                </span>
-                <span>results</span>
+                    const renderDocMini = (docKey) => {
+                      const doc = docs[docKey] || {};
+                      const uploaded = !!doc.filePath;
+                      return (
+                        <td className="p-2 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            {uploaded ? (
+                              <>
+                                <button
+                                  onClick={() => openFile(doc.filePath)}
+                                  className="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-gray-900 transition-all"
+                                  title="View"
+                                >
+                                  <FaEye size={10} />
+                                </button>
+                                <button
+                                  onClick={() => openFile(doc.filePath)}
+                                  className="p-1 rounded bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-all"
+                                  title="Download"
+                                >
+                                  <FaDownload size={10} />
+                                </button>
+                              </>
+                            ) : (
+                              <FaTimes className="text-gray-900" size={10} />
+                            )}
+                          </div>
+                        </td>
+                      );
+                    };
 
-                <select
-                  value={pagination.limit}
-                  onChange={(e) => {
-                    const newLimit = Number(e.target.value);
-                    handleItemsPerPageChange(newLimit);
-                  }}
-                  className="p-1 ml-2 text-sm border rounded-lg"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
+                    return (
+                      <tr key={candId} className="hover:bg-white transition-colors">
+                        <td className="p-2 text-center">
+                          <div className="flex items-center justify-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-gray-900 shadow-sm text-xs">
+                              {candName.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold text-gray-700">{candName}</div>
+                              <div className="text-[8px] text-gray-500 font-medium">{candEmail || candId.slice(-8)}</div>
+                            </div>
+                          </div>
+                        </td>
+                        {renderDocMini('aadharCard')}
+                        {renderDocMini('panCard')}
+                        {renderDocMini('passportPhoto')}
+                        {renderDocMini('tenthCertificate')}
+                        {renderDocMini('twelfthCertificate')}
+                        {renderDocMini('graduationCertificate')}
+                        {renderDocMini('experienceLetters')}
+                        <td className="p-2 text-center">
+                          <div className={`w-2 h-2 mx-auto rounded-full ${docs.bankDetails?.bankName ? 'bg-blue-600 shadow-sm' : 'bg-gray-100'}`}></div>
+                        </td>
+                        <td className="p-2 text-center border-l border-gray-50">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => window.location.assign(`/personaldocuments?userId=${candId}`)}
+                              className="p-1.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-gray-900 transition-all"
+                              title="Review"
+                            >
+                              <FaEye size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleBulkDownload(row)}
+                              disabled={isDownloadingBulk}
+                              className="p-1.5 rounded bg-emerald-50 text-blue-700 hover:bg-blue-600 hover:text-gray-900 transition-all disabled:opacity-50"
+                              title="Bulk Download"
+                            >
+                              <FaDownload size={12} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
 
-              <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                <button
-                  onClick={handlePrevPage}
-                  disabled={pagination.currentPage === 1}
-                  className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === 1
-                    ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-white"
-                    }`}
-                >
-                  Previous
-                </button>
+              {/* Pagination */}
+              {filteredData.length > 0 && (
+                <div className="flex flex-col items-center justify-between px-4 py-3 border-t border-gray-200 bg-white sm:flex-row">
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
+                    <span>Showing</span>
+                    <span className="font-medium">
+                      {indexOfFirstItem + 1}
+                    </span>
+                    <span>to</span>
+                    <span className="font-medium">
+                      {Math.min(indexOfLastItem, filteredData.length)}
+                    </span>
+                    <span>of</span>
+                    <span className="font-medium">
+                      {filteredData.length}
+                    </span>
+                    <span>results</span>
 
-                <div className="flex items-center gap-1">
-                  {getPageNumbers().map((page, index) => (
+                    <select
+                      value={pagination.limit}
+                      onChange={(e) => {
+                        const newLimit = Number(e.target.value);
+                        handleItemsPerPageChange(newLimit);
+                      }}
+                      className="p-1 ml-2 text-sm border rounded-lg"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-2 sm:mt-0">
                     <button
-                      key={index}
-                      onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
-                      disabled={page === "..."}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${page === "..."
-                        ? "text-gray-500 cursor-default"
-                        : pagination.currentPage === page
-                          ? "bg-blue-600 text-gray-900"
-                          : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
+                      onClick={handlePrevPage}
+                      disabled={pagination.currentPage === 1}
+                      className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === 1
+                        ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-white"
                         }`}
                     >
-                      {page}
+                      Previous
                     </button>
-                  ))}
+
+                    <div className="flex items-center gap-1">
+                      {getPageNumbers().map((page, index) => (
+                        <button
+                          key={index}
+                          onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
+                          disabled={page === "..."}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${page === "..."
+                            ? "text-gray-500 cursor-default"
+                            : pagination.currentPage === page
+                              ? "bg-blue-600 text-gray-900"
+                              : "bg-white text-gray-700 border border-gray-300 hover:bg-white"
+                            }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={handleNextPage}
+                      disabled={pagination.currentPage === pagination.totalPages}
+                      className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === pagination.totalPages
+                        ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-white"
+                        }`}
+                    >
+                      Next
+                    </button>
+                  </div>
                 </div>
-
-                <button
-                  onClick={handleNextPage}
-                  disabled={pagination.currentPage === pagination.totalPages}
-                  className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === pagination.totalPages
-                    ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-white"
-                    }`}
-                >
-                  Next
-                </button>
-              </div>
+              )}
             </div>
-          )}
-
-          {filteredData.length === 0 && (
-            <div className="p-12 text-center text-gray-500 text-sm font-medium">No active records found.</div>
+          ) : (
+            <div className="p-20 text-center">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaSearch className="text-2xl text-gray-400" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-700">No documents found</h2>
+              <p className="text-gray-500 text-xs">No active records found.</p>
+            </div>
           )}
         </div>
       </div>
@@ -1698,8 +1720,8 @@ export default function PersonalDocuments() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-0 md:p-4 lg:p-6">
-      <div className="w-full space-y-8 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-6 lg:p-8">
+      <div className="w-full space-y-6">
         {/* Header Section */}
         <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-200 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-6">

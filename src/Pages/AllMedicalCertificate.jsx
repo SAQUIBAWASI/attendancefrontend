@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import CountUp from "react-countup";
-import { FaSearch, FaDownload, FaSync } from "react-icons/fa";
+import { FaSearch, FaDownload, FaSync, FaChevronUp, FaChevronDown } from "react-icons/fa";
 import { 
   FiList, 
   FiCheckCircle, 
@@ -113,6 +113,7 @@ const AllMedicalCertificate = () => {
   const [certificates, setCertificates] = useState([]);
   const [filteredCertificates, setFilteredCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -281,16 +282,16 @@ const AllMedicalCertificate = () => {
 
   return (
     <div className="emp-dash">
-      <main className="p-4 sm:p-6 lg:p-8">
+      <main className="p-2 sm:p-4 lg:p-6">
         {/* Dashboard Header */}
         <div className="emp-dash__header">
-          <div>
-            <h1 className="emp-dash__greeting">
+           <div className="flex items-center gap-3 flex-wrap">
+  <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
               Medical <span>Certificates</span>
             </h1>
-            <p className="emp-dash__subtitle">
+           {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
               Monitor and manage employee medical certificate compliance
-            </p>
+            </p> */}
           </div>
           <div className="emp-dash__date-pill">
             <FiCalendar />
@@ -305,9 +306,9 @@ const AllMedicalCertificate = () => {
           </div>
         </div>
 
-        {/* Top KPI Stats Grid */}
+        {/* Top KPI Stats Grid - 2 per row on mobile */}
         {!loading && (
-          <div className="emp-dash__stats">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mb-6">
             <div className="emp-dash__stat">
               <div className="emp-dash__stat-top">
                 <span className="emp-dash__stat-label">Critical Risk</span>
@@ -360,7 +361,7 @@ const AllMedicalCertificate = () => {
               <div className="emp-dash__stat-meta">total records</div>
             </div>
 
-            <div className="emp-dash__stat">
+            <div className="emp-dash__stat col-span-2 md:col-span-1">
               <div className="emp-dash__stat-top">
                 <span className="emp-dash__stat-label">Compliance Rate</span>
                 <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
@@ -375,8 +376,8 @@ const AllMedicalCertificate = () => {
           </div>
         )}
 
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 gap-4 mb-4 lg:grid-cols-2">
+        {/* Charts Section - Stack on mobile */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           {/* Compliance Distribution - Bar Chart */}
           <div className="emp-dash__card">
             <div className="emp-dash__card-header">
@@ -395,7 +396,7 @@ const AllMedicalCertificate = () => {
               </button>
             </div>
             <div className="emp-dash__card-body">
-              <div className="flex-1 w-full h-[300px]">
+              <div className="flex-1 w-full h-[250px] sm:h-[300px]">
                  <ResponsiveContainer width="100%" height="100%">
                    <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -403,16 +404,16 @@ const AllMedicalCertificate = () => {
                         dataKey="label" 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fill: '#64748b', fontSize: 11 }}
+                        tick={{ fill: '#64748b', fontSize: 10 }}
                         interval={0}
                       />
                       <YAxis 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fill: '#64748b', fontSize: 11 }}
+                        tick={{ fill: '#64748b', fontSize: 10 }}
                       />
                       <Tooltip content={<StatusTooltip />} cursor={{ fill: '#f8fafc' }} />
-                      <Bar dataKey="val" radius={[4, 4, 0, 0]} barSize={35}>
+                      <Bar dataKey="val" radius={[4, 4, 0, 0]} barSize={30}>
                          {chartData.map((entry, index) => (
                            <Cell key={`cell-${index}`} fill={entry.color} />
                          ))}
@@ -434,7 +435,7 @@ const AllMedicalCertificate = () => {
               </div>
             </div>
             <div className="emp-dash__card-body">
-              <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 <QualityCard label="Critical Risk" value={chartData[0].val + chartData[1].val} total={total} color="rose" />
                 <QualityCard label="Expiring in 2 Months" value={chartData[2].val} total={total} color="amber" />
                 <QualityCard label="Active Status" value={chartData[3].val} total={total} color="emerald" />
@@ -457,71 +458,111 @@ const AllMedicalCertificate = () => {
 
         {/* Filter Card */}
         <div className="emp-dash__card">
-          <div className="emp-dash__card-header">
+          {/* Desktop Header */}
+          {/* <div className="hidden sm:flex emp-dash__card-header">
             <div>
               <h3 className="emp-dash__card-title flex items-center gap-2">
                 <FiFilter className="text-blue-600" /> Filter Certificates
               </h3>
               <p className="emp-dash__card-desc">Search by name, ID, or filter by status</p>
             </div>
+          </div> */}
+
+          {/* Mobile Filter Toggle Button */}
+          <div className="sm:hidden flex items-center justify-between p-3 border-b border-gray-100">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600" />
+              Filters
+              {showMobileFilters ? <FaChevronUp className="ml-1" /> : <FaChevronDown className="ml-1" />}
+            </button>
+            <span className="text-xs text-gray-400">
+              {filteredCertificates.length} certificates
+            </span>
           </div>
-          <div className="emp-dash__card-body bg-gray-50/50">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="relative flex-grow min-w-[240px]">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                  <FaSearch className="text-xs" />
-                </span>
-                <input 
-                  type="text" 
-                  placeholder="Search candidate ID or name..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
+
+          {/* Filter Content - Toggle on Mobile */}
+          <div className={`${showMobileFilters ? 'block' : 'hidden sm:block'}`}>
+            <div className="emp-dash__card-body bg-gray-50/50">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative flex-grow min-w-[200px]">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <FaSearch className="text-xs" />
+                  </span>
+                  <input 
+                    type="text" 
+                    placeholder="Search candidate ID or name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+                <select 
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="h-8 px-3 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none min-w-[140px]"
+                >
+                  <option value="all">All Certificates</option>
+                  <option value="expired">EXPIRED</option>
+                  <option value="next_month">NEXT MONTH</option>
+                  <option value="2_months">2 MONTHS</option>
+                  <option value="active">ACTIVE</option>
+                </select>
+                <button 
+                  onClick={fetchCertificates}
+                  className="h-8 px-3 bg-white text-gray-500 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all border border-gray-300"
+                  title="Refresh Data"
+                >
+                  <FaSync size={12} className={loading ? 'animate-spin' : ''} />
+                </button>
+                <button 
+                  onClick={handleReset}
+                  className="h-8 px-4 bg-white text-gray-500 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 transition-all border border-gray-300"
+                >
+                  Clear
+                </button>
+                <button onClick={downloadCSV} className="h-8 px-4 bg-gray-100 text-gray-900 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all flex items-center gap-2 ml-auto border border-gray-300">
+                  <FaDownload /> Export CSV
+                </button>
               </div>
-              <select 
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-8 px-3 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none min-w-[140px]"
-              >
-                <option value="all">All Certificates</option>
-                <option value="expired">EXPIRED</option>
-                <option value="next_month">NEXT MONTH</option>
-                <option value="2_months">2 MONTHS</option>
-                <option value="active">ACTIVE</option>
-              </select>
-              <button 
-                onClick={fetchCertificates}
-                className="h-8 px-3 bg-white text-gray-500 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all border border-gray-300"
-                title="Refresh Data"
-              >
-                <FaSync size={12} className={loading ? 'animate-spin' : ''} />
-              </button>
-              <button 
-                onClick={handleReset}
-                className="h-8 px-4 bg-white text-gray-500 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 transition-all border border-gray-300"
-              >
-                Clear
-              </button>
-              <button onClick={downloadCSV} className="h-8 px-4 bg-gray-100 text-gray-900 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all flex items-center gap-2 ml-auto border border-gray-300">
-                <FaDownload /> Export CSV
-              </button>
+
+              {/* Active filter chips */}
+              {(searchTerm || statusFilter !== "all") && (
+                <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                  <span className="text-[10px] text-gray-500 font-medium">Active Filters:</span>
+                  {searchTerm && (
+                    <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[9px] font-semibold border border-gray-200">
+                      "{searchTerm}"
+                    </span>
+                  )}
+                  {statusFilter !== "all" && (
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[9px] font-semibold border border-blue-200">
+                      {statusFilter.replace('_', ' ').toUpperCase()}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
+        {/* GAP BETWEEN FILTER CARD AND TABLE */}
+        <div className="mt-6"></div>
+
         {/* Table Card */}
         <div className="emp-dash__card">
-          <div className="emp-dash__table-wrap">
-            <table className="emp-dash__table">
+          <div className="overflow-x-auto">
+            <table className="emp-dash__table min-w-[800px]">
               <thead>
                 <tr>
-                  <th className="text-center">ID</th>
-                  <th className="text-left">Candidate Name</th>
-                  <th className="text-center">Reg. Date</th>
-                  <th className="text-center">Exp. Date</th>
-                  <th className="text-center">Status</th>
-                  <th className="text-center">Action</th>
+                  <th className="text-center whitespace-nowrap">ID</th>
+                  <th className="text-left whitespace-nowrap">Candidate Name</th>
+                  <th className="text-center whitespace-nowrap hidden sm:table-cell">Reg. Date</th>
+                  <th className="text-center whitespace-nowrap">Exp. Date</th>
+                  <th className="text-center whitespace-nowrap">Status</th>
+                  <th className="text-center whitespace-nowrap">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -537,16 +578,16 @@ const AllMedicalCertificate = () => {
                         transition={{ duration: 0.2, delay: index * 0.02 }}
                         className="hover:bg-gray-50 transition-colors"
                       >
-                        <td className="text-center font-bold text-gray-900 text-xs">
+                        <td className="text-center font-bold text-gray-900 text-xs whitespace-nowrap">
                           {c.employeeId || c.candidateId || "N/A"}
                         </td>
                         <td className="text-left">
                           <div className="font-bold text-gray-900 text-sm whitespace-nowrap">{c.employeeName || c.candidateName || "N/A"}</div>
                         </td>
-                        <td className="text-center font-medium text-gray-500 text-xs">
+                        <td className="text-center font-medium text-gray-500 text-xs hidden sm:table-cell whitespace-nowrap">
                           {new Date(c.registrationDate).toLocaleDateString()}
                         </td>
-                        <td className="text-center font-bold text-gray-500 text-xs">
+                        <td className="text-center font-bold text-gray-500 text-xs whitespace-nowrap">
                           {new Date(c.expiryDate).toLocaleDateString()}
                         </td>
                         <td className="text-center">
@@ -561,14 +602,14 @@ const AllMedicalCertificate = () => {
                               href={`${API_DOMAIN}${c.documentUrl ? c.documentUrl.replace(/\\/g, '/').startsWith('/') ? c.documentUrl.replace(/\\/g, '/') : '/' + c.documentUrl.replace(/\\/g, '/') : ''}`} 
                               target="_blank" 
                               rel="noreferrer"
-                              className="px-3 py-1.5 bg-blue-600 text-gray-900 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition-colors"
+                              className="px-2 py-1 bg-blue-600 text-white rounded-lg text-[10px] font-bold hover:bg-blue-700 transition-colors whitespace-nowrap"
                             >
                               View
                             </a>
                             {info.label !== "Active" && (
                               <button 
                                 onClick={() => handleSendReminder(c)}
-                                className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-lg text-[10px] font-black uppercase tracking-tight hover:bg-rose-600 hover:text-gray-900 transition-all shadow-sm active:scale-95 flex items-center gap-1.5"
+                                className="px-2 py-1 bg-rose-50 text-rose-600 border border-rose-100 rounded-lg text-[10px] font-black uppercase tracking-tight hover:bg-rose-600 hover:text-white transition-all shadow-sm active:scale-95 flex items-center gap-1.5 whitespace-nowrap"
                                 title="Send Re-upload Reminder"
                               >
                                 <FiActivity size={10} />
@@ -592,22 +633,70 @@ const AllMedicalCertificate = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="emp-dash__table-footer">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-gray-500">PAGE {currentPage} OF {totalPages}</span>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                <span>Showing</span>
+                <span className="font-semibold text-gray-900">
+                  {filteredCertificates.length > 0 ? indexOfFirstItem + 1 : 0}
+                </span>
+                <span>to</span>
+                <span className="font-semibold text-gray-900">
+                  {Math.min(indexOfLastItem, filteredCertificates.length)}
+                </span>
+                <span>of</span>
+                <span className="font-semibold text-gray-900">
+                  {filteredCertificates.length}
+                </span>
+                <span>records</span>
+
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="px-2 py-1 text-xs border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
               </div>
-              <div className="flex items-center gap-1">
+
+              <div className="flex gap-2">
                 <button 
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="emp-dash__btn-pagination"
+                  className="px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Prev
+                  Previous
                 </button>
+
+                <div className="flex items-center gap-1">
+                  {getPageNumbers().map((page, index) => (
+                    page === "..." ? (
+                      <span key={index} className="px-2 text-gray-400 text-xs">...</span>
+                    ) : (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                          currentPage === page
+                            ? "bg-blue-600 text-white"
+                            : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  ))}
+                </div>
+
                 <button 
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="emp-dash__btn-pagination"
+                  className="px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>

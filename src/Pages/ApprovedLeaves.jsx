@@ -1,8 +1,8 @@
 import axios from "axios";
 import { useCallback, useEffect, useRef, useState } from "react";
 import CountUp from "react-countup";
-import { FaBuilding, FaUserTag } from "react-icons/fa";
-import { FiCalendar, FiCheckCircle, FiClock, FiDownload, FiFilter, FiList, FiTrash2 } from "react-icons/fi";
+import { FaBuilding, FaUserTag, FaChevronUp, FaChevronDown } from "react-icons/fa";
+import { FiCalendar, FiCheckCircle, FiClock, FiDownload, FiFilter, FiList, FiTrash2,  FiChevronUp,FiChevronDown, } from "react-icons/fi";
 import * as XLSX from "xlsx";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
@@ -11,6 +11,7 @@ const ApprovedLeaves = () => {
   const [leaves, setLeaves] = useState([]);
   const [filteredLeaves, setFilteredLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Employees data for department/designation
   const [employees, setEmployees] = useState([]);
@@ -64,7 +65,7 @@ const ApprovedLeaves = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ Fetch all leaves and employees
+  // Fetch all leaves and employees
   const fetchLeaves = async () => {
     try {
       setLoading(true);
@@ -123,7 +124,7 @@ const ApprovedLeaves = () => {
     };
   }, [employees]);
 
-  // ✅ View Leave Balances
+  // View Leave Balances
   const viewEmployeeBalances = async (employeeId, employeeName) => {
     try {
       const resp = await axios.get(`${API_BASE_URL}/leaves/balances/${employeeId}`);
@@ -136,7 +137,7 @@ const ApprovedLeaves = () => {
     }
   };
 
-  // ✅ Apply Filters
+  // Apply Filters
   useEffect(() => {
     let filtered = [...leaves];
 
@@ -204,7 +205,7 @@ const ApprovedLeaves = () => {
     getEmployeeDetails,
   ]);
 
-  // ✅ Clear Filters
+  // Clear Filters
   const clearFilters = () => {
     setSearchTerm("");
     setLeaveTypeFilter("all");
@@ -215,7 +216,7 @@ const ApprovedLeaves = () => {
     setSelectedMonth("");
   };
 
-  // ✅ Download Excel
+  // Download Excel
   const downloadExcel = () => {
     const rows = filteredLeaves.map((l) => {
       const empDetails = getEmployeeDetails(l.employeeId);
@@ -238,7 +239,7 @@ const ApprovedLeaves = () => {
     XLSX.writeFile(wb, `Approved_Leaves_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
-  // ✅ Pagination Handlers
+  // Pagination Handlers
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value));
     setCurrentPage(1);
@@ -278,7 +279,7 @@ const ApprovedLeaves = () => {
   const currentItems = filteredLeaves.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredLeaves.length / itemsPerPage);
 
-  // ✅ Loading Screen
+  // Loading Screen
   if (loading)
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -293,17 +294,17 @@ const ApprovedLeaves = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="p-4 sm:p-6 lg:p-8">
+      <div className="p-2 sm:p-4 lg:p-6">
         
         {/* Dashboard Header */}
         <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
+           <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Approved <span className="text-blue-600">Leaves</span>
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
+          {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
               Review and inspect approved employee leave applications
-            </p>
+            </p> */}
           </div>
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
             <FiCalendar className="text-blue-600" />
@@ -318,246 +319,388 @@ const ApprovedLeaves = () => {
           </div>
         </div>
 
-        {/* Top KPI Stats Grid */}
-        <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2">
+        {/* Top KPI Stats Grid - 2 per row on mobile */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
           <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Approved Leaves</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-green-50 text-green-600">
-                <FiCheckCircle className="text-base" />
+              <span className="text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">Approved</span>
+              <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-green-50 text-green-600">
+                <FiCheckCircle className="text-sm sm:text-base" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-xl sm:text-2xl font-bold text-gray-900">
               <CountUp end={leaves.filter((l) => l.status === "approved").length} duration={1} />
             </div>
-            <div className="mt-1 text-xs text-gray-500">total approved leave applications</div>
+            <div className="mt-1 text-[10px] sm:text-xs text-gray-500">approved leaves</div>
           </div>
 
           <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Results</span>
-              <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-purple-50 text-purple-600">
-                <FiList className="text-base" />
+              <span className="text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">Results</span>
+              <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-purple-50 text-purple-600">
+                <FiList className="text-sm sm:text-base" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-xl sm:text-2xl font-bold text-gray-900">
               <CountUp end={filteredLeaves.length} duration={1} />
             </div>
-            <div className="mt-1 text-xs text-gray-500">matching current filters</div>
+            <div className="mt-1 text-[10px] sm:text-xs text-gray-500">matching filters</div>
           </div>
         </div>
 
         {/* Filters Card */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-gray-100">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <FiFilter className="text-blue-600" /> Filters &amp; Actions
-              </h3>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={downloadExcel}
-                disabled={filteredLeaves.length === 0}
-                className="px-3 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
+  {/* Desktop View */}
+  <div className="hidden sm:block">
+    <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200">
+      {/* Left - Filters */}
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        {/* Search */}
+        <div className="relative min-w-[120px] flex-1 max-w-[160px]">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Search ID or Name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+          />
+        </div>
+
+        {/* Leave Type Filter - Compact */}
+        <div className="relative">
+          <select
+            value={leaveTypeFilter}
+            onChange={(e) => setLeaveTypeFilter(e.target.value)}
+            className="h-8 px-2 py-1 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+          >
+            <option value="all">All Types</option>
+            <option value="sick">Sick</option>
+            <option value="casual">Casual</option>
+            <option value="earned">Earned</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        {/* Department */}
+        <div className="relative" ref={departmentFilterRef}>
+          <button
+            onClick={() => {
+              setShowDepartmentFilter(!showDepartmentFilter);
+              setShowDesignationFilter(false);
+            }}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+              filterDepartment
+                ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                : "border-gray-300 text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            <FaBuilding className="text-gray-400 text-[10px]" />
+            <span className="truncate max-w-[80px]">{filterDepartment || "Dept"}</span>
+            <span className="text-gray-400 text-[10px]">▾</span>
+          </button>
+          {showDepartmentFilter && (
+            <div 
+              className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
+              style={{
+                zIndex: 99999,
+                top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
+              }}
+            >
+              <div
+                onClick={() => {
+                  setFilterDepartment("");
+                  setShowDepartmentFilter(false);
+                }}
+                className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
               >
-                <FiDownload className="text-xs" /> Download XL ({filteredLeaves.length})
-              </button>
-            </div>
-          </div>
-          
-          <div className="p-4 bg-gray-50/50">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 items-end">
-              
-              {/* Search */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Search Employee</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Search ID or Name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
+                All Departments
+              </div>
+              {uniqueDepartments.map((dept) => (
+                <div
+                  key={dept}
+                  onClick={() => {
+                    setFilterDepartment(dept);
+                    setShowDepartmentFilter(false);
+                  }}
+                  className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                    filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                  }`}
+                >
+                  {dept}
                 </div>
-              </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-              {/* Leave Type Filter */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Leave Type</label>
-                <select
-                  value={leaveTypeFilter}
-                  onChange={(e) => setLeaveTypeFilter(e.target.value)}
-                  className="w-full h-9 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                >
-                  <option value="all">All Types</option>
-                  <option value="sick">Sick Leave</option>
-                  <option value="casual">Casual Leave</option>
-                  <option value="earned">Earned Leave</option>
-                  <option value="other">Other</option>
-                </select>
+        {/* Designation */}
+        <div className="relative" ref={designationFilterRef}>
+          <button
+            onClick={() => {
+              setShowDesignationFilter(!showDesignationFilter);
+              setShowDepartmentFilter(false);
+            }}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+              filterDesignation
+                ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                : "border-gray-300 text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            <FaUserTag className="text-gray-400 text-[10px]" />
+            <span className="truncate max-w-[80px]">{filterDesignation || "Desig"}</span>
+            <span className="text-gray-400 text-[10px]">▾</span>
+          </button>
+          {showDesignationFilter && (
+            <div 
+              className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
+              style={{
+                zIndex: 99999,
+                top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
+              }}
+            >
+              <div
+                onClick={() => {
+                  setFilterDesignation("");
+                  setShowDesignationFilter(false);
+                }}
+                className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+              >
+                All Designations
               </div>
-
-              {/* Department Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={departmentFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Department</label>
-                <button
-                  onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDepartment 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              {uniqueDesignations.map((des) => (
+                <div
+                  key={des}
+                  onClick={() => {
+                    setFilterDesignation(des);
+                    setShowDesignationFilter(false);
+                  }}
+                  className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                    filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
                   }`}
                 >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaBuilding className="text-gray-400" />
-                    {filterDepartment || 'All Departments'}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                
-                {showDepartmentFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div 
-                      onClick={() => {
-                        setFilterDepartment('');
-                        setShowDepartmentFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Departments
-                    </div>
-                    {uniqueDepartments.map(dept => (
-                      <div 
-                        key={dept}
-                        onClick={() => {
-                          setFilterDepartment(dept);
-                          setShowDepartmentFilter(false);
-                        }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
-                          filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
-                      >
-                        {dept}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Designation Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={designationFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Designation</label>
-                <button
-                  onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDesignation 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaBuilding className="text-gray-400" />
-                    {filterDesignation || 'All Designations'}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                
-                {showDesignationFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div 
-                      onClick={() => {
-                        setFilterDesignation('');
-                        setShowDesignationFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Designations
-                    </div>
-                    {uniqueDesignations.map(des => (
-                      <div 
-                        key={des}
-                        onClick={() => {
-                          setFilterDesignation(des);
-                          setShowDesignationFilter(false);
-                        }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer transition-all ${
-                          filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
-                      >
-                        {des}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* From Date */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">From Date</label>
-                <input
-                  type="date"
-                  value={startDateFilter}
-                  onChange={(e) => { setStartDateFilter(e.target.value); setSelectedMonth(""); }}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
-
-              {/* To Date */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">To Date</label>
-                <input
-                  type="date"
-                  value={endDateFilter}
-                  onChange={(e) => { setEndDateFilter(e.target.value); setSelectedMonth(""); }}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
-
-              {/* Month Selector */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Month</label>
-                <input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={(e) => { setSelectedMonth(e.target.value); setStartDateFilter(""); setEndDateFilter(""); }}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
+                  {des}
+                </div>
+              ))}
             </div>
+          )}
+        </div>
 
-            {/* Filter Actions */}
-            <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200/50">
-              <div className="text-xs text-gray-500 font-medium">
-                Showing <strong>{filteredLeaves.length}</strong> of <strong>{leaves.length}</strong> requests
-              </div>
-              <div className="flex gap-2">
-                {(searchTerm || filterDepartment || filterDesignation || leaveTypeFilter !== "all" || startDateFilter || endDateFilter || selectedMonth) && (
-                  <button
-                    onClick={clearFilters}
-                    className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1.5 shadow-sm"
-                  >
-                    <FiTrash2 /> Clear Filters
-                  </button>
-                )}
-              </div>
-            </div>
+        {/* Date From - Compact */}
+        <div className="relative">
+          <input
+            type="date"
+            value={startDateFilter}
+            onChange={(e) => { setStartDateFilter(e.target.value); setSelectedMonth(""); }}
+            onClick={(e) => e.target.showPicker && e.target.showPicker()}
+            placeholder="From"
+            className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+          />
+        </div>
+
+        {/* Date To - Compact */}
+        <div className="relative">
+          <input
+            type="date"
+            value={endDateFilter}
+            onChange={(e) => { setEndDateFilter(e.target.value); setSelectedMonth(""); }}
+            onClick={(e) => e.target.showPicker && e.target.showPicker()}
+            placeholder="To"
+            className="w-[110px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+          />
+        </div>
+
+        {/* Month Picker - Compact */}
+        <div className="relative">
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => { setSelectedMonth(e.target.value); setStartDateFilter(""); setEndDateFilter(""); }}
+            onClick={(e) => e.target.showPicker && e.target.showPicker()}
+            className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+          />
+        </div>
+      </div>
+
+      {/* Right - Action Buttons */}
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <button
+          onClick={downloadExcel}
+          disabled={filteredLeaves.length === 0}
+          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <FiDownload className="w-3 h-3" />
+          <span>XL ({filteredLeaves.length})</span>
+        </button>
+        
+        {(searchTerm || filterDepartment || filterDesignation || leaveTypeFilter !== "all" || startDateFilter || endDateFilter || selectedMonth) && (
+          <button
+            onClick={clearFilters}
+            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+          >
+            <FiTrash2 className="w-3 h-3" />
+            Clear
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+
+  {/* Mobile View */}
+  <div className="sm:hidden">
+    <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
+      <button
+        onClick={() => setShowMobileFilters(!showMobileFilters)}
+        className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+      >
+        <FiFilter className="text-blue-600 text-base" />
+        <span>Filters</span>
+        {showMobileFilters ? <FiChevronUp className="text-gray-400" /> : <FiChevronDown className="text-gray-400" />}
+      </button>
+      <span className="text-xs text-gray-500">
+        <strong>{filteredLeaves.length}</strong> requests
+      </span>
+    </div>
+
+    {showMobileFilters && (
+      <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+        {/* Search */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+            <input
+              type="text"
+              placeholder="Search ID or Name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+            />
           </div>
         </div>
 
+        {/* Leave Type */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Leave Type</label>
+          <select
+            value={leaveTypeFilter}
+            onChange={(e) => setLeaveTypeFilter(e.target.value)}
+            className="w-full px-3 py-2.5 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+          >
+            <option value="all">All Types</option>
+            <option value="sick">Sick Leave</option>
+            <option value="casual">Casual Leave</option>
+            <option value="earned">Earned Leave</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        {/* Department */}
+        <div className="relative" ref={departmentFilterRef}>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
+          <button
+            onClick={() => {
+              setShowDepartmentFilter(!showDepartmentFilter);
+              setShowDesignationFilter(false);
+            }}
+            className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+              filterDepartment ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50" : "border-gray-300 text-gray-700"
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <FaBuilding className="text-gray-400" />
+              {filterDepartment || "All Departments"}
+            </span>
+            <span className="text-gray-400">▾</span>
+          </button>
+          {showDepartmentFilter && (
+            <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div onClick={() => { setFilterDepartment(""); setShowDepartmentFilter(false); }} className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50">All Departments</div>
+              {uniqueDepartments.map((dept) => (
+                <div key={dept} onClick={() => { setFilterDepartment(dept); setShowDepartmentFilter(false); }} className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"}`}>{dept}</div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Designation */}
+        <div className="relative" ref={designationFilterRef}>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
+          <button
+            onClick={() => {
+              setShowDesignationFilter(!showDesignationFilter);
+              setShowDepartmentFilter(false);
+            }}
+            className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+              filterDesignation ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50" : "border-gray-300 text-gray-700"
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <FaUserTag className="text-gray-400" />
+              {filterDesignation || "All Designations"}
+            </span>
+            <span className="text-gray-400">▾</span>
+          </button>
+          {showDesignationFilter && (
+            <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div onClick={() => { setFilterDesignation(""); setShowDesignationFilter(false); }} className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50">All Designations</div>
+              {uniqueDesignations.map((des) => (
+                <div key={des} onClick={() => { setFilterDesignation(des); setShowDesignationFilter(false); }} className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"}`}>{des}</div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Date From & To */}
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
+            <input type="date" value={startDateFilter} onChange={(e) => { setStartDateFilter(e.target.value); setSelectedMonth(""); }} onClick={(e) => e.target.showPicker && e.target.showPicker()} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
+            <input type="date" value={endDateFilter} onChange={(e) => { setEndDateFilter(e.target.value); setSelectedMonth(""); }} onClick={(e) => e.target.showPicker && e.target.showPicker()} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white" />
+          </div>
+        </div>
+
+        {/* Month */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
+          <input type="month" value={selectedMonth} onChange={(e) => { setSelectedMonth(e.target.value); setStartDateFilter(""); setEndDateFilter(""); }} onClick={(e) => e.target.showPicker && e.target.showPicker()} className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold" />
+        </div>
+
+        {/* Mobile Action Buttons */}
+        <div className="pt-3 border-t border-gray-200 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={downloadExcel} disabled={filteredLeaves.length === 0} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              <FiDownload className="w-4 h-4" /> XL ({filteredLeaves.length})
+            </button>
+            {(searchTerm || filterDepartment || filterDesignation || leaveTypeFilter !== "all" || startDateFilter || endDateFilter || selectedMonth) && (
+              <button onClick={clearFilters} className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+                <FiTrash2 className="w-4 h-4" /> Clear
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+
         {/* Leave Balances Modal Popup */}
         {showBalancePopup && selectedEmpBalance && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/40 backdrop-blur-xs">
-            <div ref={balancePopupRef} className="w-full max-w-sm p-6 bg-white rounded-2xl shadow-2xl border border-gray-150 animate-in fade-in zoom-in duration-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div ref={balancePopupRef} className="w-full max-w-sm p-6 bg-white rounded-2xl shadow-2xl border border-gray-200">
               <h2 className="mb-4 text-lg font-bold text-gray-800 flex items-center gap-2">
                 <FiList className="text-blue-600" /> Leave Balances
               </h2>
@@ -596,14 +739,14 @@ const ApprovedLeaves = () => {
 
         {/* Main Requests Container */}
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          {/* <div className="flex items-center justify-between p-4 border-b border-gray-100">
             <div>
               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                 <FiList className="text-blue-600" /> Approved Requests
               </h3>
               <p className="text-xs text-gray-500 mt-0.5">Approved employee leave applications</p>
             </div>
-          </div>
+          </div> */}
 
           {filteredLeaves.length === 0 ? (
             <div className="py-12 text-center text-sm text-gray-500 font-medium">
@@ -739,7 +882,7 @@ const ApprovedLeaves = () => {
                 disabled={currentPage === 1}
                 className={`px-3 py-1.5 text-xs font-semibold border rounded-lg transition-all ${
                   currentPage === 1
-                    ? "text-gray-400 bg-gray-150 cursor-not-allowed border-gray-200"
+                    ? "text-gray-400 bg-gray-100 cursor-not-allowed border-gray-200"
                     : "text-blue-600 bg-white hover:bg-blue-50 border-gray-300"
                 }`}
               >
@@ -768,7 +911,7 @@ const ApprovedLeaves = () => {
                 disabled={currentPage === totalPages}
                 className={`px-3 py-1.5 text-xs font-semibold border rounded-lg transition-all ${
                   currentPage === totalPages
-                    ? "text-gray-400 bg-gray-150 cursor-not-allowed border-gray-200"
+                    ? "text-gray-400 bg-gray-100 cursor-not-allowed border-gray-200"
                     : "text-blue-600 bg-white hover:bg-blue-50 border-gray-300"
                 }`}
               >

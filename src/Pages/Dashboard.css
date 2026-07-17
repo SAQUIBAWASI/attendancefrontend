@@ -476,3 +476,238 @@
     height: 320px;
   }
 }
+
+
+/* Mobile Responsive Stats Cards */
+@media (max-width: 768px) {
+  .admin-dash__stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 0 8px;
+  }
+
+  .admin-dash__stat {
+    padding: 14px 12px;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid #f1f5f9;
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .admin-dash__stat:active {
+    transform: scale(0.97);
+  }
+
+  .admin-dash__stat-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+  }
+
+  .admin-dash__stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    line-height: 1.2;
+  }
+
+  .admin-dash__stat-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .admin-dash__stat-icon--indigo {
+    background: #eef2ff;
+    color: #4f46e5;
+  }
+  .admin-dash__stat-icon--emerald {
+    background: #ecfdf5;
+    color: #10b981;
+  }
+  .admin-dash__stat-icon--rose {
+    background: #fef2f2;
+    color: #ef4444;
+  }
+  .admin-dash__stat-icon--amber {
+    background: #fffbeb;
+    color: #f59e0b;
+  }
+  .admin-dash__stat-icon--cyan {
+    background: #ecfeff;
+    color: #06b6d4;
+  }
+
+  .admin-dash__stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+    margin-top: 2px;
+  }
+
+  .admin-dash__stat-meta {
+    font-size: 10px;
+    color: #94a3b8;
+    margin-top: 4px;
+    font-weight: 400;
+  }
+
+  /* Full width card for 5th item (Attendance Rate) */
+  .admin-dash__stat:last-child {
+    grid-column: 1 / -1;
+  }
+
+  /* Adjust header spacing */
+  .admin-dash__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 16px 0;
+  }
+
+  .admin-dash__greeting {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .admin-dash__greeting span {
+    font-weight: 300;
+  }
+
+  .admin-dash__subtitle {
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  .admin-dash__date-pill {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Chart grid adjustments */
+  .admin-dash__charts-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 0 8px;
+  }
+
+  .admin-dash__card {
+    padding: 14px;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  .admin-dash__card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .admin-dash__card-title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .admin-dash__card-desc {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  .admin-dash__month-input {
+    padding: 4px 8px;
+    font-size: 11px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    max-width: 120px;
+  }
+
+  .admin-dash__card-link {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .admin-dash__card-body {
+    min-height: 200px;
+  }
+
+  /* Hide legend on small screens for pie charts */
+  .recharts-legend-wrapper {
+    display: none;
+  }
+
+  /* Pie chart adjustments */
+  .admin-dash__chart-wrap--tall {
+    min-height: 300px;
+  }
+}
+
+/* Extra small screens (below 400px) */
+@media (max-width: 400px) {
+  .admin-dash__stats {
+    gap: 6px;
+    padding: 0 4px;
+  }
+
+  .admin-dash__stat {
+    padding: 10px 8px;
+    min-height: 75px;
+  }
+
+  .admin-dash__stat-value {
+    font-size: 18px;
+  }
+
+  .admin-dash__stat-label {
+    font-size: 9px;
+  }
+
+  .admin-dash__stat-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+
+  .admin-dash__stat-meta {
+    font-size: 8px;
+  }
+}
+
+/* Tablets (768px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .admin-dash__stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .admin-dash__stat:last-child {
+    grid-column: auto;
+  }
+
+  .admin-dash__charts-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+}

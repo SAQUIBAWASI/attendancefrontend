@@ -360,7 +360,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaBuilding, FaMapMarkerAlt, FaSearch } from "react-icons/fa";
-import { FiEdit, FiTrash2, FiCalendar, FiMapPin, FiGlobe, FiActivity } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiCalendar, FiMapPin, FiGlobe, FiActivity, FiChevronUp, FiChevronDown } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
 import "../index.css";
@@ -371,8 +371,9 @@ const LocationListPage = () => {
   const [filteredLocations, setFilteredLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   
-  // Search filters - LIKE ABSENTTODAY.JS
+  // Search filters
   const [searchTerm, setSearchTerm] = useState("");
   
   // City and State filter states
@@ -408,7 +409,7 @@ const LocationListPage = () => {
   const [updatedLatitude, setUpdatedLatitude] = useState("");
   const [updatedLongitude, setUpdatedLongitude] = useState("");
 
-  // Click outside handlers for filter dropdowns - LIKE ABSENTTODAY.JS
+  // Click outside handlers
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (cityFilterRef.current && !cityFilterRef.current.contains(event.target)) {
@@ -428,22 +429,17 @@ const LocationListPage = () => {
     const states = new Set();
     
     locationsData.forEach(loc => {
-      // Extract city from fullAddress (simple parsing)
       const addressParts = loc.fullAddress.split(',');
       if (addressParts.length > 1) {
-        // Try to get city (second last part usually)
         const possibleCity = addressParts[addressParts.length - 2]?.trim();
         if (possibleCity && possibleCity.length > 2) cities.add(possibleCity);
       }
       
-      // Extract state from fullAddress (last part usually)
       const possibleState = addressParts[addressParts.length - 1]?.trim();
       if (possibleState && possibleState.length > 2) states.add(possibleState);
       
-      // Also try to extract from pin code pattern
       const pinMatch = loc.fullAddress.match(/\b\d{6}\b/);
       if (pinMatch) {
-        // State might be before pin code
         const beforePin = loc.fullAddress.substring(0, pinMatch.index).trim();
         const lastComma = beforePin.lastIndexOf(',');
         if (lastComma !== -1) {
@@ -467,10 +463,7 @@ const LocationListPage = () => {
 
       const locationsData = data.locations || [];
       setLocations(locationsData);
-      
-      // Extract unique cities and states
       extractUniqueValues(locationsData);
-      
       setFilteredLocations(locationsData);
       setLoading(false);
       
@@ -490,20 +483,17 @@ const LocationListPage = () => {
     fetchLocations();
   }, []);
 
-  // Apply filters whenever search term or filters change
   useEffect(() => {
     filterLocations();
   }, [searchTerm, filterCity, filterState, filterPinCode, locations]);
 
   useEffect(() => {
-    // Reset to first page when filters change
     setPagination(prev => ({ ...prev, currentPage: 1 }));
   }, [searchTerm, filterCity, filterState, filterPinCode]);
 
   const filterLocations = () => {
     let filtered = [...locations];
 
-    // Filter by Location Name or Address
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
       filtered = filtered.filter(loc => 
@@ -512,7 +502,6 @@ const LocationListPage = () => {
       );
     }
 
-    // Filter by City
     if (filterCity) {
       filtered = filtered.filter(loc => {
         const addressParts = loc.fullAddress.split(',');
@@ -524,7 +513,6 @@ const LocationListPage = () => {
       });
     }
 
-    // Filter by State
     if (filterState) {
       filtered = filtered.filter(loc => {
         const addressParts = loc.fullAddress.split(',');
@@ -533,7 +521,6 @@ const LocationListPage = () => {
       });
     }
 
-    // Filter by Pin Code
     if (filterPinCode.trim()) {
       filtered = filtered.filter(loc => {
         const pinMatch = loc.fullAddress.match(/\b\d{6}\b/);
@@ -541,7 +528,6 @@ const LocationListPage = () => {
       });
     }
 
-    // Sort by status (active first, inactive last)
     filtered.sort((a, b) => {
       const statusA = a.status === "inactive" ? 1 : 0;
       const statusB = b.status === "inactive" ? 1 : 0;
@@ -556,7 +542,6 @@ const LocationListPage = () => {
     }));
   };
 
-  // Clear all filters - LIKE ABSENTTODAY.JS
   const clearFilters = () => {
     setSearchTerm("");
     setFilterCity("");
@@ -564,7 +549,6 @@ const LocationListPage = () => {
     setFilterPinCode("");
   };
 
-  // Pagination handlers
   const handleItemsPerPageChange = (limit) => {
     setPagination({
       currentPage: 1,
@@ -615,12 +599,10 @@ const LocationListPage = () => {
     return pageNumbers;
   };
 
-  // Calculate pagination
   const indexOfLastItem = pagination.currentPage * pagination.limit;
   const indexOfFirstItem = indexOfLastItem - pagination.limit;
   const currentItems = filteredLocations.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Handle Delete
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this location?")) return;
 
@@ -639,7 +621,6 @@ const LocationListPage = () => {
     }
   };
 
-  // Handle Toggle Status
   const handleToggleStatus = async (location) => {
     const newStatus = location.status === "inactive" ? "active" : "inactive";
     const confirmMsg = location.status === "inactive"
@@ -670,7 +651,6 @@ const LocationListPage = () => {
     }
   };
 
-  // Open Edit Modal
   const openEditModal = (location) => {
     setEditLocation(location);
     setUpdatedName(location.name);
@@ -682,7 +662,6 @@ const LocationListPage = () => {
   
   const navigate = useNavigate();
   
-  // Handle Update
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
@@ -700,7 +679,6 @@ const LocationListPage = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Failed to update location");
 
-      // Update list locally
       setLocations((prev) =>
         prev.map((loc) =>
           loc._id === editLocation._id
@@ -716,7 +694,7 @@ const LocationListPage = () => {
       );
 
       setIsEditModalOpen(false);
-      fetchLocations(); // Refresh to update filters
+      fetchLocations();
     } catch (error) {
       alert("❌ " + error.message);
     }
@@ -724,16 +702,16 @@ const LocationListPage = () => {
 
   return (
     <div className="emp-dash">
-      <main className="p-4 sm:p-6 lg:p-8">
+      <main className="p-2 sm:p-4 lg:p-6">
         {/* Dashboard Header */}
         <div className="emp-dash__header">
-          <div>
-            <h1 className="emp-dash__greeting">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
               Location <span>Management</span>
             </h1>
-            <p className="emp-dash__subtitle">
+             {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
               Manage and monitor all office locations
-            </p>
+            </p> */}
           </div>
           <div className="emp-dash__date-pill">
             <FiCalendar />
@@ -750,7 +728,7 @@ const LocationListPage = () => {
 
         {/* Top KPI Stats Grid */}
         {!loading && (
-          <div className="emp-dash__stats">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
             <div className="emp-dash__stat">
               <div className="emp-dash__stat-top">
                 <span className="emp-dash__stat-label">Total Locations</span>
@@ -802,170 +780,205 @@ const LocationListPage = () => {
               </div>
               <div className="emp-dash__stat-meta">states covered</div>
             </div>
-{/* 
-            <div className="emp-dash__stat">
-              <div className="emp-dash__stat-top">
-                <span className="emp-dash__stat-label">Inactive</span>
-                <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
-                  <FiGlobe className="text-purple-500" />
-                </div>
-              </div>
-              <div className="emp-dash__stat-value">
-                {locations.filter(l => l.status === 'inactive').length}
-              </div>
-              <div className="emp-dash__stat-meta">inactive locations</div>
-            </div> */}
           </div>
         )}
 
         {/* Filter Card */}
         <div className="emp-dash__card">
-          <div className="emp-dash__card-header">
+          {/* Desktop Header - Hidden on mobile */}
+          {/* <div className="hidden sm:flex emp-dash__card-header">
             <div>
               <h3 className="emp-dash__card-title flex items-center gap-2">
                 <FiMapPin className="text-blue-600" /> Filter Locations
               </h3>
               <p className="emp-dash__card-desc">Search by name, address, city, state, or pin code</p>
             </div>
-          </div>
-          <div className="emp-dash__card-body bg-gray-50/50">
-            <div className="flex flex-wrap items-center gap-3">
-              
-              {/* Location Name/Address Search */}
-              <div className="relative flex-1 min-w-[180px]">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                  <FaSearch className="text-xs" />
-                </span>
-                <input
-                  type="text"
-                  placeholder="Search by name or address..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
+          </div> */}
 
-              {/* City Filter Button */}
-              <div className="relative" ref={cityFilterRef}>
-                <button
-                  onClick={() => setShowCityFilter(!showCityFilter)}
-                  className={`h-8 px-3 text-xs font-medium rounded-lg transition flex items-center gap-1 ${
-                    filterCity 
-                      ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
-                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-                  }`}
-                >
-                  <FaBuilding className="text-xs" /> City {filterCity && `: ${filterCity}`}
-                </button>
+          {/* Mobile Filter Toggle Button */}
+          <div className="sm:hidden flex items-center justify-between p-3 border-b border-gray-100">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiMapPin className="text-blue-600" />
+              Filters
+              {showMobileFilters ? <FiChevronUp className="ml-1" /> : <FiChevronDown className="ml-1" />}
+            </button>
+            <span className="text-xs text-gray-400">
+              {filteredLocations.length} locations
+            </span>
+          </div>
+
+          {/* Filter Content - Toggle on Mobile */}
+          <div className={`${showMobileFilters ? 'block' : 'hidden sm:block'}`}>
+            <div className="emp-dash__card-body bg-gray-50/50">
+              <div className="flex flex-wrap items-center gap-3">
                 
-                {/* City Filter Dropdown */}
-                {showCityFilter && (
-                  <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div 
-                      onClick={() => {
-                        setFilterCity('');
-                        setShowCityFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-gray-200 font-medium text-gray-700"
-                    >
-                      All Cities
-                    </div>
-                    {uniqueCities.map(city => (
+                {/* Location Name/Address Search */}
+                <div className="relative flex-1 min-w-[180px]">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <FaSearch className="text-xs" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search by name or address..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* City Filter Button */}
+                <div className="relative" ref={cityFilterRef}>
+                  <button
+                    onClick={() => setShowCityFilter(!showCityFilter)}
+                    className={`h-8 px-3 text-xs font-medium rounded-lg transition flex items-center gap-1 ${
+                      filterCity 
+                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                    }`}
+                  >
+                    <FaBuilding className="text-xs" /> City {filterCity && `: ${filterCity}`}
+                  </button>
+                  
+                  {showCityFilter && (
+                    <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                       <div 
-                        key={city}
                         onClick={() => {
-                          setFilterCity(city);
+                          setFilterCity('');
                           setShowCityFilter(false);
                         }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                          filterCity === city ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                        }`}
+                        className="px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-gray-200 font-medium text-gray-700"
                       >
-                        {city}
+                        All Cities
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* State Filter Button */}
-              <div className="relative" ref={stateFilterRef}>
-                <button
-                  onClick={() => setShowStateFilter(!showStateFilter)}
-                  className={`h-8 px-3 text-xs font-medium rounded-lg transition flex items-center gap-1 ${
-                    filterState 
-                      ? 'bg-blue-600 text-gray-900 hover:bg-blue-700' 
-                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-                  }`}
-                >
-                  <FaMapMarkerAlt className="text-xs" /> State {filterState && `: ${filterState}`}
-                </button>
-                
-                {/* State Filter Dropdown */}
-                {showStateFilter && (
-                  <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div 
-                      onClick={() => {
-                        setFilterState('');
-                        setShowStateFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-gray-200 font-medium text-gray-700"
-                    >
-                      All States
+                      {uniqueCities.map(city => (
+                        <div 
+                          key={city}
+                          onClick={() => {
+                            setFilterCity(city);
+                            setShowCityFilter(false);
+                          }}
+                          className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
+                            filterCity === city ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                          }`}
+                        >
+                          {city}
+                        </div>
+                      ))}
                     </div>
-                    {uniqueStates.map(state => (
+                  )}
+                </div>
+
+                {/* State Filter Button */}
+                <div className="relative" ref={stateFilterRef}>
+                  <button
+                    onClick={() => setShowStateFilter(!showStateFilter)}
+                    className={`h-8 px-3 text-xs font-medium rounded-lg transition flex items-center gap-1 ${
+                      filterState 
+                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                    }`}
+                  >
+                    <FaMapMarkerAlt className="text-xs" /> State {filterState && `: ${filterState}`}
+                  </button>
+                  
+                  {showStateFilter && (
+                    <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                       <div 
-                        key={state}
                         onClick={() => {
-                          setFilterState(state);
+                          setFilterState('');
                           setShowStateFilter(false);
                         }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                          filterState === state ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                        }`}
+                        className="px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b border-gray-200 font-medium text-gray-700"
                       >
-                        {state}
+                        All States
                       </div>
-                    ))}
-                  </div>
+                      {uniqueStates.map(state => (
+                        <div 
+                          key={state}
+                          onClick={() => {
+                            setFilterState(state);
+                            setShowStateFilter(false);
+                          }}
+                          className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
+                            filterState === state ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                          }`}
+                        >
+                          {state}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Pin Code Search */}
+                <div className="relative w-[120px]">
+                  <input
+                    type="text"
+                    placeholder="Pin Code"
+                    value={filterPinCode}
+                    onChange={(e) => setFilterPinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    className="w-full px-3 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    maxLength="6"
+                  />
+                </div>
+
+                {/* Add Location Button */}
+                <button
+                  onClick={() => {
+                    const isEmployee = window.location.pathname.startsWith("/emp-");
+                    navigate(isEmployee ? "/emp-add-location" : "/addlocation");
+                  }}
+                  className="h-8 px-3 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition flex items-center gap-1"
+                >
+                  📍 Add Location
+                </button>
+
+                {/* Clear Filters Button */}
+                {(searchTerm || filterCity || filterState || filterPinCode) && (
+                  <button
+                    onClick={clearFilters}
+                    className="h-8 px-3 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                  >
+                    Clear
+                  </button>
                 )}
               </div>
 
-              {/* Pin Code Search */}
-              <div className="relative w-[120px]">
-                <input
-                  type="text"
-                  placeholder="Pin Code"
-                  value={filterPinCode}
-                  onChange={(e) => setFilterPinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  maxLength="6"
-                />
-              </div>
-
-              {/* Add Location Button */}
-              <button
-                onClick={() => {
-                  const isEmployee = window.location.pathname.startsWith("/emp-");
-                  navigate(isEmployee ? "/emp-add-location" : "/addlocation");
-                }}
-                className="h-8 px-3 text-xs font-medium text-gray-900 bg-blue-600 rounded-lg hover:bg-blue-800 transition flex items-center gap-1"
-              >
-                📍 Add Location
-              </button>
-
-              {/* Clear Filters Button */}
+              {/* Active filter chips */}
               {(searchTerm || filterCity || filterState || filterPinCode) && (
-                <button
-                  onClick={clearFilters}
-                  className="h-8 px-3 text-xs font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition"
-                >
-                  Clear
-                </button>
+                <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                  <span className="text-[10px] text-gray-500 font-medium">Active Filters:</span>
+                  {searchTerm && (
+                    <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[9px] font-semibold border border-gray-200">
+                      "{searchTerm}"
+                    </span>
+                  )}
+                  {filterCity && (
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[9px] font-semibold border border-blue-200">
+                      City: {filterCity}
+                    </span>
+                  )}
+                  {filterState && (
+                    <span className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[9px] font-semibold border border-purple-200">
+                      State: {filterState}
+                    </span>
+                  )}
+                  {filterPinCode && (
+                    <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-[9px] font-semibold border border-green-200">
+                      Pin: {filterPinCode}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           </div>
         </div>
+
+        {/* GAP BETWEEN FILTER CARD AND TABLE */}
+        <div className="mt-6"></div>
 
         {/* Loading / Error */}
         {loading && (
@@ -995,25 +1008,24 @@ const LocationListPage = () => {
         {/* Table Card */}
         {!loading && filteredLocations.length > 0 && (
           <div className="emp-dash__card">
-            <div className="emp-dash__table-wrap">
-              <table className="emp-dash__table">
+            <div className="overflow-x-auto">
+              <table className="emp-dash__table min-w-[1100px]">
                 <thead>
                   <tr>
-                    <th className="text-center">S.No</th>
-                    <th className="text-center">Location Name</th>
-                    <th className="text-center">Full Address</th>
-                    <th className="text-center">City</th>
-                    <th className="text-center">State</th>
-                    <th className="text-center">Pin Code</th>
-                    <th className="text-center">Latitude</th>
-                    <th className="text-center">Longitude</th>
-                    <th className="text-center">Actions</th>
+                    <th className="text-center whitespace-nowrap">S.No</th>
+                    <th className="text-center whitespace-nowrap">Location Name</th>
+                    <th className="text-center whitespace-nowrap">Full Address</th>
+                    <th className="text-center whitespace-nowrap">City</th>
+                    <th className="text-center whitespace-nowrap">State</th>
+                    <th className="text-center whitespace-nowrap">Pin Code</th>
+                    <th className="text-center whitespace-nowrap hidden md:table-cell">Latitude</th>
+                    <th className="text-center whitespace-nowrap hidden md:table-cell">Longitude</th>
+                    <th className="text-center whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   <AnimatePresence>
                     {currentItems.map((loc, index) => {
-                      // Extract city, state, pin code from address
                       const addressParts = loc.fullAddress.split(',');
                       const city = addressParts.length > 1 ? addressParts[addressParts.length - 2]?.trim() : '-';
                       const state = addressParts.length > 0 ? addressParts[addressParts.length - 1]?.trim() : '-';
@@ -1047,27 +1059,27 @@ const LocationListPage = () => {
                           <td className="text-center text-gray-500 whitespace-nowrap">
                             {pinCode}
                           </td>
-                          <td className="text-center text-gray-500 whitespace-nowrap">
+                          <td className="text-center text-gray-500 whitespace-nowrap hidden md:table-cell">
                             {loc.latitude}
                           </td>
-                          <td className="text-center text-gray-500 whitespace-nowrap">
+                          <td className="text-center text-gray-500 whitespace-nowrap hidden md:table-cell">
                             {loc.longitude}
                           </td>
                           <td className="text-center">
-                            <div className="flex items-center justify-center gap-3">
+                            <div className="flex items-center justify-center gap-2">
                               <button
                                 onClick={() => openEditModal(loc)}
-                                className="p-2 text-blue-600 transition rounded hover:bg-blue-100"
+                                className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100"
                                 title="Edit Location"
                               >
-                                <FiEdit size={18} />
+                                <FiEdit size={14} />
                               </button>
                               <button
                                 onClick={() => handleToggleStatus(loc)}
-                                className={`px-2 py-2 text-center text-[10px] font-bold rounded uppercase transition ${
+                                className={`px-2 py-1 text-[10px] font-bold rounded uppercase transition ${
                                   loc.status === "inactive"
                                     ? "bg-gray-100 text-gray-500 hover:bg-blue-100 hover:text-green-700"
-                                    : "bg-blue-100 text-green-700 hover:bg-gray-200 hover:text-gray-700"
+                                    : "bg-green-100 text-green-700 hover:bg-gray-200 hover:text-gray-700"
                                 }`}
                                 title={loc.status === "inactive" ? "Make Active" : "Make Inactive"}
                               >
@@ -1075,10 +1087,10 @@ const LocationListPage = () => {
                               </button>
                               <button
                                 onClick={() => handleDelete(loc._id)}
-                                className="p-2 text-red-600 transition rounded hover:bg-red-100"
+                                className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100"
                                 title="Delete Location"
                               >
-                                <FiTrash2 size={18} />
+                                <FiTrash2 size={14} />
                               </button>
                             </div>
                           </td>
@@ -1092,65 +1104,70 @@ const LocationListPage = () => {
 
             {/* Pagination */}
             {filteredLocations.length > 0 && (
-              <div className="emp-dash__table-footer">
-                {/* Show entries dropdown */}
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Show:
-                    </label>
-                    <select
-                      value={pagination.limit}
-                      onChange={(e) => {
-                        const newLimit = Number(e.target.value);
-                        handleItemsPerPageChange(newLimit);
-                      }}
-                      className="h-8 px-2 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                    </select>
-                    <span className="text-sm text-gray-500">entries</span>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    Showing <strong>{indexOfFirstItem + 1}</strong> to <strong>{Math.min(indexOfLastItem, filteredLocations.length)}</strong> of{" "}
-                    <strong>{filteredLocations.length}</strong> records
-                  </div>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                  <span>Showing</span>
+                  <span className="font-semibold text-gray-900">
+                    {filteredLocations.length > 0 ? indexOfFirstItem + 1 : 0}
+                  </span>
+                  <span>to</span>
+                  <span className="font-semibold text-gray-900">
+                    {Math.min(indexOfLastItem, filteredLocations.length)}
+                  </span>
+                  <span>of</span>
+                  <span className="font-semibold text-gray-900">
+                    {filteredLocations.length}
+                  </span>
+                  <span>records</span>
+
+                  <select
+                    value={pagination.limit}
+                    onChange={(e) => {
+                      const newLimit = Number(e.target.value);
+                      handleItemsPerPageChange(newLimit);
+                    }}
+                    className="px-2 py-1 text-xs border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
                 </div>
 
-                {/* Pagination buttons */}
-                <div className="flex items-center gap-2">
+                <div className="flex gap-2">
                   <button
                     onClick={handlePrevPage}
                     disabled={pagination.currentPage === 1}
-                    className="emp-dash__btn-pagination"
+                    className="px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Previous
                   </button>
 
-                  {getPageNumbers().map((page, index) => (
-                    <button
-                      key={index}
-                      onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
-                      disabled={page === "..."}
-                      className={`h-8 px-3 text-xs border rounded-lg ${
-                        page === "..."
-                          ? "text-gray-500 bg-white cursor-default border-gray-300"
-                          : pagination.currentPage === page
-                          ? "text-gray-900 bg-blue-600 border-blue-600"
-                          : "text-blue-600 bg-white hover:bg-blue-50 border-blue-300"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
+                  <div className="flex items-center gap-1">
+                    {getPageNumbers().map((page, index) => (
+                      page === "..." ? (
+                        <span key={index} className="px-2 text-gray-400 text-xs">...</span>
+                      ) : (
+                        <button
+                          key={index}
+                          onClick={() => handlePageClick(page)}
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            pagination.currentPage === page
+                              ? "bg-blue-600 text-white"
+                              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    ))}
+                  </div>
 
                   <button
                     onClick={handleNextPage}
                     disabled={pagination.currentPage === pagination.totalPages}
-                    className="emp-dash__btn-pagination"
+                    className="px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
                   </button>
@@ -1162,70 +1179,65 @@ const LocationListPage = () => {
 
         {/* Edit Modal */}
         {isEditModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100/60">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
             <div className="w-full max-w-md p-6 bg-white border border-gray-200 shadow-2xl rounded-xl">
               <h3 className="mb-4 text-lg font-semibold text-blue-800">Edit Location</h3>
               <form onSubmit={handleUpdate}>
-                {/* Location Name */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700">Location Name</label>
                   <input
                     type="text"
                     value={updatedName}
                     onChange={(e) => setUpdatedName(e.target.value)}
-                    className="w-full p-2 mt-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 mt-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     required
                   />
                 </div>
 
-                {/* Full Address */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700">Full Address</label>
                   <textarea
                     value={updatedFullAddress}
                     onChange={(e) => setUpdatedFullAddress(e.target.value)}
-                    className="w-full p-2 mt-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 mt-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     rows="3"
                     required
                   ></textarea>
                 </div>
 
-                {/* Latitude */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700">Latitude</label>
                   <input
                     type="text"
                     value={updatedLatitude}
                     onChange={(e) => setUpdatedLatitude(e.target.value)}
-                    className="w-full p-2 mt-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 mt-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     required
                   />
                 </div>
 
-                {/* Longitude */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700">Longitude</label>
                   <input
                     type="text"
                     value={updatedLongitude}
                     onChange={(e) => setUpdatedLongitude(e.target.value)}
-                    className="w-full p-2 mt-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 mt-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     required
                   />
                 </div>
 
-                {/* Buttons */}
                 <div className="flex justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => setIsEditModalOpen(false)}
-                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 text-gray-900 transition bg-blue-600 rounded shadow-md hover:bg-blue-700 hover:shadow-lg"
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-200"
                   >
                     Save Changes
                   </button>

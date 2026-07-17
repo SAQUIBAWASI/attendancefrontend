@@ -9,6 +9,7 @@ import CountUp from "react-countup";
 import { FaCalendarAlt } from "react-icons/fa";
 import { FiDollarSign, FiDownloadCloud, FiFileText, FiPieChart } from "react-icons/fi";
 import logo from "../Images/Timely-Health-Logo.png";
+import companyStamp from "../Images/company-stamp-1780465131172.png";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
 
@@ -112,7 +113,6 @@ export default function EmployeeSalary() {
     return masterData?.weekOffPerMonth || 4;
   };
 
-  // Calculate actual week-off days based on employee's week-off count and attendance
   const calculateActualWeekOffDays = (employeeId, year, monthNum, attendanceMap, leavesData, targetWeekOffCount, monthStr) => {
     const startDate = new Date(year, monthNum - 1, 1);
     const endDate = new Date(year, monthNum, 0);
@@ -122,7 +122,6 @@ export default function EmployeeSalary() {
       dates.push(new Date(d));
     }
     
-    // For 4 week-offs - always Sundays
     if (targetWeekOffCount === 4) {
       let sundayCount = 0;
       dates.forEach(date => {
@@ -133,7 +132,6 @@ export default function EmployeeSalary() {
       return sundayCount;
     }
     
-    // For less than 4 week-offs (like 2) - find absent days that are not leaves
     const absentDays = [];
     
     dates.forEach(date => {
@@ -142,13 +140,11 @@ export default function EmployeeSalary() {
       const isLeave = isLeaveDayForDate(date, employeeId, leavesData, monthStr);
       const isSunday = date.toLocaleDateString('en-US', { weekday: 'long' }) === 'Sunday';
       
-      // For employees with less than 4 week-offs, Sundays are NOT automatically week-offs
       if (!hasAttendance && !isLeave && !isSunday) {
         absentDays.push(date);
       }
     });
     
-    // Return the count of week-offs (limited to targetWeekOffCount)
     return Math.min(targetWeekOffCount, absentDays.length);
   };
   
@@ -165,9 +161,7 @@ export default function EmployeeSalary() {
       const endDate = new Date(leave.endDate);
       const checkDate = new Date(dateStr);
       
-      // Check if leave overlaps with this date
       if (checkDate >= startDate && checkDate <= endDate) {
-        // Check if leave is in the target month
         const leaveYear = startDate.getFullYear();
         const leaveMonth = startDate.getMonth() + 1;
         return leaveYear === year && leaveMonth === monthNum;
@@ -286,7 +280,6 @@ export default function EmployeeSalary() {
     }
   }, []);
 
-  // Fetch attendance for an employee for a specific month
   const fetchEmployeeAttendance = async (employeeId, monthStr) => {
     try {
       const url = `${BASE_URL}/api/attendance/allattendance?employeeId=${employeeId}`;
@@ -328,6 +321,7 @@ export default function EmployeeSalary() {
       department: employee.department || masterData.department || '',
       joiningDate: masterData.joiningDate || '',
       bankAccount: masterData.bankAccount || '',
+      bankName: masterData.bankName || '',
       panNo: masterData.panCard || '',
       pfNo: masterData.pfNo || '',
       uanNo: masterData.uanNo || '',
@@ -398,13 +392,11 @@ export default function EmployeeSalary() {
       const processedLeaves = processLeavesData(leavesData, month);
       const compOffs = await processCompOffData(month, processedLeaves);
       
-      // Fetch attendance for the employee for this month
       const attendanceMap = await fetchEmployeeAttendance(employeeId, month || getCurrentMonth());
       
       const [year, monthNum] = (month || getCurrentMonth()).split('-').map(Number);
       const targetWeekOffCount = getEmployeeWeekOffCount(employeeId);
       
-      // Calculate actual week-off days based on attendance
       const actualWeekOffDays = calculateActualWeekOffDays(
         employeeId,
         year,
@@ -421,14 +413,9 @@ export default function EmployeeSalary() {
         employeeSalaryRecords = salaryData.salaries
           .filter(salary => salary.employeeId === employeeId)
           .map(salary => {
-            // Use calculated week-off days instead of summary data
-            let calculatedSalary = salary.calculatedSalary || 0;
-            
-            // Recalculate salary with correct week-off days
             const daysInMonth = salaryData.monthDays || 30;
             const dailyRateValue = (salary.salaryPerMonth || 0) / daysInMonth;
             
-            // Get present days and half days
             const presentDaysCount = salary.presentDays || 0;
             const halfDaysCount = salary.halfDayWorking || 0;
             const holidayCount = 0;
@@ -467,7 +454,6 @@ export default function EmployeeSalary() {
             };
           });
       } else {
-        // If no salary data from API, create a placeholder
         const daysInMonthValue = getDaysInMonth(month || getCurrentMonth());
         const dailyRateValue = (employeeData.salaryPerMonth || 0) / daysInMonthValue;
         
@@ -542,6 +528,7 @@ export default function EmployeeSalary() {
               designation: emp.role || emp.designation || '',
               joiningDate: emp.joinDate || emp.joiningDate || '',
               bankAccount: emp.bankAccount || emp.bankAccountNo || '',
+              bankName: emp.bankName || '',
               panCard: emp.panCard || emp.panNumber || '',
               pfNo: emp.pfNumber || emp.pfNo || '',
               uanNo: emp.uanNumber || emp.uanNo || '',
@@ -625,6 +612,7 @@ export default function EmployeeSalary() {
     setSelectedEmployee(null);
   };
 
+  // 🔥 UPDATED: generateInvoiceHTML with proper logo and stamp
   const generateInvoiceHTML = (employee) => {
     const employeeData = getEmployeeData(employee);
     const daysInMonth = employee.monthDays || monthDays || getDaysInMonth(employee.month || selectedMonth);
@@ -659,33 +647,50 @@ export default function EmployeeSalary() {
     const totalDeductions = lopAmount + halfDayDeductionAmount + otherDeductions;
     const netPay = totalEarnings - totalDeductions;
 
+    // Earnings Items
     const earningsItems = [];
     
-    earningsItems.push({ label: 'Basic Salary', amount: grossSalary });
+    const basicAmt = employeeData.basicPay || grossSalary;
+    if (basicAmt > 0) earningsItems.push({ label: 'Basic DA', amount: basicAmt });
     
-    if (bonus > 0) {
-      earningsItems.push({ label: 'Bonus', amount: bonus });
-    }
+    const hraAmt = employeeData.hra || 0;
+    if (hraAmt > 0) earningsItems.push({ label: 'HRA', amount: hraAmt });
     
-    if (extraDaysPay > 0) {
-      earningsItems.push({ label: 'Extra Days Pay', amount: extraDaysPay });
+    const convAmt = employeeData.conveyanceAllowance || 0;
+    if (convAmt > 0) earningsItems.push({ label: 'Conveyance', amount: convAmt });
+    
+    const specialAmt = employeeData.specialAllowance || 0;
+    if (specialAmt > 0) earningsItems.push({ label: 'Special Allowance', amount: specialAmt });
+    
+    const extraPay = bonus + extraDaysPay;
+    if (extraPay > 0) {
+      earningsItems.push({ label: 'Bonus / Extra Work', amount: extraPay });
     }
     
     if (compOffPay > 0) {
-      earningsItems.push({ label: 'Comp-off Pay', amount: compOffPay });
+      earningsItems.push({ label: 'Comp-off / Holiday Pay', amount: compOffPay });
     }
     
-    earningsItems.push({ label: `Working Days (Full: ${presentDays} / Half: ${halfDays})`, amount: 0, isInfo: true });
+    if (holidays > 0) {
+      earningsItems.push({ label: `Public Holidays (${holidays})`, amount: holidays * dailyRate, isInfo: true });
+    }
+    
+    earningsItems.push({ label: `Working Days (Full: ${presentDays})`, amount: 0, isInfo: true });
     earningsItems.push({ label: `Week Off Days (${actualWeekOffDays})`, amount: 0, isInfo: true });
     
+    // Deductions Items
     const deductionsItems = [];
     
     if (lopDays > 0) {
       deductionsItems.push({ label: `LOP / Absent (${lopDays} days)`, amount: lopAmount });
+    } else {
+      deductionsItems.push({ label: `LOP / Absent (0 days)`, amount: 0 });
     }
     
     if (halfDays > 0) {
       deductionsItems.push({ label: `Half Day Deductions (${halfDays} HD)`, amount: halfDayDeductionAmount });
+    } else {
+      deductionsItems.push({ label: `Half Day Deductions (0 HD)`, amount: 0 });
     }
     
     const gmcAmt = employee.gmcAmount || employeeData.gmc || 0;
@@ -693,9 +698,7 @@ export default function EmployeeSalary() {
     const extraDeductions = otherDeductions + (employee.otherDeductions || 0);
     let totalOtherDeductions = gmcAmt + ptaxAmt + extraDeductions;
     
-    if (totalOtherDeductions > 0) {
-      deductionsItems.push({ label: `Other Deductions`, amount: totalOtherDeductions });
-    }
+    deductionsItems.push({ label: `Other Deductions`, amount: totalOtherDeductions });
     
     const totalEarningsAmt = earningsItems.filter(item => !item.isInfo).reduce((sum, item) => sum + item.amount, 0);
     const totalDeductionsAmt = deductionsItems.reduce((sum, item) => sum + item.amount, 0);
@@ -721,14 +724,16 @@ export default function EmployeeSalary() {
         dedAmountStr = `₹${ded.amount.toFixed(2)}`;
       }
       
-      tableRowsHTML += `<tr>
-        <td style="border: 1px solid #000; padding: 8px 10px;">${earn ? earn.label : ''}</td>
-        <td style="border: 1px solid #000; padding: 8px 10px; text-align: right;">${earnAmountStr}</td>
-        <td style="border: 1px solid #000; padding: 8px 10px;">${ded ? ded.label : ''}</td>
-        <td style="border: 1px solid #000; padding: 8px 10px; text-align: right;">${dedAmountStr}</td>
-      </tr>`;
+      tableRowsHTML += `
+        <tr>
+          <td style="border: 1px solid #000; padding: 8px 10px;">${earn ? earn.label : ''}</td>
+          <td style="border: 1px solid #000; padding: 8px 10px; text-align: right;">${earnAmountStr}</td>
+          <td style="border: 1px solid #000; padding: 8px 10px;">${ded ? ded.label : ''}</td>
+          <td style="border: 1px solid #000; padding: 8px 10px; text-align: right;">${dedAmountStr}</td>
+        </tr>
+      `;
     }
-    
+
     const numberToWords = (num) => {
       const a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
       const b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
@@ -744,6 +749,10 @@ export default function EmployeeSalary() {
       return str.trim();
     };
 
+    // Get logo and stamp data
+    const logoData = templateConfig.logo || logo;
+    const stampData = companyStamp;
+
     return `
       <!DOCTYPE html>
       <html>
@@ -751,16 +760,88 @@ export default function EmployeeSalary() {
           <meta charset="utf-8">
           <title>Payslip - ${employee.name}</title>
           <style>
-            @page { size: A4; margin: 0; }
-            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: white; }
-            .invoice-container { max-width: 210mm; margin: 0 auto; border: 1px solid #000; border-radius: 4px; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { padding: 6px 8px; border: 1px solid #000; font-size: 12px; vertical-align: top; }
-            .header-cell { border: none; padding: 12px; border-bottom: 1px solid #000; }
-            .section-header { text-align: center; padding: 8px; font-weight: bold; background: #f5f5f5; }
-            .total-row { font-weight: bold; background: #f9f9f9; }
-            .gross-row { font-weight: bold; background: #f0f0f0; }
-            .note-text { font-size: 9px; color: #666; text-align: center; }
+            @page { 
+              size: A4; 
+              margin: 0;
+            }
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 0; 
+              padding: 20px; 
+              background: white; 
+            }
+            .invoice-container { 
+              max-width: 210mm; 
+              margin: 0 auto; 
+              border: 1px solid #000; 
+              border-radius: 4px;
+              padding: 0;
+            }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+            }
+            th, td { 
+              padding: 6px 8px; 
+              border: 1px solid #000; 
+              font-size: 12px; 
+              vertical-align: top; 
+            }
+            .header-cell { 
+              border: none; 
+              padding: 12px; 
+              border-bottom: 1px solid #000; 
+            }
+            .section-header { 
+              text-align: center; 
+              padding: 8px; 
+              font-weight: bold; 
+              background: #f5f5f5; 
+            }
+            .total-row { 
+              font-weight: bold; 
+              background: #f9f9f9; 
+            }
+            .gross-row { 
+              font-weight: bold; 
+              background: #f0f0f0; 
+            }
+            .logo-image {
+              height: 80px;
+              width: auto;
+              max-width: 200px;
+              object-fit: contain;
+              display: block;
+            }
+            .stamp-image {
+              width: 90px;
+              height: auto;
+              opacity: 0.8;
+              display: block;
+            }
+            .stamp-container {
+              display: flex;
+              flex-direction: column;
+              align-items: flex-end;
+              gap: 4px;
+            }
+            @media print {
+              body { padding: 10px; }
+              .invoice-container { border: 1px solid #000; }
+              .logo-image { 
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              .stamp-image {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+            }
           </style>
         </head>
         <body>
@@ -768,69 +849,98 @@ export default function EmployeeSalary() {
             <table>
               <tr>
                 <td colspan="6" class="header-cell">
-                  <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="width: 200px;">
-                      <img src="${templateConfig.logo}" alt="Logo" style="height: 40px; object-fit: contain;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <div style="width: 200px; flex-shrink: 0;">
+                      <img src="${logoData}" alt="Logo" class="logo-image" style="height: 80px; width: auto; max-width: 200px; object-fit: contain;">
                     </div>
-                    <div style="flex: 1; text-align: center;">
-                      <h2 style="margin: 0; font-size: 16px;">${templateConfig.companyName}</h2>
-                      <p style="margin: 2px 0 0; font-size: 8px;">${templateConfig.address}</p>
+                    <div style="flex: 1; text-align: center; padding: 0 10px;">
+                      <h2 style="margin: 0; font-size: 16px; font-weight: bold;">${templateConfig.companyName}</h2>
+                      <p style="margin: 2px 0 0; font-size: 8px; white-space: pre-wrap;">${templateConfig.address}</p>
                     </div>
-                    <div style="width: 200px;"></div>
+                    <div style="width: 200px; flex-shrink: 0;"></div>
                   </div>
                 </td>
               </tr>
-              <tr><td colspan="6" class="section-header">PAYSLIP ${formatMonthDisplay(employee.month || selectedMonth)}</td></tr>
+              <tr><td colspan="6" class="section-header">PAYSLIP FOR ${formatMonthDisplay(employee.month || selectedMonth).toUpperCase()}</td></tr>
               <tr>
-                <td width="25%"><strong>ID</strong></td><td width="25%">${employee.employeeId || '-'}</td>
-                <td width="25%"><strong>Joined</strong></td><td width="25%">${employeeData.joiningDate ? new Date(employeeData.joiningDate).toLocaleDateString('en-GB') : '-'}</td>
+                <td width="15%"><strong>Name:</strong></td>
+                <td width="35%">${employee.name || '-'}</td>
+                <td width="15%"><strong>Employee No:</strong></td>
+                <td width="35%">${employee.employeeId || '-'}</td>
               </tr>
               <tr>
-                <td><strong>Name</strong></td><td>${employee.name || '-'}</td>
-                <td><strong>Department</strong></td><td>${employeeData.department || employee.department || '-'}</td>
+                <td><strong>Joining Date:</strong></td>
+                <td>${employeeData.joiningDate ? new Date(employeeData.joiningDate).toLocaleDateString('en-GB') : '-'}</td>
+                <td><strong>Bank Name:</strong></td>
+                <td>${employeeData.bankName || '-'}</td>
               </tr>
               <tr>
-                <td><strong>Designation</strong></td><td>${employeeData.designation || employee.designation || '-'}</td>
-                <td><strong>Month</strong></td><td>${formatMonthDisplay(employee.month || selectedMonth)}</td>
+                <td><strong>Designation:</strong></td>
+                <td>${employeeData.designation || employee.designation || '-'}</td>
+                <td><strong>Bank Account No:</strong></td>
+                <td>${employeeData.bankAccount || '-'}</td>
               </tr>
               <tr>
-                <td><strong>Invoice Date</strong></td><td>${new Date().toLocaleDateString('en-GB')}</td>
-                <td><strong>Total Days</strong></td><td>${daysInMonth} Days</td>
+                <td><strong>Department:</strong></td>
+                <td>${employeeData.department || employee.department || '-'}</td>
+                <td><strong>PAN Number:</strong></td>
+                <td>${employeeData.panNo || '-'}</td>
               </tr>
-              ${(employeeData.panNo) ? `<tr><td colspan="2"><strong>PAN No.:</strong> ${employeeData.panNo}</td><td colspan="2"></td></tr>` : ''}
-              ${(employeeData.pfNo) ? `<tr><td colspan="2"><strong>PF No.:</strong> ${employeeData.pfNo}</td><td colspan="2"></td></tr>` : ''}
-              ${(employeeData.uanNo) ? `<tr><td colspan="2"><strong>UAN No.:</strong> ${employeeData.uanNo}</td><td colspan="2"></td></tr>` : ''}
-              ${(employeeData.branch) ? `<tr><td colspan="2"><strong>Branch:</strong> ${employeeData.branch}</td><td colspan="2"><tr></tr>` : ''}
-              ${(employeeData.esicNo) ? `<tr><td colspan="2"><strong>ESIC No.:</strong> ${employeeData.esicNo}</td><td colspan="2"></td></tr>` : ''}
-              ${(employeeData.bankAccount) ? `<tr><td colspan="4"><strong>Bank Account:</strong> ${employeeData.bankAccount}</td></tr>` : ''}
+              <tr>
+                <td><strong>Location:</strong></td>
+                <td>${employeeData.location || 'HYDERABAD'}</td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td><strong>EMP EFFECTIVE</strong></td>
+                <td>:30</td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td><strong>LOP:</strong></td>
+                <td>${lopDays > 0 ? lopDays : '0'}</td>
+                <td></td>
+                <td></td>
+              </tr>
             </table>
             
-            <table style="border-top: none;">
+            <table>
               <tr style="background:#f0f0f0;">
-                <td style="width:40%;"><strong>EARNINGS</strong></td>
-                <td style="width:10%; text-align:center;"><strong>₹</strong></td>
-                <td style="width:40%;"><strong>DEDUCTIONS</strong></td>
-                <td style="width:10%; text-align:center;"><strong>₹</strong></td>
+                <td style="width:30%;"><strong>Earnings</strong></td>
+                <td style="width:20%; text-align:center;"><strong>Actual</strong></td>
+                <td style="width:30%;"><strong>Deductions</strong></td>
+                <td style="width:20%; text-align:center;"><strong>Actual</strong></td>
               </tr>
               ${tableRowsHTML}
               <tr class="gross-row">
-                <td><strong>Gross Earnings</strong></td>
+                <td><strong>Total Earnings: INR.</strong></td>
                 <td style="text-align: right;"><strong>₹${totalEarningsAmt.toFixed(2)}</strong></td>
-                <td><strong>Total Deductions</strong></td>
+                <td><strong>Total Deductions.</strong></td>
                 <td style="text-align: right;"><strong>₹${totalDeductionsAmt.toFixed(2)}</strong></td>
               </tr>
               <tr class="total-row">
                 <td colspan="2"></td>
-                <td><strong>NET PAY</strong></td>
+                <td><strong>Net Pay for the month</strong></td>
                 <td style="text-align: right;"><strong>₹${finalNetPay.toFixed(2)}</strong></td>
               </tr>
               <tr>
-                <td colspan="4"><strong>Net Payable (In words):</strong> ${numberToWords(finalNetPay)}</td>
-              </tr>
-              <tr>
-                <td colspan="4" class="note-text">Note: This is a System generated slip and does not require company sign and stamp.</td>
+                <td colspan="4"><strong>(${numberToWords(finalNetPay)})</strong></td>
               </tr>
             </table>
+            
+            <!-- STAMP SECTION -->
+            <div style="display: flex; justify-content: flex-end; align-items: center; padding: 10px 20px; border-top: 1px solid #000; margin-top: 5px;">
+              <div class="stamp-container">
+                <img src="${stampData}" alt="Company Stamp" class="stamp-image" style="width: 90px; height: auto; opacity: 0.8;">
+                <div style="text-align: right; line-height: 1.2;">
+                  <strong style="font-size: 7px; color: #333; display: block;">Authorized Signatory</strong>
+                  <span style="font-size: 6px; color: #555; display: block;">Timely Health Tech Pvt Ltd</span>
+                </div>
+              </div>
+            </div>
+            
           </div>
         </body>
       </html>
@@ -900,7 +1010,7 @@ export default function EmployeeSalary() {
           <div className="emp-dash__card" style={{ maxWidth: 520, width: "100%" }}>
             <div className="emp-dash__card-header">
               <div>
-                <h3 className="emp-dash__card-title">Couldn’t load salary</h3>
+                <h3 className="emp-dash__card-title">Couldn't load salary</h3>
                 <p className="emp-dash__card-desc">{error}</p>
               </div>
               <button type="button" className="emp-dash__card-link" onClick={() => fetchSalaryData(selectedMonth)}>
@@ -918,7 +1028,6 @@ export default function EmployeeSalary() {
   const availableDocs = filteredRecords.filter((emp) => emp.canDownload).length;
 
   return (
-    
     <div className="emp-dash">
       <main>
         <div className="emp-dash__header">
@@ -995,7 +1104,6 @@ export default function EmployeeSalary() {
           <div className="emp-dash__card-header">
             <div>
               <h3 className="emp-dash__card-title">Filters</h3>
-              {/* <p className="emp-dash__card-desc">Search and filter salary records</p> */}
             </div>
             <button type="button" className="emp-dash__card-link" onClick={() => fetchSalaryData(selectedMonth)} disabled={isLoadingMonth}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
@@ -1155,7 +1263,7 @@ export default function EmployeeSalary() {
                       );
                     })}
                   </tbody>
-                 </table>
+                </table>
               </div>
 
               <div className="emp-dash__mobile-list">
@@ -1265,133 +1373,132 @@ export default function EmployeeSalary() {
 
             <div className="emp-dash__modal-body p-4">
               <div className="flex items-start space-x-4">
-              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full shrink-0">
-                <span className="text-lg font-semibold text-blue-800">{selectedEmployee.name?.charAt(0) || 'E'}</span>
-              </div>
-              <div className="flex flex-col flex-1 space-y-1">
-                <h3 className="text-lg font-semibold text-gray-700">{selectedEmployee.name}</h3>
-                <div className="grid grid-cols-2 text-sm text-gray-500 gap-x-6 gap-y-1">
-                  <p><span className="font-medium text-gray-700">ID:</span> {selectedEmployee.employeeId}</p>
-                  <p><span className="font-medium text-gray-700">Department:</span> {selectedEmployee.department || 'N/A'}</p>
-                  <p><span className="font-medium text-gray-700">Designation:</span> {selectedEmployee.designation || 'N/A'}</p>
-                  <p><span className="font-medium text-gray-700">Month:</span> {selectedEmployee.month || selectedMonth || "Current"} ({selectedEmployee.monthDays || monthDays} days) | Week-offs: {selectedEmployee.targetWeekOffCount || 4}</p>
+                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full shrink-0">
+                  <span className="text-lg font-semibold text-blue-800">{selectedEmployee.name?.charAt(0) || 'E'}</span>
+                </div>
+                <div className="flex flex-col flex-1 space-y-1">
+                  <h3 className="text-lg font-semibold text-gray-700">{selectedEmployee.name}</h3>
+                  <div className="grid grid-cols-2 text-sm text-gray-500 gap-x-6 gap-y-1">
+                    <p><span className="font-medium text-gray-700">ID:</span> {selectedEmployee.employeeId}</p>
+                    <p><span className="font-medium text-gray-700">Department:</span> {selectedEmployee.department || 'N/A'}</p>
+                    <p><span className="font-medium text-gray-700">Designation:</span> {selectedEmployee.designation || 'N/A'}</p>
+                    <p><span className="font-medium text-gray-700">Month:</span> {selectedEmployee.month || selectedMonth || "Current"} ({selectedEmployee.monthDays || monthDays} days) | Week-offs: {selectedEmployee.targetWeekOffCount || 4}</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {(selectedEmployee.compOffBalance > 0 || selectedEmployee.compOffEarned > 0) && (
-              <div className="p-3 mt-4 rounded-lg bg-purple-50">
-                <p className="text-sm font-medium text-purple-800">Comp-off Summary - {formatMonthDisplay(selectedEmployee.month || selectedMonth)}</p>
-                <div className="flex items-center justify-center gap-2 mt-2">
-                  <div className="text-center">
-                    <span className="text-xs text-gray-500">Leave Taken</span>
-                    <p className="text-2xl font-bold text-blue-600">
-                      {(() => {
-                        const leaves = employeeLeaves[selectedEmployee.employeeId];
-                        return (leaves?.CL || 0) + (leaves?.EL || 0) + (leaves?.COFF || 0) + (leaves?.Other || 0);
-                      })()}
-                    </p>
+              {(selectedEmployee.compOffBalance > 0 || selectedEmployee.compOffEarned > 0) && (
+                <div className="p-3 mt-4 rounded-lg bg-purple-50">
+                  <p className="text-sm font-medium text-purple-800">Comp-off Summary - {formatMonthDisplay(selectedEmployee.month || selectedMonth)}</p>
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    <div className="text-center">
+                      <span className="text-xs text-gray-500">Leave Taken</span>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {(() => {
+                          const leaves = employeeLeaves[selectedEmployee.employeeId];
+                          return (leaves?.CL || 0) + (leaves?.EL || 0) + (leaves?.COFF || 0) + (leaves?.Other || 0);
+                        })()}
+                      </p>
+                    </div>
+                    <span className="text-2xl font-bold text-gray-500">-</span>
+                    <div className="text-center">
+                      <span className="text-xs text-gray-500">Comp-off Used</span>
+                      <p className="text-2xl font-bold text-purple-600">
+                        {(() => {
+                          const leaves = employeeLeaves[selectedEmployee.employeeId];
+                          const totalLeaves = (leaves?.CL || 0) + (leaves?.EL || 0) + (leaves?.COFF || 0) + (leaves?.Other || 0);
+                          const earned = selectedEmployee.compOffEarned || 0;
+                          return Math.min(earned, totalLeaves);
+                        })()}
+                      </p>
+                    </div>
+                    <span className="text-2xl font-bold text-gray-500">=</span>
+                    <div className="text-center">
+                      <span className="text-xs text-gray-500">Balance</span>
+                      <p className="text-2xl font-bold text-blue-700">
+                        {(() => {
+                          const leaves = employeeLeaves[selectedEmployee.employeeId];
+                          const totalLeaves = (leaves?.CL || 0) + (leaves?.EL || 0) + (leaves?.COFF || 0) + (leaves?.Other || 0);
+                          const earned = selectedEmployee.compOffEarned || 0;
+                          const used = Math.min(earned, totalLeaves);
+                          return earned - used;
+                        })()}
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-2xl font-bold text-gray-500">-</span>
-                  <div className="text-center">
-                    <span className="text-xs text-gray-500">Comp-off Used</span>
-                    <p className="text-2xl font-bold text-purple-600">
-                      {(() => {
-                        const leaves = employeeLeaves[selectedEmployee.employeeId];
-                        const totalLeaves = (leaves?.CL || 0) + (leaves?.EL || 0) + (leaves?.COFF || 0) + (leaves?.Other || 0);
-                        const earned = selectedEmployee.compOffEarned || 0;
-                        return Math.min(earned, totalLeaves);
-                      })()}
-                    </p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 mt-4 mb-4 text-sm sm:grid-cols-2 gap-x-10 gap-y-2">
+                <div className="flex justify-between pb-1 border-b">
+                  <span className="text-gray-500">Present Days</span>
+                  <span className="font-semibold text-blue-700">{selectedEmployee.presentDays || 0}</span>
+                </div>
+                <div className="flex justify-between pb-1 border-b">
+                  <span className="text-gray-500">Working Days</span>
+                  <span className="font-semibold text-blue-600">{selectedEmployee.workingDays || 0}</span>
+                </div>
+                <div className="flex justify-between pb-1 border-b">
+                  <span className="text-gray-500">Half Days</span>
+                  <span className="font-semibold text-yellow-600">{selectedEmployee.halfDays || 0}</span>
+                </div>
+                <div className="flex justify-between pb-1 border-b">
+                  <span className="text-gray-500">WeekOff Days</span>
+                  <span className="font-semibold text-purple-600">{selectedEmployee.weekOffs || 0}</span>
+                </div>
+                <div className="flex justify-between pb-1 border-b">
+                  <span className="text-gray-500">Month Days</span>
+                  <span className="font-semibold text-gray-700">{selectedEmployee.monthDays || monthDays}</span>
+                </div>
+                <div className="flex justify-between pb-1 border-b">
+                  <span className="text-gray-500">Monthly Salary</span>
+                  <span className="font-semibold text-blue-600">₹{selectedEmployee.salaryPerMonth || 0}</span>
+                </div>
+                <div className="flex justify-between pb-1 border-b">
+                  <span className="text-gray-500">Daily Rate</span>
+                  <span className="font-semibold text-gray-700">₹{calculateDailyRate(selectedEmployee)}/day</span>
+                </div>
+                <div className="flex justify-between pb-1 border-b">
+                  <span className="text-gray-500">Calculated Salary</span>
+                  <span className="font-semibold text-blue-700">₹{Math.round(selectedEmployee.calculatedSalary || 0)}</span>
+                </div>
+                <div className="flex flex-col pb-2 border-b sm:col-span-2">
+                  <div className="flex justify-between mb-2">
+                    <span className="font-medium text-gray-500">Approved Leaves</span>
+                    <span className="font-semibold text-red-600">{getLeaveTypes(selectedEmployee) || "0"}</span>
                   </div>
-                  <span className="text-2xl font-bold text-gray-500">=</span>
-                  <div className="text-center">
-                    <span className="text-xs text-gray-500">Balance</span>
-                    <p className="text-2xl font-bold text-blue-700">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-500">Comp-off Collection</span>
+                    <span className="px-3 py-1 text-sm font-semibold text-purple-700 bg-purple-100 rounded-full">
                       {(() => {
                         const leaves = employeeLeaves[selectedEmployee.employeeId];
                         const totalLeaves = (leaves?.CL || 0) + (leaves?.EL || 0) + (leaves?.COFF || 0) + (leaves?.Other || 0);
                         const earned = selectedEmployee.compOffEarned || 0;
                         const used = Math.min(earned, totalLeaves);
-                        return earned - used;
+                        const balance = earned - used;
+                        return `${totalLeaves} - ${used} = ${balance}`;
                       })()}
-                    </p>
+                    </span>
                   </div>
                 </div>
               </div>
-            )}
 
-            <div className="grid grid-cols-1 mt-4 mb-4 text-sm sm:grid-cols-2 gap-x-10 gap-y-2">
-              <div className="flex justify-between pb-1 border-b">
-                <span className="text-gray-500">Present Days</span>
-                <span className="font-semibold text-blue-700">{selectedEmployee.presentDays || 0}</span>
+              <div className="flex justify-end space-x-3">
+                <button 
+                  onClick={() => downloadSalarySlip(selectedEmployee)} 
+                  disabled={!selectedEmployee.canDownload} 
+                  className={`px-6 py-2 rounded-lg transition duration-200 ${selectedEmployee.canDownload ? 'bg-purple-500 text-gray-900 hover:bg-purple-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                >
+                  Download Payslip
+                </button>
+                <button onClick={handleCloseModal} className="px-6 py-2 text-gray-900 transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-600">
+                  Close
+                </button>
               </div>
-              <div className="flex justify-between pb-1 border-b">
-                <span className="text-gray-500">Working Days</span>
-                <span className="font-semibold text-blue-600">{selectedEmployee.workingDays || 0}</span>
-              </div>
-              <div className="flex justify-between pb-1 border-b">
-                <span className="text-gray-500">Half Days</span>
-                <span className="font-semibold text-yellow-600">{selectedEmployee.halfDays || 0}</span>
-              </div>
-              <div className="flex justify-between pb-1 border-b">
-                <span className="text-gray-500">WeekOff Days</span>
-                <span className="font-semibold text-purple-600">{selectedEmployee.weekOffs || 0}</span>
-              </div>
-              <div className="flex justify-between pb-1 border-b">
-                <span className="text-gray-500">Month Days</span>
-                <span className="font-semibold text-gray-700">{selectedEmployee.monthDays || monthDays}</span>
-              </div>
-              <div className="flex justify-between pb-1 border-b">
-                <span className="text-gray-500">Monthly Salary</span>
-                <span className="font-semibold text-blue-600">₹{selectedEmployee.salaryPerMonth || 0}</span>
-              </div>
-              <div className="flex justify-between pb-1 border-b">
-                <span className="text-gray-500">Daily Rate</span>
-                <span className="font-semibold text-gray-700">₹{calculateDailyRate(selectedEmployee)}/day</span>
-              </div>
-              <div className="flex justify-between pb-1 border-b">
-                <span className="text-gray-500">Calculated Salary</span>
-                <span className="font-semibold text-blue-700">₹{Math.round(selectedEmployee.calculatedSalary || 0)}</span>
-              </div>
-              <div className="flex flex-col pb-2 border-b sm:col-span-2">
-                <div className="flex justify-between mb-2">
-                  <span className="font-medium text-gray-500">Approved Leaves</span>
-                  <span className="font-semibold text-red-600">{getLeaveTypes(selectedEmployee) || "0"}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-500">Comp-off Collection</span>
-                  <span className="px-3 py-1 text-sm font-semibold text-purple-700 bg-purple-100 rounded-full">
-                    {(() => {
-                      const leaves = employeeLeaves[selectedEmployee.employeeId];
-                      const totalLeaves = (leaves?.CL || 0) + (leaves?.EL || 0) + (leaves?.COFF || 0) + (leaves?.Other || 0);
-                      const earned = selectedEmployee.compOffEarned || 0;
-                      const used = Math.min(earned, totalLeaves);
-                      const balance = earned - used;
-                      return `${totalLeaves} - ${used} = ${balance}`;
-                    })()}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <button 
-                onClick={() => downloadSalarySlip(selectedEmployee)} 
-                disabled={!selectedEmployee.canDownload} 
-                className={`px-6 py-2 rounded-lg transition duration-200 ${selectedEmployee.canDownload ? 'bg-purple-500 text-gray-900 hover:bg-purple-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-              >
-                Download Payslip
-              </button>
-              <button onClick={handleCloseModal} className="px-6 py-2 text-gray-900 transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-600">
-                Close
-              </button>
             </div>
           </div>
-        </div>
         </div>
       )}
     </div>
   );
 }
-

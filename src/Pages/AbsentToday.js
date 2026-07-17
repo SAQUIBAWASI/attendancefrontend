@@ -1990,7 +1990,7 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag } from "react-icons/fa";
-import { FiUsers, FiFilter, FiUserX, FiPercent, FiCalendar, FiTrash2, FiRefreshCw } from "react-icons/fi";
+import { FiUsers, FiFilter, FiUserX, FiPercent, FiCalendar, FiTrash2, FiRefreshCw,FiChevronUp,FiChevronDown, } from "react-icons/fi";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
 import "./EmployeeDashboard.css";
@@ -2005,6 +2005,9 @@ const AbsentToday = () => {
   const [error, setError] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [allDatesCount, setAllDatesCount] = useState(1);
+  
+  // Mobile filter visibility state
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   
   // Format date as DD-MM-YYYY for display
   const formatDateForDisplay = (dateStr) => {
@@ -2313,6 +2316,38 @@ const AbsentToday = () => {
     return pageNumbers;
   };
 
+  // Handle KPI card click to filter table
+  const handleCardClick = (filterType) => {
+    // Scroll to table section
+    const tableSection = document.querySelector('.emp-dash__card:last-child');
+    if (tableSection) {
+      tableSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    // Clear existing filters first
+    setSearchTerm("");
+    setFilterDepartment("");
+    setFilterDesignation("");
+    
+    // Apply filter based on card clicked
+    switch(filterType) {
+      case 'total':
+        // Show all absences - just clear filters
+        break;
+      case 'filtered':
+        // Already showing filtered - do nothing
+        break;
+      case 'employees':
+        // No filter needed for employees count
+        break;
+      case 'rate':
+        // No filter needed for rate
+        break;
+      default:
+        break;
+    }
+  };
+
   if (loading) {
     return (
       <div className="emp-dash">
@@ -2346,17 +2381,17 @@ const AbsentToday = () => {
 
   return (
     <div className="emp-dash">
-      <main className="p-4 sm:p-6 lg:p-8">
+      <main className="p-2 sm:p-4 lg:p-6">
 
         {/* Dashboard Header */}
         <div className="emp-dash__header">
-          <div>
-            <h1 className="emp-dash__greeting">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Absent <span>Today</span>
             </h1>
-            <p className="emp-dash__subtitle">
+            {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
               Monitor employee absences and tracking rates for selected time periods.
-            </p>
+            </p> */}
           </div>
           <div className="emp-dash__date-pill">
             <FiCalendar />
@@ -2373,7 +2408,10 @@ const AbsentToday = () => {
 
         {/* Top KPI Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
-          <div className="emp-dash__stat">
+          <div 
+            className="emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200"
+            onClick={() => handleCardClick('total')}
+          >
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Total Absences</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
@@ -2384,7 +2422,10 @@ const AbsentToday = () => {
             <div className="emp-dash__stat-meta">active in view</div>
           </div>
           
-          <div className="emp-dash__stat">
+          <div 
+            className="emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200"
+            onClick={() => handleCardClick('filtered')}
+          >
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Filtered Absences</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
@@ -2395,7 +2436,10 @@ const AbsentToday = () => {
             <div className="emp-dash__stat-meta">matching filters</div>
           </div>
 
-          <div className="emp-dash__stat">
+          <div 
+            className="emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200"
+            onClick={() => handleCardClick('employees')}
+          >
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Active Employees</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
@@ -2406,7 +2450,10 @@ const AbsentToday = () => {
             <div className="emp-dash__stat-meta">active employees</div>
           </div>
 
-          <div className="emp-dash__stat">
+          <div 
+            className="emp-dash__stat cursor-pointer hover:scale-105 transition-transform duration-200"
+            onClick={() => handleCardClick('rate')}
+          >
             <div className="emp-dash__stat-top">
               <span className="emp-dash__stat-label">Avg Absent Rate</span>
               <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
@@ -2421,201 +2468,396 @@ const AbsentToday = () => {
         </div>
 
         {/* Filters Card */}
-        <div className="emp-dash__card mb-6">
-          <div className="emp-dash__card-header flex-col sm:flex-row gap-3">
-            <div>
-              <h3 className="emp-dash__card-title flex items-center gap-2">
-                <FiFilter className="text-blue-600" /> Filters &amp; Actions
-              </h3>
-              {/* <p className="emp-dash__card-desc">Filter records by name, department, date range, or month</p> */}
-            </div>
-            <div className="flex gap-2 flex-wrap w-full sm:w-auto justify-start sm:justify-end">
-              <button
-                onClick={fetchAbsentRecords}
-                className="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all flex items-center gap-1.5 shadow-md"
+       <div className="emp-dash__card mb-6">
+  {/* Desktop View */}
+  <div className="hidden lg:block">
+    <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200">
+      {/* Left - Filters */}
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        {/* Search */}
+        <div className="relative min-w-[140px] flex-1 max-w-[200px]">
+          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+          <input
+            type="text"
+            placeholder="Search ID or Name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+          />
+        </div>
+
+        {/* Department */}
+        <div className="relative" ref={departmentFilterRef}>
+          <button
+            onClick={() => {
+              setShowDepartmentFilter(!showDepartmentFilter);
+              setShowDesignationFilter(false);
+            }}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+              filterDepartment
+                ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                : "border-gray-300 text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            <FaBuilding className="text-gray-400 text-[10px]" />
+            <span className="truncate max-w-[100px]">{filterDepartment || "Departments"}</span>
+            <span className="text-gray-400 text-[10px]">▾</span>
+          </button>
+          {showDepartmentFilter && (
+            <div 
+              className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
+              style={{
+                zIndex: 99999,
+                top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
+              }}
+            >
+              <div
+                onClick={() => {
+                  setFilterDepartment("");
+                  setShowDepartmentFilter(false);
+                }}
+                className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
               >
-                <FiRefreshCw /> Apply / Refresh
-              </button>
-            </div>
-          </div>
-          
-          <div className="emp-dash__card-body bg-gray-55/50">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
-              {/* Search Bar */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Search Employee</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <FaSearch className="w-3.5 h-3.5" />
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Search ID or Name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                  />
+                All Departments
+              </div>
+              {uniqueDepartments.map((dept) => (
+                <div
+                  key={dept}
+                  onClick={() => {
+                    setFilterDepartment(dept);
+                    setShowDepartmentFilter(false);
+                  }}
+                  className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                    filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                  }`}
+                >
+                  {dept}
                 </div>
-              </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-              {/* Department Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={departmentFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Department</label>
-                <button
-                  onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDepartment 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-55'
+        {/* Designation */}
+        <div className="relative" ref={designationFilterRef}>
+          <button
+            onClick={() => {
+              setShowDesignationFilter(!showDesignationFilter);
+              setShowDepartmentFilter(false);
+            }}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+              filterDesignation
+                ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                : "border-gray-300 text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            <FaUserTag className="text-gray-400 text-[10px]" />
+            <span className="truncate max-w-[100px]">{filterDesignation || "Designations"}</span>
+            <span className="text-gray-400 text-[10px]">▾</span>
+          </button>
+          {showDesignationFilter && (
+            <div 
+              className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
+              style={{
+                zIndex: 99999,
+                top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
+              }}
+            >
+              <div
+                onClick={() => {
+                  setFilterDesignation("");
+                  setShowDesignationFilter(false);
+                }}
+                className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+              >
+                All Designations
+              </div>
+              {uniqueDesignations.map((des) => (
+                <div
+                  key={des}
+                  onClick={() => {
+                    setFilterDesignation(des);
+                    setShowDesignationFilter(false);
+                  }}
+                  className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                    filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
                   }`}
                 >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaBuilding className="text-gray-400" />
-                    {filterDepartment || 'All Departments'}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                
-                {showDepartmentFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div 
-                      onClick={() => {
-                        setFilterDepartment('');
-                        setShowDepartmentFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Departments
-                    </div>
-                    {uniqueDepartments.map(dept => (
-                      <div 
-                        key={dept}
-                        onClick={() => {
-                          setFilterDepartment(dept);
-                          setShowDepartmentFilter(false);
-                        }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-55 cursor-pointer transition-all ${
-                          filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
-                      >
-                        {dept}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Designation Filter */}
-              <div className="flex flex-col gap-1.5 relative" ref={designationFilterRef}>
-                <label className="text-xs font-medium text-gray-600">Designation</label>
-                <button
-                  onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                  className={`w-full h-9 px-3 text-xs font-medium rounded-lg transition-all border text-left flex items-center justify-between bg-white ${
-                    filterDesignation 
-                      ? 'border-blue-500 text-blue-700 font-semibold ring-2 ring-blue-500/10' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-55'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <FaUserTag className="text-gray-400" />
-                    {filterDesignation || 'All Designations'}
-                  </span>
-                  <span className="text-gray-400">▾</span>
-                </button>
-                
-                {showDesignationFilter && (
-                  <div className="absolute left-0 right-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    <div 
-                      onClick={() => {
-                        setFilterDesignation('');
-                        setShowDesignationFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Designations
-                    </div>
-                    {uniqueDesignations.map(des => (
-                      <div 
-                        key={des}
-                        onClick={() => {
-                          setFilterDesignation(des);
-                          setShowDesignationFilter(false);
-                        }}
-                        className={`px-3 py-2 text-xs hover:bg-blue-55 cursor-pointer transition-all ${
-                          filterDesignation === des ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'
-                        }`}
-                      >
-                        {des}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Date From */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">From Date</label>
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
-
-              {/* Date To */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">To Date</label>
-                <input
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
-
-              {/* Month Selector */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gray-600">Month</label>
-                <input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                  className="w-full h-9 px-3 py-2 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
+                  {des}
+                </div>
+              ))}
             </div>
+          )}
+        </div>
 
-            {/* Filter Actions */}
-            <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200/50">
-              <div className="text-xs text-gray-500 font-medium">
-                Showing <strong>{filteredRecords.length}</strong> of <strong>{absentRecords.length}</strong> absences
-              </div>
-              <div className="flex gap-2">
-                {(searchTerm || filterDepartment || filterDesignation || fromDate !== getTodayDate() || toDate !== getTodayDate() || selectedMonth) && (
-                  <button
-                    onClick={clearFilters}
-                    className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-55 transition-all flex items-center gap-1.5 shadow-sm"
-                  >
-                    <FiTrash2 /> Clear Filters
-                  </button>
-                )}
-              </div>
-            </div>
+        {/* Date From - Compact */}
+        <div className="relative">
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            onClick={(e) => e.target.showPicker && e.target.showPicker()}
+            placeholder="From"
+            className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+          />
+        </div>
+
+        {/* Date To - Compact */}
+        <div className="relative">
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            onClick={(e) => e.target.showPicker && e.target.showPicker()}
+            placeholder="To"
+            className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+          />
+        </div>
+
+        {/* Month Picker - Compact */}
+        <div className="relative">
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            onClick={(e) => e.target.showPicker && e.target.showPicker()}
+            className="w-[130px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+          />
+        </div>
+      </div>
+
+      {/* Right - Action Buttons */}
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <button
+          onClick={fetchAbsentRecords}
+          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+        >
+          <FiRefreshCw className="w-3 h-3" />
+          <span className="hidden sm:inline">Refresh</span>
+        </button>
+
+        {(searchTerm || filterDepartment || filterDesignation || fromDate !== getTodayDate() || toDate !== getTodayDate() || selectedMonth) && (
+          <button
+            onClick={clearFilters}
+            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+          >
+            <FiTrash2 className="w-3 h-3" />
+            Clear
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+
+  {/* Mobile View */}
+  <div className="lg:hidden">
+    {/* Mobile Header with Toggle */}
+    <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
+      <button
+        onClick={() => setShowMobileFilters(!showMobileFilters)}
+        className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+      >
+        <FiFilter className="text-blue-600 text-base" />
+        <span>Filters</span>
+        {showMobileFilters ? (
+          <FiChevronUp className="text-gray-400" />
+        ) : (
+          <FiChevronDown className="text-gray-400" />
+        )}
+      </button>
+      <span className="text-xs text-gray-500">
+        <strong>{filteredRecords.length}</strong> absences
+      </span>
+    </div>
+
+    {/* Mobile Filters */}
+    {showMobileFilters && (
+      <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+        {/* Search */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
+          <div className="relative">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+            <input
+              type="text"
+              placeholder="Search ID or Name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+            />
           </div>
         </div>
 
+        {/* Department */}
+        <div className="relative" ref={departmentFilterRef}>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
+          <button
+            onClick={() => {
+              setShowDepartmentFilter(!showDepartmentFilter);
+              setShowDesignationFilter(false);
+            }}
+            className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+              filterDepartment
+                ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                : "border-gray-300 text-gray-700"
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <FaBuilding className="text-gray-400" />
+              {filterDepartment || "All Departments"}
+            </span>
+            <span className="text-gray-400">▾</span>
+          </button>
+          {showDepartmentFilter && (
+            <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div
+                onClick={() => {
+                  setFilterDepartment("");
+                  setShowDepartmentFilter(false);
+                }}
+                className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+              >
+                All Departments
+              </div>
+              {uniqueDepartments.map((dept) => (
+                <div
+                  key={dept}
+                  onClick={() => {
+                    setFilterDepartment(dept);
+                    setShowDepartmentFilter(false);
+                  }}
+                  className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                    filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                  }`}
+                >
+                  {dept}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Designation */}
+        <div className="relative" ref={designationFilterRef}>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
+          <button
+            onClick={() => {
+              setShowDesignationFilter(!showDesignationFilter);
+              setShowDepartmentFilter(false);
+            }}
+            className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+              filterDesignation
+                ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                : "border-gray-300 text-gray-700"
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <FaUserTag className="text-gray-400" />
+              {filterDesignation || "All Designations"}
+            </span>
+            <span className="text-gray-400">▾</span>
+          </button>
+          {showDesignationFilter && (
+            <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div
+                onClick={() => {
+                  setFilterDesignation("");
+                  setShowDesignationFilter(false);
+                }}
+                className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+              >
+                All Designations
+              </div>
+              {uniqueDesignations.map((des) => (
+                <div
+                  key={des}
+                  onClick={() => {
+                    setFilterDesignation(des);
+                    setShowDesignationFilter(false);
+                  }}
+                  className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                    filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                  }`}
+                >
+                  {des}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Date From & To */}
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              onClick={(e) => e.target.showPicker && e.target.showPicker()}
+              className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              onClick={(e) => e.target.showPicker && e.target.showPicker()}
+              className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+            />
+          </div>
+        </div>
+
+        {/* Month Picker */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            onClick={(e) => e.target.showPicker && e.target.showPicker()}
+            className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+          />
+        </div>
+
+        {/* Mobile Action Buttons */}
+        <div className="pt-3 border-t border-gray-200 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={fetchAbsentRecords}
+              className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+            >
+              <FiRefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
+            {(searchTerm || filterDepartment || filterDesignation || fromDate !== getTodayDate() || toDate !== getTodayDate() || selectedMonth) && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+              >
+                <FiTrash2 className="w-4 h-4" />
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+
         {/* Table Section */}
         <div className="emp-dash__card">
-          <div className="emp-dash__card-header">
+          {/* <div className="emp-dash__card-header">
             <div>
               <h3 className="emp-dash__card-title">Absent Employees List</h3>
               <p className="emp-dash__card-desc">Employees who have not checked in for the selected date or date range</p>
             </div>
-          </div>
+          </div> */}
 
           {filteredRecords.length === 0 ? (
             <div className="emp-dash__card-body py-12 text-center text-gray-500">

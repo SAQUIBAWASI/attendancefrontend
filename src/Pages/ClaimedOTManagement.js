@@ -1029,8 +1029,8 @@
 
 // components/ClaimedOTManagement.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { FaEye, FaCheck, FaTimes, FaTrash, FaSearch, FaDownload, FaList } from 'react-icons/fa';
-import { FiClock, FiCheckCircle, FiXCircle, FiFileText, FiList } from 'react-icons/fi';
+import { FaEye, FaCheck, FaTimes, FaTrash, FaSearch, FaDownload, FaList, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FiClock, FiCheckCircle, FiXCircle, FiFileText, FiList, FiFilter } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 
 const API_BASE_URL = 'https://api.timelyhealth.in';
@@ -1049,6 +1049,7 @@ export default function ClaimedOTManagement() {
     currentPage: 1,
     perPage: 10
   });
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -1153,6 +1154,9 @@ export default function ClaimedOTManagement() {
       search: ''
     });
     setCurrentPage(1);
+    if (window.innerWidth < 640) {
+      setShowMobileFilters(false);
+    }
   };
 
   const calculateOTAmountNumber = (claim) => {
@@ -1434,7 +1438,7 @@ export default function ClaimedOTManagement() {
   }
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8 bg-gray-50">
+    <div className="min-h-screen p-2 sm:p-4 lg:p-6 bg-gray-50">
       {/* Toast notification */}
       {saveStatus && (
         <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-semibold text-white animate-fade-in ${
@@ -1445,16 +1449,16 @@ export default function ClaimedOTManagement() {
       )}
 
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+      <div className="flex items-center gap-3 flex-wrap">
+  <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
           <FaList className="text-orange-600" />
           OT Claims Management
         </h1>
-        <p className="text-sm text-gray-500">Manage all overtime claims from employees</p>
+        {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">Manage all overtime claims from employees</p> */}
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-5">
+      {/* Summary Cards - 2 columns on mobile, 5 on desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total</span>
@@ -1499,7 +1503,7 @@ export default function ClaimedOTManagement() {
           <div className="text-xs text-gray-400">approved claims</div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all">
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Rejected</span>
             <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50">
@@ -1511,9 +1515,25 @@ export default function ClaimedOTManagement() {
         </div>
       </div>
 
-      {/* Filters Card */}
+      {/* Filters Card - Mobile Toggle */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-gray-100">
+        {/* Mobile Filter Toggle Button */}
+        <div className="sm:hidden flex items-center justify-between p-3 border-b border-gray-100">
+          <button
+            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+          >
+            <FiFilter className="text-orange-600" />
+            Filters
+            {showMobileFilters ? <FaChevronUp className="ml-1" /> : <FaChevronDown className="ml-1" />}
+          </button>
+          <span className="text-xs text-gray-400">
+            {claims.length} claims
+          </span>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden sm:flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <FiList className="text-orange-600 text-sm" />
             <span className="text-sm font-semibold text-gray-700">Filters</span>
@@ -1528,7 +1548,8 @@ export default function ClaimedOTManagement() {
           )}
         </div>
         
-        <div className="p-4 bg-gray-50/50">
+        {/* Filter Content - Toggle on Mobile */}
+        <div className={`p-4 bg-gray-50/50 ${showMobileFilters ? 'block' : 'hidden sm:block'}`}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
             {/* Search */}
             <div className="flex flex-col gap-1.5">
@@ -1609,6 +1630,43 @@ export default function ClaimedOTManagement() {
             </div>
           </div>
 
+          {/* Active Filters Indicator */}
+          {(filters.status !== 'all' || filters.employeeId || filters.fromDate || filters.toDate) && (
+            <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-200/50">
+              <span className="text-[10px] text-gray-500 font-medium">Active Filters:</span>
+              {filters.employeeId && (
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[9px] font-semibold border border-gray-200">
+                  ID: {filters.employeeId}
+                </span>
+              )}
+              {filters.status !== 'all' && (
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
+                  filters.status === 'pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                  filters.status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
+                  'bg-red-50 text-red-700 border-red-200'
+                }`}>
+                  {filters.status.charAt(0).toUpperCase() + filters.status.slice(1)}
+                </span>
+              )}
+              {filters.fromDate && (
+                <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[9px] font-semibold border border-blue-200">
+                  From: {filters.fromDate}
+                </span>
+              )}
+              {filters.toDate && (
+                <span className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[9px] font-semibold border border-purple-200">
+                  To: {filters.toDate}
+                </span>
+              )}
+              <button
+                onClick={clearFilters}
+                className="text-[9px] text-red-500 hover:text-red-700 font-semibold ml-1"
+              >
+                Clear All ✕
+              </button>
+            </div>
+          )}
+
           {/* Filter Actions */}
           <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200/50">
             <div className="text-xs text-gray-500">
@@ -1620,7 +1678,7 @@ export default function ClaimedOTManagement() {
 
       {/* Bulk Actions */}
       {selectedClaims.length > 0 && (
-        <div className="p-3 mb-4 bg-blue-50 rounded-xl border border-blue-200 flex items-center justify-between">
+        <div className="p-3 mb-4 bg-blue-50 rounded-xl border border-blue-200 flex flex-wrap items-center justify-between gap-2">
           <span className="text-sm font-medium text-blue-700">
             {selectedClaims.length} claim{selectedClaims.length > 1 ? 's' : ''} selected
           </span>
@@ -1662,11 +1720,11 @@ export default function ClaimedOTManagement() {
                   />
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Employee</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">Date</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">OT Hours</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Multiplier</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">OT Amount</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Reason</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell">Multiplier</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider hidden lg:table-cell">OT Amount</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider hidden xl:table-cell">Reason</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
               </tr>
@@ -1693,16 +1751,16 @@ export default function ClaimedOTManagement() {
                     <td className="px-4 py-3 text-center">
                       <div className="font-medium text-gray-800 text-sm">{claim.employeeName}</div>
                       <div className="text-xs text-gray-400">{claim.employeeId}</div>
-                      <div className="text-xs text-gray-400">{claim.employeeDetails?.department || '-'}</div>
+                      <div className="text-xs text-gray-400 hidden sm:block">{claim.employeeDetails?.department || '-'}</div>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3 text-center hidden sm:table-cell">
                       <div className="text-sm text-gray-700">{formatDate(claim.date)}</div>
                       <div className="text-xs text-gray-400">{formatTime(claim.date)}</div>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className="font-semibold text-orange-600">{claim.otHours}h</span>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3 text-center hidden md:table-cell">
                       <select
                         value={getMultiplier(claim._id)}
                         onChange={(e) => handleMultiplierChange(claim._id, e.target.value)}
@@ -1715,12 +1773,12 @@ export default function ClaimedOTManagement() {
                         <option value={3}>3x</option>
                       </select>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3 text-center hidden lg:table-cell">
                       <span className="font-semibold text-green-600 text-sm">
                         {calculateOTAmount(claim)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3 text-center hidden xl:table-cell">
                       <div className="max-w-xs text-sm text-gray-500 truncate" title={claim.reason}>
                         {claim.reason || '-'}
                       </div>
@@ -1778,7 +1836,7 @@ export default function ClaimedOTManagement() {
         {/* Pagination */}
         {claims.length > 0 && (
           <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 sm:flex-row">
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
               <span>Show:</span>
               <select
                 value={itemsPerPage}
@@ -1790,7 +1848,7 @@ export default function ClaimedOTManagement() {
                 <option value={20}>20</option>
                 <option value={50}>50</option>
               </select>
-              <span>
+              <span className="text-xs sm:text-sm">
                 {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, summary.totalClaims)} of {summary.totalClaims}
               </span>
             </div>
@@ -1798,20 +1856,20 @@ export default function ClaimedOTManagement() {
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                className={`px-2.5 py-1 text-sm font-medium rounded-lg transition-colors ${
                   currentPage === 1
                     ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                Previous
+                Prev
               </button>
 
               {getPageNumbers().map(page => (
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  className={`px-2.5 py-1 text-sm font-medium rounded-lg transition-colors min-w-[28px] ${
                     currentPage === page
                       ? 'bg-orange-600 text-white'
                       : 'text-gray-600 hover:bg-gray-100'
@@ -1824,7 +1882,7 @@ export default function ClaimedOTManagement() {
               <button
                 onClick={() => setCurrentPage(p => Math.min(summary.totalPages || 1, p + 1))}
                 disabled={currentPage === (summary.totalPages || 1)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                className={`px-2.5 py-1 text-sm font-medium rounded-lg transition-colors ${
                   currentPage === (summary.totalPages || 1)
                     ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
                     : 'text-gray-600 hover:bg-gray-100'

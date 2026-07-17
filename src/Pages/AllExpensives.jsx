@@ -18,6 +18,7 @@ import {
   FaUser,
   FaChevronRight,
   FaCheckCircle,
+  FaChevronUp,
   FaEdit
 } from 'react-icons/fa';
 import { FiFilter, FiCalendar, FiActivity, FiMapPin, FiTrendingUp } from 'react-icons/fi';
@@ -32,6 +33,7 @@ const AllExpensives = () => {
   const [dateFilter, setDateFilter] = useState("");
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // KM Rate State
   const [kmRate, setKmRate] = useState(0);
@@ -142,16 +144,16 @@ const AllExpensives = () => {
 
   return (
     <div className="emp-dash">
-      <main className="p-4 sm:p-6 lg:p-8">
+      <main className="p-2 sm:p-4 lg:p-6">
         {/* Dashboard Header */}
         <div className="emp-dash__header">
-          <div>
-            <h1 className="emp-dash__greeting">
+          <div className="flex items-center gap-3 flex-wrap">
+  <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
               Expense <span>Management</span>
             </h1>
-            <p className="emp-dash__subtitle">
+           {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
               Monitor and manage employee travel expenses and reimbursements.
-            </p>
+            </p> */}
           </div>
           <div className="emp-dash__date-pill">
             <FiCalendar />
@@ -166,9 +168,9 @@ const AllExpensives = () => {
           </div>
         </div>
 
-        {/* Top KPI Stats Grid */}
+        {/* Top KPI Stats Grid - 2 per row on mobile */}
         {!loading && (
-          <div className="emp-dash__stats">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
             <div className="emp-dash__stat">
               <div className="emp-dash__stat-top">
                 <span className="emp-dash__stat-label">Total Employees</span>
@@ -225,103 +227,152 @@ const AllExpensives = () => {
 
         {/* Filters Card */}
         <div className="emp-dash__card">
-          <div className="emp-dash__card-header">
+          {/* Desktop Header - Hidden on mobile */}
+          {/* <div className="hidden sm:flex emp-dash__card-header">
             <div>
               <h3 className="emp-dash__card-title flex items-center gap-2">
                 <FiFilter className="text-blue-600" /> Filter Expenses
               </h3>
               <p className="emp-dash__card-desc">Search by employee, ID, purpose, or filter by date</p>
             </div>
-          </div>
-          <div className="emp-dash__card-body bg-gray-50/50">
-            <div className="flex flex-wrap items-center gap-4">
+          </div> */}
 
-              {/* Search */}
-              <div className="flex-1 min-w-[200px]">
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <FaSearch className="text-xs" />
-                  </span>
+          {/* Mobile Filter Toggle Button */}
+          <div className="sm:hidden flex items-center justify-between p-3 border-b border-gray-100">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600" />
+              Filters
+              {showMobileFilters ? <FaChevronUp className="ml-1" /> : <FaChevronDown className="ml-1" />}
+            </button>
+            <span className="text-xs text-gray-400">
+              {groupedExpenses.length} employees
+            </span>
+          </div>
+
+          {/* Filter Content - Toggle on Mobile */}
+          <div className={`${showMobileFilters ? 'block' : 'hidden sm:block'}`}>
+            <div className="emp-dash__card-body bg-gray-50/50">
+              <div className="flex flex-wrap items-center gap-3">
+
+                {/* Search */}
+                <div className="flex-1 min-w-[180px]">
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                      <FaSearch className="text-xs" />
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="Search employee, ID, purpose..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
+                        title="Clear search"
+                      >
+                        <FaTimes className="text-[10px]" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Date Filter */}
+                <div className="relative w-[150px]">
                   <input
-                    type="text"
-                    placeholder="Search employee, ID, purpose..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    type="date"
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
                   />
-                  {searchQuery && (
+                  {dateFilter && (
                     <button
-                      onClick={() => setSearchQuery("")}
+                      onClick={() => setDateFilter("")}
                       className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
-                      title="Clear search"
+                      title="Clear date filter"
                     >
                       <FaTimes className="text-[10px]" />
                     </button>
                   )}
                 </div>
-              </div>
 
-              {/* Date Filter */}
-              <div className="relative w-[150px]">
-                <input
-                  type="date"
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
-                />
-                {dateFilter && (
-                  <button
-                    onClick={() => setDateFilter("")}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
-                    title="Clear date filter"
-                  >
-                    <FaTimes className="text-[10px]" />
-                  </button>
-                )}
-              </div>
-
-              {/* KM Rate Update */}
-              <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-1.5 bg-white">
-                <span className="text-[10px] font-bold text-gray-500 flex items-center gap-1 whitespace-nowrap">
-                  <FaMoneyBillWave className="text-blue-600" /> ₹{kmRate}/km
-                </span>
-                <div className="h-4 w-[1px] bg-gray-300 mx-1"></div>
-                <input
-                  type="number"
-                  placeholder="New rate"
-                  value={newRate}
-                  onChange={(e) => setNewRate(e.target.value)}
-                  className="w-16 bg-transparent border-none text-xs font-bold text-gray-700 focus:ring-0 p-0 placeholder:text-gray-500 placeholder:font-normal"
-                />
-                <button
-                  onClick={handleUpdateRate}
-                  disabled={isUpdatingRate || newRate === kmRate.toString()}
-                  className="text-[10px] font-bold text-blue-600 hover:text-blue-800 disabled:text-gray-500 transition-colors uppercase tracking-wider"
-                >
-                  {isUpdatingRate ? <FaSync className="animate-spin" /> : 'Set'}
-                </button>
-                {rateMessage.text && (
-                  <span className={`text-[9px] font-bold ml-1 ${rateMessage.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>
-                    {rateMessage.text}
+                {/* KM Rate Update */}
+                <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-1.5 bg-white flex-wrap">
+                  <span className="text-[10px] font-bold text-gray-500 flex items-center gap-1 whitespace-nowrap">
+                    <FaMoneyBillWave className="text-blue-600" /> ₹{kmRate}/km
                   </span>
-                )}
+                  <div className="h-4 w-[1px] bg-gray-300 mx-1 hidden sm:block"></div>
+                  <input
+                    type="number"
+                    placeholder="New rate"
+                    value={newRate}
+                    onChange={(e) => setNewRate(e.target.value)}
+                    className="w-16 bg-transparent border-none text-xs font-bold text-gray-700 focus:ring-0 p-0 placeholder:text-gray-500 placeholder:font-normal"
+                  />
+                  <button
+                    onClick={handleUpdateRate}
+                    disabled={isUpdatingRate || newRate === kmRate.toString()}
+                    className="text-[10px] font-bold text-blue-600 hover:text-blue-800 disabled:text-gray-500 transition-colors uppercase tracking-wider"
+                  >
+                    {isUpdatingRate ? <FaSync className="animate-spin" /> : 'Set'}
+                  </button>
+                  {rateMessage.text && (
+                    <span className={`text-[9px] font-bold ml-1 ${rateMessage.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>
+                      {rateMessage.text}
+                    </span>
+                  )}
+                </div>
+
+                {/* Refresh Button */}
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setDateFilter('');
+                    fetchAllExpenses();
+                  }}
+                  className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  title="Refresh"
+                >
+                  <FaSync className={`text-[10px] ${loading ? 'animate-spin' : ''}`} />
+                </button>
               </div>
 
-              {/* Refresh Button */}
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setDateFilter('');
-                  fetchAllExpenses();
-                }}
-                className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                title="Refresh"
-              >
-                <FaSync className={`text-[10px] ${loading ? 'animate-spin' : ''}`} />
-              </button>
+              {/* Active filters indicator */}
+              {(searchQuery || dateFilter) && (
+                <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                  <span className="text-[10px] text-gray-500 font-medium">Active Filters:</span>
+                  {searchQuery && (
+                    <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[9px] font-semibold border border-gray-200">
+                      "{searchQuery}"
+                    </span>
+                  )}
+                  {dateFilter && (
+                    <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-[9px] font-semibold border border-green-200">
+                      {new Date(dateFilter).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </span>
+                  )}
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setDateFilter('');
+                    }}
+                    className="px-2 py-0.5 text-[9px] font-semibold text-red-600 hover:text-red-700 transition-colors"
+                  >
+                    Clear All ✕
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {/* GAP BETWEEN FILTER CARD AND TABLE */}
+        <div className="mt-6"></div>
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 text-xs font-bold">{error}</div>
@@ -329,16 +380,16 @@ const AllExpensives = () => {
 
         {/* Table Card */}
         <div className="emp-dash__card">
-          <div className="emp-dash__table-wrap">
-            <table className="emp-dash__table">
+          <div className="overflow-x-auto">
+            <table className="emp-dash__table min-w-[800px]">
               <thead>
                 <tr>
-                  <th>Employee</th>
-                  <th className="text-center">Designation</th>
-                  <th className="text-center">Total Visits</th>
-                  <th className="text-center">Total Distance</th>
-                  <th className="text-center">Total Reimbursement</th>
-                  <th className="text-right">Actions</th>
+                  <th className="whitespace-nowrap">Employee</th>
+                  <th className="text-center whitespace-nowrap hidden sm:table-cell">Designation</th>
+                  <th className="text-center whitespace-nowrap">Total Visits</th>
+                  <th className="text-center whitespace-nowrap hidden md:table-cell">Total Distance</th>
+                  <th className="text-center whitespace-nowrap">Total Reimbursement</th>
+                  <th className="text-right whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -369,15 +420,15 @@ const AllExpensives = () => {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: Math.min(idx * 0.03, 0.5) }}
-                        className="hover:bg-gray-55/60 transition-all group"
+                        className="hover:bg-gray-50/60 transition-all group"
                       >
                         <td>
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-blue-100 text-blue-600">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-blue-100 text-blue-600 flex-shrink-0">
                               {group.employeeDetails?.name?.[0]?.toUpperCase() || 'E'}
                             </div>
                             <div className="flex flex-col">
-                              <span className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                              <span className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors text-xs">
                                 {group.employeeDetails?.name || 'UNKNOWN'}
                               </span>
                               <span className="text-[10px] text-gray-400 font-medium">
@@ -386,23 +437,23 @@ const AllExpensives = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="text-center">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-100">
+                        <td className="text-center hidden sm:table-cell">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap">
                             {group.employeeDetails?.role || 'Employee'}
                           </span>
                         </td>
                         <td className="text-center">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap">
                             {group.visitCount} Visits
                           </span>
                         </td>
-                        <td className="text-center">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                        <td className="text-center hidden md:table-cell">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap">
                             {group.totalKm} KM
                           </span>
                         </td>
                         <td className="text-center">
-                          <span className="text-sm font-bold text-gray-900 tabular-nums">
+                          <span className="text-sm font-bold text-gray-900 tabular-nums whitespace-nowrap">
                             ₹{group.totalAmount.toLocaleString()}
                           </span>
                         </td>
@@ -425,7 +476,7 @@ const AllExpensives = () => {
 
           {/* Footer */}
           {!loading && groupedExpenses.length > 0 && (
-            <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100 bg-gray-50/50">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
               <p className="text-xs font-semibold text-gray-500">
                 Showing <span className="text-gray-900 font-bold">{groupedExpenses.length}</span> employees with expenses
               </p>
@@ -437,14 +488,14 @@ const AllExpensives = () => {
         </div>
       </main>
 
-      {/* Detail Modal */}
+      {/* Detail Modal - Responsive */}
       {isModalOpen && selectedGroup && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 emp-dash-modal animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 emp-dash-modal animate-in fade-in duration-200">
           <div className="emp-dash__modal-panel bg-white w-full max-w-5xl max-h-[90vh] rounded-2xl shadow-2xl relative overflow-hidden animate-in slide-in-from-bottom-4 duration-300 border border-gray-200">
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3 bg-gray-50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold bg-blue-100 text-blue-600">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold bg-blue-100 text-blue-600 flex-shrink-0">
                   {selectedGroup.employeeDetails?.name?.[0]?.toUpperCase() || 'E'}
                 </div>
                 <div>
@@ -475,99 +526,101 @@ const AllExpensives = () => {
             </div>
 
             <div className="emp-dash__modal-body overflow-y-auto p-0">
-              <table className="w-full text-sm border-collapse">
-                <thead className="sticky top-0 z-10">
-                  <tr className="bg-gray-100 text-[10px] font-bold uppercase tracking-wider">
-                    <th className="px-4 py-3 text-left border-r border-gray-200">Date</th>
-                    <th className="px-4 py-3 text-left border-r border-gray-200">Purpose</th>
-                    <th className="px-4 py-3 text-center border-r border-gray-200">KM</th>
-                    <th className="px-4 py-3 text-right border-r border-gray-200">Rate</th>
-                    <th className="px-4 py-3 text-center border-r border-gray-200">Outcome</th>
-                    <th className="px-4 py-3 text-right border-r border-gray-200">Order</th>
-                    <th className="px-4 py-3 text-right border-r border-gray-200">Upsell</th>
-                    <th className="px-4 py-3 text-right">Amount</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 font-medium">
-                  {selectedGroup.records.map((rec, i) => (
-                    <React.Fragment key={i}>
-                      <tr className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-500 text-xs border-r border-gray-100">
-                          {new Date(rec.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
-                        </td>
-                        <td className="px-4 py-3 text-gray-900 border-r border-gray-100">
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-xs">{rec.purpose}</span>
-                            {rec.remark && <span className="text-[10px] text-gray-500 mt-1 italic">{rec.remark}</span>}
-                            {rec.stops && rec.stops.length > 0 && (
-                              <span className="text-[9px] inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded w-fit font-bold uppercase">
-                                {rec.stops.length} Stops
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-center border-r border-gray-100 text-blue-600 font-semibold tabular-nums text-xs">
-                          {rec.km}
-                        </td>
-                        <td className="px-4 py-3 text-right border-r border-gray-100 text-gray-500 text-[10px] font-bold whitespace-nowrap">
-                          ₹{rec.rateApplied}/km
-                        </td>
-                        <td className="px-4 py-3 text-center border-r border-gray-100">
-                          <span className="text-[10px] font-medium italic text-gray-500 max-w-[120px] truncate block mx-auto" title={rec.outcome}>
-                            {rec.stops && rec.stops.length > 0 ? "Multiple Stops" : (rec.outcome ? `"${rec.outcome}"` : '-')}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right border-r border-gray-100 text-blue-700 tabular-nums font-bold text-xs">
-                          {rec.orderValue > 0 ? `₹${rec.orderValue.toLocaleString()}` : '-'}
-                        </td>
-                        <td className="px-4 py-3 text-right border-r border-gray-100 text-purple-600 tabular-nums font-bold text-xs">
-                          {rec.upsellValue > 0 ? `₹${rec.upsellValue.toLocaleString()}` : '-'}
-                        </td>
-                        <td className="px-4 py-3 text-right bg-blue-50/30 text-blue-900 font-semibold tabular-nums text-xs">
-                          ₹{rec.totalAmount.toLocaleString()}
-                        </td>
-                      </tr>
-                      
-                      {/* Render Stop Sub-rows if they exist */}
-                      {rec.stops && rec.stops.length > 0 && rec.stops.map((stop, sIndex) => (
-                        <tr key={`stop-${i}-${sIndex}`} className="bg-gray-50/50 text-[10px] border-b border-gray-100 last:border-b-0">
-                           <td className="px-4 py-2 border-r border-gray-200"></td>
-                           <td className="px-4 py-2 border-r border-gray-200">
-                             <div className="flex items-center gap-2">
-                               <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
-                               <span className="font-semibold text-gray-700">{stop.locationName}</span>
-                             </div>
-                           </td>
-                           <td className="px-4 py-2 text-center border-r border-gray-200 text-blue-600 font-medium tabular-nums">
-                             {stop.km > 0 ? stop.km : '-'}
-                           </td>
-                           <td className="px-4 py-2 border-r border-gray-200"></td>
-                           <td className="px-4 py-2 text-center border-r border-gray-200 text-gray-500 font-medium italic truncate max-w-[120px]" title={stop.outcome}>
-                             {stop.outcome || '-'}
-                           </td>
-                           <td className="px-4 py-2 text-right border-r border-gray-200 text-blue-700 tabular-nums">
-                             {stop.orderValue > 0 ? `₹${stop.orderValue.toLocaleString()}` : '-'}
-                           </td>
-                           <td className="px-4 py-2 text-right border-r border-gray-200 text-purple-600 tabular-nums">
-                             {stop.upsellValue > 0 ? `₹${stop.upsellValue.toLocaleString()}` : '-'}
-                           </td>
-                           <td className="px-4 py-2 bg-blue-50/10"></td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse min-w-[900px]">
+                  <thead className="sticky top-0 z-10">
+                    <tr className="bg-gray-100 text-[10px] font-bold uppercase tracking-wider">
+                      <th className="px-3 py-3 text-left border-r border-gray-200 whitespace-nowrap">Date</th>
+                      <th className="px-3 py-3 text-left border-r border-gray-200 whitespace-nowrap">Purpose</th>
+                      <th className="px-3 py-3 text-center border-r border-gray-200 whitespace-nowrap">KM</th>
+                      <th className="px-3 py-3 text-right border-r border-gray-200 whitespace-nowrap hidden sm:table-cell">Rate</th>
+                      <th className="px-3 py-3 text-center border-r border-gray-200 whitespace-nowrap hidden md:table-cell">Outcome</th>
+                      <th className="px-3 py-3 text-right border-r border-gray-200 whitespace-nowrap hidden lg:table-cell">Order</th>
+                      <th className="px-3 py-3 text-right border-r border-gray-200 whitespace-nowrap hidden lg:table-cell">Upsell</th>
+                      <th className="px-3 py-3 text-right whitespace-nowrap">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 font-medium">
+                    {selectedGroup.records.map((rec, i) => (
+                      <React.Fragment key={i}>
+                        <tr className="hover:bg-gray-50 transition-colors">
+                          <td className="px-3 py-3 whitespace-nowrap text-gray-500 text-xs border-r border-gray-100">
+                            {new Date(rec.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </td>
+                          <td className="px-3 py-3 text-gray-900 border-r border-gray-100">
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-xs">{rec.purpose}</span>
+                              {rec.remark && <span className="text-[10px] text-gray-500 mt-1 italic">{rec.remark}</span>}
+                              {rec.stops && rec.stops.length > 0 && (
+                                <span className="text-[9px] inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded w-fit font-bold uppercase">
+                                  {rec.stops.length} Stops
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-center border-r border-gray-100 text-blue-600 font-semibold tabular-nums text-xs">
+                            {rec.km}
+                          </td>
+                          <td className="px-3 py-3 text-right border-r border-gray-100 text-gray-500 text-[10px] font-bold whitespace-nowrap hidden sm:table-cell">
+                            ₹{rec.rateApplied}/km
+                          </td>
+                          <td className="px-3 py-3 text-center border-r border-gray-100 hidden md:table-cell">
+                            <span className="text-[10px] font-medium italic text-gray-500 max-w-[120px] truncate block mx-auto" title={rec.outcome}>
+                              {rec.stops && rec.stops.length > 0 ? "Multiple Stops" : (rec.outcome ? `"${rec.outcome}"` : '-')}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-right border-r border-gray-100 text-blue-700 tabular-nums font-bold text-xs hidden lg:table-cell">
+                            {rec.orderValue > 0 ? `₹${rec.orderValue.toLocaleString()}` : '-'}
+                          </td>
+                          <td className="px-3 py-3 text-right border-r border-gray-100 text-purple-600 tabular-nums font-bold text-xs hidden lg:table-cell">
+                            {rec.upsellValue > 0 ? `₹${rec.upsellValue.toLocaleString()}` : '-'}
+                          </td>
+                          <td className="px-3 py-3 text-right bg-blue-50/30 text-blue-900 font-semibold tabular-nums text-xs">
+                            ₹{rec.totalAmount.toLocaleString()}
+                          </td>
                         </tr>
-                      ))}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
+                        
+                        {/* Render Stop Sub-rows if they exist */}
+                        {rec.stops && rec.stops.length > 0 && rec.stops.map((stop, sIndex) => (
+                          <tr key={`stop-${i}-${sIndex}`} className="bg-gray-50/50 text-[10px] border-b border-gray-100 last:border-b-0">
+                             <td className="px-3 py-2 border-r border-gray-200"></td>
+                             <td className="px-3 py-2 border-r border-gray-200">
+                               <div className="flex items-center gap-2">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></div>
+                                 <span className="font-semibold text-gray-700 text-xs">{stop.locationName}</span>
+                               </div>
+                             </td>
+                             <td className="px-3 py-2 text-center border-r border-gray-200 text-blue-600 font-medium tabular-nums">
+                               {stop.km > 0 ? stop.km : '-'}
+                             </td>
+                             <td className="px-3 py-2 border-r border-gray-200 hidden sm:table-cell"></td>
+                             <td className="px-3 py-2 text-center border-r border-gray-200 text-gray-500 font-medium italic truncate max-w-[120px] hidden md:table-cell" title={stop.outcome}>
+                               {stop.outcome || '-'}
+                             </td>
+                             <td className="px-3 py-2 text-right border-r border-gray-200 text-blue-700 tabular-nums hidden lg:table-cell">
+                               {stop.orderValue > 0 ? `₹${stop.orderValue.toLocaleString()}` : '-'}
+                             </td>
+                             <td className="px-3 py-2 text-right border-r border-gray-200 text-purple-600 tabular-nums hidden lg:table-cell">
+                               {stop.upsellValue > 0 ? `₹${stop.upsellValue.toLocaleString()}` : '-'}
+                             </td>
+                             <td className="px-3 py-2 bg-blue-50/10"></td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
               {selectedGroup.records.length === 0 && (
                 <div className="py-20 text-center text-gray-500 italic font-medium text-sm">No individual logs available.</div>
               )}
             </div>
 
-            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end flex-shrink-0">
+            <div className="px-4 sm:px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end flex-shrink-0">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="emp-dash__btn-outline w-auto px-4 py-2 mt-0"
+                className="emp-dash__btn-outline w-auto px-4 py-2 mt-0 text-xs"
               >
                 Close
               </button>

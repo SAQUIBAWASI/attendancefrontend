@@ -2085,7 +2085,15 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag, FaSync, FaHistory, FaUserCheck, FaShieldAlt } from "react-icons/fa";
+import { 
+  FaBuilding, 
+  FaCalendarAlt, 
+  FaSearch, 
+  FaUserTag, 
+  FaHistory, 
+  FaChevronUp,
+  FaChevronDown
+} from "react-icons/fa";
 import { FiFilter, FiCalendar, FiActivity, FiUsers, FiShield } from "react-icons/fi";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
@@ -2096,7 +2104,10 @@ const UserActivity = () => {
   const [activities, setActivities] = useState([]);
   const [filteredActivities, setFilteredActivities] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [employeesMap, setEmployeesMap] = useState({});
   const [loading, setLoading] = useState(true);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [activeFilter, setActiveFilter] = useState(null);
   
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -2146,38 +2157,37 @@ const UserActivity = () => {
   // Fetch employees first
   const fetchEmployees = async () => {
     try {
-      console.log("Fetching employees...");
       const response = await axios.get(`${API_BASE_URL}/employees/get-employees`);
-      console.log("Employees API response:", response.data);
-      
       const employeesData = response.data || [];
       const activeEmployees = employeesData.filter(emp => !isEmployeeHidden(emp));
-      console.log("Active employees:", activeEmployees);
-      
       setEmployees(activeEmployees);
       
-      // Extract unique departments and designations
+      const map = {};
+      activeEmployees.forEach(emp => {
+        if (emp.employeeId) {
+          map[String(emp.employeeId).toLowerCase()] = emp;
+        }
+        if (emp._id) {
+          map[String(emp._id).toLowerCase()] = emp;
+        }
+        if (emp.email) {
+          map[String(emp.email).toLowerCase()] = emp;
+        }
+        if (emp.name) {
+          map[String(emp.name).toLowerCase()] = emp;
+        }
+      });
+      setEmployeesMap(map);
+      
       const depts = new Set();
       const designations = new Set();
       activeEmployees.forEach(emp => {
-        if (emp.department) {
-          depts.add(emp.department);
-          console.log("Department found:", emp.department);
-        }
-        if (emp.role || emp.designation) {
-          designations.add(emp.role || emp.designation);
-          console.log("Designation found:", emp.role || emp.designation);
-        }
+        if (emp.department) depts.add(emp.department);
+        if (emp.role || emp.designation) designations.add(emp.role || emp.designation);
       });
       
-      const deptsArray = Array.from(depts).sort();
-      const desigsArray = Array.from(designations).sort();
-      
-      console.log("Unique departments:", deptsArray);
-      console.log("Unique designations:", desigsArray);
-      
-      setUniqueDepartments(deptsArray);
-      setUniqueDesignations(desigsArray);
+      setUniqueDepartments(Array.from(depts).sort());
+      setUniqueDesignations(Array.from(designations).sort());
       
       return activeEmployees;
     } catch (error) {
@@ -2187,35 +2197,64 @@ const UserActivity = () => {
   };
 
   // Get employee details by ID or email
-  const getEmployeeDetails = (userId, userEmail, employeeList) => {
-    const listToSearch = employeeList || employees;
-    if (!listToSearch || listToSearch.length === 0) {
-      return {
-        department: "N/A",
-        designation: "N/A",
-        name: "N/A"
-      };
+  const getEmployeeDetails = (userId, userEmail) => {
+    if (!userId && !userEmail) {
+      return { department: "N/A", designation: "N/A", name: "N/A" };
     }
     
-    // Try to find employee by multiple possible fields
-    const employee = listToSearch.find(emp => {
-      return (
-        emp.employeeId === userId || 
-        emp._id === userId || 
-        emp.email === userId ||
-        emp.email === userEmail ||
-        emp.employeeId === userEmail
-      );
-    });
+    if (userId) {
+      const userIdStr = String(userId).toLowerCase();
+      
+      if (employeesMap[userIdStr]) {
+        const emp = employeesMap[userIdStr];
+        return {
+          department: emp.department || emp.departmentName || "N/A",
+          designation: emp.designation || emp.role || "N/A",
+          name: emp.name || emp.fullName || "N/A"
+        };
+      }
+      
+      const emp = employees.find(e => {
+        const empId = String(e.employeeId || '').toLowerCase();
+        const empEmail = String(e.email || '').toLowerCase();
+        return empId === userIdStr || empEmail === userIdStr || empId.includes(userIdStr);
+      });
+      
+      if (emp) {
+        return {
+          department: emp.department || emp.departmentName || "N/A",
+          designation: emp.designation || emp.role || "N/A",
+          name: emp.name || emp.fullName || "N/A"
+        };
+      }
+    }
     
-    const details = {
-      department: employee?.department || employee?.departmentName || "N/A",
-      designation: employee?.designation || employee?.role || "N/A",
-      name: employee?.name || employee?.fullName || "N/A"
-    };
+    if (userEmail) {
+      const emailStr = String(userEmail).toLowerCase();
+      if (employeesMap[emailStr]) {
+        const emp = employeesMap[emailStr];
+        return {
+          department: emp.department || emp.departmentName || "N/A",
+          designation: emp.designation || emp.role || "N/A",
+          name: emp.name || emp.fullName || "N/A"
+        };
+      }
+      
+      const emp = employees.find(e => {
+        const empEmail = String(e.email || '').toLowerCase();
+        return empEmail === emailStr || empEmail.includes(emailStr);
+      });
+      
+      if (emp) {
+        return {
+          department: emp.department || emp.departmentName || "N/A",
+          designation: emp.designation || emp.role || "N/A",
+          name: emp.name || emp.fullName || "N/A"
+        };
+      }
+    }
     
-    console.log("Employee details:", details);
-    return details;
+    return { department: "N/A", designation: "N/A", name: "N/A" };
   };
 
   // Fetch activities
@@ -2223,9 +2262,8 @@ const UserActivity = () => {
     try {
       setLoading(true);
       
-      const activeEmployees = await fetchEmployees();
+      await fetchEmployees();
       
-      // ✅ Correct Backend Pagination
       const params = {
         page: pagination.currentPage,
         limit: pagination.limit,
@@ -2235,7 +2273,6 @@ const UserActivity = () => {
       if (actionFilter) params.action = actionFilter;
       if (userRoleFilter) params.userRole = userRoleFilter;
       
-      // ✅ Send Date filters to Backend so pagination works perfectly with dates
       if (fromDate && toDate) {
         params.startDate = fromDate;
         params.endDate = toDate;
@@ -2245,7 +2282,6 @@ const UserActivity = () => {
       } else if (selectedMonth) {
         const [year, month] = selectedMonth.split('-');
         params.startDate = `${year}-${month}-01`;
-        // Hack for end of month date
         const nextMonth = new Date(year, month, 1);
         nextMonth.setDate(nextMonth.getDate() - 1);
         params.endDate = nextMonth.toISOString().split('T')[0];
@@ -2257,31 +2293,43 @@ const UserActivity = () => {
       );
 
       if (response.data.success) {
-        const activitiesData = response.data.data.activities;
+        let activitiesData = response.data.data.activities || [];
         
-        const enrichedActivities = activitiesData.map(activity => {
-          const empDetails = getEmployeeDetails(activity.userId, activity.userEmail, activeEmployees);
+        let enrichedActivities = activitiesData.map(activity => {
+          const empDetails = getEmployeeDetails(activity.userId, activity.userEmail);
           return {
             ...activity,
             department: empDetails.department,
             designation: empDetails.designation,
-            userName: activity.userName || empDetails.name
+            userName: activity.userName || empDetails.name || "Unknown User"
           };
         });
+        
+        if (filterDepartment) {
+          enrichedActivities = enrichedActivities.filter(a => a.department === filterDepartment);
+        }
+        
+        if (filterDesignation) {
+          enrichedActivities = enrichedActivities.filter(a => a.designation === filterDesignation);
+        }
         
         setActivities(enrichedActivities);
         setFilteredActivities(enrichedActivities);
         
-        // ✅ Correctly update pagination from Backend
         setPagination({
-          currentPage: response.data.data.pagination.currentPage,
-          totalPages: response.data.data.pagination.totalPages,
-          totalCount: response.data.data.pagination.totalCount,
-          limit: response.data.data.pagination.limit,
+          currentPage: response.data.data.pagination?.currentPage || 1,
+          totalPages: response.data.data.pagination?.totalPages || 1,
+          totalCount: response.data.data.pagination?.totalCount || enrichedActivities.length,
+          limit: response.data.data.pagination?.limit || 10,
         });
+      } else {
+        setActivities([]);
+        setFilteredActivities([]);
       }
     } catch (error) {
       console.error("Error fetching activities:", error);
+      setActivities([]);
+      setFilteredActivities([]);
     } finally {
       setLoading(false);
     }
@@ -2292,24 +2340,33 @@ const UserActivity = () => {
     fetchActivities();
   }, []);
 
-  // ✅ Fetch activities whenever pagination or filters change
+  // Fetch activities whenever pagination or filters change
   useEffect(() => {
     fetchActivities();
   }, [pagination.currentPage, pagination.limit, searchTerm, actionFilter, userRoleFilter, fromDate, toDate, selectedMonth, filterDepartment, filterDesignation]);
   
-  // ✅ Reset to page 1 when any filter changes
+  // Reset to page 1 when any filter changes
   useEffect(() => {
     setPagination(prev => ({ ...prev, currentPage: 1 }));
   }, [searchTerm, actionFilter, userRoleFilter, filterDepartment, filterDesignation, fromDate, toDate, selectedMonth]);
 
-  const filterActivities = () => {
-    // We already fetch filtered data from server for most filters.
-    // Local filtering is only needed for fields not supported by backend yet (Dept/Desig)
-    // but even then, it's better to just show what the server returns to avoid pagination confusion.
-    setFilteredActivities(activities);
+  // Handle stat card click
+  const handleStatClick = (filterType, filterValue) => {
+    if (filterType === 'all') {
+      setUserRoleFilter('');
+      setActionFilter('');
+      setActiveFilter(null);
+      return;
+    }
+    
+    if (filterType === 'role') {
+      setUserRoleFilter(filterValue);
+      setActiveFilter(filterValue);
+    } else if (filterType === 'action') {
+      setActionFilter(filterValue);
+      setActiveFilter(filterValue);
+    }
   };
-
-
 
   // Reset filters
   const resetFilters = () => {
@@ -2321,6 +2378,7 @@ const UserActivity = () => {
     setSelectedMonth(new Date().toISOString().slice(0, 7));
     setFilterDepartment("");
     setFilterDesignation("");
+    setActiveFilter(null);
   };
 
   // Export to CSV
@@ -2374,12 +2432,7 @@ const UserActivity = () => {
       file_download: "File Downloaded",
     };
     if (actionMap[action]) return actionMap[action];
-
-    // Convert snake_case or basic strings to title case dynamically
-    return String(action)
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    return String(action).split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
 
   // Get action badge color
@@ -2406,13 +2459,10 @@ const UserActivity = () => {
       currentPage: 1
     }));
   };
-  // Pagination calculations (Used for display text only)
+
   const indexOfLastItem = pagination.currentPage * pagination.limit;
   const indexOfFirstItem = indexOfLastItem - pagination.limit;
-
-  // ✅ Remove broken frontend slicing. Backend already sliced the data perfectly!
-  const currentItems = filteredActivities;
-
+  
   // Get page numbers for pagination
   const getPageNumbers = () => {
     const pageNumbers = [];
@@ -2430,18 +2480,31 @@ const UserActivity = () => {
     return pageNumbers;
   };
 
+  // Get stats
+  const getStats = () => {
+    const allActivities = activities;
+    return {
+      total: allActivities.length,
+      employeeActions: allActivities.filter(a => a.userRole === 'employee').length,
+      adminActions: allActivities.filter(a => a.userRole === 'admin').length,
+      pageVisits: allActivities.filter(a => a.action === 'page_visit').length
+    };
+  };
+
+  const stats = getStats();
+
   return (
     <div className="emp-dash">
-      <main className="p-4 sm:p-6 lg:p-8">
+      <main className="p-2 sm:p-4 lg:p-6">
         {/* Dashboard Header */}
         <div className="emp-dash__header">
-          <div>
-            <h1 className="emp-dash__greeting">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
               User <span>Activity Log</span>
             </h1>
-            <p className="emp-dash__subtitle">
+          {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
               Track all employee and admin actions in real-time
-            </p>
+            </p> */}
           </div>
           <div className="emp-dash__date-pill">
             <FiCalendar />
@@ -2458,56 +2521,68 @@ const UserActivity = () => {
 
         {/* Top KPI Stats Grid */}
         {!loading && (
-          <div className="emp-dash__stats">
-            <div className="emp-dash__stat">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+            <div 
+              onClick={() => handleStatClick('all', 'All')}
+              className={`emp-dash__stat cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${
+                activeFilter === 'All' ? 'ring-2 ring-blue-500 ring-offset-2' : ''
+              }`}
+            >
               <div className="emp-dash__stat-top">
                 <span className="emp-dash__stat-label">Total Activities</span>
                 <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
                   <FiActivity className="text-blue-500" />
                 </div>
               </div>
-              <div className="emp-dash__stat-value">
-                {pagination.totalCount}
-              </div>
+              <div className="emp-dash__stat-value">{stats.total}</div>
               <div className="emp-dash__stat-meta">all time</div>
             </div>
 
-            <div className="emp-dash__stat">
+            <div 
+              onClick={() => handleStatClick('role', 'employee')}
+              className={`emp-dash__stat cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${
+                activeFilter === 'employee' ? 'ring-2 ring-blue-500 ring-offset-2' : ''
+              }`}
+            >
               <div className="emp-dash__stat-top">
                 <span className="emp-dash__stat-label">Employee Actions</span>
                 <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
                   <FiUsers className="text-green-500" />
                 </div>
               </div>
-              <div className="emp-dash__stat-value">
-                {filteredActivities.filter(a => a.userRole === 'employee').length}
-              </div>
+              <div className="emp-dash__stat-value">{stats.employeeActions}</div>
               <div className="emp-dash__stat-meta">employee logs</div>
             </div>
 
-            <div className="emp-dash__stat">
+            <div 
+              onClick={() => handleStatClick('role', 'admin')}
+              className={`emp-dash__stat cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${
+                activeFilter === 'admin' ? 'ring-2 ring-blue-500 ring-offset-2' : ''
+              }`}
+            >
               <div className="emp-dash__stat-top">
                 <span className="emp-dash__stat-label">Admin Actions</span>
                 <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
                   <FiShield className="text-amber-500" />
                 </div>
               </div>
-              <div className="emp-dash__stat-value">
-                {filteredActivities.filter(a => a.userRole === 'admin').length}
-              </div>
+              <div className="emp-dash__stat-value">{stats.adminActions}</div>
               <div className="emp-dash__stat-meta">admin logs</div>
             </div>
 
-            <div className="emp-dash__stat">
+            <div 
+              onClick={() => handleStatClick('action', 'page_visit')}
+              className={`emp-dash__stat cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${
+                activeFilter === 'page_visit' ? 'ring-2 ring-blue-500 ring-offset-2' : ''
+              }`}
+            >
               <div className="emp-dash__stat-top">
                 <span className="emp-dash__stat-label">Page Visits</span>
                 <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
                   <FaHistory className="text-rose-500" />
                 </div>
               </div>
-              <div className="emp-dash__stat-value">
-                {filteredActivities.filter(a => a.action === 'page_visit').length}
-              </div>
+              <div className="emp-dash__stat-value">{stats.pageVisits}</div>
               <div className="emp-dash__stat-meta">page views</div>
             </div>
           </div>
@@ -2515,253 +2590,300 @@ const UserActivity = () => {
 
         {/* Filters Card */}
         <div className="emp-dash__card">
-          <div className="emp-dash__card-header">
+          {/* Desktop Header */}
+          {/* <div className="hidden sm:flex emp-dash__card-header">
             <div>
               <h3 className="emp-dash__card-title flex items-center gap-2">
                 <FiFilter className="text-blue-600" /> Filter Activities
               </h3>
               <p className="emp-dash__card-desc">Search by name, email, action, role, department, designation, or date</p>
             </div>
+          </div> */}
+
+          {/* Mobile Filter Toggle */}
+          <div className="sm:hidden flex items-center justify-between p-3 border-b border-gray-100">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600" />
+              Filters
+              {showMobileFilters ? <FaChevronUp className="ml-1" /> : <FaChevronDown className="ml-1" />}
+            </button>
+            <span className="text-xs text-gray-400">
+              {filteredActivities.length} activities
+            </span>
           </div>
-          <div className="emp-dash__card-body bg-gray-50/50">
-            <div className="flex flex-wrap items-center gap-3">
-            
-              {/* Search */}
-              <div className="flex-1 min-w-[200px]">
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <FaSearch className="text-xs" />
-                  </span>
+
+          {/* Filter Content */}
+          <div className={`${showMobileFilters ? 'block' : 'hidden sm:block'}`}>
+            <div className="emp-dash__card-body bg-gray-50/50">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex-1 min-w-[200px]">
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                      <FaSearch className="text-xs" />
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="Search name, email..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <select
+                  value={actionFilter}
+                  onChange={(e) => setActionFilter(e.target.value)}
+                  className="h-8 px-3 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none min-w-[120px]"
+                >
+                  <option value="">All Actions</option>
+                  <option value="login">Login</option>
+                  <option value="logout">Logout</option>
+                  <option value="page_visit">Page Visit</option>
+                  <option value="leave_apply">Leave Applied</option>
+                  <option value="leave_approve">Leave Approved</option>
+                  <option value="leave_reject">Leave Rejected</option>
+                  <option value="payslip_download">Payslip Downloaded</option>
+                  <option value="data_edit">Data Modified</option>
+                  <option value="file_download">File Downloaded</option>
+                </select>
+
+                <select
+                  value={userRoleFilter}
+                  onChange={(e) => setUserRoleFilter(e.target.value)}
+                  className="h-8 px-3 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none min-w-[100px]"
+                >
+                  <option value="">All Roles</option>
+                  <option value="employee">Employee</option>
+                  <option value="admin">Admin</option>
+                </select>
+
+                <div className="relative" ref={departmentFilterRef}>
+                  <button
+                    onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+                    className={`h-8 px-3 text-xs font-medium rounded-lg transition flex items-center gap-1 ${
+                      filterDepartment 
+                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                    }`}
+                  >
+                    <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
+                  </button>
+                
+                  {showDepartmentFilter && (
+                    <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg max-h-60">
+                      <div 
+                        onClick={() => {
+                          setFilterDepartment('');
+                          setShowDepartmentFilter(false);
+                        }}
+                        className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
+                      >
+                        All Departments
+                      </div>
+                      {uniqueDepartments.length > 0 ? (
+                        uniqueDepartments.map(dept => (
+                          <div 
+                            key={dept}
+                            onClick={() => {
+                              setFilterDepartment(dept);
+                              setShowDepartmentFilter(false);
+                            }}
+                            className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
+                              filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                            }`}
+                          >
+                            {dept}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-xs text-gray-500">No departments found</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="relative" ref={designationFilterRef}>
+                  <button
+                    onClick={() => setShowDesignationFilter(!showDesignationFilter)}
+                    className={`h-8 px-3 text-xs font-medium rounded-lg transition flex items-center gap-1 ${
+                      filterDesignation 
+                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                    }`}
+                  >
+                    <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
+                  </button>
+                
+                  {showDesignationFilter && (
+                    <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg max-h-60">
+                      <div 
+                        onClick={() => {
+                          setFilterDesignation('');
+                          setShowDesignationFilter(false);
+                        }}
+                        className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
+                      >
+                        All Designations
+                      </div>
+                      {uniqueDesignations.length > 0 ? (
+                        uniqueDesignations.map(des => (
+                          <div 
+                            key={des}
+                            onClick={() => {
+                              setFilterDesignation(des);
+                              setShowDesignationFilter(false);
+                            }}
+                            className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
+                              filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''
+                            }`}
+                          >
+                            {des}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-xs text-gray-500">No designations found</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="relative w-[140px]">
                   <input
-                    type="text"
-                    placeholder="Search name, email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
                   />
                 </div>
-              </div>
 
-              {/* Action Type */}
-              <select
-                value={actionFilter}
-                onChange={(e) => setActionFilter(e.target.value)}
-                className="h-8 px-3 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none min-w-[120px]"
-              >
-                <option value="">All Actions</option>
-                <option value="login">Login</option>
-                <option value="logout">Logout</option>
-                <option value="page_visit">Page Visit</option>
-                <option value="leave_apply">Leave Applied</option>
-                <option value="leave_approve">Leave Approved</option>
-                <option value="leave_reject">Leave Rejected</option>
-                <option value="payslip_download">Payslip Downloaded</option>
-                <option value="data_edit">Data Modified</option>
-                <option value="file_download">File Downloaded</option>
-              </select>
+                <div className="relative w-[140px]">
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
 
-              {/* User Role */}
-              <select
-                value={userRoleFilter}
-                onChange={(e) => setUserRoleFilter(e.target.value)}
-                className="h-8 px-3 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none min-w-[100px]"
-              >
-                <option value="">All Roles</option>
-                <option value="employee">Employee</option>
-                <option value="admin">Admin</option>
-              </select>
+                <div className="relative w-[140px]">
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
 
-              {/* Department Filter Button */}
-              <div className="relative" ref={departmentFilterRef}>
                 <button
-                  onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                  className={`h-8 px-3 text-xs font-medium rounded-lg transition flex items-center gap-1 ${
-                    filterDepartment 
-                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                  }`}
+                  onClick={exportToCSV}
+                  className="h-8 px-3 text-xs font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
-                  <FaBuilding className="text-xs" /> Dept {filterDepartment && `: ${filterDepartment}`}
+                  Export CSV
                 </button>
-              
-                {/* Department Filter Dropdown */}
-                {showDepartmentFilter && (
-                  <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg max-h-60">
-                    <div 
-                      onClick={() => {
-                        setFilterDepartment('');
-                        setShowDepartmentFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Departments
-                    </div>
-                    {uniqueDepartments.length > 0 ? (
-                      uniqueDepartments.map(dept => (
-                        <div 
-                          key={dept}
-                          onClick={() => {
-                            setFilterDepartment(dept);
-                            setShowDepartmentFilter(false);
-                          }}
-                          className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                            filterDepartment === dept ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                          }`}
-                        >
-                          {dept}
-                        </div>
-                      ))
-                    ) : (
-                      <div className="px-3 py-2 text-xs text-gray-500">No departments found</div>
-                    )}
-                  </div>
+
+                {(searchTerm || actionFilter || userRoleFilter || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7) || activeFilter) && (
+                  <button
+                    onClick={resetFilters}
+                    className="h-8 px-3 text-xs font-semibold text-gray-600 transition bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Clear All ✕
+                  </button>
                 )}
-            </div>
-
-              {/* Designation Filter Button */}
-              <div className="relative" ref={designationFilterRef}>
-                <button
-                  onClick={() => setShowDesignationFilter(!showDesignationFilter)}
-                  className={`h-8 px-3 text-xs font-medium rounded-lg transition flex items-center gap-1 ${
-                    filterDesignation 
-                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                  }`}
-                >
-                  <FaUserTag className="text-xs" /> Desig {filterDesignation && `: ${filterDesignation}`}
-                </button>
-              
-                {/* Designation Filter Dropdown */}
-                {showDesignationFilter && (
-                  <div className="absolute z-50 w-48 mt-1 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg max-h-60">
-                    <div 
-                      onClick={() => {
-                        setFilterDesignation('');
-                        setShowDesignationFilter(false);
-                      }}
-                      className="px-3 py-2 text-xs font-medium text-gray-700 border-b border-gray-200 cursor-pointer hover:bg-blue-50"
-                    >
-                      All Designations
-                    </div>
-                    {uniqueDesignations.length > 0 ? (
-                      uniqueDesignations.map(des => (
-                        <div 
-                          key={des}
-                          onClick={() => {
-                            setFilterDesignation(des);
-                            setShowDesignationFilter(false);
-                          }}
-                          className={`px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer ${
-                            filterDesignation === des ? 'bg-blue-50 text-blue-700 font-medium' : ''
-                          }`}
-                        >
-                          {des}
-                        </div>
-                      ))
-                    ) : (
-                      <div className="px-3 py-2 text-xs text-gray-500">No designations found</div>
-                    )}
-                  </div>
-                )}
-            </div>
-
-              {/* From Date */}
-              <div className="relative w-[140px]">
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
-                />
               </div>
 
-              {/* To Date */}
-              <div className="relative w-[140px]">
-                <input
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-
-              {/* Month Selector */}
-              <div className="relative w-[140px]">
-                <input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-
-              {/* Export CSV Button */}
-              <button
-                onClick={exportToCSV}
-                className="h-8 px-3 text-xs font-semibold text-white transition bg-blue-600 rounded-lg hover:bg-blue-700"
-              >
-                Export CSV
-              </button>
-
-              {/* Clear Filters Button */}
-              {(searchTerm || actionFilter || userRoleFilter || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
-                <button
-                  onClick={resetFilters}
-                  className="h-8 px-3 text-xs font-semibold text-gray-600 transition bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Clear
-                </button>
+              {(activeFilter || searchTerm || actionFilter || userRoleFilter || filterDepartment || filterDesignation || fromDate || toDate) && (
+                <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                  <span className="text-[10px] text-gray-500 font-medium">Active Filters:</span>
+                  {activeFilter && (
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[9px] font-semibold border border-blue-200">
+                      {activeFilter === 'All' ? 'All Activities' : activeFilter.charAt(0).toUpperCase() + activeFilter.slice(1)}
+                    </span>
+                  )}
+                  {searchTerm && (
+                    <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[9px] font-semibold border border-gray-200">
+                      "{searchTerm}"
+                    </span>
+                  )}
+                  {actionFilter && (
+                    <span className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[9px] font-semibold border border-purple-200">
+                      {formatActionName(actionFilter)}
+                    </span>
+                  )}
+                  {userRoleFilter && (
+                    <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-[9px] font-semibold border border-green-200">
+                      {userRoleFilter.charAt(0).toUpperCase() + userRoleFilter.slice(1)}
+                    </span>
+                  )}
+                  {filterDepartment && (
+                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-[9px] font-semibold border border-indigo-200">
+                      Dept: {filterDepartment}
+                    </span>
+                  )}
+                  {filterDesignation && (
+                    <span className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full text-[9px] font-semibold border border-amber-200">
+                      Desig: {filterDesignation}
+                    </span>
+                  )}
+                  {(fromDate || toDate) && (
+                    <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-[9px] font-semibold border border-green-200">
+                      {fromDate || '...'} - {toDate || '...'}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Table Card */}
+        {/* GAP BETWEEN FILTER CARD AND TABLE - Added mt-6 */}
+        <div className="mt-6"></div>
+
+        {/* TABLE - Single table view for both desktop and mobile */}
         <div className="emp-dash__card">
-          <div className="emp-dash__table-wrap">
-            <table className="emp-dash__table">
-              <thead>
-                <tr>
-                  <th>Timestamp</th>
-                  <th>User</th>
-                  <th className="text-center">Department</th>
-                  <th className="text-center">Designation</th>
-                  <th className="text-center">Role</th>
-                  <th className="text-center">Action</th>
-                  <th className="text-center">Details</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
+          <div className="overflow-x-auto">
+            {loading ? (
+              <div className="py-10 text-center">
+                <div className="flex flex-col items-center justify-center gap-3">
+                  <div className="emp-dash__spinner"></div>
+                  <span className="text-sm font-medium text-gray-500">Loading activities...</span>
+                </div>
+              </div>
+            ) : filteredActivities.length === 0 ? (
+              <div className="py-12 text-center">
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <FaHistory className="text-4xl text-gray-300" />
+                  <p className="text-gray-500 font-medium">No activities found</p>
+                  <p className="text-gray-400 text-xs">Try adjusting your filters</p>
+                </div>
+              </div>
+            ) : (
+              <table className="emp-dash__table min-w-[750px]">
+                <thead>
                   <tr>
-                    <td colSpan="7" className="py-10 text-center">
-                      <div className="flex flex-col items-center justify-center gap-3">
-                        <div className="emp-dash__spinner"></div>
-                        <span className="text-sm font-medium text-gray-500">Loading activities...</span>
-                      </div>
-                    </td>
+                    <th className="text-left">Timestamp</th>
+                    <th className="text-left">User</th>
+                    <th className="text-center hidden sm:table-cell">Department</th>
+                    <th className="text-center hidden md:table-cell">Designation</th>
+                    <th className="text-center">Role</th>
+                    <th className="text-center">Action</th>
+                    <th className="text-center hidden lg:table-cell">Details</th>
                   </tr>
-                ) : currentItems.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="py-12 text-center">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <FaHistory className="text-4xl text-gray-300" />
-                        <p className="text-gray-500 font-medium">No activities found</p>
-                        <p className="text-gray-400 text-xs">Try adjusting your filters</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
+                </thead>
+                <tbody>
                   <AnimatePresence>
-                    {currentItems.map((activity, idx) => (
+                    {filteredActivities.map((activity, idx) => (
                       <motion.tr
-                        key={activity._id}
+                        key={activity._id || idx}
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: Math.min(idx * 0.03, 0.5) }}
                         className="hover:bg-gray-50/60 transition-all group"
                       >
-                        <td>
+                        <td className="text-left whitespace-nowrap">
                           <span className="text-xs text-gray-500 font-medium">
                             {new Date(activity.createdAt).toLocaleString("en-IN", {
                               dateStyle: "medium",
@@ -2769,13 +2891,13 @@ const UserActivity = () => {
                             })}
                           </span>
                         </td>
-                        <td>
+                        <td className="text-left">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-blue-100 text-blue-600">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-blue-100 text-blue-600 flex-shrink-0">
                               {(activity.userName || "N")[0].toUpperCase()}
                             </div>
                             <div className="flex flex-col">
-                              <span className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                              <span className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors text-xs">
                                 {activity.userName || "N/A"}
                               </span>
                               <span className="text-[10px] text-gray-400">
@@ -2784,15 +2906,15 @@ const UserActivity = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="text-center">
+                        <td className="text-center hidden sm:table-cell">
                           <span className="text-xs text-gray-600">{activity.department || "N/A"}</span>
                         </td>
-                        <td className="text-center">
+                        <td className="text-center hidden md:table-cell">
                           <span className="text-xs text-gray-600">{activity.designation || "N/A"}</span>
                         </td>
                         <td className="text-center">
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${
                               activity.userRole === "admin"
                                 ? "bg-purple-100 text-purple-700 border border-purple-200"
                                 : "bg-blue-50 text-blue-700 border border-blue-100"
@@ -2803,31 +2925,33 @@ const UserActivity = () => {
                         </td>
                         <td className="text-center">
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getActionBadgeColor(
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${getActionBadgeColor(
                               activity.action
                             )}`}
                           >
                             {formatActionName(activity.action)}
                           </span>
                         </td>
-                        <td className="text-center">
-                          <span className="text-xs text-gray-700">{activity.actionDetails || "-"}</span>
+                        <td className="text-center hidden lg:table-cell">
+                          <span className="text-xs text-gray-700 max-w-[100px] block truncate" title={activity.actionDetails}>
+                            {activity.actionDetails || "-"}
+                          </span>
                         </td>
                       </motion.tr>
                     ))}
                   </AnimatePresence>
-                )}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            )}
           </div>
 
-          {/* Footer */}
+          {/* Pagination Footer */}
           {!loading && filteredActivities.length > 0 && (
-            <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100 bg-gray-50/50">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
               <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
                 <span>Showing</span>
                 <span className="font-semibold text-gray-900">
-                  {indexOfFirstItem + 1}
+                  {filteredActivities.length > 0 ? indexOfFirstItem + 1 : 0}
                 </span>
                 <span>to</span>
                 <span className="font-semibold text-gray-900">
