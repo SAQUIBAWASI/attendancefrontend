@@ -1785,6 +1785,51 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
   const isDropdownActive = (dropdownItems) =>
     dropdownItems?.some((item) => isActive(item.path));
 
+  // ─── Helper function to get credentials from localStorage ───
+  const getCredentials = () => {
+    const userRole = localStorage.getItem('userRole');
+    let email = '', password = '';
+    
+    if (userRole === 'admin') {
+      email = localStorage.getItem('adminEmail') || '';
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      password = userData.password || localStorage.getItem('adminPassword') || '';
+    } else if (userRole === 'employee') {
+      const employeeData = JSON.parse(localStorage.getItem('employeeData') || '{}');
+      email = employeeData.email || localStorage.getItem('employeeEmail') || '';
+      password = employeeData.password || localStorage.getItem('employeePassword') || '';
+    } else if (userRole === 'client') {
+      const clientData = JSON.parse(localStorage.getItem('clientData') || '{}');
+      email = clientData.email || localStorage.getItem('clientEmail') || '';
+      password = clientData.password || localStorage.getItem('clientPassword') || '';
+    }
+    
+    return { email, password, userRole };
+  };
+
+  // ─── Function to handle external link with auto-login ───
+  const handleExternalLink = () => {
+    const { email, password, userRole } = getCredentials();
+    
+    if (!email || !password) {
+      alert('Please login first to access Hire.');
+      return;
+    }
+
+    const url = "https://ingrainhire.ingrainsystems.com/client-login";
+    const params = new URLSearchParams();
+    params.append('email', email);
+    params.append('password', password);
+    params.append('autoLogin', 'true');
+    params.append('role', userRole || 'employee');
+    params.append('clientLogin', 'true');
+    params.append('skipOtp', 'true');
+    
+    const finalUrl = `${url}?${params.toString()}`;
+    console.log('🔗 Opening Hire:', finalUrl);
+    window.open(finalUrl, '_blank');
+  };
+
   const elements = [
     {
       icon: <i className="ri-dashboard-fill"></i>,
@@ -1795,6 +1840,12 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       icon: <i className="ri-user-fill"></i>,
       name: "Employees",
       path: "/employeelist",
+    },
+    {
+      icon: <i className="ri-user-add-fill"></i>,
+      name: "Hire",
+      action: handleExternalLink,
+      isExternal: true,
     },
     {
       icon: <i className="ri-calendar-fill"></i>,
@@ -1853,7 +1904,6 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       name: "Expensives",
       path: "/all-expensives"
     },
-    // Employee Issues Section with NEW badge and blink effect
     {
       icon: <i className="ri-error-warning-fill"></i>,
       name: "Employee Issues",
@@ -1952,9 +2002,14 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
     }
   };
 
-  // Handle dropdown item click
-  const handleDropdownItemClick = (path) => {
-    navigate(path);
+  // Handle dropdown item click (supports external links)
+  const handleDropdownItemClick = (item) => {
+    if (item.external) {
+      handleExternalLink(item.url, item.requiresAuth, item.loginPage);
+    } else if (item.path) {
+      navigate(item.path);
+    }
+    
     setOpenDropdown(null);
 
     if (isMobile) {
@@ -1970,7 +2025,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
     <>
       {isMobile && !isCollapsed && (
         <div
-          className="fixed inset-0 z-40 bg-[#1E3A8A] bg-opacity-50"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
           onClick={() => {
             setIsCollapsed(true);
             setOpenDropdown(null);
@@ -1978,10 +2033,64 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         />
       )}
 
+      {/* ─── INLINE STYLES ─── */}
+      <style>
+        {`
+          /* Hide scrollbar */
+          .sidebar-nav::-webkit-scrollbar {
+            display: none;
+          }
+          .sidebar-nav {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          
+          /* Glass morphism */
+          .sidebar-glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+          }
+          
+          /* Active gradient */
+          .active-gradient {
+            background: linear-gradient(135deg, #16A34A 0%, #059669 100%);
+            box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
+          }
+          
+          /* External glow */
+          .external-glow {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+          }
+          
+          /* Smooth transitions */
+          .sidebar-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          
+          /* Badge pulse */
+          .badge-pulse {
+            animation: pulse-badge 2s infinite;
+          }
+          
+          @keyframes pulse-badge {
+            0%, 100% {
+              opacity: 1;
+              transform: scale(1);
+            }
+            50% {
+              opacity: 0.8;
+              transform: scale(1.05);
+            }
+          }
+        `}
+      </style>
+
       <div
         onMouseEnter={handleMouseEnterSidebar}
         onMouseLeave={handleMouseLeaveSidebar}
-        className={`fixed top-0 left-0 h-full bg-white text-white z-50 transition-all duration-300 border-r border-gray-200
+        className={`fixed top-0 left-0 h-full sidebar-glass text-white z-50 transition-all duration-500 border-r border-gray-100/50 shadow-2xl
         ${isMobile
             ? isCollapsed
               ? "-translate-x-full w-52"
@@ -1997,28 +2106,40 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
           overflow: 'hidden'
         }}
       >
-        {/* Header - Fixed */}
-        <div className="flex items-center justify-center px-3 font-bold tracking-tight border-b border-gray-200 h-14 flex-shrink-0 bg-white">
+        {/* Header - Fixed with gradient */}
+        <div className="relative flex items-center justify-center px-3 font-bold tracking-tight border-b border-gray-100/50 h-14 flex-shrink-0 bg-gradient-to-r from-blue-50/80 to-indigo-50/80">
           {isCollapsed && !isMobile ? (
-            <span className="text-xl text-[#175cd3]">TM</span>
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#175cd3] to-[#1E3A8A] text-white shadow-lg">
+              <span className="text-base font-extrabold">TM</span>
+            </div>
           ) : (
             <div className="flex flex-col w-full">
-              <span className="text-[10px] uppercase tracking-[0.2em] font-medium text-[#667085] mb-0.5">
-                Team Management
-              </span>
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#175cd3] animate-pulse"></div>
-                <span className="text-[11px] font-medium truncate text-[#101828]">
-                  {currentPage}
-                </span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#175cd3] to-[#1E3A8A] flex items-center justify-center text-white shadow-md">
+                    <span className="text-[10px] font-extrabold">TM</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-[#667085] block leading-tight">
+                      Team Management
+                    </span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                      <span className="text-[11px] font-medium text-[#101828]">
+                        {currentPage}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Menu - Scrollable */}
+        {/* Menu - Scrollable with hidden scrollbar */}
         <nav
-          className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto no-scrollbar"
+          className="sidebar-nav flex-1 px-2 py-3 space-y-0.5 overflow-y-auto"
           style={{
             overflowY: 'auto',
             overflowX: 'hidden',
@@ -2032,17 +2153,22 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
               {item.dropdown ? (
                 <>
                   <div
-                    className={`group flex items-center justify-between px-2.5 py-1.5 rounded-md cursor-pointer transition-all duration-200 ${isDropdownActive(item.dropdown)
-                      ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
-                      : openDropdown === item.name
-                        ? "bg-[#1E3A8A]"
-                        : "hover:bg-blue-50"
-                      }`}
+                    className={`group flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer sidebar-item ${
+                      isDropdownActive(item.dropdown)
+                        ? "active-gradient text-white"
+                        : openDropdown === item.name
+                          ? "bg-indigo-50/80 text-[#1E3A8A] border border-indigo-100/50"
+                          : "text-gray-600 hover:bg-blue-50/80 hover:text-[#175cd3] hover:shadow-sm"
+                    }`}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (item.dropdown && item.dropdown.length > 0) {
-                        // Navigate to first dropdown item when clicking the parent
-                        navigate(item.dropdown[0].path);
+                        const firstItem = item.dropdown[0];
+                        if (firstItem.external) {
+                          handleExternalLink(firstItem.url, firstItem.requiresAuth, firstItem.loginPage);
+                        } else if (firstItem.path) {
+                          navigate(firstItem.path);
+                        }
                         setOpenDropdown(null);
                         if (isMobile) {
                           setIsCollapsed(true);
@@ -2051,36 +2177,43 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                       }
                     }}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className={`text-base transition-colors duration-200 ${isDropdownActive(item.dropdown)
-                        ? "text-white"
-                        : openDropdown === item.name
+                    <div className="flex items-center gap-2.5">
+                      <span className={`text-base transition-colors duration-200 ${
+                        isDropdownActive(item.dropdown)
                           ? "text-white"
-                          : "text-gray-600 group-hover:text-[#175cd3]"
-                        }`}>
+                          : openDropdown === item.name
+                            ? "text-[#175cd3]"
+                            : "text-gray-500 group-hover:text-[#175cd3]"
+                      }`}>
                         {item.icon}
                       </span>
                       {!isCollapsed && (
-                        <span className={`text-[13px] font-medium leading-none ${isDropdownActive(item.dropdown) ? "text-white" : "text-[#101828]"
-                          }`}>
+                        <span className={`text-[13px] font-medium leading-tight ${
+                          isDropdownActive(item.dropdown)
+                            ? "text-white"
+                            : openDropdown === item.name
+                              ? "text-[#1E3A8A]"
+                              : "text-gray-700"
+                        }`}>
                           {item.name}
                         </span>
                       )}
                     </div>
 
                     {!isCollapsed && (
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5">
                         {isDropdownActive(item.dropdown) && (
                           <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
                         )}
                         <FaChevronDown
                           onClick={(e) => toggleDropdown(e, item.name)}
-                          className={`text-[10px] transition-transform duration-300 p-0 rounded cursor-pointer ${isDropdownActive(item.dropdown)
-                            ? "text-white"
-                            : openDropdown === item.name
+                          className={`text-[10px] transition-transform duration-300 cursor-pointer ${
+                            isDropdownActive(item.dropdown)
                               ? "text-white"
-                              : "text-gray-400"
-                            } ${openDropdown === item.name ? "rotate-180" : ""}`}
+                              : openDropdown === item.name
+                                ? "text-[#175cd3]"
+                                : "text-gray-400"
+                          } ${openDropdown === item.name ? "rotate-180" : ""}`}
                           style={{
                             width: '16px',
                             height: '16px',
@@ -2092,64 +2225,119 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                     )}
                   </div>
 
-                  {/* DROPDOWN ITEMS - NO UNDERLINE */}
+                  {/* DROPDOWN ITEMS */}
                   {openDropdown === item.name && !isCollapsed && (
-                    <ul className="mt-0.5 space-y-0.5 ml-8">
+                    <ul className="mt-0.5 space-y-0.5 ml-8 border-l-2 border-indigo-100/50 pl-2.5">
                       {item.dropdown.map((sub, i) => (
                         <li key={i}>
-                          <Link
-                            to={sub.path}
-                            onClick={() => handleDropdownItemClick(sub.path)}
-                            className={`block py-1 text-[12px] transition-colors no-underline ${isActive(sub.path)
-                              ? "text-[#175cd3] font-semibold"
-                              : "text-gray-600 hover:text-[#175cd3]"
-                              }`}
+                          <div
+                            onClick={() => handleDropdownItemClick(sub)}
+                            className={`block py-1 px-2 text-[12px] transition-all duration-200 rounded-lg cursor-pointer ${
+                              sub.external 
+                                ? "text-purple-600 hover:text-purple-800 hover:bg-purple-50/50" 
+                                : ""
+                            } ${
+                              isActive(sub.path) && !sub.external
+                                ? "text-[#175cd3] font-semibold bg-blue-50/50"
+                                : "text-gray-600 hover:text-[#175cd3] hover:bg-blue-50/50"
+                            }`}
                             style={{ textDecoration: 'none' }}
                           >
                             <div className="flex items-center gap-2">
-                              {isActive(sub.path) && (
-                                <div className="w-1.5 h-1.5 rounded-full bg-[#175cd3]"></div>
+                              {isActive(sub.path) && !sub.external && (
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#175cd3] shadow-md"></div>
                               )}
-                              <span className={isActive(sub.path) ? "ml-0" : "ml-[10px]"}>
+                              {sub.external && (
+                                <i className="ri-external-link-line text-[10px] text-purple-500"></i>
+                              )}
+                              <span className={isActive(sub.path) && !sub.external ? "ml-0" : "ml-[10px]"}>
                                 {sub.name}
                               </span>
+                              {sub.external && (
+                                <span className="text-[6px] px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-600 border border-purple-200 font-medium ml-auto">
+                                  Auto-Login
+                                </span>
+                              )}
                             </div>
-                          </Link>
+                          </div>
                         </li>
                       ))}
                     </ul>
                   )}
                 </>
               ) : (
+                // Regular menu item with support for external actions
                 <div
-                  onClick={() => handleItemClick(item.path, item.action)}
-                  className={`group flex items-center gap-2 px-2.5 py-1.5 rounded-md cursor-pointer transition-all duration-200 relative ${isActive(item.path)
-                    ? "bg-[#16A34A] text-white shadow-[0_0_10px_rgba(5,150,105,0.4)]"
-                    : "hover:bg-blue-50"
-                    }`}
+                  onClick={() => {
+                    if (item.isExternal) {
+                      if (item.action) {
+                        item.action();
+                      }
+                    } else {
+                      handleItemClick(item.path, item.action);
+                    }
+                    
+                    setOpenDropdown(null);
+                    if (isMobile) {
+                      setIsCollapsed(true);
+                    }
+                    if (onLinkClick) {
+                      onLinkClick();
+                    }
+                  }}
+                  className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg cursor-pointer sidebar-item ${
+                    item.isExternal 
+                      ? "external-glow text-white hover:shadow-lg hover:scale-[1.02]"
+                      : isActive(item.path)
+                        ? "active-gradient text-white shadow-md"
+                        : "text-gray-600 hover:bg-blue-50/80 hover:text-[#175cd3] hover:shadow-sm"
+                  }`}
                 >
-                  <span className={`text-base transition-colors duration-200 ${isActive(item.path)
-                    ? "text-white"
-                    : "text-gray-600 group-hover:text-[#175cd3]"
-                    }`}>
+                  <span className={`text-base transition-all duration-200 ${
+                    item.isExternal
+                      ? "text-white"
+                      : isActive(item.path)
+                        ? "text-white"
+                        : "text-gray-500 group-hover:text-[#175cd3] group-hover:scale-110"
+                  }`}>
                     {item.icon}
                   </span>
                   {!isCollapsed && (
                     <div className="flex items-center flex-1 min-w-0 gap-1.5">
-                      <span className={`text-[13px] font-medium leading-none truncate ${isActive(item.path) ? "text-white" : "text-[#101828]"
-                        }`}>
+                      <span className={`text-[13px] font-medium leading-tight truncate ${
+                        item.isExternal
+                          ? "text-white"
+                          : isActive(item.path) 
+                            ? "text-white" 
+                            : "text-gray-700"
+                      }`}>
                         {item.name}
                       </span>
-                      {/* Badge with Blink Effect */}
+                      {item.isExternal && (
+                        <>
+                          <i className="ri-external-link-line text-[10px] text-white/80 ml-auto"></i>
+                          <span className="text-[6px] px-1.5 py-0.5 rounded-full bg-white/20 text-white border border-white/30 font-medium badge-pulse">
+                            Auto-Login
+                          </span>
+                        </>
+                      )}
                       {item.badge && (
-                        <span className={`px-1.5 py-0.5 text-[7px] font-bold bg-red-500 text-white rounded-full ${item.blink ? 'animate-pulse' : ''}`}>
+                        <span className={`px-1.5 py-0.5 text-[7px] font-bold bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-full shadow-md ${
+                          item.blink ? 'badge-pulse' : ''
+                        }`}>
                           {item.badge}
                         </span>
                       )}
-                      {isActive(item.path) && (
-                        <div className="w-1.5 h-1.5 ml-auto rounded-full bg-white animate-pulse"></div>
+                      {isActive(item.path) && !item.isExternal && (
+                        <div className="w-1.5 h-1.5 ml-auto rounded-full bg-white animate-pulse shadow-lg"></div>
                       )}
                     </div>
+                  )}
+                  {isCollapsed && item.isExternal && (
+                    <div className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
+                  )}
+                  {isCollapsed && item.badge && (
+                    <div className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
                   )}
                 </div>
               )}
@@ -2157,22 +2345,23 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
           ))}
         </nav>
 
-        {/* Footer - Fixed */}
-        <div className="px-3 py-2 text-[9px] text-[#667085] border-t border-gray-200 bg-[#f9fafb] flex-shrink-0">
+        {/* Footer - Fixed with gradient */}
+        <div className="px-3 py-2 text-[9px] text-[#667085] border-t border-gray-100/50 bg-gradient-to-r from-gray-50/80 to-gray-100/30 flex-shrink-0 backdrop-blur-sm">
           {!isCollapsed ? (
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 px-1.5 py-0.5 bg-[#175cd3]/10 rounded">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#175cd3]"></div>
-                  <span className="text-[8px] text-[#175cd3] font-medium">Active</span>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50/80 rounded-lg border border-emerald-100/50">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                  <span className="text-[8px] text-emerald-600 font-semibold">Active</span>
                 </div>
+                <span className="text-[8px] font-medium text-gray-400">v2.0</span>
               </div>
-              <p className="text-[8px]">© 2026 Timely Health</p>
+              <p className="text-[8px] text-center text-gray-400">© 2026 Timely Health</p>
             </div>
           ) : (
-            <div className="text-center">
-              <div className="w-2.5 h-2.5 mx-auto mb-0.5 bg-[#175cd3] rounded-full animate-pulse"></div>
-              <span className="text-[8px]">©</span>
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-lg shadow-emerald-500/30"></div>
+              <span className="text-[6px] text-gray-400">©</span>
             </div>
           )}
         </div>

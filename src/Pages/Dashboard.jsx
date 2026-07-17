@@ -980,7 +980,7 @@
 
 import axios from 'axios';
 import { useEffect, useState } from "react";
-import { FiCalendar, FiClock, FiTrendingUp, FiUserCheck, FiUserX, FiUsers, FiX } from "react-icons/fi";
+import { FiCalendar, FiClock, FiTrendingUp, FiUserCheck, FiUserX, FiUsers, FiX, FiExternalLink, FiMapPin } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { isEmployeeHidden } from "../utils/employeeStatus";
 import "./Dashboard.css";
@@ -1041,6 +1041,7 @@ const AttendanceDashboard = () => {
         "/late-today": "/emp-late-today",
         "/attedancesummary": "/emp-attendance-summary",
         "/leavelist": "/emp-leaves",
+        "/employee-locations": "/emp-employee-locations",
       };
       if (typeof path === "string" && routeMap[path]) {
         reactNavigate(routeMap[path]);
@@ -1048,6 +1049,51 @@ const AttendanceDashboard = () => {
       }
     }
     reactNavigate(path);
+  };
+
+  // ─── Helper function to get credentials from localStorage ───
+  const getCredentials = () => {
+    const userRole = localStorage.getItem('userRole');
+    let email = '', password = '';
+    
+    if (userRole === 'admin') {
+      email = localStorage.getItem('adminEmail') || '';
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      password = userData.password || localStorage.getItem('adminPassword') || '';
+    } else if (userRole === 'employee') {
+      const employeeData = JSON.parse(localStorage.getItem('employeeData') || '{}');
+      email = employeeData.email || localStorage.getItem('employeeEmail') || '';
+      password = employeeData.password || localStorage.getItem('employeePassword') || '';
+    } else if (userRole === 'client') {
+      const clientData = JSON.parse(localStorage.getItem('clientData') || '{}');
+      email = clientData.email || localStorage.getItem('clientEmail') || '';
+      password = clientData.password || localStorage.getItem('clientPassword') || '';
+    }
+    
+    return { email, password, userRole };
+  };
+
+  // ─── Function to handle Hire external link with auto-login ───
+  const handleHireClick = () => {
+    const { email, password, userRole } = getCredentials();
+    
+    if (!email || !password) {
+      alert('Please login first to access Hire.');
+      return;
+    }
+
+    const url = "https://ingrainhire.ingrainsystems.com/client-login";
+    const params = new URLSearchParams();
+    params.append('email', email);
+    params.append('password', password);
+    params.append('autoLogin', 'true');
+    params.append('role', userRole || 'employee');
+    params.append('clientLogin', 'true');
+    params.append('skipOtp', 'true');
+    
+    const finalUrl = `${url}?${params.toString()}`;
+    console.log('🔗 Opening Hire:', finalUrl);
+    window.open(finalUrl, '_blank');
   };
 
   const fetchData = async () => {
@@ -1593,26 +1639,44 @@ const AttendanceDashboard = () => {
   return (
     <div className="admin-dash">
       <main>
-        {/* Header */}
+        {/* Header with Hire & Employee Location Buttons */}
         <div className="admin-dash__header">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="admin-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap leading-tight">
               Admin <span>Dashboard</span>
             </h1>
-            {/* <p className="admin-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
-              Track attendance, leaves, and team performance in one place.
-            </p> */}
           </div>
-          <div className="admin-dash__date-pill">
-            <FiCalendar />
-            <span>
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* ─── EMPLOYEE LOCATION BUTTON ─── */}
+            <button
+              onClick={() => navigate("/employee-locations")}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white text-xs font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-emerald-700 hover:to-emerald-600 transition-all duration-300 border border-emerald-400/30"
+            >
+              <FiMapPin className="text-sm" />
+              <span>Employee Location</span>
+            </button>
+
+            {/* ─── HIRE BUTTON ─── */}
+            <button
+              onClick={handleHireClick}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-xs font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-purple-700 hover:to-purple-600 transition-all duration-300 border border-purple-400/30"
+            >
+              <i className="ri-user-add-fill text-sm"></i>
+              <span>Hire</span>
+              <FiExternalLink className="text-[10px] ml-0.5 opacity-70" />
+            </button>
+            
+            <div className="admin-dash__date-pill">
+              <FiCalendar />
+              <span>
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "short",
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+            </div>
           </div>
         </div>
 

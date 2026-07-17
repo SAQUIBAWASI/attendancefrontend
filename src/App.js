@@ -215,6 +215,10 @@ import AdminCompOffRequests from "./Pages/AdminCompOffRequests.js";
 // import ClaimedOTManagement from "./Pages/ClaimedOTManagement.js";
 // import IssueManagement from "./Pages/IssueManagement.js";
 // import AdminIssueManagement from "./Pages/AdminIssueManagement.js";
+import MyProducts from "./Pages/MyProducts.js"
+import CompanyIPManagement from "./Pages/CompanyIPManagement.js";
+import QRScanner from "./Pages/QRScanner.js";
+import EmployeeLocations from "./Pages/EmployeeLocations.js";
 
 
 
@@ -482,6 +486,10 @@ function App() {
               <Route path="/comp-off-requests" element={<AdminCompOffRequests />} />
               <Route path="/ot-claims" element={<ClaimedOTManagement />} />
               <Route path="/employeesissues" element={<AdminIssueManagement />} />
+              <Route path="/my-products" element={<MyProducts />} />
+              <Route path="/company-ip" element={<CompanyIPManagement />} />
+              <Route path="/qrcode" element={<QRScanner />} />
+              <Route path="/employee-locations" element={<EmployeeLocations />} />
 
            
            
