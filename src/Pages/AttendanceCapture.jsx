@@ -2930,115 +2930,93 @@ const playSuccessSound = () => {
   }
 };
 
-// Female voice welcome message
-const speakWelcomeMessage = (name, greeting) => {
-  try {
+// ✅ FIX: Get voices with retry mechanism
+const getFemaleVoice = (voices) => {
+  // Try to find female voice
+  let femaleVoice = voices.find(
+    (voice) =>
+      voice.name.toLowerCase().includes("female") ||
+      voice.name.toLowerCase().includes("woman") ||
+      voice.name.toLowerCase().includes("girl") ||
+      voice.name.toLowerCase().includes("zira") ||
+      voice.name.toLowerCase().includes("samantha") ||
+      voice.name.toLowerCase().includes("victoria") ||
+      voice.name.toLowerCase().includes("google uk english female")
+  );
+
+  if (!femaleVoice) {
+    femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
+  }
+
+  if (!femaleVoice) {
+    femaleVoice = voices.find((voice) => voice.lang.includes("en-US") || voice.lang.includes("en-GB"));
+  }
+
+  if (!femaleVoice && voices.length > 0) {
+    femaleVoice = voices[0];
+  }
+
+  return femaleVoice;
+};
+
+// ✅ FIX: Speak with voice loading retry
+const speakWithRetry = (message, retries = 5) => {
+  return new Promise((resolve) => {
     if (!("speechSynthesis" in window)) {
-      console.log("Speech synthesis not supported");
+      resolve(false);
       return;
     }
 
-    window.speechSynthesis.cancel();
+    const trySpeak = (attempt = 0) => {
+      const voices = window.speechSynthesis.getVoices();
+      
+      if (voices.length > 0 || attempt >= retries) {
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(message);
+        const femaleVoice = getFemaleVoice(voices);
+        
+        if (femaleVoice) {
+          utterance.voice = femaleVoice;
+        }
+        
+        utterance.lang = "en-IN";
+        utterance.pitch = 1.2;
+        utterance.rate = 0.9;
+        utterance.volume = 1;
+        
+        utterance.onend = () => resolve(true);
+        utterance.onerror = () => resolve(false);
+        
+        window.speechSynthesis.speak(utterance);
+      } else {
+        // Wait for voices to load
+        setTimeout(() => trySpeak(attempt + 1), 300);
+      }
+    };
+    
+    trySpeak();
+  });
+};
 
-    const { day, date, month, year } = getDayDetails();
-    const currentTime = getIndianTime();
-
-    const message = `Hello ${name}! ${greeting}! Today is ${day}, ${date} ${month} ${year}. The current time is ${currentTime} IST. Welcome to your attendance dashboard. Have a wonderful and productive day ahead. Stay motivated and keep shining!`;
-
-    const utterance = new SpeechSynthesisUtterance(message);
-    const voices = window.speechSynthesis.getVoices();
-
-    let femaleVoice = voices.find(
-      (voice) =>
-        voice.name.toLowerCase().includes("female") ||
-        voice.name.toLowerCase().includes("woman") ||
-        voice.name.toLowerCase().includes("girl") ||
-        voice.name.toLowerCase().includes("zira") ||
-        voice.name.toLowerCase().includes("samantha") ||
-        voice.name.toLowerCase().includes("victoria") ||
-        voice.name.toLowerCase().includes("google uk english female")
-    );
-
-    if (!femaleVoice) {
-      femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
-    }
-
-    if (!femaleVoice) {
-      femaleVoice = voices.find((voice) => voice.lang.includes("en"));
-    }
-
-    if (femaleVoice) {
-      utterance.voice = femaleVoice;
-    }
-
-    utterance.lang = "en-IN";
-    utterance.pitch = 1.2;
-    utterance.rate = 0.9;
-    utterance.volume = 1;
-
-    window.speechSynthesis.speak(utterance);
-
-    return true;
-  } catch (error) {
-    console.log("Speech synthesis error:", error);
-    return false;
-  }
+// Female voice welcome message
+const speakWelcomeMessage = async (name, greeting) => {
+  const { day, date, month, year } = getDayDetails();
+  const currentTime = getIndianTime();
+  const message = `Hello ${name}! ${greeting}! Today is ${day}, ${date} ${month} ${year}. The current time is ${currentTime} IST. Welcome to your attendance dashboard. Have a wonderful and productive day ahead. Stay motivated and keep shining!`;
+  return speakWithRetry(message);
 };
 
 // Female voice for Check-in success (short)
-const speakCheckInSuccess = (name) => {
-  try {
-    if (!("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    const message = `You have successfully checked in. Have a great day!`;
-    const utterance = new SpeechSynthesisUtterance(message);
-    const voices = window.speechSynthesis.getVoices();
-    let femaleVoice = voices.find(
-      (voice) =>
-        voice.name.toLowerCase().includes("female") ||
-        voice.name.toLowerCase().includes("woman") ||
-        voice.name.toLowerCase().includes("zira") ||
-        voice.name.toLowerCase().includes("samantha")
-    );
-    if (!femaleVoice) femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
-    if (!femaleVoice) femaleVoice = voices.find((voice) => voice.lang.includes("en"));
-    if (femaleVoice) utterance.voice = femaleVoice;
-    utterance.lang = "en-IN";
-    utterance.pitch = 1.2;
-    utterance.rate = 0.9;
-    utterance.volume = 1;
-    window.speechSynthesis.speak(utterance);
-  } catch (error) {
-    console.log("Speech error:", error);
-  }
+const speakCheckInSuccess = async (name) => {
+  const message = `You have successfully checked in. Have a great day!`;
+  return speakWithRetry(message);
 };
 
 // Female voice for Check-out success (short)
-const speakCheckOutSuccess = (name) => {
-  try {
-    if (!("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    const message = `You have successfully checked out. Thank you!`;
-    const utterance = new SpeechSynthesisUtterance(message);
-    const voices = window.speechSynthesis.getVoices();
-    let femaleVoice = voices.find(
-      (voice) =>
-        voice.name.toLowerCase().includes("female") ||
-        voice.name.toLowerCase().includes("woman") ||
-        voice.name.toLowerCase().includes("zira") ||
-        voice.name.toLowerCase().includes("samantha")
-    );
-    if (!femaleVoice) femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
-    if (!femaleVoice) femaleVoice = voices.find((voice) => voice.lang.includes("en"));
-    if (femaleVoice) utterance.voice = femaleVoice;
-    utterance.lang = "en-IN";
-    utterance.pitch = 1.2;
-    utterance.rate = 0.9;
-    utterance.volume = 1;
-    window.speechSynthesis.speak(utterance);
-  } catch (error) {
-    console.log("Speech error:", error);
-  }
+const speakCheckOutSuccess = async (name) => {
+  const message = `You have successfully checked out. Thank you!`;
+  return speakWithRetry(message);
 };
 
 export default function AttendanceCapture() {
@@ -3066,6 +3044,7 @@ export default function AttendanceCapture() {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voicesLoaded, setVoicesLoaded] = useState(false);
 
   // Success Popup states
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -3074,9 +3053,8 @@ export default function AttendanceCapture() {
   const [successType, setSuccessType] = useState(""); // "checkin" or "checkout"
   const [isPopupClosing, setIsPopupClosing] = useState(false);
 
-  // Welcome Popup states - ✅ Sirf ek baar show hoga
+  // Welcome Popup states
   const [showWelcomePopup, setShowWelcomePopup] = useState(() => {
-    // Check if welcome popup has been shown before
     const hasSeenWelcome = localStorage.getItem("hasSeenWelcomePopup");
     if (hasSeenWelcome === "true") {
       return false;
@@ -3094,6 +3072,36 @@ export default function AttendanceCapture() {
   // Current time state
   const [currentTime, setCurrentTime] = useState("");
   const [currentDate, setCurrentDate] = useState("");
+
+  // ✅ Load voices on component mount
+  useEffect(() => {
+    if ("speechSynthesis" in window) {
+      // Try to load voices immediately
+      let voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        setVoicesLoaded(true);
+      }
+      
+      // Also listen for voices changed event
+      const onVoicesChanged = () => {
+        setVoicesLoaded(true);
+      };
+      
+      window.speechSynthesis.addEventListener("voiceschanged", onVoicesChanged);
+      
+      // Fallback: if voices still not loaded after 2 seconds, retry
+      const timeout = setTimeout(() => {
+        if (window.speechSynthesis.getVoices().length > 0) {
+          setVoicesLoaded(true);
+        }
+      }, 2000);
+      
+      return () => {
+        window.speechSynthesis.removeEventListener("voiceschanged", onVoicesChanged);
+        clearTimeout(timeout);
+      };
+    }
+  }, []);
 
   // Get employeeId & email from navigation state or localStorage
   useEffect(() => {
@@ -3130,7 +3138,7 @@ export default function AttendanceCapture() {
     }
   }, [routerLocation.state, navigate]);
 
-  // ✅ Initialize welcome popup data - Sirf ek baar (localStorage check)
+  // ✅ Initialize welcome popup data
   useEffect(() => {
     if (employeeName && showWelcomePopup) {
       const { greeting, emoji } = getGreeting(employeeName);
@@ -3145,17 +3153,41 @@ export default function AttendanceCapture() {
         playWelcomeSound();
       }, 300);
 
-      setTimeout(() => {
-        speakWelcomeMessage(employeeName, greeting);
-        setIsSpeaking(true);
-      }, 1000);
-
+      // ✅ Speak with retry when voices are ready
+      const speakWelcome = async () => {
+        if (voicesLoaded) {
+          setIsSpeaking(true);
+          await speakWelcomeMessage(employeeName, greeting);
+          setIsSpeaking(false);
+        } else {
+          // Wait for voices and retry
+          let attempts = 0;
+          const checkVoices = setInterval(() => {
+            attempts++;
+            if (window.speechSynthesis.getVoices().length > 0) {
+              clearInterval(checkVoices);
+              setIsSpeaking(true);
+              speakWelcomeMessage(employeeName, greeting).then(() => {
+                setIsSpeaking(false);
+              });
+            } else if (attempts > 10) {
+              clearInterval(checkVoices);
+              // Fallback: try anyway
+              setIsSpeaking(true);
+              speakWelcomeMessage(employeeName, greeting).then(() => {
+                setIsSpeaking(false);
+              });
+            }
+          }, 500);
+        }
+      };
+      
+      speakWelcome();
       generateParticles();
 
-      // ✅ Mark as seen - popup sirf ek baar aayega
       localStorage.setItem("hasSeenWelcomePopup", "true");
     }
-  }, [employeeName, showWelcomePopup]);
+  }, [employeeName, showWelcomePopup, voicesLoaded]);
 
   // Generate floating particles
   const generateParticles = () => {
@@ -3331,7 +3363,7 @@ export default function AttendanceCapture() {
     );
   };
 
-  // Handle Check-In
+  // ✅ Handle Check-In with voice
   const handleCheckIn = async () => {
     if (!position) return alert("Please capture your current location first.");
     if (!employeeId || !employeeEmail) return alert("Employee data missing.");
@@ -3355,7 +3387,6 @@ export default function AttendanceCapture() {
         reason: isOnsiteOnlyDepartment ? "Onsite" : reason || "Onsite",
       });
 
-      // ✅ Chhota success popup
       setSuccessType("checkin");
       setSuccessMessage("✅ Check-in Successful!");
       setSuccessEmoji("✅");
@@ -3363,9 +3394,14 @@ export default function AttendanceCapture() {
       setIsPopupClosing(false);
 
       playSuccessSound();
-      setTimeout(() => {
-        speakCheckInSuccess(employeeName);
+      
+      // ✅ Speak check-in success with retry
+      setTimeout(async () => {
+        setIsSpeaking(true);
+        await speakCheckInSuccess(employeeName);
+        setIsSpeaking(false);
       }, 500);
+      
     } catch (err) {
       alert(err.response?.data?.message || "Check-in failed.");
     } finally {
@@ -3373,7 +3409,7 @@ export default function AttendanceCapture() {
     }
   };
 
-  // Handle Check-Out
+  // ✅ Handle Check-Out with voice
   const handleCheckOut = async () => {
     if (!employeeId) return alert("Employee data missing.");
 
@@ -3418,7 +3454,6 @@ export default function AttendanceCapture() {
 
       await axios.post(`${cleanBaseUrl}/api/attendance/checkout`, payload);
 
-      // ✅ Chhota success popup
       setSuccessType("checkout");
       setSuccessMessage("✅ Check-out Successful!");
       setSuccessEmoji("✅");
@@ -3426,9 +3461,14 @@ export default function AttendanceCapture() {
       setIsPopupClosing(false);
 
       playSuccessSound();
-      setTimeout(() => {
-        speakCheckOutSuccess(employeeName);
+      
+      // ✅ Speak check-out success with retry
+      setTimeout(async () => {
+        setIsSpeaking(true);
+        await speakCheckOutSuccess(employeeName);
+        setIsSpeaking(false);
       }, 500);
+      
     } catch (err) {
       console.error("Check-out error:", err);
       alert(err.response?.data?.message || "Check-out failed.");
@@ -3548,15 +3588,16 @@ export default function AttendanceCapture() {
   const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
 
   // Function to replay voice
-  const replayVoice = () => {
+  const replayVoice = async () => {
     if (employeeName) {
       const { greeting } = getGreeting(employeeName);
-      speakWelcomeMessage(employeeName, greeting);
       setIsSpeaking(true);
+      await speakWelcomeMessage(employeeName, greeting);
+      setIsSpeaking(false);
     }
   };
 
-  // ✅ Close welcome popup and cancel speech
+  // Close welcome popup and cancel speech
   const handleCloseWelcomePopup = () => {
     setShowWelcomePopup(false);
     if (window.speechSynthesis) {
@@ -3574,12 +3615,11 @@ export default function AttendanceCapture() {
       </div>
 
       <div className="max-w-md mx-auto relative z-10">
-        {/* ✅ SUCCESS POPUP - Chhota aur simple */}
+        {/* SUCCESS POPUP */}
         {showSuccessPopup && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
             <div className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 transform animate-scale-up border border-green-200/50">
               <div className="text-center">
-                {/* Success Icon */}
                 <div className="flex justify-center mb-2">
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full blur-xl opacity-30 animate-pulse"></div>
@@ -3589,7 +3629,6 @@ export default function AttendanceCapture() {
                   </div>
                 </div>
 
-                {/* Success Message - Simple */}
                 <h3 className="text-lg font-bold text-gray-900">{successMessage}</h3>
                 <p className="text-sm text-gray-600 mt-1">
                   {successType === "checkin" ? (
@@ -3599,7 +3638,20 @@ export default function AttendanceCapture() {
                   )}
                 </p>
 
-                {/* OK Button */}
+                {/* ✅ Voice indicator in success popup */}
+                {isSpeaking && (
+                  <div className="flex items-center justify-center gap-1 mt-2">
+                    <div className="flex items-center gap-0.5">
+                      <div className="w-1 h-2 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0s" }}></div>
+                      <div className="w-1 h-3 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.2s" }}></div>
+                      <div className="w-1 h-4 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.4s" }}></div>
+                      <div className="w-1 h-3 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.6s" }}></div>
+                      <div className="w-1 h-2 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.8s" }}></div>
+                    </div>
+                    <span className="text-xs text-green-600 font-medium">🔊 Speaking...</span>
+                  </div>
+                )}
+
                 <button
                   onClick={handleCloseSuccessPopup}
                   disabled={isPopupClosing}
@@ -3612,10 +3664,9 @@ export default function AttendanceCapture() {
           </div>
         )}
 
-        {/* ✅ WELCOME POPUP - Sirf ek baar (localStorage flag) */}
+        {/* WELCOME POPUP */}
         {showWelcomePopup && employeeName && motivationalThought && (
           <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-            {/* Floating Particles */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               {particles.map((particle) => (
                 <div
@@ -3636,7 +3687,6 @@ export default function AttendanceCapture() {
             </div>
 
             <div className="relative bg-gradient-to-br from-white via-indigo-50/95 to-purple-50/95 rounded-3xl shadow-2xl max-w-sm w-full p-5 transform animate-scale-up border border-white/30">
-              {/* Close Button (X) */}
               <button
                 onClick={handleCloseWelcomePopup}
                 className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full bg-white/80 hover:bg-red-50 hover:text-red-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:rotate-90"
@@ -3645,7 +3695,6 @@ export default function AttendanceCapture() {
                 <FaTimes className="text-gray-600 hover:text-red-500 transition-colors text-sm" />
               </button>
 
-              {/* Voice Indicator */}
               {isSpeaking && (
                 <div className="absolute top-2 right-12 flex items-center gap-1">
                   <div className="flex items-center gap-0.5">
@@ -3660,7 +3709,6 @@ export default function AttendanceCapture() {
               )}
 
               <div className="relative">
-                {/* Small Icon */}
                 <div className="flex justify-center mb-3">
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl blur-lg opacity-30 animate-pulse"></div>
@@ -3672,12 +3720,10 @@ export default function AttendanceCapture() {
                   </div>
                 </div>
 
-                {/* Greeting */}
                 <h2 className="text-xl font-bold text-center text-gray-900">
                   {greetingMessage}, {employeeName}! 👋
                 </h2>
 
-                {/* Date and Time */}
                 <div className="mt-2 text-center space-y-0.5">
                   <p className="text-xs text-indigo-600 font-medium flex items-center justify-center gap-1">
                     <FaCalendarAlt className="text-indigo-500 text-xs" />
@@ -3689,7 +3735,6 @@ export default function AttendanceCapture() {
                   </p>
                 </div>
 
-                {/* Motivational Thought - Smaller */}
                 <div className="mt-2 p-2.5 bg-gradient-to-r from-indigo-50/80 to-purple-50/80 rounded-xl border border-indigo-100/50">
                   <div className="flex items-start gap-1.5">
                     <FaQuoteLeft className="text-indigo-400 text-xs mt-0.5 flex-shrink-0" />
@@ -3700,7 +3745,6 @@ export default function AttendanceCapture() {
                   </div>
                 </div>
 
-                {/* Replay Voice Button */}
                 <button
                   onClick={replayVoice}
                   className="mt-2 w-full py-1.5 rounded-xl text-xs font-medium bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-500/25 transition-all duration-200 flex items-center justify-center gap-2"
@@ -3709,7 +3753,6 @@ export default function AttendanceCapture() {
                   <span>🔊 Listen Again</span>
                 </button>
 
-                {/* Get Started Button */}
                 <button
                   onClick={handleCloseWelcomePopup}
                   className="mt-2 w-full relative group py-2 rounded-xl text-sm font-bold text-white overflow-hidden transition-all duration-300 transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-indigo-500/30"
@@ -3944,7 +3987,6 @@ export default function AttendanceCapture() {
             </div>
           </div>
 
-          {/* Swipe Instruction */}
           <div className="text-center mb-3">
             <p className="text-xs text-gray-500 font-medium flex items-center justify-center gap-2">
               {!checkedIn ? (
@@ -3965,7 +4007,6 @@ export default function AttendanceCapture() {
             </p>
           </div>
 
-          {/* Premium Swipe Slider */}
           <div className="mb-3">
             <div
               ref={swipeAreaRef}
@@ -3976,14 +4017,11 @@ export default function AttendanceCapture() {
             >
               {!checkedIn ? (
                 <div className="relative h-16 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-lg shadow-indigo-500/30">
-                  {/* Progress fill */}
                   <div
                     className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 opacity-60"
                     style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.3s ease-out" }}
                   ></div>
-                  {/* Shimmer effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent animate-shimmer"></div>
-                  {/* Content */}
                   <div className="absolute inset-0 flex items-center justify-between px-5">
                     <div className="flex items-center gap-2.5 text-white">
                       <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-inner">
@@ -4006,14 +4044,11 @@ export default function AttendanceCapture() {
                 </div>
               ) : (
                 <div className="relative h-16 bg-gradient-to-r from-red-500 via-rose-500 to-orange-500 shadow-lg shadow-red-500/30">
-                  {/* Progress fill */}
                   <div
                     className="absolute inset-y-0 right-0 bg-gradient-to-r from-red-400 to-orange-400 opacity-60"
                     style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.3s ease-out" }}
                   ></div>
-                  {/* Shimmer effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
-                  {/* Content */}
                   <div className="absolute inset-0 flex items-center justify-between px-5">
                     <div className="flex items-center gap-1.5 text-white/80">
                       <div className="flex gap-0.5 animate-bounce-x-reverse">
@@ -4051,7 +4086,6 @@ export default function AttendanceCapture() {
           )}
         </div>
 
-        {/* Footer */}
         <div className="text-center mt-5 space-y-2">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/50 shadow-sm">
             <span className="text-[10px]">📍</span>
