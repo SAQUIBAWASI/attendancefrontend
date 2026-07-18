@@ -2985,90 +2985,56 @@ const speakWelcomeMessage = (name, greeting) => {
   }
 };
 
-// Female voice for Check-in success
+// Female voice for Check-in success (short)
 const speakCheckInSuccess = (name) => {
   try {
     if (!("speechSynthesis" in window)) return;
-
     window.speechSynthesis.cancel();
-
-    const currentTime = getIndianTime();
-    const message = `Congratulations ${name}! You have successfully checked in at ${currentTime} IST. Have a great day at work!`;
-
+    const message = `You have successfully checked in. Have a great day!`;
     const utterance = new SpeechSynthesisUtterance(message);
     const voices = window.speechSynthesis.getVoices();
-
     let femaleVoice = voices.find(
       (voice) =>
         voice.name.toLowerCase().includes("female") ||
         voice.name.toLowerCase().includes("woman") ||
-        voice.name.toLowerCase().includes("girl") ||
         voice.name.toLowerCase().includes("zira") ||
         voice.name.toLowerCase().includes("samantha")
     );
-
-    if (!femaleVoice) {
-      femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
-    }
-
-    if (!femaleVoice) {
-      femaleVoice = voices.find((voice) => voice.lang.includes("en"));
-    }
-
-    if (femaleVoice) {
-      utterance.voice = femaleVoice;
-    }
-
+    if (!femaleVoice) femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
+    if (!femaleVoice) femaleVoice = voices.find((voice) => voice.lang.includes("en"));
+    if (femaleVoice) utterance.voice = femaleVoice;
     utterance.lang = "en-IN";
     utterance.pitch = 1.2;
     utterance.rate = 0.9;
     utterance.volume = 1;
-
     window.speechSynthesis.speak(utterance);
   } catch (error) {
     console.log("Speech error:", error);
   }
 };
 
-// Female voice for Check-out success
+// Female voice for Check-out success (short)
 const speakCheckOutSuccess = (name) => {
   try {
     if (!("speechSynthesis" in window)) return;
-
     window.speechSynthesis.cancel();
-
-    const currentTime = getIndianTime();
-    const message = `Goodbye ${name}! You have successfully checked out at ${currentTime} IST. Thank you for your hard work today. See you tomorrow!`;
-
+    const message = `You have successfully checked out. Thank you!`;
     const utterance = new SpeechSynthesisUtterance(message);
     const voices = window.speechSynthesis.getVoices();
-
     let femaleVoice = voices.find(
       (voice) =>
         voice.name.toLowerCase().includes("female") ||
         voice.name.toLowerCase().includes("woman") ||
-        voice.name.toLowerCase().includes("girl") ||
         voice.name.toLowerCase().includes("zira") ||
         voice.name.toLowerCase().includes("samantha")
     );
-
-    if (!femaleVoice) {
-      femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
-    }
-
-    if (!femaleVoice) {
-      femaleVoice = voices.find((voice) => voice.lang.includes("en"));
-    }
-
-    if (femaleVoice) {
-      utterance.voice = femaleVoice;
-    }
-
+    if (!femaleVoice) femaleVoice = voices.find((voice) => voice.lang.includes("en-IN"));
+    if (!femaleVoice) femaleVoice = voices.find((voice) => voice.lang.includes("en"));
+    if (femaleVoice) utterance.voice = femaleVoice;
     utterance.lang = "en-IN";
     utterance.pitch = 1.2;
     utterance.rate = 0.9;
     utterance.volume = 1;
-
     window.speechSynthesis.speak(utterance);
   } catch (error) {
     console.log("Speech error:", error);
@@ -3108,8 +3074,16 @@ export default function AttendanceCapture() {
   const [successType, setSuccessType] = useState(""); // "checkin" or "checkout"
   const [isPopupClosing, setIsPopupClosing] = useState(false);
 
-  // Welcome Popup states
-  const [showWelcomePopup, setShowWelcomePopup] = useState(true);
+  // Welcome Popup states - ✅ Sirf ek baar show hoga
+  const [showWelcomePopup, setShowWelcomePopup] = useState(() => {
+    // Check if welcome popup has been shown before
+    const hasSeenWelcome = localStorage.getItem("hasSeenWelcomePopup");
+    if (hasSeenWelcome === "true") {
+      return false;
+    }
+    return true;
+  });
+  
   const [greetingMessage, setGreetingMessage] = useState("");
   const [greetingEmoji, setGreetingEmoji] = useState("");
   const [currentIndianDate, setCurrentIndianDate] = useState("");
@@ -3156,9 +3130,9 @@ export default function AttendanceCapture() {
     }
   }, [routerLocation.state, navigate]);
 
-  // Initialize welcome popup data when employee name is available
+  // ✅ Initialize welcome popup data - Sirf ek baar (localStorage check)
   useEffect(() => {
-    if (employeeName) {
+    if (employeeName && showWelcomePopup) {
       const { greeting, emoji } = getGreeting(employeeName);
       setGreetingMessage(greeting);
       setGreetingEmoji(emoji);
@@ -3177,8 +3151,11 @@ export default function AttendanceCapture() {
       }, 1000);
 
       generateParticles();
+
+      // ✅ Mark as seen - popup sirf ek baar aayega
+      localStorage.setItem("hasSeenWelcomePopup", "true");
     }
-  }, [employeeName]);
+  }, [employeeName, showWelcomePopup]);
 
   // Generate floating particles
   const generateParticles = () => {
@@ -3378,14 +3355,13 @@ export default function AttendanceCapture() {
         reason: isOnsiteOnlyDepartment ? "Onsite" : reason || "Onsite",
       });
 
-      // Show success popup - remove alert
+      // ✅ Chhota success popup
       setSuccessType("checkin");
-      setSuccessMessage(`Congratulations ${employeeName}!`);
-      setSuccessEmoji("🎉");
+      setSuccessMessage("✅ Check-in Successful!");
+      setSuccessEmoji("✅");
       setShowSuccessPopup(true);
       setIsPopupClosing(false);
 
-      // Play success sound and speak
       playSuccessSound();
       setTimeout(() => {
         speakCheckInSuccess(employeeName);
@@ -3442,14 +3418,13 @@ export default function AttendanceCapture() {
 
       await axios.post(`${cleanBaseUrl}/api/attendance/checkout`, payload);
 
-      // Show success popup - remove alert
+      // ✅ Chhota success popup
       setSuccessType("checkout");
-      setSuccessMessage(`Goodbye ${employeeName}!`);
-      setSuccessEmoji("👋");
+      setSuccessMessage("✅ Check-out Successful!");
+      setSuccessEmoji("✅");
       setShowSuccessPopup(true);
       setIsPopupClosing(false);
 
-      // Play success sound and speak
       playSuccessSound();
       setTimeout(() => {
         speakCheckOutSuccess(employeeName);
@@ -3467,7 +3442,6 @@ export default function AttendanceCapture() {
     if (isPopupClosing) return;
     setIsPopupClosing(true);
     setShowSuccessPopup(false);
-    // Reload after popup closes
     setTimeout(() => {
       window.location.reload();
     }, 300);
@@ -3582,6 +3556,14 @@ export default function AttendanceCapture() {
     }
   };
 
+  // ✅ Close welcome popup and cancel speech
+  const handleCloseWelcomePopup = () => {
+    setShowWelcomePopup(false);
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/80 to-purple-50/60 p-4 relative overflow-hidden">
       {/* Animated Background Orbs */}
@@ -3592,72 +3574,45 @@ export default function AttendanceCapture() {
       </div>
 
       <div className="max-w-md mx-auto relative z-10">
-        {/* Success Popup - Stays until user clicks OK */}
+        {/* ✅ SUCCESS POPUP - Chhota aur simple */}
         {showSuccessPopup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
-            <div className="relative bg-gradient-to-br from-white via-green-50/95 to-emerald-50/95 rounded-3xl shadow-2xl max-w-sm w-full p-6 transform animate-scale-up border border-green-200/50">
-              {/* Decorative elements */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-cyan-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
-
-              {/* Voice Indicator - Shows while speaking */}
-              <div className="absolute top-3 right-3 flex items-center gap-1">
-                <div className="flex items-center gap-0.5">
-                  <div className="w-1 h-2 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0s" }}></div>
-                  <div className="w-1 h-3 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.2s" }}></div>
-                  <div className="w-1 h-4 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.4s" }}></div>
-                  <div className="w-1 h-3 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.6s" }}></div>
-                  <div className="w-1 h-2 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: "0.8s" }}></div>
-                </div>
-                <span className="text-[10px] font-medium text-green-600">🔊</span>
-              </div>
-
-              <div className="relative text-center">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+            <div className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 transform animate-scale-up border border-green-200/50">
+              <div className="text-center">
                 {/* Success Icon */}
-                <div className="flex justify-center mb-3">
+                <div className="flex justify-center mb-2">
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full blur-xl opacity-30 animate-pulse"></div>
-                    <div className="relative w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/30">
-                      <span className="text-4xl animate-bounce">{successEmoji}</span>
+                    <div className="relative w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/30">
+                      <span className="text-3xl">{successEmoji}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Success Message */}
-                <h2 className="text-xl font-bold text-gray-900">{successMessage}</h2>
-
+                {/* Success Message - Simple */}
+                <h3 className="text-lg font-bold text-gray-900">{successMessage}</h3>
                 <p className="text-sm text-gray-600 mt-1">
                   {successType === "checkin" ? (
-                    <>
-                      You have successfully <span className="text-green-600 font-semibold">checked in</span> at{" "}
-                      {getIndianTime()} IST
-                    </>
+                    <>Checked in at {getIndianTime()} IST</>
                   ) : (
-                    <>
-                      You have successfully <span className="text-orange-600 font-semibold">checked out</span> at{" "}
-                      {getIndianTime()} IST
-                    </>
+                    <>Checked out at {getIndianTime()} IST</>
                   )}
                 </p>
 
-                <p className="text-xs text-gray-500 mt-2">
-                  {successType === "checkin" ? "Have a great day at work! 💪" : "Thank you for your hard work today! 🌟"}
-                </p>
-
-                {/* OK Button - Only way to close */}
+                {/* OK Button */}
                 <button
                   onClick={handleCloseSuccessPopup}
                   disabled={isPopupClosing}
-                  className="mt-4 w-full py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-3 w-full py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                 >
-                  {isPopupClosing ? "Closing..." : "OK 👍"}
+                  OK
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Small Welcome Popup */}
+        {/* ✅ WELCOME POPUP - Sirf ek baar (localStorage flag) */}
         {showWelcomePopup && employeeName && motivationalThought && (
           <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
             {/* Floating Particles */}
@@ -3683,12 +3638,7 @@ export default function AttendanceCapture() {
             <div className="relative bg-gradient-to-br from-white via-indigo-50/95 to-purple-50/95 rounded-3xl shadow-2xl max-w-sm w-full p-5 transform animate-scale-up border border-white/30">
               {/* Close Button (X) */}
               <button
-                onClick={() => {
-                  setShowWelcomePopup(false);
-                  if (window.speechSynthesis) {
-                    window.speechSynthesis.cancel();
-                  }
-                }}
+                onClick={handleCloseWelcomePopup}
                 className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full bg-white/80 hover:bg-red-50 hover:text-red-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:rotate-90"
                 aria-label="Close"
               >
@@ -3761,12 +3711,7 @@ export default function AttendanceCapture() {
 
                 {/* Get Started Button */}
                 <button
-                  onClick={() => {
-                    setShowWelcomePopup(false);
-                    if (window.speechSynthesis) {
-                      window.speechSynthesis.cancel();
-                    }
-                  }}
+                  onClick={handleCloseWelcomePopup}
                   className="mt-2 w-full relative group py-2 rounded-xl text-sm font-bold text-white overflow-hidden transition-all duration-300 transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-indigo-500/30"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 group-hover:from-indigo-600 group-hover:via-purple-600 group-hover:to-pink-600 transition-all duration-300"></div>
@@ -3811,7 +3756,6 @@ export default function AttendanceCapture() {
                   {employeeName ? employeeName.charAt(0).toUpperCase() : "U"}
                 </span>
               </div>
-              {/* Online indicator */}
               <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white shadow-sm">
                 <div className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-50"></div>
               </div>
