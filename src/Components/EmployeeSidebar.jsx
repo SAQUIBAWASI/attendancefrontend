@@ -79,7 +79,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/emp-permissions": "Permissions",
       "/emp-events": "Events",
       "/emp-issues": "Issues",
-      "/emp-tasks": "Tasks"
+      "/emp-tasks": "Tasks",
+      "/employee-visits-data": "My Visits"  // ✅ Added for visits page
     };
     return pathMap[path] || "Dashboard";
   };
@@ -112,7 +113,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
 
   const handleItemClick = (path, action, isExternal = false) => {
     if (isExternal) {
-      // ⭐ FIX: Same tab mein open karein
       window.location.href = path;
     } else if (path) {
       navigate(path);
@@ -131,7 +131,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
 
   const handleDropdownItemClick = (path, isExternal = false) => {
     if (isExternal) {
-      // ⭐ FIX: Same tab mein open karein
       window.location.href = path;
     } else {
       navigate(path);
@@ -299,7 +298,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     console.log('🔍 NAVIGATING TO INGRAIN HIRE');
     console.log('========================================');
     
-    // Get employee data from localStorage
     const employeeDataRaw = localStorage.getItem("employeeData");
     console.log('📄 Raw employeeData from localStorage:', employeeDataRaw);
     
@@ -311,29 +309,23 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       console.error('❌ Failed to parse employeeData:', e);
     }
     
-    // Get email
     const email = employeeData.email || employeeData.employeeEmail || '';
     console.log('📧 Email found:', email);
     
-    // Get password
     const password = employeeData.password || employeeData.employeePassword || '';
     console.log('🔐 Password found in employeeData:', password);
     
-    // Also check other storage locations
     const storedPassword = localStorage.getItem("employeePassword") || '';
     console.log('🔐 employeePassword from localStorage:', storedPassword);
     
-    // Determine final password
     let finalPassword = password || storedPassword || '';
     console.log('🔐 Final password before fallback:', finalPassword);
     
-    // If still empty, use fallback
     if (!finalPassword) {
       console.log('⚠️ No password found, using fallback: 456789');
       finalPassword = '456789';
     }
     
-    // Build URL with query params
     const baseUrl = 'https://ingrainhire.ingrainsystems.com/candidate-login';
     const params = new URLSearchParams();
     
@@ -349,7 +341,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     console.log('🔐 Password being sent:', finalPassword);
     console.log('========================================');
     
-    // ⭐ FIX: Same tab mein navigate karein
     window.location.href = url;
   };
 
@@ -394,6 +385,13 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         action: navigateToIngrainHire,
         isExternal: true,
         badge: "HIRE"
+      },
+      // ✅ My Visits - Employee Side
+      { 
+        icon: <i className="ri-map-pin-user-fill"></i>, 
+        name: "My Visits", 
+        path: "/employee-visits-data",
+        badge: "NEW"
       },
       { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
     ];
@@ -523,6 +521,14 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       menu.push({ icon: <i className="ri-time-fill"></i>, name: "Shifts", path: "/emp-shifts" });
     }
 
+    // ✅ My Visits - Admin Side bhi add karte hain
+    menu.push({ 
+      icon: <i className="ri-map-pin-user-fill"></i>, 
+      name: "My Visits", 
+      path: "/employee-visits-data",
+      badge: "NEW"
+    });
+
     // ─── Ingrain Hire in Admin Menu ───
     menu.push({ 
       icon: <i className="ri-building-fill"></i>, 
@@ -611,7 +617,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                       if (isCollapsed) {
                         const firstItem = item.dropdown[0];
                         if (firstItem.isExternal) {
-                          // ⭐ FIX: Same tab mein open karein
                           window.location.href = firstItem.path;
                         } else {
                           navigate(firstItem.path);
@@ -632,7 +637,6 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
                       )}
                     </div>
 
-                    {/* ─── CHEVRON DOWN ICON - BLUE COLOR ─── */}
                     {!isCollapsed && (
                       <div className="flex items-center gap-1">
                         {isDropdownActive(item.dropdown) && (

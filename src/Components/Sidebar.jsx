@@ -1735,7 +1735,8 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/admin-issue-management": "Issue Management",
       "/qrcode": "QR Scanner",
       "/company-ip": "Company IP",
-      "/my-products": "My Products"
+      "/my-products": "My Products",
+      "/visits-data": "Visit Data"  // ✅ Added for visits data page
     };
     return pathMap[path] || "Dashboard";
   };
@@ -1972,6 +1973,14 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       icon: <i className="ri-store-3-fill"></i>,
       name: "My Products",
       path: "/my-products",
+    },
+    // ✅ Visit Data - Admin Side
+    {
+      icon: <i className="ri-map-pin-user-fill"></i>,
+      name: "Visit Data",
+      path: "/visits-data",
+      badge: "NEW",
+      blink: true
     },
     {
       icon: <i className="ri-logout-box-r-line"></i>,

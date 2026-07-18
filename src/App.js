@@ -220,6 +220,15 @@ import CompanyIPManagement from "./Pages/CompanyIPManagement.js";
 import QRScanner from "./Pages/QRScanner.js";
 import EmployeeLocations from "./Pages/EmployeeLocations.js";
 
+import EmployeeVisitsData from "./Pages/EmployeeVisitsData.jsx"; // ✅ New import for Employee Visits Data
+import RejectedVisits from "./Pages/RejectedVisits.js"; // ✅ New import for Rejected Visits
+
+
+import VisitsData from "./Pages/VisitsData.js";
+import TotalVisits from "./Pages/TotalVisits.js"
+import PendingVisits from "./Pages/PendingVisits.js";
+import Leads from "./Pages/Leads.js"
+
 
 
 function App() {
@@ -319,6 +328,8 @@ function App() {
 
       <Route path="/emp-claimed-ot-management" element={<EmployeeLayout><ClaimedOTManagement /></EmployeeLayout>} />
       <Route path="/emp-issues" element={<EmployeeLayout><IssueManagement /></EmployeeLayout>} />
+
+       <Route path="/employee-visits-data" element={<EmployeeLayout><EmployeeVisitsData /></EmployeeLayout>} /> {/* ✅ Employee Visits Data - Employee Side */}
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"
@@ -490,6 +501,14 @@ function App() {
               <Route path="/company-ip" element={<CompanyIPManagement />} />
               <Route path="/qrcode" element={<QRScanner />} />
               <Route path="/employee-locations" element={<EmployeeLocations />} />
+
+
+                   <Route path="/visits-data" element={<VisitsData />} /> {/* ✅ New route for Visits Data (Admin) */}
+              <Route path="/total-visits" element={<TotalVisits />} /> {/* ✅ New route for Total Visits (Admin) */}
+              <Route path="/pending-visits" element={<PendingVisits />} /> {/* ✅ New route for Pending Visits (Admin) */}
+              <Route path="/leads" element={<Leads />} /> {/* ✅ New route for Leads (Admin) */}
+              <Route path="/rejected-visits" element={<RejectedVisits />} /> {/* ✅ New route for Rejected Visits (Admin) */}
+
 
            
            

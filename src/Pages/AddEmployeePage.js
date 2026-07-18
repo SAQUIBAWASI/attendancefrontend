@@ -10637,7 +10637,10 @@ import {
   FaSave,
   FaSpinner,
   FaUniversity,
-  FaUser
+  FaUser,
+  FaUsers,
+  FaBriefcase,
+  FaGraduationCap
 } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
@@ -10860,45 +10863,123 @@ const AddEmployeePage = () => {
     fetchSelectedCandidates();
   }, []);
 
+  // Fetch selected candidates from recruitment API
   const fetchSelectedCandidates = async () => {
     try {
       setFetchingCandidates(true);
-      // Using the user-specified API for selected candidates
-      const response = await axios.get("http://localhost:7000/api/applications/selected");
-      if (response.data.success || Array.isArray(response.data)) {
-        const candidates = Array.isArray(response.data) ? response.data : response.data.data || [];
+      const response = await axios.get("https://ingrainhirebackend.ingrainsystems.com/api/applications/selected");
+      if (response.data.success) {
+        const candidates = response.data.applications || [];
         setSelectedCandidates(candidates);
+        console.log("✅ Loaded candidates:", candidates.length);
+      } else {
+        console.warn("No candidates found in response");
+        setSelectedCandidates([]);
       }
     } catch (error) {
       console.error("Error fetching selected candidates:", error);
+      setErrorMessage("Failed to fetch candidates from recruitment");
+      setTimeout(() => setErrorMessage(""), 3000);
     } finally {
       setFetchingCandidates(false);
     }
   };
 
+  // Enhanced: Auto-fill from candidate data
   const handleCandidateSelect = (candidateId) => {
     setSelectedCandidateId(candidateId);
-    if (!candidateId) return;
+    if (!candidateId) {
+      resetFormForNewEntry();
+      return;
+    }
 
     const candidate = selectedCandidates.find(c => c._id === candidateId);
-    if (candidate) {
-      // Auto-fill fields based on candidate data
-      const fullName = candidate.name || candidate.fullName || "";
-      const nameParts = fullName.trim().split(' ');
-      setFirstName(nameParts[0] || "");
-      setLastName(nameParts.slice(1).join(' ') || "");
-      setEmail(candidate.email || "");
-      setPhone(candidate.phone || candidate.phoneNumber || "");
-      
-      // Optionally fill other fields if they exist in the candidate model
-      if (candidate.address) setAddressLine1(candidate.address);
-      if (candidate.dob) setDob(new Date(candidate.dob).toISOString().split('T')[0]);
-      
-      setEmailSuggestions([]);
-      setPhoneSuggestions([]);
-      setSuccessMessage(`Form pre-filled with ${fullName}'s details!`);
-      setTimeout(() => setSuccessMessage(""), 3000);
+    if (!candidate) {
+      setErrorMessage("Candidate not found");
+      return;
     }
+
+    console.log("📝 Auto-filling from candidate:", candidate);
+
+    // --- Extract data from candidate ---
+    const fullName = candidate.firstName && candidate.lastName 
+      ? `${candidate.firstName} ${candidate.lastName}`.trim()
+      : candidate.name || candidate.fullName || "";
+    
+    const nameParts = fullName.trim().split(' ');
+    const firstNameVal = nameParts[0] || "";
+    const lastNameVal = nameParts.slice(1).join(' ') || "";
+
+    // --- Auto-fill all fields ---
+    // 1. Basic Details
+    setFirstName(firstNameVal);
+    setLastName(lastNameVal);
+    setEmail(candidate.email || "");
+    setPhone(candidate.mobile || candidate.phone || "");
+    
+    // 2. Address
+    if (candidate.address) {
+      setAddressLine1(candidate.address);
+    }
+    if (candidate.currentLocation) {
+      // If address line 2 is empty, use current location
+      if (!candidate.address) setAddressLine1(candidate.currentLocation);
+    }
+    
+    // 3. Date of Birth - if available
+    if (candidate.dob) {
+      try {
+        const dobDate = new Date(candidate.dob);
+        if (!isNaN(dobDate.getTime())) {
+          setDob(dobDate.toISOString().split('T')[0]);
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    // 4. Office Details - Department & Role from job data
+    if (candidate.jobId) {
+      const jobRole = candidate.jobId.role || candidate.role || "";
+      if (jobRole) {
+        // Try to auto-set department based on role
+        const deptMap = {
+          'Marketing': ['Marketing', 'Business Development', 'Sales', 'Digital Marketing'],
+          'Operations': ['Operations', 'Business Operations', 'Admin'],
+          'Technology': ['Engineering', 'Development', 'IT', 'Technical'],
+          'Finance': ['Finance', 'Accounting', 'Audit'],
+          'HR': ['HR', 'Human Resources', 'Recruitment']
+        };
+        
+        const matchedDept = Object.keys(deptMap).find(dept => 
+          deptMap[dept].some(keyword => 
+            jobRole.toLowerCase().includes(keyword.toLowerCase())
+          )
+        );
+        
+        if (matchedDept) {
+          setDepartment(matchedDept);
+        }
+        
+        // Set role
+        setRole(jobRole);
+      }
+    }
+
+    // 5. Additional info if available
+    if (candidate.highestQualification) {
+      // Could be stored in a notes field if we had one
+    }
+
+    if (candidate.institution) {
+      // Could be stored in a notes field if we had one
+    }
+
+    // Clear suggestions
+    setEmailSuggestions([]);
+    setPhoneSuggestions([]);
+    
+    // Show success message
+    setSuccessMessage(`✅ Form auto-filled with ${fullName}'s details!`);
+    setTimeout(() => setSuccessMessage(""), 4000);
   };
 
   useEffect(() => {
@@ -10909,10 +10990,11 @@ const AddEmployeePage = () => {
     }
   }, [editingEmployee, shiftList]);
 
+  // Enhanced: Auto-search when phone number is entered
   useEffect(() => {
     if (!editingEmployee && phone.length === 10 && phone !== searchedPhone) {
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-      searchTimeoutRef.current = setTimeout(() => searchEmployeeByPhone(), 500);
+      searchTimeoutRef.current = setTimeout(() => searchEmployeeOrCandidateByPhone(), 500);
     }
     return () => { if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current); };
   }, [phone, editingEmployee]);
@@ -10999,7 +11081,8 @@ const AddEmployeePage = () => {
     }
   };
 
-  const searchEmployeeByPhone = async () => {
+  // Enhanced: Search in both employees AND candidates
+  const searchEmployeeOrCandidateByPhone = async () => {
     if (!phone || phone.length !== 10 || phone === searchedPhone) return;
     if (editingEmployee) return;
 
@@ -11008,17 +11091,37 @@ const AddEmployeePage = () => {
     setSearchedPhone(phone);
 
     try {
+      // 1. First check if it's a candidate from recruitment
+      const candidate = selectedCandidates.find(c => 
+        (c.mobile || c.phone) === phone
+      );
+      
+      if (candidate) {
+        console.log("🎯 Candidate found! Auto-filling...");
+        handleCandidateSelect(candidate._id);
+        setEmployeeFound(true);
+        setSearching(false);
+        return;
+      }
+
+      // 2. Then check existing employees
       const response = await axios.get(`${API_BASE_URL}/employees/get-employee-by-phone`, { params: { phone } });
       if (response.data.success) {
         loadEmployeeData(response.data.data);
         setEmployeeFound(true);
-        setSuccessMessage(`Employee found! Data loaded.`);
+        setSuccessMessage(`✅ Employee found! Data loaded.`);
+        setTimeout(() => setSuccessMessage(""), 3000);
       } else {
+        // 3. If not found, reset for new entry
         resetFormForNewEntry();
         setEmployeeFound(false);
+        setSuccessMessage(`📝 New candidate - please complete the form.`);
+        setTimeout(() => setSuccessMessage(""), 3000);
       }
     } catch (error) {
-      if (error.response?.status !== 404) setErrorMessage("Failed to search employee.");
+      if (error.response?.status !== 404) {
+        setErrorMessage("Failed to search. Please try again.");
+      }
       resetFormForNewEntry();
       setEmployeeFound(false);
     } finally {
@@ -11137,10 +11240,10 @@ const AddEmployeePage = () => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 10);
     setPhone(value);
     
-    // Update suggestions
+    // Update suggestions from candidates
     if (value.length > 2) {
       const candidateMatches = selectedCandidates.filter(c => 
-        (c.phone || c.phoneNumber || "").includes(value)
+        (c.mobile || c.phone || "").includes(value)
       ).map(c => ({ ...c, type: 'candidate' }));
 
       const employeeMatches = allEmployees.filter(emp => 
@@ -11152,9 +11255,9 @@ const AddEmployeePage = () => {
       setPhoneSuggestions([]);
     }
 
-    // Autofill from selected candidates if 10 digits
+    // Auto-fill if exact match found (10 digits)
     if (value.length === 10) {
-      const candidate = selectedCandidates.find(c => (c.phone || c.phoneNumber) === value);
+      const candidate = selectedCandidates.find(c => (c.mobile || c.phone) === value);
       if (candidate) {
         handleCandidateSelect(candidate._id);
         setPhoneSuggestions([]);
@@ -11183,7 +11286,7 @@ const AddEmployeePage = () => {
       setEmailSuggestions([]);
     }
 
-    // Autofill from selected candidates/employees if exact match found
+    // Auto-fill if exact match found
     if (value && value.includes('@')) {
       const candidate = selectedCandidates.find(c => c.email?.toLowerCase() === value.toLowerCase());
       if (candidate) {
@@ -11240,7 +11343,8 @@ const AddEmployeePage = () => {
         setShiftType(createShiftForm.shiftType.toUpperCase());
         setShowShiftModal(false);
         setCreateShiftForm({ shiftType: '', shiftName: '', timeRange: '', description: '' });
-        setSuccessMessage(`Shift created successfully!`);
+        setSuccessMessage(`✅ Shift created successfully!`);
+        setTimeout(() => setSuccessMessage(""), 3000);
       }
     } catch (error) { setErrorMessage(error.response?.data?.message || 'Failed to create shift'); }
   };
@@ -11254,6 +11358,8 @@ const AddEmployeePage = () => {
         setDepartment(deptForm.name);
         setShowDeptModal(false);
         setDeptForm({ name: '', description: '' });
+        setSuccessMessage(`✅ Department created successfully!`);
+        setTimeout(() => setSuccessMessage(""), 3000);
       }
     } catch (error) { setErrorMessage(error.response?.data?.message || 'Failed to create department'); }
   };
@@ -11267,6 +11373,8 @@ const AddEmployeePage = () => {
         setRole(roleForm.name);
         setShowRoleModal(false);
         setRoleForm({ name: '', description: '' });
+        setSuccessMessage(`✅ Role created successfully!`);
+        setTimeout(() => setSuccessMessage(""), 3000);
       }
     } catch (error) { setErrorMessage(error.response?.data?.message || 'Failed to create role'); }
   };
@@ -11284,6 +11392,8 @@ const AddEmployeePage = () => {
         if (newLocation?._id) setLocationId(newLocation._id);
         setShowLocationModal(false);
         setLocationForm({ name: '', latitude: '', longitude: '', fullAddress: '' });
+        setSuccessMessage(`✅ Location added successfully!`);
+        setTimeout(() => setSuccessMessage(""), 3000);
       }
     } catch (error) { setErrorMessage(error.response?.data?.message || 'Failed to add location'); }
   };
@@ -11341,7 +11451,7 @@ const AddEmployeePage = () => {
 
       if (response.data.success) {
         setShowIncrementSuccess(true);
-        setSuccessMessage(`✅ Salary increment applied successfully! New salary: ₹${response.data.employee?.salaryPerMonth?.toLocaleString() || 'Updated'}`);
+        setSuccessMessage(`✅ Salary increment applied successfully!`);
         
         setIncrementType("");
         setIncrementValue("");
@@ -11417,7 +11527,7 @@ const AddEmployeePage = () => {
           shiftHours: parseFloat(shiftHours) || 0, weekOffPerMonth: parseInt(weekOffsPerMonth) || 0,
         });
 
-        setSuccessMessage("Employee updated successfully!");
+        setSuccessMessage("✅ Employee updated successfully!");
       } else {
         await axios.post(`${API_BASE_URL}/employees/add-employee`, payload);
         
@@ -11431,7 +11541,7 @@ const AddEmployeePage = () => {
           weekOffPerMonth: parseInt(weekOffsPerMonth) || 0,
         });
 
-        setSuccessMessage("Employee added successfully!");
+        setSuccessMessage("✅ Employee added successfully!");
       }
 
       setTimeout(() => navigate("/employeelist"), 1500);
@@ -11478,7 +11588,7 @@ const AddEmployeePage = () => {
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               <div className="flex-1">
                 <label className="block mb-1 text-sm font-semibold text-blue-800">
-                  <FaUser className="inline mr-1" /> Autofill from Selected Candidates
+                  <FaUsers className="inline mr-1" /> Autofill from Selected Candidates
                 </label>
                 <select 
                   value={selectedCandidateId}
@@ -11489,25 +11599,30 @@ const AddEmployeePage = () => {
                   <option value="">-- Select a Candidate to Autofill --</option>
                   {selectedCandidates.map(can => (
                     <option key={can._id} value={can._id}>
-                      {can.name || can.fullName} ({can.email})
+                      {can.firstName || can.name} {can.lastName || ''} ({can.email})
                     </option>
                   ))}
                 </select>
               </div>
-              <div className="flex items-end">
+              <div className="flex items-end gap-2">
                 <button 
                   type="button"
                   onClick={fetchSelectedCandidates}
                   className="px-4 py-2.5 text-sm font-medium text-blue-700 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
                   disabled={fetchingCandidates}
                 >
-                  {fetchingCandidates ? <FaSpinner className="animate-spin inline mr-1" /> : "Refresh List"}
+                  {fetchingCandidates ? <FaSpinner className="animate-spin inline mr-1" /> : "🔄 Refresh"}
                 </button>
+                <span className="text-xs text-gray-500 hidden md:block">
+                  ({selectedCandidates.length} candidates)
+                </span>
               </div>
             </div>
-            <p className="mt-2 text-xs text-blue-600">
-              💡 Selecting a candidate will automatically fill their Name, Email, and Phone.
-            </p>
+            <div className="mt-2 text-xs text-blue-600 flex flex-wrap gap-2">
+              <span>💡 Enter phone number to auto-fill from recruitment</span>
+              <span className="hidden sm:inline">•</span>
+              <span>📋 Auto-fills: Name, Email, Phone, Address, Role</span>
+            </div>
           </div>
 
           
@@ -11530,37 +11645,39 @@ const AddEmployeePage = () => {
                     {/* Phone Suggestions Dropdown */}
                     {phoneSuggestions.length > 0 && (
                       <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-64 overflow-y-auto">
-                        {phoneSuggestions.map(can => (
+                        {phoneSuggestions.map((item) => (
                           <li 
-                            key={can._id} 
+                            key={item._id} 
                             onClick={() => {
-                              if (can.type === 'employee') {
-                                loadEmployeeData(can);
+                              if (item.type === 'employee') {
+                                loadEmployeeData(item);
                                 setEmployeeFound(true);
                                 setPhoneSuggestions([]);
                               } else {
-                                handleCandidateSelect(can._id);
+                                handleCandidateSelect(item._id);
                                 setPhoneSuggestions([]);
                               }
                             }}
                             className="px-4 py-3 cursor-pointer hover:bg-blue-50 border-b last:border-b-0 transition-colors"
                           >
                             <div className="flex justify-between items-start">
-                              <div className="font-bold text-blue-900 text-sm">{can.name || can.fullName}</div>
-                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${can.type === 'employee' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                                {can.type}
+                              <div className="font-bold text-blue-900 text-sm">
+                                {item.firstName || item.name} {item.lastName || ''}
+                              </div>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${item.type === 'employee' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                {item.type}
                               </span>
                             </div>
                             <div className="text-xs text-gray-600">
-                              {can.phone || can.phoneNumber} | {can.email || 'No email'}
-                              {can.employeeId && ` | ID: ${can.employeeId}`}
+                              {item.mobile || item.phone} | {item.email || 'No email'}
+                              {item.employeeId && ` | ID: ${item.employeeId}`}
                             </div>
                           </li>
                         ))}
                       </ul>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">Enter 10 digits to search existing employee</p>
+                  <p className="mt-1 text-xs text-gray-500">Enter 10 digits to search candidate or employee</p>
                 </div>
                 <div><label className="block mb-1 text-sm font-medium text-gray-700">Alternate Number</label><input value={alternateNumber} onChange={(e) => setAlternateNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
                 <div><label className="block mb-1 text-sm font-medium text-gray-700">Parents Name</label><input value={parentsName} onChange={(e) => setParentsName(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" /></div>
@@ -11577,29 +11694,31 @@ const AddEmployeePage = () => {
                     {/* Email Suggestions Dropdown */}
                     {emailSuggestions.length > 0 && (
                       <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-64 overflow-y-auto">
-                        {emailSuggestions.map(can => (
+                        {emailSuggestions.map((item) => (
                           <li 
-                            key={can._id} 
+                            key={item._id} 
                             onClick={() => {
-                              if (can.type === 'employee') {
-                                loadEmployeeData(can);
+                              if (item.type === 'employee') {
+                                loadEmployeeData(item);
                                 setEmployeeFound(true);
                                 setEmailSuggestions([]);
                               } else {
-                                handleCandidateSelect(can._id);
+                                handleCandidateSelect(item._id);
                                 setEmailSuggestions([]);
                               }
                             }}
                             className="px-4 py-3 cursor-pointer hover:bg-blue-50 border-b last:border-b-0 transition-colors"
                           >
                             <div className="flex justify-between items-start">
-                              <div className="font-bold text-blue-900 text-sm">{can.name || can.fullName}</div>
-                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${can.type === 'employee' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                                {can.type}
+                              <div className="font-bold text-blue-900 text-sm">
+                                {item.firstName || item.name} {item.lastName || ''}
+                              </div>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${item.type === 'employee' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                {item.type}
                               </span>
                             </div>
                             <div className="text-xs text-gray-600">
-                              {can.email} | {can.phone || can.phoneNumber}
+                              {item.email} | {item.mobile || item.phone}
                             </div>
                           </li>
                         ))}
@@ -11649,8 +11768,22 @@ const AddEmployeePage = () => {
                 <div><label className="block mb-1 text-sm text-gray-700">Join Date *</label><input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required /></div>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div><label className="block mb-1 text-sm text-gray-700">Department *</label><select value={department} onChange={(e) => e.target.value === "ADD_NEW_DEPT" ? setShowDeptModal(true) : setDepartment(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required><option value="">Select Department</option>{departments.map(dept => <option key={dept.name} value={dept.name}>{dept.name}</option>)}<option value="ADD_NEW_DEPT" className="text-blue-600">+ Add New</option></select></div>
-                <div><label className="block mb-1 text-sm text-gray-700">Role *</label><select value={role} onChange={(e) => e.target.value === "ADD_NEW_ROLE" ? setShowRoleModal(true) : setRole(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required><option value="">Select Role</option>{roles.map(r => <option key={r.name} value={r.name}>{r.name}</option>)}<option value="ADD_NEW_ROLE" className="text-blue-600">+ Add New</option></select></div>
+                <div>
+                  <label className="block mb-1 text-sm text-gray-700">Department *</label>
+                  <select value={department} onChange={(e) => e.target.value === "ADD_NEW_DEPT" ? setShowDeptModal(true) : setDepartment(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required>
+                    <option value="">Select Department</option>
+                    {departments.map(dept => <option key={dept.name} value={dept.name}>{dept.name}</option>)}
+                    <option value="ADD_NEW_DEPT" className="text-blue-600">+ Add New</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block mb-1 text-sm text-gray-700">Role *</label>
+                  <select value={role} onChange={(e) => e.target.value === "ADD_NEW_ROLE" ? setShowRoleModal(true) : setRole(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required>
+                    <option value="">Select Role</option>
+                    {roles.map(r => <option key={r.name} value={r.name}>{r.name}</option>)}
+                    <option value="ADD_NEW_ROLE" className="text-blue-600">+ Add New</option>
+                  </select>
+                </div>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div><label className="block mb-1 text-sm text-gray-700">Work Location *</label><select value={locationId} onChange={(e) => e.target.value === "ADD_NEW_LOCATION" ? setShowLocationModal(true) : setLocationId(e.target.value)} className="w-full p-2.5 border rounded-lg text-gray-900" required><option value="">Select Location</option>{locations.map(loc => <option key={loc._id} value={loc._id}>{loc.name}</option>)}<option value="ADD_NEW_LOCATION" className="text-blue-600">+ Add New</option></select></div>
@@ -11809,6 +11942,7 @@ const AddEmployeePage = () => {
                                 <span className="ml-1 text-gray-900">{slot.description}</span>
                               </div>
                               <div>
+
                                 <span className="text-gray-500">Slot:</span>
                                 <span className="ml-1 text-gray-900">{idx + 1}</span>
                               </div>
@@ -11976,7 +12110,7 @@ const AddEmployeePage = () => {
         </form>
       </div>
 
-      {/* MODALS */}
+      {/* MODALS - Keep existing modals unchanged */}
       {showShiftModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white ">
           <div className="w-full max-w-md bg-white rounded-lg shadow-xl">
