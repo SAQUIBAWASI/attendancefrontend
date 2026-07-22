@@ -228,6 +228,8 @@ import VisitsData from "./Pages/VisitsData.js";
 import TotalVisits from "./Pages/TotalVisits.js"
 import PendingVisits from "./Pages/PendingVisits.js";
 import Leads from "./Pages/Leads.js"
+import RelievingLetters from "./Pages/RelievingLetters.jsx";
+import LettersSection from "./Pages/LettersSection.jsx";
 
 
 
@@ -330,6 +332,7 @@ function App() {
       <Route path="/emp-issues" element={<EmployeeLayout><IssueManagement /></EmployeeLayout>} />
 
        <Route path="/employee-visits-data" element={<EmployeeLayout><EmployeeVisitsData /></EmployeeLayout>} /> {/* ✅ Employee Visits Data - Employee Side */}
+       <Route path="/relieving-letters" element={<EmployeeLayout><RelievingLetters /></EmployeeLayout>} /> {/* ✅ Relieving Letters - Employee Side */}
       {/* All other routes inside AdminLayout */}
       <Route
         path="/*"
@@ -508,6 +511,7 @@ function App() {
               <Route path="/pending-visits" element={<PendingVisits />} /> {/* ✅ New route for Pending Visits (Admin) */}
               <Route path="/leads" element={<Leads />} /> {/* ✅ New route for Leads (Admin) */}
               <Route path="/rejected-visits" element={<RejectedVisits />} /> {/* ✅ New route for Rejected Visits (Admin) */}
+              <Route path="/letters-section" element={<LettersSection />} />
 
 
            

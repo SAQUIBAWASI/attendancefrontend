@@ -6448,7 +6448,7 @@ const PayRoll = () => {
     }
   };
 
-  const generateInvoiceHTML = (employee) => {
+ const generateInvoiceHTML = (employee) => {
   const employeeData = getEmployeeData(employee);
 
   if (!employeeData.salaryPerMonth || employeeData.salaryPerMonth === 0) {
@@ -6617,10 +6617,12 @@ const PayRoll = () => {
     return str.trim();
   };
 
-  // 🔥 FIX: Convert base64 images to inline properly for print
   // Get logo and stamp as data URLs with proper formatting
   const logoData = templateConfig.logo || logo;
   const stampData = companyStamp;
+
+  // 🔥 UPDATED: New company address
+  const companyAddress = `Timely Healthtech Private Limited<br>Reg. Address: Flat No:301, H.No:1-68/22, Plot No. 54 & 55, Sri Sai Balaji Avenue, Arunodaya Colony, Madhapur, Hyderabad, Telangana-500081`;
 
   return `
     <!DOCTYPE html>
@@ -6699,6 +6701,12 @@ const PayRoll = () => {
             align-items: flex-end;
             gap: 4px;
           }
+          .company-address {
+            font-size: 7px;
+            color: #555;
+            line-height: 1.4;
+            margin-top: 2px;
+          }
           @media print {
             body { padding: 10px; }
             .invoice-container { border: 1px solid #000; }
@@ -6723,8 +6731,10 @@ const PayRoll = () => {
                     <img src="${logoData}" alt="Logo" class="logo-image" style="height: 80px; width: auto; max-width: 200px; object-fit: contain;">
                   </div>
                   <div style="flex: 1; text-align: center; padding: 0 10px;">
-                    <h2 style="margin: 0; font-size: 16px; font-weight: bold;">${templateConfig.companyName}</h2>
-                    <p style="margin: 2px 0 0; font-size: 8px; white-space: pre-wrap;">${templateConfig.address}</p>
+                    <h2 style="margin: 0; font-size: 16px; font-weight: bold;">Timely Healthtech Private Limited</h2>
+                    <p style="margin: 2px 0 0; font-size: 7px; line-height: 1.4; color: #555;">
+                      Reg. Address: Flat No:301, H.No:1-68/22, Plot No. 54 & 55, Sri Sai Balaji Avenue, Arunodaya Colony, Madhapur, Hyderabad, Telangana-500081
+                    </p>
                   </div>
                   <div style="width: 200px; flex-shrink: 0;"></div>
                 </div>
@@ -6805,7 +6815,7 @@ const PayRoll = () => {
               <img src="${stampData}" alt="Company Stamp" class="stamp-image" style="width: 90px; height: auto; opacity: 0.8;">
               <div style="text-align: right; line-height: 1.2;">
                 <strong style="font-size: 7px; color: #333; display: block;">Authorized Signatory</strong>
-                <span style="font-size: 6px; color: #555; display: block;">Timely Health Tech Pvt Ltd</span>
+                <span style="font-size: 6px; color: #555; display: block;">Timely Healthtech Private Limited</span>
               </div>
             </div>
           </div>

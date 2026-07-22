@@ -1736,7 +1736,8 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/qrcode": "QR Scanner",
       "/company-ip": "Company IP",
       "/my-products": "My Products",
-      "/visits-data": "Visit Data"  // ✅ Added for visits data page
+      "/visits-data": "Visit Data", // ✅ Added for visits data page
+      "/letters-section": "Reliving Letters",
     };
     return pathMap[path] || "Dashboard";
   };
@@ -1898,6 +1899,11 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       icon: <i className="ri-user-unfollow-line"></i>,
       name: "Resignation",
       path: "/employee-resignation",
+    },
+    {
+      icon: <i className="ri-file-paper-2-line"></i>,
+      name: "Relieving Letters",
+      path: "/letters-section",
     },
     {
       icon: <i className="ri-money-dollar-box-fill"></i>,
@@ -2161,13 +2167,12 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
               {item.dropdown ? (
                 <>
                   <div
-                    className={`group flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer sidebar-item ${
-                      isDropdownActive(item.dropdown)
+                    className={`group flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer sidebar-item ${isDropdownActive(item.dropdown)
                         ? "active-gradient text-white"
                         : openDropdown === item.name
                           ? "bg-indigo-50/80 text-[#1E3A8A] border border-indigo-100/50"
                           : "text-gray-600 hover:bg-blue-50/80 hover:text-[#175cd3] hover:shadow-sm"
-                    }`}
+                      }`}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (item.dropdown && item.dropdown.length > 0) {
@@ -2186,23 +2191,21 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                     }}
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className={`text-base transition-colors duration-200 ${
-                        isDropdownActive(item.dropdown)
+                      <span className={`text-base transition-colors duration-200 ${isDropdownActive(item.dropdown)
                           ? "text-white"
                           : openDropdown === item.name
                             ? "text-[#175cd3]"
                             : "text-gray-500 group-hover:text-[#175cd3]"
-                      }`}>
+                        }`}>
                         {item.icon}
                       </span>
                       {!isCollapsed && (
-                        <span className={`text-[13px] font-medium leading-tight ${
-                          isDropdownActive(item.dropdown)
+                        <span className={`text-[13px] font-medium leading-tight ${isDropdownActive(item.dropdown)
                             ? "text-white"
                             : openDropdown === item.name
                               ? "text-[#1E3A8A]"
                               : "text-gray-700"
-                        }`}>
+                          }`}>
                           {item.name}
                         </span>
                       )}
@@ -2215,13 +2218,12 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                         )}
                         <FaChevronDown
                           onClick={(e) => toggleDropdown(e, item.name)}
-                          className={`text-[10px] transition-transform duration-300 cursor-pointer ${
-                            isDropdownActive(item.dropdown)
+                          className={`text-[10px] transition-transform duration-300 cursor-pointer ${isDropdownActive(item.dropdown)
                               ? "text-white"
                               : openDropdown === item.name
                                 ? "text-[#175cd3]"
                                 : "text-gray-400"
-                          } ${openDropdown === item.name ? "rotate-180" : ""}`}
+                            } ${openDropdown === item.name ? "rotate-180" : ""}`}
                           style={{
                             width: '16px',
                             height: '16px',
@@ -2240,15 +2242,13 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                         <li key={i}>
                           <div
                             onClick={() => handleDropdownItemClick(sub)}
-                            className={`block py-1 px-2 text-[12px] transition-all duration-200 rounded-lg cursor-pointer ${
-                              sub.external 
-                                ? "text-purple-600 hover:text-purple-800 hover:bg-purple-50/50" 
+                            className={`block py-1 px-2 text-[12px] transition-all duration-200 rounded-lg cursor-pointer ${sub.external
+                                ? "text-purple-600 hover:text-purple-800 hover:bg-purple-50/50"
                                 : ""
-                            } ${
-                              isActive(sub.path) && !sub.external
+                              } ${isActive(sub.path) && !sub.external
                                 ? "text-[#175cd3] font-semibold bg-blue-50/50"
                                 : "text-gray-600 hover:text-[#175cd3] hover:bg-blue-50/50"
-                            }`}
+                              }`}
                             style={{ textDecoration: 'none' }}
                           >
                             <div className="flex items-center gap-2">
@@ -2293,32 +2293,29 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                       onLinkClick();
                     }
                   }}
-                  className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg cursor-pointer sidebar-item ${
-                    item.isExternal 
+                  className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg cursor-pointer sidebar-item ${item.isExternal
                       ? "external-glow text-white hover:shadow-lg hover:scale-[1.02]"
                       : isActive(item.path)
                         ? "active-gradient text-white shadow-md"
                         : "text-gray-600 hover:bg-blue-50/80 hover:text-[#175cd3] hover:shadow-sm"
-                  }`}
+                    }`}
                 >
-                  <span className={`text-base transition-all duration-200 ${
-                    item.isExternal
+                  <span className={`text-base transition-all duration-200 ${item.isExternal
                       ? "text-white"
                       : isActive(item.path)
                         ? "text-white"
                         : "text-gray-500 group-hover:text-[#175cd3] group-hover:scale-110"
-                  }`}>
+                    }`}>
                     {item.icon}
                   </span>
                   {!isCollapsed && (
                     <div className="flex items-center flex-1 min-w-0 gap-1.5">
-                      <span className={`text-[13px] font-medium leading-tight truncate ${
-                        item.isExternal
+                      <span className={`text-[13px] font-medium leading-tight truncate ${item.isExternal
                           ? "text-white"
-                          : isActive(item.path) 
-                            ? "text-white" 
+                          : isActive(item.path)
+                            ? "text-white"
                             : "text-gray-700"
-                      }`}>
+                        }`}>
                         {item.name}
                       </span>
                       {item.isExternal && (
@@ -2330,9 +2327,8 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                         </>
                       )}
                       {item.badge && (
-                        <span className={`px-1.5 py-0.5 text-[7px] font-bold bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-full shadow-md ${
-                          item.blink ? 'badge-pulse' : ''
-                        }`}>
+                        <span className={`px-1.5 py-0.5 text-[7px] font-bold bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-full shadow-md ${item.blink ? 'badge-pulse' : ''
+                          }`}>
                           {item.badge}
                         </span>
                       )}

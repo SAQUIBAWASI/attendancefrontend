@@ -80,7 +80,8 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       "/emp-events": "Events",
       "/emp-issues": "Issues",
       "/emp-tasks": "Tasks",
-      "/employee-visits-data": "My Visits"  // ✅ Added for visits page
+      "/employee-visits-data": "My Visits", // ✅ Added for visits page
+      "/relieving-letters": "Relieving Letters"
     };
     return pathMap[path] || "Dashboard";
   };
@@ -386,6 +387,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         isExternal: true,
         badge: "HIRE"
       },
+       {icon: <i className="ri-file-paper-2-line"></i>,name: "Relieving Letters",path: "/relieving-letters"},
       // ✅ My Visits - Employee Side
       { 
         icon: <i className="ri-map-pin-user-fill"></i>, 

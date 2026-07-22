@@ -55,7 +55,7 @@ const EmployeeLetters = () => {
         }
     };
 
-    const docTypes = ["Offer", "Warning", "Appraisal", "Termination", "Resignation"];
+    const docTypes = ["Offer", "Experience", "Relieving", "Warning", "Appraisal", "Termination", "Resignation"];
 
     const sectionConfigs = {
         "Offer": {
@@ -87,6 +87,26 @@ const EmployeeLetters = () => {
             calIcon: "text-purple-400",
             icon: FaFilePdf,
             label: "Appraisal Letters"
+        },
+        "Experience": {
+            bg: "bg-indigo-600",
+            lightBg: "bg-indigo-50",
+            text: "text-indigo-600",
+            border: "border-indigo-100",
+            iconText: "text-indigo-500",
+            calIcon: "text-indigo-400",
+            icon: FaFilePdf,
+            label: "Experience Letters"
+        },
+        "Relieving": {
+            bg: "bg-sky-600",
+            lightBg: "bg-sky-50",
+            text: "text-sky-600",
+            border: "border-sky-100",
+            iconText: "text-sky-500",
+            calIcon: "text-sky-400",
+            icon: FaFilePdf,
+            label: "Relieving Letters"
         },
         "Warning": {
             bg: "bg-orange-600",
@@ -317,6 +337,8 @@ const EmployeeLetters = () => {
         switch (t) {
             case "offer": return "bg-blue-50 text-blue-700 border-blue-200";
             case "appointment": return "bg-blue-100 text-emerald-800 border-emerald-200";
+            case "experience": return "bg-indigo-100 text-indigo-800 border-indigo-200";
+            case "relieving": return "bg-sky-100 text-sky-800 border-sky-200";
             case "appraisal": return "bg-purple-100 text-purple-800 border-purple-200";
             case "warning": return "bg-orange-100 text-orange-800 border-orange-200";
             case "termination": return "bg-rose-100 text-rose-800 border-rose-200";
@@ -603,7 +625,7 @@ ${employeeName}`;
                         )}
                     </div>
                 )}
-            
+
 
             {/* DOCUMENT VIEWER MODAL */}
             {isModalOpen && selectedOffer && (

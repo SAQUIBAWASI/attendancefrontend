@@ -1010,6 +1010,62 @@ import {
 
 const API_BASE_URL = "https://api.timelyhealth.in/api";
 
+// ─── Bold & Vibrant Color Palette ───
+const COLORS = [
+  '#FF1744', // Bright Red
+  '#D500F9', // Deep Purple
+  '#2979FF', // Bright Blue
+  '#00E676', // Neon Green
+  '#FF9100', // Deep Orange
+  '#00BCD4', // Cyan
+  '#F50057', // Pink
+  '#76FF03', // Lime Green
+  '#FFD600', // Yellow
+  '#651FFF', // Deep Indigo
+  '#FF3D00', // Orange Red
+  '#00BFA5', // Teal
+  '#E040FB', // Light Purple
+  '#FF6D00', // Amber
+  '#00E5FF', // Light Blue
+  '#F44336', // Red
+  '#7C4DFF', // Violet
+  '#00C853', // Green
+  '#FF4081', // Pink
+  '#40C4FF', // Sky Blue
+  '#FFAB00', // Gold
+  '#6D4C41', // Brown
+  '#D50000', // Dark Red
+  '#6200EA', // Dark Purple
+  '#2962FF', // Dark Blue
+  '#00BFA5', // Teal
+  '#DD2C00', // Vermilion
+  '#C51162', // Dark Pink
+  '#01579B', // Dark Cyan
+  '#1B5E20', // Dark Green
+  '#E65100', // Dark Orange
+];
+
+// ─── Employee Color Mapping ───
+const getEmployeeColor = (name) => {
+  if (!name) return '#2979FF';
+  
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % COLORS.length;
+  return COLORS[index];
+};
+
+// ─── Get color with opacity for gradients ───
+const getColorWithOpacity = (color, opacity) => {
+  const hex = color.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
+
 const AttendanceDashboard = () => {
   const [attendanceData, setAttendanceData] = useState(null);
   const [allAttendance, setAllAttendance] = useState([]);
@@ -1051,7 +1107,6 @@ const AttendanceDashboard = () => {
     reactNavigate(path);
   };
 
-  // ─── Helper function to get credentials from localStorage ───
   const getCredentials = () => {
     const userRole = localStorage.getItem('userRole');
     let email = '', password = '';
@@ -1073,7 +1128,6 @@ const AttendanceDashboard = () => {
     return { email, password, userRole };
   };
 
-  // ─── Function to handle Hire external link with auto-login ───
   const handleHireClick = () => {
     const { email, password, userRole } = getCredentials();
     
@@ -1218,16 +1272,6 @@ const AttendanceDashboard = () => {
 
   const activeEmployees = employees.filter(emp => !isEmployeeHidden(emp));
 
-  const getAttendanceColor = (count, max) => {
-    const percentage = (count / max) * 100;
-    if (percentage >= 90) return '#10b981';
-    if (percentage >= 75) return '#84cc16';
-    if (percentage >= 50) return '#EF4444';
-    if (percentage >= 25) return '#DC2626';
-    return '#ef4444';
-  };
-
-  // Process data for Cosmos Graph (Radial Bar Chart)
   const processAttendanceData = () => {
     if (!Array.isArray(allAttendance)) return [];
 
@@ -1251,20 +1295,25 @@ const AttendanceDashboard = () => {
     });
 
     const result = Object.entries(counts)
-      .map(([id, count]) => ({
-        id,
-        name: getEmployeeName(id),
-        count
-      }))
+      .map(([id, count]) => {
+        const name = getEmployeeName(id);
+        const color = getEmployeeColor(name);
+        return {
+          id,
+          name,
+          count,
+          color: color,
+          fill: color,
+          opacity: 0.9
+        };
+      })
       .sort((a, b) => b.count - a.count)
       .slice(0, 8);
 
-    const maxCount = Math.max(...result.map(item => item.count), 1);
-
     return result.map((item, index) => ({
       ...item,
-      fill: ['#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe', '#f59e0b', '#fbbf24', '#fcd34d'][index % 8],
-      color: ['#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe', '#f59e0b', '#fbbf24', '#fcd34d'][index % 8]
+      fill: item.color,
+      color: item.color
     }));
   };
 
@@ -1293,8 +1342,9 @@ const AttendanceDashboard = () => {
           const diffMs = checkInDateTime - graceTime;
           const lateMinutes = Math.floor(diffMs / (1000 * 60));
           const name = getEmployeeName(id);
+          const color = getEmployeeColor(name);
           const label = `${name}`;
-          lateMap[label] = { name: label, value: lateMinutes, type: 'minutes' };
+          lateMap[label] = { name: label, value: lateMinutes, type: 'minutes', color: color };
         }
       });
       return Object.values(lateMap).sort((a, b) => b.value - a.value);
@@ -1330,36 +1380,11 @@ const AttendanceDashboard = () => {
     });
 
     return Object.entries(lateCounts)
-      .map(([name, count]) => ({ name, value: count, type: 'days' }))
+      .map(([name, count]) => {
+        const color = getEmployeeColor(name);
+        return { name, value: count, type: 'days', color: color };
+      })
       .sort((a, b) => b.value - a.value);
-  };
-
-  const COLORS = [
-    '#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe',
-    '#f59e0b', '#fbbf24', '#fcd34d', '#fde68a', '#fef3c7',
-    '#10b981', '#34d399', '#6ee7b7', '#a7f3d0', '#d1fae5'
-  ];
-
-  const getLateMinutesColor = (minutes) => {
-    if (minutes <= 5) return '#34D399';
-    if (minutes <= 10) return '#10B981';
-    if (minutes <= 20) return '#059669';
-    if (minutes <= 30) return '#6366F1';
-    if (minutes <= 40) return '#06B6D4';
-    if (minutes <= 50) return '#FBBF24';
-    if (minutes <= 60) return '#F59E0B';
-    return '#EF4444';
-  };
-
-  const getAbsentColor = (daysSince) => {
-    if (daysSince <= 1) return '#34D399';
-    if (daysSince <= 3) return '#10B981';
-    if (daysSince <= 5) return '#059669';
-    if (daysSince <= 7) return '#6366F1';
-    if (daysSince <= 10) return '#06B6D4';
-    if (daysSince <= 14) return '#FBBF24';
-    if (daysSince <= 21) return '#F59E0B';
-    return '#EF4444';
   };
 
   const processAbsentAnalysisData = () => {
@@ -1405,11 +1430,12 @@ const AttendanceDashboard = () => {
             daysSince = Math.floor(diffTime / (1000 * 60 * 60 * 24));
           }
 
+          const color = getEmployeeColor(emp.name);
           absentData.push({
             name: `${emp.name}`,
             value: Math.max(0, daysSince),
             type: 'daysSince',
-            color: getAbsentColor(daysSince)
+            color: color
           });
         }
       });
@@ -1446,18 +1472,19 @@ const AttendanceDashboard = () => {
 
     const results = Object.values(absentCounts).map(emp => {
       const absentDays = Math.max(0, daysToCount - emp.present);
+      const color = getEmployeeColor(emp.name);
       return {
         name: emp.name,
         value: absentDays,
         type: 'absentDays',
-        color: getAttendanceColor(emp.present, daysToCount)
+        color: color,
+        fill: color
       };
     }).filter(r => r.value > 0).sort((a, b) => b.value - a.value).slice(0, 15);
 
     return results;
   };
 
-  // Process data for Line Graph (Most Late Comings)
   const processTopLateComersData = () => {
     const [year, month] = topLateMonth ? topLateMonth.split('-').map(Number) : [null, null];
     const lateCounts = {};
@@ -1488,11 +1515,16 @@ const AttendanceDashboard = () => {
     });
 
     return Object.entries(lateCounts)
-      .map(([id, count]) => ({
-        id,
-        name: getEmployeeName(id),
-        count
-      }))
+      .map(([id, count]) => {
+        const name = getEmployeeName(id);
+        const color = getEmployeeColor(name);
+        return {
+          id,
+          name,
+          count,
+          color: color
+        };
+      })
       .sort((a, b) => b.count - a.count) 
       .slice(0, 10); 
   };
@@ -1577,7 +1609,6 @@ const AttendanceDashboard = () => {
   const absentToday = calculateAbsentCount(new Date().toISOString().split('T')[0]);
   const lateToday = calculateLateCount(new Date().toISOString().split('T')[0]);
 
-  // Tooltip for Cosmos Graph
   const CosmosTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -1592,7 +1623,6 @@ const AttendanceDashboard = () => {
     return null;
   };
 
-  // Tooltip for Line Graph
   const LineTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -1639,7 +1669,6 @@ const AttendanceDashboard = () => {
   return (
     <div className="admin-dash">
       <main>
-        {/* Header with Hire & Employee Location Buttons */}
         <div className="admin-dash__header">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="admin-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap leading-tight">
@@ -1647,7 +1676,6 @@ const AttendanceDashboard = () => {
             </h1>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
-            {/* ─── EMPLOYEE LOCATION BUTTON ─── */}
             <button
               onClick={() => navigate("/employee-locations")}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white text-xs font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-emerald-700 hover:to-emerald-600 transition-all duration-300 border border-emerald-400/30"
@@ -1656,7 +1684,6 @@ const AttendanceDashboard = () => {
               <span>Employee Location</span>
             </button>
 
-            {/* ─── HIRE BUTTON ─── */}
             <button
               onClick={handleHireClick}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-xs font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-purple-700 hover:to-purple-600 transition-all duration-300 border border-purple-400/30"
@@ -1680,7 +1707,6 @@ const AttendanceDashboard = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
         <div className="admin-dash__stats">
           <div className="admin-dash__stat" onClick={() => navigate("/employeelist")}>
             <div className="admin-dash__stat-top">
@@ -1734,9 +1760,7 @@ const AttendanceDashboard = () => {
           </div>
         </div>
 
-        {/* Charts Grid */}
         <div className="admin-dash__charts-grid">
-          {/* Attendance Performance - Cosmos Graph (Radial Bar Chart) */}
           <div className="admin-dash__card admin-dash__chart-wrap">
             <div className="admin-dash__card-header">
               <div>
@@ -1766,12 +1790,15 @@ const AttendanceDashboard = () => {
                     endAngle={-180}
                   >
                     <defs>
-                      {attendanceChartData.map((entry, index) => (
-                        <linearGradient key={`grad-${index}`} id={`grad-${index}`} x1="0" y1="0" x2="1" y2="1">
-                          <stop offset="0%" stopColor={entry.color} stopOpacity={0.9}/>
-                          <stop offset="100%" stopColor={entry.color} stopOpacity={0.3}/>
-                        </linearGradient>
-                      ))}
+                      {attendanceChartData.map((entry, index) => {
+                        const color = entry.color || '#2979FF';
+                        return (
+                          <linearGradient key={`grad-${index}`} id={`grad-${index}`} x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor={color} stopOpacity={0.95}/>
+                            <stop offset="100%" stopColor={color} stopOpacity={0.5}/>
+                          </linearGradient>
+                        );
+                      })}
                     </defs>
                     <PolarAngleAxis 
                       type="number" 
@@ -1791,20 +1818,24 @@ const AttendanceDashboard = () => {
                         <Cell 
                           key={`cell-${index}`} 
                           fill={`url(#grad-${index})`}
-                          stroke={entry.color}
-                          strokeWidth={2}
+                          stroke={entry.color || '#2979FF'}
+                          strokeWidth={3}
                         />
                       ))}
                     </RadialBar>
                     <Tooltip content={<CosmosTooltip />} />
                     <Legend
-                      iconSize={10}
+                      iconSize={12}
                       width={120}
                       height={140}
                       layout="vertical"
                       verticalAlign="middle"
                       align="right"
-                      wrapperStyle={{ fontSize: '10px' }}
+                      wrapperStyle={{ fontSize: '11px', fontWeight: '600' }}
+                      formatter={(value, entry) => {
+                        const color = entry?.payload?.color || '#2979FF';
+                        return <span style={{ color: color, fontWeight: '700' }}>{value}</span>;
+                      }}
                     />
                   </RadialBarChart>
                 </ResponsiveContainer>
@@ -1814,7 +1845,6 @@ const AttendanceDashboard = () => {
             </div>
           </div>
 
-          {/* Most Late Comings - Line Graph */}
           <div className="admin-dash__card admin-dash__chart-wrap">
             <div className="admin-dash__card-header">
               <div>
@@ -1845,22 +1875,26 @@ const AttendanceDashboard = () => {
                     margin={{ top: 20, right: 20, left: 0, bottom: 10 }}
                   >
                     <defs>
-                      <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#6366f1" stopOpacity={0.8}/>
-                        <stop offset="50%" stopColor="#8b5cf6" stopOpacity={0.8}/>
-                        <stop offset="100%" stopColor="#a78bfa" stopOpacity={0.8}/>
-                      </linearGradient>
+                      {lateComersData.map((entry, index) => {
+                        const color = entry.color || '#2979FF';
+                        return (
+                          <linearGradient key={`line-grad-${index}`} id={`line-grad-${index}`} x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor={color} stopOpacity={0.9}/>
+                            <stop offset="100%" stopColor={color} stopOpacity={0.9}/>
+                          </linearGradient>
+                        );
+                      })}
                       <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#6366f1" stopOpacity={0.3}/>
-                        <stop offset="100%" stopColor="#6366f1" stopOpacity={0.02}/>
+                        <stop offset="0%" stopColor="#2979FF" stopOpacity={0.3}/>
+                        <stop offset="100%" stopColor="#2979FF" stopOpacity={0.02}/>
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                     <XAxis
-                      dataKey="id"
+                      dataKey="name"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 10 }}
+                      tick={{ fill: "#64748b", fontSize: 10, fontWeight: '600' }}
                       angle={-25}
                       textAnchor="end"
                       interval={0}
@@ -1869,12 +1903,11 @@ const AttendanceDashboard = () => {
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 10 }}
+                      tick={{ fill: "#64748b", fontSize: 10, fontWeight: '600' }}
                       allowDecimals={false}
                     />
                     <Tooltip content={<LineTooltip />} cursor={{ fill: '#f8fafc', opacity: 0.6 }} />
                     
-                    {/* Area under the line */}
                     <Area
                       type="monotone"
                       dataKey="count"
@@ -1884,39 +1917,58 @@ const AttendanceDashboard = () => {
                       animationEasing="ease-out"
                     />
                     
-                    {/* Main Line */}
                     <Line
                       type="monotone"
                       dataKey="count"
-                      stroke="url(#lineGrad)"
+                      stroke="#2979FF"
                       strokeWidth={3}
-                      dot={{ 
-                        fill: '#6366f1', 
-                        r: 6, 
-                        stroke: 'white', 
-                        strokeWidth: 2,
-                        style: { transition: 'all 0.3s ease' }
+                      dot={(props) => {
+                        const { cx, cy, payload } = props;
+                        const color = payload?.color || '#2979FF';
+                        return (
+                          <circle
+                            cx={cx}
+                            cy={cy}
+                            r={7}
+                            fill={color}
+                            stroke="white"
+                            strokeWidth={3}
+                            style={{ transition: 'all 0.3s ease' }}
+                          />
+                        );
                       }}
-                      activeDot={{ r: 8, fill: '#8b5cf6' }}
+                      activeDot={(props) => {
+                        const { cx, cy, payload } = props;
+                        const color = payload?.color || '#2979FF';
+                        return (
+                          <circle
+                            cx={cx}
+                            cy={cy}
+                            r={10}
+                            fill={color}
+                            stroke="white"
+                            strokeWidth={3}
+                          />
+                        );
+                      }}
                       animationDuration={1500}
                       animationEasing="ease-out"
                     />
                     
-                    {/* Reference Line (Average) */}
                     <Line
                       type="monotone"
                       dataKey="count"
-                      stroke="#f59e0b"
-                      strokeWidth={1.5}
-                      strokeDasharray="5 5"
+                      stroke="#FF6D00"
+                      strokeWidth={2}
+                      strokeDasharray="6 4"
                       dot={false}
                       activeDot={false}
                       label={{
                         value: 'Avg',
                         position: 'right',
-                        fill: '#f59e0b',
-                        fontSize: 10,
-                        fontWeight: 600
+                        fill: '#FF6D00',
+                        fontSize: 11,
+                        fontWeight: 700
                       }}
                     />
                   </ComposedChart>
@@ -1930,9 +1982,7 @@ const AttendanceDashboard = () => {
           </div>
         </div>
 
-        {/* Late & Absent Analysis - Pie Charts */}
         <div className="admin-dash__charts-grid">
-          {/* Late Analysis - Pie Chart */}
           <div className="admin-dash__card admin-dash__chart-wrap admin-dash__chart-wrap--tall">
             <div className="admin-dash__card-header">
               <div>
@@ -1971,12 +2021,15 @@ const AttendanceDashboard = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <defs>
-                      {COLORS.map((color, index) => (
-                        <linearGradient key={`late-pie-${index}`} id={`late-pie-${index}`} x1="0" y1="0" x2="1" y2="1">
-                          <stop offset="0%" stopColor={color} stopOpacity={0.9}/>
-                          <stop offset="100%" stopColor={color} stopOpacity={0.4}/>
-                        </linearGradient>
-                      ))}
+                      {lateChartData.map((entry, index) => {
+                        const color = entry.color || '#2979FF';
+                        return (
+                          <linearGradient key={`late-pie-${index}`} id={`late-pie-${index}`} x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor={color} stopOpacity={0.95}/>
+                            <stop offset="100%" stopColor={color} stopOpacity={0.5}/>
+                          </linearGradient>
+                        );
+                      })}
                     </defs>
                     <Pie
                       data={lateChartData}
@@ -1990,21 +2043,21 @@ const AttendanceDashboard = () => {
                       animationEasing="ease-out"
                       labelLine={{
                         stroke: '#94a3b8',
-                        strokeWidth: 1
+                        strokeWidth: 2
                       }}
                       label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
                       labelStyle={{
-                        fontSize: '10px',
-                        fontWeight: 600,
+                        fontSize: '11px',
+                        fontWeight: 700,
                         fill: '#1e293b'
                       }}
                     >
                       {lateChartData.map((entry, index) => (
                         <Cell 
                           key={`cell-${index}`} 
-                          fill={`url(#late-pie-${index % COLORS.length})`}
+                          fill={`url(#late-pie-${index})`}
                           stroke="white"
-                          strokeWidth={2}
+                          strokeWidth={3}
                         />
                       ))}
                     </Pie>
@@ -2013,9 +2066,13 @@ const AttendanceDashboard = () => {
                       layout="vertical"
                       align="right"
                       verticalAlign="middle"
-                      wrapperStyle={{ fontSize: '10px', maxWidth: '40%' }}
+                      wrapperStyle={{ fontSize: '11px', maxWidth: '40%', fontWeight: '600' }}
                       iconType="circle"
-                      iconSize={8}
+                      iconSize={10}
+                      formatter={(value, entry) => {
+                        const color = entry?.payload?.color || '#2979FF';
+                        return <span style={{ color: color, fontWeight: '700' }}>{value}</span>;
+                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -2028,7 +2085,6 @@ const AttendanceDashboard = () => {
             </div>
           </div>
 
-          {/* Absent Analysis - Pie Chart */}
           <div className="admin-dash__card admin-dash__chart-wrap admin-dash__chart-wrap--tall">
             <div className="admin-dash__card-header">
               <div>
@@ -2067,12 +2123,15 @@ const AttendanceDashboard = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <defs>
-                      {COLORS.map((color, index) => (
-                        <linearGradient key={`absent-pie-${index}`} id={`absent-pie-${index}`} x1="0" y1="0" x2="1" y2="1">
-                          <stop offset="0%" stopColor={color} stopOpacity={0.9}/>
-                          <stop offset="100%" stopColor={color} stopOpacity={0.4}/>
-                        </linearGradient>
-                      ))}
+                      {absentChartData.map((entry, index) => {
+                        const color = entry.color || '#2979FF';
+                        return (
+                          <linearGradient key={`absent-pie-${index}`} id={`absent-pie-${index}`} x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor={color} stopOpacity={0.95}/>
+                            <stop offset="100%" stopColor={color} stopOpacity={0.5}/>
+                          </linearGradient>
+                        );
+                      })}
                     </defs>
                     <Pie
                       data={absentChartData}
@@ -2086,21 +2145,21 @@ const AttendanceDashboard = () => {
                       animationEasing="ease-out"
                       labelLine={{
                         stroke: '#94a3b8',
-                        strokeWidth: 1
+                        strokeWidth: 2
                       }}
                       label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
                       labelStyle={{
-                        fontSize: '10px',
-                        fontWeight: 600,
+                        fontSize: '11px',
+                        fontWeight: 700,
                         fill: '#1e293b'
                       }}
                     >
                       {absentChartData.map((entry, index) => (
                         <Cell 
                           key={`cell-${index}`} 
-                          fill={`url(#absent-pie-${index % COLORS.length})`}
+                          fill={`url(#absent-pie-${index})`}
                           stroke="white"
-                          strokeWidth={2}
+                          strokeWidth={3}
                         />
                       ))}
                     </Pie>
@@ -2109,9 +2168,13 @@ const AttendanceDashboard = () => {
                       layout="vertical"
                       align="right"
                       verticalAlign="middle"
-                      wrapperStyle={{ fontSize: '10px', maxWidth: '40%' }}
+                      wrapperStyle={{ fontSize: '11px', maxWidth: '40%', fontWeight: '600' }}
                       iconType="circle"
-                      iconSize={8}
+                      iconSize={10}
+                      formatter={(value, entry) => {
+                        const color = entry?.payload?.color || '#2979FF';
+                        return <span style={{ color: color, fontWeight: '700' }}>{value}</span>;
+                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
