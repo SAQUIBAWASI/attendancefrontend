@@ -3828,8 +3828,8 @@ const EmployeeList = () => {
   const [showInactiveOnly, setShowInactiveOnly] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   
-  // 🔥 NEW: Active filter type for card clicks
-  const [activeFilterType, setActiveFilterType] = useState('all'); // 'all', 'active', 'inactive', 'departments', 'locations'
+  // Active filter type for card clicks
+  const [activeFilterType, setActiveFilterType] = useState('all');
   
   // Filter states
   const [filterDepartment, setFilterDepartment] = useState("");
@@ -3850,7 +3850,11 @@ const EmployeeList = () => {
     currentPage: 1,
     totalPages: 1,
     totalCount: 0,
-    limit: 10,
+    // ─── Persist limit in localStorage ───
+    limit: (() => {
+      const saved = localStorage.getItem('employeeList_itemsPerPage');
+      return saved ? parseInt(saved, 10) : 10;
+    })(),
   });
   
   const navigate = useNavigate();
@@ -3933,22 +3937,17 @@ const EmployeeList = () => {
 
   // Filter employees based on search and filters
   const filteredEmployees = employees.filter((emp) => {
-    // 🔥 Apply filter based on activeFilterType
     if (activeFilterType === 'active' && isEmployeeHidden(emp)) return false;
     if (activeFilterType === 'inactive' && !isEmployeeHidden(emp)) return false;
     
-    // For departments filter - show employees from all departments
     if (activeFilterType === 'departments') {
-      // No additional filtering, just show all active employees
       if (isEmployeeHidden(emp)) return false;
     }
     
-    // For locations filter - show all active employees
     if (activeFilterType === 'locations') {
       if (isEmployeeHidden(emp)) return false;
     }
     
-    // Apply showInactiveOnly toggle (for backward compatibility)
     if (showInactiveOnly && !isEmployeeHidden(emp)) return false;
     if (!showInactiveOnly && activeFilterType === 'all' && isEmployeeHidden(emp)) return false;
     
@@ -3990,7 +3989,7 @@ const EmployeeList = () => {
   const indexOfFirst = indexOfLast - pagination.limit;
   const currentEmployees = filteredEmployees.slice(indexOfFirst, indexOfLast);
 
-  // 🔥 Card click handlers
+  // Card click handlers
   const handleCardClick = (type) => {
     setActiveFilterType(type);
     setShowInactiveOnly(false);
@@ -3999,7 +3998,6 @@ const EmployeeList = () => {
     setSearchTerm('');
     setPagination(prev => ({ ...prev, currentPage: 1 }));
     
-    // Close mobile filters if open
     if (showMobileFilters) setShowMobileFilters(false);
   };
 
@@ -4090,6 +4088,7 @@ const EmployeeList = () => {
     setLoading(false);
   };
 
+  // ─── Handle itemsPerPage change with localStorage persistence ───
   const handleItemsPerPageChange = (limit) => {
     setPagination({
       currentPage: 1,
@@ -4097,6 +4096,7 @@ const EmployeeList = () => {
       totalCount: filteredEmployees.length,
       totalPages: Math.ceil(filteredEmployees.length / limit)
     });
+    localStorage.setItem('employeeList_itemsPerPage', String(limit));
   };
 
   const handlePrevPage = () => {
@@ -4241,7 +4241,7 @@ const EmployeeList = () => {
     return location ? location.name : "Not assigned";
   };
 
-  // 🔥 Get display label for active filter
+  // Get display label for active filter
   const getFilterLabel = () => {
     switch(activeFilterType) {
       case 'all': return 'All Employees';
@@ -4278,7 +4278,7 @@ const EmployeeList = () => {
           </div>
         </div>
 
-        {/* 🔥 UPDATED: Top KPI Stats Grid with Clickable Cards */}
+        {/* Top KPI Stats Grid with Clickable Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
           {/* Total Employees Card */}
           <div 
@@ -4356,7 +4356,7 @@ const EmployeeList = () => {
           </div>
         </div>
 
-        {/* 🔥 Filter Info Badge - Shows what filter is active */}
+        {/* Filter Info Badge - Shows what filter is active */}
         {activeFilterType !== 'all' && (
           <div className="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
             <span className="text-xs font-medium text-blue-700">

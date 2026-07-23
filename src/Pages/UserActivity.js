@@ -2133,11 +2133,15 @@ const UserActivity = () => {
   const departmentFilterRef = useRef(null);
   const designationFilterRef = useRef(null);
   
+  // ─── PERSISTED PAGINATION ───
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalCount: 0,
-    limit: 10,
+    limit: (() => {
+      const saved = localStorage.getItem('userActivity_itemsPerPage');
+      return saved ? parseInt(saved, 10) : 10;
+    })(),
   });
 
   // Click outside handlers for filter dropdowns
@@ -2451,13 +2455,14 @@ const UserActivity = () => {
     return colorMap[action] || "bg-amber-50 text-amber-700";
   };
 
-  // Pagination handlers
+  // ─── HANDLE ITEMS PER PAGE CHANGE WITH LOCALSTORAGE ───
   const handleItemsPerPageChange = (limit) => {
     setPagination(prev => ({
       ...prev,
       limit: limit,
       currentPage: 1
     }));
+    localStorage.setItem('userActivity_itemsPerPage', String(limit));
   };
 
   const indexOfLastItem = pagination.currentPage * pagination.limit;
@@ -2502,9 +2507,6 @@ const UserActivity = () => {
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
               User <span>Activity Log</span>
             </h1>
-          {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
-              Track all employee and admin actions in real-time
-            </p> */}
           </div>
           <div className="emp-dash__date-pill">
             <FiCalendar />
@@ -2590,32 +2592,6 @@ const UserActivity = () => {
 
         {/* Filters Card */}
         <div className="emp-dash__card">
-          {/* Desktop Header */}
-          {/* <div className="hidden sm:flex emp-dash__card-header">
-            <div>
-              <h3 className="emp-dash__card-title flex items-center gap-2">
-                <FiFilter className="text-blue-600" /> Filter Activities
-              </h3>
-              <p className="emp-dash__card-desc">Search by name, email, action, role, department, designation, or date</p>
-            </div>
-          </div> */}
-
-          {/* Mobile Filter Toggle */}
-          <div className="sm:hidden flex items-center justify-between p-3 border-b border-gray-100">
-            <button
-              onClick={() => setShowMobileFilters(!showMobileFilters)}
-              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
-            >
-              <FiFilter className="text-blue-600" />
-              Filters
-              {showMobileFilters ? <FaChevronUp className="ml-1" /> : <FaChevronDown className="ml-1" />}
-            </button>
-            <span className="text-xs text-gray-400">
-              {filteredActivities.length} activities
-            </span>
-          </div>
-
-          {/* Filter Content */}
           <div className={`${showMobileFilters ? 'block' : 'hidden sm:block'}`}>
             <div className="emp-dash__card-body bg-gray-50/50">
               <div className="flex flex-wrap items-center gap-3">
@@ -2945,7 +2921,7 @@ const UserActivity = () => {
             )}
           </div>
 
-          {/* Pagination Footer */}
+          {/* ─── PAGINATION SECTION ─── */}
           {!loading && filteredActivities.length > 0 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
               <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">

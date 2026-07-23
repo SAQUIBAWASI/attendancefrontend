@@ -117,7 +117,11 @@ const AllMedicalCertificate = () => {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  // ─── PERSISTED ITEMS PER PAGE ───
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    const saved = localStorage.getItem('medicalCertificates_itemsPerPage');
+    return saved ? parseInt(saved, 10) : 10;
+  });
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -226,8 +230,10 @@ const AllMedicalCertificate = () => {
       headers.join(","),
       ...filteredCertificates.map(c => {
         const info = getStatusInfo(c.expiryDate);
+        // 🔥 FIX: Use proper employeeId from the certificate data
+        const id = c.employeeId || c.candidateId || 'N/A';
         return [
-          `"${c.employeeId || c.candidateId || 'N/A'}"`,
+          `"${id}"`,
           `"${c.employeeName || c.candidateName || 'N/A'}"`,
           `"${new Date(c.registrationDate).toLocaleDateString()}"`,
           `"${new Date(c.expiryDate).toLocaleDateString()}"`,
@@ -286,12 +292,9 @@ const AllMedicalCertificate = () => {
         {/* Dashboard Header */}
         <div className="emp-dash__header">
            <div className="flex items-center gap-3 flex-wrap">
-  <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
               Medical <span>Certificates</span>
             </h1>
-           {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
-              Monitor and manage employee medical certificate compliance
-            </p> */}
           </div>
           <div className="emp-dash__date-pill">
             <FiCalendar />
@@ -458,16 +461,6 @@ const AllMedicalCertificate = () => {
 
         {/* Filter Card */}
         <div className="emp-dash__card">
-          {/* Desktop Header */}
-          {/* <div className="hidden sm:flex emp-dash__card-header">
-            <div>
-              <h3 className="emp-dash__card-title flex items-center gap-2">
-                <FiFilter className="text-blue-600" /> Filter Certificates
-              </h3>
-              <p className="emp-dash__card-desc">Search by name, ID, or filter by status</p>
-            </div>
-          </div> */}
-
           {/* Mobile Filter Toggle Button */}
           <div className="sm:hidden flex items-center justify-between p-3 border-b border-gray-100">
             <button
@@ -569,6 +562,8 @@ const AllMedicalCertificate = () => {
                 <AnimatePresence>
                   {currentItems.map((c, index) => {
                     const info = getStatusInfo(c.expiryDate);
+                    // 🔥 FIX: Get the correct employee ID - use employeeId if available, otherwise candidateId
+                    const displayId = c.employeeId || c.candidateId || "N/A";
                     return (
                       <motion.tr
                         key={c._id}
@@ -579,7 +574,7 @@ const AllMedicalCertificate = () => {
                         className="hover:bg-gray-50 transition-colors"
                       >
                         <td className="text-center font-bold text-gray-900 text-xs whitespace-nowrap">
-                          {c.employeeId || c.candidateId || "N/A"}
+                          {displayId}
                         </td>
                         <td className="text-left">
                           <div className="font-bold text-gray-900 text-sm whitespace-nowrap">{c.employeeName || c.candidateName || "N/A"}</div>
@@ -631,7 +626,7 @@ const AllMedicalCertificate = () => {
             )}
           </div>
 
-          {/* Pagination */}
+          {/* ─── PAGINATION SECTION ─── */}
           {totalPages > 1 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
               <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
@@ -652,7 +647,9 @@ const AllMedicalCertificate = () => {
                 <select
                   value={itemsPerPage}
                   onChange={(e) => {
-                    setItemsPerPage(Number(e.target.value));
+                    const newValue = Number(e.target.value);
+                    setItemsPerPage(newValue);
+                    localStorage.setItem('medicalCertificates_itemsPerPage', String(newValue));
                     setCurrentPage(1);
                   }}
                   className="px-2 py-1 text-xs border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"

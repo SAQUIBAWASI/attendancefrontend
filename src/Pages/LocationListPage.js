@@ -393,12 +393,15 @@ const LocationListPage = () => {
   const cityFilterRef = useRef(null);
   const stateFilterRef = useRef(null);
   
-  // Pagination
+  // ─── PERSISTED PAGINATION ───
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalCount: 0,
-    limit: 10,
+    limit: (() => {
+      const saved = localStorage.getItem('locationList_itemsPerPage');
+      return saved ? parseInt(saved, 10) : 10;
+    })(),
   });
 
   // Edit Modal States
@@ -549,6 +552,7 @@ const LocationListPage = () => {
     setFilterPinCode("");
   };
 
+  // ─── HANDLE ITEMS PER PAGE CHANGE WITH LOCALSTORAGE ───
   const handleItemsPerPageChange = (limit) => {
     setPagination({
       currentPage: 1,
@@ -556,6 +560,7 @@ const LocationListPage = () => {
       totalCount: filteredLocations.length,
       totalPages: Math.ceil(filteredLocations.length / limit)
     });
+    localStorage.setItem('locationList_itemsPerPage', String(limit));
   };
 
   const handlePrevPage = () => {
@@ -709,9 +714,6 @@ const LocationListPage = () => {
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
               Location <span>Management</span>
             </h1>
-             {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
-              Manage and monitor all office locations
-            </p> */}
           </div>
           <div className="emp-dash__date-pill">
             <FiCalendar />
@@ -785,16 +787,6 @@ const LocationListPage = () => {
 
         {/* Filter Card */}
         <div className="emp-dash__card">
-          {/* Desktop Header - Hidden on mobile */}
-          {/* <div className="hidden sm:flex emp-dash__card-header">
-            <div>
-              <h3 className="emp-dash__card-title flex items-center gap-2">
-                <FiMapPin className="text-blue-600" /> Filter Locations
-              </h3>
-              <p className="emp-dash__card-desc">Search by name, address, city, state, or pin code</p>
-            </div>
-          </div> */}
-
           {/* Mobile Filter Toggle Button */}
           <div className="sm:hidden flex items-center justify-between p-3 border-b border-gray-100">
             <button
@@ -1102,7 +1094,7 @@ const LocationListPage = () => {
               </table>
             </div>
 
-            {/* Pagination */}
+            {/* ─── PAGINATION SECTION ─── */}
             {filteredLocations.length > 0 && (
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
                 <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">

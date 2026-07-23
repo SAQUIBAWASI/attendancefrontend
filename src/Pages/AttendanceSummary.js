@@ -1,8 +1,4 @@
-
-
-// AttendanceSummary.jsx - Complete fixed OT calculation
-
-// AttendanceSummary.jsx - Complete Fixed Code
+// AttendanceSummary.jsx - Complete Fixed Code with Persisted itemsPerPage
 
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
@@ -57,7 +53,11 @@ export default function AttendanceSummary() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  // ─── Persist itemsPerPage in localStorage ───
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    const saved = localStorage.getItem('attendanceSummary_itemsPerPage');
+    return saved ? parseInt(saved, 10) : 10;
+  });
 
   const previousSummaryRef = useRef([]);
   const autoSaveIntervalRef = useRef(null);
@@ -967,7 +967,6 @@ export default function AttendanceSummary() {
     }
   };
 
-  // FIXED: handleBulkAction - collects records, updates state, waits, then saves
   const handleBulkAction = async (actionType, inputId, defaultHours) => {
     try {
       const val = parseFloat(document.getElementById(inputId)?.value) || defaultHours;
@@ -1037,14 +1036,11 @@ export default function AttendanceSummary() {
         return;
       }
       
-      // Update state
       setEditedRows(newEdited);
       showSaveStatus(`✅ Found ${count} records! Saving...`);
       
-      // CRITICAL: Wait for state to update
       await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Call bulk save with pre-collected records
       await handleBulkSaveAttendanceWithRecords(recordsToUpdate);
       
     } catch (error) {
@@ -1053,7 +1049,6 @@ export default function AttendanceSummary() {
     }
   };
 
-  // NEW: Bulk save with pre-collected records - NO STATE READ
   const handleBulkSaveAttendanceWithRecords = async (recordsToUpdate) => {
     try {
       if (recordsToUpdate.length === 0) {
@@ -1065,11 +1060,9 @@ export default function AttendanceSummary() {
       let successCount = 0;
       const errors = [];
       
-      // Process each record
       for (const item of recordsToUpdate) {
         const { dateKey, rec, updateData } = item;
         
-        // Use the data from updateData directly (no state read)
         const currentReason = updateData.reason !== undefined ? updateData.reason : (rec?.reason || "");
         const currentComment = updateData.comment !== undefined ? updateData.comment : (rec?.comment || "");
         const currentHours = updateData.hours !== undefined ? updateData.hours : (rec ? (rec.totalHours || rec.hours) : 0);
@@ -1123,7 +1116,6 @@ export default function AttendanceSummary() {
           const result = await res.json();
           if (result.success) {
             successCount++;
-            // Clear the edited flag
             setEditedRows(prev => {
               const newRows = { ...prev };
               if (newRows[dateKey]) {
@@ -1143,7 +1135,6 @@ export default function AttendanceSummary() {
       if (successCount > 0) {
         showSaveStatus(`✅ ${successCount}/${recordsToUpdate.length} records updated successfully!${errors.length > 0 ? ` (${errors.length} failed)` : ''}`);
         
-        // Refresh data
         if (selectedEmployee) {
           await handleViewDetails(selectedEmployee);
         }
@@ -1161,7 +1152,6 @@ export default function AttendanceSummary() {
     }
   };
 
-  // Kept for backward compatibility
   const handleBulkSaveAttendance = async () => {
     try {
       const currentEditedRows = { ...editedRows };
@@ -1437,6 +1427,14 @@ export default function AttendanceSummary() {
     };
   }, []);
 
+  // ─── Handle itemsPerPage change with localStorage persistence ───
+  const handleItemsPerPageChange = (e) => {
+    const newValue = Number(e.target.value);
+    setItemsPerPage(newValue);
+    localStorage.setItem('attendanceSummary_itemsPerPage', String(newValue));
+    setCurrentPage(1);
+  };
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredSummary.slice(indexOfFirstItem, indexOfLastItem);
@@ -1451,11 +1449,6 @@ export default function AttendanceSummary() {
   };
 
   const handlePageClick = (pageNumber) => setCurrentPage(pageNumber);
-
-  const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value));
-    setCurrentPage(1);
-  };
 
   const getPageNumbers = () => {
     const pageNumbers = [];
@@ -1548,9 +1541,6 @@ export default function AttendanceSummary() {
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Attendance <span>Summary</span>
             </h1>
-            {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
-              Monthly summary of work hours, overtime, and presence metrics per employee.
-            </p> */}
           </div>
           <div className="emp-dash__date-pill">
             <FaCalendarAlt />
@@ -2166,7 +2156,7 @@ export default function AttendanceSummary() {
                     <select
                       value={itemsPerPage}
                       onChange={handleItemsPerPageChange}
-                      className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none"
+                      className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     >
                       <option value={5}>5</option>
                       <option value={10}>10</option>
@@ -2298,31 +2288,6 @@ export default function AttendanceSummary() {
                       Double Punch
                     </button>
                   </div>
-
-                  {/* Single Punch - New Button */}
-                  {/* <div className="flex items-center px-2.5 py-1 space-x-1.5 bg-slate-50 border border-slate-200 rounded-full text-[11px] font-semibold text-slate-700">
-                    <span>Single Punch ({
-                      monthDates.filter(date => {
-                        const dateKey = date.toLocaleDateString('en-CA');
-                        const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
-                        return rec && rec.checkInTime && !rec.checkOutTime;
-                      }).length
-                    }) ➔</span>
-                    <input 
-                      type="number" 
-                      id="bulkSinglePunchHours"
-                      defaultValue="9" 
-                      className="w-12 px-1 py-0.5 text-gray-900 bg-white border border-gray-300 rounded text-center font-bold focus:outline-none"
-                      step="0.25"
-                    />
-                    <span className="text-gray-400">Hrs</span>
-                    <button
-                      onClick={() => handleBulkAction('singlePunch', 'bulkSinglePunchHours', 9)}
-                      className="px-2 py-0.5 text-[10px] font-bold text-white bg-orange-600 hover:bg-orange-700 rounded transition"
-                    >
-                      Single Punch
-                    </button>
-                  </div> */}
 
                   {/* Close Button */}
                   <button

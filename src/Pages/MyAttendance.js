@@ -2404,19 +2404,37 @@ export default function MyAttendance() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [onsiteFilter, setOnsiteFilter] = useState("all");
 
-  // Department and Designation filters
-  const [filterDepartment, setFilterDepartment] = useState("");
-  const [filterDesignation, setFilterDesignation] = useState("");
-  const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
-  const [showDesignationFilter, setShowDesignationFilter] = useState(false);
   const [employeeData, setEmployeeData] = useState(null);
-
-  const departmentFilterRef = useRef(null);
-  const designationFilterRef = useRef(null);
 
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  
+  // ─── 🔥 FIX: ITEMS PER PAGE - PAKKA SOLUTION ───
+  const getSavedItemsPerPage = () => {
+    try {
+      const saved = localStorage.getItem('myAttendance_itemsPerPage');
+      console.log('🔍 MyAttendance - Loading from localStorage:', saved);
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed) && [5, 10, 20, 50].includes(parsed)) {
+          return parsed;
+        }
+      }
+      return 10;
+    } catch (e) {
+      console.error('Error reading localStorage:', e);
+      return 10;
+    }
+  };
+
+  const [itemsPerPage, setItemsPerPage] = useState(getSavedItemsPerPage);
+
+  // ─── FORCE RELOAD ON MOUNT ───
+  useEffect(() => {
+    const saved = getSavedItemsPerPage();
+    console.log('🔄 MyAttendance - Mount - Setting itemsPerPage to:', saved);
+    setItemsPerPage(saved);
+  }, []);
 
   // Edit Request States
   const [showEditModal, setShowEditModal] = useState(false);
@@ -2486,18 +2504,16 @@ export default function MyAttendance() {
   // ✅ FIX: Don't filter out 0 hours records
   const isValidRecord = (record) => {
     const totalHours = record.totalHours || record.hours || 0;
-    // Only filter out > 24 hours records
     if (totalHours > 24) return false;
     return true;
   };
 
-  // ✅ Format time with status - WITH BLINKING DOT
+  // ✅ Format time with status
   const formatTimeWithStatus = (record) => {
     const checkInTime = record?.checkInTime;
     const checkOutTime = record?.checkOutTime;
     const totalHours = record?.totalHours || record?.hours || 0;
     const assignedShift = getCorrectShiftHours(record);
-    const status = record?.status;
 
     const checkIn = checkInTime ? new Date(checkInTime).toLocaleTimeString('en-IN', {
       hour: '2-digit',
@@ -2513,7 +2529,6 @@ export default function MyAttendance() {
 
     const formattedHours = formatDecimalHours(totalHours);
 
-    // ✅ Blinking dot for checked-in status
     if (checkIn && !checkOut) {
       return (
         <div className="flex flex-col items-center justify-center">
@@ -2547,20 +2562,6 @@ export default function MyAttendance() {
     }
   };
 
-  // Click outside handlers for filter dropdowns
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (departmentFilterRef.current && !departmentFilterRef.current.contains(event.target)) {
-        setShowDepartmentFilter(false);
-      }
-      if (designationFilterRef.current && !designationFilterRef.current.contains(event.target)) {
-        setShowDesignationFilter(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
@@ -2581,7 +2582,6 @@ export default function MyAttendance() {
         const allRecords = data.records || [];
         const validRecords = allRecords.filter(isValidRecord);
         
-        // ✅ SORT: Latest first (newest on top)
         const sortedRecords = validRecords.sort((a, b) =>
           new Date(b.checkInTime) - new Date(a.checkInTime)
         );
@@ -2844,8 +2844,19 @@ export default function MyAttendance() {
     setDateTo("");
   };
 
+  // ─── 🔥 HANDLE ITEMS PER PAGE CHANGE WITH LOCALSTORAGE ───
   const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value));
+    const newValue = Number(e.target.value);
+    console.log('💾 MyAttendance - Saving itemsPerPage:', newValue);
+    
+    try {
+      localStorage.setItem('myAttendance_itemsPerPage', String(newValue));
+      console.log('✅ MyAttendance - Verified saved:', localStorage.getItem('myAttendance_itemsPerPage'));
+    } catch (error) {
+      console.error('❌ Save error:', error);
+    }
+    
+    setItemsPerPage(newValue);
     setCurrentPage(1);
   };
 
@@ -3476,7 +3487,7 @@ export default function MyAttendance() {
                 </table>
               </div>
 
-              {/* Pagination Section */}
+              {/* ─── 🔥 FIXED PAGINATION SECTION ─── */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200/50 bg-gray-50/30">
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -3484,7 +3495,7 @@ export default function MyAttendance() {
                     <select
                       value={itemsPerPage}
                       onChange={handleItemsPerPageChange}
-                      className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none"
+                      className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
                       <option value={5}>5</option>
                       <option value={10}>10</option>
@@ -3521,7 +3532,7 @@ export default function MyAttendance() {
                         page === "..."
                           ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
                           : currentPage === page
-                          ? "text-gray-900 bg-blue-600 border-blue-600"
+                          ? "text-white bg-blue-600 border-blue-600"
                           : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300 shadow-sm"
                       }`}
                     >

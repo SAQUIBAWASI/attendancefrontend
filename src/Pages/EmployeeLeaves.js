@@ -1236,7 +1236,33 @@ const EmployeeLeaves = () => {
   const [isDemoMode, setIsDemoMode] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  
+  // ─── 🔥 FIX: PERSISTED ITEMS PER PAGE ───
+  const getSavedItemsPerPage = () => {
+    try {
+      const saved = localStorage.getItem('employeeLeaves_itemsPerPage');
+      console.log('🔍 EmployeeLeaves - Loading from localStorage:', saved);
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed) && [5, 10, 20, 50].includes(parsed)) {
+          return parsed;
+        }
+      }
+      return 10;
+    } catch (e) {
+      console.error('Error reading localStorage:', e);
+      return 10;
+    }
+  };
+
+  const [itemsPerPage, setItemsPerPage] = useState(getSavedItemsPerPage);
+
+  // ─── FORCE RELOAD ON MOUNT ───
+  useEffect(() => {
+    const saved = getSavedItemsPerPage();
+    console.log('🔄 EmployeeLeaves - Mount - Setting itemsPerPage to:', saved);
+    setItemsPerPage(saved);
+  }, []);
 
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [submittingLeave, setSubmittingLeave] = useState(false);
@@ -1770,8 +1796,19 @@ const EmployeeLeaves = () => {
     setCurrentPage(page);
   };
 
+  // ─── 🔥 HANDLE ITEMS PER PAGE CHANGE WITH LOCALSTORAGE ───
   const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value));
+    const newValue = Number(e.target.value);
+    console.log('💾 EmployeeLeaves - Saving itemsPerPage:', newValue);
+    
+    try {
+      localStorage.setItem('employeeLeaves_itemsPerPage', String(newValue));
+      console.log('✅ EmployeeLeaves - Verified saved:', localStorage.getItem('employeeLeaves_itemsPerPage'));
+    } catch (error) {
+      console.error('❌ Save error:', error);
+    }
+    
+    setItemsPerPage(newValue);
     setCurrentPage(1);
   };
 
@@ -2363,7 +2400,7 @@ const EmployeeLeaves = () => {
           </table>
         </div>
 
-        {/* Pagination */}
+        {/* ─── 🔥 FIXED PAGINATION SECTION ─── */}
         {filteredLeaves.length > 0 && (
           <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 sm:flex-row">
             <div className="flex items-center gap-2 text-sm text-gray-500">

@@ -1062,7 +1062,11 @@ export default function ClaimedOTManagement() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  // ─── PERSISTED ITEMS PER PAGE ───
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    const saved = localStorage.getItem('claimedOT_itemsPerPage');
+    return saved ? parseInt(saved, 10) : 10;
+  });
 
   // Modal states
   const [selectedClaim, setSelectedClaim] = useState(null);
@@ -1450,11 +1454,10 @@ export default function ClaimedOTManagement() {
 
       {/* Header */}
       <div className="flex items-center gap-3 flex-wrap">
-  <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
+        <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
           <FaList className="text-orange-600" />
           OT Claims Management
         </h1>
-        {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">Manage all overtime claims from employees</p> */}
       </div>
 
       {/* Summary Cards - 2 columns on mobile, 5 on desktop */}
@@ -1833,14 +1836,19 @@ export default function ClaimedOTManagement() {
           </table>
         </div>
 
-        {/* Pagination */}
+        {/* ─── PAGINATION SECTION ─── */}
         {claims.length > 0 && (
           <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 sm:flex-row">
             <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
               <span>Show:</span>
               <select
                 value={itemsPerPage}
-                onChange={e => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                onChange={e => {
+                  const newValue = Number(e.target.value);
+                  setItemsPerPage(newValue);
+                  localStorage.setItem('claimedOT_itemsPerPage', String(newValue));
+                  setCurrentPage(1);
+                }}
                 className="px-2 py-1 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 bg-white"
               >
                 <option value={5}>5</option>
