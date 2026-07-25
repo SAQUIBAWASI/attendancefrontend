@@ -5201,7 +5201,6 @@ const calculateEarnedWeekOffs = (employeeId, year, monthNum, dailyAttendance, em
     weekNumber++;
   }
 
-  // Calculate total weekoff days in this month
   let totalWeekOffDays = 0;
   for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
     if (d.getDay() === weekOffDayNum) {
@@ -5282,7 +5281,32 @@ const PayRoll = () => {
     manualDays: ""
   });
 
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  // ─── 🔥 FIX: PERSISTED ITEMS PER PAGE ───
+  const getSavedItemsPerPage = () => {
+    try {
+      const saved = localStorage.getItem('payroll_itemsPerPage');
+      console.log('🔍 PayRoll - Loading from localStorage:', saved);
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed) && [5, 10, 20, 50].includes(parsed)) {
+          return parsed;
+        }
+      }
+      return 10;
+    } catch (e) {
+      console.error('Error reading localStorage:', e);
+      return 10;
+    }
+  };
+
+  const [itemsPerPage, setItemsPerPage] = useState(getSavedItemsPerPage);
+
+  // ─── FORCE RELOAD ON MOUNT ───
+  useEffect(() => {
+    const saved = getSavedItemsPerPage();
+    console.log('🔄 PayRoll - Mount - Setting itemsPerPage to:', saved);
+    setItemsPerPage(saved);
+  }, []);
 
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [templateConfig, setTemplateConfig] = useState({
@@ -5684,7 +5708,6 @@ const PayRoll = () => {
   const handleRowClick = async (employee) => {
     setSelectedEmployee(employee);
     const monthToFetch = selectedMonth || new Date().toISOString().slice(0, 7);
-    // 🔥 CRITICAL FIX: Always fetch fresh attendance data when opening popup
     await fetchEmployeeAttendance(employee.employeeId, monthToFetch);
     setShowAttendancePopup(true);
   };
@@ -5835,7 +5858,6 @@ const PayRoll = () => {
       const processedSalaries = [];
       
       for (const emp of activeEmployees) {
-        // Use summary data from API directly (which includes AttendanceSummary updates)
         const summary = summaryData.find(x => x.employeeId === emp.employeeId) || {};
         
         let targetWeekOffCount = emp.weekOffPerMonth || 4;
@@ -5843,7 +5865,6 @@ const PayRoll = () => {
         const employeeRole = summary.role || emp.role || emp.designation || '';
         const isMedicalStaff = isMedicalRole(employeeRole);
         
-        // Get attendance for this employee - use the already fetched allAttendanceRecords
         let attendanceForEmployee = allAttendanceRecords.filter(r => r.employeeId === emp.employeeId);
         
         const weekOffDay = emp.weekOffDay || 'Sunday';
@@ -5887,7 +5908,6 @@ const PayRoll = () => {
         
         const dailyRate = salaryForMonth > 0 ? salaryForMonth / daysInMonthValue : 0;
         
-        // Use summary values from API (which includes AttendanceSummary edits)
         const presentDaysCount = summary.presentDays ?? 0;
         const halfDaysCount = summary.halfDayWorking ?? 0;
         const totalWorkingDays = summary.totalWorkingDays ?? 0;
@@ -5902,10 +5922,8 @@ const PayRoll = () => {
           calculatedSalary = effectivePaidDays * dailyRate;
         }
 
-        // Use overTimeHours from summary (which includes AttendanceSummary edits)
         let totalOTHours = overTimeHours || 0;
         
-        // Also calculate from attendance records for comparison
         let calculatedOTHours = 0;
         allAttendanceRecords.forEach(record => {
           if (record.employeeId !== emp.employeeId) return;
@@ -5929,7 +5947,6 @@ const PayRoll = () => {
           }
         });
         
-        // Use the summary value if available, otherwise use calculated
         if (totalOTHours === 0 && calculatedOTHours > 0) {
           totalOTHours = calculatedOTHours;
         }
@@ -5963,16 +5980,12 @@ const PayRoll = () => {
           }
         }
 
-        // ============================================
-        // ✅ BUILD SALARY OBJECT WITH ALL DATA
-        // ============================================
         const salaryObj = {
           employeeId: emp.employeeId,
           name: emp.name,
           department: emp.department || 'N/A',
           month: targetMonth,
           
-          // Attendance - USING SUMMARY DATA (which includes edits from AttendanceSummary)
           presentDays: presentDaysCount,
           halfDayWorking: halfDaysCount,
           totalWorkingDays: totalWorkingDays,
@@ -5980,14 +5993,12 @@ const PayRoll = () => {
           overTimeHours: totalOTHours,
           overTimeHoursFormatted: formattedOTHours,
           
-          // Weekoff
           weekOffs: finalWeekOffs,
           earnedWeekOffs: earnedWeekOffs,
           defaultWeekOffs: defaultWeekOffs,
           weekOffDay: weekOffDay,
           weeklyBreakdown: weekOffData.weeklyBreakdown,
           
-          // Salary
           salaryPerMonth: salaryForMonth,
           currentSalary: emp.salaryPerMonth,
           originalSalary: originalSalary,
@@ -5995,7 +6006,6 @@ const PayRoll = () => {
           calculatedSalary: baseCalculatedSalary,
           baseCalculatedSalary: baseCalculatedSalary,
           
-          // OT
           shiftHours: emp.shiftHours || 8,
           finalOTAmount: Math.round(finalOTAmount),
           finalPay: finalPay,
@@ -6004,7 +6014,6 @@ const PayRoll = () => {
           approvedOTAmount: approvedOTAmount,
           approvedOTHours: approvedOTHours,
           
-          // Misc
           holidayCount: holidayCount,
           monthDays: daysInMonthValue,
           includeWeekOffInSalary: includeWeekOffInSalary,
@@ -6139,8 +6148,19 @@ const PayRoll = () => {
     fetchData(currentMonth);
   };
 
+  // ─── 🔥 HANDLE ITEMS PER PAGE CHANGE WITH LOCALSTORAGE ───
   const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value));
+    const newValue = Number(e.target.value);
+    console.log('💾 PayRoll - Saving itemsPerPage:', newValue);
+    
+    try {
+      localStorage.setItem('payroll_itemsPerPage', String(newValue));
+      console.log('✅ PayRoll - Verified saved:', localStorage.getItem('payroll_itemsPerPage'));
+    } catch (error) {
+      console.error('❌ Save error:', error);
+    }
+    
+    setItemsPerPage(newValue);
     setCurrentPage(1);
   };
 
@@ -6448,7 +6468,7 @@ const PayRoll = () => {
     }
   };
 
- const generateInvoiceHTML = (employee) => {
+  const generateInvoiceHTML = (employee) => {
   const employeeData = getEmployeeData(employee);
 
   if (!employeeData.salaryPerMonth || employeeData.salaryPerMonth === 0) {
@@ -6512,7 +6532,6 @@ const PayRoll = () => {
   const totalDeductions = lopAmount + halfDayDeductionAmount + otherDeductions;
   const netPay = totalEarnings - totalDeductions;
 
-  // Direct values from employeeData
   const earningsItems = [];
   
   const basicAmt = employeeData.basicPay || 0;
@@ -6617,11 +6636,10 @@ const PayRoll = () => {
     return str.trim();
   };
 
-  // Get logo and stamp as data URLs with proper formatting
-  const logoData = templateConfig.logo || logo;
-  const stampData = companyStamp;
+  // 🔥 FIX: Yeh do lines change karo - bas itna kaam hai!
+  const logoData = templateConfig.logo || logo || '';
+  const stampData = companyStamp || '';
 
-  // 🔥 UPDATED: New company address
   const companyAddress = `Timely Healthtech Private Limited<br>Reg. Address: Flat No:301, H.No:1-68/22, Plot No. 54 & 55, Sri Sai Balaji Avenue, Arunodaya Colony, Madhapur, Hyderabad, Telangana-500081`;
 
   return `
@@ -6710,13 +6728,11 @@ const PayRoll = () => {
           @media print {
             body { padding: 10px; }
             .invoice-container { border: 1px solid #000; }
-            .logo-image { 
+            /* 🔥 Yeh line add karo - images print mein dikhengi */
+            .logo-image, .stamp-image { 
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
-            }
-            .stamp-image {
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
+              color-adjust: exact !important;
             }
           }
         </style>
@@ -6728,7 +6744,7 @@ const PayRoll = () => {
               <td colspan="6" class="header-cell">
                 <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                   <div style="width: 200px; flex-shrink: 0;">
-                    <img src="${logoData}" alt="Logo" class="logo-image" style="height: 80px; width: auto; max-width: 200px; object-fit: contain;">
+                    ${logoData ? `<img src="${logoData}" alt="Logo" class="logo-image" style="height: 80px; width: auto; max-width: 200px; object-fit: contain;">` : ''}
                   </div>
                   <div style="flex: 1; text-align: center; padding: 0 10px;">
                     <h2 style="margin: 0; font-size: 16px; font-weight: bold;">Timely Healthtech Private Limited</h2>
@@ -6809,10 +6825,9 @@ const PayRoll = () => {
             </tr>
           </table>
           
-          <!-- STAMP SECTION: Stamp on top, text below - Right side -->
           <div style="display: flex; justify-content: flex-end; align-items: center; padding: 10px 20px; border-top: 1px solid #000; margin-top: 5px;">
             <div class="stamp-container">
-              <img src="${stampData}" alt="Company Stamp" class="stamp-image" style="width: 90px; height: auto; opacity: 0.8;">
+              ${stampData ? `<img src="${stampData}" alt="Company Stamp" class="stamp-image" style="width: 90px; height: auto; opacity: 0.8;">` : ''}
               <div style="text-align: right; line-height: 1.2;">
                 <strong style="font-size: 7px; color: #333; display: block;">Authorized Signatory</strong>
                 <span style="font-size: 6px; color: #555; display: block;">Timely Healthtech Private Limited</span>
@@ -6892,7 +6907,6 @@ const PayRoll = () => {
 
     const shiftHours = getEmployeeShiftHours(selectedEmployee?.employeeId);
 
-    // 🔥 CRITICAL FIX: Use selectedEmployeeAttendance which is fetched fresh each time
     const attendanceMap = new Map();
     selectedEmployeeAttendance.forEach(record => {
       if (record.checkInTime) {
@@ -6968,7 +6982,6 @@ const PayRoll = () => {
       return new Date(dateString).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
     };
 
-    // 🔥 FIX: Get the latest data from attendanceMap for each date
     const getRecordForDate = (dateKey) => {
       return attendanceMap.get(dateKey) || null;
     };
@@ -7027,7 +7040,6 @@ const PayRoll = () => {
                   <tbody className="divide-y divide-gray-200">
                     {monthDates.map((date) => {
                       const dateKey = date.toLocaleDateString('en-CA');
-                      // 🔥 FIX: Get the record from attendanceMap (which has latest data)
                       const record = getRecordForDate(dateKey);
                       const hasAttendance = !!record;
                       
@@ -7084,7 +7096,6 @@ const PayRoll = () => {
           </div>
           
           <div className="flex justify-between items-center p-3 bg-white border-t rounded-b-lg">
-            {/* 🔥 FIX: Add Refresh button to manually refresh data */}
             <button 
               onClick={async () => {
                 if (selectedEmployee) {
@@ -7723,51 +7734,68 @@ const PayRoll = () => {
             </table>
           </div>
 
-          {/* Pagination */}
+          {/* ─── 🔥 FIXED PAGINATION SECTION ─── */}
           {filteredRecords.length > 0 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200/50 bg-gray-50/30">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 font-medium">Show</span>
-                <select
-                  value={itemsPerPage}
-                  onChange={handleItemsPerPageChange}
-                  className="p-1 text-xs border border-gray-300 rounded bg-white text-gray-700 focus:outline-none"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
-                <span className="text-xs text-gray-500 font-medium">records per page</span>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span>Show</span>
+                  <select
+                    value={itemsPerPage}
+                    onChange={handleItemsPerPageChange}
+                    className="p-1 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                  <span>entries</span>
+                </div>
+                <div className="text-xs text-gray-500">
+                  Showing <strong>{indexOfFirstRecord + 1}-{Math.min(indexOfLastRecord, filteredRecords.length)}</strong> of{" "}
+                  <strong>{filteredRecords.length}</strong>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
+
+              <div className="flex items-center gap-2">
                 <button
                   onClick={handlePrevious}
                   disabled={currentPage === 1}
-                  className="px-3 py-1.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-55 transition disabled:opacity-50"
+                  className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
+                    currentPage === 1
+                      ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
+                      : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300 shadow-sm"
+                  }`}
                 >
-                  Prev
+                  Previous
                 </button>
-                {getPageNumbers().map((page, idx) => (
+
+                {getPageNumbers().map((page, index) => (
                   <button
-                    key={idx}
-                    onClick={() => typeof page === 'number' && handlePageClick(page)}
+                    key={index}
+                    onClick={() => typeof page === 'number' ? handlePageClick(page) : null}
                     disabled={page === "..."}
-                    className={`px-3 py-1.5 text-xs font-semibold border rounded-lg transition ${
+                    className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
                       page === "..."
-                        ? "text-gray-400 bg-white border-transparent cursor-default"
+                        ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
                         : currentPage === page
                         ? "text-white bg-blue-600 border-blue-600"
-                        : "text-gray-700 bg-white border-gray-300 hover:bg-gray-50"
+                        : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300 shadow-sm"
                     }`}
                   >
                     {page}
                   </button>
                 ))}
+
                 <button
                   onClick={handleNext}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-55 transition disabled:opacity-50"
+                  className={`px-2.5 py-1 text-xs font-semibold border rounded-lg transition-all ${
+                    currentPage === totalPages
+                      ? "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
+                      : "text-gray-700 bg-white hover:bg-gray-55 border-gray-300 shadow-sm"
+                  }`}
                 >
                   Next
                 </button>

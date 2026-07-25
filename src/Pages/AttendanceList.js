@@ -3455,7 +3455,11 @@ export default function AttendanceList() {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  // ─── Persist itemsPerPage in localStorage ───
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    const saved = localStorage.getItem('attendanceList_itemsPerPage');
+    return saved ? parseInt(saved, 10) : 10;
+  });
 
   // Helper function to format decimal hours to HH:MM
   const formatDecimalHours = (decimalHours) => {
@@ -3690,8 +3694,11 @@ export default function AttendanceList() {
     applyDateFilters(allAttendanceData, new Date().toISOString().slice(0, 7), "", "");
   };
 
+  // ─── Handle itemsPerPage change with localStorage persistence ───
   const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value));
+    const newValue = Number(e.target.value);
+    setItemsPerPage(newValue);
+    localStorage.setItem('attendanceList_itemsPerPage', String(newValue));
     setCurrentPage(1);
   };
 
@@ -3918,9 +3925,6 @@ export default function AttendanceList() {
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Attendance <span>List</span>
             </h1>
-            {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
-              Browse detailed attendance logs and export filtered results.
-            </p> */}
           </div>
           <div className="emp-dash__date-pill">
             <FaCalendarAlt />
@@ -4393,12 +4397,6 @@ export default function AttendanceList() {
 
         {/* Attendance Records Section (same UI style as AttendanceSummary) */}
         <div className="emp-dash__card">
-          {/* <div className="emp-dash__card-header">
-            <div>
-              <h3 className="emp-dash__card-title">Attendance records</h3>
-              <p className="emp-dash__card-desc">Detailed check-in/out logs for the selected period.</p>
-            </div>
-          </div> */}
           {filteredRecords.length === 0 ? (
             <div className="emp-dash__card-body py-12 text-center text-gray-500">
               <div className="mb-3 text-4xl text-gray-300">📭</div>

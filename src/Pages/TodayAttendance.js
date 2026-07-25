@@ -2955,7 +2955,7 @@ const calculateTotalBreakMinutes = (breaks) => {
 };
 
 const TodayAttendance = () => {
-  const navigate = useNavigate(); // ✅ For navigation
+  const navigate = useNavigate();
   
   const [todayRecords, setTodayRecords] = useState([]);
   const [filteredRecords, setFilteredRecords] = useState([]);
@@ -2983,16 +2983,20 @@ const TodayAttendance = () => {
   const designationFilterRef = useRef(null);
   
   // State for stat card filter
-  const [activeFilter, setActiveFilter] = useState(null); // 'all', 'active', 'onsite', 'remote'
+  const [activeFilter, setActiveFilter] = useState(null);
   
   // State for mobile filter collapse
   const [showFilters, setShowFilters] = useState(false);
   
+  // ─── Persist pagination limit in localStorage ───
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalCount: 0,
-    limit: 10,
+    limit: (() => {
+      const saved = localStorage.getItem('todayAttendance_itemsPerPage');
+      return saved ? parseInt(saved, 10) : 10;
+    })(),
   });
 
   useEffect(() => {
@@ -3027,7 +3031,6 @@ const TodayAttendance = () => {
       setLoading(true);
       setError("");
 
-      // Build query params - if no filters, fetch today's data only
       const params = new URLSearchParams();
       
       if (fromDate && toDate) {
@@ -3102,7 +3105,6 @@ const TodayAttendance = () => {
   const filterRecords = () => {
     let filtered = [...todayRecords];
     
-    // Apply stat card filter first
     if (activeFilter === 'active') {
       filtered = filtered.filter(rec => rec.status?.toLowerCase() === "checked-in");
     } else if (activeFilter === 'onsite') {
@@ -3110,7 +3112,6 @@ const TodayAttendance = () => {
     } else if (activeFilter === 'remote') {
       filtered = filtered.filter(rec => rec.onsite === false);
     }
-    // 'all' shows all records, no filter needed
     
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
@@ -3146,12 +3147,10 @@ const TodayAttendance = () => {
     setActiveFilter(null);
   };
 
-  // ─── Navigate to Employee Locations Page ───
   const goToEmployeeLocations = () => {
     navigate('/employee-locations');
   };
 
-  // Function to scroll to table
   const scrollToTable = () => {
     const tableElement = document.querySelector('.emp-dash__card:last-child');
     if (tableElement) {
@@ -3166,10 +3165,8 @@ const TodayAttendance = () => {
     }
   };
 
-  // Handle stat card click
   const handleStatClick = (filterType) => {
     setActiveFilter(filterType);
-    // Small delay to allow state update and re-render before scrolling
     setTimeout(() => {
       scrollToTable();
     }, 100);
@@ -3179,6 +3176,7 @@ const TodayAttendance = () => {
   const indexOfFirstRow = indexOfLastRow - pagination.limit;
   const currentRows = filteredRecords.slice(indexOfFirstRow, indexOfLastRow);
 
+  // ─── Handle itemsPerPage change with localStorage persistence ───
   const handleItemsPerPageChange = (limit) => {
     setPagination({
       currentPage: 1,
@@ -3186,6 +3184,7 @@ const TodayAttendance = () => {
       totalCount: filteredRecords.length,
       totalPages: Math.ceil(filteredRecords.length / limit)
     });
+    localStorage.setItem('todayAttendance_itemsPerPage', String(limit));
   };
 
   const getStatusColor = (status) => {
@@ -3223,7 +3222,6 @@ const TodayAttendance = () => {
     return pageNumbers;
   };
 
-  // Function to get avatar color for desktop/tab
   const getAvatarColorDesktop = (rec) => {
     if (rec.status?.toLowerCase() === "checked-out") {
       return "bg-gradient-to-br from-red-500 to-red-600";
@@ -3292,10 +3290,9 @@ const TodayAttendance = () => {
           </div>
         </div>
 
-        {/* ─── Action Buttons Row ─── */}
+        {/* Action Buttons Row */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-2">
-            {/* ✅ Employee Location Button */}
             <button
               onClick={goToEmployeeLocations}
               className="px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
@@ -3317,7 +3314,6 @@ const TodayAttendance = () => {
 
         {/* Top KPI Stats Grid - Clickable Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
-          {/* Total Checked-In - Shows All */}
           <div 
             onClick={() => handleStatClick('all')}
             className={`emp-dash__stat cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg ${
@@ -3334,7 +3330,6 @@ const TodayAttendance = () => {
             <div className="emp-dash__stat-meta">checked in today</div>
           </div>
           
-          {/* Active Working - Shows Active/Checked-In */}
           <div 
             onClick={() => handleStatClick('active')}
             className={`emp-dash__stat cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg ${
@@ -3351,7 +3346,6 @@ const TodayAttendance = () => {
             <div className="emp-dash__stat-meta">currently working</div>
           </div>
 
-          {/* Onsite (WFO) */}
           <div 
             onClick={() => handleStatClick('onsite')}
             className={`emp-dash__stat cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg ${
@@ -3368,7 +3362,6 @@ const TodayAttendance = () => {
             <div className="emp-dash__stat-meta">working at office</div>
           </div>
 
-          {/* Remote (WFH) */}
           <div 
             onClick={() => handleStatClick('remote')}
             className={`emp-dash__stat cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg ${
@@ -3387,395 +3380,377 @@ const TodayAttendance = () => {
         </div>
 
         {/* Filters Card */}
-      <div className="emp-dash__card mb-6">
-  {/* Desktop View */}
-  <div className="hidden lg:block">
-    <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200">
-      {/* Left - Filters */}
-      <div className="flex items-center gap-2 flex-1 min-w-0">
-        {/* Search */}
-        <div className="relative min-w-[140px] flex-1 max-w-[200px]">
-          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-          <input
-            type="text"
-            placeholder="Search ID or Name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-          />
-        </div>
-
-        {/* Department */}
-        <div className="relative" ref={departmentFilterRef}>
-          <button
-            onClick={() => {
-              setShowDepartmentFilter(!showDepartmentFilter);
-              setShowDesignationFilter(false);
-            }}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-              filterDepartment
-                ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                : "border-gray-300 text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <FaBuilding className="text-gray-400 text-[10px]" />
-            <span className="truncate max-w-[100px]">{filterDepartment || "Departments"}</span>
-            <span className="text-gray-400 text-[10px]">▾</span>
-          </button>
-          {showDepartmentFilter && (
-            <div 
-              className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
-              style={{
-                zIndex: 99999,
-                top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
-                left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
-              }}
-            >
-              <div
-                onClick={() => {
-                  setFilterDepartment("");
-                  setShowDepartmentFilter(false);
-                }}
-                className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-              >
-                All Departments
-              </div>
-              {uniqueDepartments.map((dept) => (
-                <div
-                  key={dept}
-                  onClick={() => {
-                    setFilterDepartment(dept);
-                    setShowDepartmentFilter(false);
-                  }}
-                  className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                    filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                  }`}
-                >
-                  {dept}
+        <div className="emp-dash__card mb-6">
+          {/* Desktop View */}
+          <div className="hidden lg:block">
+            <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-gray-200">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="relative min-w-[140px] flex-1 max-w-[200px]">
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                  <input
+                    type="text"
+                    placeholder="Search ID or Name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
 
-        {/* Designation */}
-        <div className="relative" ref={designationFilterRef}>
-          <button
-            onClick={() => {
-              setShowDesignationFilter(!showDesignationFilter);
-              setShowDepartmentFilter(false);
-            }}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
-              filterDesignation
-                ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                : "border-gray-300 text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <FaUserTag className="text-gray-400 text-[10px]" />
-            <span className="truncate max-w-[100px]">{filterDesignation || "Designations"}</span>
-            <span className="text-gray-400 text-[10px]">▾</span>
-          </button>
-          {showDesignationFilter && (
-            <div 
-              className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
-              style={{
-                zIndex: 99999,
-                top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
-                left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
-              }}
-            >
-              <div
-                onClick={() => {
-                  setFilterDesignation("");
-                  setShowDesignationFilter(false);
-                }}
-                className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-              >
-                All Designations
-              </div>
-              {uniqueDesignations.map((des) => (
-                <div
-                  key={des}
-                  onClick={() => {
-                    setFilterDesignation(des);
-                    setShowDesignationFilter(false);
-                  }}
-                  className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
-                    filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                  }`}
-                >
-                  {des}
+                <div className="relative" ref={departmentFilterRef}>
+                  <button
+                    onClick={() => {
+                      setShowDepartmentFilter(!showDepartmentFilter);
+                      setShowDesignationFilter(false);
+                    }}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                      filterDepartment
+                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <FaBuilding className="text-gray-400 text-[10px]" />
+                    <span className="truncate max-w-[100px]">{filterDepartment || "Departments"}</span>
+                    <span className="text-gray-400 text-[10px]">▾</span>
+                  </button>
+                  {showDepartmentFilter && (
+                    <div 
+                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
+                      style={{
+                        zIndex: 99999,
+                        top: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                        left: departmentFilterRef.current ? departmentFilterRef.current.getBoundingClientRect().left : 'auto',
+                      }}
+                    >
+                      <div
+                        onClick={() => {
+                          setFilterDepartment("");
+                          setShowDepartmentFilter(false);
+                        }}
+                        className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                      >
+                        All Departments
+                      </div>
+                      {uniqueDepartments.map((dept) => (
+                        <div
+                          key={dept}
+                          onClick={() => {
+                            setFilterDepartment(dept);
+                            setShowDepartmentFilter(false);
+                          }}
+                          className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                            filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                          }`}
+                        >
+                          {dept}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))}
+
+                <div className="relative" ref={designationFilterRef}>
+                  <button
+                    onClick={() => {
+                      setShowDesignationFilter(!showDesignationFilter);
+                      setShowDepartmentFilter(false);
+                    }}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-all bg-white whitespace-nowrap ${
+                      filterDesignation
+                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <FaUserTag className="text-gray-400 text-[10px]" />
+                    <span className="truncate max-w-[100px]">{filterDesignation || "Designations"}</span>
+                    <span className="text-gray-400 text-[10px]">▾</span>
+                  </button>
+                  {showDesignationFilter && (
+                    <div 
+                      className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl min-w-[200px] max-h-60 overflow-y-auto"
+                      style={{
+                        zIndex: 99999,
+                        top: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().bottom + 4 : 'auto',
+                        left: designationFilterRef.current ? designationFilterRef.current.getBoundingClientRect().left : 'auto',
+                      }}
+                    >
+                      <div
+                        onClick={() => {
+                          setFilterDesignation("");
+                          setShowDesignationFilter(false);
+                        }}
+                        className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                      >
+                        All Designations
+                      </div>
+                      {uniqueDesignations.map((des) => (
+                        <div
+                          key={des}
+                          onClick={() => {
+                            setFilterDesignation(des);
+                            setShowDesignationFilter(false);
+                          }}
+                          className={`px-3 py-2 text-xs cursor-pointer hover:bg-blue-50 ${
+                            filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                          }`}
+                        >
+                          {des}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                    placeholder="From"
+                    className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                    placeholder="To"
+                    className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                    className="w-[130px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <button
+                  onClick={fetchAttendanceData}
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
+                  title="Refresh data"
+                >
+                  <FiRefreshCw className="w-3 h-3" />
+                  <span className="hidden sm:inline">Refresh</span>
+                </button>
+
+                {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth || activeFilter) && (
+                  <button
+                    onClick={clearFilters}
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+                  >
+                    <FiTrash2 className="w-3 h-3" />
+                    Clear
+                  </button>
+                )}
+              </div>
             </div>
-          )}
-        </div>
-
-        {/* Date From - Compact */}
-        <div className="relative">
-          <input
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            onClick={(e) => e.target.showPicker && e.target.showPicker()}
-            placeholder="From"
-            className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-          />
-        </div>
-
-        {/* Date To - Compact */}
-        <div className="relative">
-          <input
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            onClick={(e) => e.target.showPicker && e.target.showPicker()}
-            placeholder="To"
-            className="w-[120px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-          />
-        </div>
-
-        {/* Month Picker - Compact */}
-        <div className="relative">
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            onClick={(e) => e.target.showPicker && e.target.showPicker()}
-            className="w-[130px] h-8 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
-          />
-        </div>
-      </div>
-
-      {/* Right - Action Buttons */}
-      <div className="flex items-center gap-1.5 flex-shrink-0">
-        <button
-          onClick={fetchAttendanceData}
-          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
-          title="Refresh data"
-        >
-          <FiRefreshCw className="w-3 h-3" />
-          <span className="hidden sm:inline">Refresh</span>
-        </button>
-
-        {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth || activeFilter) && (
-          <button
-            onClick={clearFilters}
-            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
-          >
-            <FiTrash2 className="w-3 h-3" />
-            Clear
-          </button>
-        )}
-      </div>
-    </div>
-  </div>
-
-  {/* Mobile View */}
-  <div className="lg:hidden">
-    {/* Mobile Header with Toggle */}
-    <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
-      <button
-        onClick={() => setShowFilters(!showFilters)}
-        className="flex items-center gap-2 text-sm font-semibold text-gray-700"
-      >
-        <FiFilter className="text-blue-600 text-base" />
-        <span>Filters</span>
-        {showFilters ? (
-          <FiChevronUp className="text-gray-400" />
-        ) : (
-          <FiChevronDown className="text-gray-400" />
-        )}
-      </button>
-      <span className="text-xs text-gray-500">
-        <strong>{filteredRecords.length}</strong> records
-      </span>
-    </div>
-
-    {/* Mobile Filters */}
-    {showFilters && (
-      <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
-        {/* Search */}
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
-          <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-            <input
-              type="text"
-              placeholder="Search ID or Name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-            />
           </div>
-        </div>
 
-        {/* Department */}
-        <div className="relative" ref={departmentFilterRef}>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
-          <button
-            onClick={() => {
-              setShowDepartmentFilter(!showDepartmentFilter);
-              setShowDesignationFilter(false);
-            }}
-            className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-              filterDepartment
-                ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                : "border-gray-300 text-gray-700"
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <FaBuilding className="text-gray-400" />
-              {filterDepartment || "All Departments"}
-            </span>
-            <span className="text-gray-400">▾</span>
-          </button>
-          {showDepartmentFilter && (
-            <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              <div
-                onClick={() => {
-                  setFilterDepartment("");
-                  setShowDepartmentFilter(false);
-                }}
-                className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-              >
-                All Departments
-              </div>
-              {uniqueDepartments.map((dept) => (
-                <div
-                  key={dept}
-                  onClick={() => {
-                    setFilterDepartment(dept);
-                    setShowDepartmentFilter(false);
-                  }}
-                  className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
-                    filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                  }`}
-                >
-                  {dept}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Designation */}
-        <div className="relative" ref={designationFilterRef}>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
-          <button
-            onClick={() => {
-              setShowDesignationFilter(!showDesignationFilter);
-              setShowDepartmentFilter(false);
-            }}
-            className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
-              filterDesignation
-                ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
-                : "border-gray-300 text-gray-700"
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <FaUserTag className="text-gray-400" />
-              {filterDesignation || "All Designations"}
-            </span>
-            <span className="text-gray-400">▾</span>
-          </button>
-          {showDesignationFilter && (
-            <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              <div
-                onClick={() => {
-                  setFilterDesignation("");
-                  setShowDesignationFilter(false);
-                }}
-                className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
-              >
-                All Designations
-              </div>
-              {uniqueDesignations.map((des) => (
-                <div
-                  key={des}
-                  onClick={() => {
-                    setFilterDesignation(des);
-                    setShowDesignationFilter(false);
-                  }}
-                  className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
-                    filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
-                  }`}
-                >
-                  {des}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Date From & To */}
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              onClick={(e) => e.target.showPicker && e.target.showPicker()}
-              className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              onClick={(e) => e.target.showPicker && e.target.showPicker()}
-              className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-            />
-          </div>
-        </div>
-
-        {/* Month Picker */}
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            onClick={(e) => e.target.showPicker && e.target.showPicker()}
-            className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
-          />
-        </div>
-
-        {/* Mobile Action Buttons */}
-        <div className="pt-3 border-t border-gray-200 space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={fetchAttendanceData}
-              className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-            >
-              <FiRefreshCw className="w-4 h-4" />
-              Refresh
-            </button>
-            {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth || activeFilter) && (
+          {/* Mobile View */}
+          <div className="lg:hidden">
+            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
               <button
-                onClick={clearFilters}
-                className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2 text-sm font-semibold text-gray-700"
               >
-                <FiTrash2 className="w-4 h-4" />
-                Clear
+                <FiFilter className="text-blue-600 text-base" />
+                <span>Filters</span>
+                {showFilters ? (
+                  <FiChevronUp className="text-gray-400" />
+                ) : (
+                  <FiChevronDown className="text-gray-400" />
+                )}
               </button>
+              <span className="text-xs text-gray-500">
+                <strong>{filteredRecords.length}</strong> records
+              </span>
+            </div>
+
+            {showFilters && (
+              <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
+                  <div className="relative">
+                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                    <input
+                      type="text"
+                      placeholder="Search ID or Name..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="relative" ref={departmentFilterRef}>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
+                  <button
+                    onClick={() => {
+                      setShowDepartmentFilter(!showDepartmentFilter);
+                      setShowDesignationFilter(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                      filterDepartment
+                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                        : "border-gray-300 text-gray-700"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <FaBuilding className="text-gray-400" />
+                      {filterDepartment || "All Departments"}
+                    </span>
+                    <span className="text-gray-400">▾</span>
+                  </button>
+                  {showDepartmentFilter && (
+                    <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      <div
+                        onClick={() => {
+                          setFilterDepartment("");
+                          setShowDepartmentFilter(false);
+                        }}
+                        className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                      >
+                        All Departments
+                      </div>
+                      {uniqueDepartments.map((dept) => (
+                        <div
+                          key={dept}
+                          onClick={() => {
+                            setFilterDepartment(dept);
+                            setShowDepartmentFilter(false);
+                          }}
+                          className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                            filterDepartment === dept ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                          }`}
+                        >
+                          {dept}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="relative" ref={designationFilterRef}>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
+                  <button
+                    onClick={() => {
+                      setShowDesignationFilter(!showDesignationFilter);
+                      setShowDepartmentFilter(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg border transition-all bg-white ${
+                      filterDesignation
+                        ? "border-blue-500 text-blue-700 ring-2 ring-blue-500/10 bg-blue-50"
+                        : "border-gray-300 text-gray-700"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <FaUserTag className="text-gray-400" />
+                      {filterDesignation || "All Designations"}
+                    </span>
+                    <span className="text-gray-400">▾</span>
+                  </button>
+                  {showDesignationFilter && (
+                    <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      <div
+                        onClick={() => {
+                          setFilterDesignation("");
+                          setShowDesignationFilter(false);
+                        }}
+                        className="px-3 py-2.5 text-sm font-medium text-gray-500 border-b border-gray-100 cursor-pointer hover:bg-blue-50"
+                      >
+                        All Designations
+                      </div>
+                      {uniqueDesignations.map((des) => (
+                        <div
+                          key={des}
+                          onClick={() => {
+                            setFilterDesignation(des);
+                            setShowDesignationFilter(false);
+                          }}
+                          className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-blue-50 ${
+                            filterDesignation === des ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700"
+                          }`}
+                        >
+                          {des}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">From Date</label>
+                    <input
+                      type="date"
+                      value={fromDate}
+                      onChange={(e) => setFromDate(e.target.value)}
+                      onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">To Date</label>
+                    <input
+                      type="date"
+                      value={toDate}
+                      onChange={(e) => setToDate(e.target.value)}
+                      onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                      className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Month</label>
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold"
+                  />
+                </div>
+
+                <div className="pt-3 border-t border-gray-200 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={fetchAttendanceData}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                    >
+                      <FiRefreshCw className="w-4 h-4" />
+                      Refresh
+                    </button>
+                    {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth || activeFilter) && (
+                      <button
+                        onClick={clearFilters}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
-      </div>
-    )}
-  </div>
-</div>
 
         {/* Table Section */}
         <div className="emp-dash__card">
           <div className="emp-dash__card-header">
-            <div>
-              {/* Header removed as requested */}
-            </div>
+            <div></div>
           </div>
 
           {filteredRecords.length === 0 ? (
@@ -3875,60 +3850,20 @@ const TodayAttendance = () => {
                   const breakMinutes = rec.totalBreakMinutes || calculateTotalBreakMinutes(rec.breaks);
                   const formattedTime = (time) => time ? new Date(time).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "-";
                   
-                  // Function to get avatar color based on status with PRIORITY to WFH/Onsite
                   const getAvatarColor = (rec) => {
-                    // First check: Checked-Out gets Red (highest priority)
                     if (rec.status?.toLowerCase() === "checked-out") {
-                      return "bg-gradient-to-br from-red-500 to-red-600"; // Red for logged out
+                      return "bg-gradient-to-br from-red-500 to-red-600";
                     }
-                    // Second check: WFH gets Orange
                     else if (rec.onsite === false) {
-                      return "bg-gradient-to-br from-orange-500 to-amber-600"; // Orange for WFH
+                      return "bg-gradient-to-br from-orange-500 to-amber-600";
                     }
-                    // Third check: Onsite gets Green
                     else if (rec.onsite === true) {
-                      return "bg-gradient-to-br from-green-500 to-emerald-600"; // Green for onsite
+                      return "bg-gradient-to-br from-green-500 to-emerald-600";
                     }
-                    // Fourth check: Active
                     else if (rec.status?.toLowerCase() === "checked-in") {
-                      return "bg-gradient-to-br from-emerald-500 to-green-600"; // Green for active
+                      return "bg-gradient-to-br from-emerald-500 to-green-600";
                     }
-                    return "bg-gradient-to-br from-indigo-500 to-blue-600"; // Default
-                  };
-                  
-                  // Function to get status dot color with PRIORITY to Checked-Out
-                  const getStatusDotColor = (rec) => {
-                    // First check: Checked-Out gets Red (highest priority)
-                    if (rec.status?.toLowerCase() === "checked-out") {
-                      return "bg-red-500"; // Red dot for logged out
-                    }
-                    // Second check: WFH gets Orange
-                    else if (rec.onsite === false) {
-                      return "bg-orange-500"; // Orange dot for WFH
-                    }
-                    // Third check: Onsite gets Green
-                    else if (rec.onsite === true) {
-                      return "bg-green-500"; // Green dot for onsite
-                    }
-                    // Fourth check: Active
-                    else if (rec.status?.toLowerCase() === "checked-in") {
-                      return "bg-emerald-500"; // Green dot for active
-                    }
-                    return "bg-gray-400"; // Default
-                  };
-                  
-                  // Get text for location badge
-                  const getLocationBadge = (rec) => {
-                    // Checked-Out gets Red
-                    if (rec.status?.toLowerCase() === "checked-out") {
-                      return "bg-red-100 text-red-700 border-red-200";
-                    }
-                    else if (rec.onsite === false) {
-                      return "bg-orange-100 text-orange-700 border-orange-200";
-                    } else if (rec.onsite === true) {
-                      return "bg-green-100 text-green-700 border-green-200";
-                    }
-                    return "bg-gray-100 text-gray-700 border-gray-200";
+                    return "bg-gradient-to-br from-indigo-500 to-blue-600";
                   };
                   
                   return (
@@ -3951,24 +3886,16 @@ const TodayAttendance = () => {
                           </div>
                           <div>
                             <h4 className="font-semibold text-gray-900">{rec.name}</h4>
-                            <div className="flex items-center gap-1.5">
-                              {/* Employee ID and Location badge - commented out as requested */}
-                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          {/* Status dot indicator - commented out as requested */}
                         </div>
                       </div>
                       
-                      {/* Department and Designation in one row - same format as Total Hours */}
                       <div className="flex items-center gap-2 text-xs text-gray-600 mt-2">
                         <span><span className="text-gray-400">Dept:</span> {rec.department}</span>
                         <span className="text-gray-300">|</span>
                         <span><span className="text-gray-400">Desig:</span> {rec.designation}</span>
                       </div>
 
-                      {/* Total Hours and Times in same row */}
                       <div className="flex items-center gap-2 text-xs text-gray-600 mt-1.5">
                         <span><span className="text-gray-400">Total Hours:</span> <span className="font-semibold text-gray-700">{rec.totalHours?.toFixed(2) || "0.00"}h</span></span>
                         <span className="text-gray-300">|</span>
