@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { FaEye, FaEyeSlash, FaUser, FaSmile, FaTimes } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaUser, FaSmile, FaTimes, FaCalendarCheck, FaArrowRight } from "react-icons/fa";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
 
@@ -21,6 +21,7 @@ const LoginPage = () => {
   // ⭐ Store navigation info
   const navigateToRef = useRef(null);
   const navigateStateRef = useRef(null);
+  const userDataRef = useRef(null);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -93,10 +94,8 @@ const LoginPage = () => {
       return false;
     }
     
-    // Check if any voices are available
     let voices = window.speechSynthesis.getVoices();
     if (voices.length === 0) {
-      // Some browsers need time to load voices
       window.speechSynthesis.onvoiceschanged = () => {
         voices = window.speechSynthesis.getVoices();
         if (voices.length > 0) {
@@ -108,10 +107,9 @@ const LoginPage = () => {
     return true;
   };
 
-  // ─── Female Voice Welcome Function (Mobile Optimized) ───
+  // ─── Female Voice Welcome Function ───
   const speakWelcome = (name, role) => {
     return new Promise((resolve) => {
-      // If speech not supported, resolve immediately
       if (!('speechSynthesis' in window)) {
         console.warn('⚠️ Speech synthesis not supported');
         setIsSpeechSupported(false);
@@ -120,23 +118,19 @@ const LoginPage = () => {
       }
 
       try {
-        // ⭐ CRITICAL: Cancel any ongoing speech
         window.speechSynthesis.cancel();
         
         const message = `Welcome ${name}! You are logged in as ${role}. Have a great day!`;
         const utterance = new SpeechSynthesisUtterance(message);
         
-        // Language and voice settings
         utterance.lang = 'en-US';
         utterance.rate = 0.9;
         utterance.pitch = 1.1;
         utterance.volume = 1;
         
-        // ⭐ Mobile Fix: Try to get a female voice
         const voices = window.speechSynthesis.getVoices();
         console.log('🔊 Available voices:', voices.map(v => v.name));
         
-        // Try multiple female voice patterns for better mobile support
         const femaleVoiceNames = [
           'Female', 'Samantha', 'Google UK', 'Victoria', 'Zira', 
           'Marie', 'Ellen', 'Susan', 'Karen', 'Siri', 
@@ -147,12 +141,10 @@ const LoginPage = () => {
         
         let femaleVoice = null;
         
-        // Try to find female voice
         for (const voice of voices) {
           const voiceName = voice.name.toLowerCase();
           const voiceLang = voice.lang.toLowerCase();
           
-          // Check if voice name contains female indicator or is a known female voice
           if (femaleVoiceNames.some(name => 
             voiceName.includes(name.toLowerCase()) || 
             voiceName.includes('female') ||
@@ -163,7 +155,6 @@ const LoginPage = () => {
           }
         }
         
-        // If no female voice found, try to get any English voice
         if (!femaleVoice) {
           femaleVoice = voices.find(v => 
             v.lang.startsWith('en-') || 
@@ -172,17 +163,14 @@ const LoginPage = () => {
           );
         }
         
-        // If still no voice, use default
         if (femaleVoice) {
           utterance.voice = femaleVoice;
           console.log('🎤 Using voice:', femaleVoice.name);
         } else {
-          // Fallback: use higher pitch for female-like sound
           utterance.pitch = 1.3;
           console.log('🎤 Using default voice with higher pitch');
         }
         
-        // ⭐ Mobile Fix: Handle speech events properly
         let isResolved = false;
         
         utterance.onstart = () => {
@@ -199,10 +187,7 @@ const LoginPage = () => {
         
         utterance.onerror = (event) => {
           console.warn('⚠️ Speech error:', event.error);
-          
-          // ⭐ Mobile Fix: If speech fails, try fallback
           if (event.error === 'not-allowed' || event.error === 'synthesis-unavailable') {
-            // Try speaking again after a small delay
             setTimeout(() => {
               try {
                 const fallbackUtterance = new SpeechSynthesisUtterance(message);
@@ -242,12 +227,10 @@ const LoginPage = () => {
           }
         };
         
-        // ⭐ Mobile Fix: Speak with proper timing
         setTimeout(() => {
           window.speechSynthesis.speak(utterance);
         }, 100);
         
-        // ⭐ Fallback timeout
         speechTimeoutRef.current = setTimeout(() => {
           if (!isResolved) {
             isResolved = true;
@@ -263,12 +246,10 @@ const LoginPage = () => {
     });
   };
 
-  // ─── Dismiss Welcome Popup ───
-  const dismissWelcomePopup = () => {
-    console.log('🔄 Dismissing popup...');
+  // ─── Handle Attendance Action (Inside Welcome Popup) ───
+  const handleMarkAttendance = () => {
     setShowWelcome(false);
     
-    // ⭐ Mobile Fix: Cancel speech properly
     try {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -282,7 +263,51 @@ const LoginPage = () => {
       speechTimeoutRef.current = null;
     }
     
-    // ⭐ CRITICAL: Navigate after popup dismiss
+    const targetPath = '/attendance-capture';
+    const employeeEmail = localStorage.getItem('employeeEmail');
+    const employeeId = localStorage.getItem('employeeId');
+    const employeeName = localStorage.getItem('employeeName');
+    const department = localStorage.getItem('employeeDepartment') || '';
+    
+    const stateData = {
+      email: employeeEmail,
+      employeeId: employeeId,
+      employeeName: employeeName,
+      department: department
+    };
+    
+    console.log('🚀 Navigating to attendance capture:', targetPath, 'with state:', stateData);
+    
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(() => {
+        navigate(targetPath, { state: stateData, replace: true });
+      });
+    } else {
+      setTimeout(() => {
+        navigate(targetPath, { state: stateData, replace: true });
+      }, 50);
+    }
+  };
+
+  // ─── Dismiss Welcome Popup ───
+  const dismissWelcomePopup = () => {
+    console.log('🔄 Dismissing popup...');
+    setShowWelcome(false);
+    
+    try {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    } catch (e) {
+      console.warn('⚠️ Error canceling speech:', e);
+    }
+    
+    if (speechTimeoutRef.current) {
+      clearTimeout(speechTimeoutRef.current);
+      speechTimeoutRef.current = null;
+    }
+    
+    // Navigate to target
     const targetPath = navigateToRef.current;
     const targetState = navigateStateRef.current;
     
@@ -291,7 +316,6 @@ const LoginPage = () => {
       navigateToRef.current = null;
       navigateStateRef.current = null;
       
-      // Use requestAnimationFrame for smoother navigation
       if (window.requestAnimationFrame) {
         window.requestAnimationFrame(() => {
           if (targetState) {
@@ -316,18 +340,14 @@ const LoginPage = () => {
 
   // ─── Initialize speech on component mount ───
   useEffect(() => {
-    // Check speech support
     checkSpeechSupport();
     
-    // ⭐ Mobile Fix: Pre-load voices
     if ('speechSynthesis' in window) {
-      // Try to get voices
       const voices = window.speechSynthesis.getVoices();
       if (voices.length > 0) {
         console.log('🔊 Voices loaded:', voices.length);
       }
       
-      // Listen for voice changes
       window.speechSynthesis.onvoiceschanged = () => {
         const updatedVoices = window.speechSynthesis.getVoices();
         console.log('🔊 Voices updated:', updatedVoices.length);
@@ -336,11 +356,9 @@ const LoginPage = () => {
         }
       };
       
-      // ⭐ Mobile Fix: Resume speech context on user interaction
       const resumeSpeech = () => {
         if ('speechSynthesis' in window) {
           try {
-            // This helps resume speech on mobile
             window.speechSynthesis.cancel();
             window.speechSynthesis.getVoices();
           } catch (e) {
@@ -349,7 +367,6 @@ const LoginPage = () => {
         }
       };
       
-      // Resume speech on user interaction
       document.addEventListener('click', resumeSpeech);
       document.addEventListener('touchstart', resumeSpeech);
       
@@ -439,8 +456,6 @@ const LoginPage = () => {
         
         setShowWelcome(true);
         setIsLoading(false);
-        
-        // ⭐ Speak welcome with proper handling
         await speakWelcome(name, 'Admin');
         return;
       }
@@ -486,6 +501,7 @@ const LoginPage = () => {
         localStorage.setItem("employeeId", employeeId);
         localStorage.setItem("employeeEmail", employee.email || email);
         localStorage.setItem("employeeName", name);
+        localStorage.setItem("employeeDepartment", employee.department || '');
         localStorage.setItem("employeeMongoId", employee._id || '');
         localStorage.setItem("employeePassword", employeePassword);
         localStorage.setItem('userRole', 'employee');
@@ -581,6 +597,20 @@ const LoginPage = () => {
     }
   };
 
+  // Check if attendance prompt should be shown (inside welcome popup)
+  const shouldShowAttendancePrompt = () => {
+    const hour = new Date().getHours();
+    // After 5 AM
+    if (hour >= 5) {
+      const role = localStorage.getItem('userRole');
+      // Only for employees, not admin
+      if (role === 'employee') {
+        return true;
+      }
+    }
+    return false;
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       
@@ -608,7 +638,7 @@ const LoginPage = () => {
         </div>
       </div>
 
-      {/* ─── WELCOME POPUP ─── */}
+      {/* ─── WELCOME POPUP WITH ATTENDANCE PROMPT INSIDE ─── */}
       {showWelcome && (
         <div 
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-md animate-fadeIn"
@@ -616,7 +646,7 @@ const LoginPage = () => {
         >
           <div 
             className="relative bg-white rounded-3xl p-8 sm:p-12 max-w-md w-full mx-4 shadow-2xl animate-scaleUp border border-gray-100"
-            onClick={dismissWelcomePopup}
+            onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={dismissWelcomePopup}
@@ -652,11 +682,10 @@ const LoginPage = () => {
                 <span>{userRole}</span>
               </div>
               
-              <p className="text-gray-600 text-sm mb-6" onClick={dismissWelcomePopup}>
+              <p className="text-gray-600 text-sm mb-4" onClick={dismissWelcomePopup}>
                 You have been successfully logged in to <strong className="text-gray-800">INGRAIN'S TMS</strong>
               </p>
               
-              {/* ⭐ Show voice indicator only if supported */}
               {isSpeechSupported && (
                 <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-4" onClick={dismissWelcomePopup}>
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
@@ -665,16 +694,39 @@ const LoginPage = () => {
                   </span>
                 </div>
               )}
-              
-              {!isSpeechSupported && (
-                <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-4" onClick={dismissWelcomePopup}>
-                  <span className="text-[8px] sm:text-[10px] text-gray-400">
-                    ✅ Login successful!
-                  </span>
+
+              {/* ─── ATTENDANCE PROMPT INSIDE WELCOME POPUP ─── */}
+              {shouldShowAttendancePrompt() && (
+                <div className="mt-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 flex-shrink-0">
+                      <FaCalendarCheck className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-semibold text-gray-800">Mark Today's Attendance</p>
+                      <p className="text-xs text-gray-500">Time to mark your attendance for today</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleMarkAttendance}
+                      className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 transition-all duration-300 shadow-md shadow-indigo-500/30 flex items-center justify-center gap-2"
+                    >
+                      <FaArrowRight className="w-3 h-3" />
+                      Mark Now
+                    </button>
+                    <button
+                      onClick={dismissWelcomePopup}
+                      className="px-4 py-2.5 rounded-xl text-gray-500 text-sm font-medium hover:bg-gray-100 transition-all duration-200"
+                    >
+                      Skip
+                    </button>
+                  </div>
                 </div>
               )}
               
-              <div className="w-full" onClick={dismissWelcomePopup}>
+              <div className="w-full mt-4" onClick={dismissWelcomePopup}>
                 <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
                   <div className="h-full w-0 bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 rounded-full animate-progressFill"></div>
                 </div>
