@@ -2931,13 +2931,16 @@
 
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
-import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag, FaMapMarkerAlt } from "react-icons/fa";
-import { FiCoffee, FiUsers, FiMapPin, FiUserCheck, FiHome, FiCalendar, FiTrash2, FiRefreshCw, FiFilter, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { FaBuilding, FaCalendarAlt, FaSearch, FaUserTag, FaMapMarkerAlt, FaTimes, FaClock } from "react-icons/fa";
+import { FiCoffee, FiUsers, FiMapPin, FiUserCheck, FiHome, FiCalendar, FiTrash2, FiRefreshCw, FiFilter, FiChevronDown, FiChevronUp, FiImage } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config";
 import { isEmployeeHidden } from "../utils/employeeStatus";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
+
+// ✅ Remove /api from BASE_URL for static files
+const BASE_URL = API_BASE_URL.replace(/\/api$/, "");
 
 // Helper function to format break minutes
 const formatBreakMinutes = (minutes) => {
@@ -2952,6 +2955,16 @@ const formatBreakMinutes = (minutes) => {
 const calculateTotalBreakMinutes = (breaks) => {
   if (!breaks || breaks.length === 0) return 0;
   return breaks.reduce((total, b) => total + (b.breakMinutes || 0), 0);
+};
+
+// ✅ Helper function to get full image URL - REMOVED /api
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return null;
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  return `${BASE_URL}${cleanPath}`;
 };
 
 const TodayAttendance = () => {
@@ -2988,6 +3001,19 @@ const TodayAttendance = () => {
   // State for mobile filter collapse
   const [showFilters, setShowFilters] = useState(false);
   
+  // ✅ Image Popup states
+  const [imagePopup, setImagePopup] = useState({
+    isOpen: false,
+    imageUrl: null,
+    imageType: null,
+    employeeName: null,
+    employeeId: null,
+    date: null,
+    rawImagePath: null,
+    checkInTime: null,
+    checkOutTime: null
+  });
+
   // ─── Persist pagination limit in localStorage ───
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -3088,7 +3114,9 @@ const TodayAttendance = () => {
             designation: employee?.designation || employee?.role || "N/A",
             attendanceDate: formattedDate,
             rawDate: recordDate,
-            profilePicture: employee?.profilePicture || null
+            profilePicture: employee?.profilePicture || null,
+            checkInImage: rec.checkInImage || null,
+            checkOutImage: rec.checkOutImage || null
           };
         })
         .filter(rec => rec !== null);
@@ -3170,6 +3198,43 @@ const TodayAttendance = () => {
     setTimeout(() => {
       scrollToTable();
     }, 100);
+  };
+
+  // ✅ Image Popup Handlers
+  const openImagePopup = (imagePath, imageType, employeeName, employeeId, date, checkInTime, checkOutTime) => {
+    if (!imagePath) {
+      console.log("❌ No image path provided");
+      return;
+    }
+    
+    const fullImageUrl = getImageUrl(imagePath);
+    console.log("✅ Full image URL:", fullImageUrl);
+    
+    setImagePopup({
+      isOpen: true,
+      imageUrl: fullImageUrl,
+      imageType: imageType,
+      employeeName: employeeName,
+      employeeId: employeeId,
+      date: date,
+      rawImagePath: imagePath,
+      checkInTime: checkInTime,
+      checkOutTime: checkOutTime
+    });
+  };
+
+  const closeImagePopup = () => {
+    setImagePopup({
+      isOpen: false,
+      imageUrl: null,
+      imageType: null,
+      employeeName: null,
+      employeeId: null,
+      date: null,
+      rawImagePath: null,
+      checkInTime: null,
+      checkOutTime: null
+    });
   };
 
   const indexOfLastRow = pagination.currentPage * pagination.limit;
@@ -3772,6 +3837,7 @@ const TodayAttendance = () => {
                       <th style={{ textAlign: "center" }}>Check In</th>
                       <th style={{ textAlign: "center" }}>Check Out</th>
                       <th style={{ textAlign: "center" }}>Total Hours</th>
+                      <th style={{ textAlign: "center" }}>Attendance Images</th>
                       <th style={{ textAlign: "right" }}>Status</th>
                     </tr>
                   </thead>
@@ -3779,6 +3845,11 @@ const TodayAttendance = () => {
                     {currentRows.map((rec) => {
                       const breakMinutes = rec.totalBreakMinutes || calculateTotalBreakMinutes(rec.breaks);
                       const breakReason = rec.breaks && rec.breaks.length > 0 ? rec.breaks[0].reason : null;
+                      
+                      // Check if images exist
+                      const hasCheckInImage = rec.checkInImage && rec.checkInImage !== null && rec.checkInImage !== "";
+                      const hasCheckOutImage = rec.checkOutImage && rec.checkOutImage !== null && rec.checkOutImage !== "";
+                      const hasAnyImage = hasCheckInImage || hasCheckOutImage;
                       
                       return (
                         <tr key={rec._id} className="hover:bg-gray-55/60 transition-all">
@@ -3832,6 +3903,51 @@ const TodayAttendance = () => {
                               {rec.totalHours?.toFixed(2) || "0.00"}h
                             </span>
                           </td>
+                          {/* ✅ Attendance Images Column */}
+                          <td style={{ textAlign: "center" }}>
+                            {hasAnyImage ? (
+                              <div className="flex items-center justify-center gap-1.5">
+                                {hasCheckInImage && (
+                                  <button
+                                    onClick={() => openImagePopup(
+                                      rec.checkInImage,
+                                      'Check-In',
+                                      rec.name,
+                                      rec.employeeId,
+                                      rec.rawDate,
+                                      rec.checkInTime,
+                                      rec.checkOutTime
+                                    )}
+                                    className="relative group flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-all shadow-sm hover:shadow-md"
+                                    title="View Check-In Image"
+                                  >
+                                    <FiImage className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-500 border border-white"></span>
+                                  </button>
+                                )}
+                                {hasCheckOutImage && (
+                                  <button
+                                    onClick={() => openImagePopup(
+                                      rec.checkOutImage,
+                                      'Check-Out',
+                                      rec.name,
+                                      rec.employeeId,
+                                      rec.rawDate,
+                                      rec.checkInTime,
+                                      rec.checkOutTime
+                                    )}
+                                    className="relative group flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 transition-all shadow-sm hover:shadow-md"
+                                    title="View Check-Out Image"
+                                  >
+                                    <FiImage className="w-3.5 h-3.5 text-indigo-600" />
+                                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-indigo-500 border border-white"></span>
+                                  </button>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-slate-300 font-medium">-</span>
+                            )}
+                          </td>
                           <td style={{ textAlign: "right" }}>
                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getStatusColor(rec.status)}`}>
                               {rec.status === "checked-in" ? "Active" : "Logged Out"}
@@ -3849,6 +3965,11 @@ const TodayAttendance = () => {
                 {currentRows.map((rec) => {
                   const breakMinutes = rec.totalBreakMinutes || calculateTotalBreakMinutes(rec.breaks);
                   const formattedTime = (time) => time ? new Date(time).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "-";
+                  
+                  // Check if images exist
+                  const hasCheckInImage = rec.checkInImage && rec.checkInImage !== null && rec.checkInImage !== "";
+                  const hasCheckOutImage = rec.checkOutImage && rec.checkOutImage !== null && rec.checkOutImage !== "";
+                  const hasAnyImage = hasCheckInImage || hasCheckOutImage;
                   
                   const getAvatarColor = (rec) => {
                     if (rec.status?.toLowerCase() === "checked-out") {
@@ -3888,6 +4009,45 @@ const TodayAttendance = () => {
                             <h4 className="font-semibold text-gray-900">{rec.name}</h4>
                           </div>
                         </div>
+                        {/* ✅ Mobile Images */}
+                        {hasAnyImage && (
+                          <div className="flex items-center gap-1">
+                            {hasCheckInImage && (
+                              <button
+                                onClick={() => openImagePopup(
+                                  rec.checkInImage,
+                                  'Check-In',
+                                  rec.name,
+                                  rec.employeeId,
+                                  rec.rawDate,
+                                  rec.checkInTime,
+                                  rec.checkOutTime
+                                )}
+                                className="flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-all"
+                                title="View Check-In Image"
+                              >
+                                <FiImage className="w-3 h-3 text-emerald-600" />
+                              </button>
+                            )}
+                            {hasCheckOutImage && (
+                              <button
+                                onClick={() => openImagePopup(
+                                  rec.checkOutImage,
+                                  'Check-Out',
+                                  rec.name,
+                                  rec.employeeId,
+                                  rec.rawDate,
+                                  rec.checkInTime,
+                                  rec.checkOutTime
+                                )}
+                                className="flex items-center justify-center w-6 h-6 rounded-lg bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 transition-all"
+                                title="View Check-Out Image"
+                              >
+                                <FiImage className="w-3 h-3 text-indigo-600" />
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                       
                       <div className="flex items-center gap-2 text-xs text-gray-600 mt-2">
@@ -3976,6 +4136,119 @@ const TodayAttendance = () => {
           )}
         </div>
       </main>
+
+      {/* ✅ IMAGE POPUP MODAL WITH X ICON IN TOP RIGHT CORNER */}
+      {imagePopup.isOpen && (
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in p-4"
+          onClick={closeImagePopup}
+        >
+          <div 
+            className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* ✅ X Icon - Top Right Corner */}
+            <button
+              onClick={closeImagePopup}
+              className="absolute top-3 right-3 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-white/90 hover:bg-red-50 hover:text-red-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:rotate-90 border border-gray-200/50"
+              aria-label="Close"
+            >
+              <FaTimes className="text-gray-700 hover:text-red-500 transition-colors text-xl font-bold" />
+            </button>
+
+            {/* Popup Content */}
+            <div className="flex flex-col">
+              {/* Popup Header */}
+              <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50 pr-16">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <span className="text-2xl">📸</span>
+                    {imagePopup.imageType} Photo
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {imagePopup.employeeName} ({imagePopup.employeeId})
+                  </p>
+                  {/* ✅ Show Date and Time */}
+                  <div className="flex items-center gap-3 mt-1">
+                    <p className="text-[11px] text-gray-600 flex items-center gap-1">
+                      <FaCalendarAlt className="text-indigo-400 text-[10px]" />
+                      {imagePopup.date ? new Date(imagePopup.date).toLocaleDateString('en-IN', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                      }) : '-'}
+                    </p>
+                    <p className="text-[11px] text-gray-600 flex items-center gap-1">
+                      <FaClock className="text-indigo-400 text-[10px]" />
+                      {imagePopup.checkInTime ? new Date(imagePopup.checkInTime).toLocaleTimeString('en-IN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      }) : '-'}
+                    </p>
+                  </div>
+                 
+               
+                </div>
+              </div>
+
+              {/* Image Container */}
+              <div className="p-4 flex items-center justify-center bg-gray-50 min-h-[300px] max-h-[70vh]">
+                {imagePopup.imageUrl ? (
+                  <img
+                    src={imagePopup.imageUrl}
+                    alt={`${imagePopup.imageType} Photo`}
+                    className="max-w-full max-h-[65vh] object-contain rounded-lg shadow-lg"
+                    onError={(e) => {
+                      console.error("❌ Image load error for URL:", imagePopup.imageUrl);
+                      e.target.style.display = 'none';
+                      const fallback = e.target.nextSibling;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                    onLoad={() => {
+                      console.log("✅ Image loaded successfully:", imagePopup.imageUrl);
+                    }}
+                  />
+                ) : null}
+                {/* Fallback div when image fails */}
+                <div 
+                  className="text-center text-gray-400 flex flex-col items-center justify-center"
+                  style={{ display: imagePopup.imageUrl ? 'none' : 'flex' }}
+                >
+                  <FiImage className="w-16 h-16 mb-2 opacity-30" />
+                  <p className="text-sm font-medium">No image available</p>
+                  {imagePopup.rawImagePath && (
+                    <p className="text-xs text-gray-300 mt-1 truncate max-w-[200px]">
+                      {imagePopup.rawImagePath}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Popup Footer */}
+              <div className="p-3 border-t border-gray-200 bg-gray-50/50 text-center">
+                <p className="text-[10px] text-gray-400 font-medium">
+                  {imagePopup.imageType} photo captured during attendance marking
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scale-up {
+          from { opacity: 0; transform: scale(0.9) translateY(15px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-fade-in { animation: fade-in 0.25s ease-out; }
+        .animate-scale-up { animation: scale-up 0.3s ease-out; }
+      `}</style>
     </div>
   );
 };

@@ -977,116 +977,68 @@
 
 // export default AttendanceDashboard;
 
-
 import axios from 'axios';
 import { useEffect, useState } from "react";
-import { FiCalendar, FiClock, FiTrendingUp, FiUserCheck, FiUserX, FiUsers, FiX, FiExternalLink, FiMapPin } from "react-icons/fi";
+import { 
+  FiCalendar, FiClock, FiTrendingUp, FiUserCheck, FiUserX, FiUsers, 
+  FiX, FiExternalLink, FiMapPin, FiBarChart2, FiPieChart, FiActivity,
+  FiAward, FiStar, FiZap, FiTarget, FiCheckCircle, FiAlertCircle,
+  FiUser, FiBriefcase, FiHome, FiArrowUp, FiArrowDown, FiMoreHorizontal,
+  FiTrendingDown, FiInfo
+} from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { isEmployeeHidden } from "../utils/employeeStatus";
-import "./Dashboard.css";
 
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  Area,
-  AreaChart,
-  ComposedChart,
-  Line,
-  RadialBar,
-  RadialBarChart,
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis
+  Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, 
+  ResponsiveContainer, Tooltip, XAxis, YAxis, Line, LineChart, 
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  Area, AreaChart, ComposedChart
 } from 'recharts';
 
 const API_BASE_URL = "https://api.timelyhealth.in/api";
 
-// ─── Bold & Vibrant Color Palette ───
+// ─── Premium Color Palette ───
 const COLORS = [
-  '#FF1744', // Bright Red
-  '#D500F9', // Deep Purple
-  '#2979FF', // Bright Blue
-  '#00E676', // Neon Green
-  '#FF9100', // Deep Orange
-  '#00BCD4', // Cyan
-  '#F50057', // Pink
-  '#76FF03', // Lime Green
-  '#FFD600', // Yellow
-  '#651FFF', // Deep Indigo
-  '#FF3D00', // Orange Red
-  '#00BFA5', // Teal
-  '#E040FB', // Light Purple
-  '#FF6D00', // Amber
-  '#00E5FF', // Light Blue
-  '#F44336', // Red
-  '#7C4DFF', // Violet
-  '#00C853', // Green
-  '#FF4081', // Pink
-  '#40C4FF', // Sky Blue
-  '#FFAB00', // Gold
-  '#6D4C41', // Brown
-  '#D50000', // Dark Red
-  '#6200EA', // Dark Purple
-  '#2962FF', // Dark Blue
-  '#00BFA5', // Teal
-  '#DD2C00', // Vermilion
-  '#C51162', // Dark Pink
-  '#01579B', // Dark Cyan
-  '#1B5E20', // Dark Green
-  '#E65100', // Dark Orange
+  '#6366F1', '#8B5CF6', '#EC4899', '#F43F5E', '#F59E0B',
+  '#10B981', '#06B6D4', '#3B82F6', '#8B5CF6', '#D946EF',
+  '#F97316', '#14B8A6', '#6366F1', '#8B5CF6', '#EC4899',
+  '#F43F5E', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6'
 ];
 
-// ─── Employee Color Mapping ───
 const getEmployeeColor = (name) => {
-  if (!name) return '#2979FF';
-  
+  if (!name) return '#6366F1';
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const index = Math.abs(hash) % COLORS.length;
-  return COLORS[index];
-};
-
-// ─── Get color with opacity for gradients ───
-const getColorWithOpacity = (color, opacity) => {
-  const hex = color.replace('#', '');
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  return COLORS[Math.abs(hash) % COLORS.length];
 };
 
 const AttendanceDashboard = () => {
   const [attendanceData, setAttendanceData] = useState(null);
   const [allAttendance, setAllAttendance] = useState([]);
-  const [leavesData, setLeavesData] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [shiftsData, setShiftsData] = useState([]);
   const [masterShifts, setMasterShifts] = useState([]);
+  const [allLeaves, setAllLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [lateDate, setLateDate] = useState("");
   const [lateMonth, setLateMonth] = useState(new Date().toISOString().slice(0, 7));
-  const [absentDate, setAbsentDate] = useState("");
   const [absentMonth, setAbsentMonth] = useState(new Date().toISOString().slice(0, 7));
   const [attendanceMonth, setAttendanceMonth] = useState(new Date().toISOString().slice(0, 7));
   const [topLateMonth, setTopLateMonth] = useState(new Date().toISOString().slice(0, 7));
-  const [birthdaysToday, setBirthdaysToday] = useState([]);
-  const [anniversariesToday, setAnniversariesToday] = useState([]);
-  const [leavesToday, setLeavesToday] = useState([]);
-  const [celebModal, setCelebModal] = useState({ show: false, type: '' });
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const reactNavigate = useNavigate();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const navigate = (path) => {
     if (window.location.pathname.startsWith("/emp-")) {
@@ -1110,7 +1062,6 @@ const AttendanceDashboard = () => {
   const getCredentials = () => {
     const userRole = localStorage.getItem('userRole');
     let email = '', password = '';
-    
     if (userRole === 'admin') {
       email = localStorage.getItem('adminEmail') || '';
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -1124,18 +1075,15 @@ const AttendanceDashboard = () => {
       email = clientData.email || localStorage.getItem('clientEmail') || '';
       password = clientData.password || localStorage.getItem('clientPassword') || '';
     }
-    
     return { email, password, userRole };
   };
 
   const handleHireClick = () => {
     const { email, password, userRole } = getCredentials();
-    
     if (!email || !password) {
       alert('Please login first to access Hire.');
       return;
     }
-
     const url = "https://ingrainhire.ingrainsystems.com/client-login";
     const params = new URLSearchParams();
     params.append('email', email);
@@ -1144,10 +1092,7 @@ const AttendanceDashboard = () => {
     params.append('role', userRole || 'employee');
     params.append('clientLogin', 'true');
     params.append('skipOtp', 'true');
-    
-    const finalUrl = `${url}?${params.toString()}`;
-    console.log('🔗 Opening Hire:', finalUrl);
-    window.open(finalUrl, '_blank');
+    window.open(`${url}?${params.toString()}`, '_blank');
   };
 
   const fetchData = async () => {
@@ -1175,29 +1120,31 @@ const AttendanceDashboard = () => {
       const allAttData = allAttRes.data;
       setAllAttendance(Array.isArray(allAttData) ? allAttData : allAttData.records || allAttData.allAttendance || []);
 
-      const leavesRes = await axios.get(`${API_BASE_URL}/leaves/leaves?status=approved`);
-      const leavesResult = leavesRes.data;
-      setLeavesData(Array.isArray(leavesResult) ? leavesResult : leavesResult.records || leavesResult.leaves || []);
-
       try {
-        const bdayRes = await axios.get(`${API_BASE_URL}/employees/birthdays-today`);
-        setBirthdaysToday(bdayRes.data.data || []);
-      } catch (e) { console.warn("Birthdays fetch failed", e); }
-
-      try {
-        const annivRes = await axios.get(`${API_BASE_URL}/employees/anniversaries-today`);
-        setAnniversariesToday(annivRes.data.data || []);
-      } catch (e) { console.warn("Anniversaries fetch failed", e); }
-
-      try {
-        const leaveRes = await axios.get(`${API_BASE_URL}/leaves/on-leave-today`);
-        setLeavesToday(leaveRes.data.data || []);
-      } catch (e) { console.warn("Leaves today fetch failed", e); }
+        console.log("Fetching leaves from:", `${API_BASE_URL}/leaves/leaves`);
+        const leavesRes = await axios.get(`${API_BASE_URL}/leaves/leaves`);
+        
+        let leavesArray = [];
+        if (leavesRes.data && leavesRes.data.data && Array.isArray(leavesRes.data.data)) {
+          leavesArray = leavesRes.data.data;
+        } 
+        else if (Array.isArray(leavesRes.data)) {
+          leavesArray = leavesRes.data;
+        }
+        else if (leavesRes.data && leavesRes.data.records && Array.isArray(leavesRes.data.records)) {
+          leavesArray = leavesRes.data.records;
+        }
+        
+        setAllLeaves(leavesArray);
+      } catch (err) {
+        console.error("❌ Could not fetch leaves", err);
+        setAllLeaves([]);
+      }
 
       setLoading(false);
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch dashboard data. Please ensure the backend server is running.");
+      setError("Failed to fetch dashboard data.");
       setLoading(false);
     }
   };
@@ -1206,6 +1153,7 @@ const AttendanceDashboard = () => {
     fetchData();
   }, []);
 
+  // ─── Helper Functions ───
   const getEmployeeName = (id) => {
     if (!id) return "Unknown";
     const emp = employees.find(e => e.employeeId === id || e._id === id);
@@ -1214,42 +1162,26 @@ const AttendanceDashboard = () => {
 
   const getEmployeeShift = (employeeId) => {
     const shiftAssignment = shiftsData.find(s =>
-      s.employeeAssignment?.employeeId === employeeId ||
-      s.employeeId === employeeId
+      s.employeeAssignment?.employeeId === employeeId || s.employeeId === employeeId
     );
-
     if (!shiftAssignment) return null;
-
     const shiftType = shiftAssignment.shiftType;
-
     const masterShift = masterShifts.find(shift => shift.shiftType === shiftType);
-
-    if (!masterShift) {
-      return getDefaultShiftTime(shiftType);
-    }
-
-    if (masterShift.isBrakeShift && masterShift.timeSlots && masterShift.timeSlots.length >= 2) {
+    if (!masterShift) return getDefaultShiftTime(shiftType);
+    if (masterShift.isBrakeShift && masterShift.timeSlots?.length >= 2) {
       return {
         start: masterShift.timeSlots[0]?.timeRange?.split('-')[0]?.trim() || "07:00",
         end: masterShift.timeSlots[1]?.timeRange?.split('-')[1]?.trim() || "21:30",
-        grace: 5,
-        isBrakeShift: true
+        grace: 5, isBrakeShift: true
       };
     }
-
-    if (masterShift.timeSlots && masterShift.timeSlots.length > 0) {
+    if (masterShift.timeSlots?.length > 0) {
       const timeSlot = masterShift.timeSlots[0];
       if (timeSlot.timeRange) {
         const [start, end] = timeSlot.timeRange.split('-').map(s => s.trim());
-        return {
-          start: start || "09:00",
-          end: end || "18:00",
-          grace: 5,
-          isBrakeShift: false
-        };
+        return { start: start || "09:00", end: end || "18:00", grace: 5, isBrakeShift: false };
       }
     }
-
     return getDefaultShiftTime(shiftType);
   };
 
@@ -1266,323 +1198,206 @@ const AttendanceDashboard = () => {
       "I": { start: "07:00", end: "17:00", grace: 5, isBrakeShift: false },
       "BR": { start: "07:00", end: "21:30", grace: 5, isBrakeShift: true },
     };
-
     return shiftTimes[shiftType] || { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
   };
 
-  const activeEmployees = employees.filter(emp => !isEmployeeHidden(emp));
-
+  // ─── Data Processors ───
   const processAttendanceData = () => {
     if (!Array.isArray(allAttendance)) return [];
-
-    const [year, month] = attendanceMonth ? attendanceMonth.split('-').map(Number) : [null, null];
+    const [year, month] = attendanceMonth.split('-').map(Number);
     const counts = {};
-
     allAttendance.forEach(record => {
       if (year && month) {
         if (!record.checkInTime) return;
         const recordDate = new Date(record.checkInTime);
         if (recordDate.getFullYear() !== year || recordDate.getMonth() + 1 !== month) return;
       }
-
       const id = (typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId);
       if (!id) return;
-
-      const isPresent = record.status === "present" || record.status === "checked-in" || record.checkInTime;
-      if (isPresent) {
+      if (record.status === "present" || record.status === "checked-in" || record.checkInTime) {
         counts[id] = (counts[id] || 0) + 1;
       }
     });
+    return Object.entries(counts).map(([id, count]) => {
+      const name = getEmployeeName(id);
+      return { id, name, count, color: getEmployeeColor(name), fill: getEmployeeColor(name) };
+    }).sort((a, b) => b.count - a.count).slice(0, 8);
+  };
 
-    const result = Object.entries(counts)
-      .map(([id, count]) => {
-        const name = getEmployeeName(id);
-        const color = getEmployeeColor(name);
-        return {
-          id,
-          name,
-          count,
-          color: color,
-          fill: color,
-          opacity: 0.9
-        };
-      })
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 8);
-
-    return result.map((item, index) => ({
-      ...item,
-      fill: item.color,
-      color: item.color
+  const processLeaveWaveData = () => {
+    if (!Array.isArray(allLeaves)) return [];
+    
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentYear = new Date().getFullYear();
+    const monthCounts = {};
+    
+    months.forEach(month => { monthCounts[month] = 0; });
+    
+    allLeaves.forEach(record => {
+      const date = record.startDate || record.date;
+      if (!date) return;
+      const recordDate = new Date(date);
+      if (recordDate.getFullYear() !== currentYear) return;
+      
+      const monthName = months[recordDate.getMonth()];
+      if (monthName) {
+        monthCounts[monthName] = (monthCounts[monthName] || 0) + 1;
+      }
+    });
+    
+    return months.map(month => ({
+      month: month,
+      leaves: monthCounts[month] || 0
     }));
   };
 
+  const processLeaveDataWithNames = () => {
+    if (!Array.isArray(allLeaves)) return [];
+    const [year, month] = topLateMonth.split('-').map(Number); 
+    
+    const leaveMap = {};
+    allLeaves.forEach(record => {
+      const date = record.startDate || record.date;
+      if (!date) return;
+      const recordDate = new Date(date);
+      if (recordDate.getFullYear() !== year || recordDate.getMonth() + 1 !== month) return;
+      
+      const id = (typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId);
+      if (!id) return;
+      
+      const name = getEmployeeName(id);
+      if (!leaveMap[id]) {
+        leaveMap[id] = { id, name, count: 0, color: getEmployeeColor(name) };
+      }
+      leaveMap[id].count += 1;
+    });
+
+    return Object.values(leaveMap)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+  };
+
   const processLateAnalysisData = () => {
-    if (lateDate) {
-      const lateMap = {};
-      allAttendance.forEach(record => {
-        if (!record.checkInTime) return;
-        const recordDate = new Date(record.checkInTime).toISOString().split('T')[0];
-        if (recordDate !== lateDate) return;
-
-        const id = (typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId);
-        if (!id) return;
-
-        const shift = getEmployeeShift(id);
-        if (!shift) return;
-
-        const checkInDateTime = new Date(record.checkInTime);
-        const [hours, minutes] = shift.start.split(':').map(Number);
-        const shiftStartTime = new Date(checkInDateTime);
-        shiftStartTime.setHours(hours, minutes, 0, 0);
-        const graceTime = new Date(shiftStartTime);
-        graceTime.setMinutes(graceTime.getMinutes() + shift.grace);
-
-        if (checkInDateTime > graceTime) {
-          const diffMs = checkInDateTime - graceTime;
-          const lateMinutes = Math.floor(diffMs / (1000 * 60));
-          const name = getEmployeeName(id);
-          const color = getEmployeeColor(name);
-          const label = `${name}`;
-          lateMap[label] = { name: label, value: lateMinutes, type: 'minutes', color: color };
-        }
-      });
-      return Object.values(lateMap).sort((a, b) => b.value - a.value);
-    }
-
     const [year, month] = lateMonth.split('-').map(Number);
     const lateCounts = {};
-
     allAttendance.forEach(record => {
       if (!record.checkInTime) return;
       const recordDate = new Date(record.checkInTime);
       if (recordDate.getFullYear() !== year || recordDate.getMonth() + 1 !== month) return;
-
       const id = (typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId);
       if (!id) return;
-
       const shift = getEmployeeShift(id);
       if (!shift) return;
-
       const checkInDateTime = new Date(record.checkInTime);
       const [hours, minutes] = shift.start.split(':').map(Number);
       const shiftStartTime = new Date(checkInDateTime);
       shiftStartTime.setHours(hours, minutes, 0, 0);
       shiftStartTime.setFullYear(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate());
-
       const graceTime = new Date(shiftStartTime);
       graceTime.setMinutes(graceTime.getMinutes() + shift.grace);
-
       if (checkInDateTime > graceTime) {
         const name = getEmployeeName(id);
         lateCounts[name] = (lateCounts[name] || 0) + 1;
       }
     });
-
-    return Object.entries(lateCounts)
-      .map(([name, count]) => {
-        const color = getEmployeeColor(name);
-        return { name, value: count, type: 'days', color: color };
-      })
-      .sort((a, b) => b.value - a.value);
+    return Object.entries(lateCounts).map(([name, count]) => ({ 
+      name, value: count, type: 'days', color: getEmployeeColor(name) 
+    })).sort((a, b) => b.value - a.value);
   };
 
   const processAbsentAnalysisData = () => {
     if (!employees.length) return [];
-
     const activeEmps = employees.filter(emp => !isEmployeeHidden(emp));
-
-    if (absentDate) {
-      const selectedDate = new Date(absentDate);
-      const selectedDateStr = absentDate;
-      const presentIds = new Set();
-
-      allAttendance.forEach(record => {
-        if (!record.checkInTime) return;
-        const recordDate = new Date(record.checkInTime).toISOString().split('T')[0];
-        if (recordDate === selectedDateStr) {
-          const id = (typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId);
-          if (id) presentIds.add(id);
-        }
-      });
-
-      const absentData = [];
-      activeEmps.forEach(emp => {
-        if (!presentIds.has(emp.employeeId)) {
-          let lastAttendanceDate = null;
-          allAttendance.forEach(record => {
-            const id = (typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId);
-            if (id === emp.employeeId && record.checkInTime) {
-              const recordDate = new Date(record.checkInTime);
-              if (!lastAttendanceDate || recordDate > lastAttendanceDate) {
-                lastAttendanceDate = recordDate;
-              }
-            }
-          });
-
-          let daysSince = 0;
-          if (lastAttendanceDate) {
-            const diffTime = selectedDate - lastAttendanceDate;
-            daysSince = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          } else {
-            const joinDate = emp.joinDate ? new Date(emp.joinDate) : selectedDate;
-            const diffTime = Math.max(0, selectedDate - joinDate);
-            daysSince = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          }
-
-          const color = getEmployeeColor(emp.name);
-          absentData.push({
-            name: `${emp.name}`,
-            value: Math.max(0, daysSince),
-            type: 'daysSince',
-            color: color
-          });
-        }
-      });
-      return absentData.sort((a, b) => b.value - a.value).slice(0, 10);
-    }
-
     const [year, month] = absentMonth.split('-').map(Number);
     const absentCounts = {};
     const totalDaysInMonth = new Date(year, month, 0).getDate();
-
     const now = new Date();
     const isCurrentMonth = now.getFullYear() === year && now.getMonth() + 1 === month;
     const daysToCount = isCurrentMonth ? now.getDate() : totalDaysInMonth;
-
-    activeEmps.forEach(emp => {
-      absentCounts[emp.employeeId] = {
-        name: `${emp.name}`,
-        present: 0
-      };
+    
+    activeEmps.forEach(emp => { 
+      absentCounts[emp.employeeId] = { name: emp.name, present: 0 }; 
     });
-
+    
     allAttendance.forEach(record => {
       if (!record.checkInTime) return;
       const recordDate = new Date(record.checkInTime);
       if (recordDate.getFullYear() !== year || recordDate.getMonth() + 1 !== month) return;
-
       if (recordDate.getDate() > daysToCount) return;
-
       const id = (typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId);
-      if (absentCounts[id]) {
-        absentCounts[id].present++;
-      }
+      if (absentCounts[id]) absentCounts[id].present++;
     });
-
-    const results = Object.values(absentCounts).map(emp => {
+    
+    return Object.values(absentCounts).map(emp => {
       const absentDays = Math.max(0, daysToCount - emp.present);
-      const color = getEmployeeColor(emp.name);
-      return {
-        name: emp.name,
-        value: absentDays,
-        type: 'absentDays',
-        color: color,
-        fill: color
-      };
+      return { name: emp.name, value: absentDays, type: 'absentDays', color: getEmployeeColor(emp.name), fill: getEmployeeColor(emp.name) };
     }).filter(r => r.value > 0).sort((a, b) => b.value - a.value).slice(0, 15);
-
-    return results;
-  };
-
-  const processTopLateComersData = () => {
-    const [year, month] = topLateMonth ? topLateMonth.split('-').map(Number) : [null, null];
-    const lateCounts = {};
-
-    allAttendance.forEach(record => {
-      if (!record.checkInTime) return;
-      const recordDate = new Date(record.checkInTime);
-      if (year && month && (recordDate.getFullYear() !== year || recordDate.getMonth() + 1 !== month)) return;
-
-      const id = (typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId);
-      if (!id) return;
-
-      const shift = getEmployeeShift(id);
-      if (!shift) return;
-
-      const checkInDateTime = new Date(record.checkInTime);
-      const [hours, minutes] = shift.start.split(':').map(Number);
-      const shiftStartTime = new Date(checkInDateTime);
-      shiftStartTime.setHours(hours, minutes, 0, 0);
-      shiftStartTime.setFullYear(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate());
-
-      const graceTime = new Date(shiftStartTime);
-      graceTime.setMinutes(graceTime.getMinutes() + shift.grace);
-
-      if (checkInDateTime > graceTime) {
-        lateCounts[id] = (lateCounts[id] || 0) + 1;
-      }
-    });
-
-    return Object.entries(lateCounts)
-      .map(([id, count]) => {
-        const name = getEmployeeName(id);
-        const color = getEmployeeColor(name);
-        return {
-          id,
-          name,
-          count,
-          color: color
-        };
-      })
-      .sort((a, b) => b.count - a.count) 
-      .slice(0, 10); 
   };
 
   const calculatePresentCount = (dateStr) => {
     if (!Array.isArray(allAttendance)) return 0;
-    const present = allAttendance.filter(record => {
-      if (!record.checkInTime) return false;
-      return record.checkInTime.startsWith(dateStr);
-    });
-    const uniqueIds = new Set(present.map(r =>
-      (typeof r.employeeId === 'object' ? r.employeeId?.employeeId : r.employeeId)
-    ));
-    return uniqueIds.size;
+    const present = allAttendance.filter(record => record.checkInTime && record.checkInTime.startsWith(dateStr));
+    return new Set(present.map(r => (typeof r.employeeId === 'object' ? r.employeeId?.employeeId : r.employeeId))).size;
   };
 
   const calculateAbsentCount = (dateStr) => {
     const activeEmps = employees.filter(emp => !isEmployeeHidden(emp));
-    const presentCount = calculatePresentCount(dateStr);
-    return Math.max(0, activeEmps.length - presentCount);
+    return Math.max(0, activeEmps.length - calculatePresentCount(dateStr));
   };
 
   const calculateLateCount = (dateStr) => {
     if (!Array.isArray(allAttendance)) return 0;
     let count = 0;
-
     allAttendance.forEach(record => {
-      if (!record.checkInTime) return;
-      if (!record.checkInTime.startsWith(dateStr)) return;
-
+      if (!record.checkInTime || !record.checkInTime.startsWith(dateStr)) return;
       const id = (typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId);
       if (!id) return;
-
       const shift = getEmployeeShift(id);
       if (!shift) return;
-
       const checkInDateTime = new Date(record.checkInTime);
       const [hours, minutes] = shift.start.split(':').map(Number);
-
       const shiftStartTime = new Date(checkInDateTime);
       shiftStartTime.setHours(hours, minutes, 0, 0);
-
       const graceTime = new Date(shiftStartTime);
       graceTime.setMinutes(graceTime.getMinutes() + shift.grace);
-
-      if (checkInDateTime > graceTime) {
-        count++;
-      }
+      if (checkInDateTime > graceTime) count++;
     });
     return count;
   };
 
+  const getWeekData = () => {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() + mondayOffset);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    return days.map((day, index) => {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + index);
+      const dateStr = date.toISOString().split('T')[0];
+      let present = 0, absent = 0;
+      allAttendance.forEach(record => {
+        if (record.checkInTime && record.checkInTime.startsWith(dateStr)) {
+          const id = (typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId);
+          if (id) {
+            if (record.status === "present" || record.status === "checked-in" || record.checkInTime) present++;
+            else absent++;
+          }
+        }
+      });
+      return { day, present, absent };
+    });
+  };
+
   if (loading) {
     return (
-      <div className="admin-dash">
-        <div className="admin-dash__loading">
-          <div className="admin-dash__spinner" />
-          <p className="admin-dash__loading-text">Loading dashboard analytics...</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#f8fafc' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: '48px', height: '48px', border: '4px solid #e2e8f0', borderTop: '4px solid #6366F1', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+          <p style={{ color: '#64748b', fontSize: '14px' }}>Loading dashboard...</p>
         </div>
       </div>
     );
@@ -1590,604 +1405,421 @@ const AttendanceDashboard = () => {
 
   if (error) {
     return (
-      <div className="admin-dash">
-        <div className="admin-dash__error">
-          <p className="admin-dash__error-title">Oops!</p>
-          <p className="admin-dash__error-message">{error}</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#f8fafc' }}>
+        <div style={{ textAlign: 'center', padding: '24px', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+          <FiAlertCircle size={32} color="#EF4444" style={{ marginBottom: '8px' }} />
+          <p style={{ color: '#EF4444', fontSize: '16px', fontWeight: '600' }}>Oops!</p>
+          <p style={{ color: '#64748b' }}>{error}</p>
         </div>
       </div>
     );
   }
 
+  // ─── Computed Data ───
   const totals = attendanceData?.totals || {};
   const attendanceChartData = processAttendanceData();
-  const lateComersData = processTopLateComersData();
+  const leaveWaveData = processLeaveWaveData();
+  const leaveDataWithNames = processLeaveDataWithNames();
   const lateChartData = processLateAnalysisData();
   const absentChartData = processAbsentAnalysisData();
+  const weekData = getWeekData();
 
   const presentToday = calculatePresentCount(new Date().toISOString().split('T')[0]);
   const absentToday = calculateAbsentCount(new Date().toISOString().split('T')[0]);
   const lateToday = calculateLateCount(new Date().toISOString().split('T')[0]);
+  const attendanceRateValue = typeof totals.attendanceRate === 'number' ? totals.attendanceRate : parseFloat(totals.attendanceRate) || 0;
 
-  const CosmosTooltip = ({ active, payload }) => {
+  // ─── Custom Tooltip ───
+  const CustomTooltip = ({ active, payload, labelKey = 'name' }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
+      const color = data?.color || '#6366F1';
+      const label = data[labelKey] || data.name || data.day || data.month || 'N/A';
+      const value = data?.count !== undefined ? `${data.count} days` :
+                     data?.value !== undefined ? `${data.value}` :
+                     data?.leaves !== undefined ? `${data.leaves} leaves` :
+                     data?.present !== undefined ? `Present: ${data.present}` : '';
       return (
-        <div className="admin-dash__tooltip">
-          <p className="admin-dash__tooltip-title">{data.name}</p>
-          <p className="admin-dash__tooltip-value">Attendance: {data.count} days</p>
-          <p className="admin-dash__tooltip-subtitle">ID: {data.id}</p>
+        <div style={{ background: 'white', padding: '8px 12px', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', border: `1px solid ${color}` }}>
+          <p style={{ fontWeight: '600', fontSize: '12px', color: '#0f172a', margin: '0 0 2px 0' }}>{label}</p>
+          <p style={{ color: color, fontWeight: '500', fontSize: '11px', margin: '0' }}>{value}</p>
         </div>
       );
     }
     return null;
   };
 
-  const LineTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="admin-dash__tooltip">
-          <p className="admin-dash__tooltip-title">{data.name}</p>
-          <p className="admin-dash__tooltip-value">Late Days: {data.count}</p>
-        </div>
-      );
+  // ─── Styles ───
+  const styles = {
+    container: { background: '#f1f5f9', minHeight: '100vh', padding: isMobile ? '12px' : '24px', width: '100%', fontFamily: "'Inter', system-ui, sans-serif" },
+    header: { marginBottom: isMobile ? '16px' : '24px' },
+    statsGrid: { 
+      display: 'grid', 
+      gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(5, 1fr)', 
+      gap: isMobile ? '10px' : '16px', 
+      marginBottom: isMobile ? '16px' : '24px' 
+    },
+    statsCardFullWidth: {
+      gridColumn: '1 / -1'
+    },
+    cardBase: { background: 'white', borderRadius: '12px', padding: isMobile ? '12px' : '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #f1f5f9', transition: 'all 0.3s ease' },
+    flexBetween: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+    chartContainer: { height: isMobile ? '180px' : '220px', marginTop: isMobile ? '4px' : '8px' },
+    smallChartContainer: { height: isMobile ? '130px' : '160px', marginTop: isMobile ? '2px' : '6px' },
+    footer: { marginTop: isMobile ? '16px' : '24px', paddingTop: isMobile ? '12px' : '16px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px', fontSize: isMobile ? '9px' : '11px', color: '#94a3b8' },
+    leaveNameList: { 
+      display: 'flex', 
+      flexWrap: 'wrap', 
+      gap: '4px', 
+      marginTop: '4px',
+      paddingTop: '6px',
+      borderTop: '1px solid #f1f5f9'
+    },
+    leaveNameTag: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '3px',
+      padding: isMobile ? '1px 8px' : '2px 10px',
+      borderRadius: '20px',
+      fontSize: isMobile ? '8px' : '10px',
+      fontWeight: '600',
+      color: 'white'
     }
-    return null;
   };
 
-  const LateTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="admin-dash__tooltip">
-          <p className="admin-dash__tooltip-title">{data.name}</p>
-          <p className="admin-dash__tooltip-value">
-            {data.type === 'minutes' ? `Late Duration: ${data.value} mins` : `Late Days: ${data.value}`}
-          </p>
-        </div>
-      );
+  // ─── LEAVE NAMES SECTION ───
+  const renderLeaveNames = () => {
+    if (!leaveDataWithNames || leaveDataWithNames.length === 0) {
+      return <p style={{ fontSize: isMobile ? '9px' : '11px', color: '#94a3b8', marginTop: '4px' }}>No leaves taken this month</p>;
     }
-    return null;
+    return (
+      <div style={styles.leaveNameList}>
+        {leaveDataWithNames.map((item) => (
+          <span key={item.id} style={{ ...styles.leaveNameTag, background: item.color }}>
+            {item.name} ({item.count})
+          </span>
+        ))}
+      </div>
+    );
   };
 
-  const AbsentTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="admin-dash__tooltip">
-          <p className="admin-dash__tooltip-title">{data.name}</p>
-          <p className="admin-dash__tooltip-value">
-            {data.type === 'daysSince' ? `Days Since Last: ${data.value}` : `Absent Days: ${data.value}`}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
+  // ─── Stats Cards Data ───
+  const statsData = [
+    { label: 'Total Staff', value: totals.employees || 0, icon: FiUsers, color: '#6366F1', bg: '#EEF2FF', sub: 'active employees', onClick: () => navigate("/employeelist") },
+    { label: 'Present Today', value: presentToday || 0, icon: FiUserCheck, color: '#10B981', bg: '#ECFDF5', sub: 'employees present', onClick: () => navigate("/today-attendance") },
+    { label: 'Absent Today', value: absentToday || 0, icon: FiUserX, color: '#EF4444', bg: '#FEF2F2', sub: 'absent employees', onClick: () => navigate("/absent-today") },
+    { label: 'Late Arrival', value: lateToday || 0, icon: FiClock, color: '#F59E0B', bg: '#FFFBEB', sub: 'late arrivals', onClick: () => navigate("/late-today") },
+    { label: 'Attendance Rate', value: `${attendanceRateValue.toFixed(1)}%`, icon: FiTrendingUp, color: '#8B5CF6', bg: '#F5F3FF', sub: 'overall rate', onClick: () => navigate("/attedancesummary") },
+  ];
 
   return (
-    <div className="admin-dash">
-      <main>
-        <div className="admin-dash__header">
-          <div className="flex items-baseline gap-3 flex-wrap">
-            <h1 className="admin-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap leading-tight">
-              Admin <span>Dashboard</span>
+    <div style={styles.container}>
+      
+      {/* ─── 1. HEADER ─── */}
+      <div style={styles.header}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: isMobile ? '8px' : '12px' }}>
+          <div>
+            <h1 style={{ fontSize: isMobile ? '16px' : '24px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>
+              Attendance <span style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Dashboard</span>
             </h1>
+            {/* <p style={{ color: '#64748b', fontSize: isMobile ? '10px' : '13px', margin: isMobile ? '1px 0 0 0' : '4px 0 0 0' }}>
+              Real-time attendance monitoring & analytics
+            </p> */}
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <button
-              onClick={() => navigate("/employee-locations")}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white text-xs font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-emerald-700 hover:to-emerald-600 transition-all duration-300 border border-emerald-400/30"
-            >
-              <FiMapPin className="text-sm" />
-              <span>Employee Location</span>
-            </button>
-
-            <button
-              onClick={handleHireClick}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-xs font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-purple-700 hover:to-purple-600 transition-all duration-300 border border-purple-400/30"
-            >
-              <i className="ri-user-add-fill text-sm"></i>
-              <span>Hire</span>
-              <FiExternalLink className="text-[10px] ml-0.5 opacity-70" />
-            </button>
-            
-            <div className="admin-dash__date-pill">
-              <FiCalendar />
-              <span>
-                {new Date().toLocaleDateString("en-US", {
-                  weekday: "short",
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </span>
+          <div style={{ display: 'flex', gap: isMobile ? '6px' : '10px', flexWrap: 'wrap' }}>
+            <button onClick={() => navigate("/employee-locations")} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: isMobile ? '4px 8px' : '8px 16px', background: '#10B981', color: 'white', border: 'none', borderRadius: '8px', fontSize: isMobile ? '9px' : '12px', fontWeight: '600', cursor: 'pointer' }}><FiMapPin size={isMobile ? 10 : 16} /> Locations</button>
+            <button onClick={handleHireClick} style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: isMobile ? '4px 8px' : '8px 16px', background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)', color: 'white', border: 'none', borderRadius: '8px', fontSize: isMobile ? '9px' : '12px', fontWeight: '600', cursor: 'pointer' }}><FiUsers size={isMobile ? 10 : 16} /> Hire</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: isMobile ? '3px 6px' : '8px 14px', background: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <FiCalendar size={isMobile ? 10 : 16} style={{ color: '#6366F1' }} />
+              <span style={{ fontSize: isMobile ? '9px' : '12px', fontWeight: '500', color: '#0f172a' }}>{new Date().toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}</span>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="admin-dash__stats">
-          <div className="admin-dash__stat" onClick={() => navigate("/employeelist")}>
-            <div className="admin-dash__stat-top">
-              <span className="admin-dash__stat-label">Total Staff</span>
-              <div className="admin-dash__stat-icon admin-dash__stat-icon--indigo">
-                <FiUsers />
-              </div>
+      {/* ─── 2. STATS CARDS ─── */}
+      <div style={styles.statsGrid}>
+        {statsData.map((stat, index) => (
+          <div 
+            key={index} 
+            onClick={stat.onClick} 
+            style={{ 
+              ...styles.cardBase, 
+              ...(isMobile && index === 4 ? styles.statsCardFullWidth : {}),
+              cursor: 'pointer', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              padding: isMobile ? '10px 12px' : '16px 20px' 
+            }}
+          >
+            <div>
+              <p style={{ fontSize: isMobile ? '8px' : '11px', color: '#94a3b8', fontWeight: '600', margin: 0, textTransform: 'uppercase', letterSpacing: isMobile ? '0.2px' : '0.5px' }}>{stat.label}</p>
+              <p style={{ fontSize: isMobile ? '18px' : '24px', fontWeight: '700', color: '#0f172a', margin: isMobile ? '1px 0 0 0' : '4px 0 0 0' }}>{stat.value}</p>
+              {stat.sub && <p style={{ fontSize: isMobile ? '7px' : '10px', color: '#94a3b8', margin: isMobile ? '0px 0 0 0' : '2px 0 0 0' }}>{stat.sub}</p>}
             </div>
-            <div className="admin-dash__stat-value">{totals.employees || 0}</div>
-            <div className="admin-dash__stat-meta">active employees</div>
-          </div>
-          <div className="admin-dash__stat" onClick={() => navigate("/today-attendance")}>
-            <div className="admin-dash__stat-top">
-              <span className="admin-dash__stat-label">Present Today</span>
-              <div className="admin-dash__stat-icon admin-dash__stat-icon--emerald">
-                <FiUserCheck />
-              </div>
+            <div style={{ width: isMobile ? '32px' : '44px', height: isMobile ? '32px' : '44px', borderRadius: isMobile ? '8px' : '12px', background: stat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: stat.color }}>
+              <stat.icon size={isMobile ? 14 : 22} />
             </div>
-            <div className="admin-dash__stat-value">{presentToday || 0}</div>
-            <div className="admin-dash__stat-meta">employees present</div>
           </div>
-          <div className="admin-dash__stat" onClick={() => navigate("/absent-today")}>
-            <div className="admin-dash__stat-top">
-              <span className="admin-dash__stat-label">Absent Today</span>
-              <div className="admin-dash__stat-icon admin-dash__stat-icon--rose">
-                <FiUserX />
-              </div>
-            </div>
-            <div className="admin-dash__stat-value">{absentToday || 0}</div>
-            <div className="admin-dash__stat-meta">employees absent</div>
-          </div>
-          <div className="admin-dash__stat" onClick={() => navigate("/late-today")}>
-            <div className="admin-dash__stat-top">
-              <span className="admin-dash__stat-label">Late Arrival</span>
-              <div className="admin-dash__stat-icon admin-dash__stat-icon--amber">
-                <FiClock />
-              </div>
-            </div>
-            <div className="admin-dash__stat-value">{lateToday || 0}</div>
-            <div className="admin-dash__stat-meta">late arrivals</div>
-          </div>
-          <div className="admin-dash__stat" onClick={() => navigate("/attedancesummary")}>
-            <div className="admin-dash__stat-top">
-              <span className="admin-dash__stat-label">Attendance Rate</span>
-              <div className="admin-dash__stat-icon admin-dash__stat-icon--cyan">
-                <FiTrendingUp />
-              </div>
-            </div>
-            <div className="admin-dash__stat-value">{totals.attendanceRate || 0}%</div>
-            <div className="admin-dash__stat-meta">overall rate</div>
-          </div>
-        </div>
+        ))}
+      </div>
 
-        <div className="admin-dash__charts-grid">
-          <div className="admin-dash__card admin-dash__chart-wrap">
-            <div className="admin-dash__card-header">
-              <div>
-                <h3 className="admin-dash__card-title">🌌 Attendance Performance</h3>
-                <p className="admin-dash__card-desc">Top performers this month</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="month"
-                  value={attendanceMonth}
-                  onChange={(e) => setAttendanceMonth(e.target.value)}
-                  className="admin-dash__month-input"
-                />
-                <button onClick={() => navigate("/attedancesummary")} className="admin-dash__card-link hidden sm:block">View Report →</button>
-              </div>
+      {/* ─── 3. CHARTS SECTION ─── */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '12px' : '20px', marginBottom: isMobile ? '12px' : '20px' }}>
+        
+        {/* Card A: Attendance Distribution - FIXED: Names cut issue resolved */}
+        <div style={{ ...styles.cardBase, borderTop: '4px solid #6366F1' }}>
+          <div style={styles.flexBetween}>
+            <div>
+              <h3 style={{ fontSize: isMobile ? '11px' : '14px', fontWeight: '700', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <FiBarChart2 color="#6366F1" size={isMobile ? 12 : 16} /> Attendance Distribution
+              </h3>
+              <p style={{ fontSize: isMobile ? '8px' : '11px', color: '#94a3b8', margin: '1px 0 0 0' }}>Top performers this month</p>
             </div>
-            <div className="admin-dash__card-body flex-1">
-              {attendanceChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadialBarChart 
-                    cx="50%" 
-                    cy="50%" 
-                    innerRadius="20%" 
-                    outerRadius="90%" 
-                    data={attendanceChartData} 
-                    startAngle={180} 
-                    endAngle={-180}
-                  >
-                    <defs>
-                      {attendanceChartData.map((entry, index) => {
-                        const color = entry.color || '#2979FF';
-                        return (
-                          <linearGradient key={`grad-${index}`} id={`grad-${index}`} x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor={color} stopOpacity={0.95}/>
-                            <stop offset="100%" stopColor={color} stopOpacity={0.5}/>
-                          </linearGradient>
-                        );
-                      })}
-                    </defs>
-                    <PolarAngleAxis 
-                      type="number" 
-                      domain={[0, Math.max(...attendanceChartData.map(d => d.count))]} 
-                      angleAxisId={0} 
-                      tick={false} 
-                    />
-                    <RadialBar
-                      minAngle={15}
-                      background
-                      clockWise
-                      dataKey="count"
-                      cornerRadius={30}
-                      barSize={30}
-                    >
-                      {attendanceChartData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={`url(#grad-${index})`}
-                          stroke={entry.color || '#2979FF'}
-                          strokeWidth={3}
-                        />
-                      ))}
-                    </RadialBar>
-                    <Tooltip content={<CosmosTooltip />} />
-                    <Legend
-                      iconSize={12}
-                      width={120}
-                      height={140}
-                      layout="vertical"
-                      verticalAlign="middle"
-                      align="right"
-                      wrapperStyle={{ fontSize: '11px', fontWeight: '600' }}
-                      formatter={(value, entry) => {
-                        const color = entry?.payload?.color || '#2979FF';
-                        return <span style={{ color: color, fontWeight: '700' }}>{value}</span>;
-                      }}
-                    />
-                  </RadialBarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="admin-dash__empty-chart">No attendance data available</div>
-              )}
-            </div>
+            <input type="month" value={attendanceMonth} onChange={(e) => setAttendanceMonth(e.target.value)} style={{ padding: isMobile ? '2px 6px' : '4px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: isMobile ? '8px' : '11px', fontWeight: '500', background: '#f8fafc', maxWidth: isMobile ? '90px' : '140px' }} />
           </div>
-
-          <div className="admin-dash__card admin-dash__chart-wrap">
-            <div className="admin-dash__card-header">
-              <div>
-                <h3 className="admin-dash__card-title">📈 Most Late Comings</h3>
-                <p className="admin-dash__card-desc">Employees with highest late arrivals</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="month"
-                  value={topLateMonth}
-                  onChange={(e) => setTopLateMonth(e.target.value)}
-                  className="admin-dash__month-input"
-                />
-                <button
-                  onClick={() => navigate("/late-today")}
-                  className="admin-dash__card-link hidden sm:block"
-                >
-                  View All →
-                </button>
-              </div>
-            </div>
-
-            <div className="admin-dash__card-body flex-1">
-              {lateComersData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart
-                    data={lateComersData}
-                    margin={{ top: 20, right: 20, left: 0, bottom: 10 }}
-                  >
-                    <defs>
-                      {lateComersData.map((entry, index) => {
-                        const color = entry.color || '#2979FF';
-                        return (
-                          <linearGradient key={`line-grad-${index}`} id={`line-grad-${index}`} x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="0%" stopColor={color} stopOpacity={0.9}/>
-                            <stop offset="100%" stopColor={color} stopOpacity={0.9}/>
-                          </linearGradient>
-                        );
-                      })}
-                      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#2979FF" stopOpacity={0.3}/>
-                        <stop offset="100%" stopColor="#2979FF" stopOpacity={0.02}/>
+          <div style={styles.chartContainer}>
+            {attendanceChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={attendanceChartData} layout="vertical" margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                  <defs>
+                    {attendanceChartData.map((entry, index) => (
+                      <linearGradient key={`grad-${index}`} id={`grad-${index}`} x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor={entry.color} stopOpacity={0.9}/>
+                        <stop offset="100%" stopColor={entry.color} stopOpacity={0.6}/>
                       </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                    <XAxis
-                      dataKey="name"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 10, fontWeight: '600' }}
-                      angle={-25}
-                      textAnchor="end"
-                      interval={0}
-                      height={55}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 10, fontWeight: '600' }}
-                      allowDecimals={false}
-                    />
-                    <Tooltip content={<LineTooltip />} cursor={{ fill: '#f8fafc', opacity: 0.6 }} />
-                    
-                    <Area
-                      type="monotone"
-                      dataKey="count"
-                      stroke="none"
-                      fill="url(#areaGrad)"
-                      animationDuration={1500}
-                      animationEasing="ease-out"
-                    />
-                    
-                    <Line
-                      type="monotone"
-                      dataKey="count"
-                      stroke="#2979FF"
-                      strokeWidth={3}
-                      dot={(props) => {
-                        const { cx, cy, payload } = props;
-                        const color = payload?.color || '#2979FF';
-                        return (
-                          <circle
-                            cx={cx}
-                            cy={cy}
-                            r={7}
-                            fill={color}
-                            stroke="white"
-                            strokeWidth={3}
-                            style={{ transition: 'all 0.3s ease' }}
-                          />
-                        );
-                      }}
-                      activeDot={(props) => {
-                        const { cx, cy, payload } = props;
-                        const color = payload?.color || '#2979FF';
-                        return (
-                          <circle
-                            cx={cx}
-                            cy={cy}
-                            r={10}
-                            fill={color}
-                            stroke="white"
-                            strokeWidth={3}
-                          />
-                        );
-                      }}
-                      animationDuration={1500}
-                      animationEasing="ease-out"
-                    />
-                    
-                    <Line
-                      type="monotone"
-                      dataKey="count"
-                      stroke="#FF6D00"
-                      strokeWidth={2}
-                      strokeDasharray="6 4"
-                      dot={false}
-                      activeDot={false}
-                      label={{
-                        value: 'Avg',
-                        position: 'right',
-                        fill: '#FF6D00',
-                        fontSize: 11,
-                        fontWeight: 700
-                      }}
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="admin-dash__empty-chart">
-                  No monthly late data available
-                </div>
-              )}
-            </div>
+                    ))}
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={true} vertical={false} />
+                  <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: isMobile ? 8 : 10, fontWeight: '500' }} />
+                  <YAxis 
+                    type="category" 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: "#0f172a", fontSize: isMobile ? 8 : 10, fontWeight: '500' }} 
+                    width={isMobile ? 75 : 100} 
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={isMobile ? 10 : 16}>
+                    {attendanceChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={`url(#grad-${index})`} stroke={entry.color} strokeWidth={1} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', fontSize: isMobile ? '9px' : '12px' }}>No data available</div>
+            )}
+          </div>
+          <div style={{ marginTop: isMobile ? '6px' : '10px', paddingTop: isMobile ? '6px' : '10px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: isMobile ? '8px' : '11px', color: '#94a3b8' }}><span style={{ fontWeight: '600', color: '#0f172a' }}>{attendanceChartData.length}</span> employees tracked</span>
+            <button onClick={() => navigate("/attedancesummary")} style={{ fontSize: isMobile ? '8px' : '11px', color: '#6366F1', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer' }}>View Full Report →</button>
           </div>
         </div>
 
-        <div className="admin-dash__charts-grid">
-          <div className="admin-dash__card admin-dash__chart-wrap admin-dash__chart-wrap--tall">
-            <div className="admin-dash__card-header">
-              <div>
-                <h3 className="admin-dash__card-title">🎯 Late Analysis</h3>
-                <p className="admin-dash__card-desc">
-                  {lateDate ? `Late Minutes on ${lateDate}` : `Late Days in ${lateMonth}`}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="month"
-                  value={lateMonth}
-                  onChange={(e) => {
-                    setLateMonth(e.target.value);
-                    setLateDate("");
-                  }}
-                  className="admin-dash__month-input"
-                />
-                <input
-                  type="date"
-                  value={lateDate}
-                  onChange={(e) => setLateDate(e.target.value)}
-                  className="admin-dash__month-input"
-                />
-                <button
-                  onClick={() => navigate("/late-today")}
-                  className="admin-dash__card-link whitespace-nowrap"
-                >
-                  View Details
-                </button>
-              </div>
+        {/* Card B: Leave Analysis with Names */}
+        <div style={{ ...styles.cardBase, borderTop: '4px solid #8B5CF6' }}>
+          <div style={styles.flexBetween}>
+            <div>
+              <h3 style={{ fontSize: isMobile ? '11px' : '14px', fontWeight: '700', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <FiBriefcase color="#8B5CF6" size={isMobile ? 12 : 16} /> Leave Analysis
+              </h3>
+              <p style={{ fontSize: isMobile ? '8px' : '11px', color: '#94a3b8', margin: '1px 0 0 0' }}>Monthly leave distribution {new Date().getFullYear()}</p>
             </div>
-
-            <div className="admin-dash__card-body flex-1">
-              {lateChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <defs>
-                      {lateChartData.map((entry, index) => {
-                        const color = entry.color || '#2979FF';
-                        return (
-                          <linearGradient key={`late-pie-${index}`} id={`late-pie-${index}`} x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor={color} stopOpacity={0.95}/>
-                            <stop offset="100%" stopColor={color} stopOpacity={0.5}/>
-                          </linearGradient>
-                        );
-                      })}
-                    </defs>
-                    <Pie
-                      data={lateChartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={90}
-                      paddingAngle={3}
-                      dataKey="value"
-                      animationDuration={1500}
-                      animationEasing="ease-out"
-                      labelLine={{
-                        stroke: '#94a3b8',
-                        strokeWidth: 2
-                      }}
-                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                      labelStyle={{
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        fill: '#1e293b'
-                      }}
-                    >
-                      {lateChartData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={`url(#late-pie-${index})`}
-                          stroke="white"
-                          strokeWidth={3}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<LateTooltip />} />
-                    <Legend
-                      layout="vertical"
-                      align="right"
-                      verticalAlign="middle"
-                      wrapperStyle={{ fontSize: '11px', maxWidth: '40%', fontWeight: '600' }}
-                      iconType="circle"
-                      iconSize={10}
-                      formatter={(value, entry) => {
-                        const color = entry?.payload?.color || '#2979FF';
-                        return <span style={{ color: color, fontWeight: '700' }}>{value}</span>;
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="admin-dash__empty-chart">
-                  <FiClock />
-                  <p>No late records found</p>
-                </div>
-              )}
-            </div>
+            <input type="month" value={topLateMonth} onChange={(e) => setTopLateMonth(e.target.value)} style={{ padding: isMobile ? '2px 6px' : '4px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: isMobile ? '8px' : '11px', fontWeight: '500', background: '#f8fafc', maxWidth: isMobile ? '90px' : '140px' }} />
           </div>
+          <div style={styles.chartContainer}>
+            {leaveWaveData.length > 0 && leaveWaveData.some(d => d.leaves > 0) ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={leaveWaveData} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="leaveGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: "#64748b", fontSize: isMobile ? 7 : 10, fontWeight: '500' }} 
+                    interval={isMobile ? 2 : 0}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: "#64748b", fontSize: isMobile ? 7 : 10, fontWeight: '500' }} 
+                    allowDecimals={false}
+                  />
+                  <Tooltip content={<CustomTooltip labelKey="month" />} />
+                  <Area 
+                    type="monotone" 
+                    dataKey="leaves" 
+                    stroke="#8B5CF6" 
+                    strokeWidth={isMobile ? 2 : 3}
+                    fill="url(#leaveGradient)" 
+                    activeDot={{ r: isMobile ? 4 : 6, fill: '#8B5CF6' }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', fontSize: isMobile ? '9px' : '12px' }}>No leave data available</div>
+            )}
+          </div>
+          
+          {/* ─── LEAVE NAMES SECTION ─── */}
+          {renderLeaveNames()}
 
-          <div className="admin-dash__card admin-dash__chart-wrap admin-dash__chart-wrap--tall">
-            <div className="admin-dash__card-header">
-              <div>
-                <h3 className="admin-dash__card-title">📅 Absent Analysis</h3>
-                <p className="admin-dash__card-desc">
-                  {absentDate ? `Days Since Last Attendance (as of ${absentDate})` : `Total Absent Days in ${absentMonth}`}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="month"
-                  value={absentMonth}
-                  onChange={(e) => {
-                    setAbsentMonth(e.target.value);
-                    setAbsentDate("");
-                  }}
-                  className="admin-dash__month-input"
-                />
-                <input
-                  type="date"
-                  value={absentDate}
-                  onChange={(e) => setAbsentDate(e.target.value)}
-                  className="admin-dash__month-input"
-                />
-                <button
-                  onClick={() => navigate("/absent-today")}
-                  className="admin-dash__card-link whitespace-nowrap"
-                >
-                  View Details
-                </button>
-              </div>
-            </div>
-
-            <div className="admin-dash__card-body flex-1">
-              {absentChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <defs>
-                      {absentChartData.map((entry, index) => {
-                        const color = entry.color || '#2979FF';
-                        return (
-                          <linearGradient key={`absent-pie-${index}`} id={`absent-pie-${index}`} x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor={color} stopOpacity={0.95}/>
-                            <stop offset="100%" stopColor={color} stopOpacity={0.5}/>
-                          </linearGradient>
-                        );
-                      })}
-                    </defs>
-                    <Pie
-                      data={absentChartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={90}
-                      paddingAngle={3}
-                      dataKey="value"
-                      animationDuration={1500}
-                      animationEasing="ease-out"
-                      labelLine={{
-                        stroke: '#94a3b8',
-                        strokeWidth: 2
-                      }}
-                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                      labelStyle={{
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        fill: '#1e293b'
-                      }}
-                    >
-                      {absentChartData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={`url(#absent-pie-${index})`}
-                          stroke="white"
-                          strokeWidth={3}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<AbsentTooltip />} />
-                    <Legend
-                      layout="vertical"
-                      align="right"
-                      verticalAlign="middle"
-                      wrapperStyle={{ fontSize: '11px', maxWidth: '40%', fontWeight: '600' }}
-                      iconType="circle"
-                      iconSize={10}
-                      formatter={(value, entry) => {
-                        const color = entry?.payload?.color || '#2979FF';
-                        return <span style={{ color: color, fontWeight: '700' }}>{value}</span>;
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="admin-dash__empty-chart">
-                  <FiUserX />
-                  <p>No absent records found</p>
-                </div>
-              )}
-            </div>
+          <div style={{ marginTop: isMobile ? '6px' : '8px', paddingTop: isMobile ? '6px' : '8px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: isMobile ? '8px' : '11px', color: '#94a3b8' }}>
+              <span style={{ fontWeight: '600', color: '#0f172a' }}>
+                {leaveWaveData.reduce((sum, d) => sum + d.leaves, 0)}
+              </span> total leaves this year
+            </span>
+            <button onClick={() => navigate("/leavelist")} style={{ fontSize: isMobile ? '8px' : '11px', color: '#8B5CF6', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer' }}>View All →</button>
           </div>
         </div>
-      </main>
+      </div>
+
+      {/* ─── 4. SECOND ROW ─── */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: isMobile ? '10px' : '16px', marginBottom: isMobile ? '10px' : '16px' }}>
+
+        {/* Card C: Late Analysis */}
+        <div style={{ ...styles.cardBase, borderBottom: '3px solid #EC4899' }}>
+          <div style={styles.flexBetween}>
+            <div>
+              <h3 style={{ fontSize: isMobile ? '9px' : '12px', fontWeight: '700', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <FiAlertCircle color="#EC4899" size={isMobile ? 10 : 14} /> Late Analysis
+              </h3>
+              <p style={{ fontSize: isMobile ? '7px' : '10px', color: '#94a3b8', margin: '1px 0 0 0' }}>{lateMonth}</p>
+            </div>
+            <input type="month" value={lateMonth} onChange={(e) => setLateMonth(e.target.value)} style={{ padding: isMobile ? '1px 4px' : '2px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: isMobile ? '7px' : '10px', background: '#f8fafc', width: isMobile ? '60px' : '85px' }} />
+          </div>
+          <div style={styles.smallChartContainer}>
+            {lateChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <defs>
+                    {lateChartData.map((entry, index) => (
+                      <radialGradient key={`late-pie-${index}`} id={`late-pie-${index}`}><stop offset="0%" stopColor={entry.color} stopOpacity={0.9}/><stop offset="100%" stopColor={entry.color} stopOpacity={0.5}/></radialGradient>
+                    ))}
+                  </defs>
+                  <Pie data={lateChartData} cx="50%" cy="50%" innerRadius={isMobile ? 20 : 30} outerRadius={isMobile ? 38 : 55} paddingAngle={2} dataKey="value" animationDuration={1000}>
+                    {lateChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={`url(#late-pie-${index})`} stroke="white" strokeWidth={2} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
+                <FiClock size={isMobile ? 14 : 20} /><span style={{ fontSize: isMobile ? '7px' : '10px' }}>No late records</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Card D: Absent Analysis */}
+        <div style={{ ...styles.cardBase, borderBottom: '3px solid #EF4444' }}>
+          <div style={styles.flexBetween}>
+            <div>
+              <h3 style={{ fontSize: isMobile ? '9px' : '12px', fontWeight: '700', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <FiUserX color="#EF4444" size={isMobile ? 10 : 14} /> Absent Analysis
+              </h3>
+              <p style={{ fontSize: isMobile ? '7px' : '10px', color: '#94a3b8', margin: '1px 0 0 0' }}>{absentMonth}</p>
+            </div>
+            <input type="month" value={absentMonth} onChange={(e) => setAbsentMonth(e.target.value)} style={{ padding: isMobile ? '1px 4px' : '2px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: isMobile ? '7px' : '10px', background: '#f8fafc', width: isMobile ? '60px' : '85px' }} />
+          </div>
+          <div style={styles.smallChartContainer}>
+            {absentChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <defs>
+                    {absentChartData.map((entry, index) => (
+                      <radialGradient key={`absent-pie-${index}`} id={`absent-pie-${index}`}><stop offset="0%" stopColor={entry.color} stopOpacity={0.9}/><stop offset="100%" stopColor={entry.color} stopOpacity={0.5}/></radialGradient>
+                    ))}
+                  </defs>
+                  <Pie data={absentChartData} cx="50%" cy="50%" innerRadius={isMobile ? 20 : 30} outerRadius={isMobile ? 38 : 55} paddingAngle={2} dataKey="value" animationDuration={1000}>
+                    {absentChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={`url(#absent-pie-${index})`} stroke="white" strokeWidth={2} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
+                <FiUserX size={isMobile ? 14 : 20} /><span style={{ fontSize: isMobile ? '7px' : '10px' }}>No absent records</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Card E: Weekly Progress */}
+        <div style={{ ...styles.cardBase, borderBottom: '3px solid #10B981' }}>
+          <div style={styles.flexBetween}>
+            <div>
+              <h3 style={{ fontSize: isMobile ? '9px' : '12px', fontWeight: '700', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <FiTrendingUp color="#10B981" size={isMobile ? 10 : 14} /> Weekly Progress
+              </h3>
+              <p style={{ fontSize: isMobile ? '7px' : '10px', color: '#94a3b8', margin: '1px 0 0 0' }}>This week attendance</p>
+            </div>
+          </div>
+          <div style={styles.smallChartContainer}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={weekData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: isMobile ? 6 : 9, fontWeight: '500' }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: isMobile ? 6 : 9, fontWeight: '500' }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Line type="monotone" dataKey="present" stroke="#10B981" strokeWidth={isMobile ? 1.5 : 2} dot={{ fill: '#10B981', r: isMobile ? 2 : 4, strokeWidth: 2, stroke: 'white' }} activeDot={{ r: isMobile ? 3 : 6 }} />
+                <Line type="monotone" dataKey="absent" stroke="#EF4444" strokeWidth={isMobile ? 1.5 : 2} dot={{ fill: '#EF4444', r: isMobile ? 2 : 4, strokeWidth: 2, stroke: 'white' }} activeDot={{ r: isMobile ? 3 : 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Card F: Completion Progress */}
+        <div style={{ ...styles.cardBase, borderBottom: '3px solid #8B5CF6' }}>
+          <div>
+            <h3 style={{ fontSize: isMobile ? '9px' : '12px', fontWeight: '700', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '3px' }}>
+              <FiTarget color="#8B5CF6" size={isMobile ? 10 : 14} /> Completion Progress
+            </h3>
+            <p style={{ fontSize: isMobile ? '7px' : '10px', color: '#94a3b8', margin: '1px 0 0 0' }}>Overall attendance metrics</p>
+          </div>
+          <div style={styles.smallChartContainer}>
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart data={[
+                { subject: 'Present', value: presentToday || 10, fullMark: 100 },
+                { subject: 'Absent', value: absentToday || 5, fullMark: 100 },
+                { subject: 'Late', value: lateToday || 3, fullMark: 100 },
+                { subject: 'On Leave', value: Math.floor(Math.random() * 10) + 2, fullMark: 100 },
+              ]}>
+                <PolarGrid stroke="#e2e8f0" />
+                <PolarAngleAxis dataKey="subject" tick={{ fill: "#64748b", fontSize: isMobile ? 6 : 9, fontWeight: '500' }} />
+                <PolarRadiusAxis angle={30} domain={[0, 50]} tick={{ fill: "#64748b", fontSize: isMobile ? 6 : 8 }} />
+                <Radar name="Employees" dataKey="value" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.4} />
+                <Tooltip content={<CustomTooltip />} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── 5. FOOTER ─── */}
+      <div style={styles.footer}>
+        <span>© {new Date().getFullYear()} Timely Health. All rights reserved.</span>
+        <div style={{ display: 'flex', gap: isMobile ? '8px' : '12px', flexWrap: 'wrap' }}>
+          <span>Total Employees: <strong style={{ color: '#0f172a' }}>{totals.employees || 0}</strong></span>
+          <span>Attendance Rate: <strong style={{ color: '#10B981' }}>{attendanceRateValue.toFixed(1)}%</strong></span>
+        </div>
+      </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };

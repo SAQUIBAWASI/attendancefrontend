@@ -5,7 +5,7 @@ import { FaEye, FaCheck, FaTimes, FaTrash, FaSearch, FaDownload, FaBuilding, FaU
 import { FiCalendar, FiCheckCircle, FiClock, FiDownload, FiFilter, FiList, FiTrash2, FiXCircle } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 
-const API_BASE_URL = 'http://localhost:5001';
+const API_BASE_URL = 'https://api.timelyhealth.in';
 
 export default function ClaimedOTManagement() {
   const [claims, setClaims] = useState([]);

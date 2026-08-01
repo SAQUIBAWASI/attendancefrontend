@@ -3809,7 +3809,7 @@
 
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
-import { FaBuilding, FaUserTag, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaBuilding, FaUserTag, FaChevronDown, FaChevronUp, FaCamera, FaTimes } from "react-icons/fa";
 import { FiCalendar, FiUsers, FiUserCheck, FiUserMinus, FiBriefcase, FiMapPin, FiFilter, FiDownload, FiPlus, FiTrash2, FiEye, FiSearch, FiX, FiEdit } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
@@ -3827,6 +3827,19 @@ const EmployeeList = () => {
   const [loading, setLoading] = useState(false);
   const [showInactiveOnly, setShowInactiveOnly] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  
+  // ✅ Image Attendance Toggle States
+  const [selectedEmployees, setSelectedEmployees] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [showBulkImagePopup, setShowBulkImagePopup] = useState(false);
+  const [bulkImageAction, setBulkImageAction] = useState('enable');
+  const [bulkImageLoading, setBulkImageLoading] = useState(false);
+  
+  // ✅ Single Image Toggle Popup
+  const [showImageTogglePopup, setShowImageTogglePopup] = useState(false);
+  const [imageToggleEmployee, setImageToggleEmployee] = useState(null);
+  const [imageToggleAction, setImageToggleAction] = useState('');
+  const [imageToggleLoading, setImageToggleLoading] = useState(false);
   
   // Active filter type for card clicks
   const [activeFilterType, setActiveFilterType] = useState('all');
@@ -3850,7 +3863,6 @@ const EmployeeList = () => {
     currentPage: 1,
     totalPages: 1,
     totalCount: 0,
-    // ─── Persist limit in localStorage ───
     limit: (() => {
       const saved = localStorage.getItem('employeeList_itemsPerPage');
       return saved ? parseInt(saved, 10) : 10;
@@ -4060,6 +4072,123 @@ const EmployeeList = () => {
     }
   };
 
+  // =============================================
+  // ✅ IMAGE ATTENDANCE - SINGLE UPDATE
+  // =============================================
+  const handleSingleImageToggle = (emp) => {
+    const currentValue = emp.isAllowedImageCapturedAttendance === "true" || emp.isAllowedImageCapturedAttendance === true;
+    const action = currentValue ? 'disable' : 'enable';
+    setImageToggleEmployee(emp);
+    setImageToggleAction(action);
+    setShowImageTogglePopup(true);
+  };
+
+  const handleConfirmSingleImageToggle = async () => {
+    if (!imageToggleEmployee) return;
+    
+    const currentValue = imageToggleEmployee.isAllowedImageCapturedAttendance === "true" || imageToggleEmployee.isAllowedImageCapturedAttendance === true;
+    const newValue = !currentValue;
+    const action = newValue ? 'ENABLE' : 'DISABLE';
+
+    setImageToggleLoading(true);
+    setShowImageTogglePopup(false);
+    
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/employees/update-image-capture`,
+        {
+          employeeId: imageToggleEmployee.employeeId,
+          isAllowed: newValue
+        }
+      );
+
+      if (response.data.success) {
+        setEmployees(employees.map(e => 
+          e._id === imageToggleEmployee._id 
+            ? { ...e, isAllowedImageCapturedAttendance: newValue } 
+            : e
+        ));
+        alert(`✅ Image Attendance ${action}D successfully for ${imageToggleEmployee.name}`);
+      } else {
+        throw new Error(response.data.message || "Failed to update image attendance setting");
+      }
+    } catch (error) {
+      console.error("Error updating image attendance:", error);
+      alert(`Failed to update image attendance: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setImageToggleLoading(false);
+      setImageToggleEmployee(null);
+      setImageToggleAction('');
+    }
+  };
+
+  // =============================================
+  // ✅ IMAGE ATTENDANCE - BULK UPDATE
+  // =============================================
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedEmployees([]);
+    } else {
+      const allIds = currentEmployees.map(emp => emp.employeeId);
+      setSelectedEmployees(allIds);
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const handleSelectEmployee = (employeeId) => {
+    if (selectedEmployees.includes(employeeId)) {
+      setSelectedEmployees(selectedEmployees.filter(id => id !== employeeId));
+    } else {
+      setSelectedEmployees([...selectedEmployees, employeeId]);
+    }
+  };
+
+  const handleBulkImageToggle = (action) => {
+    if (selectedEmployees.length === 0) {
+      alert("⚠️ Please select at least one employee");
+      return;
+    }
+    setBulkImageAction(action);
+    setShowBulkImagePopup(true);
+  };
+
+  const handleConfirmBulkImageToggle = async () => {
+    const isAllowed = bulkImageAction === 'enable';
+    const action = isAllowed ? 'ENABLE' : 'DISABLE';
+
+    setBulkImageLoading(true);
+    setShowBulkImagePopup(false);
+    
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/employees/update-image-capture`,
+        {
+          employeeIds: selectedEmployees,
+          isAllowed: isAllowed
+        }
+      );
+
+      if (response.data.success) {
+        // Update local state
+        setEmployees(employees.map(e => 
+          selectedEmployees.includes(e.employeeId)
+            ? { ...e, isAllowedImageCapturedAttendance: isAllowed }
+            : e
+        ));
+        alert(`✅ ${response.data.data.success.length} employees ${action}D successfully`);
+        setSelectedEmployees([]);
+        setSelectAll(false);
+      } else {
+        throw new Error(response.data.message || "Failed to update");
+      }
+    } catch (error) {
+      console.error("Error in bulk update:", error);
+      alert(`Failed to update: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setBulkImageLoading(false);
+    }
+  };
+
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this employee?")) {
       try {
@@ -4088,7 +4217,7 @@ const EmployeeList = () => {
     setLoading(false);
   };
 
-  // ─── Handle itemsPerPage change with localStorage persistence ───
+  // Handle itemsPerPage change with localStorage persistence
   const handleItemsPerPageChange = (limit) => {
     setPagination({
       currentPage: 1,
@@ -4207,7 +4336,8 @@ const EmployeeList = () => {
         'Salary Per Month': `₹${emp.salaryPerMonth || ''}`,
         'Shift Hours': emp.shiftHours || '',
         'Week Off Per Month': emp.weekOffPerMonth || '',
-        'Status': isEmployeeHidden(emp) ? 'INACTIVE' : 'ACTIVE'
+        'Status': isEmployeeHidden(emp) ? 'INACTIVE' : 'ACTIVE',
+        'Image Attendance': emp.isAllowedImageCapturedAttendance === "true" || emp.isAllowedImageCapturedAttendance === true ? 'ENABLED' : 'DISABLED'
       }));
 
       const ws = XLSX.utils.json_to_sheet(excelData);
@@ -4215,7 +4345,7 @@ const EmployeeList = () => {
       const wscols = [
         {wch: 10}, {wch: 20}, {wch: 25}, {wch: 15}, {wch: 20},
         {wch: 15}, {wch: 15}, {wch: 20}, {wch: 18}, {wch: 12},
-        {wch: 18}, {wch: 10}
+        {wch: 18}, {wch: 10}, {wch: 15}
       ];
       ws['!cols'] = wscols;
       
@@ -4356,7 +4486,7 @@ const EmployeeList = () => {
           </div>
         </div>
 
-        {/* Filter Info Badge - Shows what filter is active */}
+        {/* Filter Info Badge */}
         {activeFilterType !== 'all' && (
           <div className="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
             <span className="text-xs font-medium text-blue-700">
@@ -4509,7 +4639,7 @@ const EmployeeList = () => {
                   )}
                 </div>
 
-                {/* Status Tabs - Only show when 'all' filter is active */}
+                {/* Status Tabs */}
                 {activeFilterType === 'all' && (
                   <div className="flex items-center bg-gray-100 p-0.5 rounded-lg h-8">
                     <button
@@ -4580,7 +4710,6 @@ const EmployeeList = () => {
 
           {/* Mobile View */}
           <div className="sm:hidden">
-            {/* Mobile Header with Toggle */}
             <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
               <button
                 onClick={() => setShowMobileFilters(!showMobileFilters)}
@@ -4599,10 +4728,8 @@ const EmployeeList = () => {
               </span>
             </div>
 
-            {/* Mobile Filters */}
             {showMobileFilters && (
               <div className="mt-2 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
-                {/* Search */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Search Employee</label>
                   <div className="relative">
@@ -4620,7 +4747,6 @@ const EmployeeList = () => {
                   </div>
                 </div>
 
-                {/* Department */}
                 <div className="relative" ref={departmentFilterRef}>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
                   <button
@@ -4671,7 +4797,6 @@ const EmployeeList = () => {
                   )}
                 </div>
 
-                {/* Designation */}
                 <div className="relative" ref={designationFilterRef}>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Designation</label>
                   <button
@@ -4806,12 +4931,62 @@ const EmployeeList = () => {
           </div>
         </div>
 
+        {/* ============================================= */}
+        {/* ✅ BULK IMAGE ATTENDANCE ACTION BAR */}
+        {/* ============================================= */}
+        {selectedEmployees.length > 0 && (
+          <div className="mb-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-semibold text-purple-700">
+                <FiUsers className="inline mr-1" /> {selectedEmployees.length} selected
+              </span>
+              <button
+                onClick={() => {
+                  setSelectedEmployees([]);
+                  setSelectAll(false);
+                }}
+                className="text-xs text-gray-500 hover:text-gray-700 font-medium"
+              >
+                <FiX className="inline" /> Clear
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleBulkImageToggle('enable')}
+                className="px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
+              >
+                <FaCamera className="text-xs" /> Enable All
+              </button>
+              <button
+                onClick={() => handleBulkImageToggle('disable')}
+                className="px-3 py-1.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
+              >
+                <FaCamera className="text-xs" /> Disable All
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Table Section */}
         <div className="emp-dash__card">
           <div className="overflow-x-auto">
             <table className="emp-dash__table">
               <thead>
                 <tr>
+                  {/* ✅ CHECKBOX COLUMN - FIRST */}
+                  <th style={{ textAlign: "center", width: "40px" }}>
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                      title="Select all visible employees"
+                    />
+                  </th>
+                  {/* ✅ CAMERA COLUMN - SECOND */}
+                  <th style={{ textAlign: "center", width: "40px" }}>
+                    <FaCamera className="text-gray-500 text-sm mx-auto" title="Image Attendance" />
+                  </th>
                   <th>Employee ID</th>
                   <th>Name</th>
                   <th className="hidden sm:table-cell">Phone</th>
@@ -4831,11 +5006,36 @@ const EmployeeList = () => {
                 {currentEmployees.length > 0 ? (
                   currentEmployees.map((emp) => {
                     const isHidden = isEmployeeHidden(emp);
+                    const isImageEnabled = emp.isAllowedImageCapturedAttendance === "true" || emp.isAllowedImageCapturedAttendance === true;
                     return (
                       <tr 
                         key={emp._id} 
                         className={`hover:bg-gray-50/60 transition-all ${isHidden ? 'bg-red-50/30' : ''}`}
                       >
+                        {/* ✅ CHECKBOX COLUMN */}
+                        <td style={{ textAlign: "center" }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedEmployees.includes(emp.employeeId)}
+                            onChange={() => handleSelectEmployee(emp.employeeId)}
+                            className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                          />
+                        </td>
+                        {/* ✅ CAMERA ICON COLUMN - TOGGLE SINGLE */}
+                        <td style={{ textAlign: "center" }}>
+                          <button
+                            onClick={() => handleSingleImageToggle(emp)}
+                            disabled={imageToggleLoading}
+                            className={`p-1.5 rounded-md transition-all ${
+                              isImageEnabled
+                                ? 'text-purple-600 bg-purple-50 hover:bg-purple-100'
+                                : 'text-gray-400 bg-gray-50 hover:bg-gray-100'
+                            }`}
+                            title={isImageEnabled ? "Disable Image Attendance" : "Enable Image Attendance"}
+                          >
+                            <FaCamera className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
                         <td className="font-semibold text-gray-900 whitespace-nowrap text-[11px]">
                           {emp.employeeId}
                         </td>
@@ -4862,7 +5062,7 @@ const EmployeeList = () => {
                           </span>
                         </td>
                         <td style={{ textAlign: "center" }}>
-                          <div className="flex items-center justify-center gap-1">
+                          <div className="flex items-center justify-center gap-1 flex-wrap">
                             <button 
                               className="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-all shadow-sm"
                               onClick={() => handleView(emp)} 
@@ -4919,7 +5119,7 @@ const EmployeeList = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan="12" className="py-12 text-center text-gray-500 font-medium">
+                    <td colSpan="14" className="py-12 text-center text-gray-500 font-medium">
                       {activeFilterType === 'all' && showInactiveOnly ? 'No inactive employees found.' : 
                        activeFilterType === 'all' && !showInactiveOnly ? 'No active employees found.' :
                        `No ${getFilterLabel().toLowerCase()} found.`}
@@ -4933,7 +5133,6 @@ const EmployeeList = () => {
           {/* Pagination */}
           {filteredEmployees.length > 0 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-200/50 bg-gray-50/30">
-              {/* Left Side - Showing Info + Select */}
               <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
                 <span>Show</span>
                 <select
@@ -4956,7 +5155,6 @@ const EmployeeList = () => {
                 </span>
               </div>
 
-              {/* Pagination buttons */}
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={handlePrevPage}
@@ -5007,7 +5205,6 @@ const EmployeeList = () => {
         {selectedEmployee && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="relative w-full max-w-lg bg-white shadow-2xl rounded-2xl flex flex-col max-h-[90vh] overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
-              {/* Modal Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
                 <div>
                   <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
@@ -5025,7 +5222,6 @@ const EmployeeList = () => {
                 </button>
               </div>
 
-              {/* Modal Content */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {isEmployeeHidden(selectedEmployee) && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 flex items-center gap-2">
@@ -5083,10 +5279,16 @@ const EmployeeList = () => {
                     <span className="text-gray-400 block mb-1">Work Location</span>
                     <span className="font-semibold text-blue-600 text-sm">{getLocationName(selectedEmployee.location)}</span>
                   </div>
+
+                  <div className="bg-gray-50/60 p-3 rounded-lg border border-gray-100 col-span-1 sm:col-span-2">
+                    <span className="text-gray-400 block mb-1">Image Attendance</span>
+                    <span className={`font-semibold text-sm ${selectedEmployee.isAllowedImageCapturedAttendance === "true" || selectedEmployee.isAllowedImageCapturedAttendance === true ? 'text-purple-600' : 'text-gray-500'}`}>
+                      {selectedEmployee.isAllowedImageCapturedAttendance === "true" || selectedEmployee.isAllowedImageCapturedAttendance === true ? '📸 ENABLED' : 'DISABLED'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Modal Footer */}
               <div className="flex justify-end gap-2 p-4 border-t border-gray-100 bg-gray-50/50">
                 <button
                   onClick={handleCloseModal}
@@ -5112,7 +5314,6 @@ const EmployeeList = () => {
         {showLocationModal && selectedEmployeeForLocation && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="relative w-full max-w-md bg-white shadow-2xl rounded-2xl flex flex-col max-h-[90vh] overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
-              {/* Modal Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
                 <div>
                   <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
@@ -5130,7 +5331,6 @@ const EmployeeList = () => {
                 </button>
               </div>
 
-              {/* Modal Body */}
               <div className="flex-1 p-6 space-y-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-700">Select Site Location</label>
@@ -5149,7 +5349,6 @@ const EmployeeList = () => {
                 </div>
               </div>
 
-              {/* Modal Footer */}
               <div className="flex justify-end gap-2 p-4 border-t border-gray-100 bg-gray-50/50">
                 <button
                   onClick={handleCloseLocationModal}
@@ -5163,6 +5362,175 @@ const EmployeeList = () => {
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-xs transition-all shadow-md"
                 >
                   {loading ? 'Assigning...' : 'Assign Location'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ============================================= */}
+        {/* ✅ SINGLE IMAGE ATTENDANCE CONFIRMATION POPUP */}
+        {/* ============================================= */}
+        {showImageTogglePopup && imageToggleEmployee && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="relative w-full max-w-md bg-white shadow-2xl rounded-2xl flex flex-col max-h-[90vh] overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-indigo-50">
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                    <FaCamera className="text-purple-600" /> Image Attendance
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    {imageToggleAction === 'enable' ? 'Enable' : 'Disable'} image attendance for <strong className="text-gray-700">{imageToggleEmployee.name}</strong>
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowImageTogglePopup(false);
+                    setImageToggleEmployee(null);
+                    setImageToggleAction('');
+                  }}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+                >
+                  <FaTimes className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 p-6 space-y-4">
+                <div className="text-center py-4">
+                  <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3 ${
+                    imageToggleAction === 'enable' ? 'bg-purple-100' : 'bg-red-100'
+                  }`}>
+                    <FaCamera className={`text-2xl ${
+                      imageToggleAction === 'enable' ? 'text-purple-600' : 'text-red-600'
+                    }`} />
+                  </div>
+                  <h4 className="text-base font-bold text-gray-800 mb-1">
+                    {imageToggleAction === 'enable' ? 'Enable Image Attendance?' : 'Disable Image Attendance?'}
+                  </h4>
+                  <p className="text-sm text-gray-500 max-w-xs mx-auto">
+                    {imageToggleAction === 'enable' 
+                      ? `This will allow ${imageToggleEmployee.name} to use photo capture for attendance marking.`
+                      : `This will prevent ${imageToggleEmployee.name} from using photo capture for attendance marking.`
+                    }
+                  </p>
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-xs text-gray-600">
+                      <span className="font-semibold">Employee:</span> {imageToggleEmployee.name} ({imageToggleEmployee.employeeId})
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      <span className="font-semibold">Current Status:</span> 
+                      <span className={`ml-1 ${
+                        imageToggleAction === 'enable' ? 'text-red-600' : 'text-purple-600'
+                      }`}>
+                        {imageToggleAction === 'enable' ? 'DISABLED' : 'ENABLED'}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 p-4 border-t border-gray-100 bg-gray-50/50">
+                <button
+                  onClick={() => {
+                    setShowImageTogglePopup(false);
+                    setImageToggleEmployee(null);
+                    setImageToggleAction('');
+                  }}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmSingleImageToggle}
+                  disabled={imageToggleLoading}
+                  className={`px-4 py-2 text-white font-semibold rounded-xl text-xs transition-all shadow-md ${
+                    imageToggleAction === 'enable'
+                      ? 'bg-purple-600 hover:bg-purple-700'
+                      : 'bg-red-600 hover:bg-red-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {imageToggleLoading ? 'Processing...' : imageToggleAction === 'enable' ? 'Yes, Enable' : 'Yes, Disable'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ============================================= */}
+        {/* ✅ BULK IMAGE ATTENDANCE CONFIRMATION POPUP */}
+        {/* ============================================= */}
+        {showBulkImagePopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="relative w-full max-w-md bg-white shadow-2xl rounded-2xl flex flex-col max-h-[90vh] overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-indigo-50">
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                    <FaCamera className="text-purple-600" /> Bulk Update
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    {bulkImageAction === 'enable' ? 'Enable' : 'Disable'} image attendance for <strong className="text-gray-700">{selectedEmployees.length}</strong> employees
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowBulkImagePopup(false)}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+                >
+                  <FaTimes className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 p-6 space-y-4">
+                <div className="text-center py-4">
+                  <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3 ${
+                    bulkImageAction === 'enable' ? 'bg-purple-100' : 'bg-red-100'
+                  }`}>
+                    <FaCamera className={`text-2xl ${
+                      bulkImageAction === 'enable' ? 'text-purple-600' : 'text-red-600'
+                    }`} />
+                  </div>
+                  <h4 className="text-base font-bold text-gray-800 mb-1">
+                    {bulkImageAction === 'enable' ? 'Enable Image Attendance for All?' : 'Disable Image Attendance for All?'}
+                  </h4>
+                  <p className="text-sm text-gray-500 max-w-xs mx-auto">
+                    {bulkImageAction === 'enable' 
+                      ? `This will allow ${selectedEmployees.length} employees to use photo capture for attendance.`
+                      : `This will prevent ${selectedEmployees.length} employees from using photo capture for attendance.`
+                    }
+                  </p>
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200 max-h-40 overflow-y-auto">
+                    <p className="text-xs font-semibold text-gray-700 mb-1">Selected Employees:</p>
+                    {selectedEmployees.slice(0, 10).map(id => {
+                      const emp = employees.find(e => e.employeeId === id);
+                      return (
+                        <p key={id} className="text-xs text-gray-600 py-0.5">
+                          • {emp?.name || id} ({id})
+                        </p>
+                      );
+                    })}
+                    {selectedEmployees.length > 10 && (
+                      <p className="text-xs text-gray-400 mt-1">... and {selectedEmployees.length - 10} more</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 p-4 border-t border-gray-100 bg-gray-50/50">
+                <button
+                  onClick={() => setShowBulkImagePopup(false)}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmBulkImageToggle}
+                  disabled={bulkImageLoading}
+                  className={`px-4 py-2 text-white font-semibold rounded-xl text-xs transition-all shadow-md ${
+                    bulkImageAction === 'enable'
+                      ? 'bg-purple-600 hover:bg-purple-700'
+                      : 'bg-red-600 hover:bg-red-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {bulkImageLoading ? 'Processing...' : bulkImageAction === 'enable' ? 'Enable All' : 'Disable All'}
                 </button>
               </div>
             </div>

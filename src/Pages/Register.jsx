@@ -721,7 +721,7 @@
 
 
 
-// const API_BASE_URL = 'http://localhost:5001/api'
+// const API_BASE_URL = 'https://api.timelyhealth.in/api'
 // // Add Razorpay script
 // const loadRazorpayScript = () => {
 //   return new Promise((resolve) => {
@@ -2018,7 +2018,7 @@ import Select from 'react-select';
 
 
 
-const API_BASE_URL = 'http://localhost:5001/api'
+const API_BASE_URL = 'https://api.timelyhealth.in/api'
 // Add Razorpay script
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {

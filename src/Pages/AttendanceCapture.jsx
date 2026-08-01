@@ -2764,9 +2764,13 @@ import {
   FaHome,
   FaBriefcase,
   FaUsers,
+  FaCamera,
+  FaRedo,
+  FaCheck,
+  FaExclamationTriangle,
 } from "react-icons/fa";
-import { MdCelebration, MdLocationOn, MdWork, MdOutlineAttachMoney } from "react-icons/md";
-import { BsStars, BsCalendarCheck, BsClockHistory, BsPersonBadge } from "react-icons/bs";
+import { MdCelebration, MdLocationOn, MdWork, MdOutlineAttachMoney, MdCameraAlt } from "react-icons/md";
+import { BsStars, BsCalendarCheck, BsClockHistory, BsPersonBadge, BsCamera } from "react-icons/bs";
 
 // FIX: Ensure BASE_URL ends without trailing slash and remove any duplicate 'api'
 const BASE_URL = API_BASE_URL.endsWith("/") ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
@@ -2930,9 +2934,40 @@ const playSuccessSound = () => {
   }
 };
 
+// Camera shutter sound
+const playShutterSound = () => {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioContext.currentTime;
+    
+    const osc1 = audioContext.createOscillator();
+    const gain1 = audioContext.createGain();
+    osc1.connect(gain1);
+    gain1.connect(audioContext.destination);
+    osc1.frequency.value = 1500;
+    osc1.type = "square";
+    gain1.gain.setValueAtTime(0.05, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    osc1.start(now);
+    osc1.stop(now + 0.05);
+    
+    const osc2 = audioContext.createOscillator();
+    const gain2 = audioContext.createGain();
+    osc2.connect(gain2);
+    gain2.connect(audioContext.destination);
+    osc2.frequency.value = 1200;
+    osc2.type = "square";
+    gain2.gain.setValueAtTime(0.05, now + 0.08);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+    osc2.start(now + 0.08);
+    osc2.stop(now + 0.13);
+  } catch (e) {
+    console.log("Audio not supported");
+  }
+};
+
 // ✅ FIX: Get voices with retry mechanism
 const getFemaleVoice = (voices) => {
-  // Try to find female voice
   let femaleVoice = voices.find(
     (voice) =>
       voice.name.toLowerCase().includes("female") ||
@@ -2990,7 +3025,6 @@ const speakWithRetry = (message, retries = 5) => {
         
         window.speechSynthesis.speak(utterance);
       } else {
-        // Wait for voices to load
         setTimeout(() => trySpeak(attempt + 1), 300);
       }
     };
@@ -3019,14 +3053,40 @@ const speakCheckOutSuccess = async (name) => {
   return speakWithRetry(message);
 };
 
+// ==================== HELPER: Convert Base64 to File ====================
+const base64ToFile = (base64String, filename) => {
+  try {
+    const arr = base64String.split(",");
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  } catch (error) {
+    console.error("Error converting base64 to file:", error);
+    return null;
+  }
+};
+
 export default function AttendanceCapture() {
   const navigate = useNavigate();
   const routerLocation = useLocation();
 
-  // Swipe related refs and state
-  const swipeAreaRef = useRef(null);
-  const [swipeProgress, setSwipeProgress] = useState(0);
-  const [isSwiping, setIsSwiping] = useState(false);
+  // Camera refs
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+  const [capturedImage, setCapturedImage] = useState(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [captureCountdown, setCaptureCountdown] = useState(0);
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
+  const streamRef = useRef(null);
+  const [cameraMode, setCameraMode] = useState("checkin");
 
   const [employeeId, setEmployeeId] = useState(null);
   const [employeeEmail, setEmployeeEmail] = useState(null);
@@ -3045,13 +3105,26 @@ export default function AttendanceCapture() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
+
+  // ✅ NEW: Flag for image capture attendance
+  const [isImageCaptureAllowed, setIsImageCaptureAllowed] = useState(false);
+
+  // Reason Popup states
+  const [showReasonPopup, setShowReasonPopup] = useState(false);
+  const [tempReason, setTempReason] = useState("");
+  const [pendingAction, setPendingAction] = useState(null);
+  const [isReasonProcessing, setIsReasonProcessing] = useState(false);
 
   // Success Popup states
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [successEmoji, setSuccessEmoji] = useState("");
-  const [successType, setSuccessType] = useState(""); // "checkin" or "checkout"
+  const [successType, setSuccessType] = useState("");
   const [isPopupClosing, setIsPopupClosing] = useState(false);
+
+  // Toast message
+  const [toastMessage, setToastMessage] = useState(null);
 
   // Welcome Popup states
   const [showWelcomePopup, setShowWelcomePopup] = useState(() => {
@@ -3076,20 +3149,17 @@ export default function AttendanceCapture() {
   // ✅ Load voices on component mount
   useEffect(() => {
     if ("speechSynthesis" in window) {
-      // Try to load voices immediately
       let voices = window.speechSynthesis.getVoices();
       if (voices.length > 0) {
         setVoicesLoaded(true);
       }
       
-      // Also listen for voices changed event
       const onVoicesChanged = () => {
         setVoicesLoaded(true);
       };
       
       window.speechSynthesis.addEventListener("voiceschanged", onVoicesChanged);
       
-      // Fallback: if voices still not loaded after 2 seconds, retry
       const timeout = setTimeout(() => {
         if (window.speechSynthesis.getVoices().length > 0) {
           setVoicesLoaded(true);
@@ -3138,6 +3208,31 @@ export default function AttendanceCapture() {
     }
   }, [routerLocation.state, navigate]);
 
+  // ✅ Fetch employee data to check isAllowedImageCapturedAttendance
+  useEffect(() => {
+    const fetchEmployeeData = async () => {
+      if (!employeeId) return;
+      try {
+        const url = `${cleanBaseUrl}/api/employees/get-employee?employeeId=${employeeId}`;
+        const res = await axios.get(url);
+        if (res.data.success && res.data.data) {
+          const employeeData = res.data.data;
+          // ✅ Check if image capture is allowed
+          const isAllowed = employeeData.isAllowedImageCapturedAttendance === "true" || 
+                           employeeData.isAllowedImageCapturedAttendance === true;
+          setIsImageCaptureAllowed(isAllowed);
+          
+          // Update other employee details if needed
+          if (employeeData.name) setEmployeeName(employeeData.name);
+          if (employeeData.department) setEmployeeDepartment(employeeData.department);
+        }
+      } catch (err) {
+        console.error("Error fetching employee data:", err);
+      }
+    };
+    if (employeeId) fetchEmployeeData();
+  }, [employeeId]);
+
   // ✅ Initialize welcome popup data
   useEffect(() => {
     if (employeeName && showWelcomePopup) {
@@ -3153,14 +3248,12 @@ export default function AttendanceCapture() {
         playWelcomeSound();
       }, 300);
 
-      // ✅ Speak with retry when voices are ready
       const speakWelcome = async () => {
         if (voicesLoaded) {
           setIsSpeaking(true);
           await speakWelcomeMessage(employeeName, greeting);
           setIsSpeaking(false);
         } else {
-          // Wait for voices and retry
           let attempts = 0;
           const checkVoices = setInterval(() => {
             attempts++;
@@ -3172,7 +3265,6 @@ export default function AttendanceCapture() {
               });
             } else if (attempts > 10) {
               clearInterval(checkVoices);
-              // Fallback: try anyway
               setIsSpeaking(true);
               speakWelcomeMessage(employeeName, greeting).then(() => {
                 setIsSpeaking(false);
@@ -3338,43 +3430,273 @@ export default function AttendanceCapture() {
     return () => clearInterval(interval);
   }, []);
 
-  // Get current live location
-  const fetchLocation = () => {
-    if (!navigator.geolocation) {
-      return alert("Geolocation is not supported by your browser.");
-    }
-    setPosition(null);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setPosition(coords);
-        if (assignedLocation) {
-          const dist = haversineDistance(
-            coords.lat,
-            coords.lng,
-            assignedLocation.latitude,
-            assignedLocation.longitude
-          );
-          setDistance(dist);
-        }
-      },
-      (err) => alert("Error getting location: " + err.message),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
+  // ==================== GET LOCATION FUNCTION ====================
+  const getCurrentLocation = () => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Geolocation is not supported"));
+        return;
+      }
+      
+      setLocationLoading(true);
+      
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coords = { 
+            lat: pos.coords.latitude, 
+            lng: pos.coords.longitude 
+          };
+          setPosition(coords);
+          setLocationLoading(false);
+          
+          if (assignedLocation) {
+            const dist = haversineDistance(
+              coords.lat,
+              coords.lng,
+              assignedLocation.latitude,
+              assignedLocation.longitude
+            );
+            setDistance(dist);
+          }
+          resolve(coords);
+        },
+        (err) => {
+          setLocationLoading(false);
+          reject(new Error("Error getting location: " + err.message));
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    });
   };
 
-  // ✅ Handle Check-In with voice
-  const handleCheckIn = async () => {
-    if (!position) return alert("Please capture your current location first.");
-    if (!employeeId || !employeeEmail) return alert("Employee data missing.");
+  // ==================== CAMERA FUNCTIONS ====================
+  
+  const startCamera = async () => {
+    try {
+      setCameraError(null);
+      const constraints = {
+        video: {
+          facingMode: "user",
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+        },
+        audio: false,
+      };
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = stream;
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+        setIsCameraReady(true);
+        setCameraError(null);
+      }
+    } catch (err) {
+      console.error("Camera error:", err);
+      setCameraError("Unable to access camera. Please check permissions.");
+      setIsCameraReady(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraReady(false);
+    setIsCameraOpen(false);
+    setCapturedImage(null);
+    setCaptureCountdown(0);
+  };
+
+  const handleCloseCamera = () => {
+    stopCamera();
+    setShowCameraModal(false);
+    setCapturedImage(null);
+    setCaptureCountdown(0);
+    setIsCapturing(false);
+  };
+
+  const captureImage = () => {
+    if (!videoRef.current || !canvasRef.current) return null;
+    
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    const imageData = canvas.toDataURL('image/jpeg', 0.9);
+    setCapturedImage(imageData);
+    
+    playShutterSound();
+    
+    return imageData;
+  };
+
+  // ==================== REASON POPUP FUNCTIONS ====================
+  const showReasonPopupHandler = (action) => {
+    if (isReasonProcessing || showReasonPopup) {
+      return;
+    }
+    setPendingAction(action);
+    setTempReason("");
+    setShowReasonPopup(true);
+  };
+
+  const handleReasonConfirm = () => {
+    if (!tempReason.trim()) {
+      alert("⚠️ Please select a reason.");
+      return;
+    }
+    
+    setIsReasonProcessing(true);
+    setReason(tempReason);
+    setShowReasonPopup(false);
+    
+    setToastMessage({
+      text: "✅ Reason selected successfully!",
+      type: "success"
+    });
+    setTimeout(() => setToastMessage(null), 3000);
+    
+    setTimeout(() => {
+      if (pendingAction === 'camera') {
+        openCameraAfterReason();
+      } else if (pendingAction === 'submit') {
+        submitAfterReason();
+      }
+      setPendingAction(null);
+      setIsReasonProcessing(false);
+    }, 300);
+  };
+
+  const handleReasonCancel = () => {
+    setShowReasonPopup(false);
+    setTempReason("");
+    setPendingAction(null);
+    setIsReasonProcessing(false);
+  };
+
+  // ==================== OPEN CAMERA AFTER REASON ====================
+  const openCameraAfterReason = () => {
+    const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
+    if (isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M) {
+      alert(`⚠️ ${employeeDepartment} department must be within ${ONSITE_RADIUS_M}m of office. Current distance: ${distance}m`);
+      return;
+    }
+
+    setShowCameraModal(true);
+    setIsCameraOpen(true);
+    setCapturedImage(null);
+    setCaptureCountdown(0);
+    setCameraError(null);
+    
+    setTimeout(() => {
+      startCamera();
+    }, 300);
+  };
+
+  // ==================== SUBMIT AFTER REASON ====================
+  const submitAfterReason = async () => {
+    if (!capturedImage) {
+      alert("❌ No image captured.");
+      return;
+    }
+    if (cameraMode === 'checkin') {
+      await handleSubmitCheckIn(capturedImage);
+    } else {
+      await handleSubmitCheckOut(capturedImage);
+    }
+  };
+
+  // ==================== OPEN CAMERA FOR CHECK-IN ====================
+  const handleOpenCameraForCheckIn = async () => {
+    if (checkedIn) {
+      alert("⚠️ You are already checked in today.");
+      return;
+    }
+
+    try {
+      setLocationLoading(true);
+      await getCurrentLocation();
+      setLocationLoading(false);
+    } catch (err) {
+      setLocationLoading(false);
+      alert("⚠️ " + err.message);
+      return;
+    }
 
     const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
 
     if (isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M) {
-      return alert(`You are outside the office range (${distance}m). Must be within ${ONSITE_RADIUS_M}m.`);
+      alert(`⚠️ ${employeeDepartment} department must be within ${ONSITE_RADIUS_M}m of office. Current distance: ${distance}m`);
+      return;
+    }
+
+    if (!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M) {
+      showReasonPopupHandler('camera');
+      return;
+    }
+
+    setCameraMode('checkin');
+    openCameraAfterReason();
+  };
+
+  // ==================== OPEN CAMERA FOR CHECK-OUT ====================
+  const handleOpenCameraForCheckOut = async () => {
+    if (!checkedIn) {
+      alert("⚠️ You are not checked in yet.");
+      return;
+    }
+
+    try {
+      setLocationLoading(true);
+      await getCurrentLocation();
+      setLocationLoading(false);
+    } catch (err) {
+      setLocationLoading(false);
+    }
+
+    setCameraMode('checkout');
+    setShowCameraModal(true);
+    setIsCameraOpen(true);
+    setCapturedImage(null);
+    setCaptureCountdown(0);
+    setCameraError(null);
+    
+    setTimeout(() => {
+      startCamera();
+    }, 300);
+  };
+
+  // ==================== NORMAL CHECK-IN (Without Camera) ====================
+  const handleNormalCheckIn = async () => {
+    if (!position) {
+      alert("⚠️ Please capture your location first.");
+      return;
+    }
+    if (!employeeId || !employeeEmail) {
+      alert("❌ Employee data missing.");
+      return;
+    }
+
+    const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
+
+    if (isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M) {
+      alert(`⚠️ You are outside the office range (${distance}m). Must be within ${ONSITE_RADIUS_M}m.`);
+      return;
     }
     if (!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && !reason.trim()) {
-      return alert("You are outside the office range. Please select a reason.");
+      alert("⚠️ You are outside the office range. Please select a reason.");
+      return;
     }
 
     setSubmitting(true);
@@ -3395,22 +3717,39 @@ export default function AttendanceCapture() {
 
       playSuccessSound();
       
-      // ✅ Speak check-in success with retry
       setTimeout(async () => {
         setIsSpeaking(true);
         await speakCheckInSuccess(employeeName);
         setIsSpeaking(false);
       }, 500);
       
+      const fetchTodayAttendance = async () => {
+        try {
+          const url = `${cleanBaseUrl}/api/attendance/myattendance/${employeeId}`;
+          const res = await axios.get(url);
+          const records = res.data.records || [];
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const todayRecord = records.find((rec) => {
+            const checkInTime = new Date(rec.checkInTime);
+            return checkInTime >= today && (rec.status === "checked-in" || rec.status === "on-break");
+          });
+          if (todayRecord) setCheckedIn(true);
+        } catch (err) {
+          console.error("Error fetching attendance:", err);
+        }
+      };
+      fetchTodayAttendance();
+
     } catch (err) {
-      alert(err.response?.data?.message || "Check-in failed.");
+      alert(err.response?.data?.message || "❌ Check-in failed.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // ✅ Handle Check-Out with voice
-  const handleCheckOut = async () => {
+  // ==================== NORMAL CHECK-OUT (Without Camera) ====================
+  const handleNormalCheckOut = async () => {
     if (!employeeId) return alert("Employee data missing.");
 
     let lat = null;
@@ -3462,16 +3801,241 @@ export default function AttendanceCapture() {
 
       playSuccessSound();
       
-      // ✅ Speak check-out success with retry
       setTimeout(async () => {
         setIsSpeaking(true);
         await speakCheckOutSuccess(employeeName);
         setIsSpeaking(false);
       }, 500);
-      
+
+      setCheckedIn(false);
+
     } catch (err) {
       console.error("Check-out error:", err);
       alert(err.response?.data?.message || "Check-out failed.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ==================== AUTO CAPTURE ====================
+  const startAutoCapture = () => {
+    if (!videoRef.current || !isCameraReady) {
+      alert("⚠️ Camera is not ready. Please wait.");
+      return;
+    }
+    
+    setIsCapturing(true);
+    setCaptureCountdown(5);
+    
+    let countdown = 5;
+    const interval = setInterval(() => {
+      countdown -= 1;
+      setCaptureCountdown(countdown);
+      
+      if (countdown <= 0) {
+        clearInterval(interval);
+        const imageData = captureImage();
+        if (imageData) {
+          setTimeout(() => {
+            if (cameraMode === 'checkin') {
+              const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
+              if (!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && !reason.trim()) {
+                if (!isReasonProcessing && !showReasonPopup) {
+                  setPendingAction('submit');
+                  setTempReason("");
+                  setShowReasonPopup(true);
+                  setIsCapturing(false);
+                }
+                return;
+              }
+              handleSubmitCheckIn(imageData);
+            } else {
+              handleSubmitCheckOut(imageData);
+            }
+          }, 500);
+        } else {
+          setIsCapturing(false);
+          setCaptureCountdown(0);
+          alert("❌ Failed to capture image. Please try again.");
+        }
+      }
+    }, 1000);
+  };
+
+  const handleRetake = () => {
+    setCapturedImage(null);
+    setCaptureCountdown(0);
+    setIsCapturing(false);
+    if (videoRef.current && isCameraReady) {
+      videoRef.current.play().catch(err => console.error("Error resuming video:", err));
+    }
+  };
+
+  // ==================== SUBMIT CHECK-IN WITH IMAGE (FormData) ====================
+  const handleSubmitCheckIn = async (imageData) => {
+    if (!employeeId || !employeeEmail) {
+      alert("❌ Employee data missing.");
+      setIsCapturing(false);
+      return;
+    }
+
+    try {
+      await getCurrentLocation();
+    } catch (err) {
+      alert("⚠️ Could not get location: " + err.message);
+      setIsCapturing(false);
+      return;
+    }
+
+    const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
+
+    if (isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M) {
+      alert(`⚠️ You are outside the office range (${distance}m). Must be within ${ONSITE_RADIUS_M}m.`);
+      setIsCapturing(false);
+      return;
+    }
+    if (!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && !reason.trim()) {
+      if (!isReasonProcessing && !showReasonPopup) {
+        showReasonPopupHandler('submit');
+      }
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const imageFile = base64ToFile(imageData, `checkin-${employeeId}-${Date.now()}.jpg`);
+      
+      if (!imageFile) {
+        alert("❌ Failed to process image.");
+        setIsCapturing(false);
+        setSubmitting(false);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("employeeId", employeeId);
+      formData.append("employeeEmail", employeeEmail);
+      formData.append("latitude", position.lat.toString());
+      formData.append("longitude", position.lng.toString());
+      formData.append("reason", isOnsiteOnlyDepartment ? "Onsite" : reason || "Onsite");
+      formData.append("image", imageFile);
+
+      await axios.post(`${cleanBaseUrl}/api/attendance/checkin`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      handleCloseCamera();
+      setIsCapturing(false);
+
+      setSuccessType("checkin");
+      setSuccessMessage("✅ Check-in Successful with Photo! 📸");
+      setSuccessEmoji("📸");
+      setShowSuccessPopup(true);
+      setIsPopupClosing(false);
+
+      playSuccessSound();
+      
+      setTimeout(async () => {
+        setIsSpeaking(true);
+        await speakCheckInSuccess(employeeName);
+        setIsSpeaking(false);
+      }, 500);
+      
+      const fetchTodayAttendance = async () => {
+        try {
+          const url = `${cleanBaseUrl}/api/attendance/myattendance/${employeeId}`;
+          const res = await axios.get(url);
+          const records = res.data.records || [];
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const todayRecord = records.find((rec) => {
+            const checkInTime = new Date(rec.checkInTime);
+            return checkInTime >= today && (rec.status === "checked-in" || rec.status === "on-break");
+          });
+          if (todayRecord) setCheckedIn(true);
+        } catch (err) {
+          console.error("Error fetching attendance:", err);
+        }
+      };
+      fetchTodayAttendance();
+
+    } catch (err) {
+      alert(err.response?.data?.message || "❌ Check-in failed.");
+      setIsCapturing(false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ==================== SUBMIT CHECK-OUT WITH IMAGE (FormData) ====================
+  const handleSubmitCheckOut = async (imageData) => {
+    if (!employeeId) {
+      alert("❌ Employee data missing.");
+      setIsCapturing(false);
+      return;
+    }
+
+    let lat = null;
+    let lng = null;
+
+    try {
+      const coords = await getCurrentLocation();
+      lat = coords.lat;
+      lng = coords.lng;
+    } catch (err) {
+      // Proceed without location
+    }
+
+    setSubmitting(true);
+    try {
+      const imageFile = base64ToFile(imageData, `checkout-${employeeId}-${Date.now()}.jpg`);
+      
+      if (!imageFile) {
+        alert("❌ Failed to process image.");
+        setIsCapturing(false);
+        setSubmitting(false);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("employeeId", employeeId);
+      if (lat && lng) {
+        formData.append("latitude", lat.toString());
+        formData.append("longitude", lng.toString());
+      }
+      formData.append("image", imageFile);
+
+      await axios.post(`${cleanBaseUrl}/api/attendance/checkout`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      handleCloseCamera();
+      setIsCapturing(false);
+
+      setSuccessType("checkout");
+      setSuccessMessage("✅ Check-out Successful with Photo! 📸");
+      setSuccessEmoji("📸");
+      setShowSuccessPopup(true);
+      setIsPopupClosing(false);
+
+      playSuccessSound();
+      
+      setTimeout(async () => {
+        setIsSpeaking(true);
+        await speakCheckOutSuccess(employeeName);
+        setIsSpeaking(false);
+      }, 500);
+
+      setCheckedIn(false);
+
+    } catch (err) {
+      console.error("Check-out error:", err);
+      alert(err.response?.data?.message || "❌ Check-out failed.");
+      setIsCapturing(false);
     } finally {
       setSubmitting(false);
     }
@@ -3486,104 +4050,6 @@ export default function AttendanceCapture() {
       window.location.reload();
     }, 300);
   };
-
-  // Manual swipe handler
-  const handleManualSwipe = () => {
-    if (submitting) {
-      alert("Please wait, previous action is processing...");
-      return;
-    }
-
-    if (!checkedIn && !position) {
-      alert("Please capture your location first.");
-      return;
-    }
-
-    setIsSwiping(true);
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 0.1;
-      setSwipeProgress(progress);
-      if (progress >= 1) {
-        clearInterval(interval);
-        setTimeout(() => {
-          if (!checkedIn) {
-            handleCheckIn();
-          } else {
-            handleCheckOut();
-          }
-          setIsSwiping(false);
-          setSwipeProgress(0);
-        }, 300);
-      }
-    }, 30);
-  };
-
-  // Swipe event handlers
-  useEffect(() => {
-    const swipeArea = swipeAreaRef.current;
-    if (!swipeArea) return;
-
-    let startX = 0;
-    let isDragging = false;
-    const minSwipeDistance = 100;
-
-    const onStart = (clientX) => {
-      if (submitting) return;
-      if (!checkedIn && !position) return;
-      startX = clientX;
-      isDragging = true;
-      setIsSwiping(true);
-    };
-
-    const onMove = (clientX) => {
-      if (!isDragging) return;
-      const diff = clientX - startX;
-      if (!checkedIn && diff > 0) {
-        setSwipeProgress(Math.min(diff / minSwipeDistance, 1));
-      } else if (checkedIn && diff < 0) {
-        setSwipeProgress(Math.min(Math.abs(diff) / minSwipeDistance, 1));
-      }
-    };
-
-    const onEnd = (clientX) => {
-      if (!isDragging) return;
-      isDragging = false;
-      const diff = clientX - startX;
-      if (!checkedIn && diff >= minSwipeDistance) {
-        handleCheckIn();
-      } else if (checkedIn && diff <= -minSwipeDistance) {
-        handleCheckOut();
-      }
-      setTimeout(() => {
-        setSwipeProgress(0);
-        setIsSwiping(false);
-      }, 300);
-    };
-
-    const handleMouseDown = (e) => onStart(e.clientX);
-    const handleMouseMove = (e) => onMove(e.clientX);
-    const handleMouseUp = (e) => onEnd(e.clientX);
-    const handleTouchStart = (e) => onStart(e.touches[0].clientX);
-    const handleTouchMove = (e) => onMove(e.touches[0].clientX);
-    const handleTouchEnd = (e) => onEnd(e.changedTouches[0]?.clientX || 0);
-
-    swipeArea.addEventListener("mousedown", handleMouseDown);
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-    swipeArea.addEventListener("touchstart", handleTouchStart);
-    document.addEventListener("touchmove", handleTouchMove);
-    document.addEventListener("touchend", handleTouchEnd);
-
-    return () => {
-      swipeArea.removeEventListener("mousedown", handleMouseDown);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-      swipeArea.removeEventListener("touchstart", handleTouchStart);
-      document.removeEventListener("touchmove", handleTouchMove);
-      document.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, [checkedIn, submitting, position, employeeId, assignedLocation]);
 
   const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
 
@@ -3605,6 +4071,27 @@ export default function AttendanceCapture() {
     }
   };
 
+  // ==================== GET LOCATION BUTTON HANDLER ====================
+  const handleGetLocation = async () => {
+    try {
+      setLocationLoading(true);
+      await getCurrentLocation();
+      setLocationLoading(false);
+      setToastMessage({
+        text: "📍 Location captured successfully!",
+        type: "success"
+      });
+      setTimeout(() => setToastMessage(null), 3000);
+    } catch (err) {
+      setLocationLoading(false);
+      setToastMessage({
+        text: "❌ Failed to get location: " + err.message,
+        type: "error"
+      });
+      setTimeout(() => setToastMessage(null), 3000);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/80 to-purple-50/60 p-4 relative overflow-hidden">
       {/* Animated Background Orbs */}
@@ -3615,6 +4102,21 @@ export default function AttendanceCapture() {
       </div>
 
       <div className="max-w-md mx-auto relative z-10">
+        {/* ✅ TOAST MESSAGE - NOW AT BOTTOM */}
+        {toastMessage && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up">
+            <div className={`px-6 py-3.5 rounded-2xl shadow-2xl backdrop-blur-sm ${
+              toastMessage.type === 'success' 
+                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' 
+                : 'bg-gradient-to-r from-red-500 to-rose-500 text-white'
+            } font-medium text-sm flex items-center gap-2.5 border border-white/20`}>
+              <span className="text-lg">{toastMessage.type === 'success' ? '✅' : '❌'}</span>
+              <span>{toastMessage.text}</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-white/50 animate-pulse ml-1"></div>
+            </div>
+          </div>
+        )}
+
         {/* SUCCESS POPUP */}
         {showSuccessPopup && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
@@ -3638,7 +4140,6 @@ export default function AttendanceCapture() {
                   )}
                 </p>
 
-                {/* ✅ Voice indicator in success popup */}
                 {isSpeaking && (
                   <div className="flex items-center justify-center gap-1 mt-2">
                     <div className="flex items-center gap-0.5">
@@ -3832,7 +4333,9 @@ export default function AttendanceCapture() {
               </div>
               <div>
                 <h3 className="text-sm font-bold text-gray-900">Location</h3>
-                <p className="text-[10px] text-gray-400 font-medium">Office geofence tracking</p>
+                <p className="text-[10px] text-gray-400 font-medium">
+                  {isImageCaptureAllowed ? "Auto-detected on capture" : "Get location to check in"}
+                </p>
               </div>
             </div>
             <button
@@ -3906,13 +4409,37 @@ export default function AttendanceCapture() {
                 </div>
               )}
 
-              <button
-                onClick={fetchLocation}
-                className="w-full mt-3 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg shadow-indigo-500/25 transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                <FaMapMarkerAlt className="w-4 h-4" />
-                <span>{!position ? "Get Location" : "Update Location"}</span>
-              </button>
+              {/* ✅ GET LOCATION BUTTON - Only for Swipe Mode */}
+              {!isImageCaptureAllowed && (
+                <button
+                  onClick={handleGetLocation}
+                  disabled={locationLoading}
+                  className="w-full mt-3 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg shadow-indigo-500/25 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {locationLoading ? (
+                    <>
+                      <FaSpinner className="w-4 h-4 animate-spin" />
+                      Getting Location...
+                    </>
+                  ) : (
+                    <>
+                      <FaMapMarkerAlt className="w-4 h-4" />
+                      <span>{!position ? "Get Location" : "Update Location"}</span>
+                    </>
+                  )}
+                </button>
+              )}
+
+              <div className="mt-3 p-2.5 bg-indigo-50/60 rounded-xl text-center border border-indigo-100/50">
+                <p className="text-xs text-indigo-600 font-medium flex items-center justify-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  {position ? (
+                    <>📍 Location captured automatically</>
+                  ) : (
+                    <>📍 {isImageCaptureAllowed ? "Location will be captured when you mark attendance" : "Click 'Get Location' to capture your location"}</>
+                  )}
+                </p>
+              </div>
             </div>
           ) : (
             <div className="text-center py-4">
@@ -3921,8 +4448,25 @@ export default function AttendanceCapture() {
           )}
         </div>
 
-        {/* Reason Selection */}
-        {!checkedIn && !isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && (
+        {/* Onsite-only department warning */}
+        {!checkedIn && isOnsiteOnlyDepartment && distance !== null && distance > ONSITE_RADIUS_M && (
+          <div className="bg-red-50/80 backdrop-blur-sm rounded-3xl shadow-xl border border-red-200/50 p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <span className="text-lg">🚫</span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-red-800">
+                  {employeeDepartment} department must be within {ONSITE_RADIUS_M}m
+                </p>
+                <p className="text-xs text-red-600 mt-0.5">Current distance: {distance}m</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Reason Selection for Swipe Mode */}
+        {!checkedIn && !isImageCaptureAllowed && !isOnsiteOnlyDepartment && distance !== null && distance > ONSITE_RADIUS_M && (
           <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 p-4 mb-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-7 h-7 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -3945,24 +4489,7 @@ export default function AttendanceCapture() {
           </div>
         )}
 
-        {/* Onsite-only department warning */}
-        {!checkedIn && isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && (
-          <div className="bg-red-50/80 backdrop-blur-sm rounded-3xl shadow-xl border border-red-200/50 p-4 mb-4">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <span className="text-lg">🚫</span>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-red-800">
-                  {employeeDepartment} department must be within {ONSITE_RADIUS_M}m
-                </p>
-                <p className="text-xs text-red-600 mt-0.5">Current distance: {distance}m</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Attendance Swipe Card */}
+        {/* ==================== ATTENDANCE SECTION - SINGLE BUTTON ONLY ==================== */}
         <div className="bg-white/85 backdrop-blur-2xl rounded-3xl shadow-xl shadow-indigo-500/5 border border-white/60 p-5 hover:shadow-2xl hover:shadow-indigo-500/8 transition-all duration-500">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -3987,98 +4514,99 @@ export default function AttendanceCapture() {
             </div>
           </div>
 
-          <div className="text-center mb-3">
+          {/* ========== SINGLE ATTENDANCE BUTTON ========== */}
+          {!checkedIn ? (
+            <button
+              onClick={isImageCaptureAllowed ? handleOpenCameraForCheckIn : handleNormalCheckIn}
+              disabled={submitting || (!position && !isImageCaptureAllowed)}
+              className={`w-full py-4 rounded-2xl text-base font-bold text-white transition-all duration-300 flex items-center justify-center gap-3 ${
+                submitting || (!position && !isImageCaptureAllowed)
+                  ? "bg-gray-400 cursor-not-allowed opacity-60"
+                  : isImageCaptureAllowed
+                  ? "bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 shadow-lg shadow-indigo-500/30 hover:shadow-2xl hover:shadow-indigo-500/40 transform hover:scale-[1.02] active:scale-95"
+                  : "bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-lg shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/40 transform hover:scale-[1.02] active:scale-95"
+              }`}
+            >
+              {submitting ? (
+                <>
+                  <FaSpinner className="w-5 h-5 animate-spin" />
+                  Processing...
+                </>
+              ) : !position && !isImageCaptureAllowed ? (
+                <>
+                  <FaMapMarkerAlt className="w-5 h-5" />
+                  Get Location First
+                </>
+              ) : isImageCaptureAllowed ? (
+                <>
+                  <FaCamera className="w-5 h-5" />
+                  📸 Check In with Photo
+                  <span className="text-xs opacity-80 bg-white/20 px-2 py-0.5 rounded-full">Auto-Capture</span>
+                </>
+              ) : (
+                <>
+                  <FaArrowRight className="w-5 h-5" />
+                  Check In
+                </>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={isImageCaptureAllowed ? handleOpenCameraForCheckOut : handleNormalCheckOut}
+              disabled={submitting}
+              className="w-full py-4 rounded-2xl text-base font-bold text-white bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 shadow-lg shadow-red-500/30 transition-all duration-300 flex items-center justify-center gap-3 transform hover:scale-[1.02] active:scale-95"
+            >
+              {submitting ? (
+                <>
+                  <FaSpinner className="w-5 h-5 animate-spin" />
+                  Processing...
+                </>
+              ) : isImageCaptureAllowed ? (
+                <>
+                  <FaCamera className="w-5 h-5" />
+                  📸 Check Out with Photo
+                  <span className="text-xs opacity-80 bg-white/20 px-2 py-0.5 rounded-full">Auto-Capture</span>
+                </>
+              ) : (
+                <>
+                  <FaArrowLeft className="w-5 h-5" />
+                  Check Out
+                </>
+              )}
+            </button>
+          )}
+
+          <div className="mt-3 text-center">
             <p className="text-xs text-gray-500 font-medium flex items-center justify-center gap-2">
               {!checkedIn ? (
-                <>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 rounded-full text-indigo-600">
-                    <FaArrowRight className="text-[9px] animate-bounce-x" />
-                    <span className="text-[10px] font-semibold">Swipe right to check in</span>
+                isImageCaptureAllowed ? (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-50 rounded-full text-indigo-600">
+                    <BsCamera className="text-xs" />
+                    <span>Click the button above to capture photo & check in</span>
                   </span>
-                </>
-              ) : (
-                <>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 rounded-full text-red-600">
-                    <FaArrowLeft className="text-[9px] animate-bounce-x-reverse" />
-                    <span className="text-[10px] font-semibold">Swipe left to check out</span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 rounded-full text-blue-600">
+                    <FaArrowRight className="text-xs" />
+                    <span>Click the button above to check in</span>
                   </span>
-                </>
-              )}
-            </p>
-          </div>
-
-          <div className="mb-3">
-            <div
-              ref={swipeAreaRef}
-              className={`relative overflow-hidden rounded-2xl ${
-                submitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-              }`}
-              onClick={handleManualSwipe}
-            >
-              {!checkedIn ? (
-                <div className="relative h-16 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-lg shadow-indigo-500/30">
-                  <div
-                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 opacity-60"
-                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.3s ease-out" }}
-                  ></div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent animate-shimmer"></div>
-                  <div className="absolute inset-0 flex items-center justify-between px-5">
-                    <div className="flex items-center gap-2.5 text-white">
-                      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-inner">
-                        <FaCheckCircle className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <span className="text-sm font-extrabold tracking-wide">CHECK IN</span>
-                        <p className="text-[9px] text-white/70 font-medium">Mark your attendance</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-white/80">
-                      <span className="text-[10px] font-semibold">Swipe</span>
-                      <div className="flex gap-0.5 animate-bounce-x">
-                        <FaArrowRight className="w-3 h-3 opacity-40" />
-                        <FaArrowRight className="w-3 h-3 opacity-70" />
-                        <FaArrowRight className="w-3 h-3" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                )
+              ) : isImageCaptureAllowed ? (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-50 rounded-full text-red-600">
+                  <BsCamera className="text-xs" />
+                  <span>Click the button above to capture photo & check out</span>
+                </span>
               ) : (
-                <div className="relative h-16 bg-gradient-to-r from-red-500 via-rose-500 to-orange-500 shadow-lg shadow-red-500/30">
-                  <div
-                    className="absolute inset-y-0 right-0 bg-gradient-to-r from-red-400 to-orange-400 opacity-60"
-                    style={{ width: `${swipeProgress * 100}%`, transition: isSwiping ? "none" : "width 0.3s ease-out" }}
-                  ></div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
-                  <div className="absolute inset-0 flex items-center justify-between px-5">
-                    <div className="flex items-center gap-1.5 text-white/80">
-                      <div className="flex gap-0.5 animate-bounce-x-reverse">
-                        <FaArrowLeft className="w-3 h-3" />
-                        <FaArrowLeft className="w-3 h-3 opacity-70" />
-                        <FaArrowLeft className="w-3 h-3 opacity-40" />
-                      </div>
-                      <span className="text-[10px] font-semibold">Swipe</span>
-                    </div>
-                    <div className="flex items-center gap-2.5 text-white">
-                      <div>
-                        <span className="text-sm font-extrabold tracking-wide">CHECK OUT</span>
-                        <p className="text-[9px] text-white/70 font-medium text-right">End your shift</p>
-                      </div>
-                      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-inner">
-                        <FaTimes className="w-5 h-5 text-white" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-50 rounded-full text-red-600">
+                  <FaArrowLeft className="text-xs" />
+                  <span>Click the button above to check out</span>
+                </span>
               )}
-            </div>
-            <p className="text-center text-[10px] text-gray-400 mt-2 font-medium">
-              {!checkedIn ? "📍 Capture your location first, then swipe to check in" : "👆 Tap or swipe the bar to check out"}
             </p>
           </div>
 
           {submitting && (
-            <div className="text-center py-3">
-              <div className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 shadow-sm">
+            <div className="text-center py-2 mt-2">
+              <div className="inline-flex items-center gap-2.5 px-5 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 shadow-sm">
                 <FaSpinner className="w-4 h-4 text-indigo-600 animate-spin" />
                 <span className="text-sm text-indigo-700 font-semibold">Processing...</span>
               </div>
@@ -4088,16 +4616,252 @@ export default function AttendanceCapture() {
 
         <div className="text-center mt-5 space-y-2">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/50 shadow-sm">
-            <span className="text-[10px]">📍</span>
+            <span className="text-[10px]">{isImageCaptureAllowed ? "📸" : "👆"}</span>
             <p className="text-[10px] text-gray-500 font-medium">
-              {isOnsiteOnlyDepartment
-                ? `${employeeDepartment}: Must be within ${ONSITE_RADIUS_M}m of office`
-                : "Location required • Outside radius needs reason"}
+              {isImageCaptureAllowed 
+                ? "Photo captured during check-in/check-out for security verification" 
+                : "Click the button above to mark your attendance"}
             </p>
           </div>
           <p className="text-[9px] text-gray-300 font-medium">Powered by Timely Health HRMS</p>
         </div>
       </div>
+
+      {/* ==================== REASON POPUP ==================== */}
+      {showReasonPopup && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 transform animate-scale-up border border-yellow-200/50">
+            <div className="text-center">
+              <div className="flex justify-center mb-3">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
+                  <div className="relative w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-lg shadow-yellow-500/30">
+                    <span className="text-3xl">⚠️</span>
+                  </div>
+                </div>
+              </div>
+
+              <h3 className="text-lg font-bold text-gray-900">Outside Office Range</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                You are <span className="font-bold text-red-500">{distance}m</span> away from the office.
+                <br />
+                <span className="text-xs text-gray-500">Please select a reason for check-in.</span>
+              </p>
+
+              <div className="mt-4">
+                <select
+                  value={tempReason}
+                  onChange={(e) => setTempReason(e.target.value)}
+                  className="w-full p-3 text-sm border border-gray-200 rounded-xl bg-gray-50/50 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                >
+                  <option value="">-- Select Reason --</option>
+                  <option value="Field Work">📋 Field Work</option>
+                  <option value="Work From Home">🏠 Work From Home</option>
+                  <option value="Client Meeting">🤝 Client Meeting</option>
+                  <option value="Other">📝 Other</option>
+                </select>
+              </div>
+
+              <div className="mt-4 flex gap-3">
+                <button
+                  onClick={handleReasonCancel}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleReasonConfirm}
+                  disabled={isReasonProcessing}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 shadow-lg shadow-yellow-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                >
+                  {isReasonProcessing ? 'Processing...' : 'Confirm'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== CAMERA MODAL ==================== */}
+      {showCameraModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black/90 backdrop-blur-md animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[95vh] flex flex-col overflow-hidden">
+            <div className="p-5 border-b flex justify-between items-center bg-gradient-to-r from-indigo-50 to-purple-50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                  <FaCamera className="text-white text-lg" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {cameraMode === 'checkin' ? '📸 Check In Photo' : '📸 Check Out Photo'}
+                  </h3>
+                  <p className="text-xs text-gray-500 font-medium">
+                    {cameraMode === 'checkin' ? 'For attendance verification' : 'For checkout verification'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseCamera}
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-white/80 hover:bg-red-50 hover:text-red-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:rotate-90"
+              >
+                <FaTimes className="text-gray-600 hover:text-red-500 transition-colors text-lg" />
+              </button>
+            </div>
+
+            <div className="flex-1 p-5 overflow-hidden flex flex-col">
+              <div className="relative bg-black rounded-2xl overflow-hidden aspect-[4/3] flex items-center justify-center">
+                {capturedImage ? (
+                  <img
+                    src={capturedImage}
+                    alt="Captured"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className={`w-full h-full object-cover ${!isCameraReady ? 'hidden' : ''}`}
+                    />
+                    {!isCameraReady && !cameraError && (
+                      <div className="text-center text-white">
+                        <FaSpinner className="w-10 h-10 animate-spin mx-auto mb-3 text-indigo-400" />
+                        <p className="text-base font-medium">Starting camera...</p>
+                      </div>
+                    )}
+                    {cameraError && (
+                      <div className="text-center text-white p-4">
+                        <FaExclamationTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
+                        <p className="text-sm font-medium text-red-400">{cameraError}</p>
+                        <button
+                          onClick={startCamera}
+                          className="mt-3 px-5 py-2.5 bg-indigo-600 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors"
+                        >
+                          Retry
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {isCapturing && captureCountdown > 0 && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+                    <div className="text-center">
+                      <div className="text-8xl font-bold text-white animate-pulse">
+                        {captureCountdown}
+                      </div>
+                      <p className="text-lg text-white/80 mt-2">Capturing in...</p>
+                    </div>
+                  </div>
+                )}
+
+                {!capturedImage && isCameraReady && !isCapturing && (
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute inset-0 border-2 border-white/20 rounded-2xl"></div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/2 h-1/2 border border-white/10 rounded-full"></div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                    <div className="absolute top-0 left-1/3 h-full w-px bg-white/10"></div>
+                    <div className="absolute top-0 right-1/3 h-full w-px bg-white/10"></div>
+                    <div className="absolute left-0 top-1/3 w-full h-px bg-white/10"></div>
+                    <div className="absolute left-0 bottom-1/3 w-full h-px bg-white/10"></div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5 flex items-center justify-center gap-5">
+                {capturedImage ? (
+                  <>
+                    <button
+                      onClick={handleRetake}
+                      className="px-6 py-3 rounded-xl text-sm font-medium bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors flex items-center gap-2"
+                    >
+                      <FaRedo className="text-base" />
+                      Retake
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (capturedImage) {
+                          if (cameraMode === 'checkin') {
+                            const isOnsiteOnlyDepartment = ONSITE_ONLY_DEPARTMENTS.includes(employeeDepartment);
+                            if (!isOnsiteOnlyDepartment && distance > ONSITE_RADIUS_M && !reason.trim()) {
+                              if (!isReasonProcessing && !showReasonPopup) {
+                                setPendingAction('submit');
+                                setTempReason("");
+                                setShowReasonPopup(true);
+                                setIsCapturing(false);
+                              }
+                              return;
+                            }
+                            handleSubmitCheckIn(capturedImage);
+                          } else {
+                            handleSubmitCheckOut(capturedImage);
+                          }
+                        }
+                      }}
+                      disabled={submitting}
+                      className="px-8 py-3 rounded-xl text-base font-bold text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-500/30 transition-all duration-200 flex items-center gap-3 disabled:opacity-50"
+                    >
+                      {submitting ? (
+                        <FaSpinner className="animate-spin text-lg" />
+                      ) : (
+                        <FaCheck className="text-lg" />
+                      )}
+                      Submit
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleCloseCamera}
+                      className="px-6 py-3 rounded-xl text-sm font-medium bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={startAutoCapture}
+                      disabled={!isCameraReady || isCapturing}
+                      className="relative px-10 py-3 rounded-xl text-base font-bold text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 shadow-lg shadow-indigo-500/30 transition-all duration-200 flex items-center gap-3 disabled:opacity-50"
+                    >
+                      {isCapturing ? (
+                        <>
+                          <FaSpinner className="animate-spin text-lg" />
+                          Capturing...
+                        </>
+                      ) : (
+                        <>
+                          <BsCamera className="text-lg" />
+                          Capture
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <div className="mt-4 text-center">
+                <p className="text-xs text-gray-400 font-medium">
+                  {isCapturing ? (
+                    "⏳ Photo will be captured automatically in a few seconds..."
+                  ) : capturedImage ? (
+                    reason && distance > ONSITE_RADIUS_M && cameraMode === 'checkin' ? (
+                      `✅ Photo captured! Reason: ${reason}`
+                    ) : (
+                      `✅ Photo captured! Click Submit to ${cameraMode === 'checkin' ? 'check in' : 'check out'}.`
+                    )
+                  ) : (
+                    `📸 Click 'Capture' to take a photo (auto-capture in 5 seconds)`
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden canvas for image capture */}
+      <canvas ref={canvasRef} className="hidden" />
 
       {/* Location Selection Modal */}
       {isLocationModalOpen && (
@@ -4168,6 +4932,10 @@ export default function AttendanceCapture() {
           from { opacity: 0; }
           to { opacity: 1; }
         }
+        @keyframes fade-in-up {
+          from { opacity: 0; transform: translateY(20px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
         @keyframes scale-up {
           from { opacity: 0; transform: scale(0.9) translateY(15px); }
           to { opacity: 1; transform: scale(1) translateY(0); }
@@ -4194,7 +4962,17 @@ export default function AttendanceCapture() {
           0%, 100% { transform: translateX(0); }
           50% { transform: translateX(-4px); }
         }
+        @keyframes bounce {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        .z-60 { z-index: 60; }
         .animate-fade-in { animation: fade-in 0.3s ease-out; }
+        .animate-fade-in-up { animation: fade-in-up 0.4s ease-out; }
         .animate-scale-up { animation: scale-up 0.35s ease-out; }
         .animate-scale-in { animation: scale-up 0.25s ease-out; }
         .animate-float { animation: float infinite ease-in-out; }
@@ -4205,13 +4983,8 @@ export default function AttendanceCapture() {
         .animate-bounce {
           animation: bounce 2s infinite;
         }
-        @keyframes bounce {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+        .animate-pulse {
+          animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
       `}</style>
     </div>
