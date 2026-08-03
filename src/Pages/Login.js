@@ -143,7 +143,6 @@ const speakCheckInSuccess = async (name) => {
   return speakWithRetry(message);
 };
 
-// ✅ Helper function to check if today's date matches
 const isToday = (date) => {
   if (!date) return false;
   const today = new Date();
@@ -598,8 +597,6 @@ const LoginPage = () => {
       navigate('/dashboard', { replace: true });
     } else if (role === 'employee') {
       navigate('/employeedashboard', { replace: true });
-    } else if (role === 'client') {
-      navigate('/client-dashboard', { replace: true });
     } else {
       navigate('/', { replace: true });
     }
@@ -608,7 +605,6 @@ const LoginPage = () => {
   // ─── Check if attendance prompt should be shown ───
   const shouldShowAttendancePrompt = () => {
     const hour = new Date().getHours();
-    // ✅ Only show if NOT checked in AND hour >= 5
     if (hour >= 5 && !checkedIn) {
       const role = localStorage.getItem('userRole');
       if (role === 'employee') {
@@ -700,7 +696,7 @@ const LoginPage = () => {
     }
 
     try {
-      // Admin Login
+      // ✅ Admin Login
       const adminResponse = await fetch(`${API_BASE_URL}/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -723,7 +719,7 @@ const LoginPage = () => {
         return;
       }
 
-      // Employee Login
+      // ✅ Employee Login
       const empResponse = await fetch(`${API_BASE_URL}/employees/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -783,44 +779,27 @@ const LoginPage = () => {
 
         setIsLoading(false);
 
-        // ✅ ✅ ✅ CRITICAL: WELCOME POPUP HAMESHA DIKHEGA!
-        // ✅ CHAHE CHECKED IN HO YA NAHI!
-        setShowWelcome(true); // <--- BINA KISI CONDITION KE!
+        // ✅ WELCOME POPUP HAMESHA DIKHEGA!
+        setShowWelcome(true);
         
         // ✅ Voice welcome
         await speakWelcome(name, role);
         
-        // ✅ YAHAN RETURN KARO - KOI REDIRECT NAHI!
         return;
       }
 
-      // Client Login
-      const clientResponse = await fetch(`${API_BASE_URL}/clients/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const clientData = await clientResponse.json();
-
-      if (clientResponse.ok) {
-        const client = clientData.client || {};
-        const name = client.name || 'Client';
-        localStorage.setItem('clientToken', clientData.token);
-        localStorage.setItem('userRole', 'client');
-        localStorage.setItem('userData', JSON.stringify({ name, email, role: 'client' }));
-        setUserName(name);
-        setUserRole('Client');
-        setIsImageCaptureAllowed(false);
-        
-        setIsLoading(false);
-        navigate('/client-dashboard', { replace: true });
-        return;
+      // ❌ CLIENT LOGIN REMOVED - No longer supported
+      // ✅ ✅ ✅ YAHAN PE ERROR MESSAGE SHOW KARO JO API SE AAYI HAI!
+      // ✅ Agar employee login fail hua toh uska error message dikhao
+      if (empData && empData.message) {
+        throw new Error(empData.message);
+      } else {
+        throw new Error('Invalid credentials - Admin or Employee login only');
       }
-
-      throw new Error('Invalid credentials');
 
     } catch (err) {
-      setError(err.message);
+      // ✅ ✅ ✅ ERROR MESSAGE UI PE SHOW KARO!
+      setError(err.message); // <--- YEH UI PE ERROR DIKHAYEGA!
       setIsLoading(false);
     }
   };
@@ -1185,11 +1164,14 @@ const LoginPage = () => {
               <span className="text-2xl text-white font-bold">🚀</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text">LOG IN</h1>
-            <p className="mt-1 text-sm text-gray-500">Access your account</p>
+            <p className="mt-1 text-sm text-gray-500">Admin / Employee Login</p>
           </div>
 
+          {/* ✅ ERROR MESSAGE UI PE SHOW HOGA! */}
           {error && (
-            <div className="p-3 mb-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">{error}</div>
+            <div className="p-3 mb-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
+              ❌ {error}
+            </div>
           )}
 
           {locationError && !error && (
@@ -1251,8 +1233,8 @@ const LoginPage = () => {
           </form>
 
           <div className="mt-4 text-center">
-            <p className="text-sm text-gray-500">New client? <a href="/register" className="text-emerald-600 hover:text-emerald-700 transition-colors">Register here</a></p>
-            <p className="mt-2 text-xs text-gray-400">Admin / Employee / Client • Use your registered email</p>
+            <p className="text-sm text-gray-500">Employee? Use your registered email</p>
+            <p className="mt-2 text-xs text-gray-400">Admin / Employee access only</p>
           </div>
         </div>
 
