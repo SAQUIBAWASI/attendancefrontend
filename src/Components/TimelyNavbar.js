@@ -1,15 +1,13 @@
-import { Menu,User, Phone, X } from 'lucide-react'
+import { Menu, User, Phone, X, Users, Briefcase, Building, Heart } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import logo from "../Images/logo2.png"
-// import { User } from "lucide-react";
-// import { useNavigate } from 'react-router-dom'
-import { useNavigation } from 'react-router-dom'
 
 const TimelyNavbar = () => {
     const [isOpen, setIsOpen] = useState(false)
     const location = useLocation()
     const navigate = useNavigate()
+    const [isPartnersOpen, setIsPartnersOpen] = useState(false)
 
     const navItems = [
         { name: 'Home', path: '/' },
@@ -17,6 +15,11 @@ const TimelyNavbar = () => {
         { name: 'Services', path: '/service' },
         { name: 'Who We Serve', path: '/whoweserve' },
         { name: 'Contact Us', path: '/contact' }
+    ]
+
+    const partnersItems = [
+        { name: 'Partner With Us', path: '/partners', icon: <Users className="w-4 h-4" /> },
+        { name: 'Join as Member', path: '/membership', icon: <Heart className="w-4 h-4" /> },
     ]
 
     const isActive = (path) => location.pathname === path
@@ -33,16 +36,16 @@ const TimelyNavbar = () => {
     }
 
     const handleLogin = () => {
-  navigate("/employee-login");
-};
+        navigate("/employee-login")
+    }
 
     return (
         <nav className="sticky top-0 z-50 bg-white shadow-lg">
-            <div className=" no-underline px-4 mx-auto max-w-7xl sm:px-6 lg:px-8 font-calibri">
-                <div className=" flex items-center justify-between h-16">
+            <div className="no-underline px-4 mx-auto max-w-7xl sm:px-6 lg:px-8 font-calibri">
+                <div className="flex items-center justify-between h-16">
                     {/* Logo */}
-                    <Link to="/" className=" no-underlineflex items-center space-x-2">
-                        <div className=" flex items-center justify-center h-12 w-30">
+                    <Link to="/" className="no-underline flex items-center space-x-2">
+                        <div className="flex items-center justify-center h-12 w-30">
                             <img
                                 src={logo}
                                 alt="Timely Health Logo"
@@ -52,38 +55,85 @@ const TimelyNavbar = () => {
                     </Link>
 
                     {/* Desktop Navigation */}
-                    <div className=" items-center hidden space-x-8 md:flex">
+                    <div className="items-center hidden space-x-6 md:flex">
                         {navItems.map((item) => (
                             <Link
                                 key={item.name}
                                 to={item.path}
-                                className={`px-3 py-2 rounded-md no-underline text-sm font-bold transition-colors ${isActive(item.path)
-                                    ? 'text-green-600 bg-blue-50'
-                                    : 'text-blue-700 hover:text-blue-600 hover:bg-blue-50'
-                                    }`}
+                                className={`px-3 py-2 rounded-md no-underline text-sm font-bold transition-colors ${
+                                    isActive(item.path)
+                                        ? 'text-green-600 bg-blue-50'
+                                        : 'text-blue-700 hover:text-blue-600 hover:bg-blue-50'
+                                }`}
                             >
                                 {item.name}
                             </Link>
                         ))}
+
+                        {/* Partners/Members Dropdown */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsPartnersOpen(!isPartnersOpen)}
+                                onMouseEnter={() => setIsPartnersOpen(true)}
+                                onMouseLeave={() => setIsPartnersOpen(false)}
+                                className={`px-3 py-2 rounded-md no-underline text-sm font-bold transition-colors flex items-center gap-1 ${
+                                    location.pathname.includes('/partners') || 
+                                    location.pathname.includes('/membership') || 
+                                    location.pathname.includes('/corporate-partners') || 
+                                    location.pathname.includes('/providers')
+                                        ? 'text-green-600 bg-blue-50'
+                                        : 'text-blue-700 hover:text-blue-600 hover:bg-blue-50'
+                                }`}
+                            >
+                                <Users size={16} />
+                                Partners/Members
+                                <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            {isPartnersOpen && (
+                                <div 
+                                    className="absolute left-0 mt-1 w-56 bg-white rounded-lg shadow-xl border border-gray-100 py-2"
+                                    onMouseEnter={() => setIsPartnersOpen(true)}
+                                    onMouseLeave={() => setIsPartnersOpen(false)}
+                                >
+                                    {partnersItems.map((item) => (
+                                        <Link
+                                            key={item.name}
+                                            to={item.path}
+                                            onClick={() => setIsPartnersOpen(false)}
+                                            className={`flex items-center gap-3 px-4 py-2.5 no-underline text-sm transition-colors ${
+                                                isActive(item.path)
+                                                    ? 'text-green-600 bg-blue-50'
+                                                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+                                            }`}
+                                        >
+                                            <span className="text-blue-600">{item.icon}</span>
+                                            {item.name}
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Action Icons (no bg color now) */}
-                    <div className="items-center hidden space-x-4 md:flex">
-                            <button
-                                    style={{ backgroundColor: "#007a52" }}
-                                    onClick={handleLogin}
-                                    className="flex items-center gap-2 justify-center px-4 h-10 text-white rounded-full border border-gray-400 shadow hover:bg-gray-800 transition"
-                                >
-                                    <User size={18} />
-                                    Login
-                                </button>
+                    {/* Action Icons */}
+                    <div className="items-center hidden space-x-3 md:flex">
+                        <button
+                            style={{ backgroundColor: "#007a52" }}
+                            onClick={handleLogin}
+                            className="flex items-center gap-2 justify-center px-4 h-10 text-white rounded-full border border-gray-400 shadow hover:bg-gray-800 transition"
+                        >
+                            <User size={18} />
+                            Login
+                        </button>
                         <button
                             onClick={handleCall}
                             className="flex items-center justify-center w-10 h-10 transition bg-white rounded-full shadow hover:shadow-md"
                         >
                             <Phone size={18} className="text-blue-600" />
                         </button>
-
                         <button
                             onClick={handleWhatsApp}
                             className="flex items-center justify-center w-10 h-10 transition bg-white rounded-full shadow hover:shadow-md"
@@ -110,49 +160,46 @@ const TimelyNavbar = () => {
                 {/* Mobile Navigation */}
                 {isOpen && (
                     <div className="md:hidden">
-                        <div className=" px-2 pt-2 pb-3 space-y-1 bg-white border-t sm:px-3">
+                        <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t sm:px-3">
                             {navItems.map((item) => (
                                 <Link
                                     key={item.name}
                                     to={item.path}
                                     onClick={() => setIsOpen(false)}
-                                    className={`block no-underline px-3 py-2 rounded-md text-base font-bold transition-colors ${isActive(item.path)
-                                        ? 'text-green-600 bg-blue-50'
-                                        : 'text-blue-700 hover:text-blue-600 hover:bg-blue-50'
-                                        }`}
+                                    className={`block no-underline px-3 py-2 rounded-md text-base font-bold transition-colors ${
+                                        isActive(item.path)
+                                            ? 'text-green-600 bg-blue-50'
+                                            : 'text-blue-700 hover:text-blue-600 hover:bg-blue-50'
+                                    }`}
                                 >
                                     {item.name}
                                 </Link>
                             ))}
-                            {/* <div className="flex flex-row gap-3 pt-4">
-                                <button
-                                    style={{ backgroundColor: "black" }}
-                                    onClick={{}}
-                                    className="flex items-center gap-2 justify-center px-4 h-10 text-white rounded-full shadow hover:bg-gray-800 transition"
-                                >
-                                    <User size={18} />
-                                    Login
-                                </button>
 
-                                <button
-                                    onClick={handleCall}
-                                    className="flex items-center justify-center w-10 h-10 transition bg-white rounded-full shadow hover:shadow-md"
-                                >
-                                    <Phone size={18} className="text-blue-600" />
-                                </button>
-                                <button
-                                    onClick={handleWhatsApp}
-                                    className="flex items-center justify-center w-10 h-10 transition bg-white rounded-full shadow hover:shadow-md"
-                                >
-                                    <img
-                                        src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
-                                        alt="WhatsApp"
-                                        className="w-6 h-6"
-                                    />
-                                </button>
-                            </div> */}
+                            {/* Partners/Members Section in Mobile */}
+                            <div className="mt-2 border-t border-gray-200 pt-2">
+                                <div className="px-3 py-2 text-sm font-bold text-blue-700 flex items-center gap-2">
+                                    <Users size={16} />
+                                    Partners & Members
+                                </div>
+                                {partnersItems.map((item) => (
+                                    <Link
+                                        key={item.name}
+                                        to={item.path}
+                                        onClick={() => setIsOpen(false)}
+                                        className={`flex items-center gap-3 no-underline px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                            isActive(item.path)
+                                                ? 'text-green-600 bg-blue-50'
+                                                : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+                                        }`}
+                                    >
+                                        <span className="text-blue-600">{item.icon}</span>
+                                        {item.name}
+                                    </Link>
+                                ))}
+                            </div>
+
                             <div className="flex flex-row gap-3 pt-4">
-
                                 <button
                                     style={{ backgroundColor: "#007a52" }}
                                     onClick={handleLogin}
@@ -161,14 +208,12 @@ const TimelyNavbar = () => {
                                     <User size={18} />
                                     Login
                                 </button>
-
                                 <button
                                     onClick={handleCall}
                                     className="flex items-center justify-center w-10 h-10 transition bg-white rounded-full shadow hover:shadow-md"
                                 >
                                     <Phone size={18} className="text-blue-600" />
                                 </button>
-
                                 <button
                                     onClick={handleWhatsApp}
                                     className="flex items-center justify-center w-10 h-10 transition bg-white rounded-full shadow hover:shadow-md"
@@ -179,7 +224,6 @@ const TimelyNavbar = () => {
                                         className="w-6 h-6"
                                     />
                                 </button>
-
                             </div>
                         </div>
                     </div>

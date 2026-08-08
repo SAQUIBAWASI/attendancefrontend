@@ -230,6 +230,8 @@ import PendingVisits from "./Pages/PendingVisits.js";
 import Leads from "./Pages/Leads.js"
 import RelievingLetters from "./Pages/RelievingLetters.jsx";
 import LettersSection from "./Pages/LettersSection.jsx";
+import PartnersPage from "./Pages/PartnersPage.js";
+import MembershipPage from "./Pages/MembershipPage.js";
 
 
 
@@ -293,6 +295,8 @@ function App() {
       <Route path="/service" element={<ServicesPage />}></Route>
       <Route path="/whoweserve" element={<WhoWeServePage />}></Route>
       <Route path="/contact" element={<ContactPage />}></Route>
+       <Route path="/partners" element={<PartnersPage />}></Route>
+      <Route path="/membership" element={<MembershipPage />}></Route>
       <Route path="/mysalary" element={<EmployeeLayout><EmployeeSalary /></EmployeeLayout>} />
       <Route path="/HolidayList" element={<EmployeeLayout><HolidayList /></EmployeeLayout>} />
 
