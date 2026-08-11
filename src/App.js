@@ -6,7 +6,7 @@ import ForgotPassword from "./Pages/ForgotPassword.js";
 import ResetPassword from "./Pages/ResetPassword.js";
 import CompanySidebar from "./Components/CompanySidebar.js";
 import DepartmentList from "./Components/department";
-import Recruitment from "./Components/recruitment.js";
+// import Recruitment from "./Components/recruitment.js";
 import SubDepartmentList from "./Components/subdepartment.js";
 import AdminLayout from "./Layout/AdminLayout.jsx";
 import AboutUsFormPage from "./Pages/AboutUsFormPage.js";
@@ -232,6 +232,9 @@ import RelievingLetters from "./Pages/RelievingLetters.jsx";
 import LettersSection from "./Pages/LettersSection.jsx";
 import PartnersPage from "./Pages/PartnersPage.js";
 import MembershipPage from "./Pages/MembershipPage.js";
+import Plans from "./Pages/Plans.js";
+import Products from './Pages/Products.js';
+import Recruitment from './Pages/Recruitment.js';
 
 
 
@@ -297,6 +300,9 @@ function App() {
       <Route path="/contact" element={<ContactPage />}></Route>
        <Route path="/partners" element={<PartnersPage />}></Route>
       <Route path="/membership" element={<MembershipPage />}></Route>
+      <Route path="/plans" element={<Plans />}></Route>
+      <Route path="/products" element={<Products />}></Route>
+      <Route path="/recruitment" element={<Recruitment />}></Route>
       <Route path="/mysalary" element={<EmployeeLayout><EmployeeSalary /></EmployeeLayout>} />
       <Route path="/HolidayList" element={<EmployeeLayout><HolidayList /></EmployeeLayout>} />
 

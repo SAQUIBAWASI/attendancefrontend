@@ -1,8 +1,9 @@
-import { Users, Handshake, Heart, ArrowRight, CheckCircle, Sparkles, Award, Building, UserPlus, Mail, Phone, MapPin, MessageCircle, Calendar, Briefcase, FileText } from 'lucide-react'
+import { Users, Handshake, Heart, ArrowRight, CheckCircle, Sparkles, Award, Building, UserPlus, Mail, Phone, MapPin, MessageCircle, Calendar, Briefcase, FileText, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import TimelyNavbar from '../Components/TimelyNavbar'
 import TimelyFooter from './TimelyFooter'
 import partnersBg from "../Images/s2.jpg"
+import axios from 'axios'
 
 const PartnersPage = () => {
   const [formData, setFormData] = useState({
@@ -14,6 +15,13 @@ const PartnersPage = () => {
     city: '',
     message: ''
   })
+  
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState({ type: '', message: '' })
+  const [formErrors, setFormErrors] = useState({})
+
+  // Your backend API endpoint
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api'
 
   const handleWhatsApp = () => {
     window.open(
@@ -30,38 +38,112 @@ const PartnersPage = () => {
   }
 
   const handleInputChange = (e) => {
+    const { name, value } = e.target
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     })
+    // Clear error for this field when user starts typing
+    if (formErrors[name]) {
+      setFormErrors({
+        ...formErrors,
+        [name]: ''
+      })
+    }
+    // Clear submit status when user makes changes
+    if (submitStatus.type) {
+      setSubmitStatus({ type: '', message: '' })
+    }
   }
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    const errors = {}
+    if (!formData.fullName.trim()) errors.fullName = 'Full name is required'
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address'
+    }
+    if (!formData.phone.trim()) {
+      errors.phone = 'Phone number is required'
+    } else if (!/^[0-9]{10}$/.test(formData.phone.replace(/[^0-9]/g, ''))) {
+      errors.phone = 'Please enter a valid 10-digit phone number'
+    }
+    if (!formData.organization.trim()) errors.organization = 'Organization name is required'
+    if (!formData.partnerType) errors.partnerType = 'Please select a partner type'
+    if (!formData.city.trim()) errors.city = 'City is required'
+    if (!formData.message.trim()) errors.message = 'Message is required'
+    
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
 
-    const message = `Hello! I'm interested in partnering with Timely Health.
+    setIsSubmitting(true)
+    setSubmitStatus({ type: '', message: '' })
 
-Full Name: ${formData.fullName}
-Email: ${formData.email}
-Phone: ${formData.phone}
-Organization: ${formData.organization}
-Partner Type: ${formData.partnerType}
-City: ${formData.city}
-Message: ${formData.message}
+    try {
+      // Send data to your backend API
+      const response = await axios.post(`${API_BASE_URL}/partners/register`, {
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        organization: formData.organization,
+        partnerType: formData.partnerType,
+        city: formData.city,
+        message: formData.message
+      })
 
-Please get back to me at the earliest.`
+      console.log('Partner registration successful:', response.data)
 
-    window.open(`https://wa.me/919010481048?text=${encodeURIComponent(message)}`, '_blank')
+      // Success state
+      setSubmitStatus({
+        type: 'success',
+        message: 'Application submitted successfully! Our team will contact you within 24 hours.'
+      })
 
-    setFormData({
-      fullName: '',
-      email: '',
-      phone: '',
-      organization: '',
-      partnerType: '',
-      city: '',
-      message: ''
-    })
+      // Reset form
+      setFormData({
+        fullName: '',
+        email: '',
+        phone: '',
+        organization: '',
+        partnerType: '',
+        city: '',
+        message: ''
+      })
+
+      // Optionally open WhatsApp as fallback or confirmation
+      // window.open('https://wa.me/919010481048?text=Thank you for submitting your partner application!', '_blank')
+
+    } catch (error) {
+      console.error('Submission error:', error)
+      
+      let errorMessage = 'There was an error submitting your application. Please try again.'
+      
+      if (error.response) {
+        // Server responded with error
+        if (error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message
+        }
+      } else if (error.request) {
+        // No response from server
+        errorMessage = 'Unable to connect to server. Please check your internet connection.'
+      }
+      
+      setSubmitStatus({
+        type: 'error',
+        message: errorMessage
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const partnerBenefits = [
@@ -263,7 +345,28 @@ Please get back to me at the earliest.`
           </div>
 
           <div className="p-8 bg-white rounded-2xl shadow-xl border border-gray-100">
-            <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Status Messages */}
+            {submitStatus.type === 'success' && (
+              <div className="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-green-800">Success!</p>
+                  <p className="text-sm text-green-700">{submitStatus.message}</p>
+                </div>
+              </div>
+            )}
+            
+            {submitStatus.type === 'error' && (
+              <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-start gap-3">
+                <MessageCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-red-800">Error</p>
+                  <p className="text-sm text-red-700">{submitStatus.message}</p>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 font-sans flex items-center gap-1.5">
@@ -276,9 +379,14 @@ Please get back to me at the earliest.`
                     value={formData.fullName}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm text-sm font-sans"
+                    className={`w-full px-4 py-2.5 bg-gray-50 border-2 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm text-sm font-sans ${
+                      formErrors.fullName ? 'border-red-500' : 'border-gray-200'
+                    }`}
                     placeholder="Your full name"
                   />
+                  {formErrors.fullName && (
+                    <p className="mt-1 text-xs text-red-600">{formErrors.fullName}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 font-sans flex items-center gap-1.5">
@@ -291,9 +399,14 @@ Please get back to me at the earliest.`
                     value={formData.organization}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm text-sm font-sans"
+                    className={`w-full px-4 py-2.5 bg-gray-50 border-2 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm text-sm font-sans ${
+                      formErrors.organization ? 'border-red-500' : 'border-gray-200'
+                    }`}
                     placeholder="Your organization name"
                   />
+                  {formErrors.organization && (
+                    <p className="mt-1 text-xs text-red-600">{formErrors.organization}</p>
+                  )}
                 </div>
               </div>
 
@@ -309,9 +422,14 @@ Please get back to me at the earliest.`
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm text-sm font-sans"
+                    className={`w-full px-4 py-2.5 bg-gray-50 border-2 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm text-sm font-sans ${
+                      formErrors.email ? 'border-red-500' : 'border-gray-200'
+                    }`}
                     placeholder="your.email@example.com"
                   />
+                  {formErrors.email && (
+                    <p className="mt-1 text-xs text-red-600">{formErrors.email}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 font-sans flex items-center gap-1.5">
@@ -324,9 +442,14 @@ Please get back to me at the earliest.`
                     value={formData.phone}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm text-sm font-sans"
-                    placeholder="+91 9876543210"
+                    className={`w-full px-4 py-2.5 bg-gray-50 border-2 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm text-sm font-sans ${
+                      formErrors.phone ? 'border-red-500' : 'border-gray-200'
+                    }`}
+                    placeholder="9876543210"
                   />
+                  {formErrors.phone && (
+                    <p className="mt-1 text-xs text-red-600">{formErrors.phone}</p>
+                  )}
                 </div>
               </div>
 
@@ -341,13 +464,18 @@ Please get back to me at the earliest.`
                     value={formData.partnerType}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm text-sm font-sans appearance-none"
+                    className={`w-full px-4 py-2.5 bg-gray-50 border-2 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm text-sm font-sans appearance-none ${
+                      formErrors.partnerType ? 'border-red-500' : 'border-gray-200'
+                    }`}
                   >
                     <option value="">Select partner type...</option>
                     {partnerTypes.map((type) => (
                       <option key={type} value={type}>{type}</option>
                     ))}
                   </select>
+                  {formErrors.partnerType && (
+                    <p className="mt-1 text-xs text-red-600">{formErrors.partnerType}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5 font-sans flex items-center gap-1.5">
@@ -360,9 +488,14 @@ Please get back to me at the earliest.`
                     value={formData.city}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm text-sm font-sans"
+                    className={`w-full px-4 py-2.5 bg-gray-50 border-2 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm text-sm font-sans ${
+                      formErrors.city ? 'border-red-500' : 'border-gray-200'
+                    }`}
                     placeholder="Your city"
                   />
+                  {formErrors.city && (
+                    <p className="mt-1 text-xs text-red-600">{formErrors.city}</p>
+                  )}
                 </div>
               </div>
 
@@ -377,23 +510,38 @@ Please get back to me at the earliest.`
                   onChange={handleInputChange}
                   required
                   rows={3}
-                  className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm text-sm font-sans resize-none"
+                  className={`w-full px-4 py-2.5 bg-gray-50 border-2 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-sm text-sm font-sans resize-none ${
+                    formErrors.message ? 'border-red-500' : 'border-gray-200'
+                  }`}
                   placeholder="Tell us about your organization and how you'd like to collaborate..."
                 />
+                {formErrors.message && (
+                  <p className="mt-1 text-xs text-red-600">{formErrors.message}</p>
+                )}
               </div>
 
               <button
                 type="submit"
-                className="group w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-full hover:from-blue-700 hover:to-blue-600 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 hover:scale-[1.02] font-semibold text-sm"
+                disabled={isSubmitting}
+                className="group w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-full hover:from-blue-700 hover:to-blue-600 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 hover:scale-[1.02] font-semibold text-sm disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                <Handshake className="w-4 h-4" />
-                Submit Partner Application
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Handshake className="w-4 h-4" />
+                    Submit Partner Application
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </button>
             </form>
 
             <p className="mt-3 text-[10px] text-center text-gray-400 font-sans">
-              * By submitting this form, your application will be sent via WhatsApp for faster processing.
+              * By submitting this form, your application will be processed through our secure system.
               We'll get back to you within 24 hours.
             </p>
           </div>
