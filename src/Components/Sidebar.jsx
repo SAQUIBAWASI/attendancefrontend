@@ -1805,7 +1805,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       finalPassword = '456789';
     }
     
-    const baseUrl = 'https://ingrainhire.ingrainsystems.com/candidate-login';
+    const baseUrl = 'https://ingrainhire.ingrainsystems.com/client-login';
     const params = new URLSearchParams();
     if (email) params.append('email', email);
     if (finalPassword) params.append('password', finalPassword);

@@ -74,7 +74,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
     } catch (e) {
       console.error('Failed to parse employeeData:', e);
     }
-
+    
     const email = employeeData.email || employeeData.employeeEmail || '';
     const password = employeeData.password || employeeData.employeePassword || '';
     const storedPassword = localStorage.getItem("employeePassword") || '';
@@ -82,13 +82,13 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
     if (!finalPassword) {
       finalPassword = '456789';
     }
-
+    
     const baseUrl = 'https://ingrainhire.ingrainsystems.com/candidate-login';
     const params = new URLSearchParams();
     if (email) params.append('email', email);
     if (finalPassword) params.append('password', finalPassword);
     params.append('autoLogin', 'true');
-
+    
     const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
     window.location.href = url;
   };
@@ -126,12 +126,56 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
       "/holidays-calendar": "",
       "/all-medical-certificates": "",
       "/admin-notifications": "",
+      "/employee-locations": "",
+      "/ot-claims": "",
+      "/over-time": "",
+      "/comp-off-requests": "",
+      "/comp-off-settings": "",
+      "/events": "",
     };
 
     return routes[location.pathname] || "";
   };
 
-  // ===== JOB MODULE =====
+  // ===== EMPLOYEE MODULE TABS =====
+  const employeeTabs = [
+    { path: "/employeelist", label: "Employee List" },
+    { path: "/addemployee", label: "Add Employee" },
+    { path: "/employee-locations", label: "Live Locations" },
+  ];
+
+  const isEmployeeModule = employeeTabs.some(
+    (tab) => tab.path === location.pathname
+  );
+
+  // ===== ADMIN MODULE TABS =====
+  const adminTabs = [
+    { path: "/payroll", label: "Payroll" },
+    { path: "/all-expensives", label: "Expenses" },
+    { path: "/useractivity", label: "User Activity" },
+    { path: "/useraccess", label: "User Access" },
+    { path: "/shift", label: "Shifts" },
+  ];
+
+  const isAdminModule = adminTabs.some(
+    (tab) => tab.path === location.pathname
+  );
+
+  // ===== ATTENDANCE MODULE TABS =====
+  const attendanceTabs = [
+    { path: "/attedancesummary", label: "Summary" },
+    { path: "/attendancelist", label: "Records" },
+    { path: "/today-attendance", label: "Today" },
+    { path: "/absent-today", label: "Absent" },
+    { path: "/late-today", label: "Late" },
+    { path: "/regularization", label: "Regularization" },
+  ];
+
+  const isAttendanceModule = attendanceTabs.some(
+    (tab) => tab.path === location.pathname
+  ) || location.pathname === "/attendancesummary";
+
+  // ===== JOB MODULE TABS =====
   const jobTabs = [
     { path: "/jobpost", label: "Job Post" },
     { path: "/job-applicants", label: "Applicants" },
@@ -144,31 +188,69 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
     (tab) => tab.path === location.pathname
   );
 
-  // ===== ATTENDANCE MODULE =====
-  // ✅ Only ONE "Summary" tab that handles both paths
-  const attendanceTabs = [
-    { path: "/attedancesummary", label: "Summary" },  // Sirf ek Summary
-    { path: "/attendancelist", label: "Records" },
-    { path: "/today-attendance", label: "Today" },
-    { path: "/absent-today", label: "Absent" },
-    { path: "/late-today", label: "Late" },
-    { path: "/regularization", label: "Regularization" },
-  ];
-
-  // ✅ Check if current path is ANY attendance related page
-  const isAttendanceModule = attendanceTabs.some(
-    (tab) => tab.path === location.pathname
-  ) || location.pathname === "/attendancesummary"; // Also check alternate spelling
-
   // ===== DASHBOARD MODULE CHECK =====
   const isDashboardModule = location.pathname === "/dashboard";
 
-  // ✅ Navigation handler for attendance tabs
+  // ===== LEAVES MODULE CHECK =====
+  const leavesTabs = [
+    { path: "/leavelist", label: "Leave List" },
+    { path: "/comp-off-requests", label: "Comp Off Requests" },
+    { path: "/comp-off-settings", label: "Comp Off Settings" },
+  ];
+
+  const isLeavesModule = leavesTabs.some(
+    (tab) => tab.path === location.pathname
+  );
+
+  // ===== HOLIDAYS & EVENTS MODULE CHECK =====
+  const holidayEventTabs = [
+    { path: "/holidays-calendar", label: "Holidays" },
+    { path: "/events", label: "Events" },
+  ];
+
+  const isHolidayEventModule = holidayEventTabs.some(
+    (tab) => tab.path === location.pathname
+  );
+
+  // ===== OVERTIME MODULE CHECK =====
+  const overtimeTabs = [
+    { path: "/ot-claims", label: "OT Claims" },
+    { path: "/over-time", label: "Over Time" },
+  ];
+
+  const isOvertimeModule = overtimeTabs.some(
+    (tab) => tab.path === location.pathname
+  );
+
+  // ===== PERMISSIONS MODULE CHECK =====
+  const isPermissionsModule = location.pathname === "/permissions";
+
+  // ✅ Navigation handlers
   const handleAttendanceTabClick = (path) => {
     navigate(path);
   };
 
-  // ✅ Check if a tab is active (handles both spellings)
+  const handleEmployeeTabClick = (path) => {
+    navigate(path);
+  };
+
+  const handleAdminTabClick = (path) => {
+    navigate(path);
+  };
+
+  const handleLeavesTabClick = (path) => {
+    navigate(path);
+  };
+
+  const handleHolidayEventTabClick = (path) => {
+    navigate(path);
+  };
+
+  const handleOvertimeTabClick = (path) => {
+    navigate(path);
+  };
+
+  // ✅ Check if a tab is active
   const isTabActive = (tabPath) => {
     if (tabPath === "/attedancesummary") {
       return location.pathname === "/attedancesummary" || location.pathname === "/attendancesummary";
@@ -178,32 +260,31 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
 
   return (
     <nav className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-[#e4e7ec] bg-white px-4 shadow-sm">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 overflow-x-auto">
         <button
           type="button"
           onClick={handleMenuClick}
-          className="rounded-lg p-2 text-[#667085] transition hover:bg-[#f0f2f5] hover:text-[#101828]"
+          className="rounded-lg p-2 text-[#667085] transition hover:bg-[#f0f2f5] hover:text-[#101828] flex-shrink-0"
         >
           {isCollapsed ? <RiMenu2Line className="text-xl" /> : <RiMenu3Line className="text-xl" />}
         </button>
 
-        <div>
+        <div className="flex-shrink-0">
           <span className="text-sm font-semibold text-[#101828] md:text-base">
             {getPageTitle()}
           </span>
         </div>
 
-        {/* ===== ATTENDANCE MODULE TABS - LEFT SIDE ===== */}
-        {isAttendanceModule && (
+        {/* ===== EMPLOYEE MODULE TABS ===== */}
+        {isEmployeeModule && (
           <div className="flex items-center gap-1 ml-4">
-            {attendanceTabs.map((tab) => {
-              const isActive = isTabActive(tab.path);
-
+            {employeeTabs.map((tab) => {
+              const isActive = location.pathname === tab.path;
               return (
                 <button
                   key={tab.path}
-                  onClick={() => handleAttendanceTabClick(tab.path)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                  onClick={() => handleEmployeeTabClick(tab.path)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 whitespace-nowrap ${
                     isActive
                       ? "bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-md"
                       : "bg-[#f0f2f5] text-[#667085] hover:bg-[#e4e7ec] hover:text-[#101828]"
@@ -216,14 +297,133 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
           </div>
         )}
 
-        {/* ===== JOB MODULE TABS - LEFT SIDE ===== */}
+        {/* ===== ADMIN MODULE TABS ===== */}
+        {isAdminModule && (
+          <div className="flex items-center gap-1 ml-4">
+            {adminTabs.map((tab) => {
+              const isActive = location.pathname === tab.path;
+              return (
+                <button
+                  key={tab.path}
+                  onClick={() => handleAdminTabClick(tab.path)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 whitespace-nowrap ${
+                    isActive
+                      ? "bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-md"
+                      : "bg-[#f0f2f5] text-[#667085] hover:bg-[#e4e7ec] hover:text-[#101828]"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ===== ATTENDANCE MODULE TABS ===== */}
+        {isAttendanceModule && (
+          <div className="flex items-center gap-1 ml-4">
+            {attendanceTabs.map((tab) => {
+              const isActive = isTabActive(tab.path);
+              return (
+                <button
+                  key={tab.path}
+                  onClick={() => handleAttendanceTabClick(tab.path)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 whitespace-nowrap ${
+                    isActive
+                      ? "bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-md"
+                      : "bg-[#f0f2f5] text-[#667085] hover:bg-[#e4e7ec] hover:text-[#101828]"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ===== LEAVES MODULE TABS ===== */}
+        {isLeavesModule && (
+          <div className="flex items-center gap-1 ml-4">
+            {leavesTabs.map((tab) => {
+              const isActive = location.pathname === tab.path;
+              return (
+                <button
+                  key={tab.path}
+                  onClick={() => handleLeavesTabClick(tab.path)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 whitespace-nowrap ${
+                    isActive
+                      ? "bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-md"
+                      : "bg-[#f0f2f5] text-[#667085] hover:bg-[#e4e7ec] hover:text-[#101828]"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ===== HOLIDAYS & EVENTS MODULE TABS ===== */}
+        {isHolidayEventModule && (
+          <div className="flex items-center gap-1 ml-4">
+            {holidayEventTabs.map((tab) => {
+              const isActive = location.pathname === tab.path;
+              return (
+                <button
+                  key={tab.path}
+                  onClick={() => handleHolidayEventTabClick(tab.path)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 whitespace-nowrap ${
+                    isActive
+                      ? "bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-md"
+                      : "bg-[#f0f2f5] text-[#667085] hover:bg-[#e4e7ec] hover:text-[#101828]"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ===== OVERTIME MODULE TABS ===== */}
+        {isOvertimeModule && (
+          <div className="flex items-center gap-1 ml-4">
+            {overtimeTabs.map((tab) => {
+              const isActive = location.pathname === tab.path;
+              return (
+                <button
+                  key={tab.path}
+                  onClick={() => handleOvertimeTabClick(tab.path)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 whitespace-nowrap ${
+                    isActive
+                      ? "bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-md"
+                      : "bg-[#f0f2f5] text-[#667085] hover:bg-[#e4e7ec] hover:text-[#101828]"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ===== PERMISSIONS MODULE ===== */}
+        {isPermissionsModule && (
+          <div className="flex items-center gap-1 ml-4">
+            <span className="px-3 py-1.5 text-xs font-medium text-[#667085]">
+              Permissions Management
+            </span>
+          </div>
+        )}
+
+        {/* ===== JOB MODULE TABS ===== */}
         {isJobModule && (
           <div className="flex items-center gap-1 ml-4">
             {jobTabs.map((tab) => (
               <button
                 key={tab.path}
                 onClick={() => navigate(tab.path)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 whitespace-nowrap ${
                   location.pathname === tab.path
                     ? "bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-md"
                     : "bg-[#f0f2f5] text-[#667085] hover:bg-[#e4e7ec] hover:text-[#101828]"
@@ -236,7 +436,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
         )}
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-shrink-0">
         {/* Dashboard Circles - Only show on Dashboard */}
         {isDashboardModule && (
           <div className="flex items-center gap-2">
@@ -286,7 +486,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
           >
             <FiGrid className="text-2xl" />
           </button>
-
+          
           <div className="absolute right-0 top-full pt-2 z-50 w-60 hidden group-hover:block">
             <div className="rounded-xl border border-[#e4e7ec] bg-white p-3 shadow-xl">
 
