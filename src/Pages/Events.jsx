@@ -379,7 +379,7 @@ const Events = () => {
             <table className="emp-dash__table">
               <thead>
                 <tr>
-                  <th className="text-center w-12">#</th>
+                  <th className="text-center w-12">S.No</th>
                   <th>Employee</th>
                   <th>Department</th>
                   <th>Occasion</th>

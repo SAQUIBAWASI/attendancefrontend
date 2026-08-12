@@ -9,16 +9,16 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
   const [openDropdown, setOpenDropdown] = useState(null);
   const [currentPage, setCurrentPage] = useState("Dashboard");
   const [activeItem, setActiveItem] = useState("/employeedashboard");
-  
+
   const [isAdminView, setIsAdminView] = useState(() => {
     const saved = localStorage.getItem("isAdminView");
     return saved === "true";
   });
-  
+
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasAnyAdminPermission, setHasAnyAdminPermission] = useState(false);
-  
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -101,7 +101,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
   const toggleDropdown = (e, name) => {
     e.stopPropagation();
     e.preventDefault();
-    
+
     if (openDropdown !== name) {
       if (!isMobile && isCollapsed && setIsCollapsed) {
         setIsCollapsed(false);
@@ -164,13 +164,13 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       e.preventDefault();
     }
     if (!hasAnyAdminPermission) return;
-    
+
     const newView = !isAdminView;
     setIsAdminView(newView);
     localStorage.setItem("isAdminView", newView);
     setOpenDropdown(null);
     window.dispatchEvent(new CustomEvent('viewChanged', { detail: { isAdminView: newView } }));
-    
+
     if (newView) {
       const adminMenu = buildAdminMenu();
       const firstNavigableItem = adminMenu.find(item => item.path && item.name !== "Logout");
@@ -186,7 +186,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     if (path && path.startsWith('http')) return false;
     return activeItem === path;
   };
-  
+
   const isDropdownActive = (dropdownItems) => dropdownItems?.some(item => isActive(item.path));
 
   useEffect(() => {
@@ -216,16 +216,16 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       try {
         const response = await axios.get(`${API_BASE_URL}/employees/get-employee?employeeId=${storedId}&t=${new Date().getTime()}`);
         let fetchedPermissions = [];
-        
+
         if (response.data.data?.permissions) fetchedPermissions = response.data.data.permissions;
         else if (response.data.permissions) fetchedPermissions = response.data.permissions;
-        
+
         const empLocal = JSON.parse(localStorage.getItem("employeeData") || "{}");
         const dataToUse = response.data.data || response.data || empLocal;
-        
+
         const isManagerUser = checkManagerStatus(dataToUse);
         const isHRManagement = checkHRManagementStatus(dataToUse);
-        
+
         if (isHRManagement) {
           const allPerms = new Set([...fetchedPermissions, ...ADMIN_PERMISSIONS]);
           fetchedPermissions = Array.from(allPerms);
@@ -242,10 +242,10 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
 
         setPermissions(fetchedPermissions);
         localStorage.setItem("employeePermissions", JSON.stringify(fetchedPermissions));
-        
+
         const hasAdminPerm = fetchedPermissions.some(perm => ADMIN_PERMISSIONS.includes(perm));
         setHasAnyAdminPermission(hasAdminPerm);
-        
+
         if (!hasAdminPerm) {
           setIsAdminView(false);
           localStorage.setItem("isAdminView", "false");
@@ -298,10 +298,10 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     console.log('========================================');
     console.log('🔍 NAVIGATING TO INGRAIN HIRE');
     console.log('========================================');
-    
+
     const employeeDataRaw = localStorage.getItem("employeeData");
     console.log('📄 Raw employeeData from localStorage:', employeeDataRaw);
-    
+
     let employeeData = {};
     try {
       employeeData = JSON.parse(employeeDataRaw || "{}");
@@ -309,39 +309,39 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     } catch (e) {
       console.error('❌ Failed to parse employeeData:', e);
     }
-    
+
     const email = employeeData.email || employeeData.employeeEmail || '';
     console.log('📧 Email found:', email);
-    
+
     const password = employeeData.password || employeeData.employeePassword || '';
     console.log('🔐 Password found in employeeData:', password);
-    
+
     const storedPassword = localStorage.getItem("employeePassword") || '';
     console.log('🔐 employeePassword from localStorage:', storedPassword);
-    
+
     let finalPassword = password || storedPassword || '';
     console.log('🔐 Final password before fallback:', finalPassword);
-    
+
     if (!finalPassword) {
       console.log('⚠️ No password found, using fallback: 456789');
       finalPassword = '456789';
     }
-    
+
     const baseUrl = 'https://ingrainhire.ingrainsystems.com/candidate-login';
     const params = new URLSearchParams();
-    
+
     if (email) params.append('email', email);
     if (finalPassword) params.append('password', finalPassword);
     params.append('autoLogin', 'true');
-    
+
     const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
-    
+
     console.log('========================================');
     console.log('🚀 FINAL URL:', url);
     console.log('📧 Email being sent:', email);
     console.log('🔐 Password being sent:', finalPassword);
     console.log('========================================');
-    
+
     window.location.href = url;
   };
 
@@ -349,7 +349,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
   const buildEmployeeMenu = () => {
     const employeeId = localStorage.getItem("employeeId") || '';
     const tasksUrl = `https://taskmanagement.iryax.com?employeeId=${employeeId}`;
-    
+
     const menu = [
       { icon: <i className="ri-dashboard-fill"></i>, name: "Dashboard", path: "/employeedashboard" },
       {
@@ -367,6 +367,13 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
       { icon: <i className="ri-money-rupee-circle-fill"></i>, name: "Payslips", path: "/mysalary" },
       { icon: <i className="ri-funds-fill"></i>, name: "Expenses", path: "/expense-management" },
       { icon: <i className="ri-calendar-event-fill"></i>, name: "Holidays", path: "/HolidayList" },
+      {icon: <i className="ri-file-paper-2-line"></i>,name: "Relieving Letters",path: "/relieving-letters"},
+        { 
+        icon: <i className="ri-map-pin-user-fill"></i>, 
+        name: "My Visits", 
+        path: "/employee-visits-data",
+        badge: "NEW"
+      },
       { 
         icon: <i className="ri-error-warning-fill"></i>, 
         name: "Issues", 
@@ -387,14 +394,14 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
         isExternal: true,
         badge: "HIRE"
       },
-       {icon: <i className="ri-file-paper-2-line"></i>,name: "Relieving Letters",path: "/relieving-letters"},
+      
       // ✅ My Visits - Employee Side
-      { 
-        icon: <i className="ri-map-pin-user-fill"></i>, 
-        name: "My Visits", 
-        path: "/employee-visits-data",
-        badge: "NEW"
-      },
+   
+
+
+
+
+
       { icon: <i className="ri-logout-box-r-line"></i>, name: "Logout", action: handleLogout }
     ];
     return menu;
@@ -407,7 +414,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
   const buildAdminMenu = () => {
     const employeeId = localStorage.getItem("employeeId") || '';
     const tasksUrl = `https://taskmanagement.iryax.com?employeeId=${employeeId}`;
-    
+
     const menu = [];
 
     if (hasPermission("dashboard_view")) {
@@ -424,14 +431,14 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
 
     // Admin Attendance - Sirf admin-specific items
     const attendanceDropdown = [];
-    
+
     if (hasPermission("attendance_view_all")) {
       attendanceDropdown.push({ name: "Attendance Summary", path: "/emp-attendance-summary" });
       attendanceDropdown.push({ name: "Attendance Records", path: "/emp-attendance-records" });
       attendanceDropdown.push({ name: "Today Attendance", path: "/emp-today-attendance" });
       attendanceDropdown.push({ name: "Absent Today", path: "/emp-absent-today" });
     }
-    
+
     if (attendanceDropdown.length > 0) {
       menu.push({
         icon: <i className="ri-calendar-check-fill"></i>,
@@ -443,7 +450,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     if (hasPermission("leave_approve")) {
       menu.push({ icon: <i className="ri-calendar-fill"></i>, name: "Leaves", path: "/emp-leaves" });
     }
-    
+
     if (hasPermission("leave_approve_manager")) {
       menu.push({ icon: <i className="ri-user-star-fill"></i>, name: "Manager Approve", path: "/emp-pending-leaves" });
     }
@@ -497,7 +504,7 @@ const EmployeeSidebar = ({ isCollapsed, setIsCollapsed, isMobile, onClose }) => 
     if (hasPermission("score_board_view")) recruitmentDropdown.push({ name: "Score Board", path: "/emp-score-board" });
     if (hasPermission("assessments_view")) recruitmentDropdown.push({ name: "Assessments", path: "/emp-assessments" });
     if (hasPermission("documents_view")) recruitmentDropdown.push({ name: "Documents", path: "/emp-documents" });
-    
+
     if (recruitmentDropdown.length > 0) {
       menu.push({
         icon: <i className="ri-briefcase-fill"></i>,

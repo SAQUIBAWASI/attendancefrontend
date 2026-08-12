@@ -709,6 +709,11 @@ const LoginPage = () => {
         const name = admin.name || 'Admin';
         localStorage.setItem('adminToken', adminData.token);
         localStorage.setItem('userRole', 'admin');
+        localStorage.setItem('adminEmail', email);
+        localStorage.setItem('adminName', name);
+        if (admin.id || admin._id) {
+          localStorage.setItem('adminId', admin.id || admin._id);
+        }
         localStorage.setItem('userData', JSON.stringify({ name, email, role: 'admin' }));
         setUserName(name);
         setUserRole('Admin');

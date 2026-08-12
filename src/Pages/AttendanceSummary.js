@@ -20,7 +20,11 @@ import "../index.css";
 import "./AttendanceSummary.css";
 import "./EmployeeDashboard.css";
 import "./EmployeeLeaves.css";
+
 const BASE_URL = API_BASE_URL;
+
+// Configuration: Only Sunday is weekoff (0=Sunday)
+const WEEKEND_DAYS = [0]; // Only Sunday is weekoff
 
 export default function AttendanceSummary() {
   const [editedRows, setEditedRows] = useState({});
@@ -71,6 +75,172 @@ export default function AttendanceSummary() {
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [employeeLeaves, setEmployeeLeaves] = useState({});
   const [employeesMasterData, setEmployeesMasterData] = useState({});
+
+  // Bulk Update States
+  const [selectedEmployeesForBulkUpdate, setSelectedEmployeesForBulkUpdate] = useState([]);
+  const [showBulkUpdateModal, setShowBulkUpdateModal] = useState(false);
+  const [bulkUpdateEmployees, setBulkUpdateEmployees] = useState([]);
+
+  // Helper function to get all dates of a month
+  const getAllDatesOfMonth = (month) => {
+    if (!month) return [];
+    const [year, m] = month.split("-");
+    const start = new Date(year, m - 1, 1);
+    const end = new Date(year, m, 0);
+    const dates = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      dates.push(new Date(d));
+    }
+    return dates;
+  };
+
+  // Get weekoff dates (Sundays - max 4)
+  const getWeekoffDatesForEmployee = (month) => {
+    if (!month) return [];
+    const monthDates = getAllDatesOfMonth(month);
+    // Get Sundays (max 4)
+    return monthDates
+      .filter(date => date.getDay() === 0) // Sundays only
+      .slice(0, 4) // Max 4 Sundays
+      .map(date => date.toLocaleDateString('en-CA'));
+  };
+
+  // Get working days for an employee (Monday to Saturday, excluding Sundays)
+  const getWorkingDaysForEmployee = (month) => {
+    if (!month) return [];
+    const monthDates = getAllDatesOfMonth(month);
+    const weekoffDates = getWeekoffDatesForEmployee(month);
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    
+    return monthDates.filter(date => {
+      const dateKey = date.toLocaleDateString('en-CA');
+      const dayOfWeek = date.getDay();
+      // Skip only Sundays (day 0)
+      if (dayOfWeek === 0) return false;
+      // Skip weekoffs (Sundays)
+      if (weekoffDates.includes(dateKey)) return false;
+      // If current month, only till today
+      if (month === currentMonth && dateKey > todayStr) return false;
+      return true;
+    });
+  };
+
+  // Helper function to get missing attendance dates for a specific employee (excluding Sundays)
+  const getMissingAttendanceDates = (employeeId, month) => {
+    if (!month) return [];
+    
+    const monthDates = getAllDatesOfMonth(month);
+    const employeeRecords = employeeDetails.filter(r => r.employeeId === employeeId);
+    const weekoffDates = getWeekoffDatesForEmployee(month);
+    
+    // Get dates where employee has attendance
+    const attendedDates = new Set(
+      employeeRecords
+        .filter(r => r.checkInTime)
+        .map(r => new Date(r.checkInTime).toLocaleDateString('en-CA'))
+    );
+    
+    // Filter out Sundays, weekoffs, and dates with attendance
+    const workingDays = monthDates.filter(date => {
+      const dateKey = date.toLocaleDateString('en-CA');
+      const dayOfWeek = date.getDay();
+      
+      // Skip Sundays only
+      if (dayOfWeek === 0) return false;
+      
+      // Skip weekoffs (Sundays)
+      if (weekoffDates.includes(dateKey)) return false;
+      
+      // Skip if attendance already exists
+      if (attendedDates.has(dateKey)) return false;
+      
+      return true;
+    });
+    
+    return workingDays;
+  };
+
+  // Get all active employees with their attendance status for ANY month
+  const getAllActiveEmployeesAttendanceStatus = (month) => {
+    if (!month) return [];
+    
+    const monthDates = getAllDatesOfMonth(month);
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    
+    // Get all active employees
+    const activeEmployees = employees.filter(emp => 
+      emp.status === 'active' || emp.status === undefined
+    );
+    
+    // For each employee, check their attendance for the month
+    return activeEmployees.map(emp => {
+      const empRecords = records.filter(r => 
+        r.employeeId === emp.employeeId &&
+        r.checkInTime &&
+        new Date(r.checkInTime).toISOString().slice(0, 7) === month
+      );
+      
+      // Get dates where employee has attendance
+      const attendedDates = new Set(
+        empRecords.map(r => new Date(r.checkInTime).toLocaleDateString('en-CA'))
+      );
+      
+      // Get weekoff dates (Sundays)
+      const weekoffDates = getWeekoffDatesForEmployee(month);
+      
+      // Get working days (Monday to Saturday, excluding Sundays)
+      let workingDays = monthDates.filter(date => {
+        const dateKey = date.toLocaleDateString('en-CA');
+        const dayOfWeek = date.getDay();
+        // Skip Sundays only
+        if (dayOfWeek === 0) return false;
+        // Skip weekoffs (Sundays)
+        if (weekoffDates.includes(dateKey)) return false;
+        return true;
+      });
+      
+      // If current month, only till today
+      if (month === currentMonth) {
+        workingDays = workingDays.filter(date => 
+          date.toLocaleDateString('en-CA') <= todayStr
+        );
+      }
+      
+      // Count how many working days employee has attendance
+      const attendedCount = workingDays.filter(date => 
+        attendedDates.has(date.toLocaleDateString('en-CA'))
+      ).length;
+      
+      // Get missing days (working days where attendance is missing)
+      const missingDaysList = workingDays.filter(date => {
+        const dateKey = date.toLocaleDateString('en-CA');
+        // Skip if attendance exists
+        if (attendedDates.has(dateKey)) return false;
+        return true;
+      });
+      
+      return {
+        employeeId: emp.employeeId,
+        name: emp.name,
+        department: emp.department || '-',
+        designation: emp.role || emp.designation || '-',
+        totalWorkingDays: workingDays.length,
+        attendedDays: attendedCount,
+        missingDays: missingDaysList.length,
+        missingDaysList: missingDaysList,
+        weekoffDates: weekoffDates,
+        hasNoAttendance: attendedCount === 0,
+        hasMissingDays: missingDaysList.length > 0,
+        attendancePercentage: workingDays.length > 0 
+          ? ((attendedCount / workingDays.length) * 100).toFixed(1) 
+          : 0
+      };
+    });
+  };
 
   // Helper function to format decimal hours to HH:MM
   const formatDecimalHours = (decimalHours) => {
@@ -429,19 +599,6 @@ export default function AttendanceSummary() {
   const getEmployeeDesignation = (employeeId) => {
     const employee = employees.find(emp => emp.employeeId === employeeId);
     return employee?.role || employee?.designation || '-';
-  };
-
-  // Helper function to get all dates of a month
-  const getAllDatesOfMonth = (month) => {
-    if (!month) return [];
-    const [year, m] = month.split("-");
-    const start = new Date(year, m - 1, 1);
-    const end = new Date(year, m, 0);
-    const dates = [];
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      dates.push(new Date(d));
-    }
-    return dates;
   };
 
   const downloadSingleEmployeeExcel = async (employeeId) => {
@@ -967,7 +1124,340 @@ export default function AttendanceSummary() {
     }
   };
 
-  // FIXED: handleBulkAction - collects records, updates state, waits, then saves
+  // Handle adding missing punches with weekoff logic (Monday to Saturday working)
+  const handleAddMissingPunchesWithWeekoff = async () => {
+    try {
+      const missingDates = getMissingAttendanceDates(selectedEmployee, selectedMonth);
+      const weekoffDates = getWeekoffDatesForEmployee(selectedMonth);
+      
+      if (missingDates.length === 0) {
+        showSaveStatus("✅ No missing attendance found for this employee (excluding Sundays).", "success");
+        return;
+      }
+      
+      // Show which dates will be added and which are weekoffs
+      let confirmMessage = `📋 Attendance Summary for ${selectedEmployee}:\n\n`;
+      confirmMessage += `📅 Month: ${selectedMonth}\n`;
+      confirmMessage += `📌 Weekoffs (Sundays - will be skipped): ${weekoffDates.length > 0 ? weekoffDates.join(', ') : 'None'}\n`;
+      confirmMessage += `📝 Working Days: Monday to Saturday\n\n`;
+      confirmMessage += `✅ Missing days to add: ${missingDates.length}\n`;
+      confirmMessage += `📝 Dates: ${missingDates.map(d => d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })).join(', ')}\n\n`;
+      confirmMessage += `Do you want to add attendance for these ${missingDates.length} days?`;
+      
+      if (!window.confirm(confirmMessage)) {
+        return;
+      }
+      
+      setLoading(true);
+      showSaveStatus(`⏳ Adding attendance for ${missingDates.length} missing days...`);
+      
+      let successCount = 0;
+      const errors = [];
+      
+      // Get shift timings for the employee
+      const shift = getEmployeeShift(selectedEmployee);
+      if (!shift) {
+        showSaveStatus("❌ Employee shift not found!", "error");
+        setLoading(false);
+        return;
+      }
+      
+      // Process each missing date
+      for (const date of missingDates) {
+        const dateKey = date.toLocaleDateString('en-CA');
+        
+        // Create check-in and check-out times based on shift
+        const checkInTime = `${dateKey}T${shift.start}:00`;
+        const checkOutTime = `${dateKey}T${shift.end}:00`;
+        
+        // Calculate hours based on shift
+        const [startHour, startMinute] = shift.start.split(':').map(Number);
+        const [endHour, endMinute] = shift.end.split(':').map(Number);
+        let startMinutes = startHour * 60 + startMinute;
+        let endMinutes = endHour * 60 + endMinute;
+        if (endMinutes <= startMinutes) endMinutes += 24 * 60;
+        const hours = (endMinutes - startMinutes) / 60;
+        
+        // Check if any attendance already exists for this date
+        const existingRecord = employeeDetails.find(r => 
+          r.checkInTime && 
+          new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey
+        );
+        
+        if (existingRecord) {
+          // Skip if already has attendance
+          continue;
+        }
+        
+        // Create attendance record
+        const payload = {
+          attendanceId: null, // New record
+          employeeId: selectedEmployee,
+          date: dateKey,
+          hours: hours,
+          region: null,
+          comment: "Auto-added missing punch by Admin ",
+          reason: "Onsite",
+          checkInTime: checkInTime,
+          checkOutTime: checkOutTime
+        };
+        
+        try {
+          const response = await fetch(`${BASE_URL}/attendancesummary/update`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+          
+          const result = await response.json();
+          if (result.success) {
+            successCount++;
+            // Update local state to show the new record
+            const newRecord = {
+              _id: result.data?._id || `temp_${Date.now()}_${dateKey}`,
+              employeeId: selectedEmployee,
+              checkInTime: checkInTime,
+              checkOutTime: checkOutTime,
+              totalHours: hours,
+              hours: hours,
+              reason: "Onsite",
+              comment: "Auto-added missing punch by Admin"
+            };
+            
+            setEmployeeDetails(prev => [...prev, newRecord]);
+          } else {
+            errors.push(`Failed for ${dateKey}: ${result.message || "Unknown error"}`);
+          }
+        } catch (err) {
+          console.error(`Failed to add attendance for ${dateKey}:`, err);
+          errors.push(`Network error for ${dateKey}`);
+        }
+      }
+      
+      // Refresh data after all operations
+      if (successCount > 0) {
+        showSaveStatus(`✅ ${successCount}/${missingDates.length} missing attendance records added successfully!${errors.length > 0 ? ` (${errors.length} failed)` : ''}`);
+        
+        // Refresh employee details
+        await handleViewDetails(selectedEmployee);
+        await calculateSummaryFromBackend();
+        await fetchAllData();
+      } else {
+        showSaveStatus(`❌ No records were added. ${errors.length > 0 ? errors.join('. ') : 'All dates had attendance or were Sundays.'}`, "error");
+      }
+      
+    } catch (error) {
+      console.error("Error adding missing punches:", error);
+      showSaveStatus("🚨 Error adding missing punches: " + error.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Show employees with no attendance in a popup/modal
+  const handleShowZeroAttendanceEmployees = () => {
+    const status = getAllActiveEmployeesAttendanceStatus(selectedMonth);
+    const zeroAttendanceEmployees = status.filter(emp => emp.hasNoAttendance);
+    const weekoffDates = getWeekoffDatesForEmployee(selectedMonth);
+    
+    if (zeroAttendanceEmployees.length === 0) {
+      showSaveStatus("✅ All employees have at least one attendance record this month!", "success");
+      return;
+    }
+    
+    // Create a table of employees with no attendance
+    let message = "🚨 EMPLOYEES WITH ZERO ATTENDANCE:\n\n";
+    message += `📌 Working Days: Monday to Saturday\n`;
+    message += `📌 Weekoffs (Sundays - will be skipped): ${weekoffDates.length > 0 ? weekoffDates.join(', ') : 'None'}\n\n`;
+    message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+    message += "ID\tName\t\tDepartment\tMissing Days\n";
+    message += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+    
+    zeroAttendanceEmployees.forEach((emp, index) => {
+      message += `${emp.employeeId}\t${emp.name}\t\t${emp.department || '-'}\t${emp.missingDays}\n`;
+    });
+    
+    message += "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+    message += `Total: ${zeroAttendanceEmployees.length} employees with zero attendance`;
+    message += "\n\nDo you want to add attendance for all these employees?";
+    
+    if (window.confirm(message)) {
+      handleBulkAddAttendanceForZeroAttendanceEmployees(zeroAttendanceEmployees);
+    }
+  };
+
+  // Bulk add attendance for all employees with zero attendance (with weekoff logic)
+  const handleBulkAddAttendanceForZeroAttendanceEmployees = async (employeesList) => {
+    try {
+      if (!employeesList || employeesList.length === 0) {
+        showSaveStatus("No employees with zero attendance found.", "error");
+        return;
+      }
+      
+      const weekoffDates = getWeekoffDatesForEmployee(selectedMonth);
+      const workingDays = getWorkingDaysForEmployee(selectedMonth);
+      
+      let confirmMessage = `📋 Bulk Attendance Summary:\n\n`;
+      confirmMessage += `📅 Month: ${selectedMonth}\n`;
+      confirmMessage += `📌 Working Days: Monday to Saturday\n`;
+      confirmMessage += `📌 Weekoffs (Sundays - will be skipped): ${weekoffDates.length > 0 ? weekoffDates.join(', ') : 'None'}\n`;
+      confirmMessage += `📝 Working Days: ${workingDays.length} days\n`;
+      confirmMessage += `👥 Employees: ${employeesList.length}\n\n`;
+      confirmMessage += `This will add attendance for ALL missing working days of ${employeesList.length} employees. Continue?`;
+      
+      if (!window.confirm(confirmMessage)) {
+        return;
+      }
+      
+      setLoading(true);
+      showSaveStatus(`⏳ Adding attendance for ${employeesList.length} employees...`);
+      
+      let totalAdded = 0;
+      let totalErrors = 0;
+      const errors = [];
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      
+      for (const emp of employeesList) {
+        try {
+          // Get shift for this employee
+          const shift = getEmployeeShift(emp.employeeId);
+          if (!shift) {
+            errors.push(`❌ ${emp.employeeId} - No shift assigned`);
+            continue;
+          }
+          
+          // Get all missing dates for this employee
+          const params = new URLSearchParams({
+            employeeId: emp.employeeId,
+            month: selectedMonth
+          });
+          
+          const response = await fetch(`${BASE_URL}/attendancesummary/employee-details?${params}`);
+          const result = await response.json();
+          
+          if (!result.success) {
+            errors.push(`❌ ${emp.employeeId} - Failed to fetch details`);
+            continue;
+          }
+          
+          const empDetails = result.details || [];
+          
+          // Get missing dates (excluding Sundays)
+          const monthDates = getAllDatesOfMonth(selectedMonth);
+          const attendedDates = new Set(
+            empDetails
+              .filter(r => r.checkInTime)
+              .map(r => new Date(r.checkInTime).toLocaleDateString('en-CA'))
+          );
+          
+          let workingDaysForEmp = monthDates.filter(date => {
+            const dateKey = date.toLocaleDateString('en-CA');
+            const dayOfWeek = date.getDay();
+            // Skip Sundays only
+            if (dayOfWeek === 0) return false;
+            // Skip weekoffs (Sundays)
+            if (weekoffDates.includes(dateKey)) return false;
+            // Skip if attendance exists
+            if (attendedDates.has(dateKey)) return false;
+            return true;
+          });
+          
+          // If current month, only till today
+          if (selectedMonth === currentMonth) {
+            workingDaysForEmp = workingDaysForEmp.filter(date => 
+              date.toLocaleDateString('en-CA') <= todayStr
+            );
+          }
+          
+          if (workingDaysForEmp.length === 0) {
+            continue;
+          }
+          
+          // Add attendance for each missing date
+          for (const date of workingDaysForEmp) {
+            const dateKey = date.toLocaleDateString('en-CA');
+            const checkInTime = `${dateKey}T${shift.start}:00`;
+            const checkOutTime = `${dateKey}T${shift.end}:00`;
+            
+            const [startHour, startMinute] = shift.start.split(':').map(Number);
+            const [endHour, endMinute] = shift.end.split(':').map(Number);
+            let startMinutes = startHour * 60 + startMinute;
+            let endMinutes = endHour * 60 + endMinute;
+            if (endMinutes <= startMinutes) endMinutes += 24 * 60;
+            const hours = (endMinutes - startMinutes) / 60;
+            
+            const payload = {
+              attendanceId: null,
+              employeeId: emp.employeeId,
+              date: dateKey,
+              hours: hours,
+              region: null,
+              comment: `Auto-added missing punch by Admin (Bulk - Sundays skipped)`,
+              reason: "Onsite",
+              checkInTime: checkInTime,
+              checkOutTime: checkOutTime
+            };
+            
+            try {
+              const updateRes = await fetch(`${BASE_URL}/attendancesummary/update`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              });
+              
+              const updateResult = await updateRes.json();
+              if (updateResult.success) {
+                totalAdded++;
+              } else {
+                totalErrors++;
+                errors.push(`❌ ${emp.employeeId} - Failed for ${dateKey}`);
+              }
+            } catch (err) {
+              totalErrors++;
+              errors.push(`❌ ${emp.employeeId} - Network error for ${dateKey}`);
+            }
+          }
+          
+        } catch (err) {
+          totalErrors++;
+          errors.push(`❌ ${emp.employeeId} - ${err.message}`);
+        }
+      }
+      
+      // Show final status
+      if (totalAdded > 0) {
+        showSaveStatus(`✅ Added ${totalAdded} attendance records for ${employeesList.length} employees!${errors.length > 0 ? ` (${errors.length} errors)` : ''}`);
+        
+        // Refresh all data
+        await fetchAllData();
+        if (selectedEmployee) {
+          await handleViewDetails(selectedEmployee);
+        }
+        await calculateSummaryFromBackend();
+      } else {
+        showSaveStatus(`❌ No records added. ${errors.length > 0 ? errors.join('\n') : 'Unknown error'}`, "error");
+      }
+      
+      if (errors.length > 0) {
+        console.error("Errors:", errors);
+        setTimeout(() => {
+          alert(`Errors encountered:\n\n${errors.slice(0, 10).join('\n')}${errors.length > 10 ? `\n... and ${errors.length - 10} more` : ''}`);
+        }, 500);
+      }
+      
+    } catch (error) {
+      console.error("Error in bulk add:", error);
+      showSaveStatus("🚨 Error in bulk operation: " + error.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // handleBulkAction - collects records, updates state, waits, then saves
   const handleBulkAction = async (actionType, inputId, defaultHours) => {
     try {
       const val = parseFloat(document.getElementById(inputId)?.value) || defaultHours;
@@ -1053,7 +1543,7 @@ export default function AttendanceSummary() {
     }
   };
 
-  // NEW: Bulk save with pre-collected records - NO STATE READ
+  // Bulk save with pre-collected records - NO STATE READ
   const handleBulkSaveAttendanceWithRecords = async (recordsToUpdate) => {
     try {
       if (recordsToUpdate.length === 0) {
@@ -1548,15 +2038,71 @@ export default function AttendanceSummary() {
             <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap">
               Attendance <span>Summary</span>
             </h1>
-            {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
-              Monthly summary of work hours, overtime, and presence metrics per employee.
-            </p> */}
           </div>
           <div className="emp-dash__date-pill">
             <FaCalendarAlt />
             <span>{getPeriodLabel()}</span>
           </div>
         </div>
+
+        {/* Zero Attendance Alert Card */}
+        {(() => {
+          const status = getAllActiveEmployeesAttendanceStatus(selectedMonth);
+          const zeroAttendanceEmployees = status.filter(emp => emp.hasNoAttendance);
+          const weekoffDates = getWeekoffDatesForEmployee(selectedMonth);
+          
+          if (zeroAttendanceEmployees.length === 0) return null;
+          
+          return (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 bg-red-100 rounded-full">
+                    <span className="text-xl">🚨</span>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-red-700">
+                      {zeroAttendanceEmployees.length} Employee(s) with Zero Attendance
+                    </h4>
+                    <p className="text-xs text-red-600">
+                      These employees have not marked any attendance for {selectedMonth}
+                      {weekoffDates.length > 0 && ` (${weekoffDates.length} Sundays will be skipped)`}
+                    </p>
+                    {/* <p className="text-[10px] text-gray-500 mt-0.5">
+                      Working Days: Monday to Saturday | Weekoff: Sunday
+                    </p> */}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleShowZeroAttendanceEmployees}
+                    className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition shadow-sm"
+                  >
+                    View & Fix All
+                  </button>
+                </div>
+              </div>
+              
+              {/* Show list of employees with zero attendance */}
+              <div className="mt-3 flex flex-wrap gap-2">
+                {zeroAttendanceEmployees.slice(0, 10).map(emp => (
+                  <div 
+                    key={emp.employeeId}
+                    onClick={() => handleViewDetails(emp.employeeId)}
+                    className="px-3 py-1.5 bg-white border border-red-200 rounded-lg text-xs font-medium text-red-700 cursor-pointer hover:bg-red-50 transition shadow-sm"
+                  >
+                    {emp.employeeId} - {emp.name}
+                  </div>
+                ))}
+                {zeroAttendanceEmployees.length > 10 && (
+                  <div className="px-3 py-1.5 bg-gray-100 rounded-lg text-xs font-medium text-gray-600">
+                    +{zeroAttendanceEmployees.length - 10} more
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Stats Grid - Mobile Responsive */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
@@ -1789,12 +2335,30 @@ export default function AttendanceSummary() {
                   Apply
                 </button>
 
-                <button
+                {/* <button
                   onClick={handleFixWrongData}
                   className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-all shadow-sm whitespace-nowrap"
                   title="Fix data corrections for the selected month"
                 >
                   🔧 Fix
+                </button> */}
+
+                <button
+                  onClick={() => {
+                    const status = getAllActiveEmployeesAttendanceStatus(selectedMonth);
+                    const employeesWithMissing = status.filter(emp => emp.hasMissingDays);
+                    if (employeesWithMissing.length === 0) {
+                      showSaveStatus("✅ All employees have complete attendance for this month!", "success");
+                      return;
+                    }
+                    setBulkUpdateEmployees(employeesWithMissing);
+                    setSelectedEmployeesForBulkUpdate([]);
+                    setShowBulkUpdateModal(true);
+                  }}
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-all shadow-sm whitespace-nowrap"
+                >
+                  <FiPlus className="w-3 h-3" />
+                  Bulk Update
                 </button>
 
                 {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
@@ -2010,22 +2574,39 @@ export default function AttendanceSummary() {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <button
+                      onClick={() => {
+                        const status = getAllActiveEmployeesAttendanceStatus(selectedMonth);
+                        const employeesWithMissing = status.filter(emp => emp.hasMissingDays);
+                        if (employeesWithMissing.length === 0) {
+                          showSaveStatus("✅ All employees have complete attendance for this month!", "success");
+                          return;
+                        }
+                        setBulkUpdateEmployees(employeesWithMissing);
+                        setSelectedEmployeesForBulkUpdate([]);
+                        setShowBulkUpdateModal(true);
+                      }}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
+                    >
+                      <FiPlus className="w-4 h-4" />
+                      Bulk Update
+                    </button>
+                    <button
                       onClick={downloadCombinedExcel}
                       className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all shadow-sm"
                     >
                       <FiDownload className="w-4 h-4" />
                       Export
                     </button>
-                    {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
-                      <button
-                        onClick={clearFilters}
-                        className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                        Clear
-                      </button>
-                    )}
                   </div>
+                  {(searchTerm || filterDepartment || filterDesignation || fromDate || toDate || selectedMonth !== new Date().toISOString().slice(0, 7)) && (
+                    <button
+                      onClick={clearFilters}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                    >
+                      <FiTrash2 className="w-4 h-4" />
+                      Clear
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -2046,8 +2627,8 @@ export default function AttendanceSummary() {
                 <table className="emp-dash__table">
                   <thead>
                     <tr>
-                      <th>Employee ID</th>
-                      <th>Name</th>
+                      <th>Emp ID</th>
+                      <th>Employee Name</th>
                       <th style={{ textAlign: "center" }} className="hidden sm:table-cell">Department</th>
                       <th style={{ textAlign: "center" }} className="hidden md:table-cell">Designation</th>
                       <th style={{ textAlign: "center" }}>Month</th>
@@ -2226,6 +2807,178 @@ export default function AttendanceSummary() {
         </div>
       </main>
 
+      {/* Bulk Update Modal */}
+      {showBulkUpdateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white shadow-2xl rounded-2xl w-full max-w-5xl flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="flex flex-wrap items-center justify-between p-4 border-b gap-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-800">
+                  Bulk Update Attendance - {selectedMonth}
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Select employees to add missing attendance for all working days
+                  {getWeekoffDatesForEmployee(selectedMonth).length > 0 && 
+                    ` (${getWeekoffDatesForEmployee(selectedMonth).length} Sundays will be skipped)`}
+                </p>
+                {/* <p className="text-[10px] text-gray-400 mt-0.5">
+                  Working Days: Monday to Saturday | Weekoff: Sunday
+                </p> */}
+              </div>
+              <button
+                onClick={() => {
+                  setShowBulkUpdateModal(false);
+                  setSelectedEmployeesForBulkUpdate([]);
+                }}
+                className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-4 bg-slate-50/50">
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+                <div className="overflow-x-auto">
+                  <table className="emp-dash__table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '40px' }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedEmployeesForBulkUpdate.length === bulkUpdateEmployees.length && bulkUpdateEmployees.length > 0}
+                            onChange={() => {
+                              const allIds = bulkUpdateEmployees.map(emp => emp.employeeId);
+                              setSelectedEmployeesForBulkUpdate(prev => {
+                                if (prev.length === allIds.length) {
+                                  return [];
+                                } else {
+                                  return allIds;
+                                }
+                              });
+                            }}
+                            className="w-4 h-4 cursor-pointer"
+                          />
+                        </th>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th style={{ textAlign: "center" }}>Department</th>
+                        <th style={{ textAlign: "center" }}>Designation</th>
+                        <th style={{ textAlign: "center" }}>Total Days</th>
+                        <th style={{ textAlign: "center" }}>Present</th>
+                        <th style={{ textAlign: "center" }}>Missing</th>
+                        <th style={{ textAlign: "center" }}>Attendance %</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bulkUpdateEmployees.map((emp) => (
+                        <tr key={emp.employeeId} className="transition-colors hover:bg-slate-50/50">
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={selectedEmployeesForBulkUpdate.includes(emp.employeeId)}
+                              onChange={() => {
+                                setSelectedEmployeesForBulkUpdate(prev => {
+                                  if (prev.includes(emp.employeeId)) {
+                                    return prev.filter(id => id !== emp.employeeId);
+                                  } else {
+                                    return [...prev, emp.employeeId];
+                                  }
+                                });
+                              }}
+                              className="w-4 h-4 cursor-pointer"
+                            />
+                          </td>
+                          <td className="font-semibold text-slate-800 text-[11px]">
+                            {emp.employeeId}
+                          </td>
+                          <td>
+                            <div className="flex items-center justify-start gap-2">
+                              <div className="flex items-center justify-center w-7 h-7 text-[10px] font-bold bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-full shadow-inner">
+                                {emp.name ? emp.name.charAt(0).toUpperCase() : "?"}
+                              </div>
+                              <span className="font-semibold text-slate-800 text-xs whitespace-nowrap">
+                                {emp.name}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">
+                            {emp.department}
+                          </td>
+                          <td className="text-center text-slate-600 text-[11px] font-medium whitespace-nowrap">
+                            {emp.designation}
+                          </td>
+                          <td className="text-center font-semibold text-slate-700 text-xs">
+                            {emp.totalWorkingDays}
+                          </td>
+                          <td className="text-center">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                              {emp.attendedDays}
+                            </span>
+                          </td>
+                          <td className="text-center">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-100">
+                              {emp.missingDays}
+                            </span>
+                          </td>
+                          <td className="text-center">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              emp.attendancePercentage >= 80 
+                                ? 'bg-green-50 text-green-700 border border-green-100'
+                                : emp.attendancePercentage >= 50
+                                ? 'bg-yellow-50 text-yellow-700 border border-yellow-100'
+                                : 'bg-red-50 text-red-700 border border-red-100'
+                            }`}>
+                              {emp.attendancePercentage}%
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex flex-wrap items-center justify-between p-4 border-t gap-3 bg-slate-50/50">
+              <div className="text-xs text-slate-600">
+                <strong>{selectedEmployeesForBulkUpdate.length}</strong> employee(s) selected
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowBulkUpdateModal(false);
+                    setSelectedEmployeesForBulkUpdate([]);
+                  }}
+                  className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    const selectedEmployees = bulkUpdateEmployees.filter(emp => 
+                      selectedEmployeesForBulkUpdate.includes(emp.employeeId)
+                    );
+                    handleBulkAddAttendanceForZeroAttendanceEmployees(selectedEmployees);
+                    setShowBulkUpdateModal(false);
+                  }}
+                  disabled={selectedEmployeesForBulkUpdate.length === 0}
+                  className={`px-4 py-2 text-xs font-semibold text-white rounded-lg transition ${
+                    selectedEmployeesForBulkUpdate.length === 0
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-indigo-600 hover:bg-indigo-700 shadow-sm'
+                  }`}
+                >
+                  Update Selected ({selectedEmployeesForBulkUpdate.length})
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Details Modal */}
       {selectedEmployee && (() => {
         const monthDates = getAllDatesOfMonth(selectedMonth);
@@ -2247,7 +3000,7 @@ export default function AttendanceSummary() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  {/* Half Days - Full Day Button */}
+                  {/* Half Days -> Full Day Button */}
                   <div className="flex items-center px-2.5 py-1 space-x-1.5 bg-slate-50 border border-slate-200 rounded-full text-[11px] font-semibold text-slate-700">
                     <span>Half Days ({
                       monthDates.filter(date => {
@@ -2273,7 +3026,7 @@ export default function AttendanceSummary() {
                     </button>
                   </div>
 
-                  {/* Full Leaves - Double Punch Button */}
+                  {/* Full Leaves -> Double Punch Button */}
                   <div className="flex items-center px-2.5 py-1 space-x-1.5 bg-slate-50 border border-slate-200 rounded-full text-[11px] font-semibold text-slate-700">
                     <span>Single Punch ({
                       monthDates.filter(date => {
@@ -2299,30 +3052,24 @@ export default function AttendanceSummary() {
                     </button>
                   </div>
 
-                  {/* Single Punch - New Button */}
-                  {/* <div className="flex items-center px-2.5 py-1 space-x-1.5 bg-slate-50 border border-slate-200 rounded-full text-[11px] font-semibold text-slate-700">
-                    <span>Single Punch ({
-                      monthDates.filter(date => {
-                        const dateKey = date.toLocaleDateString('en-CA');
-                        const rec = employeeDetails.find(r => r.checkInTime && new Date(r.checkInTime).toLocaleDateString('en-CA') === dateKey);
-                        return rec && rec.checkInTime && !rec.checkOutTime;
-                      }).length
-                    }) ➔</span>
-                    <input 
-                      type="number" 
-                      id="bulkSinglePunchHours"
-                      defaultValue="9" 
-                      className="w-12 px-1 py-0.5 text-gray-900 bg-white border border-gray-300 rounded text-center font-bold focus:outline-none"
-                      step="0.25"
-                    />
-                    <span className="text-gray-400">Hrs</span>
+                  {/* Missing Punches -> Add Punches Button */}
+                  <div className="flex items-center px-2.5 py-1 space-x-1.5 bg-slate-50 border border-slate-200 rounded-full text-[11px] font-semibold text-slate-700">
+                    <span>
+                      Missing ({
+                        getMissingAttendanceDates(selectedEmployee, selectedMonth).length
+                      }) ➔
+                    </span>
+                    <span className="text-[10px] text-gray-400">
+                      ( {getWeekoffDatesForEmployee(selectedMonth).length} )
+                    </span>
                     <button
-                      onClick={() => handleBulkAction('singlePunch', 'bulkSinglePunchHours', 9)}
-                      className="px-2 py-0.5 text-[10px] font-bold text-white bg-orange-600 hover:bg-orange-700 rounded transition"
+                      onClick={() => handleAddMissingPunchesWithWeekoff()}
+                      className="px-2 py-0.5 text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 rounded transition"
+                      disabled={getMissingAttendanceDates(selectedEmployee, selectedMonth).length === 0}
                     >
-                      Single Punch
+                      Add Punches
                     </button>
-                  </div> */}
+                  </div>
 
                   {/* Close Button */}
                   <button

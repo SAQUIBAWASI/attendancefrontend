@@ -689,15 +689,17 @@
 
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { 
-  FaCheck, FaTimes, FaEye, FaSearch, FaExchangeAlt, 
-  FaChevronDown, FaChevronUp, FaTrash 
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FaCheck, FaTimes, FaEye, FaSearch, FaExchangeAlt,
 } from "react-icons/fa";
-import { 
-  FiFileText, FiClock, FiCheckCircle, FiXCircle, 
-  FiList, FiFilter, FiTrash2, FiDownload 
+import {
+  FiFileText, FiClock, FiCheckCircle, FiXCircle,
+  FiFilter, FiTrash2, FiCalendar, FiRefreshCw,
+  FiChevronUp, FiChevronDown, FiInfo,
 } from "react-icons/fi";
 import { API_BASE_URL } from "../config";
+import "./EmployeeDashboard.css";
 
 const AdminCompOffRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -712,7 +714,10 @@ const AdminCompOffRequests = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    const saved = localStorage.getItem('compOffRequests_itemsPerPage');
+    return saved ? parseInt(saved, 10) : 10;
+  });
 
   // Modal states
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -938,429 +943,472 @@ const AdminCompOffRequests = () => {
     return pageNumbers;
   };
 
+  const getInitials = (name) => {
+    if (!name) return '?';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  const getAvatarColor = (name) => {
+    const colors = ['#6366F1', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444', '#14B8A6'];
+    let hash = 0;
+    for (let i = 0; i < (name?.length || 0); i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  const handleItemsPerPageChange = (limit) => {
+    setItemsPerPage(limit);
+    setCurrentPage(1);
+    localStorage.setItem('compOffRequests_itemsPerPage', String(limit));
+  };
+
   if (loading && requests.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <div className="w-10 h-10 mx-auto mb-3 border-3 border-gray-200 border-t-purple-600 rounded-full animate-spin"></div>
-          <p className="text-sm font-medium text-gray-600">Loading comp-off requests...</p>
-        </div>
+      <div className="emp-dash">
+        <main className="p-2 sm:p-4 lg:p-6">
+          <div className="emp-dash__header">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
+              Comp-off <span>Requests</span>
+            </h1>
+          </div>
+          <div className="flex items-center justify-center py-10">
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-3 border-b-2 border-blue-600 rounded-full animate-spin" />
+              <p className="text-xs font-semibold text-gray-500">Loading comp-off requests...</p>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
-  if (error) {
+  if (error && requests.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="max-w-md p-8 text-center bg-white border border-red-200 shadow-lg rounded-2xl">
-          <div className="mb-4 text-4xl text-red-500">✕</div>
-          <p className="mb-4 text-lg font-semibold text-red-600">{error}</p>
-          <button onClick={() => window.location.reload()} className="px-6 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">Retry</button>
-        </div>
+      <div className="emp-dash">
+        <main className="p-2 sm:p-4 lg:p-6">
+          <div className="p-4 mb-4 text-red-700 bg-red-100 border border-red-200 rounded-lg emp-dash__card">
+            {error}
+            <button
+              onClick={fetchRequests}
+              className="block mt-3 px-4 py-2 text-xs font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-2 sm:p-4 lg:p-6 bg-gray-50">
-      {/* Header */}
-     <div className="flex items-center gap-3 flex-wrap">
-  <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
-    <FaExchangeAlt className="text-purple-600" />
-    Comp-off Requests
-  </h1>
-  {/* <p className="emp-dash__subtitle text-xs sm:text-sm text-gray-500 font-medium">
-    Manage all comp-off requests from employees
-  </p> */}
-</div>
+    <div className="emp-dash">
+      <main className="p-2 sm:p-4 lg:p-6">
+        <div className="emp-dash__header">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="emp-dash__greeting text-lg sm:text-xl font-bold whitespace-nowrap flex items-center gap-2">
+              Comp-off <span>Requests</span>
+            </h1>
+          </div>
+          <div className="emp-dash__date-pill">
+            <FiCalendar />
+            <span>
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              })}
+            </span>
+          </div>
+        </div>
 
-      {/* Stats Cards - 2 columns on mobile, 4 on desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        {/* Total Card */}
-        <div 
-          className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] ${
-            statusFilter === '' ? 'ring-2 ring-purple-500 shadow-lg' : 'border-gray-200'
-          }`}
-          onClick={() => handleCardClick('total')}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total</span>
-            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-50">
-              <FiFileText className="text-indigo-600 text-sm" />
+        {!loading && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+            <div
+              className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${statusFilter === '' ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
+              onClick={() => handleCardClick('total')}
+            >
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Total Requests</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--rate">
+                  <FiFileText className="text-blue-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{counts.total || 0}</div>
+              <div className="emp-dash__stat-meta">all comp-off requests</div>
+            </div>
+
+            <div
+              className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${statusFilter === 'pending' ? 'ring-2 ring-amber-500 ring-offset-2' : ''}`}
+              onClick={() => handleCardClick('pending')}
+            >
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Pending</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--late">
+                  <FiClock className="text-amber-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{counts.pending || 0}</div>
+              <div className="emp-dash__stat-meta">awaiting review</div>
+            </div>
+
+            <div
+              className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${statusFilter === 'approved' ? 'ring-2 ring-green-500 ring-offset-2' : ''}`}
+              onClick={() => handleCardClick('approved')}
+            >
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Approved</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--present">
+                  <FiCheckCircle className="text-green-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{counts.approved || 0}</div>
+              <div className="emp-dash__stat-meta">approved requests</div>
+            </div>
+
+            <div
+              className={`emp-dash__stat cursor-pointer transition-all hover:shadow-md ${statusFilter === 'rejected' ? 'ring-2 ring-red-500 ring-offset-2' : ''}`}
+              onClick={() => handleCardClick('rejected')}
+            >
+              <div className="emp-dash__stat-top">
+                <span className="emp-dash__stat-label">Rejected</span>
+                <div className="emp-dash__stat-icon emp-dash__stat-icon--absent">
+                  <FiXCircle className="text-rose-500" />
+                </div>
+              </div>
+              <div className="emp-dash__stat-value">{counts.rejected || 0}</div>
+              <div className="emp-dash__stat-meta">rejected requests</div>
             </div>
           </div>
-          <div className="text-2xl font-bold text-gray-800">{counts.total || 0}</div>
-          <div className="text-xs text-gray-400">tap to view all</div>
-        </div>
-
-        {/* Pending Card */}
-        <div 
-          className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] ${
-            statusFilter === 'pending' ? 'ring-2 ring-yellow-500 shadow-lg' : 'border-gray-200'
-          }`}
-          onClick={() => handleCardClick('pending')}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Pending</span>
-            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-yellow-50">
-              <FiClock className="text-yellow-600 text-sm" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-gray-800">{counts.pending || 0}</div>
-          <div className="text-xs text-gray-400">tap to view pending</div>
-        </div>
-
-        {/* Approved Card */}
-        <div 
-          className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] ${
-            statusFilter === 'approved' ? 'ring-2 ring-green-500 shadow-lg' : 'border-gray-200'
-          }`}
-          onClick={() => handleCardClick('approved')}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Approved</span>
-            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-green-50">
-              <FiCheckCircle className="text-green-600 text-sm" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-gray-800">{counts.approved || 0}</div>
-          <div className="text-xs text-gray-400">tap to view approved</div>
-        </div>
-
-        {/* Rejected Card */}
-        <div 
-          className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] ${
-            statusFilter === 'rejected' ? 'ring-2 ring-red-500 shadow-lg' : 'border-gray-200'
-          }`}
-          onClick={() => handleCardClick('rejected')}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Rejected</span>
-            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50">
-              <FiXCircle className="text-red-600 text-sm" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-gray-800">{counts.rejected || 0}</div>
-          <div className="text-xs text-gray-400">tap to view rejected</div>
-        </div>
-      </div>
-
-      {/* Active Filter Indicator */}
-      {statusFilter && (
-        <div className="mb-4 flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-          <span className="font-semibold text-blue-700">🔍 Showing:</span>
-          <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-            statusFilter === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-            statusFilter === 'approved' ? 'bg-green-100 text-green-700' :
-            'bg-red-100 text-red-700'
-          }`}>
-            {statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
-          </span>
-          <button 
-            onClick={() => handleCardClick('total')}
-            className="ml-auto text-blue-600 hover:text-blue-800 font-semibold text-xs"
-          >
-            Show All ✕
-          </button>
-        </div>
-      )}
-
-      {/* Filters Card - Mobile Toggle */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-  {/* Mobile Filter Toggle Button */}
-  <div className="sm:hidden flex items-center justify-between p-3 border-b border-gray-100">
-    <button
-      onClick={() => setShowMobileFilters(!showMobileFilters)}
-      className="flex items-center gap-2 text-sm font-semibold text-gray-700"
-    >
-      <FiFilter className="text-purple-600" />
-      Filters
-      {showMobileFilters ? <FaChevronUp className="ml-1" /> : <FaChevronDown className="ml-1" />}
-    </button>
-    <span className="text-xs text-gray-400">
-      {requests.length} requests
-    </span>
-  </div>
-
-  {/* Filter Content - Toggle on Mobile */}
-  <div className={`p-4 bg-gray-50/50 ${showMobileFilters ? 'block' : 'hidden sm:block'}`}>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
-      {/* Search */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-gray-600">Search Employee</label>
-        <div className="relative">
-          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
-          <input
-            type="text"
-            placeholder="Employee name, ID, or reason..."
-            value={searchTerm}
-            onChange={handleSearch}
-            className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white"
-          />
-        </div>
-      </div>
-
-      {/* Status Filter */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-gray-600">Status</label>
-        <select
-          value={statusFilter}
-          onChange={handleStatusChange}
-          className="w-full h-9 px-3 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white"
-        >
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
-      </div>
-
-      {/* Month Filter */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-gray-600">Month</label>
-        <input
-          type="month"
-          value={monthFilter}
-          onChange={handleMonthChange}
-          className="w-full h-9 px-3 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white"
-        />
-      </div>
-
-      {/* Filter Actions */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-gray-600">&nbsp;</label>
-        <div className="flex gap-2">
-          <button
-            onClick={clearFilters}
-            className="flex-1 px-3 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-1.5 shadow-sm"
-          >
-            <FiTrash2 className="w-3.5 h-3.5" /> Clear Filters
-          </button>
-        </div>
-      </div>
-    </div>
-
-    {/* Filter Info */}
-    <div className="flex flex-wrap justify-between items-center mt-4 pt-3 border-t border-gray-200/50 gap-2">
-      <div className="text-xs text-gray-500 font-medium">
-        Showing <strong>{requests.length}</strong> of <strong>{pagination.total || 0}</strong> requests
-      </div>
-      <div className="flex gap-2 flex-wrap">
-        {/* Active Filters Badges */}
-        {(searchTerm || statusFilter || monthFilter) && (
-          <>
-            {searchTerm && (
-              <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[9px] font-semibold border border-gray-200">
-                "{searchTerm}"
-              </span>
-            )}
-            {statusFilter && (
-              <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
-                statusFilter === 'pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                statusFilter === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
-                'bg-red-50 text-red-700 border-red-200'
-              }`}>
-                {statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
-              </span>
-            )}
-            {monthFilter && (
-              <span className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full text-[9px] font-semibold border border-purple-200">
-                {new Date(monthFilter + '-01').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
-              </span>
-            )}
-          </>
         )}
-      </div>
-    </div>
-  </div>
-</div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        {/* <div className="px-4 py-3 border-b border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-            <FiList className="text-purple-600" /> Comp-off Requests
-          </h3>
-        </div> */}
+        <div className="emp-dash__card">
+          <div className="sm:hidden flex items-center justify-between p-3 border-b border-gray-100">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+            >
+              <FiFilter className="text-blue-600" />
+              Filters
+              {showMobileFilters ? <FiChevronUp className="ml-1" /> : <FiChevronDown className="ml-1" />}
+            </button>
+            <span className="text-xs text-gray-400">{requests.length} requests</span>
+          </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Employee</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">Leave Details</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell">Extra Day</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider hidden lg:table-cell">Requested On</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {requests.length > 0 ? (
-                requests.map((request) => (
-                  <tr key={request._id} className="hover:bg-gray-50 transition-colors">
-                    {/* Employee */}
-                    <td className="px-4 py-3 text-center">
-                      <div className="text-sm font-medium text-gray-800">{request.employeeName || "N/A"}</div>
-                      <div className="text-xs text-gray-400">{request.employeeId || "N/A"}</div>
-                    </td>
-                    
-                    {/* Leave Details */}
-                    <td className="px-4 py-3 text-center hidden sm:table-cell">
-                      <span className="px-2 py-0.5 text-xs font-medium capitalize bg-blue-100 text-blue-700 rounded-full">
-                        {request.leaveDetails?.leaveType || "N/A"}
-                      </span>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {request.leaveDetails?.startDate ? formatDate(request.leaveDetails.startDate) : "N/A"} 
-                        {request.leaveDetails?.endDate && request.leaveDetails?.startDate !== request.leaveDetails?.endDate 
-                          ? ` - ${formatDate(request.leaveDetails.endDate)}` 
-                          : ''}
-                        <span className="text-gray-400 ml-1">({request.leaveDetails?.days || 0}d)</span>
-                      </div>
-                    </td>
-                    
-                    {/* Extra Day Details */}
-                    <td className="px-4 py-3 text-center hidden md:table-cell">
-                      <div className="text-sm font-medium text-gray-800">
-                        {request.extraDayDetails?.day || formatDate(request.extraDayDate)}
-                      </div>
-                      <div className="text-xs text-green-600 font-semibold">
-                        +{request.extraDayDetails?.extraHours || 0}h
-                        <span className="text-gray-400 ml-1">({request.extraDayDetails?.totalHours || 8}h)</span>
-                      </div>
-                    </td>
-                    
-                    {/* Status */}
-                    <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(request.status)}`}>
-                        <span className={`w-1.5 h-1.5 mr-1.5 rounded-full ${
-                          request.status === "approved" ? 'bg-green-500' : 
-                          request.status === "rejected" ? 'bg-red-500' : 'bg-yellow-500'
-                        }`}></span>
-                        {request.status ? request.status.charAt(0).toUpperCase() + request.status.slice(1) : "N/A"}
-                      </span>
-                    </td>
-                    
-                    {/* Requested On */}
-                    <td className="px-4 py-3 text-center text-xs text-gray-500 hidden lg:table-cell">
-                      {request.createdAt ? formatDateTime(request.createdAt) : "N/A"}
-                    </td>
-                    
-                    {/* Actions */}
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          onClick={() => handleView(request)}
-                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="View Details"
-                        >
-                          <FaEye size={14} />
-                        </button>
-                        {request.status === "pending" && (
-                          <>
-                            <button
-                              onClick={() => handleApprove(request)}
-                              className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                              title="Approve"
-                            >
-                              <FaCheck size={14} />
-                            </button>
-                            <button
-                              onClick={() => handleReject(request)}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Reject"
-                            >
-                              <FaTimes size={14} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="px-4 py-12 text-center text-gray-400 text-sm">
-                    No comp-off requests found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+          <div className={`${showMobileFilters ? 'block' : 'hidden sm:block'}`}>
+            <div className="emp-dash__card-body bg-gray-50/50">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative flex-1 min-w-[180px]">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <FaSearch className="text-xs" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search employee name, ID, or reason..."
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
 
-        {/* Pagination */}
-        {pagination.totalPages > 1 && (
-          <div className="flex flex-col items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 sm:flex-row">
-            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
-              <span>Show:</span>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-                className="px-2 py-1 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 bg-white"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-              <span className="text-xs sm:text-sm">
-                {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, pagination.total)} of {pagination.total}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className={`px-2.5 py-1 text-sm font-medium rounded-lg transition-colors ${
-                  currentPage === 1 
-                    ? "text-gray-400 bg-gray-100 cursor-not-allowed" 
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                Prev
-              </button>
-              {getPageNumbers().map((page, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => typeof page === "number" && setCurrentPage(page)}
-                  className={`px-2.5 py-1 text-sm font-medium rounded-lg transition-colors min-w-[28px] ${
-                    page === "..." 
-                      ? "text-gray-400 cursor-default" 
-                      : currentPage === page 
-                        ? "bg-purple-600 text-white" 
-                        : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                <select
+                  value={statusFilter}
+                  onChange={handleStatusChange}
+                  className="h-8 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 >
-                  {page}
+                  <option value="">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+
+                <input
+                  type="month"
+                  value={monthFilter}
+                  onChange={handleMonthChange}
+                  className="h-8 px-3 text-xs border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+
+                <button
+                  onClick={fetchRequests}
+                  disabled={loading}
+                  className="h-8 px-3 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center gap-1.5"
+                >
+                  <FiRefreshCw className={loading ? 'animate-spin' : ''} />
+                  Refresh
                 </button>
-              ))}
+
+                {(searchTerm || statusFilter || monthFilter) && (
+                  <button
+                    onClick={clearFilters}
+                    className="h-8 px-3 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center gap-1.5"
+                  >
+                    <FiTrash2 className="w-3.5 h-3.5" /> Clear
+                  </button>
+                )}
+              </div>
+
+              {(searchTerm || statusFilter || monthFilter) && (
+                <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                  <span className="text-[10px] text-gray-500 font-medium">Active Filters:</span>
+                  {searchTerm && (
+                    <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[9px] font-semibold border border-gray-200">
+                      &quot;{searchTerm}&quot;
+                    </span>
+                  )}
+                  {statusFilter && (
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
+                      statusFilter === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                      statusFilter === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
+                      'bg-red-50 text-red-700 border-red-200'
+                    }`}>
+                      {statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+                    </span>
+                  )}
+                  {monthFilter && (
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[9px] font-semibold border border-blue-200">
+                      {new Date(`${monthFilter}-01`).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6" />
+
+        {loading && (
+          <div className="flex items-center justify-center py-6">
+            <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin" />
+          </div>
+        )}
+
+        {error && requests.length > 0 && (
+          <div className="p-4 mb-4 text-red-700 bg-red-100 border border-red-200 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {!loading && requests.length === 0 && (
+          <div className="p-8 text-center bg-white rounded-lg shadow-md emp-dash__card">
+            <p className="text-lg text-gray-500">No comp-off requests found</p>
+            <p className="mt-2 text-sm text-gray-500">
+              {(searchTerm || statusFilter || monthFilter) ? 'Try clearing filters' : 'No requests submitted yet'}
+            </p>
+            {(searchTerm || statusFilter || monthFilter) && (
               <button
-                onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
-                disabled={currentPage === pagination.totalPages}
-                className={`px-2.5 py-1 text-sm font-medium rounded-lg transition-colors ${
-                  currentPage === pagination.totalPages 
-                    ? "text-gray-400 bg-gray-100 cursor-not-allowed" 
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                onClick={clearFilters}
+                className="mt-3 px-4 py-2 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition"
               >
-                Next
+                Clear filters
               </button>
+            )}
+          </div>
+        )}
+
+        {!loading && requests.length > 0 && (
+          <div className="emp-dash__card">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                  <FiInfo className="text-blue-600" /> Comp-off Request List
+                </h3>
+                <p className="text-[10px] text-gray-500 mt-0.5">
+                  Showing {requests.length} of {pagination.total || 0} records
+                </p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto emp-dash__table-wrap">
+              <table className="emp-dash__table min-w-[960px]">
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'center', width: '56px' }}>S.No</th>
+                    <th style={{ width: '90px' }}>Emp ID</th>
+                    <th style={{ minWidth: '160px' }}>Employee Name</th>
+                    <th className="hidden sm:table-cell">Leave Details</th>
+                    <th className="hidden md:table-cell" style={{ textAlign: 'center' }}>Extra Day</th>
+                    <th style={{ textAlign: 'center' }}>Status</th>
+                    <th className="hidden lg:table-cell" style={{ textAlign: 'center' }}>Requested On</th>
+                    <th style={{ textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <AnimatePresence>
+                    {requests.map((request, index) => (
+                      <motion.tr
+                        key={request._id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2, delay: index * 0.02 }}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td style={{ textAlign: 'center' }} className="font-medium text-gray-900 whitespace-nowrap text-[11px]">
+                          {(currentPage - 1) * itemsPerPage + index + 1}
+                        </td>
+                        <td className="font-semibold text-gray-900 whitespace-nowrap text-[11px]">
+                          {request.employeeId || 'N/A'}
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-2 min-w-[140px]">
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+                              style={{ background: getAvatarColor(request.employeeName) }}
+                            >
+                              {getInitials(request.employeeName)}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-gray-900 text-xs truncate" title={request.employeeName || 'N/A'}>
+                                {request.employeeName || 'N/A'}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="hidden sm:table-cell">
+                          <span className="inline-flex px-2 py-0.5 text-[10px] font-medium capitalize bg-blue-50 text-blue-700 rounded-full border border-blue-100">
+                            {request.leaveDetails?.leaveType || 'N/A'}
+                          </span>
+                          <div className="text-[10px] text-gray-500 mt-1 whitespace-nowrap">
+                            {request.leaveDetails?.startDate ? formatDate(request.leaveDetails.startDate) : 'N/A'}
+                            {request.leaveDetails?.endDate && request.leaveDetails?.startDate !== request.leaveDetails?.endDate
+                              ? ` - ${formatDate(request.leaveDetails.endDate)}`
+                              : ''}
+                            <span className="text-gray-400 ml-1">({request.leaveDetails?.days || 0}d)</span>
+                          </div>
+                        </td>
+                        <td className="hidden md:table-cell" style={{ textAlign: 'center' }}>
+                          <div className="text-xs font-medium text-gray-800 whitespace-nowrap">
+                            {request.extraDayDetails?.day || formatDate(request.extraDayDate)}
+                          </div>
+                          <div className="text-[10px] text-green-600 font-semibold">
+                            +{request.extraDayDetails?.extraHours || 0}h
+                            <span className="text-gray-400 ml-1">({request.extraDayDetails?.totalHours || 8}h)</span>
+                          </div>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full ${getStatusBadge(request.status)}`}>
+                            <span className={`w-1.5 h-1.5 mr-1 rounded-full ${
+                              request.status === 'approved' ? 'bg-green-500' :
+                              request.status === 'rejected' ? 'bg-red-500' : 'bg-amber-500'
+                            }`} />
+                            {request.status ? request.status.charAt(0).toUpperCase() + request.status.slice(1) : 'N/A'}
+                          </span>
+                        </td>
+                        <td className="hidden lg:table-cell text-[11px] text-gray-500 whitespace-nowrap" style={{ textAlign: 'center' }}>
+                          {request.createdAt ? formatDateTime(request.createdAt) : 'N/A'}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => handleView(request)}
+                              className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100"
+                              title="View Details"
+                            >
+                              <FaEye size={14} />
+                            </button>
+                            {request.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => handleApprove(request)}
+                                  className="p-1.5 text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors border border-green-100"
+                                  title="Approve"
+                                >
+                                  <FaCheck size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleReject(request)}
+                                  className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100"
+                                  title="Reject"
+                                >
+                                  <FaTimes size={14} />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </AnimatePresence>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                <span>Showing</span>
+                <span className="font-semibold text-gray-900">
+                  {pagination.total > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}
+                </span>
+                <span>to</span>
+                <span className="font-semibold text-gray-900">
+                  {Math.min(currentPage * itemsPerPage, pagination.total || 0)}
+                </span>
+                <span>of</span>
+                <span className="font-semibold text-gray-900">{pagination.total || 0}</span>
+                <span>records</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                  className="px-2 py-1 text-xs border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+
+              {pagination.totalPages > 1 && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {getPageNumbers().map((page, idx) => (
+                      page === '...' ? (
+                        <span key={idx} className="px-2 text-gray-400 text-xs">...</span>
+                      ) : (
+                        <button
+                          key={idx}
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            currentPage === page
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                    disabled={currentPage === pagination.totalPages}
+                    className="px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
-      </div>
 
       {/* View Modal */}
       {isViewModalOpen && selectedRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="w-full max-w-2xl max-h-[90vh] overflow-auto bg-white rounded-2xl shadow-2xl">
             <div className="sticky top-0 flex justify-between items-center p-4 bg-white border-b">
-              <h3 className="text-lg font-bold text-purple-700 flex items-center gap-2">
-                <FaExchangeAlt className="text-purple-600" /> Request Details
+              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <FaExchangeAlt className="text-blue-600" /> Request Details
               </h3>
               <button onClick={() => setIsViewModalOpen(false)} className="text-gray-400 text-2xl hover:text-gray-600 transition-colors">×</button>
             </div>
@@ -1426,7 +1474,7 @@ const AdminCompOffRequests = () => {
               </div>
             </div>
             <div className="sticky bottom-0 p-4 bg-white border-t">
-              <button onClick={() => setIsViewModalOpen(false)} className="w-full px-4 py-2 text-sm font-medium text-white bg-purple-500 rounded-xl hover:bg-purple-600 transition-colors">Close</button>
+              <button onClick={() => setIsViewModalOpen(false)} className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">Close</button>
             </div>
           </div>
         </div>
@@ -1537,7 +1585,7 @@ const AdminCompOffRequests = () => {
                   setShowSuccessModal(false);
                   setActionMessage("");
                 }}
-                className="w-full px-4 py-2 text-sm font-medium text-white bg-purple-500 rounded-xl hover:bg-purple-600 transition-colors"
+                className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors"
               >
                 OK
               </button>
@@ -1545,6 +1593,7 @@ const AdminCompOffRequests = () => {
           </div>
         </div>
       )}
+      </main>
     </div>
   );
 };

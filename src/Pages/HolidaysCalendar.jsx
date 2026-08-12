@@ -1531,7 +1531,7 @@ const HolidaysCalendar = ({ isEmployeeView = false }) => {
             <table className="emp-dash__table" style={{ minWidth: "820px" }}>
               <thead>
                 <tr>
-                  <th className="px-4 py-3 text-center">#</th>
+                  <th className="px-4 py-3 text-center">S.No</th>
                   <th className="px-4 py-3">Holiday / Occasion</th>
                   <th className="px-4 py-3 text-center">Category</th>
                   <th className="px-4 py-3 text-center">State</th>

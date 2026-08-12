@@ -163,6 +163,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import EmployeeNavbar from "../Components/EmployeeNavbar";
 import EmployeeSidebar from "../Components/EmployeeSidebar";
+import { checkMissedLoginAlert } from "../utils/attendanceLoginAlert";
 
 export default function EmployeeLayout({ children }) {
   const location = useLocation();
@@ -190,6 +191,42 @@ export default function EmployeeLayout({ children }) {
       setIsSidebarCollapsed(true);
     }
   }, [location.pathname, isMobile]);
+
+  // Check missed login every minute (per employee shift) and create notification if needed
+  useEffect(() => {
+    const employeeId = localStorage.getItem("employeeId");
+    if (!employeeId) return;
+
+    const employeeData = JSON.parse(localStorage.getItem("employeeData") || "{}");
+    const employeeName =
+      employeeData?.name ||
+      employeeData?.employeeName ||
+      localStorage.getItem("employeeName") ||
+      "Employee";
+
+    const runMissedLoginCheck = () => {
+      checkMissedLoginAlert({
+        employeeId,
+        employeeName,
+        createNotification: true,
+      });
+    };
+
+    runMissedLoginCheck();
+    const intervalId = setInterval(runMissedLoginCheck, 60000);
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        runMissedLoginCheck();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -245,4 +282,3 @@ export default function EmployeeLayout({ children }) {
     </div>
   );
 }
-

@@ -720,7 +720,7 @@ const LettersSection = () => {
                             <table className="emp-dash__table">
                                 <thead>
                                     <tr>
-                                        <th className="text-center w-10">#</th>
+                                        <th className="text-center w-10">S.No</th>
                                         <th>Employee</th>
                                         <th>Department</th>
                                         <th>Role</th>

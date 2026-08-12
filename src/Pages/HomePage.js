@@ -266,58 +266,6 @@ const HomePage = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
       <TimelyNavbar/>
       
-      {/* Top Banner - Emergency/Urgent Care */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-rose-600 via-red-600 to-orange-600 text-white shadow-2xl">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{ backgroundImage: `url(${svgPattern2})` }}></div>
-        </div>
-        
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-3xl animate-pulse delay-300"></div>
-        <div className="absolute top-1/2 left-1/4 w-32 h-32 bg-yellow-400/10 rounded-full blur-3xl animate-pulse delay-700"></div>
-        
-        <div className="absolute top-1/2 left-10 opacity-10 animate-pulse">
-          <Ambulance className="w-12 h-12" />
-        </div>
-        <div className="absolute top-1/2 right-10 opacity-10 animate-pulse delay-300">
-          <ShieldAlert className="w-12 h-12" />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
-                </span>
-                <div className="p-1.5 bg-white/20 backdrop-blur-sm rounded-full shadow-lg">
-                  <Clock className="w-3.5 h-3.5" />
-                </div>
-              </div>
-              <span className="text-xs font-bold tracking-wide flex items-center gap-1.5">
-                <span className="inline-block w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-                24/7 Emergency Support
-              </span>
-            </div>
-            
-            <div className="flex items-center gap-3 text-xs flex-wrap justify-center">
-              <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full border border-white/20 shadow-lg shadow-black/10 hover:bg-white/30 transition-all">
-                <Phone className="w-3 h-3 animate-bounce" />
-                <span className="font-semibold">+91 9010 481 048</span>
-              </div>
-              <span className="hidden sm:inline text-white/30">|</span>
-              <div className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 backdrop-blur-sm px-3 py-1 rounded-full border border-white/20 shadow-lg">
-                <Gift className="w-3 h-3 animate-pulse" />
-                <span className="text-white/90 font-medium">Free Health Camps</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-      </div>
-
       {/* Hero Section - Full Image Background */}
       <section className="relative overflow-hidden min-h-[500px] flex items-center">
         <div className="absolute inset-0">
@@ -338,14 +286,6 @@ const HomePage = () => {
         
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-500/30 backdrop-blur-sm rounded-full border border-emerald-400/30 shadow-xl mb-4">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
-              </span>
-              <span className="text-xs font-semibold text-white">Live: {liveStats.consultations}+ consultations</span>
-            </div>
-
             <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight">
               Trusted Healthcare,{' '}
               <span className="bg-gradient-to-r from-emerald-300 via-teal-300 to-blue-300 bg-clip-text text-transparent">
@@ -400,8 +340,8 @@ const HomePage = () => {
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent"></div>
       </section>
 
-      {/* Stats Bar */}
-      <section className="px-4 py-6 bg-white/80 backdrop-blur-sm border-y border-slate-100 relative z-10">
+      {/* Live Stats Bar - Moved DOWN with margin-top */}
+      <section className="px-4 py-6 bg-white/80 backdrop-blur-sm border-y border-slate-100 relative z-10 mt-4 md:mt-6">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-3 gap-3 md:gap-6">
             {[

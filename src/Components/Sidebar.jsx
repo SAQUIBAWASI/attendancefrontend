@@ -1736,8 +1736,9 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/qrcode": "QR Scanner",
       "/company-ip": "Company IP",
       "/my-products": "My Products",
-      "/visits-data": "Visit Data", // ✅ Added for visits data page
+      "/visits-data": "Visit Data",
       "/letters-section": "Reliving Letters",
+      "/late-today": "Late Today",
     };
     return pathMap[path] || "Dashboard";
   };
@@ -1786,49 +1787,32 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
   const isDropdownActive = (dropdownItems) =>
     dropdownItems?.some((item) => isActive(item.path));
 
-  // ─── Helper function to get credentials from localStorage ───
-  const getCredentials = () => {
-    const userRole = localStorage.getItem('userRole');
-    let email = '', password = '';
-
-    if (userRole === 'admin') {
-      email = localStorage.getItem('adminEmail') || '';
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      password = userData.password || localStorage.getItem('adminPassword') || '';
-    } else if (userRole === 'employee') {
-      const employeeData = JSON.parse(localStorage.getItem('employeeData') || '{}');
-      email = employeeData.email || localStorage.getItem('employeeEmail') || '';
-      password = employeeData.password || localStorage.getItem('employeePassword') || '';
-    } else if (userRole === 'client') {
-      const clientData = JSON.parse(localStorage.getItem('clientData') || '{}');
-      email = clientData.email || localStorage.getItem('clientEmail') || '';
-      password = clientData.password || localStorage.getItem('clientPassword') || '';
+  // ─── Function to handle Hire navigation (EXACTLY like Navbar) ───
+  const navigateToIngrainHire = () => {
+    const employeeDataRaw = localStorage.getItem("employeeData");
+    let employeeData = {};
+    try {
+      employeeData = JSON.parse(employeeDataRaw || "{}");
+    } catch (e) {
+      console.error('Failed to parse employeeData:', e);
     }
-
-    return { email, password, userRole };
-  };
-
-  // ─── Function to handle external link with auto-login ───
-  const handleExternalLink = () => {
-    const { email, password, userRole } = getCredentials();
-
-    if (!email || !password) {
-      alert('Please login first to access Hire.');
-      return;
+    
+    const email = employeeData.email || employeeData.employeeEmail || '';
+    const password = employeeData.password || employeeData.employeePassword || '';
+    const storedPassword = localStorage.getItem("employeePassword") || '';
+    let finalPassword = password || storedPassword || '';
+    if (!finalPassword) {
+      finalPassword = '456789';
     }
-
-    const url = "https://ingrainhire.ingrainsystems.com/client-login";
+    
+    const baseUrl = 'https://ingrainhire.ingrainsystems.com/candidate-login';
     const params = new URLSearchParams();
-    params.append('email', email);
-    params.append('password', password);
+    if (email) params.append('email', email);
+    if (finalPassword) params.append('password', finalPassword);
     params.append('autoLogin', 'true');
-    params.append('role', userRole || 'employee');
-    params.append('clientLogin', 'true');
-    params.append('skipOtp', 'true');
-
-    const finalUrl = `${url}?${params.toString()}`;
-    console.log('🔗 Opening Hire:', finalUrl);
-    window.open(finalUrl, '_blank');
+    
+    const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+    window.open(url, '_blank');
   };
 
   const elements = [
@@ -1840,14 +1824,13 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
     {
       icon: <i className="ri-user-fill"></i>,
       name: "Employees",
-      path: "/employeelist",
+      dropdown: [
+        { name: "Employee List", path: "/employeelist" },
+        { name: "Add Employee", path: "/addemployee" },
+        { name: "Employee Locations", path: "/employee-locations" },
+      ],
     },
-    {
-      icon: <i className="ri-user-add-fill"></i>,
-      name: "Hire",
-      action: handleExternalLink,
-      isExternal: true,
-    },
+    
     {
       icon: <i className="ri-calendar-fill"></i>,
       name: "Attendance",
@@ -1860,18 +1843,49 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         { name: "Regularization", path: "/regularization" },
       ],
     },
+
     {
-      icon: <i className="ri-calendar-fill"></i>,
-      name: "Leaves",
+      icon: <i className="ri-file-list-fill"></i>,
+      name: "Leave List",
       path: "/leavelist",
     },
+
     {
-      icon: <i className="ri-exchange-fill"></i>,
+      icon: <i className="ri-user-fill"></i>,
+      name: "Admin",
+      dropdown: [
+        { name: "Payroll", path: "/payroll" },
+        { name: "Expenses", path: "/all-expensives" },
+        { name: "User Activity", path: "/useractivity" },
+        { name: "User Access", path: "/useraccess" },
+        { name: "Shifts", path: "/shift" },
+      ],
+    },
+
+    {
+      icon: <i className="ri-user-add-fill"></i>,
+      name: "Hire",
+      action: navigateToIngrainHire,
+      isExternal: true,
+    },
+
+    {
+      icon: <i className="ri-file-list-fill"></i>,
       name: "Comp Off Requests",
       path: "/comp-off-requests",
     },
     {
-      icon: <i className="ri-calendar-fill"></i>,
+      icon: <i className="ri-file-list-fill"></i>,
+      name: "Comp Off Settings",
+      path: "/comp-off-settings",
+    },
+    {
+      icon: <i className="ri-shield-keyhole-fill"></i>,
+      name: "Permissions",
+      path: "/permissions",
+    },
+    {
+      icon: <i className="ri-calendar-event-fill"></i>,
       name: "Holidays",
       path: "/holidays-calendar",
     },
@@ -1881,90 +1895,21 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       path: "/events",
     },
     {
-      icon: <i className="ri-shield-keyhole-fill"></i>,
-      name: "Permissions",
-      path: "/permissions",
-    },
-    {
-      icon: <i className="ri-money-dollar-box-fill"></i>,
-      name: "Payroll",
-      path: "/payroll",
-    },
-    {
       icon: <i className="ri-time-fill"></i>,
-      name: "OverTime",
+      name: "OT Claims",
       path: "/ot-claims",
     },
     {
-      icon: <i className="ri-user-unfollow-line"></i>,
-      name: "Resignation",
-      path: "/employee-resignation",
+      icon: <i className="ri-time-fill"></i>,
+      name: "Over Time",
+      path: "/over-time",
     },
-    {
-      icon: <i className="ri-file-paper-2-line"></i>,
-      name: "Relieving Letters",
-      path: "/letters-section",
-    },
-    {
-      icon: <i className="ri-money-dollar-box-fill"></i>,
-      name: "Expensives",
-      path: "/all-expensives"
-    },
-    {
-      icon: <i className="ri-error-warning-fill"></i>,
-      name: "Employee Issues",
-      path: "/employeesissues",
-      badge: "NEW",
-      blink: true
-    },
-    {
-      icon: <i className="ri-history-fill"></i>,
-      name: "User Activity",
-      path: "/useractivity",
-    },
-    {
-      icon: <i className="ri-shield-user-fill"></i>,
-      name: "User Access",
-      path: "/useraccess",
-    },
-    {
-      icon: <i className="ri-shield-user-fill"></i>,
-      name: "Issue Management",
-      path: "/admin-issue-management",
-    },
-    {
-      icon: <i className="ri-stethoscope-fill"></i>,
-      name: "Medical Certificates",
-      path: "/all-medical-certificates",
-    },
-    // {
-    //   icon: <i className="ri-briefcase-fill"></i>,
-    //   name: "Recruitment",
-    //   dropdown: [
-    //     { name: "Dashboard", path: "/recruitment-dashboard" },
-    //     { name: "Job Posts", path: "/jobpost" },
-    //     { name: "Job Applicants", path: "/job-applicants" },
-    //     { name: "Score Board", path: "/score" },
-    //     { name: "Assessments", path: "/assessment-manager" },
-    //     { name: "Documents", path: "/personaldocuments" },
-    //     { name: "Employee Journey", path: "/employee-journey" },
-    //   ],
-    // },
     {
       icon: <i className="ri-map-pin-2-fill"></i>,
       name: "Locations",
       path: "/locationlist",
     },
-    {
-      icon: <i className="ri-map-pin-user-fill"></i>,
-      name: "Employee Location",
-      path: "/employee-locations",
-    },
-    {
-      icon: <i className="ri-time-fill"></i>,
-      name: "Shifts",
-      path: "/shift",
-    },
+    
     {
       icon: <i className="ri-qr-code-fill"></i>,
       name: "QR Scanner",
@@ -1980,7 +1925,6 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       name: "My Products",
       path: "/my-products",
     },
-    // ✅ Visit Data - Admin Side
     {
       icon: <i className="ri-map-pin-user-fill"></i>,
       name: "Visit Data",
@@ -2016,11 +1960,9 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
     }
   };
 
-  // Handle dropdown item click (supports external links)
+  // Handle dropdown item click
   const handleDropdownItemClick = (item) => {
-    if (item.external) {
-      handleExternalLink(item.url, item.requiresAuth, item.loginPage);
-    } else if (item.path) {
+    if (item.path) {
       navigate(item.path);
     }
 
@@ -2098,6 +2040,22 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
               transform: scale(1.05);
             }
           }
+
+          /* Dropdown animation */
+          .dropdown-enter {
+            animation: slideDown 0.2s ease-out;
+          }
+
+          @keyframes slideDown {
+            from {
+              opacity: 0;
+              transform: translateY(-5px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
         `}
       </style>
 
@@ -2134,12 +2092,12 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                     <span className="text-[10px] font-extrabold">TM</span>
                   </div>
                   <div>
-                    <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-[#667085] block leading-tight">
+                    <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#667085] block leading-tight">
                       Team Management
                     </span>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                      <span className="text-[11px] font-medium text-[#101828]">
+                      <span className="text-[13px] font-medium text-[#101828]">
                         {currentPage}
                       </span>
                     </div>
@@ -2167,7 +2125,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
               {item.dropdown ? (
                 <>
                   <div
-                    className={`group flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer sidebar-item ${isDropdownActive(item.dropdown)
+                    className={`group flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer sidebar-item ${isDropdownActive(item.dropdown)
                         ? "active-gradient text-white"
                         : openDropdown === item.name
                           ? "bg-indigo-50/80 text-[#1E3A8A] border border-indigo-100/50"
@@ -2175,19 +2133,16 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                       }`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (item.dropdown && item.dropdown.length > 0) {
-                        const firstItem = item.dropdown[0];
-                        if (firstItem.external) {
-                          handleExternalLink(firstItem.url, firstItem.requiresAuth, firstItem.loginPage);
-                        } else if (firstItem.path) {
-                          navigate(firstItem.path);
-                        }
-                        setOpenDropdown(null);
-                        if (isMobile) {
-                          setIsCollapsed(true);
-                        }
-                        if (onLinkClick) onLinkClick();
+                      // If dropdown has items, navigate to first non-external item or toggle
+                      const firstItem = item.dropdown?.find(sub => !sub.external);
+                      if (firstItem?.path) {
+                        navigate(firstItem.path);
                       }
+                      setOpenDropdown(null);
+                      if (isMobile) {
+                        setIsCollapsed(true);
+                      }
+                      if (onLinkClick) onLinkClick();
                     }}
                   >
                     <div className="flex items-center gap-2.5">
@@ -2200,7 +2155,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                         {item.icon}
                       </span>
                       {!isCollapsed && (
-                        <span className={`text-[13px] font-medium leading-tight ${isDropdownActive(item.dropdown)
+                        <span className={`text-[15px] font-medium leading-tight ${isDropdownActive(item.dropdown)
                             ? "text-white"
                             : openDropdown === item.name
                               ? "text-[#1E3A8A]"
@@ -2218,17 +2173,17 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                         )}
                         <FaChevronDown
                           onClick={(e) => toggleDropdown(e, item.name)}
-                          className={`text-[10px] transition-transform duration-300 cursor-pointer ${isDropdownActive(item.dropdown)
+                          className={`text-[12px] transition-transform duration-300 cursor-pointer ${isDropdownActive(item.dropdown)
                               ? "text-white"
                               : openDropdown === item.name
                                 ? "text-[#175cd3]"
                                 : "text-gray-400"
                             } ${openDropdown === item.name ? "rotate-180" : ""}`}
                           style={{
-                            width: '16px',
-                            height: '16px',
-                            minWidth: '16px',
-                            minHeight: '16px'
+                            width: '18px',
+                            height: '18px',
+                            minWidth: '18px',
+                            minHeight: '18px'
                           }}
                         />
                       </div>
@@ -2237,12 +2192,12 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
 
                   {/* DROPDOWN ITEMS */}
                   {openDropdown === item.name && !isCollapsed && (
-                    <ul className="mt-0.5 space-y-0.5 ml-8 border-l-2 border-indigo-100/50 pl-2.5">
+                    <ul className="mt-0.5 space-y-0.5 ml-8 border-l-2 border-indigo-100/50 pl-2.5 dropdown-enter">
                       {item.dropdown.map((sub, i) => (
                         <li key={i}>
                           <div
                             onClick={() => handleDropdownItemClick(sub)}
-                            className={`block py-1 px-2 text-[12px] transition-all duration-200 rounded-lg cursor-pointer ${sub.external
+                            className={`block py-1.5 px-2 text-[14px] transition-all duration-200 rounded-lg cursor-pointer ${sub.external
                                 ? "text-purple-600 hover:text-purple-800 hover:bg-purple-50/50"
                                 : ""
                               } ${isActive(sub.path) && !sub.external
@@ -2256,13 +2211,18 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                                 <div className="w-1.5 h-1.5 rounded-full bg-[#175cd3] shadow-md"></div>
                               )}
                               {sub.external && (
-                                <i className="ri-external-link-line text-[10px] text-purple-500"></i>
+                                <i className="ri-external-link-line text-[12px] text-purple-500"></i>
                               )}
                               <span className={isActive(sub.path) && !sub.external ? "ml-0" : "ml-[10px]"}>
                                 {sub.name}
                               </span>
+                              {sub.badge && (
+                                <span className={`text-[8px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-red-500 to-rose-500 text-white font-medium ml-auto ${sub.blink ? 'badge-pulse' : ''}`}>
+                                  {sub.badge}
+                                </span>
+                              )}
                               {sub.external && (
-                                <span className="text-[6px] px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-600 border border-purple-200 font-medium ml-auto">
+                                <span className="text-[7px] px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-600 border border-purple-200 font-medium ml-auto">
                                   Auto-Login
                                 </span>
                               )}
@@ -2293,7 +2253,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                       onLinkClick();
                     }
                   }}
-                  className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg cursor-pointer sidebar-item ${item.isExternal
+                  className={`group flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer sidebar-item ${item.isExternal
                       ? "external-glow text-white hover:shadow-lg hover:scale-[1.02]"
                       : isActive(item.path)
                         ? "active-gradient text-white shadow-md"
@@ -2310,7 +2270,7 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                   </span>
                   {!isCollapsed && (
                     <div className="flex items-center flex-1 min-w-0 gap-1.5">
-                      <span className={`text-[13px] font-medium leading-tight truncate ${item.isExternal
+                      <span className={`text-[15px] font-medium leading-tight truncate ${item.isExternal
                           ? "text-white"
                           : isActive(item.path)
                             ? "text-white"
@@ -2320,14 +2280,14 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
                       </span>
                       {item.isExternal && (
                         <>
-                          <i className="ri-external-link-line text-[10px] text-white/80 ml-auto"></i>
-                          <span className="text-[6px] px-1.5 py-0.5 rounded-full bg-white/20 text-white border border-white/30 font-medium badge-pulse">
+                          <i className="ri-external-link-line text-[12px] text-white/80 ml-auto"></i>
+                          <span className="text-[7px] px-1.5 py-0.5 rounded-full bg-white/20 text-white border border-white/30 font-medium badge-pulse">
                             Auto-Login
                           </span>
                         </>
                       )}
                       {item.badge && (
-                        <span className={`px-1.5 py-0.5 text-[7px] font-bold bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-full shadow-md ${item.blink ? 'badge-pulse' : ''
+                        <span className={`px-1.5 py-0.5 text-[8px] font-bold bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-full shadow-md ${item.blink ? 'badge-pulse' : ''
                           }`}>
                           {item.badge}
                         </span>
@@ -2350,22 +2310,22 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         </nav>
 
         {/* Footer - Fixed with gradient */}
-        <div className="px-3 py-2 text-[9px] text-[#667085] border-t border-gray-100/50 bg-gradient-to-r from-gray-50/80 to-gray-100/30 flex-shrink-0 backdrop-blur-sm">
+        <div className="px-3 py-2 text-[10px] text-[#667085] border-t border-gray-100/50 bg-gradient-to-r from-gray-50/80 to-gray-100/30 flex-shrink-0 backdrop-blur-sm">
           {!isCollapsed ? (
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50/80 rounded-lg border border-emerald-100/50">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                  <span className="text-[8px] text-emerald-600 font-semibold">Active</span>
+                  <span className="text-[9px] text-emerald-600 font-semibold">Active</span>
                 </div>
-                <span className="text-[8px] font-medium text-gray-400">v2.0</span>
+                <span className="text-[9px] font-medium text-gray-400">v2.0</span>
               </div>
-              <p className="text-[8px] text-center text-gray-400">© 2026 Timely Health</p>
+              <p className="text-[9px] text-center text-gray-400">© 2026 Timely Health</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-0.5">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-lg shadow-emerald-500/30"></div>
-              <span className="text-[6px] text-gray-400">©</span>
+              <span className="text-[7px] text-gray-400">©</span>
             </div>
           )}
         </div>
@@ -2373,6 +2333,5 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
     </>
   );
 };
-
 
 export default Sidebar;

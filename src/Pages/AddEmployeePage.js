@@ -10813,6 +10813,30 @@ const AddEmployeePage = () => {
     setNetSalary(totalEarnings - deductions);
   }, [ptax, gmcAmount, otherDeductions, totalEarnings]);
 
+  // Helper: format time range as "10:00 AM TO 07:00 PM"
+  const formatShiftTimeRangeLabel = (timeRange) => {
+    if (!timeRange) return "";
+    const parts = String(timeRange).split(/\s*-\s*/).map((part) => part.trim());
+    if (parts.length >= 2) {
+      return `${parts[0]} TO ${parts[parts.length - 1]}`;
+    }
+    return String(timeRange).replace(/\s*-\s*/g, " TO ");
+  };
+
+  const getShiftOptionLabel = (shift) => {
+    const shiftName = shift.shiftName || `Shift ${shift.shiftType}`;
+    const timeSlots = shift.timeSlots || [];
+    const timeLabels = timeSlots
+      .map((slot) => slot.timeRange)
+      .filter(Boolean)
+      .map((range) => `[ ${formatShiftTimeRangeLabel(range)} ]`);
+
+    const timeText = timeLabels.length ? ` with time ${timeLabels.join(" & ")}` : "";
+    const brakeText = shift.isBrakeShift ? " (Brake Shift)" : "";
+
+    return `Shift ${shift.shiftType} : ${shiftName}${timeText}${brakeText}`;
+  };
+
   // Helper function to convert 24-hour to 12-hour format
   const formatTo12Hour = (time24) => {
     if (!time24) return '';
@@ -11897,8 +11921,7 @@ const AddEmployeePage = () => {
                     <option value="">-- Select a Shift --</option>
                     {shiftList.map(shift => (
                       <option key={shift._id} value={shift.shiftType}>
-                        {shift.isBrakeShift ? '🔴' : '🟢'} Shift {shift.shiftType}: {shift.shiftName} 
-                        {shift.isBrakeShift ? ' (Brake Shift)' : ''}
+                        {shift.isBrakeShift ? "🔴" : "🟢"} {getShiftOptionLabel(shift)}
                       </option>
                     ))}
                     <option value="ADD_NEW" className="text-blue-600 font-bold">+ Create New Shift</option>
@@ -11935,7 +11958,9 @@ const AddEmployeePage = () => {
                             <div className="grid grid-cols-3 gap-2 text-xs">
                               <div>
                                 <span className="text-gray-500">Time:</span>
-                                <span className="ml-1 font-medium text-gray-900">{slot.timeRange}</span>
+                                <span className="ml-1 font-medium text-gray-900">
+                                  {slot.timeRange ? formatShiftTimeRangeLabel(slot.timeRange) : "—"}
+                                </span>
                               </div>
                               <div>
                                 <span className="text-gray-500">Description:</span>

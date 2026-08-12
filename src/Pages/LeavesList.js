@@ -3034,7 +3034,7 @@ const LeavesList = () => {
                 <table className="min-w-full divide-y divide-gray-200 bg-white">
                   <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     <tr>
-                      <th style={{ color: 'black' }} className="px-4 py-3 text-left">Employee ID</th>
+                      <th style={{ color: 'black' }} className="px-4 py-3 text-left">Emp ID</th>
                       <th style={{ color: 'black' }} className="px-4 py-3 text-left">Name</th>
                       <th style={{ color: 'black' }} className="px-4 py-3 text-left">Department</th>
                       <th style={{ color: 'black' }} className="px-4 py-3 text-left">Designation</th>
