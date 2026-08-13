@@ -1789,29 +1789,48 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
 
   // ─── Function to handle Hire navigation (EXACTLY like Navbar) ───
   const navigateToIngrainHire = () => {
-    const employeeDataRaw = localStorage.getItem("employeeData");
-    let employeeData = {};
-    try {
-      employeeData = JSON.parse(employeeDataRaw || "{}");
-    } catch (e) {
-      console.error('Failed to parse employeeData:', e);
+    const userRole = localStorage.getItem('userRole');
+    let email = '', password = '';
+    
+    if (userRole === 'admin') {
+      email = localStorage.getItem('adminEmail') || '';
+      try {
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        password = userData.password || localStorage.getItem('adminPassword') || '';
+      } catch (e) {
+        password = localStorage.getItem('adminPassword') || '';
+      }
+    } else if (userRole === 'employee') {
+      try {
+        const employeeData = JSON.parse(localStorage.getItem('employeeData') || '{}');
+        email = employeeData.email || employeeData.employeeEmail || localStorage.getItem('employeeEmail') || '';
+        password = employeeData.password || employeeData.employeePassword || localStorage.getItem('employeePassword') || '';
+      } catch (e) {
+        email = localStorage.getItem('employeeEmail') || '';
+        password = localStorage.getItem('employeePassword') || '';
+      }
     }
     
-    const email = employeeData.email || employeeData.employeeEmail || '';
-    const password = employeeData.password || employeeData.employeePassword || '';
-    const storedPassword = localStorage.getItem("employeePassword") || '';
-    let finalPassword = password || storedPassword || '';
-    if (!finalPassword) {
-      finalPassword = '456789';
+    if (!email || !password) {
+      const employeeDataRaw = localStorage.getItem("employeeData");
+      let employeeData = {};
+      try {
+        employeeData = JSON.parse(employeeDataRaw || "{}");
+      } catch (e) {}
+      email = email || employeeData.email || employeeData.employeeEmail || '';
+      password = password || employeeData.password || employeeData.employeePassword || localStorage.getItem("employeePassword") || '456789';
     }
-    
+
     const baseUrl = 'https://ingrainhire.ingrainsystems.com/client-login';
     const params = new URLSearchParams();
-    if (email) params.append('email', email);
-    if (finalPassword) params.append('password', finalPassword);
+    params.append('email', email);
+    params.append('password', password);
     params.append('autoLogin', 'true');
+    params.append('role', userRole || 'employee');
+    params.append('clientLogin', 'true');
+    params.append('skipOtp', 'true');
     
-    const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+    const url = `${baseUrl}?${params.toString()}`;
     window.open(url, '_blank');
   };
 

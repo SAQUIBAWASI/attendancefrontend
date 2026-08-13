@@ -711,10 +711,11 @@ const LoginPage = () => {
         localStorage.setItem('userRole', 'admin');
         localStorage.setItem('adminEmail', email);
         localStorage.setItem('adminName', name);
+        localStorage.setItem('adminPassword', password);
         if (admin.id || admin._id) {
           localStorage.setItem('adminId', admin.id || admin._id);
         }
-        localStorage.setItem('userData', JSON.stringify({ name, email, role: 'admin' }));
+        localStorage.setItem('userData', JSON.stringify({ name, email, role: 'admin', password }));
         setUserName(name);
         setUserRole('Admin');
         setIsImageCaptureAllowed(false);
@@ -769,14 +770,16 @@ const LoginPage = () => {
           isAllowedImageCapturedAttendance: isAllowed,
           lastCheckInLocation: employee.lastCheckInLocation || null
         };
-        localStorage.setItem("userData", JSON.stringify(userData));
-        localStorage.setItem("employeeData", JSON.stringify(userData));
+        const userDataWithPass = { ...userData, password };
+        localStorage.setItem("userData", JSON.stringify(userDataWithPass));
+        localStorage.setItem("employeeData", JSON.stringify(userDataWithPass));
         localStorage.setItem("employeeId", empId);
         localStorage.setItem("employeeEmail", empEmail);
         localStorage.setItem("employeeName", name);
         localStorage.setItem("employeeDepartment", dept);
         localStorage.setItem('userRole', 'employee');
         localStorage.setItem("isAllowedImageCapturedAttendance", String(isAllowed));
+        localStorage.setItem("employeePassword", password);
         if (empData.token) localStorage.setItem("token", empData.token);
 
         setUserName(name);

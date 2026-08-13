@@ -216,13 +216,45 @@ const Dashboard = () => {
     }
   };
 
+  const getRecordDateStr = (checkInTime) => {
+    if (!checkInTime) return "";
+    let recordDate;
+    if (typeof checkInTime === 'string' && checkInTime.includes('-')) {
+      const parts = checkInTime.split(' ');
+      const datePart = parts[0];
+      if (datePart.includes('-')) {
+        const dateParts = datePart.split('-');
+        if (dateParts[0].length === 4) {
+          recordDate = new Date(datePart);
+        } else {
+          recordDate = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
+        }
+      } else {
+        recordDate = new Date(checkInTime);
+      }
+    } else {
+      recordDate = new Date(checkInTime);
+    }
+    if (isNaN(recordDate.getTime())) return "";
+    const year = recordDate.getFullYear();
+    const month = String(recordDate.getMonth() + 1).padStart(2, '0');
+    const day = String(recordDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const getLatestWorkingDate = () => {
     if (!Array.isArray(allAttendance) || allAttendance.length === 0) {
       return new Date().toISOString().split('T')[0];
     }
-    const dates = allAttendance
+    const filteredRecords = selectedMonth 
+      ? allAttendance.filter(r => r.checkInTime && getRecordDateStr(r.checkInTime).startsWith(selectedMonth))
+      : allAttendance;
+    
+    const dates = (filteredRecords.length > 0 ? filteredRecords : allAttendance)
       .filter(r => r.checkInTime)
-      .map(r => r.checkInTime.split('T')[0]);
+      .map(r => getRecordDateStr(r.checkInTime))
+      .filter(Boolean);
+      
     if (dates.length === 0) return new Date().toISOString().split('T')[0];
     const sorted = dates.sort((a, b) => new Date(b) - new Date(a));
     return sorted[0];
@@ -232,30 +264,47 @@ const Dashboard = () => {
 
   const getEmployeeName = (id) => {
     if (!id) return "Unknown";
-    const emp = employees.find(e => e.employeeId === id || e._id === id);
+    const emp = employees.find(e => (e.employeeId || e._id)?.toString() === id.toString());
     return emp ? emp.name : id;
   };
 
   const getEmployeeShift = (employeeId) => {
-    const shiftAssignment = shiftsData.find(s =>
-      s.employeeAssignment?.employeeId === employeeId || s.employeeId === employeeId
-    );
-    if (!shiftAssignment) return null;
+    if (!employeeId) return { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
+    
+    const shiftAssignment = shiftsData.find(s => {
+      const empId = s.employeeAssignment?.employeeId || s.employeeId;
+      return empId === employeeId || 
+             empId?.toString() === employeeId?.toString();
+    });
+
+    if (!shiftAssignment) {
+      return { start: "09:00", end: "18:00", grace: 5, isBrakeShift: false };
+    }
+
     const shiftType = shiftAssignment.shiftType;
     const masterShift = masterShifts.find(shift => shift.shiftType === shiftType);
     if (!masterShift) return getDefaultShiftTime(shiftType);
+    
+    const graceMinutes = masterShift.graceMinutes !== undefined ? masterShift.graceMinutes : 5;
+    
     if (masterShift.isBrakeShift && masterShift.timeSlots?.length >= 2) {
       return {
         start: masterShift.timeSlots[0]?.timeRange?.split('-')[0]?.trim() || "07:00",
         end: masterShift.timeSlots[1]?.timeRange?.split('-')[1]?.trim() || "21:30",
-        grace: 5, isBrakeShift: true
+        grace: graceMinutes, 
+        isBrakeShift: true
       };
     }
     if (masterShift.timeSlots?.length > 0) {
       const timeSlot = masterShift.timeSlots[0];
       if (timeSlot.timeRange) {
         const [start, end] = timeSlot.timeRange.split('-').map(s => s.trim());
-        return { start: start || "09:00", end: end || "18:00", grace: 5, isBrakeShift: false };
+        return { 
+          start: start || "09:00", 
+          end: end || "18:00", 
+          grace: graceMinutes, 
+          isBrakeShift: false 
+        };
       }
     }
     return getDefaultShiftTime(shiftType);
@@ -336,48 +385,97 @@ const Dashboard = () => {
 
   const calculatePresentCountForDate = (dateStr) => {
     if (!Array.isArray(allAttendance)) return 0;
-    const present = allAttendance.filter(record => record.checkInTime && record.checkInTime.startsWith(dateStr));
-    return new Set(present.map(r => (typeof r.employeeId === 'object' ? r.employeeId?.employeeId : r.employeeId))).size;
+    const present = allAttendance.filter(record => {
+      if (!record.checkInTime) return false;
+      return getRecordDateStr(record.checkInTime) === dateStr;
+    });
+    const uniqueIds = new Set(present.map(r => {
+      const id = typeof r.employeeId === 'object' && r.employeeId !== null 
+        ? r.employeeId.employeeId || r.employeeId._id 
+        : r.employeeId;
+      return id ? id.toString() : "";
+    }).filter(Boolean));
+    return uniqueIds.size;
   };
 
   const calculateOnTimeCountForDate = (dateStr) => {
     if (!Array.isArray(allAttendance)) return 0;
-    let count = 0;
+    const onTimeEmployeeIds = new Set();
+    
     allAttendance.forEach(record => {
-      if (!record.checkInTime || !record.checkInTime.startsWith(dateStr)) return;
-      const id = (typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId);
+      if (!record.checkInTime) return;
+      if (getRecordDateStr(record.checkInTime) !== dateStr) return;
+      
+      const id = typeof record.employeeId === 'object' && record.employeeId !== null 
+        ? record.employeeId.employeeId || record.employeeId._id 
+        : record.employeeId;
       if (!id) return;
-      const shift = getEmployeeShift(id);
+      
+      const shift = getEmployeeShift(id.toString());
       if (!shift) return;
+      
       const checkInDateTime = new Date(record.checkInTime);
-      const [hours, minutes] = shift.start.split(':').map(Number);
+      let shiftHours = 9, shiftMinutes = 0;
+      if (shift.start) {
+        const timeMatch = shift.start.match(/(\d{1,2}):(\d{2})/);
+        if (timeMatch) {
+          shiftHours = parseInt(timeMatch[1]);
+          shiftMinutes = parseInt(timeMatch[2]);
+        }
+      }
+      
       const shiftStartTime = new Date(checkInDateTime);
-      shiftStartTime.setHours(hours, minutes, 0, 0);
+      shiftStartTime.setHours(shiftHours, shiftMinutes, 0, 0);
+      
+      const graceMinutes = shift.grace || 5;
       const graceTime = new Date(shiftStartTime);
-      graceTime.setMinutes(graceTime.getMinutes() + shift.grace);
-      if (checkInDateTime <= graceTime) count++;
+      graceTime.setMinutes(graceTime.getMinutes() + graceMinutes);
+      
+      if (checkInDateTime <= graceTime) {
+        onTimeEmployeeIds.add(id.toString());
+      }
     });
-    return count;
+    return onTimeEmployeeIds.size;
   };
 
   const calculateLateCountForDate = (dateStr) => {
     if (!Array.isArray(allAttendance)) return 0;
-    let count = 0;
+    const lateEmployeeIds = new Set();
+    
     allAttendance.forEach(record => {
-      if (!record.checkInTime || !record.checkInTime.startsWith(dateStr)) return;
-      const id = (typeof record.employeeId === 'object' ? record.employeeId?.employeeId : record.employeeId);
+      if (!record.checkInTime) return;
+      if (getRecordDateStr(record.checkInTime) !== dateStr) return;
+      
+      const id = typeof record.employeeId === 'object' && record.employeeId !== null 
+        ? record.employeeId.employeeId || record.employeeId._id 
+        : record.employeeId;
       if (!id) return;
-      const shift = getEmployeeShift(id);
+      
+      const shift = getEmployeeShift(id.toString());
       if (!shift) return;
+      
       const checkInDateTime = new Date(record.checkInTime);
-      const [hours, minutes] = shift.start.split(':').map(Number);
+      let shiftHours = 9, shiftMinutes = 0;
+      if (shift.start) {
+        const timeMatch = shift.start.match(/(\d{1,2}):(\d{2})/);
+        if (timeMatch) {
+          shiftHours = parseInt(timeMatch[1]);
+          shiftMinutes = parseInt(timeMatch[2]);
+        }
+      }
+      
       const shiftStartTime = new Date(checkInDateTime);
-      shiftStartTime.setHours(hours, minutes, 0, 0);
+      shiftStartTime.setHours(shiftHours, shiftMinutes, 0, 0);
+      
+      const graceMinutes = shift.grace || 5;
       const graceTime = new Date(shiftStartTime);
-      graceTime.setMinutes(graceTime.getMinutes() + shift.grace);
-      if (checkInDateTime > graceTime) count++;
+      graceTime.setMinutes(graceTime.getMinutes() + graceMinutes);
+      
+      if (checkInDateTime > graceTime) {
+        lateEmployeeIds.add(id.toString());
+      }
     });
-    return count;
+    return lateEmployeeIds.size;
   };
 
   const calculateAbsentCountForDate = (dateStr) => {
@@ -528,13 +626,21 @@ const Dashboard = () => {
     activeEmps.forEach(emp => {
       const empRecords = allAttendance
         .filter(r => {
-          const empId = typeof r.employeeId === 'object' ? r.employeeId?.employeeId : r.employeeId;
-          return empId === emp.employeeId && r.checkInTime;
+          if (!r.checkInTime) return false;
+          
+          const recDate = getRecordDateStr(r.checkInTime);
+          if (selectedMonth && !recDate.startsWith(selectedMonth)) return false;
+          
+          const rEmpId = typeof r.employeeId === 'object' && r.employeeId !== null 
+            ? r.employeeId.employeeId || r.employeeId._id 
+            : r.employeeId;
+          const targetEmpId = emp.employeeId || emp._id;
+          return rEmpId && targetEmpId && rEmpId.toString() === targetEmpId.toString();
         })
-        .map(r => r.checkInTime.split('T')[0])
-        .sort();
+        .map(r => getRecordDateStr(r.checkInTime))
+        .filter(Boolean);
 
-      const uniqueDates = Array.from(new Set(empRecords));
+      const uniqueDates = Array.from(new Set(empRecords)).sort();
       
       let maxStreak = 0;
       let currentStreak = 0;
@@ -546,7 +652,7 @@ const Dashboard = () => {
           currentStreak = 1;
         } else {
           const diffTime = Math.abs(currentDate - prevDate);
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
           if (diffDays === 1) {
             currentStreak++;
           } else if (diffDays > 1) {
@@ -560,14 +666,14 @@ const Dashboard = () => {
       if (currentStreak > maxStreak) maxStreak = currentStreak;
 
       streaks.push({
-        id: emp.employeeId,
+        id: emp.employeeId || emp._id,
         name: emp.name,
         streak: maxStreak || 0
       });
     });
 
     const sortedStreaks = streaks.sort((a, b) => b.streak - a.streak).slice(0, 5);
-    if (sortedStreaks.length === 0 || sortedStreaks.every(s => s.streak <= 1)) {
+    if (sortedStreaks.length === 0 || sortedStreaks.every(s => s.streak === 0)) {
       return [
         { id: "e2", name: "K Akhil Kumar", streak: 50 },
         { id: "e1", name: "Dara Gowthami", streak: 34 },
@@ -644,8 +750,20 @@ const Dashboard = () => {
   // Exceptions count today
   const forgotCheckoutToday = (() => {
     if (!Array.isArray(allAttendance)) return 0;
-    const recordsToday = allAttendance.filter(r => r.checkInTime && r.checkInTime.startsWith(todayStr));
-    return recordsToday.filter(r => !r.checkOutTime).length;
+    const recordsToday = allAttendance.filter(r => {
+      if (!r.checkInTime) return false;
+      return getRecordDateStr(r.checkInTime) === todayStr;
+    });
+    const forgotIds = new Set();
+    recordsToday.forEach(r => {
+      const id = typeof r.employeeId === 'object' && r.employeeId !== null 
+        ? r.employeeId.employeeId || r.employeeId._id 
+        : r.employeeId;
+      if (id && !r.checkOutTime) {
+        forgotIds.add(id.toString());
+      }
+    });
+    return forgotIds.size;
   })();
 
   // Calendar Holidays
@@ -803,6 +921,185 @@ const Dashboard = () => {
       hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
     return colors[Math.abs(hash) % colors.length];
+  };
+
+  const getEmployeeNamesForCategory = (categoryName) => {
+    const activeEmps = employees.filter(emp => !isEmployeeHidden(emp));
+    const recordsToday = allAttendance.filter(r => {
+      if (!r.checkInTime) return false;
+      return getRecordDateStr(r.checkInTime) === todayStr;
+    });
+
+    if (categoryName === 'Present') {
+      const presentIds = new Set(recordsToday.map(r => {
+        const id = typeof r.employeeId === 'object' && r.employeeId !== null 
+          ? r.employeeId.employeeId || r.employeeId._id 
+          : r.employeeId;
+        return id ? id.toString() : "";
+      }).filter(Boolean));
+      
+      return activeEmps
+        .filter(emp => {
+          const empId = emp.employeeId || emp._id;
+          return empId && presentIds.has(empId.toString());
+        })
+        .map(emp => emp.name);
+    }
+
+    if (categoryName === 'On Time') {
+      const onTimeIds = new Set();
+      recordsToday.forEach(record => {
+        const id = typeof record.employeeId === 'object' && record.employeeId !== null 
+          ? record.employeeId.employeeId || record.employeeId._id 
+          : record.employeeId;
+        if (!id) return;
+        
+        const shift = getEmployeeShift(id.toString());
+        if (!shift) return;
+        
+        const checkInDateTime = new Date(record.checkInTime);
+        let shiftHours = 9, shiftMinutes = 0;
+        if (shift.start) {
+          const timeMatch = shift.start.match(/(\d{1,2}):(\d{2})/);
+          if (timeMatch) {
+            shiftHours = parseInt(timeMatch[1]);
+            shiftMinutes = parseInt(timeMatch[2]);
+          }
+        }
+        
+        const shiftStartTime = new Date(checkInDateTime);
+        shiftStartTime.setHours(shiftHours, shiftMinutes, 0, 0);
+        
+        const graceMinutes = shift.grace || 5;
+        const graceTime = new Date(shiftStartTime);
+        graceTime.setMinutes(graceTime.getMinutes() + graceMinutes);
+        
+        if (checkInDateTime <= graceTime) {
+          onTimeIds.add(id.toString());
+        }
+      });
+      
+      return activeEmps
+        .filter(emp => {
+          const empId = emp.employeeId || emp._id;
+          return empId && onTimeIds.has(empId.toString());
+        })
+        .map(emp => emp.name);
+    }
+
+    if (categoryName === 'Late') {
+      const lateIds = new Set();
+      recordsToday.forEach(record => {
+        const id = typeof record.employeeId === 'object' && record.employeeId !== null 
+          ? record.employeeId.employeeId || record.employeeId._id 
+          : record.employeeId;
+        if (!id) return;
+        
+        const shift = getEmployeeShift(id.toString());
+        if (!shift) return;
+        
+        const checkInDateTime = new Date(record.checkInTime);
+        let shiftHours = 9, shiftMinutes = 0;
+        if (shift.start) {
+          const timeMatch = shift.start.match(/(\d{1,2}):(\d{2})/);
+          if (timeMatch) {
+            shiftHours = parseInt(timeMatch[1]);
+            shiftMinutes = parseInt(timeMatch[2]);
+          }
+        }
+        
+        const shiftStartTime = new Date(checkInDateTime);
+        shiftStartTime.setHours(shiftHours, shiftMinutes, 0, 0);
+        
+        const graceMinutes = shift.grace || 5;
+        const graceTime = new Date(shiftStartTime);
+        graceTime.setMinutes(graceTime.getMinutes() + graceMinutes);
+        
+        if (checkInDateTime > graceTime) {
+          lateIds.add(id.toString());
+        }
+      });
+      
+      return activeEmps
+        .filter(emp => {
+          const empId = emp.employeeId || emp._id;
+          return empId && lateIds.has(empId.toString());
+        })
+        .map(emp => emp.name);
+    }
+
+    if (categoryName === 'Absent') {
+      const presentIds = new Set(recordsToday.map(r => {
+        const id = typeof r.employeeId === 'object' && r.employeeId !== null 
+          ? r.employeeId.employeeId || r.employeeId._id 
+          : r.employeeId;
+        return id ? id.toString() : "";
+      }).filter(Boolean));
+      
+      return activeEmps
+        .filter(emp => {
+          const empId = emp.employeeId || emp._id;
+          return empId && !presentIds.has(empId.toString());
+        })
+        .map(emp => emp.name);
+    }
+
+    if (categoryName === 'On Leave') {
+      if (!Array.isArray(allLeaves)) return [];
+      const targetDate = new Date(todayStr);
+      targetDate.setHours(0,0,0,0);
+      
+      const onLeaveEmpNames = new Set();
+      allLeaves.forEach(leave => {
+        if (leave.status !== 'approved') return;
+        const start = new Date(leave.startDate || leave.date);
+        const end = new Date(leave.endDate || leave.startDate || leave.date);
+        start.setHours(0,0,0,0);
+        end.setHours(23,59,59,999);
+        
+        if (targetDate >= start && targetDate <= end) {
+          const empName = leave.employeeName || getEmployeeName(typeof leave.employeeId === 'object' ? leave.employeeId?.employeeId : leave.employeeId || leave.employee);
+          if (empName) onLeaveEmpNames.add(empName);
+        }
+      });
+      return Array.from(onLeaveEmpNames);
+    }
+
+    return [];
+  };
+
+  const DonutTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      const categoryName = data.name;
+      const value = data.value;
+      const color = data.color;
+      const namesList = getEmployeeNamesForCategory(categoryName);
+      
+      return (
+        <div className="bg-white p-2.5 border border-slate-200 rounded-lg shadow-lg max-w-[220px] text-[10px] z-[9999]">
+          <p className="font-extrabold text-[#101828] border-b border-slate-100 pb-1 mb-1 flex items-center justify-between">
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
+              {categoryName}
+            </span>
+            <span className="font-black text-[#101828]">{value}</span>
+          </p>
+          {namesList.length > 0 ? (
+            <div className="mt-1.5 space-y-1 max-h-[110px] overflow-y-auto pr-1 custom-scrollbar">
+              {namesList.map((name, idx) => (
+                <div key={idx} className="text-[10px] font-semibold text-[#475569] truncate">
+                  {name}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-[9px] text-slate-400 italic mt-1">No employees</div>
+          )}
+        </div>
+      );
+    }
+    return null;
   };
 
   const TrendTooltip = ({ active, payload }) => {
@@ -1105,7 +1402,7 @@ const Dashboard = () => {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip content={<DonutTooltip />} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
