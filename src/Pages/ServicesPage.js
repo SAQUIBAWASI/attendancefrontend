@@ -150,8 +150,8 @@ const ServicesPage = () => {
     <div className="min-h-screen bg-white">
       <TimelyNavbar/>
       
-      {/* Hero Section - Premium */}
-      <section className="relative px-6 py-12 overflow-hidden bg-white lg:px-20 lg:py-16">
+      {/* Hero Section - with top padding */}
+      <section className="relative px-6 py-12 overflow-hidden bg-white lg:px-20 lg:py-16 pt-20 md:pt-24 lg:pt-28">
         <div className="absolute inset-0 opacity-30" style={{ backgroundImage: `url(${svgPattern})` }}></div>
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100/20 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-green-100/20 rounded-full blur-3xl"></div>

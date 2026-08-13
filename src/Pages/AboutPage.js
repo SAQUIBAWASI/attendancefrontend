@@ -63,8 +63,8 @@ const AboutPage = () => {
     <div className="min-h-screen bg-white">
       <TimelyNavbar />
       
-      {/* Hero Section */}
-      <section className="relative px-6 py-12 overflow-hidden bg-white lg:px-20 lg:py-16">
+      {/* Hero Section - Added top padding for navbar */}
+      <section className="relative px-6 py-12 overflow-hidden bg-white lg:px-20 lg:py-16 pt-20 md:pt-24 lg:pt-28">
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100 rounded-full opacity-20 -translate-y-1/2 translate-x-1/2"></div>
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-green-100 rounded-full opacity-20 translate-y-1/2 -translate-x-1/2"></div>
         

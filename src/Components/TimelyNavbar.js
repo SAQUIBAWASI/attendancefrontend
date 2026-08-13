@@ -89,7 +89,7 @@ const TimelyNavbar = () => {
                 : 'bg-white shadow-sm'
         }`}>
             <div className="px-2 sm:px-4 mx-auto max-w-7xl lg:px-8">
-                <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
+                <div className="flex items-center justify-between h-16 sm:h-16 lg:h-20">
                     {/* Logo */}
                     <Link 
                         to="/" 
@@ -111,7 +111,7 @@ const TimelyNavbar = () => {
                                 <Link
                                     key={item.name}
                                     to={item.path}
-                                    className={`px-3 py-1.5 rounded-lg no-underline text-sm font-medium transition-all duration-200 ${
+                                    className={`px-3 py-2 rounded-lg no-underline text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                                         isActive(item.path)
                                             ? 'text-green-600 bg-green-50'
                                             : 'text-gray-700 hover:text-green-600 hover:bg-gray-50'
@@ -129,7 +129,7 @@ const TimelyNavbar = () => {
                                 onMouseLeave={handleDropdownLeave}
                             >
                                 <button
-                                    className={`px-3 py-1.5 rounded-lg no-underline text-sm font-medium transition-all duration-200 flex items-center gap-1 ${
+                                    className={`px-3 py-2 rounded-lg no-underline text-sm font-medium transition-all duration-200 flex items-center gap-1 whitespace-nowrap ${
                                         isPartnersActive() || isPartnersOpen
                                             ? 'text-green-600 bg-green-50'
                                             : 'text-gray-700 hover:text-green-600 hover:bg-gray-50'
@@ -155,7 +155,7 @@ const TimelyNavbar = () => {
                                             <Link
                                                 key={item.name}
                                                 to={item.path}
-                                                className={`flex items-center gap-2 px-3 py-2 no-underline text-sm font-medium transition-all duration-200 ${
+                                                className={`flex items-center gap-2 px-3 py-2.5 no-underline text-sm font-medium transition-all duration-200 ${
                                                     isActive(item.path)
                                                         ? 'text-green-600 bg-green-50'
                                                         : 'text-gray-700 hover:text-green-600 hover:bg-gray-50'
@@ -173,39 +173,39 @@ const TimelyNavbar = () => {
                         </div>
                     </div>
 
-                    {/* Right Side Actions */}
-                    <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
-                        {/* Login Button - Icon + Text on all screens, text hidden only on very small */}
+                    {/* Right Side Actions - Fixed size buttons */}
+                    <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 flex-shrink-0">
+                        {/* Login Button */}
                         <button
                             onClick={handleLogin}
-                            className="flex items-center justify-center gap-1.5 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white rounded-full transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 whitespace-nowrap"
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white rounded-full transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 whitespace-nowrap min-w-[90px]"
                             style={{ backgroundColor: "#007a52" }}
                         >
-                            <User size={15} />
-                            <span className="hidden sm:inline">Login</span>
+                            <User size={18} className="flex-shrink-0" />
+                            <span>Login</span>
                         </button>
 
-                        {/* WhatsApp Button - Icon + Text on all screens, text hidden only on very small */}
+                        {/* WhatsApp Button */}
                         <button
                             onClick={handleWhatsApp}
-                            className="flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white rounded-full transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 whitespace-nowrap"
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white rounded-full transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 whitespace-nowrap min-w-[90px]"
                             style={{ backgroundColor: "#25D366" }}
                         >
                             <img
                                 src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
                                 alt="WhatsApp"
-                                className="w-4 h-4 sm:w-4 sm:h-4"
+                                className="w-5 h-5 flex-shrink-0"
                             />
-                            <span className="hidden sm:inline">Chat</span>
+                            <span>Chat</span>
                         </button>
 
-                        {/* Mobile Menu Button - Always last, visible only on small screens */}
+                        {/* Mobile Menu Button */}
                         <button
                             onClick={() => setIsOpen(!isOpen)}
-                            className="p-1.5 sm:p-2 text-gray-600 rounded-lg lg:hidden hover:bg-gray-100 transition-colors"
+                            className="p-2 text-gray-600 rounded-lg lg:hidden hover:bg-gray-100 transition-colors flex-shrink-0"
                             aria-label="Toggle menu"
                         >
-                            {isOpen ? <X size={20} className="sm:w-5 sm:h-5" /> : <Menu size={20} className="sm:w-5 sm:h-5" />}
+                            {isOpen ? <X size={24} /> : <Menu size={24} />}
                         </button>
                     </div>
                 </div>

@@ -266,8 +266,8 @@ const HomePage = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
       <TimelyNavbar/>
       
-      {/* Hero Section - Full Image Background */}
-      <section className="relative overflow-hidden min-h-[500px] flex items-center">
+      {/* Hero Section - No white shadow at bottom */}
+      <section className="relative overflow-hidden min-h-[500px] flex items-center pt-20 md:pt-24 lg:pt-28">
         <div className="absolute inset-0">
           <img 
             src={img1} 
@@ -284,7 +284,7 @@ const HomePage = () => {
         <div className="absolute bottom-20 left-20 w-40 h-40 bg-blue-400/10 rounded-full blur-3xl animate-pulse delay-300"></div>
         <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-emerald-300/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
         
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
           <div className="max-w-3xl">
             <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight">
               Trusted Healthcare,{' '}
@@ -337,11 +337,11 @@ const HomePage = () => {
           </div>
         </div>
         
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent"></div>
+        {/* REMOVED - White gradient at bottom */}
       </section>
 
-      {/* Live Stats Bar - Moved DOWN with margin-top */}
-      <section className="px-4 py-6 bg-white/80 backdrop-blur-sm border-y border-slate-100 relative z-10 mt-4 md:mt-6">
+      {/* Live Stats Bar */}
+      <section className="px-4 py-6 bg-white/80 backdrop-blur-sm border-y border-slate-100 relative z-10">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-3 gap-3 md:gap-6">
             {[
@@ -461,7 +461,7 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* FREE HEALTH CAMP - With Image Background */}
+      {/* FREE HEALTH CAMP - No white shadow */}
       <section className="relative overflow-hidden min-h-[500px] flex items-center">
         <div className="absolute inset-0">
           <img 
@@ -555,7 +555,7 @@ const HomePage = () => {
           </button>
         </div>
         
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent"></div>
+        {/* REMOVED - White gradient at bottom */}
       </section>
 
       {/* Interactive CTA */}
@@ -804,7 +804,7 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Brand Promise - With Indian Image Background */}
+      {/* Brand Promise - No white shadow */}
       <section className="relative overflow-hidden min-h-[400px] flex items-center">
         <div className="absolute inset-0">
           <img 
@@ -818,7 +818,6 @@ const HomePage = () => {
         
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url(${svgPattern2})` }}></div>
         
-        {/* Indian flag colors overlay */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-orange-500 via-white to-green-500 opacity-60"></div>
         
         <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
@@ -846,7 +845,7 @@ const HomePage = () => {
           </button>
         </div>
         
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent"></div>
+        {/* REMOVED - White gradient at bottom */}
       </section>
 
       <TimelyFooter/>
