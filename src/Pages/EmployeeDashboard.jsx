@@ -4978,9 +4978,10 @@ import { API_BASE_URL } from "../config";
 import { subscribeToPushNotifications } from "../utils/pushNotification";
 import CelebrationCard from "../Components/CelebrationCard";
 import {
-  Bar,
-  BarChart,
+  Area,
   CartesianGrid,
+  ComposedChart,
+  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -5001,10 +5002,8 @@ const EmployeeDashboard = () => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   };
 
-  const [lateDate, setLateDate] = useState("");
-  const [lateMonth, setLateMonth] = useState(getCurrentMonth());
-  const [absentDate, setAbsentDate] = useState("");
-  const [absentMonth, setAbsentMonth] = useState(getCurrentMonth());
+  const [trendYear, setTrendYear] = useState(new Date().getFullYear());
+  const [employeeLeaves, setEmployeeLeaves] = useState([]);
 
   const [employeeStats, setEmployeeStats] = useState({
     presentThisMonth: 0,
@@ -5012,9 +5011,6 @@ const EmployeeDashboard = () => {
     lateThisMonth: 0,
     totalWorkingDays: 0
   });
-
-  const [lateChartData, setLateChartData] = useState([]);
-  const [absentChartData, setAbsentChartData] = useState([]);
   const [allAttendance, setAllAttendance] = useState([]);
   const [userAttendance, setUserAttendance] = useState([]);
   const [birthdaysToday, setBirthdaysToday] = useState([]);
@@ -5071,26 +5067,12 @@ const EmployeeDashboard = () => {
           });
           setUserAttendance(filteredAttendance);
 
-          let resolvedMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
-
-          if (filteredAttendance.length > 0) {
-            const validDates = filteredAttendance
-              .map(r => r.checkInTime ? new Date(r.checkInTime) : null)
-              .filter(d => d && !isNaN(d.getTime()));
-
-            if (validDates.length > 0) {
-              const latestDate = new Date(Math.max(...validDates));
-              resolvedMonth = `${latestDate.getFullYear()}-${String(latestDate.getMonth() + 1).padStart(2, '0')}`;
-            }
-          }
-
-          setLateMonth(resolvedMonth);
-          setAbsentMonth(resolvedMonth);
-          updateChartDataWithMonth(filteredAttendance, profileData, resolvedMonth);
           calculateEmployeeStats(filteredAttendance, profileData);
 
           const leaveRes = await axios.get(`${BASE_URL}api/leaves/employeeleaves/${targetId}`);
-          const pendingLeavesCount = leaveRes.data?.records?.filter(l => l.status === "pending").length || 0;
+          const leaveRecords = leaveRes.data?.records || leaveRes.data?.data || (Array.isArray(leaveRes.data) ? leaveRes.data : []);
+          setEmployeeLeaves(leaveRecords);
+          const pendingLeavesCount = leaveRecords.filter(l => l.status === "pending").length || 0;
           setEmployeeStats(prev => ({ ...prev, pendingLeaves: pendingLeavesCount }));
 
           try {
@@ -5467,8 +5449,9 @@ const EmployeeDashboard = () => {
   };
 
   const calculateEmployeeStats = (attendance, profileData) => {
-    if (!lateMonth) return;
-    const parts = lateMonth.split('-');
+    const statsMonth = getCurrentMonth();
+    if (!statsMonth) return;
+    const parts = statsMonth.split('-');
     if (parts.length < 2) return;
     const [year, month] = parts.map(Number);
     if (isNaN(year) || isNaN(month)) return;
@@ -5546,145 +5529,90 @@ const EmployeeDashboard = () => {
     if (!profile || !allAttendance.length) return;
 
     const targetId = profile.employeeId;
-    const userAttendance = allAttendance.filter(record => {
+    const filteredAttendance = allAttendance.filter(record => {
       const recordId = typeof record.employeeId === 'object' ?
         record.employeeId?.employeeId : record.employeeId;
       return recordId === targetId;
     });
 
-    updateChartData(userAttendance, profile);
-    calculateEmployeeStats(userAttendance, profile);
-  }, [lateMonth, absentMonth, lateDate, absentDate]);
+    calculateEmployeeStats(filteredAttendance, profile);
+  }, [profile, allAttendance]);
 
-  const updateChartData = (userAttendance, profileData) => {
-    const lateAnalysis = analyzeLateDays(userAttendance, profileData);
-    const absentAnalysis = analyzeAbsentDays(userAttendance, profileData);
-    setLateChartData(lateAnalysis.chartData);
-    setAbsentChartData(absentAnalysis.chartData);
-  };
-
-  const updateChartDataWithMonth = (attendance, profileData, month) => {
-    const lateAnalysis = analyzeLateDaysForMonth(attendance, profileData, month, "");
-    const absentAnalysis = analyzeAbsentDaysForMonth(attendance, profileData, month, "");
-    setLateChartData(lateAnalysis.chartData);
-    setAbsentChartData(absentAnalysis.chartData);
-  };
-
-  const analyzeLateDays = (attendance, profileData) =>
-    analyzeLateDaysForMonth(attendance, profileData, lateMonth, lateDate);
-
-  const analyzeLateDaysForMonth = (attendance, profileData, theMonth, theDate) => {
-    if (!theMonth) return { chartData: [] };
-    const parts = theMonth.split('-');
-    if (parts.length < 2) return { chartData: [] };
-    const [year, month] = parts.map(Number);
-    if (isNaN(year) || isNaN(month)) return { chartData: [] };
-
-    const weeklyLate = { 'Week 1': 0, 'Week 2': 0, 'Week 3': 0, 'Week 4': 0, 'Week 5': 0 };
-
-    attendance.forEach(record => {
-      if (!record.checkInTime) return;
-      const recordDate = new Date(record.checkInTime);
-
-      if (theDate) {
-        if (recordDate.toISOString().split('T')[0] !== theDate) return;
-      } else {
-        if (recordDate.getFullYear() !== year || recordDate.getMonth() + 1 !== month) return;
-      }
-
-      const shiftStart = getShiftStartTime(profileData?.shift || "D");
-      const checkInTime = new Date(record.checkInTime);
-      const [hours, mins] = shiftStart.split(':').map(Number);
-      const shiftStartTime = new Date(checkInTime);
-      shiftStartTime.setHours(hours, mins, 0, 0);
-      const graceTime = new Date(shiftStartTime);
-      graceTime.setMinutes(graceTime.getMinutes() + 5);
-
-      if (checkInTime > graceTime) {
-        const lateMins = Math.floor((checkInTime - graceTime) / (1000 * 60));
-        const day = recordDate.getDate();
-        let weekNum = day <= 7 ? 1 : day <= 14 ? 2 : day <= 21 ? 3 : day <= 28 ? 4 : 5;
-        weeklyLate[`Week ${weekNum}`] += lateMins;
-      }
-    });
-
-    let chartData = Object.entries(weeklyLate).map(([week, minutes]) => ({ name: week, value: minutes, label: `${minutes} min` }));
-
-    if (theDate) {
-      chartData = chartData.filter(d => d.value > 0);
-      if (chartData.length === 0) chartData = [{ name: theDate, value: 0, label: '0 min' }];
-      else chartData[0].name = theDate;
-    }
-
-    return { chartData };
-  };
-
-  const analyzeAbsentDays = (attendance, profileData) =>
-    analyzeAbsentDaysForMonth(attendance, profileData, absentMonth, absentDate);
-
-  const analyzeAbsentDaysForMonth = (attendance, profileData, theMonth, theDate) => {
-    if (!theMonth) return { chartData: [] };
-    const parts = theMonth.split('-');
-    if (parts.length < 2) return { chartData: [] };
-    const [year, month] = parts.map(Number);
-    if (isNaN(year) || isNaN(month)) return { chartData: [] };
-
-    const daysInMonth = new Date(year, month, 0).getDate();
+  const getMonthlyTrend = () => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const today = new Date();
-    let maxDayToCheck = daysInMonth;
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth() + 1;
-    
-    if (year > currentYear || (year === currentYear && month > currentMonth)) {
-      maxDayToCheck = 0;
-    } else if (year === currentYear && month === currentMonth) {
-      maxDayToCheck = today.getDate();
-    }
+    const data = [];
 
-    const workingDayMap = {};
-    const workingDays = [];
-    for (let day = 1; day <= maxDayToCheck; day++) {
-      const d = new Date(year, month - 1, day).getDay();
-      if (d >= 1 && d <= 6) { workingDayMap[day] = true; workingDays.push(day); }
-    }
+    months.forEach((month, idx) => {
+      const monthNum = idx + 1;
+      if (trendYear > today.getFullYear() || (trendYear === today.getFullYear() && monthNum > today.getMonth() + 1)) {
+        return;
+      }
 
-    const presentDays = new Set();
-    attendance.forEach(record => {
-      if (!record.checkInTime) return;
-      const recordDate = new Date(record.checkInTime);
-      if (theDate) {
-        if (recordDate.toISOString().split('T')[0] !== theDate) return;
-      } else {
-        if (recordDate.getFullYear() !== year || recordDate.getMonth() + 1 !== month) return;
+      const daysInMonth = new Date(trendYear, monthNum, 0).getDate();
+      let maxDay = daysInMonth;
+      if (trendYear === today.getFullYear() && monthNum === today.getMonth() + 1) {
+        maxDay = today.getDate();
       }
-      if (record.status === "present" || record.status === "checked-in") {
-        const day = recordDate.getDate();
-        if (workingDayMap[day]) presentDays.add(day);
+
+      let workingDays = 0;
+      const workingDayMap = {};
+      for (let day = 1; day <= maxDay; day++) {
+        const date = new Date(trendYear, idx, day);
+        if (date.getDay() >= 1 && date.getDay() <= 6) {
+          workingDays++;
+          workingDayMap[day] = true;
+        }
       }
+      if (workingDays === 0) workingDays = 1;
+
+      const presentDays = new Set();
+      userAttendance.forEach(record => {
+        if (!record.checkInTime) return;
+        const recordDate = new Date(record.checkInTime);
+        if (recordDate.getFullYear() !== trendYear || recordDate.getMonth() !== idx) return;
+        if (record.status === "present" || record.status === "checked-in") {
+          const day = recordDate.getDate();
+          if (workingDayMap[day]) presentDays.add(day);
+        }
+      });
+
+      const rate = Math.min(100, Math.round((presentDays.size / workingDays) * 100));
+
+      const monthLeaves = employeeLeaves.filter(leave => {
+        if (leave.status !== 'approved') return false;
+        const start = new Date(leave.startDate || leave.date);
+        const end = new Date(leave.endDate || leave.startDate || leave.date);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        const monthStart = new Date(trendYear, idx, 1);
+        const monthEnd = new Date(trendYear, idx + 1, 0, 23, 59, 59, 999);
+        return start <= monthEnd && end >= monthStart;
+      });
+
+      let leavesDays = 0;
+      monthLeaves.forEach(leave => {
+        leavesDays += leave.days || 1;
+      });
+
+      data.push({
+        month,
+        rate,
+        leavesDays,
+        leavesCount: monthLeaves.length,
+        hasData: presentDays.size > 0 || monthLeaves.length > 0 || maxDay > 0
+      });
     });
 
-    if (theDate) {
-      const selectedDate = new Date(theDate);
-      const dow = selectedDate.getDay();
-      if (dow >= 1 && dow <= 6) {
-        const day = selectedDate.getDate();
-        const isPresent = presentDays.has(day);
-        return { chartData: [{ name: theDate, value: isPresent ? 0 : 1, label: isPresent ? 'Present' : 'Absent' }] };
-      }
-      return { chartData: [] };
+    const filteredData = data.filter(d => d.hasData);
+    if (filteredData.length === 0) {
+      const currentMonthIdx = trendYear === today.getFullYear() ? today.getMonth() : 11;
+      return data.slice(Math.max(0, currentMonthIdx - 2), currentMonthIdx + 1);
     }
-
-    const weeklyAbsent = { 'Week 1': 0, 'Week 2': 0, 'Week 3': 0, 'Week 4': 0, 'Week 5': 0 };
-    workingDays.forEach(day => {
-      if (!presentDays.has(day)) {
-        const wk = day <= 7 ? 1 : day <= 14 ? 2 : day <= 21 ? 3 : day <= 28 ? 4 : 5;
-        weeklyAbsent[`Week ${wk}`]++;
-      }
-    });
-
-    const chartData = Object.entries(weeklyAbsent).map(([week, days]) => ({ name: week, value: days, label: `${days} day${days > 1 ? 's' : ''}` }));
-    return { chartData };
+    return filteredData;
   };
+
+  const monthlyTrendData = getMonthlyTrend();
 
   const getShiftStartTime = (shiftType) => {
     const shiftTimes = {
@@ -5695,24 +5623,29 @@ const EmployeeDashboard = () => {
     return shiftTimes[shiftType] || "09:00";
   };
 
-  const LateTooltip = ({ active, payload }) => {
+  const TrendTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
+      const data = payload[0].payload;
       return (
-        <div className="px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-bold text-gray-700">{payload[0].payload.name}</p>
-          <p className="font-medium text-rose-600">{payload[0].payload.label}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const AbsentTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-bold text-gray-700">{payload[0].payload.name}</p>
-          <p className="font-medium text-red-500">{payload[0].payload.label}</p>
+        <div className="bg-white p-2.5 border border-slate-200 rounded-lg shadow-lg max-w-[220px] text-[10px]">
+          <p className="font-extrabold text-[#101828] border-b border-slate-100 pb-1 mb-1 text-center">
+            {data.month} {trendYear}
+          </p>
+          <div className="space-y-0.5">
+            <p className="flex items-center justify-between font-semibold">
+              <span className="text-[#175cd3]">Attendance Rate:</span>
+              <span className="text-[#101828] font-extrabold">{data.rate}%</span>
+            </p>
+            <p className="flex items-center justify-between font-semibold">
+              <span className="text-[#ec4899]">Leaves Taken:</span>
+              <span className="text-[#101828] font-extrabold">{data.leavesDays} {data.leavesDays === 1 ? 'day' : 'days'}</span>
+            </p>
+          </div>
+          {data.leavesDays === 0 ? (
+            <div className="mt-2 pt-1.5 border-t border-slate-100 text-[8px] text-[#667085] font-medium italic text-center">
+              No leaves this month
+            </div>
+          ) : null}
         </div>
       );
     }
@@ -5751,10 +5684,7 @@ const EmployeeDashboard = () => {
       ? new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       : "—";
 
-  const monthLabel = new Date(`${lateMonth}-01`).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
+  const trendYearOptions = [new Date().getFullYear(), new Date().getFullYear() - 1];
 
   const popupIsMyBirthday = birthdaysToday.some(b => b.email === email);
   const popupMyAnniversary = anniversariesToday.find(a => a.email === email);
@@ -5903,58 +5833,94 @@ const EmployeeDashboard = () => {
           </button>
         </div>
 
-        {/* ─── CHARTS ─── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-white/30 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-                <FiClock className="w-3.5 h-3.5 text-amber-500" /> Late Minutes
-              </h3>
-              <input type="month" value={lateMonth} onChange={(e) => { setLateMonth(e.target.value); setLateDate(""); }} className="px-2 py-0.5 text-[10px] font-medium text-gray-600 border border-gray-200 rounded-lg bg-white/50 focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer" />
-            </div>
-            <div className="h-40">
-              {lateChartData.some(d => d.value > 0) || lateDate ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={lateChartData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#6b7280' }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#6b7280' }} />
-                    <Tooltip content={<LateTooltip />} cursor={{ fill: '#f3f4f6' }} />
-                    <Bar dataKey="value" fill="#F59E0B" radius={[4, 4, 0, 0]} barSize={30} />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-400 text-xs">
-                  <div className="text-center"><FiAlertCircle className="w-6 h-6 mx-auto mb-1 opacity-20" /><p>No late records</p></div>
-                </div>
-              )}
-            </div>
+        {/* ─── MONTHLY ATTENDANCE TREND ─── */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-white/30 shadow-sm mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+              <FiTrendingUp className="w-3.5 h-3.5 text-indigo-500" /> My Monthly Attendance Trend
+            </h3>
+            <select
+              value={trendYear}
+              onChange={(e) => setTrendYear(Number(e.target.value))}
+              className="px-2 py-0.5 bg-[#f8fafc] border border-slate-200 rounded-lg text-[9px] font-bold text-slate-600 focus:outline-none cursor-pointer"
+            >
+              {trendYearOptions.map((year) => (
+                <option key={year} value={year}>{year === new Date().getFullYear() ? 'This Year' : year}</option>
+              ))}
+            </select>
           </div>
 
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-white/30 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-                <FiUserX className="w-3.5 h-3.5 text-red-500" /> Absent Days
-              </h3>
-              <input type="month" value={absentMonth} onChange={(e) => { setAbsentMonth(e.target.value); setAbsentDate(""); }} className="px-2 py-0.5 text-[10px] font-medium text-gray-600 border border-gray-200 rounded-lg bg-white/50 focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer" />
-            </div>
-            <div className="h-40">
-              {absentChartData.some(d => d.value > 0) || absentDate ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={absentChartData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#6b7280' }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#6b7280' }} allowDecimals={false} />
-                    <Tooltip content={<AbsentTooltip />} cursor={{ fill: '#f3f4f6' }} />
-                    <Bar dataKey="value" fill="#EF4444" radius={[4, 4, 0, 0]} barSize={30} />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-400 text-xs">
-                  <div className="text-center"><FiAlertCircle className="w-6 h-6 mx-auto mb-1 opacity-20" /><p>No absent records</p></div>
-                </div>
-              )}
-            </div>
+          <div className="h-[190px] w-full py-1">
+            {monthlyTrendData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={monthlyTrendData} margin={{ top: 5, right: -5, left: -15, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="empTrendGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#175cd3" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#175cd3" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: '700' }}
+                  />
+                  <YAxis
+                    yAxisId="left"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: '700' }}
+                    domain={[0, 100]}
+                    ticks={[0, 20, 40, 60, 80, 100]}
+                    unit="%"
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#ec4899', fontSize: 9, fontWeight: '700' }}
+                    domain={[0, 'auto']}
+                    allowDecimals={false}
+                  />
+                  <Tooltip content={<TrendTooltip />} />
+                  <Area
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="rate"
+                    stroke="#175cd3"
+                    strokeWidth={2}
+                    fill="url(#empTrendGradient)"
+                    dot={{ fill: '#175cd3', stroke: '#fff', strokeWidth: 1.5, r: 3.5 }}
+                    activeDot={{ r: 5, fill: '#175cd3', stroke: '#fff', strokeWidth: 1.5 }}
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="leavesDays"
+                    stroke="#ec4899"
+                    strokeWidth={2}
+                    dot={{ fill: '#ec4899', stroke: '#fff', strokeWidth: 1.5, r: 3.5 }}
+                    activeDot={{ r: 5, fill: '#ec4899', stroke: '#fff', strokeWidth: 1.5 }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400 text-xs">
+                <div className="text-center"><FiAlertCircle className="w-6 h-6 mx-auto mb-1 opacity-20" /><p>No attendance data yet</p></div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-center gap-3 text-[8px] font-bold text-[#667085] uppercase tracking-wide pt-1 border-t border-slate-100">
+            <span className="flex items-center gap-0.5">
+              <span className="w-3 h-1 rounded-full bg-[#175cd3] inline-block" /> Attendance Rate
+            </span>
+            <span className="flex items-center gap-0.5">
+              <span className="w-3 h-1 rounded-full bg-[#ec4899] inline-block" /> Leaves Taken
+            </span>
           </div>
         </div>
 

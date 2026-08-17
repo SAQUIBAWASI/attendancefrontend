@@ -1739,6 +1739,10 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       "/visits-data": "Visit Data",
       "/letters-section": "Reliving Letters",
       "/late-today": "Late Today",
+      "/appointment-slots": "Appointments Slots",
+      "/bookings": "Bookings",
+      "/op-management": "OP Management",
+      "/op-dashboard": "OP Dashboard"
     };
     return pathMap[path] || "Dashboard";
   };
@@ -1821,7 +1825,14 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
       password = password || employeeData.password || employeeData.employeePassword || localStorage.getItem("employeePassword") || '456789';
     }
 
-    const baseUrl = 'https://ingrainhire.ingrainsystems.com/client-login';
+    
+
+    const baseUrl = 'https://ingrainhire.ingrainsystems.com/candidate-login';
+
+   
+
+
+
     const params = new URLSearchParams();
     params.append('email', email);
     params.append('password', password);
@@ -1878,6 +1889,23 @@ const Sidebar = ({ isMobile, onLinkClick, isCollapsed, setIsCollapsed }) => {
         { name: "User Activity", path: "/useractivity" },
         { name: "User Access", path: "/useraccess" },
         { name: "Shifts", path: "/shift" },
+        // { name: "Appointments Slots", path: "/appointment-slots" },
+        // { name: "Bookings", path: "/bookings" },
+        // { name: "OP Management", path: "/op-management" },
+        // { name: "OP Dashboard", path: "/op-dashboard" },
+      ],
+    },
+    {
+      icon: <i className="ri-hospital-line"></i>,
+      name: "OP Management",
+      dropdown: [
+        { name: "OP Dashboard", path: "/op-dashboard" },
+        { name: "Patient Records", path: "/op-management" },
+          { name: "Appointments Slots", path: "/appointment-slots" },
+          { name: "Services", path: "/services" },
+        { name: "Bookings", path: "/bookings" },
+       
+        
       ],
     },
 

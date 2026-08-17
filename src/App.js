@@ -235,6 +235,12 @@ import MembershipPage from "./Pages/MembershipPage.js";
 import Plans from "./Pages/Plans.js";
 import Products from './Pages/Products.js';
 import Recruitment from './Pages/Recruitment.js';
+import Appointment from './Pages/Appointment.js';
+import AppointmentSlots from './Pages/AppointmentSlots.js';
+import Bookings from './Pages/Bookings.js';
+import OpManagement from './Pages/OpManagement.js';
+import OpDashboard from './Pages/OpDashboard.js';
+import Services from "./Pages/Services.js";
 
 
 
@@ -298,6 +304,7 @@ function App() {
       <Route path="/service" element={<ServicesPage />}></Route>
       <Route path="/whoweserve" element={<WhoWeServePage />}></Route>
       <Route path="/contact" element={<ContactPage />}></Route>
+      <Route path="/appointment" element={<Appointment />} />
        <Route path="/partners" element={<PartnersPage />}></Route>
       <Route path="/membership" element={<MembershipPage />}></Route>
       <Route path="/plans" element={<Plans />}></Route>
@@ -516,12 +523,17 @@ function App() {
               <Route path="/employee-locations" element={<EmployeeLocations />} />
 
 
-                   <Route path="/visits-data" element={<VisitsData />} /> {/* ✅ New route for Visits Data (Admin) */}
+              <Route path="/visits-data" element={<VisitsData />} /> {/* ✅ New route for Visits Data (Admin) */}
               <Route path="/total-visits" element={<TotalVisits />} /> {/* ✅ New route for Total Visits (Admin) */}
               <Route path="/pending-visits" element={<PendingVisits />} /> {/* ✅ New route for Pending Visits (Admin) */}
               <Route path="/leads" element={<Leads />} /> {/* ✅ New route for Leads (Admin) */}
               <Route path="/rejected-visits" element={<RejectedVisits />} /> {/* ✅ New route for Rejected Visits (Admin) */}
               <Route path="/letters-section" element={<LettersSection />} />
+              <Route path="/appointment-slots" element={<AppointmentSlots />} />
+              <Route path="/bookings" element={<Bookings />} />
+               <Route path="/op-management" element={<OpManagement />} />
+              <Route path="/op-dashboard" element={<OpDashboard />} />
+              <Route path="/services" element={<Services />} />
 
 
            

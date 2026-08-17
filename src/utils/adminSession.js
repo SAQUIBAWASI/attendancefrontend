@@ -12,7 +12,7 @@ export const getAdminEmail = () => {
   if (localStorage.getItem("userRole") === "admin") {
     const employeeEmail = localStorage.getItem("employeeEmail");
     if (employeeEmail) return employeeEmail;
-  }
+  } 
 
   return null;
 };
